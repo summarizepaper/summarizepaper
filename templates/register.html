@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %} About the CarbonFreeConf team that organizes seminars and conferences {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Meet the team that allowed virtual conferences to be carbon-neutral." />
+  <!--add text-->
+  <style>
+      form {
+          width: 500px;
+          margin: 50px auto;
+          text-align: center;
+      }
+
+      form h2 {
+          margin-bottom: 40px;
+          font-size: 30px;
+          color: #333;
+      }
+
+      form .form-group {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-bottom: 40px;
+      }
+
+      form label {
+          font-size: 20px;
+          color: #333;
+          margin-bottom: 10px;
+      }
+
+      form input[type="text"], form input[type="email"], form input[type="password"] {
+          width: 100%;
+          padding: 10px;
+          font-size: 18px;
+          border-radius: 5px;
+          border: none;
+          box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      form button[type="submit"] {
+          width: 200px;
+          padding: 10px 20px;
+          background-color: blue;
+          color: white;
+          font-size: 18px;
+          border-radius: 5px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s;
+      }
+
+      form button[type="submit"]:hover {
+          background-color: lightblue;
+      }
+      #popover {
+        display: none;
+        position: fixed;
+        background-color: black;
+        color: white;
+        padding: 10px;
+        z-index: 1;
+        right: 20px;
+      }
+  </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+
+
+<form method="post">
+    {% csrf_token %}
+    <h2>Register</h2>
+
+    <div class="form-group">
+        <label for="{{ form.username.id_for_label }}">Username:</label>
+        {{ form.username }}
+    </div>
+    <div class="form-group">
+        <label for="{{ form.email.id_for_label }}">Email:</label>
+        {{ form.email }}
+    </div>
+    <div id="popover">
+      <p>Your password must be at least 8 characters long and contain:<br>
+      - At least one number<br>
+      - At least one uppercase letter<br>
+      - At least one lowercase letter<br>
+      - At least one special character (!@#$%^&*)</p>
+    </div>
+    <div class="form-group">
+        <label for="{{ form.password1.id_for_label }}">Password:
+          <span id="popover-link">
+          <i class="fas fa-question-circle"></i>
+        </span></label>
+        {{ form.password1 }}
+    </div>
+    <div id="password_error" style="color: red;margin-bottom:20px;"></div>
+    <div class="form-group">
+        <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
+        {{ form.password2 }}
+    </div>
+    <button type="submit">Sign up</button>
+    {% if form.errors %}
+        <div class="alert alert-danger" style="color:red;margin-top:30px;">
+            <strong>Oops!</strong> Please fix the following errors:
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ error|escape }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error|escape }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const passwordInput = document.querySelector('input[name="password1"]');
+  const passwordError = document.querySelector('#password_error');
+
+  passwordInput.addEventListener('input', function() {
+    const password = passwordInput.value;
+
+    if (password.length < 8) {
+      passwordError.innerHTML = 'Password must be at least 8 characters.';
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      passwordError.innerHTML = 'Password must contain at least one number.';
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      passwordError.innerHTML = 'Password must contain at least one uppercase letter.';
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      passwordError.innerHTML = 'Password must contain at least one lowercase letter.';
+      return;
+    }
+
+    if (!/[!@#$%^&*()]/.test(password)) {
+      passwordError.innerHTML = 'Password must contain at least one special character.';
+      return;
+    }
+
+    passwordError.innerHTML = '';
+  });
+</script>
+
+<script>
+document.getElementById("popover-link").addEventListener("mouseover", function(event) {
+  var popover = document.getElementById("popover");
+  popover.style.display = "block";
+  popover.style.left = event.clientX + "px";
+  popover.style.top = (event.clientY + 20) + "px";
+});
+
+document.getElementById("popover-link").addEventListener("mouseout", function() {
+  var popover = document.getElementById("popover");
+  popover.style.display = "none";
+});
+</script>
+{% endblock %}

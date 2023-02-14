@@ -1,0 +1,788 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% load index %}
+
+{% block title %} About the CarbonFreeConf team that organizes seminars and conferences {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Meet the team that allowed virtual conferences to be carbon-neutral." />
+  <link rel="canonical" href="https://www.carbonfreeconf.com/about/" />
+  <!--add text-->
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+  <style>
+
+.paper-container {
+  background-color: #f2f2f2;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px #ccc;
+  margin-bottom: 20px;
+}
+
+.paper-title {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.paper-details p {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.paper-details strong {
+  font-weight: bold;
+}
+
+.paper-details a {
+  color: #337ab7;
+  text-decoration: none;
+}
+
+.paper-summary,
+.paper-notes,
+.paper-longer-summary {
+  padding: 20px;
+  border: 1px solid #e5e5e5;
+  margin-bottom: 20px;
+}
+
+.paper-summary h3,
+.paper-notes h3,
+.paper-longer-summary h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.paper-summary p,
+.paper-notes p,
+.paper-longer-summary p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+}
+
+/*new*/
+
+.main-content2 {
+     padding: 16px;
+   }
+
+   .title {
+     font-size: 2xl;
+     font-weight: bold;
+     font-family: sans-serif;
+     margin-bottom: 12px;
+   }
+
+   .subtitle {
+     font-size: 1xl;
+     font-family: serif;
+     margin-bottom: 18px;
+   }
+
+   .info-block {
+     display: flex;
+     align-items: center;
+     margin-bottom: 6px;
+   }
+
+   .info-icon {
+     width: 16px;
+     height: 16px;
+     margin-right: 6px;
+   }
+
+   .info-text {
+     font-size: 14px;
+     font-weight: normal;
+     margin-right: 6px;
+     flex-grow: 1;
+     text-overflow: ellipsis;
+     overflow: hidden;
+   }
+
+   @media (min-width: 768px) {
+     .main-content2 {
+       padding: 16px 32px;
+     }
+
+     .title {
+       font-size: 4xl;
+     }
+   }
+
+   .message-box {
+      background-color: #f2f2f2;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 2px 2px 10px #ddd;
+      margin: 20px 40px;
+      text-align: left;
+    }
+
+    .message-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 0 0 20px 0;
+    }
+
+    .message-box p {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .message-tabs {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .message-tabs li {
+      flex: 1;
+      text-align: center;
+      padding: 20px 0;
+      cursor: pointer;
+      font-size: 24px;
+    }
+
+    .message-tabs .active {
+      font-weight: bold;
+      border-bottom: 2px solid #333;
+    }
+
+    .message-header {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 0 0 20px 0;
+      text-align: center;
+    }
+
+    .message-content {
+      margin-top: 20px;
+    }
+
+    .message-tab {
+      padding: 20px;
+      font-size:18px;
+      text-align: justify;
+    }
+
+    input[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #3e8e41;
+    }
+
+
+  #progress-bar {
+    width: 500px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: lightgrey;
+    position: relative;
+    margin: 10px auto;
+  }
+
+  #progress {
+    height: 100%;
+    background-color: green;
+    border-radius: 25px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: width 0.5s ease-in-out;
+  }
+
+  #progress-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+  }
+
+  #loading-message {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    color:red;
+    padding: 20px;
+  }
+  input[type='submit'] {
+   padding: 10px 20px;
+   font-size: 20px;
+ }
+
+ .center {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   height: 100%;
+ }
+ @keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  #popover {
+    display: none;
+    position: fixed;
+    background-color: black;
+    color: white;
+    padding: 10px;
+    z-index: 1;
+    right: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+<div class="main-content2">
+
+{% if errormess %}
+<div style="text-align:center;color:red;">
+  <p><strong>{{ errormess }}</strong></p>
+</div>
+{% else %}
+
+{% if alpaper %}
+
+  {% if paper.title %}
+    <div class="title"><h2>{{ paper.title }}</h2></div>
+  {% endif %}
+    <div class="subtitle">
+      {% if paper.authors.all %}
+        <p>
+          {% for author in paper.authors.all %}
+            {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% if not forloop.last %}, {% endif %}{% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+    </div>
+    {% if paper.journal_ref %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</div>
+    </div>
+    {% endif %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
+    </div>
+    {% if paper.comments %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-comment"></i> {{ paper.comments }}</div>
+    </div>
+    {% endif %}
+    {% if paper.license %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
+    </div>
+    {% endif %}
+    <div class="paper-details">
+    {% if paper.abstract %}
+      <p style="text-align: justify;"><strong>Abstract:</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
+    {% endif %}
+    </div>
+    {% if paper.published_arxiv %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-clock"></i> Submitted to arXiv on {{ paper.published_arxiv|date:"d M. Y" }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="message-box">
+    <h1 class="message-header">Results of the summarizing process for the arXiv paper: {{ arxiv_id }}</h1>
+    {% if not public %}
+    <p class="message-header2"><small><span class="warning-sign">&#9888;</span>This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article.</small></p>
+    {% endif %}
+    <ul class="message-tabs">
+      <li class="active" onclick="switchTab(0)">Summary</li>
+      <li onclick="switchTab(1)">Notes</li>
+      <li onclick="switchTab(2)">10-yrs old Summary</li>
+      <li onclick="switchTab(3)">Blog article</li>
+    </ul>
+    <div class="message-content">
+      <div class="message-tab">{% if paper.summary %}{{ paper.summary }}{% else %}The summary is not ready yet{% endif %}</div>
+      <div class="message-tab" style="display:none;">
+        {% if paper.notes %}
+        <ul>
+        {% for note in notes %}
+          <li>{{ note }}</li>
+        {% endfor %}
+        </ul>
+        {% else %}The notes are not ready yet{% endif %}
+      </div>
+      <div class="message-tab" style="display:none;">{% if paper.longer_summary %}{{ paper.longer_summary }}{% else %}The longer summary is not ready yet{% endif %}</div>
+      <div class="message-tab" style="display:none;">{% if paper.blog %}{{ paper.blog|safe }}{% else %}The blog article is not ready yet{% endif %}</div>
+    </div>
+    {% if paper.updated %}
+    <div class="info-block" style="margin-top:20px;">
+      <div class="info-text"><i class="fas fa-clock"></i> Created on {{ paper.updated|date:"d M. Y" }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="text-align: center;">
+  <p>
+    <a href="{% url 'vote' paper.arxiv_id 'up' %}">
+      <i class="fa fa-thumbs-up" style="font-size: 36px;"></i>
+    </a>
+  </p>
+  <p id="totvote">Total number of votes: {{ paper.total_votes }}
+    <span id="popover-link">
+      <i class="fas fa-question-circle"></i>
+    </span>
+  </p>
+  <div id="popover">
+    <p><strong>Why do we need votes?</strong></p>
+    <p>Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.</p>
+  </div>
+  <p>
+    <a href="{% url 'vote' paper.arxiv_id 'down' %}">
+      <i class="fa fa-thumbs-down" style="font-size: 36px;"></i>
+    </a>
+  </p>
+  {% if error_message %}
+  <div style="text-align:center;color:red;">
+    <p><strong>{{ error_message }}</strong></p>
+  </div>
+  {% endif %}
+</div>
+
+  {% if not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog or toolong or paper.total_votes < -9 or user.is_staff %}
+  <div class="center" style="margin:40px;">
+    {% if toolong %}
+    <p>The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.</p>
+    {% elif paper.total_votes < -9 %}
+    <p>The summaries have many downvotes and can be re-run with our tools if necessary by clicking on the Run button below.</p>
+    {% elif not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog %}
+    <p>Some bits of the article are not summarized yet, you can re-run the summarizing process by clicking on the Run button below.</p>
+    {% elif user.is_staff %}
+    <p>Hi, because you are a staff member you can Run the AI tools!</p>
+    {% endif %}
+    </div>
+    <div class="center" style="margin-bottom:20px;">
+  <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" value="Run" name="run_button">
+  </form>
+  {% endif %}
+
+{% else %}
+
+{% if exist == 0 %}
+<p>There is no existing article with the given arXiv ID: {{ arxiv_id }}. Try again your <a href="/">search</a> with a new arXiv ID.</p>
+{% else %}
+
+<div class="main-content2">
+  <h1>Running summarizing tools on a new article</h1>
+  {% if run or run2 %}
+  <p style="font-size:25px;"><strong>We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.</strong></p>
+  {% else %}
+  <p style="font-size:25px;"><strong>This is the first time this article is requested and our AI summarizing tools have never been run on it. We can run our tools now if you click on the button "Run" donw the page but first make sure that it is the right article.</strong></p>
+  {% endif %}
+  <hr>
+
+  {% if run or run2 %}
+    <div class="info-block">
+      <p> We are analysing the following arXiv article: {{ arxiv_id }}</p>
+    </div>
+  {% else %}
+    <div class="title"><h2>{{ details.title }}</h2></div>
+    <div class="subtitle">
+      {% if details.authors %}
+        <p>
+          {% for author in details.authors %}
+            {{ author }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+    </div>
+    {% if details.journal_ref %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-book"></i> {{ details.journal_ref }}</div>
+    </div>
+    {% endif %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-link"></i> {% if details.link_homepage %}<a href="{{ details.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id }}{% if details.link_homepage %}</a>{% endif %}{% if details.link_doi %} - <a href="{{ details.link_doi }}" target="_blank">DOI</a>{% endif %}{% if details.category %} ({{ details.category }}){% endif %}</div>
+    </div>
+    {% if details.comments %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-comment"></i> {{ details.comments }}</div>
+    </div>
+    {% endif %}
+    {% if details.license %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="{{ details.license }}" target="_blank">{{ cc_format }}</a></div>
+    </div>
+    {% endif %}
+    <div class="paper-details">
+    {% if details.abstract %}
+      <p style="text-align: justify;"><strong>Abstract:</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ details.abstract }}</span></p>
+    {% endif %}
+    </div>
+    {% if details.published_arxiv %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-clock"></i> Submitted to arXiv on {{ details.published_arxiv|date:"d M. Y" }}</div>
+    </div>
+    {% endif %}
+
+    <div class="center">
+    <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="submit" value="Run" name="run_button">
+    </form>
+    </div>
+    {% endif %}
+    </div>
+
+
+{% endif %}
+
+{% if run2 %}
+{{ arxiv_id|json_script:"arxiv_id" }}
+
+<div class="main-content2">
+
+<div class="loading" style="text-align:center;margin-bottom:40px;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+
+<div id="progtextupdate" style="font-size:20px;color:red; text-align: center;animation: blink 2s linear infinite;"></div>
+
+  <div id="loading-message"></div>
+  <div id="progress-bar">
+    <div id="progress" style="width: 0%">
+      <div id="progress-text"></div>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+
+{% if run %}
+{{ arxiv_id|json_script:"arxiv_id" }}
+
+<div class="main-content2">
+
+<div id="progtextupdate" style="font-size:20px;color:red; text-align: center;animation: blink 2s linear infinite;"></div>
+
+<div id="loading-message"></div>
+<div id="progress-bar">
+  <div id="progress" style="width: 0%">
+    <div id="progress-text"></div>
+  </div>
+</div>
+
+<div class="title" style="margin-top:40px;"></div>
+<div class="subtitle"></div>
+<div class="jr"></div>
+<div class="link"></div>
+<div class="com"></div>
+<div class="license"></div>
+<div class="paper-details"></div>
+<div class="publ"></div>
+
+<div class="message-box">
+  <h1 class="message-header"></h1>
+  <p class="message-header2"></p>
+
+  <ul class="message-tabs">
+    <li class="active" onclick="switchTab(0)">Summary</li>
+    <li onclick="switchTab(1)">Notes</li>
+    <li onclick="switchTab(2)">10-yrs old Summary</li>
+    <li onclick="switchTab(3)">Blog article</li>
+  </ul>
+  <div class="message-content">
+    <div id="sum" class="message-tab">
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+    </div>
+    <div id="notes" class="message-tab" style="display:none;">
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+    </div>
+    <div id="longsum" class="message-tab" style="display:none;">
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+    </div>
+    <div id="blog" class="message-tab" style="display:none;">
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+{% endif %}
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {% if run or run2 %}
+
+  <script>
+  const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
+
+  const socketl = new WebSocket(
+      'ws://'
+      + window.location.host
+      + '/ws/arxivid/'
+      + arxivRoomName
+      + '/'
+  );
+
+  socketl.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    //console.log('oklmmm',data.message);
+
+    if(data.type=='progress_update'){
+      document.getElementById("loading-message").innerHTML = data.message.loading_message;
+      document.getElementById("progress").style.width = data.message.progress + "%";
+      if(data.message.progress !=0){
+        document.getElementById("progress-text").innerHTML = data.message.progress + "%";
+      }
+      console.log(data.message.progress);
+      if(data.message.progress == 100){
+        document.getElementById("progress-bar").style.display = "none";
+        document.getElementById("progtextupdate").style.animation = "none";
+      }
+    }
+    if(data.type=='progress_text_update'){
+      console.log('progresstextupdate');
+
+      document.getElementById("progtextupdate").innerHTML = data.message.loading_message;
+      document.getElementById("progress").style.width = data.message.progress + "%";
+      document.getElementById("progress-text").innerHTML = data.message.progress + "%";
+      if(data.message.progress == 5){
+        data.message.progress = parseInt(data.message.progress) + 2;
+        document.getElementById("progress").style.width = data.message.progress + "%";
+      }
+      if(data.message.progress == 100){
+        document.getElementById("progress-bar").style.display = "none";
+        document.getElementById("progtextupdate").style.animation = "none";
+        {% if run2 %}
+        location.reload(true);
+        {% endif %}
+      }
+    }
+
+    {% if run %}
+
+    if(data.type=='progress_sum_update'){
+      //alert(data.message);
+      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (1/4): "+arxivRoomName;
+      document.getElementById("sum").innerHTML = data.message;
+      MathJax.typeset();
+
+      //document.querySelector("#sum_.loading").style.display = "none";
+    }
+    if(data.type=='progress_notes_update'){
+      //alert(data.message);
+      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (2/4): "+arxivRoomName;
+      document.getElementById("notes").innerHTML = data.message;
+      MathJax.typeset();
+
+      //document.querySelector("#notes_.loading").style.display = "none";
+    }
+    if(data.type=='progress_longsum_update'){
+      //alert(data.message);
+      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (3/4): "+arxivRoomName;
+      document.getElementById("longsum").innerHTML = data.message;
+      MathJax.typeset();
+
+      //document.querySelector("#longsum_.loading").style.display = "none";
+    }
+    if(data.type=='progress_blog_update'){
+      //alert(data.message);
+      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (4/4): "+arxivRoomName;
+      document.getElementById("blog").innerHTML = data.message;
+      MathJax.typeset();
+
+      //document.querySelector("#longsum_.loading").style.display = "none";
+    }
+    if(data.type=='progress_arxiv_update'){
+      console.log('progressarxivupdate');
+      //alert(document.getElementsByClassName("title2")[0]);
+      document.getElementsByClassName("title")[0].innerHTML = "<h2>"+data.message.title+"</h2>";
+      var authorsContainer = document.getElementsByClassName("subtitle")[0];
+      var authorsHTML = "";
+      //alert(data.message.authors.length)
+      for (var i = 0; i < data.message.authors.length; i++) {
+        if (i==data.message.authors.length-1){
+          authorsHTML += data.message.authors[i];
+        }
+        else{
+          authorsHTML += data.message.authors[i] + ", ";
+        }
+      }
+      authorsHTML = "<p>"+authorsHTML+"</p>"
+      authorsContainer.innerHTML = authorsHTML;
+
+      var jrContainer = document.getElementsByClassName("jr")[0];
+      if (data.message.journal_ref){
+        //alert(data.message.journal_ref)
+        var jrHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-book"></i> ';
+        jrHTML += data.message.journal_ref;
+        jrHTML += '</div></div>';
+        jrContainer.innerHTML = jrHTML;
+      }
+
+      var linkContainer = document.getElementsByClassName("link")[0];
+        //alert(data.message.journal_ref)
+      var linkHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-link"></i> ';
+      if (data.message.link_homepage){
+        linkHTML += '<a href="'+data.message.link_homepage+'" target="_blank">';
+      }
+        linkHTML += "arXiv: "+arxivRoomName;
+      if (data.message.link_homepage){
+        linkHTML += '</a>';
+      }
+      if (data.message.link_doi){
+        linkHTML += ' - <a href="'+data.message.link_doi+'" target="_blank">DOI</a>';
+      }
+      if (data.message.category){
+        linkHTML += ' ('+data.message.category+')';
+      }
+        linkHTML += '</div></div>';
+        linkContainer.innerHTML = linkHTML;
+
+
+      var comContainer = document.getElementsByClassName("com")[0];
+      if (data.message.comments){
+        //alert(data.message.journal_ref)
+        var comHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-comment"></i> ';
+        comHTML += data.message.comments;
+        comHTML += '</div></div>';
+        comContainer.innerHTML = comHTML;
+      }
+
+      var liContainer = document.getElementsByClassName("license")[0];
+      if (data.message.license){
+        //alert(data.message.journal_ref)
+        const parts = data.message.license.split('/');
+        //console.log('parts'+parts);
+
+        const license = parts[parts.length - 3];
+        const version = parts[parts.length - 2];
+        //console.log('ici'+license.toUpperCase());
+        if (license.toUpperCase() != 'NONEXCLUSIVE-DISTRIB'){
+          var ccFormat = 'CC ' + license.toUpperCase() + ' ' + version;
+
+        } else {
+          var ccFormat = license.toUpperCase() + ' ' + version;
+        }
+
+        if (license.trim().toUpperCase() != "BY" && license.trim().toUpperCase() != "BY-SA" && license.trim().toUpperCase() != "BY-NC-SA" && license.trim().toUpperCase() != "ZERO") {
+            document.getElementsByClassName("message-header2")[0].innerHTML+="<small><span class='warning-sign'>&#9888;</span>This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article.</small>";
+        }
+
+
+        //console.log(ccFormat); // Output: CC BY-NC-SA 4.0
+
+        var liHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-id-badge"></i> ';
+        liHTML += '<a href="'+data.message.license+'" target="_blank">'+ccFormat+'</a>';
+        liHTML += '</div></div>';
+        liContainer.innerHTML = liHTML;
+      }
+
+      var absContainer = document.getElementsByClassName("paper-details")[0];
+      if (data.message.abstract){
+        //alert(data.message.journal_ref)
+        var absHTML = '<p style="text-align: justify;"><strong>Abstract:</strong> <span class="math style="width: 1.796em; display: inline-block;">';
+        absHTML += data.message.abstract;
+        absHTML += '</span></p>';
+        absContainer.innerHTML = absHTML;
+        MathJax.typeset();
+      }
+
+      var publContainer = document.getElementsByClassName("publ")[0];
+      if (data.message.published_arxiv){
+        //alert(data.message.journal_ref)
+        var publHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-clock"></i> ';
+        publHTML += 'Submitted to arXiv on '+data.message.published_arxiv;
+        publHTML += '</div></div>';
+        publContainer.innerHTML = publHTML;
+      }
+
+      }
+      {% endif %}
+  };
+
+  socketl.onclose = function(e) {
+    /*updateCache(arxivRoomName); do not need in production because once started, can't stop the code from running in background*/
+    console.error('WebSocket closed with code: ' + e.code);
+  };
+
+</script>
+
+<!--
+<script>
+function updateCache(arxiv_id) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/update-cache/?arxiv_id=' + arxiv_id, true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            console.log('Cache updated for arxiv_id: ' + arxiv_id);
+        }
+    };
+    xhr.send();
+}
+</script>
+-->
+{% endif %}
+{% if alpaper %}
+
+<script>
+document.getElementById("popover-link").addEventListener("mouseover", function(event) {
+  var popover = document.getElementById("popover");
+  popover.style.display = "block";
+  popover.style.left = event.clientX + "px";
+  popover.style.top = (event.clientY + 20) + "px";
+});
+
+document.getElementById("popover-link").addEventListener("mouseout", function() {
+  var popover = document.getElementById("popover");
+  popover.style.display = "none";
+});
+</script>
+{% endif %}
+
+<script>
+function switchTab(tabIndex) {
+  var tabs = document.querySelectorAll(".message-tabs li");
+  var contents = document.querySelectorAll(".message-tab");
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.remove("active");
+    contents[i].style.display = "none";
+  }
+  tabs[tabIndex].classList.add("active");
+  contents[tabIndex].style.display = "block";
+}
+</script>
+{% endblock %}

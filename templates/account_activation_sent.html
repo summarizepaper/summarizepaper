@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %} About the CarbonFreeConf team that organizes seminars and conferences {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Meet the team that allowed virtual conferences to be carbon-neutral." />
+  <!--add text-->
+  <style>
+   body {
+     background-color: #F2F2F2;
+     font-family: Arial, sans-serif;
+     text-align: center;
+   }
+   /*.container {
+     background-color: white;
+     padding: 50px;
+     margin: 50px;
+     border-radius: 10px;
+     box-shadow: 0px 0px 10px #BBBBBB;
+   }*/
+   h2 {
+     font-size: 36px;
+     font-weight: bold;
+     color: #3399CC;
+     margin-bottom: 30px;
+   }
+   /*p {
+     font-size: 18px;
+     color: #555555;
+     margin-bottom: 30px;
+   }*/
+ </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+<div class="container">
+<h2>Activation email sent</h2>
+  <p>An activation email has been sent. Please follow the instructions in the email to activate your account.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

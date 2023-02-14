@@ -1,0 +1,192 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-14 15:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: arxivsummarizer/settings.py:135
+msgid "French"
+msgstr ""
+
+#: arxivsummarizer/settings.py:136
+msgid "English"
+msgstr ""
+
+#: templates/base.html:12
+msgid "SummarizePaper.com - AI Powered Summaries of arXiv.org Papers"
+msgstr ""
+
+#: templates/base.html:19
+msgid ""
+"SummarizePaper.com uses artificial intelligence to generate summaries of "
+"scientific papers from arXiv.org. Get quick insights into complex research "
+"topics with our AI-powered summaries. Try it out today!"
+msgstr ""
+
+#: templates/base.html:230
+msgid "Home"
+msgstr ""
+
+#: templates/base.html:231 templates/base.html:280
+msgid "About"
+msgstr ""
+
+#: templates/base.html:232
+msgid "FAQ"
+msgstr ""
+
+#: templates/base.html:233 templates/base.html:281
+msgid "Contact"
+msgstr ""
+
+#: templates/base.html:237
+msgid "Logout"
+msgstr ""
+
+#: templates/base.html:242
+msgid "Login"
+msgstr ""
+
+#: templates/base.html:248
+msgid "Language"
+msgstr ""
+
+#: templates/base.html:282
+msgid "Privacy Policy"
+msgstr ""
+
+#: templates/base.html:283
+msgid "Legal Notice"
+msgstr ""
+
+#: templates/summarizer/about.html:21
+msgid "About Us"
+msgstr ""
+
+#: templates/summarizer/about.html:22
+msgid ""
+"Welcome to our website, where we use cutting-edge AI technology to summarize "
+"the latest research papers from arXiv. Our goal is to make it easy for you "
+"to stay up-to-date on the latest developments in your field of interest, "
+"without having to spend hours reading through lengthy research papers. It "
+"can also be useful if you are not a researcher but want to understand the "
+"content of published articles in a certain field. Everyone has the ability "
+"to verify information, thereby reducing the spread of misinformation."
+msgstr ""
+
+#: templates/summarizer/about.html:24
+msgid "How We Do It"
+msgstr ""
+
+#: templates/summarizer/about.html:25
+msgid ""
+"Our AI algorithms analyze each paper and extract the key findings and "
+"conclusions, presenting them to you in a concise and easily digestible "
+"format. By automating this process, we are able to provide you with "
+"summaries of multiple papers in a fraction of the time it would take you to "
+"read them all in their entirety. "
+msgstr ""
+
+#: templates/summarizer/about.html:27
+msgid "Our Team"
+msgstr ""
+
+#: templates/summarizer/about.html:28
+msgid ""
+"We are a team of researchers with a passion to make complex information more "
+"accessible. Our goal is to allow everyone to benefit from all research "
+"findings and thereby avoid fake news."
+msgstr ""
+
+#: templates/summarizer/about.html:30
+msgid "Our Promise"
+msgstr ""
+
+#: templates/summarizer/about.html:31
+msgid ""
+"At our website, we are committed to providing you with the highest quality "
+"summaries of the latest research. We do our best to make sure that our AI "
+"algorithms accurately reflect the key findings and conclusions of each "
+"paper, so that you can stay informed and ahead of the curve in your field of "
+"interest. "
+msgstr ""
+
+#: templates/summarizer/contact.html:70
+msgid "Contact Us"
+msgstr ""
+
+#: templates/summarizer/contact.html:72
+msgid ""
+" Have questions or concerns about our AI-powered paper summarization\n"
+"    service? We're here to help! Fill out the form below and we'll get back\n"
+"    to you as soon as possible. "
+msgstr ""
+
+#: templates/summarizer/contact.html:79
+msgid "Name:"
+msgstr ""
+
+#: templates/summarizer/contact.html:82
+msgid "Email:"
+msgstr ""
+
+#: templates/summarizer/contact.html:85
+msgid "Message:"
+msgstr ""
+
+#: templates/summarizer/contact.html:91
+msgid "The email was successfully sent. You'll hear back from us shortly."
+msgstr ""
+
+#: templates/summarizer/contact.html:95
+msgid "The email could not be sent. If it happens again, please contact us."
+msgstr ""
+
+#: templates/summarizer/home.html:93
+msgid "Your account is now activated and you are logged in."
+msgstr ""
+
+#: templates/summarizer/home.html:96
+msgid "Discover Key Insights from arXiv's Latest Articles"
+msgstr ""
+
+#: templates/summarizer/home.html:99
+msgid "Enter arXiv ID: "
+msgstr ""
+
+#: templates/summarizer/home.html:100
+msgid "Example:"
+msgstr ""
+
+#: templates/summarizer/home.html:101
+msgid "Submit"
+msgstr ""
+
+#: templates/summarizer/home.html:101
+msgid "Loading..."
+msgstr ""
+
+#: templates/summarizer/home.html:107
+msgid ""
+"Welcome to Summarize<span style=\"color:#34a853\">Paper</span>.com, where "
+"you can stay up-to-date with the latest research on arXiv. Our goal is to "
+"provide you with concise, understandable, and insightful summaries for all "
+"arXiv research articles using AI, so you can quickly get a grasp of the "
+"latest developments in your field. Whether you're a researcher, a student, a "
+"journalist, or simply someone who wants to stay informed, Summarize<span "
+"style=\"color:#34a853\">Paper</span>.com is here to make your life easier."
+msgstr ""

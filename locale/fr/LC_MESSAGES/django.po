@@ -1,0 +1,235 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-14 15:39+0000\n"
+"PO-Revision-Date: 2023-02-14 15:43+0000\n"
+"Last-Translator:   <admin@carbonfreeconf.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Translated-Using: django-rosetta 0.9.8\n"
+
+#: arxivsummarizer/settings.py:135
+msgid "French"
+msgstr "Français"
+
+#: arxivsummarizer/settings.py:136
+msgid "English"
+msgstr "Anglais"
+
+#: templates/base.html:12
+msgid "SummarizePaper.com - AI Powered Summaries of arXiv.org Papers"
+msgstr "SummarizePaper.com - Résumé des papiers d'arXiv.org en utilisant l'IA"
+
+#: templates/base.html:19
+msgid ""
+"SummarizePaper.com uses artificial intelligence to generate summaries of "
+"scientific papers from arXiv.org. Get quick insights into complex research "
+"topics with our AI-powered summaries. Try it out today!"
+msgstr ""
+"SummarizePaper.com utilise l'intelligence artificielle pour générer des "
+"résumés d'articles scientifiques provenant d'arXiv.org. Obtenez un aperçu "
+"rapide de sujets de recherche complexes grâce à nos résumés alimentés par "
+"l'intelligence artificielle. Essayez-le dès aujourd'hui !"
+
+#: templates/base.html:230
+msgid "Home"
+msgstr "Accueil"
+
+#: templates/base.html:231 templates/base.html:280
+msgid "About"
+msgstr "A propos"
+
+#: templates/base.html:232
+msgid "FAQ"
+msgstr "FAQ"
+
+#: templates/base.html:233 templates/base.html:281
+msgid "Contact"
+msgstr "Contact"
+
+#: templates/base.html:237
+msgid "Logout"
+msgstr "Déconnexion"
+
+#: templates/base.html:242
+msgid "Login"
+msgstr "Se connecter"
+
+#: templates/base.html:248
+msgid "Language"
+msgstr "Langue"
+
+#: templates/base.html:282
+msgid "Privacy Policy"
+msgstr "Confidentialité"
+
+#: templates/base.html:283
+msgid "Legal Notice"
+msgstr "Mentions Légales"
+
+#: templates/summarizer/about.html:21
+#| msgid "About"
+msgid "About Us"
+msgstr "A propos"
+
+#: templates/summarizer/about.html:22
+msgid ""
+"Welcome to our website, where we use cutting-edge AI technology to summarize"
+" the latest research papers from arXiv. Our goal is to make it easy for you "
+"to stay up-to-date on the latest developments in your field of interest, "
+"without having to spend hours reading through lengthy research papers. It "
+"can also be useful if you are not a researcher but want to understand the "
+"content of published articles in a certain field. Everyone has the ability "
+"to verify information, thereby reducing the spread of misinformation."
+msgstr ""
+"Bienvenue sur notre site Web, où nous utilisons une technologie d'IA de "
+"pointe pour résumer les derniers articles de recherche d'arXiv. Notre "
+"objectif est de vous permettre de rester facilement au courant des derniers "
+"développements dans votre domaine d'intérêt, sans avoir à passer des heures "
+"à lire de longs articles de recherche. Notre plateforme peut également être "
+"utile si vous n'êtes pas un chercheur mais que vous souhaitez comprendre le "
+"contenu des articles publiés dans un certain domaine. Tout le monde a la "
+"possibilité de vérifier les informations, ce qui réduit la propagation de la"
+" désinformation."
+
+#: templates/summarizer/about.html:24
+msgid "How We Do It"
+msgstr "Comment procède-t-on"
+
+#: templates/summarizer/about.html:25
+msgid ""
+"Our AI algorithms analyze each paper and extract the key findings and "
+"conclusions, presenting them to you in a concise and easily digestible "
+"format. By automating this process, we are able to provide you with "
+"summaries of multiple papers in a fraction of the time it would take you to "
+"read them all in their entirety. "
+msgstr ""
+"Nos algorithmes d'IA analysent chaque article et en extraient les principaux"
+" résultats et conclusions, pour vous les présenter dans un format concis et "
+"facile à digérer. En automatisant ce processus, nous sommes en mesure de "
+"vous fournir des résumés de plusieurs articles en une fraction du temps "
+"qu'il vous faudrait pour les lire dans leur intégralité."
+
+#: templates/summarizer/about.html:27
+msgid "Our Team"
+msgstr "Notre équipe"
+
+#: templates/summarizer/about.html:28
+msgid ""
+"We are a team of researchers with a passion to make complex information more"
+" accessible. Our goal is to allow everyone to benefit from all research "
+"findings and thereby avoid fake news."
+msgstr ""
+"Nous sommes une équipe de chercheurs qui a la passion de rendre des "
+"informations complexes plus accessibles. Notre objectif est de permettre à "
+"chacun de bénéficier de tous les résultats de la recherche et d'éviter ainsi"
+" la propagation des fake news."
+
+#: templates/summarizer/about.html:30
+msgid "Our Promise"
+msgstr "Notre promesse"
+
+#: templates/summarizer/about.html:31
+msgid ""
+"At our website, we are committed to providing you with the highest quality "
+"summaries of the latest research. We do our best to make sure that our AI "
+"algorithms accurately reflect the key findings and conclusions of each "
+"paper, so that you can stay informed and ahead of the curve in your field of"
+" interest. "
+msgstr ""
+"Sur notre site Web, nous nous engageons à vous fournir des résumés de la "
+"plus haute qualité des dernières recherches. Nous faisons tout notre "
+"possible pour que nos algorithmes d'IA reflètent fidèlement les principaux "
+"résultats et conclusions de chaque article, afin que vous puissiez rester "
+"informé et prendre une longueur d'avance dans votre domaine d'intérêt."
+
+#: templates/summarizer/contact.html:70
+msgid "Contact Us"
+msgstr "Contactez Nous"
+
+#: templates/summarizer/contact.html:72
+msgid ""
+" Have questions or concerns about our AI-powered paper summarization\n"
+"    service? We're here to help! Fill out the form below and we'll get back\n"
+"    to you as soon as possible. "
+msgstr ""
+"Vous avez des questions ou des inquiétudes concernant notre service de "
+"résumé d'articles alimenté par l'IA ? Nous sommes là pour vous aider ! "
+"Remplissez le formulaire ci-dessous et nous vous répondrons dès que "
+"possible."
+
+#: templates/summarizer/contact.html:79
+msgid "Name:"
+msgstr "Nom :"
+
+#: templates/summarizer/contact.html:82
+msgid "Email:"
+msgstr "Email :"
+
+#: templates/summarizer/contact.html:85
+msgid "Message:"
+msgstr "Message :"
+
+#: templates/summarizer/contact.html:91
+msgid "The email was successfully sent. You'll hear back from us shortly."
+msgstr ""
+"L'email a été envoyé avec succès. Nous faisons notre possible pour vous "
+"répondre le plus radipement possible."
+
+#: templates/summarizer/contact.html:95
+msgid "The email could not be sent. If it happens again, please contact us."
+msgstr "L'email n'a pas pu être envoyé. Si cela se reproduit, contactez nous."
+
+#: templates/summarizer/home.html:93
+msgid "Your account is now activated and you are logged in."
+msgstr "Votre compte est maintenant activé et vous êtes connecté."
+
+#: templates/summarizer/home.html:96
+msgid "Discover Key Insights from arXiv's Latest Articles"
+msgstr "Découvrez les idées clés des derniers articles d'arXiv"
+
+#: templates/summarizer/home.html:99
+msgid "Enter arXiv ID: "
+msgstr "Entrez un ID arXiv :"
+
+#: templates/summarizer/home.html:100
+msgid "Example:"
+msgstr "Exemple :"
+
+#: templates/summarizer/home.html:101
+msgid "Submit"
+msgstr "Envoyer"
+
+#: templates/summarizer/home.html:101
+msgid "Loading..."
+msgstr "Chargement..."
+
+#: templates/summarizer/home.html:107
+msgid ""
+"Welcome to Summarize<span style=\"color:#34a853\">Paper</span>.com, where "
+"you can stay up-to-date with the latest research on arXiv. Our goal is to "
+"provide you with concise, understandable, and insightful summaries for all "
+"arXiv research articles using AI, so you can quickly get a grasp of the "
+"latest developments in your field. Whether you're a researcher, a student, a"
+" journalist, or simply someone who wants to stay informed, Summarize<span "
+"style=\"color:#34a853\">Paper</span>.com is here to make your life easier."
+msgstr ""
+"Bienvenu sur <span style=\"color:#34a853\">Paper</span>.com, où vous pouvez "
+"vous tenir au courant des dernières recherches sur arXiv. Notre objectif est"
+" de vous fournir des résumés concis, compréhensibles et perspicaces de tous "
+"les articles de recherche arXiv en utilisant l'IA, afin que vous puissiez "
+"vous familiariser rapidement avec les derniers développements dans votre "
+"domaine. Que vous soyez un chercheur, un étudiant, un journaliste ou tout "
+"simplement quelqu'un qui souhaite rester informé, Summarize<span "
+"style=\"color:#34a853\">Paper</span>.com est là pour vous faciliter la vie."

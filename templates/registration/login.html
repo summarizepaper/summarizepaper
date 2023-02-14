@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %} Summarize the arxiv articles {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Papers in journals are too complicated? Summarize them in a few sentence with AI." />
+
+  <style>
+  /* Style for the form container */
+  .form-container {
+    width: 500px;
+    margin: auto;
+    margin-top: 40px;
+    text-align: center;
+    padding: 40px;
+    background-color: #f2f2f2;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  }
+
+  /* Style for the form header */
+  .form-header {
+    font-size: 36px;
+    margin-bottom: 40px;
+    color: #333;
+    text-shadow: 2px 2px 2px rgba(255,255,255,0.5);
+  }
+
+  /* Style for the form input fields */
+  .form-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #333;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+  }
+
+  /* Style for the form submit button */
+  .form-submit {
+    width: 100%;
+    padding: 10px;
+    background-color: #333;
+    color: #fff;
+    border: 0;
+    border-radius: 5px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .form-submit:hover {
+    background-color: #555;
+  }
+</style>
+
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <!-- Form header -->
+  <h1 class="form-header">Login</h1>
+
+  <!-- Login form -->
+  <form method="post">
+    {% csrf_token %}
+    <!-- Username field -->
+    <input type="text" class="form-input" placeholder="Username" name="username">
+    <!-- Password field -->
+    <input type="password" class="form-input" placeholder="Password" name="password">
+    <!-- Submit button -->
+    <input type="submit" class="form-submit" value="Login">
+
+  </form>
+  <p style="margin-top: 20px;">
+    No account yet? <a href="{% url 'register' %}" style="text-decoration: none;">Register</a>
+  </p>
+  <p style="margin-top: 20px;">
+    <small><a href="{% url 'password_reset' %}" style="text-decoration: none;">Lost your password?</a></small>
+  </p>
+  {% if form.errors %}
+      <ul>
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+
+{% endblock %}

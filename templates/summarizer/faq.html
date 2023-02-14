@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %} About the CarbonFreeConf team that organizes seminars and conferences {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Meet the team that allowed virtual conferences to be carbon-neutral." />
+  <link rel="canonical" href="https://www.carbonfreeconf.com/about/" />
+  <!--add text-->
+  <style>
+    .container {
+     width: 80%;
+     margin: 0 auto;
+     text-align: center;
+   }
+
+   h1 {
+     font-size: 36px;
+     font-family: sans-serif;
+     margin-bottom: 50px;
+   }
+
+   .faq {
+     background-color: #f2f2f2;
+     border-radius: 10px;
+     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+     padding: 30px;
+     margin-bottom: 30px;
+   }
+
+   .question {
+     font-size: 24px;
+     font-family: sans-serif;
+     margin-bottom: 10px;
+     cursor: pointer;
+   }
+
+   .answer {
+     font-size: 18px;
+     font-family: sans-serif;
+     margin-bottom: 10px;
+     display: none;
+   }
+    </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+      <h1>Frequently Asked Questions</h1>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">What is this website about?</div>
+        <div class="answer">
+          This website is a platform that summarizes scientific papers from arXiv using AI.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">How does the AI summarization work?</div>
+        <div class="answer">
+          The AI uses advanced machine learning algorithms to analyze and extract the most important information from the papers, and present it in a condensed and understandable format.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">Who is behind this website?</div>
+        <div class="answer">
+          This website is developed and maintained by a team of researchers who want to allow everyone to access research results.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">How can I suggest a paper for summarization?</div>
+        <div class="answer">
+          You can just type in the arXiv ID of the paper you want to summarize on the homepage and it will show you a summary and more. Note that if it is the first time this specific article is being looked for, then it will have to run our AI code to summarize it, which may take a few minutes.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">Is this website free to use?</div>
+        <div class="answer">
+          Yes, this website is completely free to use. There are no hidden fees or charges.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">What is the process of summarizing a paper?</div>
+        <div class="answer">
+          The process of summarizing a paper involves several steps, including text pre-processing, feature extraction, and summarization. The AI uses a combination of natural language processing and machine learning techniques to analyze the paper and generate a concise summary.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">Is the code open-source?</div>
+        <div class="answer">
+          Yes, the code is open source and freely accessible.
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">Is there a limit to the number of papers I can summarize?</div>
+        <div class="answer">
+          There is no limit to the number of papers you can summarize. You can use the platform as much as you need to stay updated on the latest research developments.
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+  function toggleAnswer(question) {
+    const answer = question.nextElementSibling;
+    if (answer.style.display === "block") {
+      answer.style.display = "none";
+    } else {
+      answer.style.display = "block";
+    }
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %} Summarize the arxiv articles {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Papers in journals are too complicated? Summarize them in a few sentence with AI." />
+  <style>
+      body {
+        background-color: #f2f2f2;
+      }
+      h1 {
+        font-weight: bold;
+        text-align: center;
+        margin-top: 50px;
+      }
+
+      form {
+        width: 500px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 50px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 2px 2px 10px #ccc;
+      }
+      label {
+        font-weight: bold;
+        margin-right: 10px;
+        /*display: block;
+        margin-bottom: 10px;*/
+      }
+      input[type="text"] {
+        padding: 10px;
+        font-size: 16px;
+        width: 60%;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button[type="submit"] {
+        padding: 10px 20px;
+        background-color: #333;
+        color: white;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      #submit-button img {
+       height: 40px;
+       width: 40px;
+       vertical-align: middle;
+     }
+      .loading {
+        display: none;
+      }
+      .welcome {
+        font-size: 18px;
+        line-height: 1.5;
+        max-width: 800px;
+        text-align: center;
+        margin: 50px auto;
+      }
+
+      /* Media queries */
+      @media (max-width: 600px) {
+        form {
+          padding: 20px;
+        }
+        input[type="text"] {
+          font-size: 14px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        form {
+          padding: 10px;
+        }
+        input[type="text"] {
+          font-size: 12px;
+        }
+      }
+
+    </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+
+{% if activated %}
+<p>{% trans 'Your account is now activated and you are logged in.' %}</p>
+{% endif %}
+
+<h1>{% trans "Discover Key Insights from arXiv's Latest Articles" %}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <label for="arxiv-id">{% trans 'Enter arXiv ID: '%}</label>
+    <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Example:' %} 21040.1035">
+    <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Submit' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
+    {% if error %}
+        <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>
+    {% endif %}
+  </form>
+
+  <p class="welcome">{% blocktrans %}Welcome to Summarize<span style="color:#34a853">Paper</span>.com, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
+
+{% endblock %}
+
+{% block scripts %}
+
+  <script>
+    document.getElementById("submit-button").addEventListener("click", function() {
+      document.querySelector("#sub-text").innerHTML = "";
+      document.querySelector(".loading").style.display = "block";
+    });
+  </script>
+
+{% endblock %}

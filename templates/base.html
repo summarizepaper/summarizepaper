@@ -1,0 +1,334 @@
+{% load static %}
+{% load i18n %}
+{% load rosetta %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <title>
+    {% block title %}
+    {% trans "SummarizePaper.com - AI Powered Summaries of arXiv.org Papers" %}
+    {% endblock %}
+  </title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+          integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
+
+  {% block extra_head_tags %}
+    <meta name="description" content="{% trans 'SummarizePaper.com uses artificial intelligence to generate summaries of scientific papers from arXiv.org. Get quick insights into complex research topics with our AI-powered summaries. Try it out today!' %}" />
+
+  {% endblock %}
+
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <style>
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 60px;
+      padding: 0 20px;
+      background-color: #333;
+      color: #fff;
+      box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      text-decoration: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo span:nth-of-type(1) {
+      color: white; /* Blue */
+    }
+
+    .logo span:nth-of-type(2) {
+      color: #34a853; /* Green */
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-links li {
+      margin: 0 20px;
+    }
+
+    .nav-links a {
+      font-size: 18px;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .nav-links a:hover {
+      color: #ddd;
+    }
+
+
+
+    .nav-toggle {
+      display: none;
+    }
+
+    @media screen and (max-width: 900px) {
+      .nav-links {
+        display: none;
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-links li {
+          margin: 20px 0;
+        }
+
+      .nav-links {
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: absolute;
+        top: 40px;
+        right: 0px;
+        background-color: #24292e;
+        width: 20%;
+        height: 100%;
+        margin-top: 20px;
+        transition: all 0.5s ease-in-out;
+      }
+
+      .nav-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        cursor: pointer;
+      }
+    }
+
+    footer {
+      background-color: #333;
+      color: #fff;
+      padding: 1em;
+      text-align: center;
+    }
+
+    footer a {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    footer nav {
+      display: inline-block;
+      margin-top: 1em;
+    }
+
+    footer ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    footer li {
+      margin: 10px 1em;
+    }
+
+    @media (max-width: 600px) {
+      footer nav {
+        display: block;
+        margin-top: 1em;
+      }
+      footer ul {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+
+      body{
+        font-family: Arial, sans-serif;
+        margin:0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .main-content {
+        flex: 1;
+      }
+      .dropdown {
+        position: relative;
+        display: inline-block;
+        margin-right:20px;
+      }
+
+      .dropdown-item {
+        margin-top:20px;
+      }
+
+      .dropdown-menu {
+        display: none;
+        position: absolute;
+        z-index: 1;
+        padding: 16px 0px;
+        min-width: 7rem;
+        text-align: center;
+      }
+
+      .dropdown-menu a {
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+        padding: 0;
+      }
+      .dropdown:hover .dropdown-menu {
+        background-color: #333;
+      }
+
+      .dropdown:hover .dropdown-content {
+        display: block;
+        background-color: black;
+        padding-top: 20px;
+      }
+
+      .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        margin: 10px 0;
+      }
+      .dropdown-arrow {
+          margin-left: 0.25rem;
+          font-size: 0.75rem;
+      }
+
+</style>
+  {% block extrahead %}{% endblock %}
+
+</head>
+
+<body>
+  <div class="main-content">
+  <nav class="navbar">
+    <a href="/{{LANGUAGE_CODE}}" class="logo"><span>Summarize</span><span>Paper</span>.com</a>
+    <div class="nav-toggle">
+      <i class="fas fa-bars"></i>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/{{LANGUAGE_CODE}}">{% trans 'Home' %}</a></li>
+      <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
+      <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
+      <li><a href="/{{LANGUAGE_CODE}}/contact">{% trans 'Contact' %}</a></li>
+      {% if request.user.is_authenticated %}
+      <li style="height: 15px; display: flex; align-items: center;">
+        <div style="display: flex; flex-direction: column; align-items: center;height: 100%;">
+          <a href="/{{LANGUAGE_CODE}}/logout" style="color:#34a853">{% trans 'Logout' %}</a>
+          <span style="margin-left: 5px;"><small>({{ request.user.username }})</small></span>
+        </div>
+      </li>
+      {% else %}
+          <li><a href="/{{LANGUAGE_CODE}}/login" style="color:#34a853">{% trans 'Login' %}</a></li>
+      {% endif %}
+      <li>
+
+        <div class="dropdown">
+  <a class="dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <small>{% trans 'Language' %}<span class="dropdown-arrow">&#9660;</span></small>
+  </a>
+  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+    {% get_current_language as LANGUAGE_CODE %}
+    {% get_available_languages as LANGUAGES %}
+    {% get_language_info_list for LANGUAGES as languages %}
+    {% for lang in languages %}
+      {% if '/fr/' in request.get_full_path or '/en/' in request.get_full_path %}
+        <a class="dropdown-item" href="/{{ lang.code }}/{{request.get_full_path|slice:'4:'}}">{{ lang.name_local|title }}</a>
+      {% else %}
+        <a class="dropdown-item" href="/{{ lang.code }}/{{request.get_full_path|slice:'1:'}}">{{ lang.name_local|title }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+    </li>
+    </ul>
+  </nav>
+
+
+  {% block content %}
+
+
+
+  {% endblock %}
+
+  </div>
+  <footer>
+    <div class="container">
+      <p>Copyright © 2023 Summarize<span style="color:#34a853">Paper</span></p>
+      <nav>
+        <ul>
+          <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
+          <li><a href="/{{LANGUAGE_CODE}}/contact">{% trans 'Contact' %}</a></li>
+          <li><a href="/{{LANGUAGE_CODE}}/privacy">{% trans 'Privacy Policy' %}</a></li>
+          <li><a href="/{{LANGUAGE_CODE}}/legal-notice">{% trans 'Legal Notice' %}</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+
+
+{% block downbody %}
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+{% endblock %}
+
+<script>
+  const navToggle = document.querySelector('.nav-toggle');
+  const navLinks = document.querySelector('.nav-links');
+  let menuOpen = false;
+
+  navToggle.addEventListener('click', () => {
+  if (menuOpen === false) {
+    navToggle.innerHTML = '<i class="fas fa-times"></i>';
+    menuOpen = true;
+  } else {
+    navToggle.innerHTML = '<i class="fas fa-bars"></i>';
+    menuOpen = false;
+  }
+  navLinks.classList.toggle('active');
+  });
+</script>
+
+<script>
+  var dropdown = document.querySelector('.dropdown');
+
+  var dropdownContent = document.querySelector('.dropdown-menu');
+
+  dropdown.addEventListener('mouseover', function() {
+    dropdownContent.style.display = 'block';
+  });
+
+  dropdown.addEventListener('mouseout', function() {
+    dropdownContent.style.display = 'none';
+  });
+</script>
+
+</body>
+
+</html>

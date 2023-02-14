@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %} About the CarbonFreeConf team that organizes seminars and conferences {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="Meet the team that allowed virtual conferences to be carbon-neutral." />
+  <!--add text-->
+<style>
+  .containera{
+    padding: 20px;
+  }
+</style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+
+<div class="containera">
+<h1>{% trans 'About Us' %}</h1>
+<p>{% trans 'Welcome to our website, where we use cutting-edge AI technology to summarize the latest research papers from arXiv. Our goal is to make it easy for you to stay up-to-date on the latest developments in your field of interest, without having to spend hours reading through lengthy research papers. It can also be useful if you are not a researcher but want to understand the content of published articles in a certain field. Everyone has the ability to verify information, thereby reducing the spread of misinformation.' %}</p>
+
+<h2>{% trans 'How We Do It' %}</h2>
+<p>{% trans 'Our AI algorithms analyze each paper and extract the key findings and conclusions, presenting them to you in a concise and easily digestible format. By automating this process, we are able to provide you with summaries of multiple papers in a fraction of the time it would take you to read them all in their entirety. ' %}</p>
+
+<h2>{% trans 'Our Team' %}</h2>
+<p>{% trans 'We are a team of researchers with a passion to make complex information more accessible. Our goal is to allow everyone to benefit from all research findings and thereby avoid fake news.' %}</p>
+
+<h2>{% trans 'Our Promise' %}</h2>
+<p>{% trans 'At our website, we are committed to providing you with the highest quality summaries of the latest research. We do our best to make sure that our AI algorithms accurately reflect the key findings and conclusions of each paper, so that you can stay informed and ahead of the curve in your field of interest. ' %}</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+
+{% endblock %}
