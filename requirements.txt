@@ -89,6 +89,7 @@ pyasn1-modules==0.2.8
 pycountry==19.8.18
 pycparser==2.20
 pycryptodome==3.17
+pycurl
 pyerfa==2.0.0.1
 pygeoip==0.3.2
 PyJWT==1.7.1
