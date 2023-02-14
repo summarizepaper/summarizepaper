@@ -2,10 +2,9 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %} About the CarbonFreeConf team that organizes seminars and conferences {% endblock %}
+{% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="Meet the team that allowed virtual conferences to be carbon-neutral." />
-  <link rel="canonical" href="https://www.carbonfreeconf.com/about/" />
+  <meta name="description" content="{% trans 'Find answers to commonly asked questions about our AI-powered arXiv paper summarization service. Learn how our technology works, what types of papers we summarize, and how to get started with our service.' %}" />
   <!--add text-->
   <style>
     .container {

@@ -2,9 +2,9 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %} Summarize the arxiv articles {% endblock %}
+{% block title %} {% trans 'AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper Summaries' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="Papers in journals are too complicated? Summarize them in a few sentence with AI." />
+  <meta name="description" content="{% trans 'Our AI-powered arXiv paper summarization service provides fast, accurate, and easy-to-read summaries of scientific papers. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
   <style>
       body {
         background-color: #f2f2f2;
