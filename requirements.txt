@@ -4,3 +4,5 @@ Django==4.1.6
 pdfminer==20191125
 requests==2.23.0
 six==1.10.0
+daphne
+rosetta
