@@ -8,3 +8,4 @@ daphne
 rosetta
 scipy
 nltk
+pandas
