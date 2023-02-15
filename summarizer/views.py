@@ -331,6 +331,7 @@ def arxividpage(request, arxiv_id, error_message=None):
 
             url = paper.license
             cc_format=''
+            license = ''
             if url != '' and url != None:
                 parts = url.split('/')
                 print('parts',parts)
@@ -342,7 +343,7 @@ def arxividpage(request, arxiv_id, error_message=None):
                     cc_format = license.upper() + ' ' + version
 
             public=False
-            print('lo',license.upper())
+            #print('lo',license.upper())
             if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
                 public=True
                 print('pub')
