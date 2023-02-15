@@ -10,3 +10,4 @@ scipy
 nltk
 pandas
 gunicorn
+channels_redis
