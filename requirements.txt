@@ -12,3 +12,4 @@ pandas
 gunicorn
 channels_redis
 pymemcache
+whitenoise
