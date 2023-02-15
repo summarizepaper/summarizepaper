@@ -6,3 +6,4 @@ requests==2.23.0
 six==1.10.0
 daphne
 rosetta
+scipy
