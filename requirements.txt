@@ -9,3 +9,4 @@ rosetta
 scipy
 nltk
 pandas
+gunicorn
