@@ -7,3 +7,4 @@ six==1.10.0
 daphne
 rosetta
 scipy
+nltk
