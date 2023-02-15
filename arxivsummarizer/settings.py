@@ -38,6 +38,12 @@ DEBUG = True
 ALLOWED_HOSTS = ['summarizepaper.herokuapp.com','127.0.0.1']
 
 
+BROKER_URL = os.environ.get("REDISCLOUD_URL", "django://")
+BROKER_POOL_LIMIT = None
+BROKER_CONNECTION_MAX_RETRIES = None
+BROKER_TRANSPORT_OPTIONS = {
+    "max_connections": 2,
+}
 # Application definition
 
 INSTALLED_APPS = [
