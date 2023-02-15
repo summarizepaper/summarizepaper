@@ -16,3 +16,4 @@ whitenoise
 redis
 django-redis-cache
 django_heroku
+django-bmemcached
