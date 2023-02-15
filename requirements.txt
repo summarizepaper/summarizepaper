@@ -13,3 +13,5 @@ gunicorn
 channels_redis
 pymemcache
 whitenoise
+redis
+django-redis-cache
