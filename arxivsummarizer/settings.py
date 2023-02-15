@@ -208,6 +208,9 @@ CACHES = {
     }
 }'''
 
+#if not 'ON_HEROKU' in os.environ:
+
+
 def get_cache():
   import os
   try:

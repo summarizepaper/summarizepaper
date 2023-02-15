@@ -549,7 +549,7 @@
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
 
   const socketl = new WebSocket(
-      'wss://'
+      'ws://'
       + window.location.host
       + '/ws/arxivid/'
       + arxivRoomName
