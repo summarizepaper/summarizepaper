@@ -312,11 +312,13 @@ def arxividpage(request, arxiv_id, error_message=None):
         print('in here')
         if 'run_button' in request.POST:
             print('ok run')
-            paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
+            if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+                print('deja')
+                paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+            #paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
             #client_ip = request.META['REMOTE_ADDR']
             #print('clientip',client_ip)
             # Check if this IP address has already voted on this post
-            if paper:
                 previous_votes = Vote.objects.filter(paper=paper)
 
                 if previous_votes.exists():
