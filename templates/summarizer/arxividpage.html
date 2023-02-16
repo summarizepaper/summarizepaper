@@ -379,7 +379,7 @@
 </div>
 
   {% if not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog or toolong or paper.total_votes < -9 or user.is_staff %}
-  <div class="center" style="margin:40px;">
+  <div class="center" style="margin:10px;">
     {% if toolong %}
     <p>{% trans 'The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.' %}</p>
     {% elif paper.total_votes < -9 %}
@@ -576,14 +576,14 @@
       if(data.message.progress !=0){
         document.getElementById("progress-text").innerHTML = data.message.progress + "%";
       }
-      console.log(data.message.progress);
+      //console.log(data.message.progress);
       if(data.message.progress == 100){
         document.getElementById("progress-bar").style.display = "none";
         document.getElementById("progtextupdate").style.animation = "none";
       }
     }
     if(data.type=='progress_text_update'){
-      console.log('progresstextupdate');
+      //console.log('progresstextupdate');
 
       document.getElementById("progtextupdate").innerHTML = data.message.loading_message;
       document.getElementById("progress").style.width = data.message.progress + "%";
@@ -614,7 +614,7 @@
     if(data.type=='progress_notes_update'){
       //alert(data.message);
       document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (2/4):' %} "+arxivRoomName;
-      console.log(data.message);
+      //console.log(data.message);
       if (Array.isArray(data.message)) {
         const bulletPoints = data.message.map((item) => `<li>${item}</li>`).join('');
         document.getElementById("notes").innerHTML = `<ul style="list-style: none;">${bulletPoints}</ul>`;
@@ -642,7 +642,7 @@
       //document.querySelector("#longsum_.loading").style.display = "none";
     }
     if(data.type=='progress_arxiv_update'){
-      console.log('progressarxivupdate');
+      //console.log('progressarxivupdate');
       //alert(document.getElementsByClassName("title2")[0]);
       document.getElementsByClassName("title")[0].innerHTML = "<h2>"+data.message.title+"</h2>";
       var authorsContainer = document.getElementsByClassName("subtitle")[0];

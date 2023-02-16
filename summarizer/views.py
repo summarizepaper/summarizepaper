@@ -33,6 +33,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
 import os
+from django.utils.translation import get_language
 
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):
@@ -297,10 +298,17 @@ def arxividpage(request, arxiv_id, error_message=None):
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
 
+    lang = get_language()
+    print('lang',lang)
+    #if lang =='fr':
     if error_message:
         print('rrr',error_message)
         if error_message=="vote":
-            error_message="You have already voted"
+            if lang =='fr':
+                error_message="Vous avez déjà voté"
+            else:
+                error_message="You have already voted"
+
         else:
             error_message=""
 
