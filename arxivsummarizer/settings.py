@@ -38,7 +38,7 @@ EMAIL_HOST_PASSWORD = SECRETSG
 EMAIL_USE_TLS = True
 # SECURITY WARNING: don't run with debug turned on in production!
 if 'ON_HEROKU' in os.environ:
-    DEBUG = False
+    DEBUG = True#False
 else:
     DEBUG = True
 
