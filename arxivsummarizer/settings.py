@@ -37,7 +37,11 @@ EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = SECRETSG
 EMAIL_USE_TLS = True
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False#True
+if 'ON_HEROKU' in os.environ:
+    DEBUG = False
+else:
+    DEBUG = True
+
 
 ALLOWED_HOSTS = ['summarizepaper.herokuapp.com','127.0.0.1']
 
@@ -177,7 +181,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 ASGI_APPLICATION = 'arxivsummarizer.asgi.application'
 
-if ON_HEROKU == 1:
+if 'ON_HEROKU' in os.environ:
     CHANNEL_LAYERS = {
         "default": {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',

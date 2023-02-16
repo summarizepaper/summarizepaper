@@ -13,12 +13,12 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'arxivsummarizer.settings')
 
 django.setup()
 
-django_asgi_app = get_default_application()
+#django_asgi_app = get_default_application()
 
 # Initialize Django ASGI application early to ensure the AppRegistry
 # is populated before importing code that may import ORM models.
 #django_asgi_app = get_default_application()
-##django_asgi_app = get_asgi_application()
+django_asgi_app = get_asgi_application()
 import summarizer.routing
 
 '''
