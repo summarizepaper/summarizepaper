@@ -32,6 +32,7 @@ from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
+import os
 
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):
@@ -265,8 +266,13 @@ def escape_latex(abstract):
 
 def arxividpage(request, arxiv_id, error_message=None):
     arxiv_id = arxiv_id.strip()
+    if 'ON_HEROKU' in os.environ:
+        onhero=true
+    else:
+        onhero=False
 
-    stuff_for_frontend = {"arxiv_id": arxiv_id}
+
+    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero}
 
 
     pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')

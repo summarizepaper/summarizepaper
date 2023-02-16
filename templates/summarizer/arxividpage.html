@@ -548,6 +548,15 @@
   <script>
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
 
+{% if onhero %}
+  const socketl = new WebSocket(
+      'wss://'
+      + window.location.host
+      + '/ws/arxivid/'
+      + arxivRoomName
+      + '/'
+  );
+{% else %}
   const socketl = new WebSocket(
       'ws://'
       + window.location.host
@@ -555,6 +564,7 @@
       + arxivRoomName
       + '/'
   );
+{% endif %}
 
   socketl.onmessage = function(e) {
     const data = JSON.parse(e.data);
