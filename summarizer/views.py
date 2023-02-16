@@ -267,7 +267,7 @@ def escape_latex(abstract):
 def arxividpage(request, arxiv_id, error_message=None):
     arxiv_id = arxiv_id.strip()
     if 'ON_HEROKU' in os.environ:
-        onhero=true
+        onhero=True
     else:
         onhero=False
 
