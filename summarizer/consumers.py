@@ -94,13 +94,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         So only perpetual and CC BY-NC-ND should be done with metadata only
         '''
 
-        if license=='https://creativecommons.org/licenses/by/4.0/' or license=='https://creativecommons.org/licenses/by-sa/4.0/' or license=='https://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
+        print('lic',license)
+        if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
             public=1
         else:
             public=0
 
+        print('pubbbllllliiiiiiccccc',public)
         active=1
         if active==1:
+            print('active....')
             if public==1:
                 response = requests.get(url)
                 my_raw_data = response.content
@@ -128,6 +131,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 book_text=await c
                 print('book:',book_text)
             else:
+                print('else book text')
                 book_text='Title: '+title+'. Abstract: '+abstract+'.'
 
             message["progress"] = 25
