@@ -37,7 +37,7 @@ EMAIL_HOST_USER = 'apikey'
 EMAIL_HOST_PASSWORD = SECRETSG
 EMAIL_USE_TLS = True
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False#True
 
 ALLOWED_HOSTS = ['summarizepaper.herokuapp.com','127.0.0.1']
 
@@ -177,15 +177,24 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 ASGI_APPLICATION = 'arxivsummarizer.asgi.application'
 
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+if ON_HEROKU == 1:
+    CHANNEL_LAYERS = {
+        "default": {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [("redis", 6379)],
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("127.0.0.1", 6379)],
+            },
+        },
+    }
 
 #CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer',}}
 
