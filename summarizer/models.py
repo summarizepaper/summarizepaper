@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-import os
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'arxivsummarizer.settings')
 
 class CustomUser(User):
     pass

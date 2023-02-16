@@ -5,13 +5,14 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 #from django.core.asgi import get_asgi_application
 from django.core.asgi import get_asgi_application
-from summarizer.routing import websocket_urlpatterns
 from channels.routing import get_default_application
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'arxivsummarizer.settings')
 
 django.setup()
+
+from summarizer.routing import websocket_urlpatterns
 
 #django_asgi_app = get_default_application()
 
