@@ -187,7 +187,7 @@ if 'ON_HEROKU' in os.environ:
         "default": {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                "hosts": [("redis", 6379)],
+                "hosts": [(BROKER_URL, 6379)],
             },
         },
     }
