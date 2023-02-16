@@ -174,7 +174,7 @@ async def summarize_book(arxiv_id, book_text, api_key):
         for chunk2 in chunks2:
             print('jjjjjjjjjjjjjj:\n',jj)
 
-            prompt2 = f"Summarize the following text in 300 words: {chunk2}"
+            prompt2 = f"Summarize the following text from a research article in 300 words: {chunk2}"
             headers2 = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {api_key}"
@@ -203,7 +203,7 @@ async def summarize_book(arxiv_id, book_text, api_key):
 
         print("beeeefffffooooooorrreee2")
         message["progress"] = 50
-        message["loading_message"] = "Text partly summarized..."
+        message["loading_message"] = "Extracting key points..."
         c=asyncio.create_task(send_message_now(arxiv_group_name,message))
 
         #c=asyncio.create_task(channel_layer.group_send(arxiv_group_name, {"type": "progress_text_update", "message": message}))
@@ -230,8 +230,8 @@ async def summarize_book(arxiv_id, book_text, api_key):
 
 async def extract_key_points(arxiv_id, summary, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
-
-    prompt3 = f"Extract the most important notes from the following text: {summary}"
+    #Extract the most important key points from the following text
+    prompt3 = f"Extract the most important key points from the following text and use bullet points for each of them: {summary}"
     print('key sum',prompt3)
 
     headers3 = {
@@ -265,7 +265,7 @@ async def extract_key_points(arxiv_id, summary, api_key):
 async def extract_simple_summary(arxiv_id, keyp, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
-    prompt4 = f"Summarize the following notes in 3 sentences for a 10 yr old: {keyp}"
+    prompt4 = f"Summarize the following key points in 3 sentences for a 10 yr old: {keyp}"
     headers4 = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
@@ -297,7 +297,7 @@ async def extract_simple_summary(arxiv_id, keyp, api_key):
 async def extract_blog_article(arxiv_id, summary, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
-    prompt5 = f"Create a blog article in html about: {summary}"
+    prompt5 = f"Create a blog article in html about this research paper: {summary}"
     headers5 = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"

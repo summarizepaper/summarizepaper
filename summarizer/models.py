@@ -49,6 +49,7 @@ class Vote(models.Model):
     paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
     ip_address = models.GenericIPAddressField()
     created_at = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.paper.arxiv_id

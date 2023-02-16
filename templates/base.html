@@ -213,6 +213,16 @@
           margin-left: 0.25rem;
           font-size: 0.75rem;
       }
+      .logo-container {
+        display: flex;
+        align-items: center;
+      }
+
+      .logo-container img {
+        width: 50px;
+        height: 50px;
+        margin-right: 10px;
+      }
 
 </style>
   {% block extrahead %}{% endblock %}
@@ -222,7 +232,11 @@
 <body>
   <div class="main-content">
   <nav class="navbar">
-    <a href="/{{LANGUAGE_CODE}}" class="logo"><span>Summarize</span><span>Paper</span>.com</a>
+    <!--<a href="/{{LANGUAGE_CODE}}" class="logo"><span>Summarize</span><span>Paper</span>.com</a>-->
+    <div class="logo-container">
+      <img src="{% static 'summarizer/images/logo.png' %}" alt="Summarize Paper logo">
+      <a href="/{{LANGUAGE_CODE}}" class="logo"><span>Summarize</span><span>Paper</span>.com</a>
+    </div>
     <div class="nav-toggle">
       <i class="fas fa-bars"></i>
     </div>

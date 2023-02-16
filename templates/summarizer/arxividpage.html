@@ -314,39 +314,39 @@
     </div>
     {% if paper.published_arxiv %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-clock"></i> Submitted to arXiv on {{ paper.published_arxiv|date:"d M. Y" }}</div>
+      <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
   </div>
 
   <div class="message-box">
-    <h1 class="message-header">Results of the summarizing process for the arXiv paper: {{ arxiv_id }}</h1>
+    <h1 class="message-header">{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id }}</h1>
     {% if not public %}
-    <p class="message-header2"><small><span class="warning-sign">&#9888;</span>This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article.</small></p>
+    <p class="message-header2"><small><span class="warning-sign">&#9888;</span>{% trans "This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article." %}</small></p>
     {% endif %}
     <ul class="message-tabs">
-      <li class="active" onclick="switchTab(0)">Summary</li>
-      <li onclick="switchTab(1)">Notes</li>
-      <li onclick="switchTab(2)">10-yrs old Summary</li>
-      <li onclick="switchTab(3)">Blog article</li>
+      <li class="active" onclick="switchTab(0)">{% trans 'Comprehensive Summary' %}</li>
+      <li onclick="switchTab(1)">{% trans 'Key points' %}</li>
+      <li onclick="switchTab(2)">{% trans '10-yrs old Summary' %}</li>
+      <li onclick="switchTab(3)">{% trans 'Blog article' %}</li>
     </ul>
     <div class="message-content">
-      <div class="message-tab">{% if paper.summary %}{{ paper.summary }}{% else %}The summary is not ready yet{% endif %}</div>
+      <div class="message-tab">{% if paper.summary %}{{ paper.summary }}{% else %}{% trans 'The summary is not ready yet' %}{% endif %}</div>
       <div class="message-tab" style="display:none;">
         {% if paper.notes %}
-        <ul>
+        <ul style="list-style: none;">
         {% for note in notes %}
           <li>{{ note }}</li>
         {% endfor %}
         </ul>
-        {% else %}The notes are not ready yet{% endif %}
+        {% else %}The key points are not ready yet{% endif %}
       </div>
-      <div class="message-tab" style="display:none;">{% if paper.longer_summary %}{{ paper.longer_summary }}{% else %}The longer summary is not ready yet{% endif %}</div>
-      <div class="message-tab" style="display:none;">{% if paper.blog %}{{ paper.blog|safe }}{% else %}The blog article is not ready yet{% endif %}</div>
+      <div class="message-tab" style="display:none;">{% if paper.longer_summary %}{{ paper.longer_summary }}{% else %}{% trans 'The 10-yrs old summary is not ready yet' %}{% endif %}</div>
+      <div class="message-tab" style="display:none;">{% if paper.blog %}{{ paper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
     </div>
     {% if paper.updated %}
     <div class="info-block" style="margin-top:20px;">
-      <div class="info-text"><i class="fas fa-clock"></i> Created on {{ paper.updated|date:"d M. Y" }}</div>
+      <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Created on' %} {{ paper.updated|date:"d M. Y" }}</div>
     </div>
     {% endif %}
   </div>
@@ -357,14 +357,14 @@
       <i class="fa fa-thumbs-up" style="font-size: 36px;"></i>
     </a>
   </p>
-  <p id="totvote">Total number of votes: {{ paper.total_votes }}
+  <p id="totvote">{% trans 'Total number of votes:' %} {{ paper.total_votes }}
     <span id="popover-link">
       <i class="fas fa-question-circle"></i>
     </span>
   </p>
   <div id="popover">
-    <p><strong>Why do we need votes?</strong></p>
-    <p>Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.</p>
+    <p><strong>{% trans 'Why do we need votes?' %}</strong></p>
+    <p>{% trans 'Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.' %}</p>
   </div>
   <p>
     <a href="{% url 'vote' paper.arxiv_id 'down' %}">
@@ -381,40 +381,40 @@
   {% if not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog or toolong or paper.total_votes < -9 or user.is_staff %}
   <div class="center" style="margin:40px;">
     {% if toolong %}
-    <p>The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.</p>
+    <p>{% trans 'The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.' %}</p>
     {% elif paper.total_votes < -9 %}
-    <p>The summaries have many downvotes and can be re-run with our tools if necessary by clicking on the Run button below.</p>
+    <p>{% trans 'The summaries have many downvotes and can be re-run with our tools if necessary by clicking on the Run button below.' %}</p>
     {% elif not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog %}
-    <p>Some bits of the article are not summarized yet, you can re-run the summarizing process by clicking on the Run button below.</p>
+    <p>{% trans 'Some bits of the article are not summarized yet, you can re-run the summarizing process by clicking on the Run button below.' %}</p>
     {% elif user.is_staff %}
-    <p>Hi, because you are a staff member you can Run the AI tools!</p>
+    <p>{% trans 'Hi, because you are a staff member you can Run the AI tools!' %}</p>
     {% endif %}
     </div>
     <div class="center" style="margin-bottom:20px;">
   <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
     {% csrf_token %}
-    <input type="submit" value="Run" name="run_button">
+    <input type="submit" value="{% trans 'Run' %}" name="run_button">
   </form>
   {% endif %}
 
 {% else %}
 
 {% if exist == 0 %}
-<p>There is no existing article with the given arXiv ID: {{ arxiv_id }}. Try again your <a href="/">search</a> with a new arXiv ID.</p>
+<p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}.{% blocktrans %} Try again your <a href="/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
 <div class="main-content2">
-  <h1>Running summarizing tools on a new article</h1>
+  <h1>{% trans 'Running summarizing tools on a new article' %}</h1>
   {% if run or run2 %}
-  <p style="font-size:25px;"><strong>We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.</strong></p>
+  <p style="font-size:20px;"><strong>{% trans 'We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.' %}</strong></p>
   {% else %}
-  <p style="font-size:25px;"><strong>This is the first time this article is requested and our AI summarizing tools have never been run on it. We can run our tools now if you click on the button "Run" donw the page but first make sure that it is the right article.</strong></p>
+  <p style="font-size:20px;"><strong>{% trans 'This is the first time this article is requested and our AI summarizing tools have never been run on it. We can run our tools now if you click on the button "Run" donw the page but first make sure that it is the right article.' %}</strong></p>
   {% endif %}
   <hr>
 
   {% if run or run2 %}
     <div class="info-block">
-      <p> We are analysing the following arXiv article: {{ arxiv_id }}</p>
+      <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id }}</p>
     </div>
   {% else %}
     <div class="title"><h2>{{ details.title }}</h2></div>
@@ -447,19 +447,19 @@
     {% endif %}
     <div class="paper-details">
     {% if details.abstract %}
-      <p style="text-align: justify;"><strong>Abstract:</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ details.abstract }}</span></p>
+      <p style="text-align: justify;"><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ details.abstract }}</span></p>
     {% endif %}
     </div>
     {% if details.published_arxiv %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-clock"></i> Submitted to arXiv on {{ details.published_arxiv|date:"d M. Y" }}</div>
+      <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ details.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
 
     <div class="center">
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
-      <input type="submit" value="Run" name="run_button">
+      <input type="submit" value="{% trans 'Run' %}" name="run_button">
     </form>
     </div>
     {% endif %}
@@ -473,7 +473,7 @@
 
 <div class="main-content2">
 
-<div class="loading" style="text-align:center;margin-bottom:40px;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+<div class="loading" style="text-align:center;margin-bottom:40px;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
 
 <div id="progtextupdate" style="font-size:20px;color:red; text-align: center;animation: blink 2s linear infinite;"></div>
 
@@ -515,23 +515,23 @@
   <p class="message-header2"></p>
 
   <ul class="message-tabs">
-    <li class="active" onclick="switchTab(0)">Summary</li>
-    <li onclick="switchTab(1)">Notes</li>
-    <li onclick="switchTab(2)">10-yrs old Summary</li>
-    <li onclick="switchTab(3)">Blog article</li>
+    <li class="active" onclick="switchTab(0)">{% trans 'Comprehensive Summary' %}</li>
+    <li onclick="switchTab(1)">{% trans 'Key points' %}</li>
+    <li onclick="switchTab(2)">{% trans '10-yrs old Summary' %}</li>
+    <li onclick="switchTab(3)">{% trans 'Blog article' %}</li>
   </ul>
   <div class="message-content">
     <div id="sum" class="message-tab">
-      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
     <div id="notes" class="message-tab" style="display:none;">
-      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
     <div id="longsum" class="message-tab" style="display:none;">
-      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
     <div id="blog" class="message-tab" style="display:none;">
-      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="Loading..." style="display:inline-block;"></div>
+      <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
   </div>
 </div>
@@ -605,7 +605,7 @@
 
     if(data.type=='progress_sum_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (1/4): "+arxivRoomName;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (1/4):' %} "+arxivRoomName;
       document.getElementById("sum").innerHTML = data.message;
       MathJax.typeset();
 
@@ -613,15 +613,21 @@
     }
     if(data.type=='progress_notes_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (2/4): "+arxivRoomName;
-      document.getElementById("notes").innerHTML = data.message;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (2/4):' %} "+arxivRoomName;
+      console.log(data.message);
+      if (Array.isArray(data.message)) {
+        const bulletPoints = data.message.map((item) => `<li>${item}</li>`).join('');
+        document.getElementById("notes").innerHTML = `<ul style="list-style: none;">${bulletPoints}</ul>`;
+      } else {
+        document.getElementById("notes").innerHTML = data.message;
+      }
       MathJax.typeset();
 
       //document.querySelector("#notes_.loading").style.display = "none";
     }
     if(data.type=='progress_longsum_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (3/4): "+arxivRoomName;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (3/4):' %} "+arxivRoomName;
       document.getElementById("longsum").innerHTML = data.message;
       MathJax.typeset();
 
@@ -629,7 +635,7 @@
     }
     if(data.type=='progress_blog_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "Results of the summarizing process for the arXiv paper (4/4): "+arxivRoomName;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (4/4):' %} "+arxivRoomName;
       document.getElementById("blog").innerHTML = data.message;
       MathJax.typeset();
 
@@ -708,7 +714,7 @@
         }
 
         if (license.trim().toUpperCase() != "BY" && license.trim().toUpperCase() != "BY-SA" && license.trim().toUpperCase() != "BY-NC-SA" && license.trim().toUpperCase() != "ZERO") {
-            document.getElementsByClassName("message-header2")[0].innerHTML+="<small><span class='warning-sign'>&#9888;</span>This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article.</small>";
+            document.getElementsByClassName("message-header2")[0].innerHTML+="<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the summarizing process is here made with the paper metadata rather than the article.' %}</small>";
         }
 
 
@@ -723,7 +729,7 @@
       var absContainer = document.getElementsByClassName("paper-details")[0];
       if (data.message.abstract){
         //alert(data.message.journal_ref)
-        var absHTML = '<p style="text-align: justify;"><strong>Abstract:</strong> <span class="math style="width: 1.796em; display: inline-block;">';
+        var absHTML = '<p style="text-align: justify;"><strong>{% trans "Abstract:" %}</strong> <span class="math style="width: 1.796em; display: inline-block;">';
         absHTML += data.message.abstract;
         absHTML += '</span></p>';
         absContainer.innerHTML = absHTML;
@@ -734,7 +740,7 @@
       if (data.message.published_arxiv){
         //alert(data.message.journal_ref)
         var publHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-clock"></i> ';
-        publHTML += 'Submitted to arXiv on '+data.message.published_arxiv;
+        publHTML += '{% trans "Submitted to arXiv on" %} '+data.message.published_arxiv;
         publHTML += '</div></div>';
         publContainer.innerHTML = publHTML;
       }

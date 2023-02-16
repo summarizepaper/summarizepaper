@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-14 15:39+0000\n"
+"POT-Creation-Date: 2023-02-16 16:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,12 +18,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: arxivsummarizer/settings.py:135
+#: arxivsummarizer/settings.py:151
 msgid "French"
 msgstr ""
 
-#: arxivsummarizer/settings.py:136
+#: arxivsummarizer/settings.py:152
 msgid "English"
+msgstr ""
+
+#: templates/account_activation_invalid.html:5
+msgid ""
+"Invalid Account Activation Link - AI-Powered arXiv Paper Summarization "
+"Service"
+msgstr ""
+
+#: templates/account_activation_invalid.html:7
+msgid ""
+"The account activation link you tried to use is invalid or has expired. "
+"Please request a new activation link or contact our support team for "
+"assistance. Sign up today to start getting fast, accurate, and easy-to-read "
+"paper summaries. Our secure service ensures that your data is protected and "
+"your account is safe."
+msgstr ""
+
+#: templates/account_activation_sent.html:5
+msgid "Activate Your Account - AI-Powered arXiv Paper Summarization Service"
+msgstr ""
+
+#: templates/account_activation_sent.html:7
+msgid ""
+"Activate your account for our AI-powered arXiv paper summarization service "
+"and start getting fast, accurate, and easy-to-read paper summaries. Our "
+"account activation process is quick and easy, and our cutting-edge "
+"technology will keep you up-to-date with the latest research."
 msgstr ""
 
 #: templates/base.html:12
@@ -65,12 +92,97 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: templates/base.html:282
+#: templates/base.html:282 templates/summarizer/privacy.html:30
 msgid "Privacy Policy"
 msgstr ""
 
 #: templates/base.html:283
 msgid "Legal Notice"
+msgstr ""
+
+#: templates/password_reset_complete.html:5
+msgid ""
+"Password Reset Complete - Secure Access to AI-Powered arXiv Paper Summaries"
+msgstr ""
+
+#: templates/password_reset_complete.html:7
+msgid ""
+"Your password has been successfully reset! Log in securely to our AI-powered "
+"arXiv paper summarization service to access your account and view your past "
+"summaries. Our secure system ensures that your data is protected and your "
+"account is safe. Get fast, accurate, and easy-to-read paper summaries."
+msgstr ""
+
+#: templates/password_reset_confirm.html:5
+msgid ""
+"Confirm Password Reset - Securely Access AI-Powered arXiv Paper Summaries"
+msgstr ""
+
+#: templates/password_reset_confirm.html:7
+msgid ""
+"Confirm your password reset for our AI-powered arXiv paper summarization "
+"service with our secure confirmation form. Follow the instructions and get "
+"back into your account to access your paper summaries. Get fast, accurate, "
+"and easy-to-read paper summaries."
+msgstr ""
+
+#: templates/password_reset_done.html:5
+msgid ""
+"Password Reset Successful - Secure Access to AI-Powered arXiv Paper Summaries"
+msgstr ""
+
+#: templates/password_reset_done.html:7
+msgid ""
+"Your password reset was successful! Log in securely to our AI-powered arXiv "
+"paper summarization service to access your account and view your past "
+"summaries. Our secure system ensures that your data is protected and your "
+"account is safe. Get fast, accurate, and easy-to-read paper summaries."
+msgstr ""
+
+#: templates/password_reset_form.html:5
+msgid "Reset Your Password - Securely Access AI-Powered arXiv Paper Summaries"
+msgstr ""
+
+#: templates/password_reset_form.html:7
+msgid ""
+"Reset your password for our AI-powered arXiv paper summarization service "
+"with our secure password reset form. Enter your email address and follow the "
+"steps to get back into your account and access your paper summaries. Get "
+"fast, accurate, and easy-to-read paper summaries."
+msgstr ""
+
+#: templates/register.html:5
+msgid "Register - Get Fast and Accurate AI-Powered arXiv Paper Summaries"
+msgstr ""
+
+#: templates/register.html:7
+msgid ""
+"Register for our AI-powered arXiv paper summarization service and get fast, "
+"accurate, and easy-to-read paper summaries. Our quick and easy registration "
+"process will keep you up-to-date with the latest research. Sign up today!"
+msgstr ""
+
+#: templates/registration/login.html:5
+msgid "Login - Secure Access to AI-Powered arXiv Paper Summaries"
+msgstr ""
+
+#: templates/registration/login.html:7
+msgid ""
+"Log in securely to our AI-powered arXiv paper summarization service to "
+"access your account and view past summaries. Our login system ensures that "
+"your data is protected and your account is safe. Discover the convenience of "
+"easy-to-read paper summaries."
+msgstr ""
+
+#: templates/summarizer/about.html:5
+msgid "About Our AI-Powered arXiv Paper Summarization Service"
+msgstr ""
+
+#: templates/summarizer/about.html:7
+msgid ""
+"Learn more about our innovative AI-powered arXiv paper summarization "
+"service. Find out how our team of experts leverages cutting-edge "
+"technologies to deliver fast, accurate, and easy-to-read paper summaries."
 msgstr ""
 
 #: templates/summarizer/about.html:21
@@ -125,7 +237,193 @@ msgid ""
 "interest. "
 msgstr ""
 
-#: templates/summarizer/contact.html:70
+#: templates/summarizer/arxividpage.html:6
+msgid ""
+"AI-Powered arXiv Paper Summarization - Get a Fast and Accurate Summary of "
+"Your Paper"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:8
+msgid ""
+"Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "
+"AI-powered summarization service. Our cutting-edge technology uses machine "
+"learning and natural language processing to deliver a high-quality summary "
+"in just a few seconds. Try it out today!"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:317
+#: templates/summarizer/arxividpage.html:455
+#: templates/summarizer/arxividpage.html:743
+msgid "Submitted to arXiv on"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:323
+msgid "Results of the summarizing process for the arXiv paper:"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:325
+msgid ""
+"This paper's license doesn't allow us to build upon its content and the "
+"summarizing process is here made with the paper's metadata rather than the "
+"article."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:328
+#: templates/summarizer/arxividpage.html:518
+msgid "Comprehensive Summary"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:329
+#: templates/summarizer/arxividpage.html:519
+msgid "Key points"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:330
+#: templates/summarizer/arxividpage.html:520
+msgid "10-yrs old Summary"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:331
+#: templates/summarizer/arxividpage.html:521
+msgid "Blog article"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:334
+msgid "The summary is not ready yet"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:344
+msgid "The 10-yrs old summary is not ready yet"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:345
+msgid "The blog article is not ready yet"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:349
+msgid "Created on"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:360
+msgid "Total number of votes:"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:366
+msgid "Why do we need votes?"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:367
+msgid ""
+"Votes are used to determine whether we need to re-run our summarizing tools. "
+"If the count reaches -10, our tools can be restarted."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:384
+msgid ""
+"The previous summary was created more than a year ago and can be re-run (if "
+"necessary) by clicking on the Run button below."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:386
+msgid ""
+"The summaries have many downvotes and can be re-run with our tools if "
+"necessary by clicking on the Run button below."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:388
+msgid ""
+"Some bits of the article are not summarized yet, you can re-run the "
+"summarizing process by clicking on the Run button below."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:390
+msgid "Hi, because you are a staff member you can Run the AI tools!"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:396
+#: templates/summarizer/arxividpage.html:462
+msgid "Run"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:403
+msgid "There is no existing article with the given arXiv ID:"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:403
+msgid " Try again your <a href=\"/\">search</a> with a new arXiv ID."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:407
+msgid "Running summarizing tools on a new article"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:409
+msgid ""
+"We are now running our AI tools on the requested article. This process may "
+"take a few minutes so please bear with us."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:411
+msgid ""
+"This is the first time this article is requested and our AI summarizing "
+"tools have never been run on it. We can run our tools now if you click on "
+"the button \"Run\" donw the page but first make sure that it is the right "
+"article."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:417
+msgid "We are analysing the following arXiv article:"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:450
+#: templates/summarizer/arxividpage.html:732
+msgid "Abstract:"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:476
+#: templates/summarizer/arxividpage.html:525
+#: templates/summarizer/arxividpage.html:528
+#: templates/summarizer/arxividpage.html:531
+#: templates/summarizer/arxividpage.html:534 templates/summarizer/home.html:101
+msgid "Loading..."
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:608
+msgid "Results of the summarizing process for the arXiv paper (1/4):"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:616
+msgid "Results of the summarizing process for the arXiv paper (2/4):"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:630
+msgid "Results of the summarizing process for the arXiv paper (3/4):"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:638
+msgid "Results of the summarizing process for the arXiv paper (4/4):"
+msgstr ""
+
+#: templates/summarizer/arxividpage.html:717
+msgid ""
+"The license of the paper does not allow us to build upon its content and the "
+"summarizing process is here made with the paper metadata rather than the "
+"article."
+msgstr ""
+
+#: templates/summarizer/contact.html:6
+msgid ""
+"Contact Us - Get in Touch with Our AI-Powered arXiv Paper Summarization "
+"Service"
+msgstr ""
+
+#: templates/summarizer/contact.html:8
+msgid ""
+"Have questions or feedback about our AI-powered arXiv paper summarization "
+"service? Contact us today to get in touch with our team and learn more."
+msgstr ""
+
+#: templates/summarizer/contact.html:70 templates/summarizer/privacy.html:63
 msgid "Contact Us"
 msgstr ""
 
@@ -156,6 +454,119 @@ msgstr ""
 msgid "The email could not be sent. If it happens again, please contact us."
 msgstr ""
 
+#: templates/summarizer/faq.html:5
+msgid ""
+"Frequently Asked Questions - Our AI-Powered arXiv Paper Summarization Service"
+msgstr ""
+
+#: templates/summarizer/faq.html:7
+msgid ""
+"Find answers to commonly asked questions about our AI-powered arXiv paper "
+"summarization service. Learn how our technology works, what types of papers "
+"we summarize, and how to get started with our service."
+msgstr ""
+
+#: templates/summarizer/faq.html:51
+msgid "Frequently Asked Questions"
+msgstr ""
+
+#: templates/summarizer/faq.html:53
+msgid "What is this website about?"
+msgstr ""
+
+#: templates/summarizer/faq.html:55
+msgid ""
+"This website is a platform that summarizes scientific papers from arXiv "
+"using AI."
+msgstr ""
+
+#: templates/summarizer/faq.html:59
+msgid "How does the AI summarization work?"
+msgstr ""
+
+#: templates/summarizer/faq.html:61
+msgid ""
+"The AI uses advanced machine learning algorithms to analyze and extract the "
+"most important information from the papers, and present it in a condensed "
+"and understandable format."
+msgstr ""
+
+#: templates/summarizer/faq.html:65
+msgid "Who is behind this website?"
+msgstr ""
+
+#: templates/summarizer/faq.html:67
+msgid ""
+"This website is developed and maintained by a team of researchers who want "
+"to allow everyone to access research results."
+msgstr ""
+
+#: templates/summarizer/faq.html:71
+msgid "How can I suggest a paper for summarization?"
+msgstr ""
+
+#: templates/summarizer/faq.html:73
+msgid ""
+"You can just type in the arXiv ID of the paper you want to summarize on the "
+"homepage and it will show you a summary and more. Note that if it is the "
+"first time this specific article is being looked for, then it will have to "
+"run our AI code to summarize it, which may take a few minutes."
+msgstr ""
+
+#: templates/summarizer/faq.html:77
+msgid "Is this website free to use?"
+msgstr ""
+
+#: templates/summarizer/faq.html:79
+msgid ""
+"Yes, this website is completely free to use. There are no hidden fees or "
+"charges."
+msgstr ""
+
+#: templates/summarizer/faq.html:83
+msgid "What is the process of summarizing a paper?"
+msgstr ""
+
+#: templates/summarizer/faq.html:85
+msgid ""
+"The process of summarizing a paper involves several steps, including text "
+"pre-processing, feature extraction, and summarization. The AI uses a "
+"combination of natural language processing and machine learning techniques "
+"to analyze the paper and generate a concise summary."
+msgstr ""
+
+#: templates/summarizer/faq.html:89
+msgid "Is the code open-source?"
+msgstr ""
+
+#: templates/summarizer/faq.html:91
+msgid "Yes, the code is open source and freely accessible."
+msgstr ""
+
+#: templates/summarizer/faq.html:95
+msgid "Is there a limit to the number of papers I can summarize?"
+msgstr ""
+
+#: templates/summarizer/faq.html:97
+msgid ""
+"There is no limit to the number of papers you can summarize. You can use the "
+"platform as much as you need to stay updated on the latest research "
+"developments."
+msgstr ""
+
+#: templates/summarizer/home.html:5
+msgid ""
+"AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
+"Summaries"
+msgstr ""
+
+#: templates/summarizer/home.html:7
+msgid ""
+"Our AI-powered arXiv paper summarization service provides fast, accurate, "
+"and easy-to-read summaries of scientific papers. Save time and stay up-to-"
+"date with the latest research with our cutting-edge technology."
+msgstr ""
+
 #: templates/summarizer/home.html:93
 msgid "Your account is now activated and you are logged in."
 msgstr ""
@@ -176,10 +587,6 @@ msgstr ""
 msgid "Submit"
 msgstr ""
 
-#: templates/summarizer/home.html:101
-msgid "Loading..."
-msgstr ""
-
 #: templates/summarizer/home.html:107
 msgid ""
 "Welcome to Summarize<span style=\"color:#34a853\">Paper</span>.com, where "
@@ -189,4 +596,129 @@ msgid ""
 "latest developments in your field. Whether you're a researcher, a student, a "
 "journalist, or simply someone who wants to stay informed, Summarize<span "
 "style=\"color:#34a853\">Paper</span>.com is here to make your life easier."
+msgstr ""
+
+#: templates/summarizer/legal-notice.html:5
+msgid "Legal Notice - AI-Powered arXiv Paper Summarization Service"
+msgstr ""
+
+#: templates/summarizer/legal-notice.html:7
+msgid ""
+"Learn more about our legal notice for our AI-powered arXiv paper "
+"summarization service."
+msgstr ""
+
+#: templates/summarizer/privacy.html:5
+msgid "Our Privacy Policy - AI-Powered arXiv Paper Summarization Service"
+msgstr ""
+
+#: templates/summarizer/privacy.html:7
+msgid ""
+"We take your privacy seriously. Learn more about our privacy policy for our "
+"AI-powered arXiv paper summarization service. Discover how we protect your "
+"data, what information we collect, and how we use it to improve our service."
+msgstr ""
+
+#: templates/summarizer/privacy.html:32
+msgid ""
+"Our website is committed to protecting the privacy of its users. This "
+"Privacy Policy outlines the types of information we collect, how we use it, "
+"and how we protect it. We are dedicated to following industry best practices "
+"and respecting the General Data Protection Regulation (GDPR) and other "
+"relevant privacy laws."
+msgstr ""
+
+#: templates/summarizer/privacy.html:34
+msgid "Information Collection and Use"
+msgstr ""
+
+#: templates/summarizer/privacy.html:36
+msgid ""
+"We do not collect information from our users when they use our website. The "
+"only time we do keep personal information is when users contact us via our "
+"contact form so that we can then reply to them. In this case, we keep the "
+"name, email address and message."
+msgstr ""
+
+#: templates/summarizer/privacy.html:39
+msgid ""
+"We do not sell or share any personal information with third-party companies. "
+"All user data is kept confidential and is only used in accordance with this "
+"Privacy Policy."
+msgstr ""
+
+#: templates/summarizer/privacy.html:41
+msgid "Cookies"
+msgstr ""
+
+#: templates/summarizer/privacy.html:43
+msgid ""
+"Our website uses cookies to store information about user preferences and to "
+"keep track of user activity on our site. This information is used to provide "
+"a more personalized user experience and to improve the functionality of our "
+"website."
+msgstr ""
+
+#: templates/summarizer/privacy.html:46
+msgid ""
+"Users have the option to disable cookies in their web browser, but this may "
+"affect the functionality of our website."
+msgstr ""
+
+#: templates/summarizer/privacy.html:48
+msgid "Data Security"
+msgstr ""
+
+#: templates/summarizer/privacy.html:50
+#, python-format
+msgid ""
+"We take appropriate measures to protect the security of our users' personal "
+"information. However, no data transmission over the internet can be "
+"guaranteed to be 100%% secure. As a result, we cannot guarantee the security "
+"of any information transmitted to our website."
+msgstr ""
+
+#: templates/summarizer/privacy.html:53
+msgid ""
+"In the unlikely event of a data breach, we will promptly notify affected "
+"users and take appropriate measures to secure their information."
+msgstr ""
+
+#: templates/summarizer/privacy.html:55
+msgid "Open Source"
+msgstr ""
+
+#: templates/summarizer/privacy.html:57
+msgid ""
+"Our website is built as an open source software, which allows for greater "
+"transparency and security. The codebase is available for public inspection "
+"and contributions are welcomed from the open source community."
+msgstr ""
+
+#: templates/summarizer/privacy.html:59
+msgid "Changes to this Privacy Policy"
+msgstr ""
+
+#: templates/summarizer/privacy.html:61
+msgid ""
+"We reserve the right to make changes to this Privacy Policy at any time. If "
+"changes are made, we will notify users by updating the \"Effective Date\" at "
+"the top of this page. We encourage users to periodically review this Privacy "
+"Policy to stay informed about how we are protecting their information."
+msgstr ""
+
+#: templates/summarizer/privacy.html:65
+msgid ""
+"If you have any questions or concerns about this Privacy Policy, please "
+"contact us using the"
+msgstr ""
+
+#: templates/summarizer/privacy.html:65
+msgid "dedicated page"
+msgstr ""
+
+#: templates/summarizer/privacy.html:65
+msgid ""
+"We are always happy to hear from our users and will make every effort to "
+"address any issues."
 msgstr ""

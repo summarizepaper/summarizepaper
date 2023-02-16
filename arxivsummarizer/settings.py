@@ -185,6 +185,13 @@ ASGI_APPLICATION = 'arxivsummarizer.asgi.application'
 #redishost='redis://default:jRzA5ZwUH8J0bgA30uRqIiI1jITwJdbQ@redis-17137.c81.us-east-1-2.ec2.cloud.redislabs.com:17137'
 #print('BROKER_URL',BROKER_URL)
 
+# Number of messages to display per page.
+ROSETTA_MESSAGES_PER_PAGE = 20
+# Enable Google translation suggestions
+ROSETTA_ENABLE_TRANSLATION_SUGGESTIONS = True
+
+YANDEX_TRANSLATE_KEY = os.getenv('YANDEX_TRANSLATE_KEY')
+
 if 'ON_HEROKU' in os.environ:
     CHANNEL_LAYERS = {
         "default": {

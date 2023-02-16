@@ -123,7 +123,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
 
-                c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
+                #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
+                c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
                 book_text=await c
                 print('book:',book_text)
             else:
@@ -154,7 +155,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             await c
 
             message["progress"] = 60
-            message["loading_message"] = "Extracting key points..."
+            #message["loading_message"] = "Extracting key points..."
+            message["loading_message"] = "Creating a simple summary for a 10 year old..."
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
@@ -173,7 +175,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 print('note',key_point)
 
             message["progress"] = 80
-            message["loading_message"] = "Creating a simple summary for a 10 year old..."
+            message["loading_message"] = "Creating a blog-like article"
+            #message["loading_message"] = "Creating a simple summary for a 10 year old..."
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
@@ -189,7 +192,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             await c
 
             message["progress"] = 90
-            message["loading_message"] = "Creating a blog-like article"
+            message["loading_message"] = "Wrapping this up..."
             c=asyncio.create_task(self.send_message_now(message))
             await c
 

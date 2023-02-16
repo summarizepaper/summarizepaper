@@ -311,7 +311,23 @@ def arxividpage(request, arxiv_id, error_message=None):
     if request.method == 'POST':
         print('in here')
         if 'run_button' in request.POST:
-            print('ok')
+            print('ok run')
+            paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
+            #client_ip = request.META['REMOTE_ADDR']
+            #print('clientip',client_ip)
+            # Check if this IP address has already voted on this post
+            if paper:
+                previous_votes = Vote.objects.filter(paper=paper)
+
+                if previous_votes.exists():
+                    #we cancel the votes because we rerun the process
+                    print('rerun cancel votes')
+                    for pv in previous_votes:
+                        pv.active=False
+                        pv.save()
+                    paper.total_votes = 0
+                    paper.save()
+
             stuff_for_frontend.update({
                 'run':True,
             })
