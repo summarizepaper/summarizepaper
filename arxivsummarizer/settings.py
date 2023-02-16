@@ -182,12 +182,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 ASGI_APPLICATION = 'arxivsummarizer.asgi.application'
 
+#redishost='redis://default:jRzA5ZwUH8J0bgA30uRqIiI1jITwJdbQ@redis-17137.c81.us-east-1-2.ec2.cloud.redislabs.com:17137'
+#print('BROKER_URL',BROKER_URL)
+
 if 'ON_HEROKU' in os.environ:
     CHANNEL_LAYERS = {
         "default": {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                "hosts": [(BROKER_URL, 6379)],
+                "hosts": [(BROKER_URL)],
             },
         },
     }
@@ -196,6 +199,7 @@ else:
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
+                #"hosts": [(BROKER_URL)],
                 "hosts": [("127.0.0.1", 6379)],
             },
         },
