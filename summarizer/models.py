@@ -56,7 +56,7 @@ class Vote(models.Model):
     )
     vote = models.SmallIntegerField(choices=VOTE_CHOICES)
     paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
-    ip_address = models.GenericIPAddressField()
+    ip_address = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 
