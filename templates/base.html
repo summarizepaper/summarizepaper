@@ -73,13 +73,11 @@
       color: #ddd;
     }
 
-
-
     .nav-toggle {
       display: none;
     }
 
-    @media screen and (max-width: 900px) {
+    @media screen and (max-width: 950px) {
       .nav-links {
         display: none;
       }
@@ -99,11 +97,12 @@
         position: absolute;
         top: 40px;
         right: 0px;
-        background-color: #24292e;
+        background-color: #333;
         width: 20%;
         height: 100%;
         margin-top: 20px;
         transition: all 0.5s ease-in-out;
+        min-width:200px;
       }
 
       .nav-toggle {
@@ -112,6 +111,9 @@
         top: 20px;
         right: 20px;
         cursor: pointer;
+      }
+      .dropdown {
+        margin-right:0px!important;
       }
     }
 
@@ -244,8 +246,8 @@
       <li><a href="/{{LANGUAGE_CODE}}">{% trans 'Home' %}</a></li>
       <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
       <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
-      <li><a href="/{{LANGUAGE_CODE}}/contact">{% trans 'Contact' %}</a></li>
       {% if request.user.is_authenticated %}
+      <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
       <li style="height: 15px; display: flex; align-items: center;">
         <div style="display: flex; flex-direction: column; align-items: center;height: 100%;">
           <a href="/{{LANGUAGE_CODE}}/logout" style="color:#34a853">{% trans 'Logout' %}</a>

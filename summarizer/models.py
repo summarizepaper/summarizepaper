@@ -12,6 +12,15 @@ class Author(models.Model):
     def __str__(self):
         return self.name
 
+class PaperHistory(models.Model):
+    arxiv_id = models.CharField(max_length=20)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.username
+
 class ArxivPaper(models.Model):
     id = models.AutoField(primary_key=True)
     arxiv_id = models.CharField(max_length=20, unique=True)

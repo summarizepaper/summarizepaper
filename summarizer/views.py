@@ -5,7 +5,8 @@ from django.http import HttpResponse
 import requests
 import time
 import re
-from .models import ArxivPaper, Vote
+import hashlib
+from .models import ArxivPaper, Vote, PaperHistory
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -320,6 +321,11 @@ def arxividpage(request, arxiv_id, error_message=None):
         print('in here')
         if 'run_button' in request.POST:
             print('ok run')
+            hist, created = PaperHistory.objects.update_or_create(
+                arxiv_id=arxiv_id,
+                user=request.user,
+                defaults={}
+            )
             if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
                 print('deja')
                 paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
@@ -459,8 +465,9 @@ def vote(request, paper_id, direction):
     client_ip = request.META['REMOTE_ADDR']
     print('clientip',client_ip)
     # Check if this IP address has already voted on this post
+    hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
-    previous_votes = Vote.objects.filter(paper=paper, ip_address=client_ip)
+    previous_votes = Vote.objects.filter(paper=paper, ip_address=hashed_ip_address)
     if previous_votes.exists() and not client_ip=='127.0.0.1':
         print('exist vote')
 
@@ -483,13 +490,41 @@ def vote(request, paper_id, direction):
         valuevote=0
 
     if valuevote != 0:
-        vote = Vote(paper=paper, ip_address=client_ip, vote=valuevote)
+
+        vote = Vote(paper=paper, ip_address=hashed_ip_address, vote=valuevote)
         vote.save()
         #if paper.total_votes+valuevote>=0:
         paper.total_votes += valuevote
         paper.save()
 
     return redirect('arxividpage', arxiv_id=paper_id)
+
+def history(request):
+    stuff_for_frontend={}
+
+    paper_history=[]
+    if request.user.is_authenticated:
+        #access user table
+        auth=True
+        history=PaperHistory.objects.filter(user=request.user).order_by('-created')
+        print('history',history)
+        for h in history:
+            arxiv_paper = ArxivPaper.objects.filter(arxiv_id=h.arxiv_id).first()
+            paperdate = h.created#.strftime('%d/%m/%Y')
+
+            if arxiv_paper:
+                paper_history.append({'arxiv_id': h.arxiv_id, 'title': arxiv_paper.title, 'date': paperdate})
+            else:
+                paper_history.append({'arxiv_id': h.arxiv_id, 'date': paperdate})
+    else:
+        auth=False
+
+    stuff_for_frontend.update({
+        'auth':auth,
+        'paper_history':paper_history
+    })
+
+    return render(request, "summarizer/history.html", stuff_for_frontend)
 
 
 def update_cache(request):

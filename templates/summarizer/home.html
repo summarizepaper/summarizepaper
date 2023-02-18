@@ -61,26 +61,22 @@
         max-width: 800px;
         text-align: center;
         margin: 50px auto;
+        padding:20px;
+        text-align: justify; /* justify the text */
+        text-align-last: center; /* center the last line of text */
       }
 
       /* Media queries */
-      @media (max-width: 600px) {
+      @media (max-width: 650px) {
         form {
-          padding: 20px;
+          padding: 10px;
+          max-width:400px;
         }
         input[type="text"] {
           font-size: 14px;
         }
       }
 
-      @media (max-width: 400px) {
-        form {
-          padding: 10px;
-        }
-        input[type="text"] {
-          font-size: 12px;
-        }
-      }
 
     </style>
 {% endblock %}
@@ -96,8 +92,8 @@
 <h1>{% trans "Discover Key Insights from arXiv's Latest Articles" %}</h1>
   <form method="post">
     {% csrf_token %}
-    <label for="arxiv-id">{% trans 'Enter arXiv ID: '%}</label>
-    <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Example:' %} 21040.1035">
+    <label for="arxiv-id">{% trans 'Enter arXiv ID: ' %}</label>
+    <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Example:' %} 2104.1035">
     <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Submit' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
     {% if error %}
         <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>
