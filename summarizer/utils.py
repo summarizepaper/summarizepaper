@@ -92,6 +92,7 @@ def summary_pdf(arxiv_id):
 
         # Add the first summary section to the document
         if paper.summary:
+            print('in comp sum')
             pdf.section("Comprehensive Summary", paper.summary.lstrip().rstrip())
 
         # Add the second summary section to the document
@@ -125,7 +126,7 @@ def summary_pdf(arxiv_id):
         #pdf.section("Key Points", summary_2.encode('latin-1', 'replace').decode('latin-1'))
 
         # Save the PDF file
-        out=pdf.output("summary.pdf",dest='S')
+        out=pdf.output(dest='S')
         print('resp')
 
         return out
