@@ -92,7 +92,7 @@ def summary_pdf(arxiv_id):
                 self.set_font("Arial","B", size=12)
                 self.cell(0, 10, title, 0, 1)
                 self.set_font("Arial", size=11)
-                #self.write_html(texthtml)
+                self.write_html(texthtml)
                 self.ln(10)
 
         # Create a new PDF document with the MyPDF class
