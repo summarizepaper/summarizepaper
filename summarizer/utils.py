@@ -63,12 +63,15 @@ def summary_pdf(arxiv_id):
         class MyPDF(FPDF, HTMLMixin):
             def __init__(self):
                 super().__init__(orientation='P', unit='mm', format='A4')
+                self.add_font('DejaVu', '', 'font/DejaVuSansCondensed.ttf', uni=True)
+
                 #self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
                 #self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
                 #self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
 
                 self.add_page()
-                self.set_font("Arial", size=12)
+                #self.set_font("Arial", size=12)
+                self.set_font("DejaVu", size=12)
 
             def header(self):
                 #self.set_font("DejaVu", "B", size=14)
@@ -84,11 +87,24 @@ def summary_pdf(arxiv_id):
                 self.multi_cell(0, 10, text)
                 self.ln(10)
 
+            def sectionhtml(self, title, texthtml):
+                #self.set_font("DejaVu", "B", size=12)
+                self.set_font("Arial","B", size=12)
+                self.cell(0, 10, title, 0, 1)
+                self.set_font("Arial", size=11)
+                self.write_html(texthtml)
+                self.ln(10)
+
         # Create a new PDF document with the MyPDF class
+
+
         pdf = MyPDF()
         #pdf.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
         #pdf.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
         #pdf.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
+
+
+        #print('fonts:',pdf.get_font_family())
 
         # Add the first summary section to the document
         if paper.summary:
@@ -119,7 +135,9 @@ def summary_pdf(arxiv_id):
             pdf.section("10-yrs old summary", paper.longer_summary.lstrip().rstrip())
 
         if paper.blog:
-            pdf.section("Blog Article", strip_tags(paper.blog.lstrip().rstrip()))
+            pdf.sectionhtml("Blog Article", paper.blog)
+
+            #pdf.section("Blog Article", strip_tags(paper.blog.lstrip().rstrip()))
 
         #pdf.section("Blog Article", notestr)
 
