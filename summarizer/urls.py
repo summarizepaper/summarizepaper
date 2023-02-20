@@ -9,6 +9,7 @@ urlpatterns = [
     path('', views.summarize, name='summarize'),
     path("arxiv-id/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.arxividpage, name="arxividpage"),
+    #path("summary-pdf/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     path("about/", views.about, name="about"),
     path("faq/", views.faq, name="faq"),
     path("contact/", views.contact, name="contact"),

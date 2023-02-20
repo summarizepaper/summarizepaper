@@ -3,6 +3,9 @@
 {% load i18n %}
 {% load index %}
 
+{% get_current_language as LANGUAGE_CODE %}
+
+
 {% block title %} {% trans 'AI-Powered arXiv Paper Summarization - Get a Fast and Accurate Summary of Your Paper' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Get a fast, accurate, and easy-to-read summary of your arXiv paper with our AI-powered summarization service. Our cutting-edge technology uses machine learning and natural language processing to deliver a high-quality summary in just a few seconds. Try it out today!' %}" />
@@ -287,7 +290,7 @@
       {% if paper.authors.all %}
         <p>
           {% for author in paper.authors.all %}
-            {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% if not forloop.last %}, {% endif %}{% endif %}
+            {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% endif %}{% if not forloop.last %}, {% endif %}
           {% endfor %}
         </p>
       {% endif %}
@@ -320,6 +323,8 @@
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
+
+
   </div>
 
   <div class="message-box">
@@ -352,6 +357,10 @@
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Created on' %} {{ paper.updated|date:"d M. Y" }}</div>
     </div>
     {% endif %}
+    <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="submit" value="{% trans 'Download as pdf' %}" name="download_pdf">
+    </form>
   </div>
 
   <div style="text-align: center;">
@@ -403,7 +412,7 @@
 {% else %}
 
 {% if exist == 0 %}
-<p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}.{% blocktrans %} Try again your <a href="/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
+<p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}.{% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
 <div class="main-content2">
@@ -424,9 +433,11 @@
     <div class="subtitle">
       {% if details.authors %}
         <p>
+          {% with affiliations=details.affiliation %}
           {% for author in details.authors %}
-            {{ author }}{% if not forloop.last %}, {% endif %}
+            {{ author }}{% if affiliations|index:forloop.counter0 %} ({{ affiliations|index:forloop.counter0 }}){% endif %}{% if not forloop.last %}, {% endif %}
           {% endfor %}
+          {% endwith %}
         </p>
       {% endif %}
     </div>
@@ -466,10 +477,10 @@
     </form>
     </div>
     {% endif %}
-    </div>
 
 
 {% endif %}
+</div>
 
 {% if run2 %}
 {{ arxiv_id|json_script:"arxiv_id" }}
@@ -654,9 +665,17 @@
       for (var i = 0; i < data.message.authors.length; i++) {
         if (i==data.message.authors.length-1){
           authorsHTML += data.message.authors[i];
+          if (data.message.affiliation[i]!=''){
+            authorsHTML += " ("+data.message.affiliation[i]+")";
+          }
         }
         else{
-          authorsHTML += data.message.authors[i] + ", ";
+          authorsHTML += data.message.authors[i];
+          if (data.message.affiliation[i]!=''){
+            authorsHTML += " ("+data.message.affiliation[i]+")";
+          }
+          authorsHTML += ", ";
+
         }
       }
       authorsHTML = "<p>"+authorsHTML+"</p>"

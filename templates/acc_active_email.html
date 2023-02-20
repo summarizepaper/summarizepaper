@@ -2,6 +2,6 @@
 
 <h2 style="text-align:center;">Welcome, {{ user.username }}!</h2>
 <p style="text-align:center; font-size:18px;">Your SummarizePaper account has been created with success! To activate your account, click the button below:</p>
-<p style="text-align:center;"><a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}" style="background-color:#007bff; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">Activate your account</a></p>
+<p style="text-align:center;"><a href="{{ protocol|default:'http' }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}" style="background-color:#007bff; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">Activate your account</a></p>
 <br>
-<p>The SummarizePaper.com team<p>
+<p>The <a href="https://www.summarizepaper.com">SummarizePaper.com</a> team<p>

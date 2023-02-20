@@ -163,6 +163,7 @@ class RegisterView(View):
             token=generate_token.make_token(user)
             print('uid1',uid)
             print('token1',token)
+            print('current_site.domain',current_site.domain)
             message = render_to_string('acc_active_email.html', {
                 'user': user,
                 'domain': current_site.domain,
@@ -276,7 +277,7 @@ def arxividpage(request, arxiv_id, error_message=None):
 
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero}
 
-
+    print('jk')
     pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')
     if not pattern.match(arxiv_id):
         print('not')
@@ -318,14 +319,25 @@ def arxividpage(request, arxiv_id, error_message=None):
         })
 
     if request.method == 'POST':
-        print('in here')
+        print('in here',request.POST)
+        if 'download_pdf' in request.POST:
+            print('download')
+            resp=utils.summary_pdf(arxiv_id)
+            response = HttpResponse(content_type="application/pdf")
+            filename="SummarizePaper-"+str(arxiv_id)+".pdf"
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
+            response.write(resp)
+            #print('sumpdf',sumpdf)
+            return response
+
         if 'run_button' in request.POST:
             print('ok run')
-            hist, created = PaperHistory.objects.update_or_create(
-                arxiv_id=arxiv_id,
-                user=request.user,
-                defaults={}
-            )
+            if request.user.is_authenticated:
+                hist, created = PaperHistory.objects.update_or_create(
+                    arxiv_id=arxiv_id,
+                    user=request.user,
+                    defaults={}
+                )
             if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
                 print('deja')
                 paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]

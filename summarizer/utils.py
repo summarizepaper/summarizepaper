@@ -12,10 +12,123 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 from django.shortcuts import redirect
 from channels.layers import get_channel_layer
+import re
+from django.http import HttpResponse
+import os
+from django.conf import settings
+import ast
 
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
 temp=0.3
+
+from io import StringIO
+from html.parser import HTMLParser
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs= True
+        self.text = StringIO()
+    def handle_data(self, d):
+        self.text.write(d)
+    def get_data(self):
+        return self.text.getvalue()
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
+
+def summary_pdf(arxiv_id):
+    # Get the summary object from the database
+    if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+        paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+        print('paper',paper.title)
+        # Generate the PDF file using reportlab
+        #response = HttpResponse(content_type='application/pdf')
+        #response = FileResponse(content_type='application/pdf')
+        #response['Content-Disposition'] = f'attachment; filename="SummarizePaper-{str(arxiv_id)}.pdf"'
+        filename="SummarizePaper-"+str(arxiv_id)+".pdf"
+        response = HttpResponse(content_type="application/pdf")
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename
+        # Create the PDF canvas
+        from fpdf import FPDF, HTMLMixin
+
+        class MyPDF(FPDF, HTMLMixin):
+            def __init__(self):
+                super().__init__(orientation='P', unit='mm', format='A4')
+                self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
+                self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
+                self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
+
+                self.add_page()
+                self.set_font("Arial", size=12)
+
+            def header(self):
+                self.set_font("DejaVu", "B", size=14)
+                self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
+                self.ln(20)
+
+            def section(self, title, text):
+                self.set_font("DejaVu", "B", size=12)
+                self.cell(0, 10, title, 0, 1)
+                self.set_font("Arial", size=12)
+                self.multi_cell(0, 10, text)
+                self.ln(10)
+
+        # Create a new PDF document with the MyPDF class
+        pdf = MyPDF()
+
+        # Add the first summary section to the document
+        if paper.summary:
+            pdf.section("Comprehensive Summary", paper.summary.lstrip().rstrip())
+
+        # Add the second summary section to the document
+        if paper.notes:
+            notes = paper.notes.replace('•','')
+            print('rrrr',notes)
+
+        try:
+            notesarr = ast.literal_eval(notes)
+        except ValueError:
+            # Handle the error by returning a response with an error message to the user
+            return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+
+        notestr=''
+        if notesarr:
+            for note in notesarr:
+                notestr+='-'+note+'\n'
+                print('n',note)
+
+        if paper.notes:
+            pdf.section("Key Points", notestr)
+
+        if paper.longer_summary:
+            pdf.section("10-yrs old summary", paper.longer_summary.lstrip().rstrip())
+
+        if paper.blog:
+            pdf.section("Blog Article", strip_tags(paper.blog.lstrip().rstrip()))
+
+        #pdf.section("Blog Article", notestr)
+
+        #pdf.section("Key Points", summary_2.encode('latin-1', 'replace').decode('latin-1'))
+
+        # Save the PDF file
+        out=pdf.output("summary.pdf",dest='S')
+        print('resp')
+
+        return out
+
+    else:
+        print('no paper')
+
+        return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
+
 
 def update_arxiv_paper(arxiv_id,summary):
 
@@ -331,7 +444,10 @@ def get_arxiv_metadata(arxiv_id):
     response = requests.get(url)
     #if response.status_code != 200:
     #    raise Exception(f"Failed to retrieve data: {response.text}")
-    url2=f"http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id}&metadataPrefix=arXiv"
+
+    arxiv_id2= re.sub(r'v\d+$', '', arxiv_id)
+    print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
+    url2=f"http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
     response2 = requests.get(url2)
 
     try:
@@ -427,7 +543,9 @@ def get_arxiv_metadata(arxiv_id):
         for entry in root.findall("ns0:entry",ns):
             for author in entry.findall("ns0:author",ns):
                 authors.append(author.find("ns0:name",ns).text)
+                print('test')
                 if author.find("ns2:affiliation",ns) is not None:
+                    print('aff',author.find("ns2:affiliation",ns).text)
                     affiliation.append(author.find("ns2:affiliation",ns).text)
                 else:
                     affiliation.append('')

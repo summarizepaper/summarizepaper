@@ -4,7 +4,7 @@ import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
 from channels.db import database_sync_to_async
-from .models import ArxivPaper, Author
+from .models import ArxivPaper, Author, PaperAuthor
 from datetime import datetime
 import urllib.request
 import requests
@@ -247,8 +247,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             arxiv_id=arxiv_id,
             defaults={'link_homepage':arxiv_dict['link_homepage'], 'title':arxiv_dict['title'], 'link_doi':arxiv_dict['link_doi'], 'abstract':arxiv_dict['abstract'], 'category':arxiv_dict['category'], 'updated':arxiv_dict['updated'], 'published_arxiv':arxiv_dict['published_arxiv'], 'journal_ref':arxiv_dict['journal_ref'], 'comments':arxiv_dict['comments'],'license':arxiv_dict['license']}
         )
-        authors_ids = [autho.id for autho in authors]
-        paper.authors.set(authors_ids)
+
+        for i, author in enumerate(authors):
+            paper_author, created = PaperAuthor.objects.get_or_create(author=author, paper=paper, author_order=i)
+
+        #authors_ids = [autho.id for autho in authors]
+        #.set(authors_ids)
         #paper.authors.set(arxiv_dict['authors'])
         paper.save()
 
