@@ -63,20 +63,22 @@ def summary_pdf(arxiv_id):
         class MyPDF(FPDF, HTMLMixin):
             def __init__(self):
                 super().__init__(orientation='P', unit='mm', format='A4')
-                self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
-                self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
-                self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
+                #self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
+                #self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
+                #self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
 
                 self.add_page()
                 self.set_font("Arial", size=12)
 
             def header(self):
-                self.set_font("DejaVu", "B", size=14)
+                #self.set_font("DejaVu", "B", size=14)
+                self.set_font("Arial","B", size=14)
                 self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
                 self.ln(20)
 
             def section(self, title, text):
-                self.set_font("DejaVu", "B", size=12)
+                #self.set_font("DejaVu", "B", size=12)
+                self.set_font("Arial","B", size=12)
                 self.cell(0, 10, title, 0, 1)
                 self.set_font("Arial", size=12)
                 self.multi_cell(0, 10, text)
@@ -84,6 +86,9 @@ def summary_pdf(arxiv_id):
 
         # Create a new PDF document with the MyPDF class
         pdf = MyPDF()
+        pdf.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
+        pdf.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
+        pdf.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
 
         # Add the first summary section to the document
         if paper.summary:
