@@ -30,10 +30,24 @@ class MLStripper(HTMLParser):
         super().__init__()
         self.reset()
         self.strict = False
-        self.convert_charrefs= True
+        self.convert_charrefs = True
         self.text = StringIO()
+        self.in_h1_tag = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'h1':
+            self.in_h1_tag = True
+
+    def handle_endtag(self, tag):
+        if tag == 'h1':
+            self.in_h1_tag = False
+
     def handle_data(self, d):
-        self.text.write(d)
+        if self.in_h1_tag:
+            self.text.write('<b>{}</b>'.format(d))
+        else:
+            self.text.write(d)
+
     def get_data(self):
         return self.text.getvalue()
 
@@ -59,7 +73,7 @@ def summary_pdf(arxiv_id):
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
 
-        print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
+        #print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
         class MyPDF(FPDF, HTMLMixin):
             def __init__(self):
                 super().__init__(orientation='P', unit='mm', format='A4')
@@ -73,6 +87,7 @@ def summary_pdf(arxiv_id):
                 #self.set_font("Arial", size=12)
                 self.set_font("Helvetica", size=12)
 
+
             def header(self):
                 #self.set_font("DejaVu", "B", size=14)
                 self.set_font("Arial","B", size=14)
@@ -84,18 +99,28 @@ def summary_pdf(arxiv_id):
                 self.set_font("Arial","B", size=12)
                 self.cell(0, 10, title, 0, 1)
                 self.set_font("Arial", size=12)
+                h1_text = re.search(r'<b>(.*?)</b>', text)
+                if h1_text:
+                    h1_text = h1_text.group(1)
+                    self.set_font("Arial","I", size=12)
+                    self.cell(0, 10, h1_text, 0, 1)
+                    self.set_font("Arial", size=11)
+                    # Remove the extracted h1 text from the text to avoid duplication
+                    text = text.replace(f"<b>{h1_text}</b>", "")
                 self.multi_cell(0, 10, text)
                 self.ln(10)
 
-            def sectionhtml(self, title, texthtml):
+            def sectionhtml(self, title, html):
                 #self.set_font("DejaVu", "B", size=12)
                 self.set_font("Arial","B", size=12)
                 self.cell(0, 10, title, 0, 1)
                 self.set_font("Arial", size=11)
+                texthtml="<font color='#000000'>"+html+"</font>"
+                print('te',texthtml)
                 self.write_html(texthtml)
+
                 self.ln(10)
 
-        # Create a new PDF document with the MyPDF class
 
 
         pdf = MyPDF()
@@ -105,6 +130,8 @@ def summary_pdf(arxiv_id):
 
 
         #print('fonts:',pdf.get_font_family())
+
+
 
         # Add the first summary section to the document
         if paper.summary:
@@ -136,9 +163,10 @@ def summary_pdf(arxiv_id):
             pdf.section("10-yrs old summary", paper.longer_summary.lstrip().rstrip())
 
         if paper.blog:
-            pdf.sectionhtml("Blog Article", paper.blog)
+            print('pap',paper.blog)
+            #pdf.sectionhtml("Blog Article", paper.blog)
 
-            #pdf.section("Blog Article", strip_tags(paper.blog.lstrip().rstrip()))
+            pdf.section("Blog Article", strip_tags(paper.blog.lstrip().rstrip()))
 
         #pdf.section("Blog Article", notestr)
 
