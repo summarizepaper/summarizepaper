@@ -59,6 +59,7 @@ def summary_pdf(arxiv_id):
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
 
+        print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
         class MyPDF(FPDF, HTMLMixin):
             def __init__(self):
                 super().__init__(orientation='P', unit='mm', format='A4')

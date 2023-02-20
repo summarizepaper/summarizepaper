@@ -275,6 +275,8 @@ def arxividpage(request, arxiv_id, error_message=None):
         onhero=False
 
 
+    print('base dir',settings.BASE_DIR)
+
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero}
 
     print('jk')
