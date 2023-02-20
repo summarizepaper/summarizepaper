@@ -18,4 +18,4 @@ django-redis-cache
 django_heroku
 django-bmemcached
 dj-database-url
-fpdf
+git+https://github.com/qkral/pyfpdf.git
