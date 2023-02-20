@@ -19,4 +19,3 @@ django_heroku
 django-bmemcached
 dj-database-url
 fpdf
-pyfpdf
