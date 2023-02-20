@@ -274,6 +274,8 @@ def arxividpage(request, arxiv_id, error_message=None):
     else:
         onhero=False
 
+    import sys
+    print('syspath',sys.path)
 
     print('base dir',settings.BASE_DIR)
 

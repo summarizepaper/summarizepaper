@@ -63,7 +63,7 @@ def summary_pdf(arxiv_id):
         class MyPDF(FPDF, HTMLMixin):
             def __init__(self):
                 super().__init__(orientation='P', unit='mm', format='A4')
-                self.add_font('DejaVu', '', 'font/DejaVuSansCondensed.ttf', uni=True)
+                #self.add_font('DejaVu', '', 'font/DejaVuSansCondensed.ttf', uni=True)
 
                 #self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
                 #self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
@@ -71,7 +71,7 @@ def summary_pdf(arxiv_id):
 
                 self.add_page()
                 #self.set_font("Arial", size=12)
-                self.set_font("DejaVu", size=12)
+                self.set_font("Helvetica", size=12)
 
             def header(self):
                 #self.set_font("DejaVu", "B", size=14)
@@ -112,15 +112,16 @@ def summary_pdf(arxiv_id):
             pdf.section("Comprehensive Summary", paper.summary.lstrip().rstrip())
 
         # Add the second summary section to the document
+        notesarr=''
         if paper.notes:
             notes = paper.notes.replace('•','')
             print('rrrr',notes)
 
-        try:
-            notesarr = ast.literal_eval(notes)
-        except ValueError:
-            # Handle the error by returning a response with an error message to the user
-            return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+            try:
+                notesarr = ast.literal_eval(notes)
+            except ValueError:
+                # Handle the error by returning a response with an error message to the user
+                return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
 
         notestr=''
         if notesarr:
