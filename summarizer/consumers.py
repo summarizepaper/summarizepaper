@@ -111,7 +111,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf')
                 message["progress"] = 20
-                message["loading_message"] = "Reading the pdf file..."
+                if language == 'fr':
+                    message["loading_message"] = "Lecture du fichier pdf..."
+                else:
+                    message["loading_message"] = "Reading the pdf file..."
                 print('hhjfkfkkfkfkf')
                 #time.sleep(10.)
 
@@ -139,7 +142,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
             message["progress"] = 30
-            message["loading_message"] = "Indexing the paper..."
+            if language == 'fr':
+                message["loading_message"] = "Indexation de l'article..."
+            else:
+                message["loading_message"] = "Indexing the paper..."
             #await self.send_message_now(message)
 
             c=asyncio.create_task(self.send_message_now(message))
@@ -155,7 +161,20 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 print('crea',created)
 
             message["progress"] = 40
-            message["loading_message"] = "Summarizing the article..."
+            if language == 'fr':
+                message["loading_message"] = "Création du résumé de l'article..."
+            else:
+                message["loading_message"] = "Summarizing the article..."
+            #await self.send_message_now(message)
+
+            c=asyncio.create_task(self.send_message_now(message))
+            await c
+
+            message["progress"] = 50
+            if language == 'fr':
+                message["loading_message"] = "Extraction des points clefs de l'article..."
+            else:
+                message["loading_message"] = "Extracting key points of the article..."
             #await self.send_message_now(message)
 
             c=asyncio.create_task(self.send_message_now(message))
@@ -176,7 +195,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 message["progress"] = 60
                 #message["loading_message"] = "Extracting key points..."
-                message["loading_message"] = "Creating a simple summary for a 10 year old..."
+                if language == 'fr':
+                    message["loading_message"] = "Création d'un résumé vulgarisé"
+                else:
+                    message["loading_message"] = "Creating a simple laymans' summary"
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
@@ -193,7 +215,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     print('note',key_point)
 
                 message["progress"] = 80
-                message["loading_message"] = "Creating a blog-like article"
+                if language == 'fr':
+                    message["loading_message"] = "Création d'un article type blog"
+                else:
+                    message["loading_message"] = "Creating a blog-like article"
                 #message["loading_message"] = "Creating a simple summary for a 10 year old..."
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
@@ -208,7 +233,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 await c
 
                 message["progress"] = 90
-                message["loading_message"] = "Wrapping this up..."
+                if language == 'fr':
+                    message["loading_message"] = "Finition en cours..."
+                else:
+                    message["loading_message"] = "Wrapping this up..."
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
@@ -227,7 +255,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 blog=sum
 
             message["progress"] = 95
-            message["loading_message"] = "Almost finished..."
+            if language == 'fr':
+                message["loading_message"] = "Presque terminé..."
+            else:
+                message["loading_message"] = "Almost finished..."
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
@@ -304,7 +335,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf1')
 
         message["progress"] = 5
-        message["loading_message"] = "Loading the arXiv paper informartion."
+        if l == 'fr':
+            message["loading_message"] = "Chargement des informations du papier arXiv..."
+        else:
+            message["loading_message"] = "Loading the arXiv paper informartion..."
+
         c=asyncio.create_task(self.send_message_now(message))
         await c
         #await asyncio.sleep(10.)
@@ -344,7 +379,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf2')
 
             message["progress"] = 10
-            message["loading_message"] = "arXiv info loaded..."
+            if l == 'fr':
+                message["loading_message"] = "Informations d'arXiv chargée..."
+            else:
+                message["loading_message"] = "The arXiv info are loaded..."
 
             c=asyncio.create_task(self.send_message_now(message))
             await c
@@ -369,7 +407,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf3')
 
         message["progress"] = 15
-        message["loading_message"] = "Converting the input text..."
+        if l == 'fr':
+            message["loading_message"] = "Conversion du texte initial..."
+        else:
+            message["loading_message"] = "Converting the input text..."
         c=asyncio.create_task(self.send_message_now(message))
         await c
         #time.sleep(10.)
@@ -393,7 +434,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #print('testpap',testpaper)
 
         message["progress"] = 100
-        message["loading_message"] = "The paper is now summarized - Look at the results down below"
+        if l == 'fr':
+            message["loading_message"] = "L'article est maintenant traité - Regardez les résultats ci-dessous"
+        else:
+            message["loading_message"] = "The paper is now summarized - Look at the results down below"
         c=asyncio.create_task(self.send_message_now(message))
         await c
 

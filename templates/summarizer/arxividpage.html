@@ -514,7 +514,7 @@
       <div class="message-tab">{% if sumpaper.summary %}{{ sumpaper.summary }}{% else %}{% trans 'The summary is not ready yet' %}{% endif %}</div>
       <div class="message-tab" style="display:none;">
         {% if sumpaper.notes %}
-        <ul style="list-style: none;padding-left: 20px; text-indent: -20px;">
+        <ul style="list-style: none;padding-left: 20px; text-indent: -10px;">
         {% for note in notes %}
           <li>{{ note }}</li>
         {% endfor %}
@@ -834,7 +834,7 @@
       //console.log(data.message);
       if (Array.isArray(data.message)) {
         const bulletPoints = data.message.map((item) => `<li>${item}</li>`).join('');
-        document.getElementById("notes").innerHTML = `<ul style="list-style: none;padding-left: 20px; text-indent: -20px;">${bulletPoints}</ul>`;
+        document.getElementById("notes").innerHTML = `<ul style="list-style: none;padding-left: 20px; text-indent: -10px;">${bulletPoints}</ul>`;
       } else {
         document.getElementById("notes").innerHTML = data.message;
       }

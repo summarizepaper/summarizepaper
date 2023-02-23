@@ -212,28 +212,7 @@ else:
         },
     }
 
-#CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer',}}
 
-'''
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
-        },
-    }
-}
-'''
-
-'''
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': '127.0.0.1:11211',
-    }
-}'''
-
-#if not 'ON_HEROKU' in os.environ:
 
 
 def get_cache():
@@ -248,7 +227,8 @@ def get_cache():
         # TIMEOUT is not the connection timeout! It's the default expiration
         # timeout that should be applied to keys! Setting it to `None`
         # disables expiration.
-        'TIMEOUT': None,
+        #'TIMEOUT': None,
+        'TIMEOUT': 60 * 10,
         'LOCATION': servers,
         'OPTIONS': {
           'username': username,
@@ -259,36 +239,14 @@ def get_cache():
   except:
     return {
       'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'TIMEOUT': 60*10,
       }
     }
 
 CACHES = get_cache()
 
-'''
-redis_url = urlparse(os.environ.get('REDISCLOUD_URL'))
-CACHES = {
-        'default': {
-            'BACKEND': 'redis_cache.RedisCache',
-            'LOCATION': '%s:%s' % (redis_url.hostname, redis_url.port),
-            'OPTIONS': {
-                'PASSWORD': redis_url.password,
-                'DB': 0,
-        }
-    }
-}
-'''
-'''
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/0',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
-'''
+
 prod_db = dj_database_url.config(conn_max_age=0)
 DATABASES['default'].update(prod_db)
 

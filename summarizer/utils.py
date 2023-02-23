@@ -366,7 +366,7 @@ def summary_pdf(arxiv_id,language):
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
         #import latexcodec
-        from pylatexenc.latex2text import LatexNodes2Text
+        #from pylatexenc.latex2text import LatexNodes2Text
 
         #print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
         class MyPDF(FPDF, HTMLMixin):
