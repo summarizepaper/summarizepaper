@@ -57,7 +57,7 @@
 
 .paper-summary,
 .paper-notes,
-.paper-longer-summary {
+.paper-lay-summary {
   padding: 20px;
   border: 1px solid #e5e5e5;
   margin-bottom: 20px;
@@ -65,7 +65,7 @@
 
 .paper-summary h3,
 .paper-notes h3,
-.paper-longer-summary h3 {
+.paper-lay-summary h3 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 10px;
@@ -73,7 +73,7 @@
 
 .paper-summary p,
 .paper-notes p,
-.paper-longer-summary p {
+.paper-lay-summary p {
   font-size: 16px;
   line-height: 1.5;
   color: #333;
@@ -185,7 +185,7 @@
     }
 
     .message-tab {
-      padding: 20px;
+      /*padding: 20px;*/
       font-size:18px;
       text-align: justify;
     }
@@ -267,6 +267,157 @@
     z-index: 1;
     right: 20px;
   }
+  .small-button {
+    width: 150px;
+    height: 35px;
+    background-color:grey!important;
+    font-size: 14px!important; /* adjust the font size as needed */
+  }
+
+  .chatbot-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom:40px;
+  margin-top:30px;
+  width: 100%;
+  height: 100%;
+}
+
+
+
+.chatbot-header {
+  background-color: #f7f7f7;
+  /*display: flex;*/
+  text-align:center;
+  /*justify-content: center;
+  align-items: center;*/
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.chatbot-body {
+  width: 700px;
+  height: 400px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  font-family: sans-serif;
+}
+
+.chatbot-body .chatbot-messages {
+  height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.chatbot-form {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+.chatbot-form input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+}
+
+.chatbot-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4CAF50;
+  color: #fff;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+
+.chatbot-body .chatbot-messages .chatbot-message {
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 5px;
+    margin-top: 15px;
+    text-align: justify;
+}
+
+.chatbot-body .chatbot-messages .chatbot-response {
+    color: #555;
+    margin-left: 20px;
+    text-align: justify;
+}
+
+/* Small devices (phones, 576px and up) */
+@media (min-width: 300px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 300px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+/* Small devices (phones, 576px and up) */
+@media (min-width: 576px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 400px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+@media (min-width: 900px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 700px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+.chatbot-message {
+  position: relative;
+}
+
+
+.blinking-square {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid black;
+  background-color: black; /* Add this line to set the background color to black */
+  position: absolute;
+  top: 5px; /* Position the square at the top of the chatbot-messages div */
+  /*right: 0;*/
+  margin-left:10px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+#loading-spinner {
+  margin-left: 5px;
+}
+
 </style>
 {% endblock %}
 
@@ -326,6 +477,27 @@
 
 
   </div>
+  <div class="chatbot-container">
+    <div class="chatbot-body">
+    <div class="chatbot-header">
+      <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
+      {% if not public %}
+      <p style="max-width: 400px;display: inline-block; margin-top:-10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
+      {% endif %}
+    </div>
+    </div>
+    <div class="chatbot-body">
+      <div class="chatbot-messages">
+      </div>
+      <form class="chatbot-form">
+        <input type="text" placeholder="{% trans 'Type your question here' %}">
+        <button type="submit" id="send-btn">{% trans 'Send' %}</button>
+      </form>
+      <div id="loading-spinner" style="display: none;text-align:right;">
+      <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
+    </div>
+    </div>
+  </div>
 
   <div class="message-box">
     <h1 class="message-header">{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id }}</h1>
@@ -335,31 +507,39 @@
     <ul class="message-tabs">
       <li class="active" onclick="switchTab(0)">{% trans 'Comprehensive Summary' %}</li>
       <li onclick="switchTab(1)">{% trans 'Key points' %}</li>
-      <li onclick="switchTab(2)">{% trans '10-yrs old Summary' %}</li>
+      <li onclick="switchTab(2)">{% trans "Layman's Summary" %}</li>
       <li onclick="switchTab(3)">{% trans 'Blog article' %}</li>
     </ul>
     <div class="message-content">
-      <div class="message-tab">{% if paper.summary %}{{ paper.summary }}{% else %}{% trans 'The summary is not ready yet' %}{% endif %}</div>
+      <div class="message-tab">{% if sumpaper.summary %}{{ sumpaper.summary }}{% else %}{% trans 'The summary is not ready yet' %}{% endif %}</div>
       <div class="message-tab" style="display:none;">
-        {% if paper.notes %}
-        <ul style="list-style: none;">
+        {% if sumpaper.notes %}
+        <ul style="list-style: none;padding-left: 20px; text-indent: -20px;">
         {% for note in notes %}
           <li>{{ note }}</li>
         {% endfor %}
         </ul>
         {% else %}The key points are not ready yet{% endif %}
       </div>
-      <div class="message-tab" style="display:none;">{% if paper.longer_summary %}{{ paper.longer_summary }}{% else %}{% trans 'The 10-yrs old summary is not ready yet' %}{% endif %}</div>
-      <div class="message-tab" style="display:none;">{% if paper.blog %}{{ paper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
+      <div class="message-tab" style="display:none;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
+      <div class="message-tab" style="display:none;">{% if sumpaper.blog %}{{ sumpaper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
     </div>
+
     {% if paper.updated %}
     <div class="info-block" style="margin-top:20px;">
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Created on' %} {{ paper.updated|date:"d M. Y" }}</div>
     </div>
     {% endif %}
+    {% if sumlang %}
+    <div class="info-block" style="margin-top:20px;">
+      <div class="info-text"> {% trans 'Available in other languages:' %}
+          {% for l in sumlang %}<a href="/{{ l }}/arxiv-id/{{ arxiv_id }}">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
-      <input type="submit" value="{% trans 'Download as pdf' %}" name="download_pdf">
+      <input type="submit" value="{% trans 'Download as pdf' %}" name="download_pdf" class="small-button">
     </form>
   </div>
 
@@ -369,7 +549,7 @@
       <i class="fa fa-thumbs-up" style="font-size: 36px;"></i>
     </a>
   </p>
-  <p id="totvote">{% trans 'Total number of votes:' %} {{ paper.total_votes }}
+  <p id="totvote">{% trans 'Total number of votes:' %} {{ total_votes }}
     <span id="popover-link">
       <i class="fas fa-question-circle"></i>
     </span>
@@ -390,13 +570,13 @@
   {% endif %}
 </div>
 
-  {% if not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog or toolong or paper.total_votes < -9 or user.is_staff %}
+  {% if not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog or toolong or total_votes < -9 or user.is_staff %}
   <div class="center" style="margin:10px;">
     {% if toolong %}
     <p>{% trans 'The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.' %}</p>
-    {% elif paper.total_votes < -9 %}
+    {% elif total_votes < -9 %}
     <p>{% trans 'The summaries have many downvotes and can be re-run with our tools if necessary by clicking on the Run button below.' %}</p>
-    {% elif not paper.summary or not paper.notes or not paper.longer_summary or not paper.blog %}
+    {% elif not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog %}
     <p>{% trans 'Some bits of the article are not summarized yet, you can re-run the summarizing process by clicking on the Run button below.' %}</p>
     {% elif user.is_staff %}
     <p>{% trans 'Hi, because you are a staff member you can Run the AI tools!' %}</p>
@@ -407,7 +587,10 @@
     {% csrf_token %}
     <input type="submit" value="{% trans 'Run' %}" name="run_button">
   </form>
+  </div>
   {% endif %}
+
+
 
 {% else %}
 
@@ -482,6 +665,7 @@
 {% endif %}
 </div>
 
+
 {% if run2 %}
 {{ arxiv_id|json_script:"arxiv_id" }}
 
@@ -531,7 +715,7 @@
   <ul class="message-tabs">
     <li class="active" onclick="switchTab(0)">{% trans 'Comprehensive Summary' %}</li>
     <li onclick="switchTab(1)">{% trans 'Key points' %}</li>
-    <li onclick="switchTab(2)">{% trans '10-yrs old Summary' %}</li>
+    <li onclick="switchTab(2)">{% trans "Layman's Summary" %}</li>
     <li onclick="switchTab(3)">{% trans 'Blog article' %}</li>
   </ul>
   <div class="message-content">
@@ -541,7 +725,7 @@
     <div id="notes" class="message-tab" style="display:none;">
       <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
-    <div id="longsum" class="message-tab" style="display:none;">
+    <div id="laysum" class="message-tab" style="display:none;">
       <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
     <div id="blog" class="message-tab" style="display:none;">
@@ -561,6 +745,8 @@
 
   <script>
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
+  const language = "{{ language }}"
+  //console.log(language);
 
 {% if onhero %}
   const socketl = new WebSocket(
@@ -568,6 +754,8 @@
       + window.location.host
       + '/ws/arxivid/'
       + arxivRoomName
+      + '/'
+      + language
       + '/'
   );
 {% else %}
@@ -577,8 +765,22 @@
       + '/ws/arxivid/'
       + arxivRoomName
       + '/'
+      + language
+      + '/'
   );
 {% endif %}
+
+  socketl.onopen = function(event) {
+      console.log('WebSocket connection established.');
+      //console.log('jkkk');
+      socketl.send(JSON.stringify({
+          'command': 'start_background_task'
+      }));
+      //console.log('jkkddk');
+      // You can now send messages over the WebSocket connection.
+  }
+
+
 
   socketl.onmessage = function(e) {
     const data = JSON.parse(e.data);
@@ -609,8 +811,9 @@
       if(data.message.progress == 100){
         document.getElementById("progress-bar").style.display = "none";
         document.getElementById("progtextupdate").style.animation = "none";
-        {% if run2 %}
-        location.reload(true);
+        {% if run2 or run %}
+        window.location.href = window.location.protocol +'//'+ window.location.host + window.location.pathname;
+        //location.reload(true);
         {% endif %}
       }
     }
@@ -631,7 +834,7 @@
       //console.log(data.message);
       if (Array.isArray(data.message)) {
         const bulletPoints = data.message.map((item) => `<li>${item}</li>`).join('');
-        document.getElementById("notes").innerHTML = `<ul style="list-style: none;">${bulletPoints}</ul>`;
+        document.getElementById("notes").innerHTML = `<ul style="list-style: none;padding-left: 20px; text-indent: -20px;">${bulletPoints}</ul>`;
       } else {
         document.getElementById("notes").innerHTML = data.message;
       }
@@ -639,10 +842,10 @@
 
       //document.querySelector("#notes_.loading").style.display = "none";
     }
-    if(data.type=='progress_longsum_update'){
+    if(data.type=='progress_laysum_update'){
       //alert(data.message);
       document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (3/4):' %} "+arxivRoomName;
-      document.getElementById("longsum").innerHTML = data.message;
+      document.getElementById("laysum").innerHTML = data.message;
       MathJax.typeset();
 
       //document.querySelector("#longsum_.loading").style.display = "none";
@@ -792,6 +995,186 @@ function updateCache(arxiv_id) {
 }
 </script>
 -->
+{% else %}
+{{ arxiv_id|json_script:"arxiv_id" }}
+
+<script>
+
+function addTheListeners() {
+  //alert('ok');
+  if (socketl && socketl.readyState === WebSocket.OPEN) {
+    //console.log('adding...')
+    socketl.addEventListener("open", function(event) {
+      //console.log("WebSocket connected");
+      connecting = false;
+      //alert(socketl+' '+socketl.readyState);
+    });
+
+    socketl.addEventListener("message", function(event) {
+      //socketl.onmessage = function(event) {
+      //console.log('Received message:', event);
+      const messageb = JSON.parse(event.data).message;
+      const chatbotResponse = document.createElement('div');
+      chatbotResponse.classList.add('chatbot-response');
+      chatbotResponse.innerText = messageb;
+      chatbotMessages.appendChild(chatbotResponse);
+      var blinkingSquare = document.querySelector(".blinking-square");
+
+      blinkingSquare.remove();
+
+      var loadingSpinner = document.getElementById("loading-spinner");
+      loadingSpinner.style.display = "none";
+
+      var messagesContainer = document.querySelector(".chatbot-messages");
+
+      // Function to scroll the container to the bottom
+      function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // Scroll the container to the bottom
+      scrollToBottom();
+
+    });
+
+    socketl.addEventListener("close", function(event) {
+      // If the WebSocket connection is closed, display an error message
+      var messagesContainer = document.querySelector(".chatbot-messages");
+      var errorMessage = document.createElement("div");
+      errorMessage.innerHTML = "{% trans 'Error: WebSocket connection closed (reload the page).' %}";
+      messagesContainer.appendChild(errorMessage);
+      console.log("WebSocket disconnected: ");
+    });
+
+    socketl.addEventListener("error", function(event) {
+      console.error("WebSocket error: " + event);
+    });
+    isListenerAdded = true;
+
+  } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
+    //console.log("WebSocket connecting 2...");
+    setTimeout(function() {
+      addTheListeners();
+      //console.log("wait 2");
+    }, 1000);
+  } else {
+    console.error("WebSocket is not open 2");
+  }
+}
+</script>
+
+<script>
+  const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
+  const language = "{{ language }}"
+  //console.log(language);
+  let isListenerAdded = false;
+
+  const chatbotMessages = document.querySelector('.chatbot-messages');
+  const chatbotForm = document.querySelector('.chatbot-form');
+  const chatbotInput = chatbotForm.querySelector('input[type="text"]');
+
+  var sendBtn = document.getElementById("send-btn");
+  let socketl=null;
+  let connecting = false;
+
+  sendBtn.addEventListener('click', function(event) {
+    event.preventDefault();
+
+    if (socketl === null) {
+      console.log('connecting...')
+    {% if onhero %}
+    socketl = new WebSocket(
+        'wss://'
+        + window.location.host
+        + '/ws/arxivid/'
+        + arxivRoomName
+        + '/'
+        + language
+        + '/'
+    );
+    {% else %}
+    socketl = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/arxivid/'
+        + arxivRoomName
+        + '/'
+        + language
+        + '/'
+    );
+    {% endif %}
+    connecting = true;
+  }
+
+
+//chatbotForm.addEventListener('submit', function(event) {
+  //event.preventDefault();
+  //alert('ok');
+  var inputValue = chatbotInput.value.trim();
+  var messagesContainer = document.querySelector(".chatbot-messages");
+
+  /*if (socketl.readyState !== WebSocket.OPEN) {
+    var errorMessage = document.createElement("div");
+    errorMessage.innerHTML = "{% trans 'Error: WebSocket connection closed. Reload the page.' %}";
+    messagesContainer.appendChild(errorMessage);
+    return;
+  }*/
+
+  if (inputValue === "") {
+    return;
+  }
+
+  const messagec = chatbotInput.value;
+  chatbotInput.value = '';
+  const chatbotMessage = document.createElement('div');
+  chatbotMessage.classList.add('chatbot-message');
+  chatbotMessage.innerText = messagec;
+  const blinkingSquare = document.createElement('span');
+  blinkingSquare.classList.add('blinking-square');
+  chatbotMessage.appendChild(blinkingSquare);
+  chatbotMessages.appendChild(chatbotMessage);
+  var messagesContainer = document.querySelector(".chatbot-messages");
+  var loadingSpinner = document.getElementById("loading-spinner");
+  loadingSpinner.style.display = "block";
+
+  // Function to scroll the container to the bottom
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Scroll the container to the bottom
+  scrollToBottom();
+
+  sendWebSocketMessage(messagec);
+  //socketl.send(JSON.stringify({message: messagec}));
+
+  if (!isListenerAdded) {
+    addTheListeners();
+  }
+});
+
+</script>
+
+
+
+<script>
+
+function sendWebSocketMessage(message2) {
+  if (socketl && socketl.readyState === WebSocket.OPEN) {
+    //console.log('sending...')
+    socketl.send(JSON.stringify({message: message2}));
+  } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
+    //console.log("WebSocket connecting...");
+    setTimeout(function() {
+      sendWebSocketMessage(message2);
+      //console.log("wait");
+    }, 1000);
+  } else {
+    console.error("WebSocket is not open");
+  }
+}
+
+</script>
 {% endif %}
 {% if alpaper %}
 
@@ -822,4 +1205,6 @@ function switchTab(tabIndex) {
   contents[tabIndex].style.display = "block";
 }
 </script>
+
+
 {% endblock %}

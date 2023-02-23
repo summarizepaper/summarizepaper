@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory
+from .models import ArxivPaper, Vote, PaperHistory, SummaryPaper
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -34,7 +34,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
 import os
-from django.utils.translation import get_language
+from django.utils.translation import get_language,get_language_info
+from django.db.models import Sum
 
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):
@@ -274,12 +275,17 @@ def arxividpage(request, arxiv_id, error_message=None):
     else:
         onhero=False
 
-    import sys
-    print('syspath',sys.path)
+    #import sys
+    #print('syspath',sys.path)
 
-    print('base dir',settings.BASE_DIR)
+    #print('base dir',settings.BASE_DIR)
+    lang = get_language()
+    li = get_language_info(lang)
+    language = li['name']
+    #input("Press Enter to continue...")
 
-    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero}
+
+    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang}
 
     print('jk')
     pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')
@@ -304,8 +310,8 @@ def arxividpage(request, arxiv_id, error_message=None):
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
 
-    lang = get_language()
-    print('lang',lang)
+    #lang = get_language()
+    #print('lang',lang)
     #if lang =='fr':
     if error_message:
         print('rrr',error_message)
@@ -326,7 +332,7 @@ def arxividpage(request, arxiv_id, error_message=None):
         print('in here',request.POST)
         if 'download_pdf' in request.POST:
             print('download')
-            resp=utils.summary_pdf(arxiv_id)
+            resp=utils.summary_pdf(arxiv_id,lang)
             response = HttpResponse(content_type="application/pdf")
             filename="SummarizePaper-"+str(arxiv_id)+".pdf"
             response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
@@ -345,20 +351,19 @@ def arxividpage(request, arxiv_id, error_message=None):
             if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
                 print('deja')
                 paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
-            #paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
-            #client_ip = request.META['REMOTE_ADDR']
-            #print('clientip',client_ip)
-            # Check if this IP address has already voted on this post
-                previous_votes = Vote.objects.filter(paper=paper)
+                #if SummaryPaper.objects.filter(paper=paper,lang=lang).exists():
+                #    sumpaper=SummaryPaper.objects.filter(paper=paper,lang=lang)[0]
 
-                if previous_votes.exists():
+                previous_votes = Vote.objects.filter(paper=paper,lang=lang)
+
+                if SummaryPaper.objects.filter(paper=paper,lang=lang).exists() and previous_votes.exists():
                     #we cancel the votes because we rerun the process
                     print('rerun cancel votes')
                     for pv in previous_votes:
                         pv.active=False
                         pv.save()
-                    paper.total_votes = 0
-                    paper.save()
+                    #paper.total_votes = 0
+                    #paper.save()
 
             stuff_for_frontend.update({
                 'run':True,
@@ -368,8 +373,26 @@ def arxividpage(request, arxiv_id, error_message=None):
         if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
             print('deja')
             paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+            sumpaper=''
+            sumlang=''
+            if SummaryPaper.objects.filter(paper=paper,lang=lang).exists():
+                sumpaper=SummaryPaper.objects.filter(paper=paper,lang=lang)[0]
+            if SummaryPaper.objects.filter(paper=paper).exclude(lang=lang).exists():
+                sumlang=SummaryPaper.objects.filter(paper=paper).exclude(lang=lang).values_list('lang',flat=True)
+                print('sumlang',list(sumlang))
+                sumlang=list(sumlang)
+
             alpaper=True
             print('paper',paper.abstract)
+            total_votes=0
+
+            if Vote.objects.filter(paper=paper,lang=lang).exists():
+                nbvotes=Vote.objects.filter(paper=paper,lang=lang,active=True).aggregate(Sum('vote'))
+                print('nbvotes',nbvotes)
+                if nbvotes['vote__sum'] != None:
+                    total_votes=nbvotes['vote__sum']
+                print('totvotes',total_votes)
+
             #updated = timezone.make_aware(paper.updated)
             #if paper.updated >= (timezone.now() - timezone.timedelta(minutes=1)):
             if paper.updated >= (timezone.now() - timezone.timedelta(days=365)):
@@ -405,24 +428,28 @@ def arxividpage(request, arxiv_id, error_message=None):
             print('cc',cc_format) # Output: CC BY-NC-SA 4.0
 
             #paper.abstract = escape_latex(paper.abstract)
-            if (paper.notes is not None) and (paper.notes != "") and (paper.notes != "['']"):
-                print('nnnnnnoooottees',paper.notes)
-                try:
-                    notes = ast.literal_eval(paper.notes)
-                except ValueError:
-                    # Handle the error by returning a response with an error message to the user
-                    return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+            notes=''
+            if sumpaper:
+                if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
+                    print('nnnnnnoooottees',sumpaper.notes)
+                    try:
+                        notes = ast.literal_eval(sumpaper.notes)
+                    except ValueError:
+                        # Handle the error by returning a response with an error message to the user
+                        return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
 
-                #notes=ast.literal_eval(paper.notes)
-            else:
-                notes=''
+                else:
+                    notes=['Error: needs to be re-run']
 
             stuff_for_frontend.update({
                 'paper':paper,
+                'sumpaper':sumpaper,
+                'sumlang':sumlang,
                 'notes':notes,
                 'cc_format':cc_format,
                 'toolong':toolong,
                 'public':public,
+                'total_votes':total_votes,
             })
         else:
             print('nope')
@@ -476,14 +503,16 @@ def arxividpage(request, arxiv_id, error_message=None):
 
 
 def vote(request, paper_id, direction):
-    print('in there')
+    lang = get_language()
+
+    print('in there',lang)
     paper = get_object_or_404(ArxivPaper, arxiv_id=paper_id)
     client_ip = request.META['REMOTE_ADDR']
     print('clientip',client_ip)
     # Check if this IP address has already voted on this post
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
-    previous_votes = Vote.objects.filter(paper=paper, ip_address=hashed_ip_address)
+    previous_votes = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address)
     if previous_votes.exists() and not client_ip=='127.0.0.1':
         print('exist vote')
 
@@ -507,11 +536,11 @@ def vote(request, paper_id, direction):
 
     if valuevote != 0:
 
-        vote = Vote(paper=paper, ip_address=hashed_ip_address, vote=valuevote)
+        vote = Vote(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote)
         vote.save()
         #if paper.total_votes+valuevote>=0:
-        paper.total_votes += valuevote
-        paper.save()
+        #paper.total_votes += valuevote
+        #paper.save()
 
     return redirect('arxividpage', arxiv_id=paper_id)
 

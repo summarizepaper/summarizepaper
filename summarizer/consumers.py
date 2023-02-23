@@ -4,7 +4,7 @@ import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
 from channels.db import database_sync_to_async
-from .models import ArxivPaper, Author, PaperAuthor
+from .models import ArxivPaper, Author, PaperAuthor, SummaryPaper
 from datetime import datetime
 import urllib.request
 import requests
@@ -52,9 +52,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             self.arxiv_group_name, {"type": "progress_notes_update", "message": notes}
         )
 
-    async def send_message_longsum(self,longsum):
+    async def send_message_laysum(self,laysum):
         await self.channel_layer.group_send(
-            self.arxiv_group_name, {"type": "progress_longsum_update", "message": longsum}
+            self.arxiv_group_name, {"type": "progress_laysum_update", "message": laysum}
         )
 
     async def send_message_blog(self,blog):
@@ -62,15 +62,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             self.arxiv_group_name, {"type": "progress_blog_update", "message": blog}
         )
 
-    async def computesummary(self,arxiv_id,details_paper,message):
+    async def computesummary(self,arxiv_id,language,details_paper,message):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
         book_path = "test1.pdf"
         sum=""
-        longsum=""
+        laysum=""
         notes=""
 
         #details_paper=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract']]
-        license,title,abstract=details_paper
+        license,title,abstract,authors=details_paper
         #look at license first to see what can be done
         '''
         https://creativecommons.org/licenses/by/4.0/ CC BY: Creative Commons Attribution
@@ -99,6 +99,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             public=1
         else:
             public=0
+
 
         print('pubbbllllliiiiiiccccc',public)
         active=1
@@ -132,99 +133,115 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 print('book:',book_text)
             else:
                 print('else book text')
-                book_text='Title: '+title+'. Abstract: '+abstract+'.'
+                print('authors',authors)
+                book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
 
-            message["progress"] = 25
+
+
+            message["progress"] = 30
+            message["loading_message"] = "Indexing the paper..."
+            #await self.send_message_now(message)
+
+            c=asyncio.create_task(self.send_message_now(message))
+            await c
+
+
+            c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
+            pickledata = await c
+
+            if pickledata=='':
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text, settings.OPENAI_KEY))
+                created=await c
+                print('crea',created)
+
+            message["progress"] = 40
             message["loading_message"] = "Summarizing the article..."
             #await self.send_message_now(message)
 
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-            c = asyncio.create_task(utils.summarize_book(arxiv_id, book_text, settings.OPENAI_KEY))
+            c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
             sum = await c
             # Print the summarized text
             #await sum
+            if sum != '':
+                print('sum:',sum)
+                #await task
+                if 'error_message' in sum:
+                    print("Received error message sum:", sum)
+                    sum='Error: needs to be re-run'
+                c=asyncio.create_task(self.send_message_sum(sum))
+                await c
 
-            print('sum:',sum)
-            #await task
-            if 'error_message' in sum:
-                # longsum contains the error_message
-                #error_message = sum['error_message']
-                # Handle error message
-                #error_message = sum.split("error_message")[1]
-                print("Received error message sum:", sum)
+                message["progress"] = 60
+                #message["loading_message"] = "Extracting key points..."
+                message["loading_message"] = "Creating a simple summary for a 10 year old..."
+                c=asyncio.create_task(self.send_message_now(message))
+                await c
+
+                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
+                notes = await c
+                if 'error_message' in notes:
+                    print("Received error message notes:", notes)
+                    notes='Error: needs to be re-run'
+                c=asyncio.create_task(self.send_message_notes(notes))
+                await c
+
+                # Print the key points
+                for key_point in notes:
+                    print('note',key_point)
+
+                message["progress"] = 80
+                message["loading_message"] = "Creating a blog-like article"
+                #message["loading_message"] = "Creating a simple summary for a 10 year old..."
+                c=asyncio.create_task(self.send_message_now(message))
+                await c
+
+                c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, settings.OPENAI_KEY))
+                laysum = await c
+                print('laysum:',laysum)
+                if 'error_message' in laysum:
+                    print("Received error message laysum:", laysum)
+                    laysum='Error: needs to be re-run'
+                c=asyncio.create_task(self.send_message_laysum(laysum))
+                await c
+
+                message["progress"] = 90
+                message["loading_message"] = "Wrapping this up..."
+                c=asyncio.create_task(self.send_message_now(message))
+                await c
+
+                c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, settings.OPENAI_KEY))
+                blog = await c
+                print('blog:',blog)
+                if 'error_message' in blog:
+                    print("Received error message blog:", blog)
+                    blog='Error: needs to be re-run'
+                c=asyncio.create_task(self.send_message_blog(blog))
+                await c
+            else:
                 sum='Error: needs to be re-run'
-            c=asyncio.create_task(self.send_message_sum(sum))
-            await c
-
-            message["progress"] = 60
-            #message["loading_message"] = "Extracting key points..."
-            message["loading_message"] = "Creating a simple summary for a 10 year old..."
-            c=asyncio.create_task(self.send_message_now(message))
-            await c
-
-            c = asyncio.create_task(utils.extract_key_points(arxiv_id, sum, settings.OPENAI_KEY))
-            notes = await c
-            if 'error_message' in notes:
-                # longsum contains the error_message
-                #error_message = notes['error_message']
-                print("Received error message notes:", notes)
-                notes='Error: needs to be re-run'
-            c=asyncio.create_task(self.send_message_notes(notes))
-            await c
-
-            # Print the key points
-            for key_point in notes:
-                print('note',key_point)
-
-            message["progress"] = 80
-            message["loading_message"] = "Creating a blog-like article"
-            #message["loading_message"] = "Creating a simple summary for a 10 year old..."
-            c=asyncio.create_task(self.send_message_now(message))
-            await c
-
-            c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, notes, settings.OPENAI_KEY))
-            longsum = await c
-            print('longsum:',longsum)
-            if 'error_message' in longsum:
-                # longsum contains the error_message
-                #error_message = longsum['error_message']
-                print("Received error message longsum:", longsum)
-                longsum='Error: needs to be re-run'
-            c=asyncio.create_task(self.send_message_longsum(longsum))
-            await c
-
-            message["progress"] = 90
-            message["loading_message"] = "Wrapping this up..."
-            c=asyncio.create_task(self.send_message_now(message))
-            await c
-
-            c=asyncio.create_task(utils.extract_blog_article(arxiv_id, sum, settings.OPENAI_KEY))
-            blog = await c
-            print('blog:',blog)
-            if 'error_message' in blog:
-                # longsum contains the error_message
-                #error_message = blog['error_message']
-                print("Received error message blog:", blog)
-                blog='Error: needs to be re-run'
-            c=asyncio.create_task(self.send_message_blog(blog))
-            await c
+                laysum=sum
+                notes=sum
+                blog=sum
 
             message["progress"] = 95
             message["loading_message"] = "Almost finished..."
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-        suma=[sum,longsum,notes,blog]
-        return suma#,longsum,notes
+        suma=[sum,laysum,notes,blog]
+        return suma
 
-    def updatepaper(self,arxiv_id,sumarray):
-        paper, created = ArxivPaper.objects.update_or_create(
-            arxiv_id=arxiv_id,
-            defaults={'summary': sumarray['summary'],'notes': sumarray['notes'],'longer_summary': sumarray['longer_summary'],'blog': sumarray['blog']}
+    def updatesumpaper(self,arxiv_id,language,sumarray):
+        paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+        sumpaper, created = SummaryPaper.objects.update_or_create(
+            paper=paper,lang=language,
+            defaults={'summary': sumarray['summary'],'notes': sumarray['notes'],'lay_summary': sumarray['lay_summary'],'blog': sumarray['blog']}
         )
-        return paper,created
+        return sumpaper,created
 
     def updatearvixdatapaper(self,arxiv_id,arxiv_dict):
 
@@ -243,6 +260,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             #author, created = Author.objects.get_or_create(name=author_name,affiliation=aff)
             authors.append(author)
 
+        print('a',arxiv_dict['abstract'])
+        arxiv_dict['abstract']=arxiv_dict['abstract'].replace('\n',' ')
+        #input('llll')
+
         paper, created = ArxivPaper.objects.update_or_create(
             arxiv_id=arxiv_id,
             defaults={'link_homepage':arxiv_dict['link_homepage'], 'title':arxiv_dict['title'], 'link_doi':arxiv_dict['link_doi'], 'abstract':arxiv_dict['abstract'], 'category':arxiv_dict['category'], 'updated':arxiv_dict['updated'], 'published_arxiv':arxiv_dict['published_arxiv'], 'journal_ref':arxiv_dict['journal_ref'], 'comments':arxiv_dict['comments'],'license':arxiv_dict['license']}
@@ -260,7 +281,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #'authors':arxiv_dict['authors'],'affiliation':arxiv_dict['affiliation']
         return paper,created
 
-    async def sendmessages(self,v,message):
+    async def sendmessages(self,v,l,message):
         print('in sendmessages')
 
         page_running = cache.get(self.arxiv_group_name)
@@ -358,18 +379,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #now compute Summary
         print('avantcompute')
         #sumarray = await self.computesummary(v,message)
-        detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract']]
-        sumarra=asyncio.create_task(self.computesummary(v,detpap,message))
+        detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
+        sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message))
         sumarray=await sumarra
-        #sum,longsum,notes=comsum
-        #sumarray=[sum,longsum,notes]
         print('aprescompute')
 
-        keysum = ['summary', 'longer_summary', 'notes','blog']
+        keysum = ['summary', 'lay_summary', 'notes','blog']
         sum_dict = dict(zip(keysum, sumarray))
 
         print('suma',sum_dict)
-        c = asyncio.create_task(sync_to_async(self.updatepaper)(v,sum_dict))
+        c = asyncio.create_task(sync_to_async(self.updatesumpaper)(v,l,sum_dict))
         updatethesum = await c
         #print('testpap',testpaper)
 
@@ -395,7 +414,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         self.arxiv_id = self.scope["url_route"]["kwargs"]["arxiv_id"]
+        self.language = self.scope["url_route"]["kwargs"]["language"]
+
         print('self.arxiv_id',self.arxiv_id)
+        print('self.language',self.language)
+
         self.arxiv_group_name = "ar_%s" % self.arxiv_id
         print('self.arxiv_group_name',self.arxiv_group_name)
         # Join room group
@@ -403,27 +426,64 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await self.accept()
         print('conn')
 
-        message = {
-            "loading_message": "Loading...",
-            "progress": 0
-        }
+        #message = {
+        #    "loading_message": "Loading...",
+        #    "progress": 0
+        #}
 
-        v=self.arxiv_id
+        #v=self.arxiv_id
+        #l=self.language
 
         #ta=asyncio.ensure_future(self.sendmessages(v,message))#needed for channel_layer_group_send to work instantaneously
         #await self.sendmessages(v,message)
         #await ta
-        asyncio.create_task(self.sendmessages(v,message))
+        #asyncio.create_task(self.sendmessages(v,l,message))
 
     # Receive message from WebSocket
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
-        print('receive')
-        # Send message to room group
-        await self.channel_layer.group_send(
-            self.arxiv_group_name, {"type": "progress_update","message": message}
-        )
+        print('rec',text_data)
+        data = json.loads(text_data)
+
+        if 'command' in data:
+            command = data['command']
+
+            if command == 'start_background_task':
+                message = {
+                    "loading_message": "Loading...",
+                    "progress": 0
+                }
+                v=self.arxiv_id
+                l=self.language
+
+                #ta=asyncio.ensure_future(self.sendmessages(v,message))#needed for channel_layer_group_send to work instantaneously
+                #await self.sendmessages(v,message)
+                #await ta
+                asyncio.create_task(self.sendmessages(v,l,message))
+        else:
+            message = data["message"]
+            print('receive',message)
+            #response = "reponse brah"#process_message(message)
+            print('avant chat bot')
+            #query = "Create a summary and tell me who the authors are?"
+
+            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY))
+            #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
+            chatbot_text=await c
+            print('apres chat bot',chatbot_text)
+
+            if chatbot_text==None:
+                chatbot_text="Something went wrong... Contact the administrators if it keeps on happening."
+            # Send the response back to the client over the WebSocket connection
+
+            print('send 1')
+            await self.send(text_data=json.dumps({
+                'message': chatbot_text
+            }))
+            print('send 2',chatbot_text)
+
+
+
+
 
     async def progress_text_update(self, event):
         print('progtext',event['message'])
@@ -457,11 +517,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             'message': event['message']
         }))
 
-    async def progress_longsum_update(self, event):
-        print('progtextlongsum')
+    async def progress_laysum_update(self, event):
+        print('progtextlaysum')
 
         await self.send(text_data=json.dumps({
-            'type': 'progress_longsum_update',
+            'type': 'progress_laysum_update',
             'message': event['message']
         }))
 

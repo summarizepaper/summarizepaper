@@ -1,6 +1,6 @@
 import time
 import requests
-from .models import ArxivPaper
+from .models import ArxivPaper, SummaryPaper, PickledData
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
 from channels.db import database_sync_to_async
@@ -17,13 +17,298 @@ from django.http import HttpResponse
 import os
 from django.conf import settings
 import ast
+from io import StringIO
+from html.parser import HTMLParser
+from langchain import OpenAI, PromptTemplate, LLMChain
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import ElasticVectorSearch, Pinecone, Weaviate, FAISS, Chroma
+from langchain.chains.mapreduce import MapReduceChain
+from langchain.prompts import PromptTemplate
+from langchain.docstore.document import Document
+from langchain.chains.summarize import load_summarize_chain
+from langchain.chains.question_answering import load_qa_chain
+from langchain.chains.qa_with_sources import load_qa_with_sources_chain
+from langchain.llms import OpenAI
+import pickle
+from django.utils.translation import get_language_info
 
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
 temp=0.3
+method="langchain"#quentin
 
-from io import StringIO
-from html.parser import HTMLParser
+def dependable_faiss_import():# -> Any:
+    """Import faiss if available, otherwise raise error."""
+    try:
+        import faiss
+    except ImportError:
+        raise ValueError(
+            "Could not import faiss python package. "
+            "Please it install it with `pip install faiss` "
+            "or `pip install faiss-cpu` (depending on Python version)."
+        )
+    return faiss
+
+def readpaper(arxiv_id):
+    paper=ArxivPaper.objects.prefetch_related('authors').filter(arxiv_id=arxiv_id)[0]
+
+    return paper
+
+def storepickle(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer):
+
+    obj, created = PickledData.objects.update_or_create(
+        arxiv_id=arxiv_id,
+        defaults={
+            'docstore_pickle': docstore_pickle,
+            'index_to_docstore_id_pickle': index_to_docstore_id_pickle,
+            'buffer':buffer
+        }
+    )
+
+    return created
+
+def getstorepickle(arxiv_id):
+
+    if PickledData.objects.filter(arxiv_id=arxiv_id).exists():
+        print("Data found with arxiv_id =", arxiv_id)
+        pickledata=PickledData.objects.filter(arxiv_id=arxiv_id)[0]
+    else:
+        print("No data found with arxiv_id =", arxiv_id)
+        pickledata=''
+
+    return pickledata
+
+async def createindex(arxiv_id,book_text,api_key):
+
+    text_splitter = CharacterTextSplitter(
+    separator = "\n",
+    chunk_size = 1000,
+    chunk_overlap  = 200,
+    length_function = len,
+    )
+    texts = text_splitter.split_text(book_text)
+    print('tttettxtxtxtxtxtxtxtttzetet',texts)
+
+    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+
+    new_docsearch=embeddings
+
+    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
+    #docsearch = Chroma.from_texts(texts, embeddings)
+    #tu=FAISS.save_local(docsearch,"savedocsearch")
+
+    print('docsearchhhhhhhhhhhhhhh index',docsearch.index)
+    print('docsearchhhhhhhhhhhhhhh doc',docsearch.docstore)
+    print('docsearchhhhhhhhhhhhhhh id',docsearch.index_to_docstore_id)
+    # save index separately since it is not picklable
+    faiss = dependable_faiss_import()
+    # serialize the index to a byte buffer
+    #buffer = bytearray()
+    #faiss.write_index(docsearch.index, buffer)
+    chunk = faiss.serialize_index(docsearch.index)
+    buffer_pickle = pickle.dumps(chunk)
+
+    # save docstore and index_to_docstore_id
+    docstore_pickle = pickle.dumps(docsearch.docstore)
+    index_to_docstore_id_pickle = pickle.dumps(docsearch.index_to_docstore_id)
+
+    # update or create a PickledData object with the given arxiv_id
+    c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
+    created = await c
+
+    print('ok created',created)
+    return created
+
+async def chatbot(arxiv_id,language,query,api_key):
+    print('in chatbot')
+
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
+
+    '''
+    url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
+    book_path = "test1.pdf"
+
+    #paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+    #get_paper = sync_to_async(ArxivPaper.objects.filter)
+    #paper = await get_paper(arxiv_id=arxiv_id)
+
+    c = asyncio.create_task(sync_to_async(readpaper)(arxiv_id))
+    paper = await c
+    print('ok',paper)
+
+    license=paper.license
+    print('lic',license)
+    if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
+        public=1
+    else:
+        public=0
+
+
+    active=1
+    if active==1:
+        if public==1:
+            response = requests.get(url)
+            my_raw_data = response.content
+
+
+            #time.sleep(3.)
+
+            #print('ookkkkkkkkkk')
+
+            with open("my_pdf.pdf", 'wb') as my_data:
+                my_data.write(my_raw_data)
+
+            ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+
+            #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
+            c=asyncio.create_task(extract_text_from_pdf("my_pdf.pdf"))
+            book_text=await c
+            print('book:',book_text)
+        else:
+            print('else book text')
+            author_names = ', '.join([author.name for author in paper.authors.all()])
+
+            book_text='Authors: '+str(author_names)+'. Title: '+paper.title+'. Abstract: '+paper.abstract+'.'
+
+    #c=asyncio.create_task(extract_text_from_pdf(pdffile))
+    #book_text=await c
+    #print('book in chat:',book_text)
+    llm = OpenAI(batch_size=5,temperature=0,openai_api_key=api_key)
+
+    text_splitter = CharacterTextSplitter(
+    separator = "\n",
+    chunk_size = 1000,
+    chunk_overlap  = 200,
+    length_function = len,
+    )
+    texts = text_splitter.split_text(book_text)
+    print('tttettxtxtxtxtxtxtxtttzetet',texts)
+
+    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+
+    new_docsearch=embeddings
+
+    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
+    #docsearch = Chroma.from_texts(texts, embeddings)
+    #tu=FAISS.save_local(docsearch,"savedocsearch")
+
+    print('docsearchhhhhhhhhhhhhhh index',docsearch.index)
+    print('docsearchhhhhhhhhhhhhhh doc',docsearch.docstore)
+    print('docsearchhhhhhhhhhhhhhh id',docsearch.index_to_docstore_id)
+    # save index separately since it is not picklable
+    faiss = dependable_faiss_import()
+    # serialize the index to a byte buffer
+    #buffer = bytearray()
+    #faiss.write_index(docsearch.index, buffer)
+    chunk = faiss.serialize_index(docsearch.index)
+    buffer_pickle = pickle.dumps(chunk)
+
+    # save docstore and index_to_docstore_id
+    docstore_pickle = pickle.dumps(docsearch.docstore)
+    index_to_docstore_id_pickle = pickle.dumps(docsearch.index_to_docstore_id)
+
+
+    # update or create a PickledData object with the given arxiv_id
+    c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
+    storedpickle = await c
+    print('ok created',storedpickle)
+
+    '''
+
+    c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
+
+    getstoredpickle = await c
+
+    if getstoredpickle != '':
+        # deserialize the index from a byte buffer
+        #index_buffer = faiss.read_index(storedpickle.buffer)
+        faiss = dependable_faiss_import()
+
+        index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
+
+        docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
+        index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
+
+        llm = OpenAI(batch_size=5,temperature=0,openai_api_key=api_key)
+
+        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+
+        #return cls(embeddings.embed_query, index, docstore, index_to_docstore_id)
+        docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
+
+
+        docs = docsearch2.similarity_search(query,k=4)
+        print('docs:',docs)
+
+        #this is for map_reduce
+        '''
+        question_prompt_template = """Use the following portion of a long document to see if any of the text is relevant to answer the question.
+        Return any relevant text translated into french.
+        {context}
+        Question: {question}
+        Relevant text, if any, in French:"""
+        QUESTION_PROMPT = PromptTemplate(
+            template=question_prompt_template, input_variables=["context", "question"]
+        )
+
+        combine_prompt_template = """Given the following extracted parts of a long document and a question, create a final answer in French.
+        ALWAYS return a "SOURCES" part in your answer.
+
+        QUESTION: {question}
+        =========
+        {summaries}
+        =========
+        Answer in French:"""
+        COMBINE_PROMPT = PromptTemplate(
+            template=combine_prompt_template, input_variables=["summaries", "question"]
+        )
+        chain = load_qa_with_sources_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
+        #chain = load_qa_chain(llm, chain_type="map_reduce", return_map_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
+        getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
+        '''
+
+        template = """Given the following extracted parts of a long document and a question, create a final answer.
+        If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+
+        QUESTION: {question}
+        =========
+        {summaries}
+        ========="""
+
+        if language != 'en':
+            template += """FINAL ANSWER IN """+language2
+
+        print('tem',template)
+
+        PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
+
+        chain = load_qa_with_sources_chain(llm, chain_type="stuff", prompt=PROMPT)
+        getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
+
+        #chain = load_qa_chain(llm, chain_type="stuff")
+        #chain_type="map_reduce", return_map_steps=True)
+        #getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
+
+        #getresponse=chain.run(input_documents=docs, question=query)
+        print('getresponse',getresponse)
+        print('getresponse2',getresponse['output_text'])
+
+        finalresp=getresponse['output_text']
+        #chunk_size = 4096
+        #chunks = [book_text[i:i+chunk_size] for i in range(0, len(book_text), chunk_size)]
+
+        # Send each chunk to the API for summarization
+        #summarized_chunks = []
+        #for chunk in chunks:
+        #input("Press Enter to continue...")
+
+        return finalresp.rstrip().lstrip()
+    else:
+        return None
+
 
 class MLStripper(HTMLParser):
     def __init__(self):
@@ -57,10 +342,18 @@ def strip_tags(html):
     return s.get_data()
 
 
-def summary_pdf(arxiv_id):
+def summary_pdf(arxiv_id,language):
     # Get the summary object from the database
     if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
         paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+        if SummaryPaper.objects.filter(paper=paper,lang=language).exists():
+            sumpaper=SummaryPaper.objects.filter(paper=paper,lang=language)[0]
+        elif SummaryPaper.objects.filter(paper=paper,lang='en').exists():
+            sumpaper=SummaryPaper.objects.filter(paper=paper,lang='en')[0]
+        else:
+            sumpaper=''
+            print('no summaries yet')
 
         print('paper',paper.title)
         # Generate the PDF file using reportlab
@@ -72,6 +365,8 @@ def summary_pdf(arxiv_id):
         response['Content-Disposition'] = 'attachment; filename=%s' % filename
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
+        #import latexcodec
+        from pylatexenc.latex2text import LatexNodes2Text
 
         #print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
         class MyPDF(FPDF, HTMLMixin):
@@ -94,6 +389,47 @@ def summary_pdf(arxiv_id):
                 self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
                 self.ln(20)
 
+            def paperdet(self, title, text, url):
+                #self.set_font("DejaVu", "B", size=12)
+                self.set_font("Arial","I", size=12)
+                self.cell(0, 10, "Title: "+title, 0, 1)
+                self.set_font("Arial", size=10)
+
+                #self.multi_cell(0, 5, "Abstract: "+str(LatexNodes2Text().latex_to_text(text.encode("utf-8"))))
+                #text_str = latex2text(text)
+                #self.set_font("DejaVu", "B", size=14)
+
+                #latex_converter = LatexNodes2Text()
+
+                # Convert the LaTeX code to plain text
+                #print('latex_converter.latex_to_text(text)',latex_converter.latex_to_text(text))
+                #text_str = latex_converter.latex_to_text(text)#.encode('latin-1')#.encode('utf-8')
+
+                self.multi_cell(0, 5, "Abstract: "+text)
+
+                #self.set_font("Arial", "I", size=10)
+                #self.cell(0, 10, "URL: ", 0, 0)
+
+                # Get the x and y positions of the current cell
+
+                #x, y = self.get_x(), self.get_y()
+
+                # Set the font and color for the link
+                self.set_text_color(0, 0, 255)
+                self.set_font("Arial", "U", size=10)
+
+                # Set the link target
+                #link = self.add_link()
+                self.write(10, url, url)
+
+                # Reset the font and color
+                self.set_font("Arial", size=10)
+                self.set_text_color(0, 0, 0)
+
+                # Add a line break
+                self.ln(10)
+
+
             def section(self, title, text):
                 #self.set_font("DejaVu", "B", size=12)
                 self.set_font("Arial","B", size=12)
@@ -107,7 +443,7 @@ def summary_pdf(arxiv_id):
                     self.set_font("Arial", size=11)
                     # Remove the extracted h1 text from the text to avoid duplication
                     text = text.replace(f"<b>{h1_text}</b>", "")
-                self.multi_cell(0, 10, text)
+                self.multi_cell(0, 7, text)
                 self.ln(10)
 
             def sectionhtml(self, title, html):
@@ -134,39 +470,47 @@ def summary_pdf(arxiv_id):
 
 
         # Add the first summary section to the document
-        if paper.summary:
-            print('in comp sum')
-            pdf.section("Comprehensive Summary", paper.summary.lstrip().rstrip())
+        if paper.link_doi:
+            link=paper.link_doi
+        else:
+            link=paper.link_homepage
 
-        # Add the second summary section to the document
-        notesarr=''
-        if paper.notes:
-            notes = paper.notes.replace('•','')
-            print('rrrr',notes)
+        pdf.paperdet(paper.title.strip(), paper.abstract.lstrip().rstrip(),str(link).strip())
 
-            try:
-                notesarr = ast.literal_eval(notes)
-            except ValueError:
-                # Handle the error by returning a response with an error message to the user
-                return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+        if sumpaper:
+            if sumpaper.summary:
+                print('in comp sum')
+                pdf.section("Comprehensive Summary", sumpaper.summary.lstrip().rstrip())
 
-        notestr=''
-        if notesarr:
-            for note in notesarr:
-                notestr+='-'+note+'\n'
-                print('n',note)
+            # Add the second summary section to the document
+            notesarr=''
+            if sumpaper.notes:
+                notes = sumpaper.notes.replace('•','')
+                print('rrrr',notes)
 
-        if paper.notes:
-            pdf.section("Key Points", notestr)
+                try:
+                    notesarr = ast.literal_eval(notes)
+                except ValueError:
+                    # Handle the error by returning a response with an error message to the user
+                    return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
 
-        if paper.longer_summary:
-            pdf.section("10-yrs old summary", paper.longer_summary.lstrip().rstrip())
+            notestr=''
+            if notesarr:
+                for note in notesarr:
+                    notestr+='-'+note+'\n'
+                    print('n',note)
 
-        if paper.blog:
-            print('pap',paper.blog)
-            #pdf.sectionhtml("Blog Article", paper.blog)
+            if sumpaper.notes:
+                pdf.section("Key Points", notestr)
 
-            pdf.section("Blog Article", strip_tags(paper.blog.lstrip().rstrip()))
+            if sumpaper.lay_summary:
+                pdf.section("Layman's summary", sumpaper.lay_summary.lstrip().rstrip())
+
+            if sumpaper.blog:
+                print('pap',sumpaper.blog)
+                #pdf.sectionhtml("Blog Article", paper.blog)
+
+                pdf.section("Blog Article", strip_tags(sumpaper.blog.lstrip().rstrip()))
 
         #pdf.section("Blog Article", notestr)
 
@@ -271,135 +615,180 @@ async def send_message_now(arxiv_group_name,message):
         arxiv_group_name, {"type": "progress_text_update", "message": message}
     )
 
-async def summarize_book(arxiv_id, book_text, api_key):
+async def summarize_book(arxiv_id, language, book_text, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
     message={}
     arxiv_group_name="ar_%s" % arxiv_id
     # Split the book into chunks of at most 4096 tokens
     print("len(book_text)",len(book_text))
-    chunk_size = 4096
-    chunks = [book_text[i:i+chunk_size] for i in range(0, len(book_text), chunk_size)]
 
-    # Send each chunk to the API for summarization
-    summarized_chunks = []
-    for chunk in chunks:
-        prompt = f"summarize the following text in 100 words: {chunk}"
-        print("prompt:",prompt)
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
-        }
-        response = requests.post(endpoint, headers=headers, json={"prompt": prompt, "max_tokens": 400, "temperature": temp, "n":1, "stop":None})
+    if method=="Quentin":
+        chunk_size = 4096
+        chunks = [book_text[i:i+chunk_size] for i in range(0, len(book_text), chunk_size)]
 
-        try:
-            print('in try1')
-            if response.status_code != 200:
-                print("in1 ! 200")
-                raise Exception(f"Failed to summarize text: {response.text}")
-        except Exception as e:
-            print('in redirect1',str(e))
-            # Redirect to the arxividpage and pass the error message
-            return {
-                "error_message": str(e),
-            }
-            #return redirect('arxividpage', arxiv_id=arxiv_id, error_message="e1")#str(e))
-            #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
-
-
-        #if response.status_code != 200:
-        #    raise Exception(f"Failed to summarize chunk: {response.text}")
-
-        summarized_chunks.append(response.json()["choices"][0]["text"])
-        print('yo:\n',response.json()["choices"][0]["text"])
-
-    # Concatenate the summarized chunks and send the result to the API for further summarization
-
-    print("beeeefffffooooooorrreee1")
-    message["progress"] = 35
-    message["loading_message"] = "Summarizing in progress..."
-    c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-
-    #c=asyncio.create_task(channel_layer.group_send(arxiv_group_name, {"type": "progress_text_update", "message": message}))
-    await c
-    #time.sleep(10.)
-    print("afffffteeeeeeeerrrrrdsdrrreee1")
-
-    summarized_text = " ".join(summarized_chunks)
-    print("len(summarized_text)",len(summarized_text))
-    print('summarized_text',summarized_text)
-
-    cont=1
-    final_summarized_text=summarized_text
-    i=0
-    while cont==1:
-        print('iiiiiiiiiiiiiiiii:\n',i)
-        chunks2 = [final_summarized_text[i:i+chunk_size] for i in range(0, len(final_summarized_text), chunk_size)]
-
-        summarized_chunks2 = []
-        jj=0
-        for chunk2 in chunks2:
-            print('jjjjjjjjjjjjjj:\n',jj)
-
-            prompt2 = f"Summarize the following text from a research article in 300 words: {chunk2}"
-            headers2 = {
+        # Send each chunk to the API for summarization
+        summarized_chunks = []
+        for chunk in chunks:
+            prompt = f"summarize the following text in 100 words: {chunk}"
+            print("prompt:",prompt)
+            headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {api_key}"
             }
-            response2 = requests.post(endpoint, headers=headers2, json={"prompt": prompt2, "max_tokens": 500, "temperature": temp, "n":1, "stop":None})
+            response = requests.post(endpoint, headers=headers, json={"prompt": prompt, "max_tokens": 400, "temperature": temp, "n":1, "stop":None})
 
-            #if response2.status_code != 200:
-            #    raise Exception(f"Failed to summarize text: {response2.text}")
-                #it happens sometimes so to be treated...
             try:
-                print('in try')
-                if response2.status_code != 200:
-                    print("in ! 200")
-                    raise Exception(f"Failed to summarize text: {response2.text}")
+                print('in try1')
+                if response.status_code != 200:
+                    print("in1 ! 200")
+                    raise Exception(f"Failed to summarize text: {response.text}")
             except Exception as e:
-                print('in redirect')
+                print('in redirect1',str(e))
                 # Redirect to the arxividpage and pass the error message
                 return {
                     "error_message": str(e),
-                }                #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+                }
+                #return redirect('arxividpage', arxiv_id=arxiv_id, error_message="e1")#str(e))
+                #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
-            summarized_chunks2.append(response2.json()["choices"][0]["text"])
-            jj+=1
 
-        print('len summarized_chunks2',len(summarized_chunks2))
+            #if response.status_code != 200:
+            #    raise Exception(f"Failed to summarize chunk: {response.text}")
 
-        print("beeeefffffooooooorrreee2")
-        message["progress"] = 50
-        message["loading_message"] = "Extracting key points..."
+            summarized_chunks.append(response.json()["choices"][0]["text"])
+            print('yo:\n',response.json()["choices"][0]["text"])
+
+        # Concatenate the summarized chunks and send the result to the API for further summarization
+
+        print("beeeefffffooooooorrreee1")
+        message["progress"] = 35
+        message["loading_message"] = "Summarizing in progress..."
         c=asyncio.create_task(send_message_now(arxiv_group_name,message))
 
         #c=asyncio.create_task(channel_layer.group_send(arxiv_group_name, {"type": "progress_text_update", "message": message}))
         await c
         #time.sleep(10.)
-        print("afffffteeeeeeeerrrrrdsdrrreee2")
+        print("afffffteeeeeeeerrrrrdsdrrreee1")
+
+        summarized_text = " ".join(summarized_chunks)
+        print("len(summarized_text)",len(summarized_text))
+        print('summarized_text',summarized_text)
+
+        cont=1
+        final_summarized_text=summarized_text
+        i=0
+        while cont==1:
+            print('iiiiiiiiiiiiiiiii:\n',i)
+            chunks2 = [final_summarized_text[i:i+chunk_size] for i in range(0, len(final_summarized_text), chunk_size)]
+
+            summarized_chunks2 = []
+            jj=0
+            for chunk2 in chunks2:
+                print('jjjjjjjjjjjjjj:\n',jj)
+
+                prompt2 = f"Summarize the following text from a research article in 300 words: {chunk2}"
+                headers2 = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}"
+                }
+                response2 = requests.post(endpoint, headers=headers2, json={"prompt": prompt2, "max_tokens": 500, "temperature": temp, "n":1, "stop":None})
+
+                #if response2.status_code != 200:
+                #    raise Exception(f"Failed to summarize text: {response2.text}")
+                    #it happens sometimes so to be treated...
+                try:
+                    print('in try')
+                    if response2.status_code != 200:
+                        print("in ! 200")
+                        raise Exception(f"Failed to summarize text: {response2.text}")
+                except Exception as e:
+                    print('in redirect')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }                #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+
+                summarized_chunks2.append(response2.json()["choices"][0]["text"])
+                jj+=1
+
+            print('len summarized_chunks2',len(summarized_chunks2))
 
 
-        summarized_text2 = " ".join(summarized_chunks2)
-        print('\nsummmmmmmmmmmmmmm\n',summarized_text2)
-        if len(summarized_chunks2)==1:
-        #if len(summarized_text2)<chunk_size:
-            cont=0
-            print('yes:\n',len(summarized_chunks2))
-        else:
-            print('no:\n',len(summarized_chunks2))
-            final_summarized_text=summarized_text2#summarized_chunks2
-        i+=1
+            print("beeeefffffooooooorrreee2")
+            message["progress"] = 50
+            message["loading_message"] = "Extracting key points..."
+            c=asyncio.create_task(send_message_now(arxiv_group_name,message))
 
-    final_summarized_text = summarized_text2#response2.json()["choices"][0]["text"]
-    print('yoyo:\n',final_summarized_text)
+            #c=asyncio.create_task(channel_layer.group_send(arxiv_group_name, {"type": "progress_text_update", "message": message}))
+            await c
+            #time.sleep(10.)
+            print("afffffteeeeeeeerrrrrdsdrrreee2")
+
+
+            summarized_text2 = " ".join(summarized_chunks2)
+            print('\nsummmmmmmmmmmmmmm\n',summarized_text2)
+            if len(summarized_chunks2)==1:
+            #if len(summarized_text2)<chunk_size:
+                cont=0
+                print('yes:\n',len(summarized_chunks2))
+            else:
+                print('no:\n',len(summarized_chunks2))
+                final_summarized_text=summarized_text2#summarized_chunks2
+            i+=1
+
+        final_summarized_text = summarized_text2#response2.json()["choices"][0]["text"]
+        print('yoyo:\n',final_summarized_text)
+
+    else:
+        llm = OpenAI(temperature=0,openai_api_key=api_key)
+        li = get_language_info(language)
+        language2 = li['name']
+        print('language2',language2)
+
+        text_splitter = CharacterTextSplitter(
+        separator = "\n",
+        chunk_size = 1000,
+        chunk_overlap  = 200,
+        length_function = len,
+        )
+        texts = text_splitter.split_text(book_text)
+        print('tttettxtxtxtxtxtxtxtttzetet',texts)
+        docs = [Document(page_content=t) for t in texts[:3]]
+
+        prompt_template = """Summarize the following text from a research article in 300 words:
+        {text}
+        """
+
+        if language != 'en':
+            prompt_template += """TRANSLATE THE ANSWER IN """+language2
+
+        print('prompt_template',prompt_template)
+
+        PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
+        #chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
+        chain = load_summarize_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, map_prompt=PROMPT, combine_prompt=PROMPT)
+        res=chain({"input_documents": docs}, return_only_outputs=True)
+        #chain.run(docs)
+        print('res',res)
+        #input("Press Enter to continueb...")
+
+        final_summarized_text = res['output_text']
 
     return final_summarized_text
 
-async def extract_key_points(arxiv_id, summary, api_key):
+async def extract_key_points(arxiv_id, language, summary, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
+
     #Extract the most important key points from the following text
     prompt3 = f"Extract the most important key points from the following text and use bullet points for each of them: {summary}"
     print('key sum',prompt3)
+    if language != 'en':
+        prompt3 += "TRANSLATE THE ANSWER IN "+language2
+
 
     headers3 = {
         "Content-Type": "application/json",
@@ -429,10 +818,16 @@ async def extract_key_points(arxiv_id, summary, api_key):
 
     return key_points
 
-async def extract_simple_summary(arxiv_id, keyp, api_key):
+async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
 
     prompt4 = f"Summarize the following key points in 3 sentences for a 10 yr old: {keyp}"
+    if language != 'en':
+        prompt4 += "TRANSLATE THE ANSWER IN "+language2
+
     headers4 = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
@@ -461,10 +856,16 @@ async def extract_simple_summary(arxiv_id, keyp, api_key):
 
     return simple_sum
 
-async def extract_blog_article(arxiv_id, summary, api_key):
+async def extract_blog_article(arxiv_id, language, summary, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
 
     prompt5 = f"Create a blog article in html about this research paper: {summary}"
+    if language != 'en':
+        prompt5 += "TRANSLATE THE ANSWER IN "+language2
+
     headers5 = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
