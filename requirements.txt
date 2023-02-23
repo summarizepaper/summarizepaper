@@ -22,3 +22,4 @@ git+https://github.com/qkral/pyfpdf.git
 tiktoken
 langchain
 openai
+faiss-cpu
