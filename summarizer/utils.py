@@ -296,7 +296,8 @@ async def chatbot(arxiv_id,language,query,api_key):
         print('getresponse',getresponse)
         print('getresponse2',getresponse['output_text'])
 
-        finalresp=getresponse['output_text']
+        finalresp=getresponse['output_text'].replace(':\n', '')
+
         #chunk_size = 4096
         #chunks = [book_text[i:i+chunk_size] for i in range(0, len(book_text), chunk_size)]
 

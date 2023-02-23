@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-23 08:45+0000\n"
+"POT-Creation-Date: 2023-02-23 15:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,7 +96,7 @@ msgstr ""
 msgid "Contact"
 msgstr ""
 
-#: templates/base.html:300 templates/summarizer/privacy.html:30
+#: templates/base.html:300 templates/summarizer/privacy.html:31
 msgid "Privacy Policy"
 msgstr ""
 
@@ -212,9 +212,9 @@ msgstr ""
 msgid ""
 "Our AI algorithms analyze each paper and extract the key findings and "
 "conclusions, presenting them to you in a concise and easily digestible "
-"format. By automating this process, we are able to provide you with "
-"summaries of multiple papers in a fraction of the time it would take you to "
-"read them all in their entirety. "
+"format. By automating this process, we are able to provide you with an AI "
+"assistant to answer your questions about the content of articles in a "
+"fraction of the time it would take you to read them all in their entirety. "
 msgstr ""
 
 #: templates/summarizer/about.html:27
@@ -223,22 +223,10 @@ msgstr ""
 
 #: templates/summarizer/about.html:28
 msgid ""
-"We are a team of researchers with a passion to make complex information more "
-"accessible. Our goal is to allow everyone to benefit from all research "
-"findings and thereby avoid fake news."
-msgstr ""
-
-#: templates/summarizer/about.html:30
-msgid "Our Promise"
-msgstr ""
-
-#: templates/summarizer/about.html:31
-msgid ""
-"At our website, we are committed to providing you with the highest quality "
-"summaries of the latest research. We do our best to make sure that our AI "
-"algorithms accurately reflect the key findings and conclusions of each "
-"paper, so that you can stay informed and ahead of the curve in your field of "
-"interest. "
+"The team is currently made up of one researcher in astrophysics (Quentin "
+"Kral) with a passion to make complex information more accessible. Our goal "
+"is to allow everyone to benefit from all research findings and thereby avoid "
+"fake news."
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:9
@@ -255,158 +243,158 @@ msgid ""
 "in just a few seconds. Try it out today!"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:473
-#: templates/summarizer/arxividpage.html:649
-#: templates/summarizer/arxividpage.html:965
+#: templates/summarizer/arxividpage.html:474
+#: templates/summarizer/arxividpage.html:652
+#: templates/summarizer/arxividpage.html:968
 msgid "Submitted to arXiv on"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:482
+#: templates/summarizer/arxividpage.html:483
 msgid "Ask questions about this paper to our AI assistant"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:483
+#: templates/summarizer/arxividpage.html:485
 msgid ""
 "The license of the paper does not allow us to build upon its content and the "
 "AI assistant only knows about the paper metadata rather than the full "
 "article."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:490
+#: templates/summarizer/arxividpage.html:493
 msgid "Type your question here"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:491
+#: templates/summarizer/arxividpage.html:494
 msgid "Send"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:494
-#: templates/summarizer/arxividpage.html:671
-#: templates/summarizer/arxividpage.html:720
+#: templates/summarizer/arxividpage.html:497
+#: templates/summarizer/arxividpage.html:674
 #: templates/summarizer/arxividpage.html:723
 #: templates/summarizer/arxividpage.html:726
-#: templates/summarizer/arxividpage.html:729 templates/summarizer/home.html:97
+#: templates/summarizer/arxividpage.html:729
+#: templates/summarizer/arxividpage.html:732 templates/summarizer/home.html:97
 msgid "Loading..."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:500
+#: templates/summarizer/arxividpage.html:503
 msgid "Results of the summarizing process for the arXiv paper:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:502
+#: templates/summarizer/arxividpage.html:505
 msgid ""
 "This paper's license doesn't allow us to build upon its content and the "
 "summarizing process is here made with the paper's metadata rather than the "
 "article."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:505
-#: templates/summarizer/arxividpage.html:713
+#: templates/summarizer/arxividpage.html:508
+#: templates/summarizer/arxividpage.html:716
 msgid "Comprehensive Summary"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:506
-#: templates/summarizer/arxividpage.html:714
+#: templates/summarizer/arxividpage.html:509
+#: templates/summarizer/arxividpage.html:717
 msgid "Key points"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:507
-#: templates/summarizer/arxividpage.html:715
+#: templates/summarizer/arxividpage.html:510
+#: templates/summarizer/arxividpage.html:718
 msgid "Layman's Summary"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:508
-#: templates/summarizer/arxividpage.html:716
+#: templates/summarizer/arxividpage.html:511
+#: templates/summarizer/arxividpage.html:719
 msgid "Blog article"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:511
+#: templates/summarizer/arxividpage.html:514
 msgid "The summary is not ready yet"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:521
+#: templates/summarizer/arxividpage.html:524
 msgid "The Layman's summary is not ready yet"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:522
+#: templates/summarizer/arxividpage.html:525
 msgid "The blog article is not ready yet"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:527
+#: templates/summarizer/arxividpage.html:530
 msgid "Created on"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:532
+#: templates/summarizer/arxividpage.html:535
 msgid "Available in other languages:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:539
+#: templates/summarizer/arxividpage.html:542
 msgid "Download as pdf"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:549
+#: templates/summarizer/arxividpage.html:552
 msgid "Total number of votes:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:555
+#: templates/summarizer/arxividpage.html:558
 msgid "Why do we need votes?"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:556
+#: templates/summarizer/arxividpage.html:559
 msgid ""
 "Votes are used to determine whether we need to re-run our summarizing tools. "
 "If the count reaches -10, our tools can be restarted."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:573
+#: templates/summarizer/arxividpage.html:576
 msgid ""
 "The previous summary was created more than a year ago and can be re-run (if "
 "necessary) by clicking on the Run button below."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:575
+#: templates/summarizer/arxividpage.html:578
 msgid ""
 "The summaries have many downvotes and can be re-run with our tools if "
 "necessary by clicking on the Run button below."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:577
+#: templates/summarizer/arxividpage.html:580
 msgid ""
 "Some bits of the article are not summarized yet, you can re-run the "
 "summarizing process by clicking on the Run button below."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:579
+#: templates/summarizer/arxividpage.html:582
 msgid "Hi, because you are a staff member you can Run the AI tools!"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:585
-#: templates/summarizer/arxividpage.html:656
+#: templates/summarizer/arxividpage.html:588
+#: templates/summarizer/arxividpage.html:659
 msgid "Run"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:595
+#: templates/summarizer/arxividpage.html:598
 msgid "There is no existing article with the given arXiv ID:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:595
+#: templates/summarizer/arxividpage.html:598
 #, python-format
 msgid ""
 " Try again your <a href=\"/%(LANGUAGE_CODE)s/\">search</a> with a new arXiv "
 "ID."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:599
+#: templates/summarizer/arxividpage.html:602
 msgid "Running summarizing tools on a new article"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:601
+#: templates/summarizer/arxividpage.html:604
 msgid ""
 "We are now running our AI tools on the requested article. This process may "
 "take a few minutes so please bear with us."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:603
+#: templates/summarizer/arxividpage.html:606
 msgid ""
 "This is the first time this article is requested and our AI summarizing "
 "tools have never been run on it. We can run our tools now if you click on "
@@ -414,44 +402,44 @@ msgid ""
 "article."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:609
+#: templates/summarizer/arxividpage.html:612
 msgid "We are analysing the following arXiv article:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:644
-#: templates/summarizer/arxividpage.html:954
+#: templates/summarizer/arxividpage.html:647
+#: templates/summarizer/arxividpage.html:957
 msgid "Abstract:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:822
+#: templates/summarizer/arxividpage.html:825
 msgid "Results of the summarizing process for the arXiv paper (1/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:830
+#: templates/summarizer/arxividpage.html:833
 msgid "Results of the summarizing process for the arXiv paper (2/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:844
+#: templates/summarizer/arxividpage.html:847
 msgid "Results of the summarizing process for the arXiv paper (3/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:852
+#: templates/summarizer/arxividpage.html:855
 msgid "Results of the summarizing process for the arXiv paper (4/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:939
+#: templates/summarizer/arxividpage.html:942
 msgid ""
 "The license of the paper does not allow us to build upon its content and the "
 "summarizing process is here made with the paper metadata rather than the "
 "article."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1040
-msgid "Error: WebSocket connection closed. Reload the page."
+#: templates/summarizer/arxividpage.html:1044
+msgid "Error: WebSocket connection closed (reload the page)."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1099
-msgid "Error: WebSocket connection closed (reload the page)."
+#: templates/summarizer/arxividpage.html:1118
+msgid "Error: WebSocket connection closed. Reload the page."
 msgstr ""
 
 #: templates/summarizer/contact.html:6
@@ -466,7 +454,7 @@ msgid ""
 "service? Contact us today to get in touch with our team and learn more."
 msgstr ""
 
-#: templates/summarizer/contact.html:70 templates/summarizer/privacy.html:63
+#: templates/summarizer/contact.html:70 templates/summarizer/privacy.html:65
 msgid "Contact Us"
 msgstr ""
 
@@ -520,7 +508,8 @@ msgstr ""
 #: templates/summarizer/faq.html:55
 msgid ""
 "This website is a platform that summarizes scientific papers from arXiv "
-"using AI."
+"using AI and allows you to interrogate our chat bot about the content of all "
+"articles."
 msgstr ""
 
 #: templates/summarizer/faq.html:59
@@ -540,8 +529,8 @@ msgstr ""
 
 #: templates/summarizer/faq.html:67
 msgid ""
-"This website is developed and maintained by a team of researchers who want "
-"to allow everyone to access research results."
+"This website is developed and maintained by a researcher in astrophysics who "
+"want to allow everyone to access research results."
 msgstr ""
 
 #: templates/summarizer/faq.html:71
@@ -561,9 +550,7 @@ msgid "Is this website free to use?"
 msgstr ""
 
 #: templates/summarizer/faq.html:79
-msgid ""
-"Yes, this website is completely free to use. There are no hidden fees or "
-"charges."
+msgid "Yes, this website is completely free to use."
 msgstr ""
 
 #: templates/summarizer/faq.html:83
@@ -592,9 +579,9 @@ msgstr ""
 
 #: templates/summarizer/faq.html:97
 msgid ""
-"There is no limit to the number of papers you can summarize. You can use the "
-"platform as much as you need to stay updated on the latest research "
-"developments."
+"There is no limit to the number of papers you can summarize (but this may "
+"change if it gets overloaded). You can use the platform as much as you need "
+"to stay updated on the latest research developments."
 msgstr ""
 
 #: templates/summarizer/history.html:5
@@ -679,6 +666,10 @@ msgid ""
 msgstr ""
 
 #: templates/summarizer/privacy.html:32
+msgid "Last update:"
+msgstr ""
+
+#: templates/summarizer/privacy.html:34
 msgid ""
 "Our website is committed to protecting the privacy of its users. This "
 "Privacy Policy outlines the types of information we collect, how we use it, "
@@ -687,48 +678,46 @@ msgid ""
 "relevant privacy laws."
 msgstr ""
 
-#: templates/summarizer/privacy.html:34
+#: templates/summarizer/privacy.html:36
 msgid "Information Collection and Use"
 msgstr ""
 
-#: templates/summarizer/privacy.html:36
+#: templates/summarizer/privacy.html:38
 msgid ""
-"We do not collect information from our users when they use our website. The "
-"only time we do keep personal information is when users contact us via our "
-"contact form so that we can then reply to them. In this case, we keep the "
-"name, email address and message."
+"We do not collect information from our users when they use our website "
+"unless they create an account. The only time we do keep personal information "
+"is when users contact us via our contact form so that we can then reply to "
+"them. In this case, we keep the name, email address and message."
 msgstr ""
 
-#: templates/summarizer/privacy.html:39
+#: templates/summarizer/privacy.html:41
 msgid ""
 "We do not sell or share any personal information with third-party companies. "
 "All user data is kept confidential and is only used in accordance with this "
 "Privacy Policy."
 msgstr ""
 
-#: templates/summarizer/privacy.html:41
+#: templates/summarizer/privacy.html:43
 msgid "Cookies"
 msgstr ""
 
-#: templates/summarizer/privacy.html:43
+#: templates/summarizer/privacy.html:45
 msgid ""
-"Our website uses cookies to store information about user preferences and to "
-"keep track of user activity on our site. This information is used to provide "
-"a more personalized user experience and to improve the functionality of our "
-"website."
+"Our website only uses necessary cookies (e.g. to help protect the website "
+"against Cross-Site Request Forgery attacks)."
 msgstr ""
 
-#: templates/summarizer/privacy.html:46
+#: templates/summarizer/privacy.html:48
 msgid ""
 "Users have the option to disable cookies in their web browser, but this may "
 "affect the functionality of our website."
 msgstr ""
 
-#: templates/summarizer/privacy.html:48
+#: templates/summarizer/privacy.html:50
 msgid "Data Security"
 msgstr ""
 
-#: templates/summarizer/privacy.html:50
+#: templates/summarizer/privacy.html:52
 #, python-format
 msgid ""
 "We take appropriate measures to protect the security of our users' personal "
@@ -737,28 +726,28 @@ msgid ""
 "of any information transmitted to our website."
 msgstr ""
 
-#: templates/summarizer/privacy.html:53
+#: templates/summarizer/privacy.html:55
 msgid ""
 "In the unlikely event of a data breach, we will promptly notify affected "
 "users and take appropriate measures to secure their information."
 msgstr ""
 
-#: templates/summarizer/privacy.html:55
+#: templates/summarizer/privacy.html:57
 msgid "Open Source"
 msgstr ""
 
-#: templates/summarizer/privacy.html:57
+#: templates/summarizer/privacy.html:59
 msgid ""
 "Our website is built as an open source software, which allows for greater "
 "transparency and security. The codebase is available for public inspection "
 "and contributions are welcomed from the open source community."
 msgstr ""
 
-#: templates/summarizer/privacy.html:59
+#: templates/summarizer/privacy.html:61
 msgid "Changes to this Privacy Policy"
 msgstr ""
 
-#: templates/summarizer/privacy.html:61
+#: templates/summarizer/privacy.html:63
 msgid ""
 "We reserve the right to make changes to this Privacy Policy at any time. If "
 "changes are made, we will notify users by updating the \"Effective Date\" at "
@@ -766,17 +755,17 @@ msgid ""
 "Policy to stay informed about how we are protecting their information."
 msgstr ""
 
-#: templates/summarizer/privacy.html:65
+#: templates/summarizer/privacy.html:67
 msgid ""
 "If you have any questions or concerns about this Privacy Policy, please "
 "contact us using the"
 msgstr ""
 
-#: templates/summarizer/privacy.html:65
+#: templates/summarizer/privacy.html:67
 msgid "dedicated page"
 msgstr ""
 
-#: templates/summarizer/privacy.html:65
+#: templates/summarizer/privacy.html:67
 msgid ""
 "We are always happy to hear from our users and will make every effort to "
 "address any issues."

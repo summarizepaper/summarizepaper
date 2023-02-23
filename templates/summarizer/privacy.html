@@ -14,10 +14,11 @@
     h1, h2 {
       text-align: center;
     }
-    .container {
+    .container-pol {
       max-width: 800px;
       margin: 0 auto;
       margin-bottom:30px;
+      text-align:justify;
     }
   </style>
 {% endblock %}
@@ -26,21 +27,22 @@
 
 {% block content %}
 
-<div class="container">
+<div class="container-pol">
       <h1>{% trans "Privacy Policy" %}</h1>
+      <p><small>{% trans 'Last update:' %} 23/02/23</small></p>
       <p>
         {% trans "Our website is committed to protecting the privacy of its users. This Privacy Policy outlines the types of information we collect, how we use it, and how we protect it. We are dedicated to following industry best practices and respecting the General Data Protection Regulation (GDPR) and other relevant privacy laws." %}
       </p>
       <h2>{% trans "Information Collection and Use" %}</h2>
       <p>
-        {% trans "We do not collect information from our users when they use our website. The only time we do keep personal information is when users contact us via our contact form so that we can then reply to them. In this case, we keep the name, email address and message." %}
+        {% trans "We do not collect information from our users when they use our website unless they create an account. The only time we do keep personal information is when users contact us via our contact form so that we can then reply to them. In this case, we keep the name, email address and message." %}
       </p>
       <p>
         {% trans "We do not sell or share any personal information with third-party companies. All user data is kept confidential and is only used in accordance with this Privacy Policy." %}
       </p>
       <h2>{% trans "Cookies" %}</h2>
       <p>
-        {% trans "Our website uses cookies to store information about user preferences and to keep track of user activity on our site. This information is used to provide a more personalized user experience and to improve the functionality of our website." %}
+        {% trans "Our website only uses necessary cookies (e.g. to help protect the website against Cross-Site Request Forgery attacks)." %}
       </p>
       <p>
         {% trans "Users have the option to disable cookies in their web browser, but this may affect the functionality of our website." %}

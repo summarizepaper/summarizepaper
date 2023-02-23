@@ -233,7 +233,7 @@ def contact(request):
         #emailto.append(email)
         emailsend = EmailMessage(
             subject,
-            message+' From:'+email,
+            message+'\n\n\nFrom: '+name+' ('+email+')',
             'SummarizePaper <communication@summarizepaper.com>',  # from
             emailto,  # to
             # getemails,  # bcc
