@@ -36,7 +36,7 @@ from django.utils.translation import get_language_info
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
 temp=0.3
-method="langchain"#quentin
+method="fromembeddings"#"langchain"#quentin
 
 def dependable_faiss_import():# -> Any:
     """Import faiss if available, otherwise raise error."""
@@ -127,97 +127,6 @@ async def chatbot(arxiv_id,language,query,api_key):
     language2 = li['name']
     print('language2',language2)
 
-    '''
-    url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
-    book_path = "test1.pdf"
-
-    #paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
-    #get_paper = sync_to_async(ArxivPaper.objects.filter)
-    #paper = await get_paper(arxiv_id=arxiv_id)
-
-    c = asyncio.create_task(sync_to_async(readpaper)(arxiv_id))
-    paper = await c
-    print('ok',paper)
-
-    license=paper.license
-    print('lic',license)
-    if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
-        public=1
-    else:
-        public=0
-
-
-    active=1
-    if active==1:
-        if public==1:
-            response = requests.get(url)
-            my_raw_data = response.content
-
-
-            #time.sleep(3.)
-
-            #print('ookkkkkkkkkk')
-
-            with open("my_pdf.pdf", 'wb') as my_data:
-                my_data.write(my_raw_data)
-
-            ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
-
-            #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-            c=asyncio.create_task(extract_text_from_pdf("my_pdf.pdf"))
-            book_text=await c
-            print('book:',book_text)
-        else:
-            print('else book text')
-            author_names = ', '.join([author.name for author in paper.authors.all()])
-
-            book_text='Authors: '+str(author_names)+'. Title: '+paper.title+'. Abstract: '+paper.abstract+'.'
-
-    #c=asyncio.create_task(extract_text_from_pdf(pdffile))
-    #book_text=await c
-    #print('book in chat:',book_text)
-    llm = OpenAI(batch_size=5,temperature=0,openai_api_key=api_key)
-
-    text_splitter = CharacterTextSplitter(
-    separator = "\n",
-    chunk_size = 1000,
-    chunk_overlap  = 200,
-    length_function = len,
-    )
-    texts = text_splitter.split_text(book_text)
-    print('tttettxtxtxtxtxtxtxtttzetet',texts)
-
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-
-    new_docsearch=embeddings
-
-    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
-    #docsearch = Chroma.from_texts(texts, embeddings)
-    #tu=FAISS.save_local(docsearch,"savedocsearch")
-
-    print('docsearchhhhhhhhhhhhhhh index',docsearch.index)
-    print('docsearchhhhhhhhhhhhhhh doc',docsearch.docstore)
-    print('docsearchhhhhhhhhhhhhhh id',docsearch.index_to_docstore_id)
-    # save index separately since it is not picklable
-    faiss = dependable_faiss_import()
-    # serialize the index to a byte buffer
-    #buffer = bytearray()
-    #faiss.write_index(docsearch.index, buffer)
-    chunk = faiss.serialize_index(docsearch.index)
-    buffer_pickle = pickle.dumps(chunk)
-
-    # save docstore and index_to_docstore_id
-    docstore_pickle = pickle.dumps(docsearch.docstore)
-    index_to_docstore_id_pickle = pickle.dumps(docsearch.index_to_docstore_id)
-
-
-    # update or create a PickledData object with the given arxiv_id
-    c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
-    storedpickle = await c
-    print('ok created',storedpickle)
-
-    '''
-
     c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
 
     getstoredpickle = await c
@@ -240,7 +149,7 @@ async def chatbot(arxiv_id,language,query,api_key):
         docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
 
 
-        docs = docsearch2.similarity_search(query,k=4)
+        docs = docsearch2.similarity_search(query,k=5)
         print('docs:',docs)
 
         #this is for map_reduce
@@ -741,6 +650,14 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
         final_summarized_text = summarized_text2#response2.json()["choices"][0]["text"]
         print('yoyo:\n',final_summarized_text)
 
+    elif method=='fromembeddings':
+        print('from embeddings')
+        query="Create a long detailed summary of the paper"
+        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key))
+        #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
+        final_summarized_text =await c
+        print('apres final_summarized_text',final_summarized_text)
+
     else:
         llm = OpenAI(temperature=0,openai_api_key=api_key)
         li = get_language_info(language)
@@ -755,9 +672,12 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
         )
         texts = text_splitter.split_text(book_text)
         print('tttettxtxtxtxtxtxtxtttzetet',texts)
-        docs = [Document(page_content=t) for t in texts[:3]]
+        #docs = [Document(page_content=t) for t in texts[:3]]
+        docs = [Document(page_content=t) for t in texts]
 
-        prompt_template = """Summarize the following text from a research article in 300 words:
+        print('docs---------------',texts[:3])
+
+        prompt_template = """Create a long summary of the following text from a research article:
         {text}
         """
 
