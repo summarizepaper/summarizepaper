@@ -998,6 +998,8 @@ function updateCache(arxiv_id) {
 {% else %}
 {{ arxiv_id|json_script:"arxiv_id" }}
 
+{% if alpaper %}
+
 <script>
 
 function addTheListeners() {
@@ -1156,7 +1158,6 @@ function addTheListeners() {
 </script>
 
 
-
 <script>
 
 function sendWebSocketMessage(message2) {
@@ -1175,6 +1176,8 @@ function sendWebSocketMessage(message2) {
 }
 
 </script>
+{% endif %}
+
 {% endif %}
 {% if alpaper %}
 

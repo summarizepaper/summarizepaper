@@ -264,7 +264,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-        suma=[sum,laysum,notes,blog]
+        suma=[sum.replace(':\n', ''),laysum.replace(':\n', ''),notes,blog]
         return suma
 
     def updatesumpaper(self,arxiv_id,language,sumarray):
