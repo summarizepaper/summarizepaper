@@ -160,6 +160,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 created=await c
                 print('crea',created)
 
+            input('stop here')
+
             message["progress"] = 40
             if language == 'fr':
                 message["loading_message"] = "Création du résumé de l'article..."
@@ -515,18 +517,20 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             chatbot_text=await c
             print('apres chat bot',chatbot_text)
 
+            #async for text_chunk in utils.chatbot(self.arxiv_id, self.language, message, settings.OPENAI_KEY):
+
+            #    await self.send(text_data=json.dumps({
+            #        'message': text_chunk
+            #    }))
+
             if chatbot_text==None:
                 chatbot_text="Something went wrong... Contact the administrators if it keeps on happening."
             # Send the response back to the client over the WebSocket connection
 
-            print('send 1')
             await self.send(text_data=json.dumps({
                 'message': chatbot_text
             }))
             print('send 2',chatbot_text)
-
-
-
 
 
     async def progress_text_update(self, event):

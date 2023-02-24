@@ -30,13 +30,29 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.llms import OpenAI
+from langchain.callbacks import get_openai_callback
 import pickle
 from django.utils.translation import get_language_info
 
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
 temp=0.3
-method="fromembeddings"#"langchain"#quentin
+method="f"#"fromembeddings"#"langchain"#quentin
+
+def openaipricing(model_name):
+    #return cost per token in dollars
+    if 'davinci' in model_name:
+        cost=0.02
+    elif 'babbage' in model_name:
+        cost=0.0005
+    elif 'curie' in model_name:
+        cost=0.002
+    elif 'ada' in model_name:
+        cost=0.0004
+    else:
+        cost=1.
+
+    return cost/1000.
 
 def dependable_faiss_import():# -> Any:
     """Import faiss if available, otherwise raise error."""
@@ -81,6 +97,10 @@ def getstorepickle(arxiv_id):
 
 async def createindex(arxiv_id,book_text,api_key):
 
+    text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=1000, chunk_overlap=200)#limit at 8096 tokens
+    texts = text_splitter.split_text(book_text)
+
+    '''
     text_splitter = CharacterTextSplitter(
     separator = "\n",
     chunk_size = 1000,
@@ -88,13 +108,15 @@ async def createindex(arxiv_id,book_text,api_key):
     length_function = len,
     )
     texts = text_splitter.split_text(book_text)
+    '''
     print('tttettxtxtxtxtxtxtxtttzetet',texts)
 
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+    embeddings = OpenAIEmbeddings(openai_api_key=api_key)#text-embedding-ada-002 used in background
 
     new_docsearch=embeddings
 
     docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
+
     #docsearch = Chroma.from_texts(texts, embeddings)
     #tu=FAISS.save_local(docsearch,"savedocsearch")
 
@@ -141,15 +163,26 @@ async def chatbot(arxiv_id,language,query,api_key):
         docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
         index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
 
-        llm = OpenAI(batch_size=5,temperature=0,openai_api_key=api_key)
+        from langchain.chains import ChatVectorDBChain
 
+        llm = OpenAI(temperature=0.3,max_tokens=1000,openai_api_key=api_key)
+
+        '''
+        For streaming
+        from langchain.callbacks.base import CallbackManager
+        from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
+        llm = OpenAI(streaming=True, callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]), verbose=True, temperature=0.3,openai_api_key=api_key)
+        #llm = OpenAI(model_name=modelforsummarizing,max_tokens=1000,best_of=1,n=1,temperature=0.3,openai_api_key=api_key)
+        #best_of=2,streaming=True
+        '''
         embeddings = OpenAIEmbeddings(openai_api_key=api_key)
 
         #return cls(embeddings.embed_query, index, docstore, index_to_docstore_id)
         docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
 
 
-        docs = docsearch2.similarity_search(query,k=5)
+        docs = docsearch2.similarity_search(query,k=3)
         print('docs:',docs)
 
         #this is for map_reduce
@@ -178,14 +211,17 @@ async def chatbot(arxiv_id,language,query,api_key):
         #chain = load_qa_chain(llm, chain_type="map_reduce", return_map_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
         getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
         '''
+        #        If you don't know the answer, just say that you don't know. Don't try to make up an answer.
 
         template = """Given the following extracted parts of a long document and a question, create a final answer.
-        If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+        If you are not sure about the answer, just say that you are not sure before making up an answer.
 
         QUESTION: {question}
         =========
         {summaries}
-        ========="""
+        =========
+
+        """
 
         if language != 'en':
             template += """FINAL ANSWER IN """+language2
@@ -195,7 +231,12 @@ async def chatbot(arxiv_id,language,query,api_key):
         PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
 
         chain = load_qa_with_sources_chain(llm, chain_type="stuff", prompt=PROMPT)
-        getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
+        getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=False)
+
+        #qa = ChatVectorDBChain.from_llm(llm, docs)
+        #chat_history = []
+        #getresponse = qa({"question": query, "chat_history": chat_history})
+
 
         #chain = load_qa_chain(llm, chain_type="stuff")
         #chain_type="map_reduce", return_map_steps=True)
@@ -207,6 +248,23 @@ async def chatbot(arxiv_id,language,query,api_key):
 
         finalresp=getresponse['output_text'].replace(':\n', '')
 
+        '''
+        lenchunck=10
+        lenchunck2=lenchunck
+
+        if len(finalresp)>lenchunck2:
+            chunck=finalresp[lenchunck2-lenchunck:lenchunck2-1]
+            lenchunck2+=lenchunck
+            input('ok'+chunck)
+        #chunks = [response[i:i+10] for i in range(0, len(response), 10)]
+        '''
+
+        #text_chunks = text_splitter.split_text(finaresp)
+
+        # Yield each chunk of the generated text
+        #for text_chunk in text_chunks:
+        #    yield text_chunk
+
         #chunk_size = 4096
         #chunks = [book_text[i:i+chunk_size] for i in range(0, len(book_text), chunk_size)]
 
@@ -216,8 +274,8 @@ async def chatbot(arxiv_id,language,query,api_key):
         #input("Press Enter to continue...")
 
         return finalresp.rstrip().lstrip()
-    else:
-        return None
+    #else:
+    #    return None
 
 
 class MLStripper(HTMLParser):
@@ -652,33 +710,55 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
 
     elif method=='fromembeddings':
         print('from embeddings')
-        query="Create a long detailed summary of the paper"
+        query="Create a long detailed summary of the paper, preserve important details"
         c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key))
         #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
         final_summarized_text =await c
         print('apres final_summarized_text',final_summarized_text)
 
     else:
-        llm = OpenAI(temperature=0,openai_api_key=api_key)
+        #llm = OpenAI(temperature=0,openai_api_key=api_key)
+        modelforsummarizing="text-davinci-003"#"text-curie-001"
+        #text-davinci-003#4000 tokens#chunk_size=2000#max_tokens=1000
+        #text-curie-001#2048 tokens
+        #text-babbage-001#2048 tokens
+        #text-ada-001#2048 tokens
+        llm = OpenAI(model_name=modelforsummarizing,max_tokens=1000,best_of=1,n=1,temperature=0.3,openai_api_key=api_key)
+        #best_of=2,streaming=True
         li = get_language_info(language)
         language2 = li['name']
         print('language2',language2)
+        #from transformers import GPT2TokenizerFast
+        #tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
+        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=2000, chunk_overlap=0)
+        texts = text_splitter.split_text(book_text)
+
+        for text in texts:
+            print('text:------------------',text)
+
+        '''
         text_splitter = CharacterTextSplitter(
         separator = "\n",
         chunk_size = 1000,
-        chunk_overlap  = 200,
+        chunk_overlap  = 10,
         length_function = len,
         )
         texts = text_splitter.split_text(book_text)
+        for text in texts:
+            print('text:------------------',text)
+        '''
         print('tttettxtxtxtxtxtxtxtttzetet',texts)
         #docs = [Document(page_content=t) for t in texts[:3]]
         docs = [Document(page_content=t) for t in texts]
 
         print('docs---------------',texts[:3])
 
-        prompt_template = """Create a long summary of the following text from a research article:
+        prompt_template = """Create a long detailed summary of the following text:
         {text}
+
+        LONG DETAILED SUMMARY:
+
         """
 
         if language != 'en':
@@ -689,7 +769,15 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
         PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
         #chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
         chain = load_summarize_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, map_prompt=PROMPT, combine_prompt=PROMPT)
-        res=chain({"input_documents": docs}, return_only_outputs=True)
+
+        with get_openai_callback() as cb:
+
+            res=chain({"input_documents": docs}, return_only_outputs=True)
+            nbtokensused=cb.total_tokens
+
+        print('nbtokensused',nbtokensused)
+        print('openai cost',nbtokensused*openaipricing(modelforsummarizing))
+
         #chain.run(docs)
         print('res',res)
         #input("Press Enter to continueb...")
@@ -783,7 +871,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     language2 = li['name']
     print('language2',language2)
 
-    prompt5 = f"Create a blog article in html about this research paper: {summary}"
+    prompt5 = f"Create a detailed blog article in html about this research paper: {summary}"
     if language != 'en':
         prompt5 += "TRANSLATE THE ANSWER IN "+language2
 

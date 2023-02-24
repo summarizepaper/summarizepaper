@@ -1016,7 +1016,7 @@ function addTheListeners() {
       const messageb = JSON.parse(event.data).message;
       const chatbotResponse = document.createElement('div');
       chatbotResponse.classList.add('chatbot-response');
-      chatbotResponse.innerText = messageb;
+      chatbotResponse.innerText = "{% trans 'AI:' %} "+messageb;
       chatbotMessages.appendChild(chatbotResponse);
       var blinkingSquare = document.querySelector(".blinking-square");
 
@@ -1128,7 +1128,7 @@ function addTheListeners() {
   chatbotInput.value = '';
   const chatbotMessage = document.createElement('div');
   chatbotMessage.classList.add('chatbot-message');
-  chatbotMessage.innerText = messagec;
+  chatbotMessage.innerText = "{% trans 'You:' %} "+messagec;
   const blinkingSquare = document.createElement('span');
   blinkingSquare.classList.add('blinking-square');
   chatbotMessage.appendChild(blinkingSquare);

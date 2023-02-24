@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-23 15:06+0000\n"
-"PO-Revision-Date: 2023-02-23 15:07+0000\n"
+"POT-Creation-Date: 2023-02-23 17:49+0000\n"
+"PO-Revision-Date: 2023-02-23 17:49+0000\n"
 "Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -554,6 +554,10 @@ msgstr ""
 "et le processus de synthèse est ici réalisé avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
+#: templates/summarizer/arxividpage.html:1019
+msgid "AI:"
+msgstr "IA :"
+
 #: templates/summarizer/arxividpage.html:1044
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr "Erreur: connexion au WebSocket fermée (rechargez la page)."
@@ -561,6 +565,10 @@ msgstr "Erreur: connexion au WebSocket fermée (rechargez la page)."
 #: templates/summarizer/arxividpage.html:1118
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr "Erreur : connexion au WebSocket fermée. Rechargez la page."
+
+#: templates/summarizer/arxividpage.html:1131
+msgid "You:"
+msgstr "Vous :"
 
 #: templates/summarizer/contact.html:6
 msgid ""
