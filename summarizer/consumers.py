@@ -160,7 +160,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 created=await c
                 print('crea',created)
 
-            input('stop here')
+            #input('stop here')
 
             message["progress"] = 40
             if language == 'fr':
