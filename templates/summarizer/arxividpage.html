@@ -723,7 +723,10 @@
         <li>{% trans 'The assistant will only answer questions related to this specific paper.' %}</li>
         <li>{% trans 'Please note that this is not a bot for casual chatting.' %}</li>
         <li>{% trans 'If you want the answer in a language other than the language you chose for navigating the website, simply add "TRANSLATE IN LANGUAGE L" at the end of your query (replace "LANGUAGE L" with the language of your choice).' %}</li>
-        <li>{% trans 'For example, you could ask "Can you extract the most important aspect of the paper? TRANSLATE IN SPANISH"' %}</li>
+        <li>{% trans 'For example, you could ask "Can you extract the most important aspect of the paper? TRANSLATE IN SPANISH".' %}</li>
+        {% if not request.user.is_authenticated %}
+        <li>{% trans 'If you want to keep the history of your questions/answers you should create an account.' %}</li>
+        {% endif %}
     </ol>
   </div>
 

@@ -201,11 +201,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(utils.finalise_and_keywords(arxiv_id, language, sum, settings.OPENAI_KEY))
                 sum, kw = await c
 
-                c=asyncio.create_task(self.send_message_sum(sum))
-                await c
-
-                print('hfjggkg2')
-
                 message["progress"] = 50
                 if language == 'fr':
                     message["loading_message"] = "Extraction des points clefs de l'article..."
@@ -218,9 +213,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
-                print('hfjggkg')
+                c=asyncio.create_task(self.send_message_sum(sum))
+                await c
 
-
+                print('hfjggkg2')
 
                 c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
                 notes = await c
