@@ -279,7 +279,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-bottom:40px;
+  margin-bottom:10px;
   margin-top:30px;
   width: 100%;
   height: 100%;
@@ -418,6 +418,188 @@
   margin-left: 5px;
 }
 
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keyword {
+  display: inline-block;
+  margin-right:8px;
+  margin-left:8px;
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+#chatbot-toggle {
+  display: block;
+  width: 200px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+
+#chatbot-toggle:hover {
+  background-color: #e8e8e8;
+}
+
+
+.chatbot-instructions p {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+
+
+.chatbot-instructions {
+  display: none;
+  margin: 20px auto;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.chatbot-instructions ol {
+    counter-reset: my-counter;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.chatbot-instructions ol li {
+    counter-increment: my-counter;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.chatbot-instructions ol li:before {
+    content: counter(my-counter) ".";
+    background-color: #2196f3;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    height: 24px;
+    line-height: 24px;
+    margin-right: 10px;
+    text-align: center;
+    width: 24px;
+}
+
+.chatbot-instructions ol li:last-child {
+    margin-bottom: 0;
+}
+
+.chatbot-instructions ol li:last-child:before {
+    content: counter(my-counter) ".";
+    background-color: #2196f3;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    height: 24px;
+    line-height: 24px;
+    margin-right: 10px;
+    text-align: center;
+    width: 24px;
+}
+
+
+.key-points-container {
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 20px 0;
+}
+
+.key-points-header {
+  background-color: #eee;
+  padding: 5px;
+  border-radius: 5px 5px 0 0;
+  text-align: center;
+}
+
+.key-points-header h3 {
+  margin: 0;
+}
+
+
+.key-points-body ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.key-points-body {
+  background-color: #f2f2f2;
+  border-radius: 5px;
+  padding: 20px;
+}
+
+.key-points-body li {
+  position: relative;
+  padding-left: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  font-size: 18px;
+}
+
+.key-points-body li:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3CB371;
+}
+
+.paper-resources {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      color: #333;
+      background-color: #f8f9a0;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      display: inline-block;
+  }
+
+  .paper-resources a {
+      color: #007bff;
+      text-decoration: none;
+  }
+
+  .paper-resources a:hover {
+      text-decoration: underline;
+  }
 </style>
 {% endblock %}
 
@@ -437,9 +619,40 @@
   {% if paper.title %}
     <div class="title"><h2>{{ paper.title }}</h2></div>
   {% endif %}
+  {% if keywords %}
+    <div class="keywords">
+      <span class="label">{% trans 'AI-generated keywords:' %}
+      {% for kw in keywords %}
+        <span class="keyword">{{ kw }}</span>
+      {% endfor %}
+      </span>
+    </div>
+  {% endif %}
+  {% if notes %}
+  <div class="key-points-container">
+  <div class="key-points-header">
+    <h3>{% trans 'AI-generated Key Points' %}</h3>
+  </div>
+  <div class="key-points-body">
+    <ul>
+      {% for point in notes2 %}
+      <li>{{ point }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="paper-resources">
+    {% trans 'Also access our AI generated:' %}
+      <a href="#results" onclick="switchTab(0)">{% trans 'Comprehensive summary' %}</a>,
+      <a href="#results" onclick="switchTab(2)">{% trans 'Lay summary' %}</a>,
+      or
+      <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a> {% trans 'about this paper.' %}
+  </div>
+</div>
+
+  {% endif %}
     <div class="subtitle">
       {% if paper.authors.all %}
-        <p>
+        <p><b>{% trans 'Authors:' %}</b>
           {% for author in paper.authors.all %}
             {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% endif %}{% if not forloop.last %}, {% endif %}
           {% endfor %}
@@ -474,9 +687,8 @@
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
-
-
   </div>
+
   <div class="chatbot-container">
     <div class="chatbot-body">
     <div class="chatbot-header">
@@ -488,6 +700,12 @@
     </div>
     <div class="chatbot-body">
       <div class="chatbot-messages">
+        {% if chathistory %}
+          {% for chat in chathistory %}
+            <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
+            <div class="chatbot-response">{% trans 'AI' %} - {{ chat.response }}</div>
+          {% endfor %}
+        {% endif %}
       </div>
       <form class="chatbot-form">
         <input type="text" placeholder="{% trans 'Type your question here' %}">
@@ -498,8 +716,19 @@
     </div>
     </div>
   </div>
+  <a id="chatbot-toggle" href="#">{% trans 'AI assistant instructions?' %}</a>
+  <div class="chatbot-instructions" style="display: none;">
+    <p>{% trans 'Welcome to our AI assistant! Here are some important things to keep in mind:' %}</p>
+    <ol>
+        <li>{% trans 'The assistant will only answer questions related to this specific paper.' %}</li>
+        <li>{% trans 'Please note that this is not a bot for casual chatting.' %}</li>
+        <li>{% trans 'If you want the answer in a language other than the language you chose for navigating the website, simply add "TRANSLATE IN LANGUAGE L" at the end of your query (replace "LANGUAGE L" with the language of your choice).' %}</li>
+        <li>{% trans 'For example, you could ask "Can you extract the most important aspect of the paper? TRANSLATE IN SPANISH"' %}</li>
+    </ol>
+  </div>
 
-  <div class="message-box">
+
+  <div class="message-box" id="results">
     <h1 class="message-header">{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id }}</h1>
     {% if not public %}
     <p class="message-header2"><small><span class="warning-sign">&#9888;</span>{% trans "This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article." %}</small></p>
@@ -1001,6 +1230,16 @@ function updateCache(arxiv_id) {
 {% if alpaper %}
 
 <script>
+    const chatbotToggle = document.querySelector('#chatbot-toggle');
+    const chatbotInstructions = document.querySelector('.chatbot-instructions');
+
+    chatbotToggle.addEventListener('click', () => {
+      event.preventDefault();
+      chatbotInstructions.style.display = chatbotInstructions.style.display === 'none' ? 'block' : 'none';
+    });
+</script>
+
+<script>
 
 function addTheListeners() {
   //alert('ok');
@@ -1018,7 +1257,7 @@ function addTheListeners() {
       const messageb = JSON.parse(event.data).message;
       const chatbotResponse = document.createElement('div');
       chatbotResponse.classList.add('chatbot-response');
-      chatbotResponse.innerText = "{% trans 'AI:' %} "+messageb;
+      chatbotResponse.innerText = "{% trans 'AI -' %} "+messageb;
       chatbotMessages.appendChild(chatbotResponse);
       var blinkingSquare = document.querySelector(".blinking-square");
 
@@ -1027,12 +1266,12 @@ function addTheListeners() {
       var loadingSpinner = document.getElementById("loading-spinner");
       loadingSpinner.style.display = "none";
 
-      var messagesContainer = document.querySelector(".chatbot-messages");
+      /*var messagesContainer = document.querySelector(".chatbot-messages");
 
       // Function to scroll the container to the bottom
       function scrollToBottom() {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
+      }*/
 
       // Scroll the container to the bottom
       scrollToBottom();
@@ -1069,6 +1308,7 @@ function addTheListeners() {
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
   const language = "{{ language }}"
   //console.log(language);
+  const user = "{{ request.user }}"
   let isListenerAdded = false;
 
   const chatbotMessages = document.querySelector('.chatbot-messages');
@@ -1130,24 +1370,24 @@ function addTheListeners() {
   chatbotInput.value = '';
   const chatbotMessage = document.createElement('div');
   chatbotMessage.classList.add('chatbot-message');
-  chatbotMessage.innerText = "{% trans 'You:' %} "+messagec;
+  chatbotMessage.innerText = "{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %} "+messagec;
   const blinkingSquare = document.createElement('span');
   blinkingSquare.classList.add('blinking-square');
   chatbotMessage.appendChild(blinkingSquare);
   chatbotMessages.appendChild(chatbotMessage);
-  var messagesContainer = document.querySelector(".chatbot-messages");
+  //var messagesContainer = document.querySelector(".chatbot-messages");
   var loadingSpinner = document.getElementById("loading-spinner");
   loadingSpinner.style.display = "block";
 
   // Function to scroll the container to the bottom
-  function scrollToBottom() {
+  /*function scrollToBottom() {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }
+  }*/
 
   // Scroll the container to the bottom
   scrollToBottom();
 
-  sendWebSocketMessage(messagec);
+  sendWebSocketMessage(messagec,user);
   //socketl.send(JSON.stringify({message: messagec}));
 
   if (!isListenerAdded) {
@@ -1160,14 +1400,14 @@ function addTheListeners() {
 
 <script>
 
-function sendWebSocketMessage(message2) {
+function sendWebSocketMessage(message2,user) {
   if (socketl && socketl.readyState === WebSocket.OPEN) {
     //console.log('sending...')
-    socketl.send(JSON.stringify({message: message2}));
+    socketl.send(JSON.stringify({message: message2, user:user}));
   } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
     //console.log("WebSocket connecting...");
     setTimeout(function() {
-      sendWebSocketMessage(message2);
+      sendWebSocketMessage(message2,user);
       //console.log("wait");
     }, 1000);
   } else {
@@ -1176,6 +1416,18 @@ function sendWebSocketMessage(message2) {
 }
 
 </script>
+
+<script>
+  // Define a function that scrolls to the bottom of the chatbot-messages div
+  function scrollToBottom() {
+    var messagesContainer = document.querySelector(".chatbot-messages");
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  // Call the scrollToBottom function when the page is fully loaded
+  window.addEventListener("load", scrollToBottom);
+</script>
+
 {% endif %}
 
 {% endif %}

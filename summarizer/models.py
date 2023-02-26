@@ -7,6 +7,7 @@ class CustomUser(User):#add here if want to add CB info
     pass
 
 class Author(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=200)
     affiliation = models.CharField(max_length=300, blank=True, null=True)
 
@@ -14,6 +15,7 @@ class Author(models.Model):
         return self.name+' '+self.affiliation
 
 class PaperHistory(models.Model):
+    id = models.AutoField(primary_key=True)
     arxiv_id = models.CharField(max_length=20)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -49,11 +51,13 @@ class ArxivPaper(models.Model):
         return self.arxiv_id+' '+self.title
 
 class SummaryPaper(models.Model):
+    id = models.AutoField(primary_key=True)
     paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
     summary = models.TextField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     lay_summary = models.TextField(blank=True, null=True)
     blog = models.TextField(blank=True, null=True)
+    keywords = models.TextField(blank=True, null=True)
     lang = models.CharField(max_length=10,default='en')
 
     def __str__(self):
@@ -61,6 +65,7 @@ class SummaryPaper(models.Model):
 
 
 class PaperAuthor(models.Model):
+    id = models.AutoField(primary_key=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
     author_order = models.PositiveSmallIntegerField()
@@ -79,6 +84,7 @@ class Vote(models.Model):
         (UP, 'Up'),
         (DOWN, 'Down'),
     )
+    id = models.AutoField(primary_key=True)
     vote = models.SmallIntegerField(choices=VOTE_CHOICES)
     paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
     ip_address = models.TextField(blank=True, null=True)
@@ -91,10 +97,24 @@ class Vote(models.Model):
 
 
 class PickledData(models.Model):
+    id = models.AutoField(primary_key=True)
     arxiv_id = models.CharField(max_length=20)
     docstore_pickle = models.BinaryField(editable=True)
     buffer = models.BinaryField(editable=True)
     index_to_docstore_id_pickle = models.BinaryField(editable=True)
+
+    def __str__(self):
+        return self.arxiv_id
+
+class AIassistant(models.Model):
+    id = models.AutoField(primary_key=True)
+    arxiv_id = models.CharField(max_length=20)
+    query = models.TextField(blank=True, null=True)
+    response = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField(default=True)
+    lang = models.CharField(max_length=10,default='en')
 
     def __str__(self):
         return self.arxiv_id

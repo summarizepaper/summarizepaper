@@ -15,6 +15,7 @@ from django.core.cache import cache
 class LoadingConsumer(AsyncWebsocketConsumer):
     sendmessages_running = {}
 
+
     async def send_message_now(self,message):
         print('in sendmesnow',message)
 
@@ -172,15 +173,17 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-            message["progress"] = 50
+            message["progress"] = 45
             if language == 'fr':
-                message["loading_message"] = "Extraction des points clefs de l'article..."
+                message["loading_message"] = "Création du résumé en cours..."
             else:
-                message["loading_message"] = "Extracting key points of the article..."
+                message["loading_message"] = "Summarizing in progress..."
             #await self.send_message_now(message)
 
             c=asyncio.create_task(self.send_message_now(message))
             await c
+
+
 
             c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
             sum = await c
@@ -192,8 +195,46 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 if 'error_message' in sum:
                     print("Received error message sum:", sum)
                     sum='Error: needs to be re-run'
+
+                print('hfjggkg0a')
+
+                c=asyncio.create_task(utils.finalise_and_keywords(arxiv_id, language, sum, settings.OPENAI_KEY))
+                sum, kw = await c
+
                 c=asyncio.create_task(self.send_message_sum(sum))
                 await c
+
+                print('hfjggkg2')
+
+                message["progress"] = 50
+                if language == 'fr':
+                    message["loading_message"] = "Extraction des points clefs de l'article..."
+                else:
+                    message["loading_message"] = "Extracting key points of the article..."
+                #await self.send_message_now(message)
+
+                print('hfjggkg0')
+
+                c=asyncio.create_task(self.send_message_now(message))
+                await c
+
+                print('hfjggkg')
+
+
+
+                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
+                notes = await c
+                if 'error_message' in notes:
+                    print("Received error message notes:", notes)
+                    notes='Error: needs to be re-run'
+                c=asyncio.create_task(self.send_message_notes(notes))
+                await c
+
+                print('hfjggkg3')
+
+                # Print the key points
+                for key_point in notes:
+                    print('note',key_point)
 
                 message["progress"] = 60
                 #message["loading_message"] = "Extracting key points..."
@@ -204,26 +245,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
-                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
-                notes = await c
-                if 'error_message' in notes:
-                    print("Received error message notes:", notes)
-                    notes='Error: needs to be re-run'
-                c=asyncio.create_task(self.send_message_notes(notes))
-                await c
 
-                # Print the key points
-                for key_point in notes:
-                    print('note',key_point)
-
-                message["progress"] = 80
-                if language == 'fr':
-                    message["loading_message"] = "Création d'un article type blog"
-                else:
-                    message["loading_message"] = "Creating a blog-like article"
-                #message["loading_message"] = "Creating a simple summary for a 10 year old..."
-                c=asyncio.create_task(self.send_message_now(message))
-                await c
 
                 c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, settings.OPENAI_KEY))
                 laysum = await c
@@ -234,13 +256,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_laysum(laysum))
                 await c
 
-                message["progress"] = 90
+                message["progress"] = 80
                 if language == 'fr':
-                    message["loading_message"] = "Finition en cours..."
+                    message["loading_message"] = "Création d'un article type blog"
                 else:
-                    message["loading_message"] = "Wrapping this up..."
+                    message["loading_message"] = "Creating a blog-like article"
+                #message["loading_message"] = "Creating a simple summary for a 10 year old..."
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
+
+
 
                 c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, settings.OPENAI_KEY))
                 blog = await c
@@ -256,7 +281,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 notes=sum
                 blog=sum
 
-            message["progress"] = 95
+            message["progress"] = 90
             if language == 'fr':
                 message["loading_message"] = "Presque terminé..."
             else:
@@ -264,7 +289,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-        suma=[sum.replace(':\n', ''),laysum.replace(':\n', ''),notes,blog]
+        suma=[sum.replace(':\n', ''),laysum.replace(':\n', ''),notes,blog,kw]
         return suma
 
     def updatesumpaper(self,arxiv_id,language,sumarray):
@@ -272,7 +297,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         sumpaper, created = SummaryPaper.objects.update_or_create(
             paper=paper,lang=language,
-            defaults={'summary': sumarray['summary'],'notes': sumarray['notes'],'lay_summary': sumarray['lay_summary'],'blog': sumarray['blog']}
+            defaults={'summary': sumarray['summary'],'notes': sumarray['notes'],'lay_summary': sumarray['lay_summary'],'blog': sumarray['blog'], 'keywords': sumarray['keywords']}
         )
         return sumpaper,created
 
@@ -427,7 +452,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         sumarray=await sumarra
         print('aprescompute')
 
-        keysum = ['summary', 'lay_summary', 'notes','blog']
+        keysum = ['summary', 'lay_summary', 'notes','blog', 'keywords']
         sum_dict = dict(zip(keysum, sumarray))
 
         print('suma',sum_dict)
@@ -508,11 +533,13 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         else:
             message = data["message"]
             print('receive',message)
+            user = data["user"]
+            print('receive',user)
             #response = "reponse brah"#process_message(message)
             print('avant chat bot')
             #query = "Create a summary and tell me who the authors are?"
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY))
+            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user))
             #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
             chatbot_text=await c
             print('apres chat bot',chatbot_text)
@@ -528,7 +555,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             # Send the response back to the client over the WebSocket connection
 
             await self.send(text_data=json.dumps({
-                'message': chatbot_text
+                'message': chatbot_text.lstrip(": ")
             }))
             print('send 2',chatbot_text)
 

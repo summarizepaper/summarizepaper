@@ -1,6 +1,7 @@
 import time
 import requests
-from .models import ArxivPaper, SummaryPaper, PickledData
+from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant
+from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
 from channels.db import database_sync_to_async
@@ -33,11 +34,13 @@ from langchain.llms import OpenAI
 from langchain.callbacks import get_openai_callback
 import pickle
 from django.utils.translation import get_language_info
+import nltk
 
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
 temp=0.3
-method="f"#"fromembeddings"#"langchain"#quentin
+method="fromembeddingsandabstract"#"fromembeddings"#"langchain"#quentin
+
 
 def openaipricing(model_name):
     #return cost per token in dollars
@@ -71,6 +74,31 @@ def readpaper(arxiv_id):
 
     return paper
 
+def getpaperabstract(arxiv_id):
+    paperabstract=ArxivPaper.objects.filter(arxiv_id=arxiv_id).values_list('abstract',flat=True)[0]
+
+    return paperabstract
+
+def getuserinst(user):
+    if User.objects.filter(username=user).exists():
+        userinst = User.objects.get(username=user)
+        # Do something with the admin_user instance
+    else:
+        userinst = None# AnonymousUser()
+
+    return userinst
+
+def storeconversation(arxiv_id,query,response,user,lang):
+
+    AIassistant.objects.create(
+        arxiv_id=arxiv_id,
+        query=query,
+        response=response,
+        user=user,
+        lang=lang
+    )
+
+
 def storepickle(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer):
 
     obj, created = PickledData.objects.update_or_create(
@@ -95,9 +123,11 @@ def getstorepickle(arxiv_id):
 
     return pickledata
 
+
+
 async def createindex(arxiv_id,book_text,api_key):
 
-    text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=1000, chunk_overlap=200)#limit at 8096 tokens
+    text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=800, chunk_overlap=200)#limit at 8096 tokens
     texts = text_splitter.split_text(book_text)
 
     '''
@@ -115,8 +145,22 @@ async def createindex(arxiv_id,book_text,api_key):
 
     new_docsearch=embeddings
 
-    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
+    #docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
 
+    metadatas = [
+        {"source": f"from {texts[i][0:30]} --- to --- {texts[i][len(texts[i])-30:-1]}"}
+        for i in range(len(texts))
+    ]
+
+    # Print the metadata
+    #for metadata in metadatas:
+    #    print('met',metadata)
+
+    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=metadatas)
+
+
+
+    #input('jkll')
     #docsearch = Chroma.from_texts(texts, embeddings)
     #tu=FAISS.save_local(docsearch,"savedocsearch")
 
@@ -142,7 +186,7 @@ async def createindex(arxiv_id,book_text,api_key):
     print('ok created',created)
     return created
 
-async def chatbot(arxiv_id,language,query,api_key):
+async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
     print('in chatbot')
 
     li = get_language_info(language)
@@ -163,9 +207,12 @@ async def chatbot(arxiv_id,language,query,api_key):
         docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
         index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
 
-        from langchain.chains import ChatVectorDBChain
+        #from langchain.chains import ChatVectorDBChain
 
-        llm = OpenAI(temperature=0.3,max_tokens=1000,openai_api_key=api_key)
+        if sum==1:
+            llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+        else:
+            llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
 
         '''
         For streaming
@@ -181,57 +228,64 @@ async def chatbot(arxiv_id,language,query,api_key):
         #return cls(embeddings.embed_query, index, docstore, index_to_docstore_id)
         docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
 
+        if sum == 1:
+            kvalue=3
+        else:
+            kvalue=3
 
-        docs = docsearch2.similarity_search(query,k=3)
+        docs = docsearch2.similarity_search(query,k=kvalue)
         print('docs:',docs)
 
-        #this is for map_reduce
-        '''
-        question_prompt_template = """Use the following portion of a long document to see if any of the text is relevant to answer the question.
-        Return any relevant text translated into french.
-        {context}
-        Question: {question}
-        Relevant text, if any, in French:"""
-        QUESTION_PROMPT = PromptTemplate(
-            template=question_prompt_template, input_variables=["context", "question"]
-        )
 
-        combine_prompt_template = """Given the following extracted parts of a long document and a question, create a final answer in French.
-        ALWAYS return a "SOURCES" part in your answer.
+        if sum==1:
+            template = """We have an existing summary: {existing_answer}
+                We have the opportunity to expand and refine the existing summary
+                with some more context below.
+                ------------
+                {summaries}
+                ------------
+                Given the new context, create a refined detailed longer summary.
+                """
+        else:
+            template = """Given the following extracted parts of a long document and a question, create a final answer.
+            If you are not sure about the answer, just say that you are not sure before making up an answer.
 
-        QUESTION: {question}
-        =========
-        {summaries}
-        =========
-        Answer in French:"""
-        COMBINE_PROMPT = PromptTemplate(
-            template=combine_prompt_template, input_variables=["summaries", "question"]
-        )
-        chain = load_qa_with_sources_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
-        #chain = load_qa_chain(llm, chain_type="map_reduce", return_map_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
-        getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
-        '''
-        #        If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+            QUESTION: {question}
+            =========
+            {summaries}
+            =========
 
-        template = """Given the following extracted parts of a long document and a question, create a final answer.
-        If you are not sure about the answer, just say that you are not sure before making up an answer.
+            """
 
-        QUESTION: {question}
-        =========
-        {summaries}
-        =========
-
-        """
-
-        if language != 'en':
-            template += """FINAL ANSWER IN """+language2
+        #if language != 'en'
+        #    template += """FINAL ANSWER IN """+language2
 
         print('tem',template)
 
-        PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
+        if sum==1:
+            if language != 'en':
+                template += """FINAL ANSWER IN """+language2
+            c = asyncio.create_task(sync_to_async(getpaperabstract)(arxiv_id))
+            paperabstract=await c
+            PROMPT = PromptTemplate(template=template, input_variables=["summaries", "existing_answer"])
+        else:
+            if language != 'en' and not 'TRANSLATE' in query:
+                template += """FINAL ANSWER IN """+language2
+            PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
 
         chain = load_qa_with_sources_chain(llm, chain_type="stuff", prompt=PROMPT)
-        getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=False)
+
+        with get_openai_callback() as cb:
+
+            if sum==1:
+                getresponse=chain({"input_documents": docs, "existing_answer": paperabstract}, return_only_outputs=False)
+            else:
+                getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=False)
+
+            nbtokensused=cb.total_tokens
+
+        print('nbtokensusedchatbot',nbtokensused)
+        print('openai cost chatbot',nbtokensused*openaipricing("text-davinci-003"))
 
         #qa = ChatVectorDBChain.from_llm(llm, docs)
         #chat_history = []
@@ -246,34 +300,17 @@ async def chatbot(arxiv_id,language,query,api_key):
         print('getresponse',getresponse)
         print('getresponse2',getresponse['output_text'])
 
-        finalresp=getresponse['output_text'].replace(':\n', '')
+        finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
 
-        '''
-        lenchunck=10
-        lenchunck2=lenchunck
+        #store the query and answer
+        if sum != 1:
+            c = asyncio.create_task(sync_to_async(getuserinst)(user))
+            userinst = await c
 
-        if len(finalresp)>lenchunck2:
-            chunck=finalresp[lenchunck2-lenchunck:lenchunck2-1]
-            lenchunck2+=lenchunck
-            input('ok'+chunck)
-        #chunks = [response[i:i+10] for i in range(0, len(response), 10)]
-        '''
+            c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language))
+            await c
 
-        #text_chunks = text_splitter.split_text(finaresp)
-
-        # Yield each chunk of the generated text
-        #for text_chunk in text_chunks:
-        #    yield text_chunk
-
-        #chunk_size = 4096
-        #chunks = [book_text[i:i+chunk_size] for i in range(0, len(book_text), chunk_size)]
-
-        # Send each chunk to the API for summarization
-        #summarized_chunks = []
-        #for chunk in chunks:
-        #input("Press Enter to continue...")
-
-        return finalresp.rstrip().lstrip()
+        return finalresp
     #else:
     #    return None
 
@@ -583,6 +620,8 @@ async def send_message_now(arxiv_group_name,message):
         arxiv_group_name, {"type": "progress_text_update", "message": message}
     )
 
+
+
 async def summarize_book(arxiv_id, language, book_text, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
@@ -715,6 +754,38 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
         #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
         final_summarized_text =await c
         print('apres final_summarized_text',final_summarized_text)
+    elif method=='fromembeddingsandabstract':
+        print('from embeddings2')
+        query="Create a long detailed summary of the paper"
+
+        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,sum=1))
+        #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
+        final_summarized_text = await c
+        print('before nltk final_summarized_text',final_summarized_text)
+
+
+        # Download the nltk punkt tokenizer if necessary
+        nltk.download('punkt')
+
+
+        # Split the summary into individual sentences
+        sentences = nltk.sent_tokenize(final_summarized_text)
+
+        # Filter out sentence fragments
+        final_summarized_text = [s for s in sentences if s.endswith((".", "!", "?"))]
+
+        # Print the full sentences
+        #for s in final_summarized_text:
+        #    print(s)
+        final_summarized_text = ' '.join(final_summarized_text)
+
+        print('await')
+        #await asyncio.sleep(50)
+
+
+
+        #final_summarized_text=finalise_and_keywordsb
+        print('apres final_summarized_text',final_summarized_text)
 
     else:
         #llm = OpenAI(temperature=0,openai_api_key=api_key)
@@ -786,6 +857,98 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
 
     return final_summarized_text
 
+
+async def finalise_and_keywords(arxiv_id, language, summary, api_key):
+    endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
+
+    #Extract the most important key points from the following text
+    prompt3b = """
+        Improve the text and remove all unfinished sentences from: {}
+
+        Moreover, create 5 keywords from the text and write them at the beginning of the output between <kd> </kd> tags
+
+    """.format(summary)
+
+    print('finalise sum',prompt3b)
+    if language != 'en':
+        prompt3b += "TRANSLATE THE ANSWER IN "+language2
+
+
+    headers3b = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+
+    try:
+        print('in try2b')
+        if response3b.status_code != 200:
+            print("in2b ! 200")
+            raise Exception(f"Failed to summarize text2b: {response3b.text}")
+    except Exception as e:
+        print('in redirect2b')
+        # Redirect to the arxividpage and pass the error message
+        return {
+            "error_message": str(e),
+        }        #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+
+    #if response3.status_code != 200:
+    #    raise Exception(f"Failed to extract key points: {response3.text}")
+
+    print('icccciiiiiib',response3b.json()["choices"][0]["text"])
+
+    finalise_and_keywords2 = response3b.json()["choices"][0]["text"].rstrip().lstrip()
+    print('finalise_and_keywords',finalise_and_keywords2)
+
+    # Find the text between the <keywords> tags
+    match = re.search(r"<kd>(.*?)</kd>", finalise_and_keywords2)
+    if match:
+        # Extract the text between the tags
+        keywords_text = match.group(1)
+
+        # Remove the tags and the extracted text from the original text
+        finalise_and_keywords2 = re.sub(r"<kd>.*?</kd>", "", finalise_and_keywords2)
+
+        # Print the extracted text and the text without the keywords
+        print("Keywords: {}".format(keywords_text))
+        print("Text without keywords: {}".format(finalise_and_keywords2))
+        #save the keywords
+
+    else:
+        print("No keywords found in text")
+        keywords_text=''
+
+
+
+
+    sentences = nltk.sent_tokenize(finalise_and_keywords2)
+
+    # Filter out sentence fragments
+    finalise_and_keywords2 = [s for s in sentences if s.endswith((".", "!", "?"))]
+
+    # Print the full sentences
+    #for s in final_summarized_text:
+    #    print(s)
+    finalise_and_keywords2 = ' '.join(finalise_and_keywords2)
+    print('simple_sum after',finalise_and_keywords2)
+
+
+    '''#problem cuz keypoints do not finish with dots
+    sentences = nltk.sent_tokenize(' '.join(key_points))
+
+    # Filter out sentence fragments
+    sentences = [s for s in sentences if s.endswith((".", "!", "?"))]
+
+    # Join the remaining sentences into a single string
+    key_points = sentences
+    print('key_points after',key_points)
+    '''
+
+    return [finalise_and_keywords2,keywords_text]
+
 async def extract_key_points(arxiv_id, language, summary, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
     li = get_language_info(language)
@@ -803,7 +966,7 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500, "temperature": temp, "n":1, "stop":None})
+    response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try2')
@@ -822,8 +985,19 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
 
     print('icccciiiiii',response3.json()["choices"][0]["text"])
 
-    key_points = response3.json()["choices"][0]["text"].strip().split("\n")
+    key_points = response3.json()["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
     print('key_points',key_points)
+
+    '''#problem cuz keypoints do not finish with dots
+    sentences = nltk.sent_tokenize(' '.join(key_points))
+
+    # Filter out sentence fragments
+    sentences = [s for s in sentences if s.endswith((".", "!", "?"))]
+
+    # Join the remaining sentences into a single string
+    key_points = sentences
+    print('key_points after',key_points)
+    '''
 
     return key_points
 
@@ -833,7 +1007,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     language2 = li['name']
     print('language2',language2)
 
-    prompt4 = f"Summarize the following key points in 3 sentences for a 10 yr old: {keyp}"
+    prompt4 = f"Summarize the following key points in 5 sentences for a six year old kid: {keyp}"
     if language != 'en':
         prompt4 += "TRANSLATE THE ANSWER IN "+language2
 
@@ -841,7 +1015,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300, "temperature": temp, "n":1, "stop":None})
+    response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try3')
@@ -862,8 +1036,19 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
 
     simple_sum = response4.json()["choices"][0]["text"]#.strip().split("\n")
     print('simple_sum',simple_sum)
+    # Split the summary into individual sentences
+    sentences = nltk.sent_tokenize(simple_sum)
 
-    return simple_sum
+    # Filter out sentence fragments
+    simple_sum = [s for s in sentences if s.endswith((".", "!", "?"))]
+
+    # Print the full sentences
+    #for s in final_summarized_text:
+    #    print(s)
+    simple_sum = ' '.join(simple_sum)
+    print('simple_sum after',simple_sum)
+
+    return simple_sum.rstrip().lstrip()
 
 async def extract_blog_article(arxiv_id, language, summary, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
@@ -879,7 +1064,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+    response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try5')
@@ -900,8 +1085,18 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
     blog_article = response5.json()["choices"][0]["text"]#.strip().split("\n")
     print('blog article',blog_article)
+    sentences = nltk.sent_tokenize(blog_article)
 
-    return blog_article
+    # Filter out sentence fragments
+    blog_article = [s for s in sentences if s.endswith((".", "!", "?"))]
+
+    # Print the full sentences
+    #for s in final_summarized_text:
+    #    print(s)
+    blog_article = ' '.join(blog_article)
+    print('blog article after',blog_article)
+
+    return blog_article.rstrip().lstrip()
 
 def get_arxiv_metadata(arxiv_id):
     url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"

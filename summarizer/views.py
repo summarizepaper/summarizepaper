@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, SummaryPaper
+from .models import ArxivPaper, Vote, PaperHistory, SummaryPaper, AIassistant
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -382,6 +382,13 @@ def arxividpage(request, arxiv_id, error_message=None):
                 print('sumlang',list(sumlang))
                 sumlang=list(sumlang)
 
+            chathistory=''
+            if request.user.is_authenticated:
+                print('authent')
+                if AIassistant.objects.filter(arxiv_id=arxiv_id,active=True,user=request.user).exists():
+                    print('exist AI assistant')
+                    chathistory=AIassistant.objects.filter(arxiv_id=arxiv_id,active=True,user=request.user).order_by('created')
+
             alpaper=True
             print('paper',paper.abstract)
             total_votes=0
@@ -429,27 +436,47 @@ def arxividpage(request, arxiv_id, error_message=None):
 
             #paper.abstract = escape_latex(paper.abstract)
             notes=''
+            kw=''
             if sumpaper:
                 if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
                     print('nnnnnnoooottees',sumpaper.notes)
                     try:
                         notes = ast.literal_eval(sumpaper.notes)
+                        notes2 = [note.replace('•', '') for note in notes]
+
                     except ValueError:
                         # Handle the error by returning a response with an error message to the user
                         return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
-
                 else:
                     notes=['Error: needs to be re-run']
+                    notes2=''
+
+                if (sumpaper.keywords is not None) and (sumpaper.keywords != "") and (sumpaper.keywords != "['']"):
+                    print('keywords',sumpaper.keywords)
+                    try:
+                        keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
+                        keywords_list = [keyword.strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
+                        keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
+                        keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
+                        #keywords = ast.literal_eval('['+sumpaper.keywords+']')
+                    except ValueError:
+                        # Handle the error by returning a response with an error message to the user
+                        return HttpResponse("Invalid input: 'keywords' attribute is not a valid Python literal.")
+                else:
+                    keywords=''
 
             stuff_for_frontend.update({
                 'paper':paper,
+                'keywords':keywords,
                 'sumpaper':sumpaper,
                 'sumlang':sumlang,
                 'notes':notes,
+                'notes2':notes2,
                 'cc_format':cc_format,
                 'toolong':toolong,
                 'public':public,
                 'total_votes':total_votes,
+                'chathistory':chathistory
             })
         else:
             print('nope')
