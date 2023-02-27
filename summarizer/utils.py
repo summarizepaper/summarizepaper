@@ -445,9 +445,9 @@ def summary_pdf(arxiv_id,language):
                 if h1_text:
                     h1_text = h1_text.group(1)
                     #self.set_font("Arial","I", size=12)
-                    self.set_font("DejaVU","I", size=12)
+                    self.set_font("DejaVu","I", size=12)
                     self.cell(0, 10, h1_text, 0, 1)
-                    self.set_font("DejaVU", size=11)
+                    self.set_font("DejaVu", size=11)
                     #self.set_font("Arial", size=11)
                     # Remove the extracted h1 text from the text to avoid duplication
                     text = text.replace(f"<b>{h1_text}</b>", "")
