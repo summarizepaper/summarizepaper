@@ -378,10 +378,11 @@ def summary_pdf(arxiv_id,language):
             def __init__(self):
                 super().__init__(orientation='P', unit='mm', format='A4')
                 #self.add_font('DejaVu', '', 'font/DejaVuSansCondensed.ttf', uni=True)
-
-                self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
-                self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
-                self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
+                print('os.path.join(settings.BASE_DIR, "font", "DejaVuSansCondensed.ttf")',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
+                self.add_font('DejaVu', '', "font/DejaVuSansCondensed.ttf", uni=True)
+                self.add_font('DejaVu', 'B', "font/DejaVuSansCondensed-Bold.ttf", uni=True)
+                self.add_font('DejaVu', 'I', "font/DejaVuSansCondensed-Oblique.ttf", uni=True)
+                #self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
 
                 self.add_page()
                 #self.set_font("Arial", size=12)
