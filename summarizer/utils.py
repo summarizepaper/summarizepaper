@@ -379,9 +379,9 @@ def summary_pdf(arxiv_id,language):
                 super().__init__(orientation='P', unit='mm', format='A4')
                 #self.add_font('DejaVu', '', 'font/DejaVuSansCondensed.ttf', uni=True)
 
-                #self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
-                #self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
-                #self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
+                self.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
+                self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
+                self.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
 
                 self.add_page()
                 #self.set_font("Arial", size=12)
@@ -389,14 +389,14 @@ def summary_pdf(arxiv_id,language):
 
 
             def header(self):
-                #self.set_font("DejaVu", "B", size=14)
-                self.set_font("Arial","B", size=14)
+                self.set_font("DejaVu", "B", size=14)
+                #self.set_font("Arial","B", size=14)
                 self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
                 self.ln(20)
 
             def paperdet(self, title, text, url):
-                #self.set_font("DejaVu", "B", size=12)
-                self.set_font("Arial","I", size=12)
+                self.set_font("DejaVu", "I", size=12)
+                #self.set_font("Arial","I", size=12)
                 self.cell(0, 10, "Title: "+title, 0, 1)
                 self.set_font("Arial", size=10)
 
@@ -436,16 +436,19 @@ def summary_pdf(arxiv_id,language):
 
 
             def section(self, title, text):
-                #self.set_font("DejaVu", "B", size=12)
-                self.set_font("Arial","B", size=12)
+                self.set_font("DejaVu", "B", size=12)
+                #self.set_font("Arial","B", size=12)
                 self.cell(0, 10, title, 0, 1)
-                self.set_font("Arial", size=12)
+                self.set_font("DejaVu", size=12)
+                #self.set_font("Arial", size=12)
                 h1_text = re.search(r'<b>(.*?)</b>', text)
                 if h1_text:
                     h1_text = h1_text.group(1)
-                    self.set_font("Arial","I", size=12)
+                    #self.set_font("Arial","I", size=12)
+                    self.set_font("DejaVU","I", size=12)
                     self.cell(0, 10, h1_text, 0, 1)
-                    self.set_font("Arial", size=11)
+                    self.set_font("DejaVU", size=11)
+                    #self.set_font("Arial", size=11)
                     # Remove the extracted h1 text from the text to avoid duplication
                     text = text.replace(f"<b>{h1_text}</b>", "")
                 self.multi_cell(0, 7, text)
