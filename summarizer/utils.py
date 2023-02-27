@@ -269,7 +269,7 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
             paperabstract=await c
             PROMPT = PromptTemplate(template=template, input_variables=["summaries", "existing_answer"])
         else:
-            if language != 'en' and not 'TRANSLATE' in query:
+            if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
                 template += """FINAL ANSWER IN """+language2
             PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
 

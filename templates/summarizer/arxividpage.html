@@ -632,6 +632,9 @@
   <div class="key-points-container">
   <div class="key-points-header">
     <h3>{% trans 'AI-generated Key Points' %}</h3>
+    {% if not public %}
+    <p style="display: inline-block; margin-top:10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the key points are generated using the paper metadata rather than the full article.' %}</small></p>
+    {% endif %}
   </div>
   <div class="key-points-body">
     <ul>
@@ -644,8 +647,8 @@
     {% trans 'Also access our AI generated:' %}
       <a href="#results" onclick="switchTab(0)">{% trans 'Comprehensive summary' %}</a>,
       <a href="#results" onclick="switchTab(2)">{% trans 'Lay summary' %}</a>,
-      or
-      <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a> {% trans 'about this paper.' %}
+      <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a>;
+      {% trans ' or Ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
   </div>
 </div>
 
@@ -689,7 +692,7 @@
     {% endif %}
   </div>
 
-  <div class="chatbot-container">
+  <div class="chatbot-container" id="assistant">
     <div class="chatbot-body">
     <div class="chatbot-header">
       <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
