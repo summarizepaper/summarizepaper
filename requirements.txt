@@ -22,4 +22,3 @@ tiktoken
 langchain
 openai
 faiss-cpu
-fpdf
