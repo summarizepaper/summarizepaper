@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %} {% trans 'Search Results for "{{ query }}"' %} {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans '.' %}" />
+  <style>
+    .search-results {
+      margin: 50px auto;
+      max-width: 800px;
+    }
+
+    .search-result {
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .search-result:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-result-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .search-result-metadata {
+      font-size: 14px;
+      color: #777;
+    }
+
+    .search-result-arxiv-id {
+      margin-bottom: 5px;
+    }
+
+    .search-result-authors {
+      margin-bottom: 5px;
+    }
+
+    .search-result-category {
+      font-style: italic;
+    }
+
+    .search-result a {
+      color: #333;
+    }
+
+    .search-result a:hover {
+      color: #007bff;
+    }
+    h1 {
+      position: relative;
+      left: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 50px;
+      margin-bottom: 30px;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      font-size: 18px;
+      color: #555;
+    }
+
+    .pagination a {
+      display: inline-block;
+      margin: 0 5px;
+      padding: 5px 10px;
+      background-color: #f2f2f2;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #555;
+    }
+
+    .pagination a:hover {
+      background-color: #ddd;
+    }
+
+    .pagination .active {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+  </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+  <h1>Search Results for "{{ query }}"</h1>
+  <div class="search-results">
+    {% for paper in page_obj %}
+    <div class="search-result">
+      <div class="search-result-title">
+        <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.arxiv_id }}">{{ paper.title }}</a>
+      </div>
+      <div class="search-result-metadata">
+        <div class="search-result-arxiv-id">
+          <a href="{{ paper.link }}" target="_blank">{{ paper.arxiv_id }}</a>
+        </div>
+        <div class="search-result-authors">{{ paper.authors|join:", " }}</div>
+        <div class="search-result-category">{{ paper.category }}</div>
+      </div>
+    </div>
+    {% endfor %}
+
+
+    <div class="pagination">
+      <span class="step-links">
+        {% if page_obj.has_previous %}
+          <a href="?q={{ query }}&page=1">&laquo; first</a>
+          <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">&lsaquo; previous</a>
+        {% endif %}
+
+        <span class="current-page">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">next &rsaquo;</a>
+          <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+      </span>
+    </div>
+
+  </div>
+
+{% endblock %}
+
+{% block scripts %}
+
+
+{% endblock %}

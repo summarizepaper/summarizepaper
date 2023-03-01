@@ -35,6 +35,9 @@ from langchain.callbacks import get_openai_callback
 import pickle
 from django.utils.translation import get_language_info
 import nltk
+from xml.etree import ElementTree
+import urllib, urllib.request
+
 
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
@@ -1102,7 +1105,117 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
     return blog_article.rstrip().lstrip()
 
+def arxiv_search(query):
+
+    #url = 'http://export.arxiv.org/api/query?search_query=ti:'+query+'&start=0&max_results=1&sortBy=lastUpdatedDate&sortOrder=ascending'
+    query = urllib.parse.quote(query)
+    # Define the API endpoint URL
+    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
+
+    response = urllib.request.urlopen(url)
+    data = response.read()
+    print('data',data.decode('utf-8'))
+    root = ElementTree.fromstring(data)
+
+    # find and modify the value of an element
+
+    ns = {'ns0': 'http://www.w3.org/2005/Atom','ns1':'http://a9.com/-/spec/opensearch/1.1/','ns2':'http://arxiv.org/schemas/atom'} # add more as needed
+    tit=root.find('ns0:title', ns).text
+
+    # Extract the authors, title, and abstract
+
+    #check if exists
+    exist=0
+    authors=""
+    authors_array=[]
+    affiliation=""
+    affiliation_array=[]
+    link_hp=""
+    link_hp_array=[]
+    title=""
+    title_array=[]
+    link_doi=""
+    link_doi_array=[]
+    abstract=""
+    abstract_array=[]
+    cat=""
+    cat_array=[]
+    updated=""
+    updated_array=[]
+    published=""
+    published_array=[]
+    journal_ref=""
+    journal_ref_array=[]
+    comments=""
+    comments_array=[]
+    papers=[]
+
+    for entry in root.findall("ns0:entry",ns):
+        if entry.find("ns0:title",ns) is not None:
+            exist=1
+            print('exist',exist)
+
+            if exist == 1:
+
+                #for entry in root.findall("ns0:entry",ns):
+                authors = []
+                affiliation = []
+                title = ""
+                abstract = ""
+                for author in entry.findall("ns0:author",ns):
+                    authors.append(author.find("ns0:name",ns).text)
+                    print('test',authors)
+                    if author.find("ns2:affiliation",ns) is not None:
+                        print('aff',author.find("ns2:affiliation",ns).text)
+                        affiliation.append(author.find("ns2:affiliation",ns).text)
+                    else:
+                        affiliation.append('')
+                authors_array.append(authors)
+                affiliation_array.append(affiliation)
+
+                link_hp = entry.find("ns0:id",ns).text
+                link_hp_array.append(link_hp)
+                title = entry.find("ns0:title",ns).text
+                title_array.append(title)
+                link_doi = entry.find("ns0:link",ns).attrib['href']
+                link_doi_array.append(link_doi)
+                abstract = entry.find("ns0:summary",ns).text
+                abstract_array.append(abstract)
+                if entry.find("ns2:primary_category",ns) is not None:
+                    cat = entry.find("ns2:primary_category",ns).attrib['term']
+                cat_array.append(cat)
+                updated = entry.find("ns0:updated",ns).text
+                updated_array.append(updated)
+                if entry.find("ns0:published",ns) is not None:
+                    published = entry.find("ns0:published",ns).text
+                published_array.append(published)
+                #print('kllll',entry.find("ns2:journal_ref",ns))
+                if entry.find("ns2:journal_ref",ns) is not None:
+                    journal_ref = entry.find("ns2:journal_ref",ns).text
+                else:
+                    journal_ref = ''
+                journal_ref_array.append(journal_ref)
+                if entry.find("ns2:comment",ns) is not None:
+                    comments = entry.find("ns2:comment",ns).text
+                else:
+                    comments = ''
+                comments_array.append(comments)
+
+                arxiv_id = re.search(r'/(\d+\.\d+)', link_hp).group(1)
+                papers.append({'arxiv_id':arxiv_id,'title': title, 'authors': authors, 'link':link_hp,'category':cat})
+
+    print('all lot',authors_array)
+    print('aff arr',affiliation_array)
+
+    return papers
+
 def get_arxiv_metadata(arxiv_id):
+    print('aaa',arxiv_id)
+    if '--' in arxiv_id:
+        print('arxiv_id1',arxiv_id)
+        arxiv_id=arxiv_id.replace('--','/')
+        print('arxiv_id2',arxiv_id)
+
     url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"
     response = requests.get(url)
     #if response.status_code != 200:
@@ -1143,7 +1256,6 @@ def get_arxiv_metadata(arxiv_id):
     print('data2',data2)
 
     # Parse the XML response
-    from xml.etree import ElementTree
     root = ElementTree.fromstring(data)
 
     root2 = ElementTree.fromstring(data2)

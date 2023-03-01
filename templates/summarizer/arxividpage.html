@@ -2,6 +2,7 @@
 {% load static %}
 {% load i18n %}
 {% load index %}
+{% load dash_slash %}
 
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -668,7 +669,7 @@
     </div>
     {% endif %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
+      <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id|dash_slash }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
     </div>
     {% if paper.comments %}
     <div class="info-block">

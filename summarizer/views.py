@@ -36,6 +36,10 @@ from django.contrib.auth import logout
 import os
 from django.utils.translation import get_language,get_language_info
 from django.db.models import Sum
+from django.core.paginator import Paginator
+from urllib.parse import urlencode
+import urllib, urllib.request
+from xml.etree import ElementTree
 
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):
@@ -187,17 +191,151 @@ def logout_view(request):
     # Redirect the user to the login page or any other page of your choice
     return redirect('login')
 
+def search_results(request):
+    query = request.GET.get('q')
+    page_num = request.GET.get('page', 1)
+
+    # perform search and pagination logic here
+    search_results = []
+    #total_results = 0
+    items_per_page = 10
+    #start = (int(page_num) - 1) * items_per_page
+    max_results=25
+
+    query1 = urllib.parse.quote(query)
+    # Define the API endpoint URL
+    #url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
+
+    #response = urllib.request.urlopen(url)
+    #data = response.read()
+    #print('data',data.decode('utf-8'))
+
+    # find and modify the value of an element
+    ns = {'ns0': 'http://www.w3.org/2005/Atom','ns1':'http://a9.com/-/spec/opensearch/1.1/','ns2':'http://arxiv.org/schemas/atom'} # add more as needed
+    #tit=root.find('ns0:title', ns).text
+
+    #url = 'http://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
+    url = 'http://export.arxiv.org/api/query?search_query=all:'+query1+'&start=0&max_results='+str(max_results)
+
+    data = urllib.request.urlopen(url).read().decode('utf-8')
+    print('data',data)
+
+    root = ElementTree.fromstring(data)
+
+    for entry in root.findall("ns0:entry",ns):
+        if entry.find("ns0:title",ns) is not None:
+            authors = []
+            affiliation = []
+            title = ""
+            link_hp=""
+            cat=""
+            for author in entry.findall("ns0:author",ns):
+                authors.append(author.find("ns0:name",ns).text)
+                print('test',authors)
+                if author.find("ns2:affiliation",ns) is not None:
+                    print('aff',author.find("ns2:affiliation",ns).text)
+                    affiliation.append(author.find("ns2:affiliation",ns).text)
+                else:
+                    affiliation.append('')
+
+            link_hp = entry.find("ns0:id",ns).text
+            title = entry.find("ns0:title",ns).text
+            if entry.find("ns2:primary_category",ns) is not None:
+                cat = entry.find("ns2:primary_category",ns).attrib['term']
+
+
+            print('link',link_hp)
+            pattern1 = r'http://arxiv.org/abs/([\d\.]+v\d)'
+            pattern2 = r'http://arxiv.org/abs/([\w\-/]+)'
+
+            match1 = re.search(pattern1, link_hp)
+            match2 = re.search(pattern2, link_hp)
+
+            # Check which pattern was matched
+            if match1:
+                print('Matched pattern 1:', match1.group(1))
+                arxiv_id=match1.group(1)
+            elif match2:
+                print('Matched pattern 2:', match2.group(1))
+                arxiv_id=match2.group(1)
+            else:
+                print('No pattern matched')
+                arxiv_id=''
+
+            #arxiv_id = re.search(r'/(\d+\.\d+)', link_hp).group(1)
+            #https://arxiv.org/abs/cond-mat/0609158v1
+            #http://arxiv.org/abs/1905.06628v1
+
+            search_results.append({'arxiv_id':arxiv_id,'title': title, 'authors': authors, 'link':link_hp,'category':cat})
+
+
+    paginator = Paginator(search_results, items_per_page)
+    page_obj = paginator.get_page(page_num)
+
+    #total_pages = math.ceil(total_results / items_per_page)
+
+    context = {'query': query, 'search': search_results,'page_obj': page_obj}
+
+    return render(request, 'summarizer/search_results.html', context)
+
 def summarize(request):
     if request.method == 'POST':
+        print('request.POST',request.POST)
         arxiv_id = request.POST['arxiv_id']
         arxiv_id = arxiv_id.strip()
 
-        pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')
-        if not pattern.match(arxiv_id):
-            # Return an error message if the format is incorrect
-            return render(request, 'summarizer/home.html', {'error': 'Invalid arXiv ID format. It should be a four-digit number, a dot, a four or five-digit number, and an optional version number consisting of the letter "v" and one or more digits. For example, 2101.1234, 2101.12345, and 2101.12345v2 are valid identifiers.'})
+        regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
+        pattern1 = re.compile(regex_pattern1)
+        #pattern = 'cond-mat/0609158v1'
 
-        return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
+        # Regular expression pattern to match the expected format
+        regex_pattern2 = r'^[\w\-/]+v\d+$'
+
+        # Compile the regular expression pattern into a regex object
+        pattern2 = re.compile(regex_pattern2)
+
+        # Match the pattern against the input string
+        if not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
+            # Return an error message if the format is incorrect
+            #search_results=utils.arxiv_search(arxiv_id)
+
+            print('searchresults',search_results)
+            #paginator = Paginator(search_results, 10)  # 10 results per page
+            #page_number = request.GET.get('page')
+            #page_obj = paginator.get_page(page_number)
+
+            #context = {'query': arxiv_id, 'search': search_results,'page_obj': page_obj}
+            query = arxiv_id
+            page = 1
+
+            # perform search and pagination logic here
+
+            # redirect to search results view with query and page as query strings
+            #return redirect('search_results', q=query, page=page)
+            query_params = {'q': query, 'page': page}
+            url = f'/search_results/?{urlencode(query_params)}'
+            return redirect(url)
+            #return redirect('search_results?q={}&page={}'.format(query, page))
+
+
+            #return render(request, 'summarizer/search_results.html', context)
+            #return render(request, 'summarizer/home.html', {'error': 'Invalid arXiv ID format. It should be a four-digit number, a dot, a four or five-digit number, and an optional version number consisting of the letter "v" and one or more digits. For example, 2101.1234, 2101.12345, and 2101.12345v2 are valid identifiers.'})
+        else:
+            if pattern1.match(arxiv_id):
+                print('arxiv_id1',arxiv_id)
+                return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
+
+            if pattern2.match(arxiv_id):
+                print('arxiv_id2',arxiv_id)
+                #arxiv_id = arxiv_id.replace('/', '%2F')
+                #print('arxiv_id3',arxiv_id)
+                cat,arxiv_id_old=arxiv_id.split('/')
+                print('cat,arxiv',cat,arxiv_id_old)
+                return HttpResponseRedirect(reverse('arxividpage', kwargs={'cat': cat,'arxiv_id':arxiv_id_old}))
+
+
+            #url = reverse('arxividpage', args=['hep-ph/9411346v1'])
+            #return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
     activated = request.GET.get('activated', False)
 
@@ -268,8 +406,16 @@ def escape_latex(abstract):
         abstract = abstract[:start] + "\[" + abstract[start + 1:end] + "\]" + abstract[end + 1:]
     return abstract
 
-def arxividpage(request, arxiv_id, error_message=None):
+def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
+
+    print('cat',cat)
+    print('id',arxiv_id)
+    print('err',error_message)
+    if cat is not None:
+        arxiv_id=cat+'--'+arxiv_id
+        print('comp',arxiv_id)
+
     if 'ON_HEROKU' in os.environ:
         onhero=True
     else:
@@ -288,8 +434,22 @@ def arxividpage(request, arxiv_id, error_message=None):
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang}
 
     print('jk')
-    pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')
-    if not pattern.match(arxiv_id):
+    regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
+    pattern1 = re.compile(regex_pattern1)
+    #pattern = 'cond-mat/0609158v1'
+
+    # Regular expression pattern to match the expected format
+    regex_pattern2 = r'^[\w\-/]+v\d+$'
+
+    # Compile the regular expression pattern into a regex object
+    pattern2 = re.compile(regex_pattern2)
+
+    # Match the pattern against the input string
+
+    #pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')
+    #if not pattern.match(arxiv_id):
+    if not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
+
         print('not')
         errormess='Wrong url. '+arxiv_id+' is an invalid arXiv ID format. It should be a four-digit number, a dot, a four or five-digit number, and an optional version number consisting of the letter "v" and one or more digits. For example, 2101.1234, 2101.12345, and 2101.12345v2 are valid identifiers.'
         # Return an error message if the format is incorrect

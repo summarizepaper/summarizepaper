@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -7,9 +7,14 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', views.summarize, name='summarize'),
+    #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),
     path("arxiv-id/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
+    #path("arxiv-id/<str:cat>/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
+    re_path(r"^arxiv-id/(?P<cat>[^\d]+)/(?P<arxiv_id>[a-zA-Z0-9]+)/$", views.arxividpage, name="arxividpage"),
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.arxividpage, name="arxividpage"),
     #path("summary-pdf/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
+    #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),
+    path("search_results/", views.search_results, name="search_results"),
     path("about/", views.about, name="about"),
     path("faq/", views.faq, name="faq"),
     path("contact/", views.contact, name="contact"),
