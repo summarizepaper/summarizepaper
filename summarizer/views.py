@@ -201,8 +201,10 @@ def search_results(request):
     items_per_page = 10
     #start = (int(page_num) - 1) * items_per_page
     max_results=25
+    print('query',query)
 
     query1 = urllib.parse.quote(query)
+    print('query1',query1)
     # Define the API endpoint URL
     #url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
 
@@ -215,10 +217,12 @@ def search_results(request):
     #tit=root.find('ns0:title', ns).text
 
     #url = 'http://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
-    url = 'http://export.arxiv.org/api/query?search_query=all:'+query1+'&start=0&max_results='+str(max_results)
+    url = 'http://export.arxiv.org/api/query?search_query=all:"'+query1+'"&start=0&max_results='+str(max_results)+'&sortBy=submittedDate&sortOrder=descending'
+
+    print('url',url)
 
     data = urllib.request.urlopen(url).read().decode('utf-8')
-    print('data',data)
+    #print('data',data)
 
     root = ElementTree.fromstring(data)
 
@@ -229,6 +233,7 @@ def search_results(request):
             title = ""
             link_hp=""
             cat=""
+            published=""
             for author in entry.findall("ns0:author",ns):
                 authors.append(author.find("ns0:name",ns).text)
                 print('test',authors)
@@ -242,6 +247,9 @@ def search_results(request):
             title = entry.find("ns0:title",ns).text
             if entry.find("ns2:primary_category",ns) is not None:
                 cat = entry.find("ns2:primary_category",ns).attrib['term']
+            if entry.find("ns0:published",ns) is not None:
+                published = entry.find("ns0:published",ns).text
+                published = datetime.strptime(published, '%Y-%m-%dT%H:%M:%SZ')
 
 
             print('link',link_hp)
@@ -266,7 +274,8 @@ def search_results(request):
             #https://arxiv.org/abs/cond-mat/0609158v1
             #http://arxiv.org/abs/1905.06628v1
 
-            search_results.append({'arxiv_id':arxiv_id,'title': title, 'authors': authors, 'link':link_hp,'category':cat})
+
+            search_results.append({'arxiv_id':arxiv_id,'title': title, 'authors': authors, 'link':link_hp,'category':cat,'published':published})
 
 
     paginator = Paginator(search_results, items_per_page)

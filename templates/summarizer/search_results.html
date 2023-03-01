@@ -4,9 +4,23 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %} {% trans 'Search Results for "{{ query }}"' %} {% endblock %}
+{% block title %} {% trans 'Search Results for your query about a research article' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans '.' %}" />
+  <meta name="description" content="{% trans 'Discover the latest research about a topic of your choice with our comprehensive search results page. Explore relevant articles, studies, and papers to stay up-to-date on all topics of interest. Find the information you need to inform your research and stay ahead of the curve.' %}" />
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
   <style>
     .search-results {
       margin: 50px auto;
@@ -47,11 +61,24 @@
       margin-bottom: 5px;
     }
 
+    .search-result-published {
+      margin-bottom: 5px;
+    }
+
     .search-result-category {
       font-style: italic;
     }
 
-    .search-result a {
+    .search-result-title a {
+      /*color: #333;*/
+      text-decoration: none;
+    }
+
+    .search-result-title a:hover {
+       text-decoration: underline;
+    }
+
+    .search-result-arxiv-id a {
       color: #333;
     }
 
@@ -95,14 +122,51 @@
       color: white;
     }
 
+    /* Responsive styles for pagination */
+    @media only screen and (max-width: 600px) {
+      .pagination {
+        flex-direction: column;
+        font-size: 14px;
+        margin: 10px 0;
+      }
+
+      .pagination a {
+        margin: 5px 0;
+        padding: 5px;
+      }
+
+      .pagination .current-page {
+        margin: 5px 0;
+      }
+    }
+
+    .no-results {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 50px;
+      color: #555;
+    }
+
+    .no-results a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .no-results a:hover {
+      text-decoration: underline;
+    }
+
   </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
 
 {% block content %}
-  <h1>Search Results for "{{ query }}"</h1>
+  <h1>{% trans 'Search Results for' %} "{{ query }}"</h1>
+
   <div class="search-results">
+    {% if page_obj %}
     {% for paper in page_obj %}
     <div class="search-result">
       <div class="search-result-title">
@@ -113,7 +177,8 @@
           <a href="{{ paper.link }}" target="_blank">{{ paper.arxiv_id }}</a>
         </div>
         <div class="search-result-authors">{{ paper.authors|join:", " }}</div>
-        <div class="search-result-category">{{ paper.category }}</div>
+        <div class="search-result-published">{{ paper.published|date:"jS F Y" }}</div>
+        <div class="search-result-category">{% trans 'Category:' %} {{ paper.category }}</div>
       </div>
     </div>
     {% endfor %}
@@ -122,22 +187,24 @@
     <div class="pagination">
       <span class="step-links">
         {% if page_obj.has_previous %}
-          <a href="?q={{ query }}&page=1">&laquo; first</a>
-          <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">&lsaquo; previous</a>
+          <a href="?q={{ query }}&page=1">&laquo; {% trans 'first' %}</a>
+          <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
         {% endif %}
 
         <span class="current-page">
-          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          {% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}
         </span>
 
         {% if page_obj.has_next %}
-          <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">next &rsaquo;</a>
-          <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+          <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
+          <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
         {% endif %}
       </span>
     </div>
-
-  </div>
+  {% else %}
+    <p class="no-results">{% trans 'No results found' %} (<a href="/{{ LANGUAGE_CODE }}/">{% trans 'Go back' %}</a>)</p>
+  {% endif %}
+</div>
 
 {% endblock %}
 

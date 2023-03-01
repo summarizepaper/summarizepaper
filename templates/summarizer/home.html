@@ -67,7 +67,7 @@
       }
 
       /* Media queries */
-      @media (max-width: 650px) {
+      @media (max-width: 750px) {
         form {
           padding: 10px;
           max-width:400px;
@@ -77,7 +77,11 @@
         }
       }
 
-
+      .search-helper {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+      }
     </style>
 {% endblock %}
 
@@ -93,8 +97,10 @@
   <form method="post">
     {% csrf_token %}
     <label for="arxiv-id"></label>
-    <input type="text" id="arxiv-id" name="arxiv_id">
-    <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Submit' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
+    <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Search for an article' %}">
+    <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Search' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
+    <div class="search-helper">{% trans 'Enter keywords, article titles, arXiv IDs, or authors to search (use the language of papers you are interested in)' %}</div> <!-- Search form helper -->
+
     {% if error %}
         <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>
     {% endif %}
