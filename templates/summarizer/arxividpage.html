@@ -834,7 +834,6 @@
 <p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}.{% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
-<div class="main-content2">
   <h1>{% trans 'Running summarizing tools on a new article' %}</h1>
   {% if run or run2 %}
   <p style="font-size:20px;"><strong>{% trans 'We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.' %}</strong></p>
@@ -845,7 +844,7 @@
 
   {% if run or run2 %}
     <div class="info-block">
-      <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id }}</p>
+      <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id|dash_slash }}</p>
     </div>
   {% else %}
     <div class="title"><h2>{{ details.title }}</h2></div>
@@ -866,7 +865,7 @@
     </div>
     {% endif %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-link"></i> {% if details.link_homepage %}<a href="{{ details.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id }}{% if details.link_homepage %}</a>{% endif %}{% if details.link_doi %} - <a href="{{ details.link_doi }}" target="_blank">DOI</a>{% endif %}{% if details.category %} ({{ details.category }}){% endif %}</div>
+      <div class="info-text"><i class="fas fa-link"></i> {% if details.link_homepage %}<a href="{{ details.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id|dash_slash }}{% if details.link_homepage %}</a>{% endif %}{% if details.link_doi %} - <a href="{{ details.link_doi }}" target="_blank">DOI</a>{% endif %}{% if details.category %} ({{ details.category }}){% endif %}</div>
     </div>
     {% if details.comments %}
     <div class="info-block">
@@ -1185,6 +1184,9 @@
         liHTML += '<a href="'+data.message.license+'" target="_blank">'+ccFormat+'</a>';
         liHTML += '</div></div>';
         liContainer.innerHTML = liHTML;
+      }
+      else{
+        document.getElementsByClassName("message-header2")[0].innerHTML+="<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the summarizing process is here made with the paper metadata rather than the article.' %}</small>";
       }
 
       var absContainer = document.getElementsByClassName("paper-details")[0];

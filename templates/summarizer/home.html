@@ -92,8 +92,8 @@
 <h1>{% trans "Discover Key Insights from arXiv's Latest Articles" %}</h1>
   <form method="post">
     {% csrf_token %}
-    <label for="arxiv-id">{% trans 'Enter arXiv ID: ' %}</label>
-    <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Example:' %} 2104.1035">
+    <label for="arxiv-id"></label>
+    <input type="text" id="arxiv-id" name="arxiv_id">
     <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Submit' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
     {% if error %}
         <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>

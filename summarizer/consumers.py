@@ -218,19 +218,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 print('hfjggkg2')
 
+
                 c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
                 notes = await c
                 if 'error_message' in notes:
                     print("Received error message notes:", notes)
                     notes='Error: needs to be re-run'
-                c=asyncio.create_task(self.send_message_notes(notes))
-                await c
-
-                print('hfjggkg3')
-
-                # Print the key points
-                for key_point in notes:
-                    print('note',key_point)
 
                 message["progress"] = 60
                 #message["loading_message"] = "Extracting key points..."
@@ -241,6 +234,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
+                c=asyncio.create_task(self.send_message_notes(notes))
+                await c
+
+                print('hfjggkg3')
+
+                # Print the key points
+                for key_point in notes:
+                    print('note',key_point)
 
 
                 c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, settings.OPENAI_KEY))
@@ -249,6 +250,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 if 'error_message' in laysum:
                     print("Received error message laysum:", laysum)
                     laysum='Error: needs to be re-run'
+
+
+
                 c=asyncio.create_task(self.send_message_laysum(laysum))
                 await c
 
@@ -260,8 +264,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 #message["loading_message"] = "Creating a simple summary for a 10 year old..."
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
-
-
 
                 c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, settings.OPENAI_KEY))
                 blog = await c
