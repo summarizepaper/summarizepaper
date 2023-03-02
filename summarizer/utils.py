@@ -620,9 +620,9 @@ def summary_pdf(arxiv_id,language):
 
             if sumpaper.blog:
                 print('pap',sumpaper.blog)
-                #pdf.sectionhtml("Blog Article", paper.blog)
+                pdf.sectionhtml("Blog Article", sumpaper.blog)
 
-                pdf.section("Blog Article", strip_tags(sumpaper.blog.lstrip().rstrip()))
+                #pdf.section("Blog Article", strip_tags(sumpaper.blog.lstrip().rstrip()))
 
         #pdf.section("Blog Article", notestr)
 
