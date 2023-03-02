@@ -471,6 +471,8 @@ def summary_pdf(arxiv_id,language):
         response['Content-Disposition'] = 'attachment; filename=%s' % filename
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
+        from io import BytesIO
+
         #import latexcodec
         #from pylatexenc.latex2text import LatexNodes2Text
 
@@ -628,11 +630,15 @@ def summary_pdf(arxiv_id,language):
 
         # Save the PDF file
         #out=pdf.output(dest='S').encode('latin-1')
-        out=pdf.output()
+        #out=pdf.output()
 
-        print('resp')
+        file = BytesIO()
+        pdf.output(file)
+        return file.getvalue()
 
-        return out
+        #print('resp')
+
+        #return out
 
     else:
         print('no paper')
