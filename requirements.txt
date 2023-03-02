@@ -19,7 +19,8 @@ django_heroku
 django-bmemcached
 dj-database-url
 tiktoken
-git+https://github.com/qkral/pyfpdf.git
+#git+https://github.com/qkral/pyfpdf.git
 langchain
 openai==0.26.5
 faiss-cpu
+fpdf2
