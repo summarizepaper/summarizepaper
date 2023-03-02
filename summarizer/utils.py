@@ -466,9 +466,9 @@ def summary_pdf(arxiv_id,language):
         #response = HttpResponse(content_type='application/pdf')
         #response = FileResponse(content_type='application/pdf')
         #response['Content-Disposition'] = f'attachment; filename="SummarizePaper-{str(arxiv_id)}.pdf"'
-        filename="SummarizePaper-"+str(arxiv_id)+".pdf"
-        response = HttpResponse(content_type="application/pdf")
-        response['Content-Disposition'] = 'attachment; filename=%s' % filename
+        #filename="SummarizePaper-"+str(arxiv_id)+".pdf"
+        #response = HttpResponse(content_type="application/pdf")
+        #response['Content-Disposition'] = 'attachment; filename=%s' % filename
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
         from io import BytesIO
@@ -632,9 +632,14 @@ def summary_pdf(arxiv_id,language):
         #out=pdf.output(dest='S').encode('latin-1')
         #out=pdf.output()
 
-        file = BytesIO()
-        pdf.output(file)
-        return file.getvalue()
+        if 'ON_HEROKU' in os.environ:
+
+            file = BytesIO()
+            pdf.output(file)
+            return file.getvalue()
+        else:
+            out=pdf.output(dest='S').encode('latin-1')
+            return out
 
         #print('resp')
 
