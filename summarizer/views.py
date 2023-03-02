@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, SummaryPaper, AIassistant
+from .models import ArxivPaper, Vote, PaperHistory, SummaryPaper, AIassistant, Search
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -200,7 +200,7 @@ def search_results(request):
     #total_results = 0
     items_per_page = 10
     #start = (int(page_num) - 1) * items_per_page
-    max_results=25
+    max_results=30
     print('query',query)
 
     query1 = urllib.parse.quote(query)
@@ -284,6 +284,23 @@ def search_results(request):
     #total_pages = math.ceil(total_results / items_per_page)
 
     context = {'query': query, 'search': search_results,'page_obj': page_obj}
+
+    print('page_num',page_num)
+    if int(page_num)==1:
+        if request.user.is_authenticated:
+            #if User.objects.filter(username=user).exists():
+            userinst = request.user#User.objects.get(username=user)
+            # Do something with the admin_user instance
+        else:
+            userinst = None# AnonymousUser()
+
+        lang = get_language()
+
+        Search.objects.create(
+            query=query,
+            user=userinst,
+            lang=lang
+        )
 
     return render(request, 'summarizer/search_results.html', context)
 
@@ -611,7 +628,13 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     print('nnnnnnoooottees',sumpaper.notes)
                     try:
                         notes = ast.literal_eval(sumpaper.notes)
-                        notes2 = [note.replace('•', '').replace('-', '') for note in notes]
+                        notes2=[]
+                        for note in notes:
+                            noteb=note.replace('•', '').strip()
+                            if noteb.startswith("-"):
+                                noteb = noteb[1:]
+                            notes2.append(noteb)
+                        #notes2 = [note.replace('•', '') for note in notes]
 
                     except ValueError:
                         # Handle the error by returning a response with an error message to the user

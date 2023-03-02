@@ -349,7 +349,6 @@ def strip_tags(html):
     s.feed(html)
     return s.get_data()
 
-
 def summary_pdf(arxiv_id,language):
     # Get the summary object from the database
     if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():

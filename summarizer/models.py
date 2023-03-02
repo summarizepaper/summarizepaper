@@ -50,6 +50,16 @@ class ArxivPaper(models.Model):
     def __str__(self):
         return self.arxiv_id+' '+self.title
 
+class Search(models.Model):
+    id = models.AutoField(primary_key=True)
+    query = models.TextField(blank=True, null=True)
+    lang = models.CharField(max_length=10,default='en')
+    created = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.query
+
 class SummaryPaper(models.Model):
     id = models.AutoField(primary_key=True)
     paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
