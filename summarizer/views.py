@@ -611,7 +611,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     print('nnnnnnoooottees',sumpaper.notes)
                     try:
                         notes = ast.literal_eval(sumpaper.notes)
-                        notes2 = [note.replace('•', '') for note in notes]
+                        notes2 = [note.replace('•', '').replace('-', '') for note in notes]
 
                     except ValueError:
                         # Handle the error by returning a response with an error message to the user

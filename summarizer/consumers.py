@@ -133,7 +133,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
                 c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
-                book_text=await c
+                book_text,full_text=await c
                 print('book:',book_text)
             else:
                 print('else book text')
@@ -157,7 +157,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             pickledata = await c
 
             if pickledata=='':
-                c = asyncio.create_task(utils.createindex(arxiv_id, book_text, settings.OPENAI_KEY))
+                if public==1:
+                    book_text2=full_text
+                else:
+                    book_text2=book_text
+
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
                 created=await c
                 print('crea',created)
 
@@ -173,6 +178,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
+            '''
             message["progress"] = 45
             if language == 'fr':
                 message["loading_message"] = "Création du résumé en cours..."
@@ -182,7 +188,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
             c=asyncio.create_task(self.send_message_now(message))
             await c
-
+            '''
 
 
             c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
@@ -197,6 +203,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     sum='Error: needs to be re-run'
 
                 print('hfjggkg0a')
+
+
 
                 c=asyncio.create_task(utils.finalise_and_keywords(arxiv_id, language, sum, settings.OPENAI_KEY))
                 sum, kw = await c
@@ -216,14 +224,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_sum(sum))
                 await c
 
-                print('hfjggkg2')
 
-
-                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
-                notes = await c
-                if 'error_message' in notes:
-                    print("Received error message notes:", notes)
-                    notes='Error: needs to be re-run'
 
                 message["progress"] = 60
                 #message["loading_message"] = "Extracting key points..."
@@ -233,6 +234,17 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     message["loading_message"] = "Creating a simple laymans' summary"
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
+
+                print('hfjggkg2')
+
+
+                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
+                notes = await c
+                if 'error_message' in notes:
+                    print("Received error message notes:", notes)
+                    notes='Error: needs to be re-run'
+
+
 
                 c=asyncio.create_task(self.send_message_notes(notes))
                 await c
@@ -244,12 +256,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     print('note',key_point)
 
 
+
                 c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, settings.OPENAI_KEY))
                 laysum = await c
                 print('laysum:',laysum)
                 if 'error_message' in laysum:
                     print("Received error message laysum:", laysum)
                     laysum='Error: needs to be re-run'
+
 
 
 

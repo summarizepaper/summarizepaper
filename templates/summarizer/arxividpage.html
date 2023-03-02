@@ -138,7 +138,7 @@
       padding: 20px;
       border-radius: 20px;
       box-shadow: 2px 2px 10px #ddd;
-      margin: 20px 40px;
+      margin: 20px 20px;
       text-align: left;
     }
 
@@ -166,7 +166,7 @@
       text-align: center;
       padding: 20px 0;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .message-tabs .active {
@@ -207,7 +207,7 @@
 
 
   #progress-bar {
-    width: 500px;
+    max-width: 100%;
     height: 50px;
     border-radius: 25px;
     background-color: lightgrey;
@@ -245,6 +245,15 @@
   input[type='submit'] {
    padding: 10px 20px;
    font-size: 20px;
+ }
+
+ @media only screen and (max-width: 600px) {
+   #progress-bar {
+     height: 30px;
+   }
+   #progress-text {
+     font-size: 16px;
+   }
  }
 
  .center {
@@ -419,32 +428,9 @@
   margin-left: 5px;
 }
 
-.keywords {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 
-.keyword {
-  display: inline-block;
-  margin-right:8px;
-  margin-left:8px;
-  background-color: #f5f5f5;
-  color: #333;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-}
 
-.label {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  font-weight: bold;
-  margin-right: 8px;
-}
+
 
 #chatbot-toggle {
   display: block;
@@ -530,6 +516,48 @@
     width: 24px;
 }
 
+.label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+
+.keyword {
+  display: inline-block;
+  margin-right:8px;
+  margin-left:8px;
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media only screen and (max-width: 600px) {
+  .keyword {
+    font-size: 12px;
+    padding: 3px 6px;
+    margin: 5px;
+  }
+  .label {
+    display: inline-block;
+    align-items: center;
+    font-size: 14px;
+  }
+}
 
 .key-points-container {
   background-color: #f5f5f5;

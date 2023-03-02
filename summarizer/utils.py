@@ -581,15 +581,7 @@ async def extract_text_from_pdf(pdf_filename):
             page_interpreter.process_page(page)
             text = text_io.getvalue()
 
-        # Get the extracted text
-        #text = text_io.getvalue()
 
-        '''
-        keywords=["ABSTRACT", "Key words."]
-        start_keyword, end_keyword = keywords
-        start = text.find(start_keyword) + len(start_keyword)
-        end = text.find(end_keyword)
-        '''
         end = text.find("References")
         end2 = text.find("REFERENCES")
         end3 = text.find("Acknowledgements")
@@ -612,12 +604,13 @@ async def extract_text_from_pdf(pdf_filename):
         print('abs:',text[0:endf].strip())
         textlim=text[0:endf].strip()
         # Close the text buffer and the text converter
+
         text_io.close()
         text_converter.close()
 
 
         # Return the extracted text
-        return textlim
+        return [textlim,text]
 
 
 async def send_message_now(arxiv_group_name,message):
@@ -1014,7 +1007,18 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     language2 = li['name']
     print('language2',language2)
 
-    prompt4 = f"Summarize the following key points in 5 sentences for a six year old kid: {keyp}"
+    prompt4 = """
+        Summarize the following key points in 5 sentences for a six year old kid: {}
+
+        Give definitions for the 3 most important words in the summary.
+
+        Definitions:
+
+    """.format(keyp)
+
+    #prompt4 = f"Summarize the following key points in 5 sentences for a six year old kid: {keyp}"
+    #prompt4 += "Skip 3 lines and Give definitions for the 3 most important words in the summary."
+
     if language != 'en':
         prompt4 += "TRANSLATE THE ANSWER IN "+language2
 
