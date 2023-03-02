@@ -421,7 +421,7 @@ def summary_pdf2(arxiv_id,language):
         #print('resp',out)
 
         #pdf.output(BytesIO())
-        file = io.BytesIO()
+        file = BytesIO()
         pdf.output(file)
         return file.getvalue()
         #out = pdf.output()  # Probably what you want
