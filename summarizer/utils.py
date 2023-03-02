@@ -475,6 +475,7 @@ def summary_pdf(arxiv_id,language):
 
         #import latexcodec
         from pylatexenc.latex2text import LatexNodes2Text
+        latex_converter = LatexNodes2Text()
 
         #print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
         class MyPDF(FPDF, HTMLMixin):
@@ -508,7 +509,6 @@ def summary_pdf(arxiv_id,language):
                 #text_str = latex2text(text)
                 #self.set_font("DejaVu", "B", size=14)
 
-                latex_converter = LatexNodes2Text()
 
                 # Convert the LaTeX code to plain text
                 #print('latex_converter.latex_to_text(text)',latex_converter.latex_to_text(text))
@@ -555,6 +555,9 @@ def summary_pdf(arxiv_id,language):
                     #self.set_font("Arial", size=11)
                     # Remove the extracted h1 text from the text to avoid duplication
                     text = text.replace(f"<b>{h1_text}</b>", "")
+
+                text = latex_converter.latex_to_text(text)#.encode('utf-8')
+
                 self.multi_cell(0, 7, text)
                 self.ln(10)
 
