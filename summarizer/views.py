@@ -522,7 +522,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             #response = HttpResponse(pdf_bytes, content_type="application/pdf")
             #response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
 
-            #response = HttpResponse(bytes(pdf_bytes.encode("utf-8")), content_type='application/pdf')
+            response = HttpResponse(bytes(pdf_bytes), content_type='application/pdf')
 
             response = HttpResponse(content_type="application/pdf")
             filename="SummarizePaper-"+str(arxiv_id)+".pdf"
@@ -534,7 +534,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             #buffer = BytesIO(pdf_bytes)
             #response.write(buffer.getvalue())
             #print('pdf_bytes',pdf_bytes)
-            response.write(pdf_bytes)
+            #response.write(pdf_bytes)
 
             return response
 

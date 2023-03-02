@@ -621,7 +621,9 @@ def summary_pdf(arxiv_id,language):
         #pdf.section("Key Points", summary_2.encode('latin-1', 'replace').decode('latin-1'))
 
         # Save the PDF file
-        out=pdf.output(dest='S').encode('latin-1')
+        #out=pdf.output(dest='S').encode('latin-1')
+        out=pdf.output()
+
         print('resp')
 
         return out
