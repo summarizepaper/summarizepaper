@@ -349,6 +349,99 @@ def strip_tags(html):
     s.feed(html)
     return s.get_data()
 
+def summary_pdf2(arxiv_id,language):
+    # Get the summary object from the database
+    if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+        paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+        if SummaryPaper.objects.filter(paper=paper,lang=language).exists():
+            sumpaper=SummaryPaper.objects.filter(paper=paper,lang=language)[0]
+        elif SummaryPaper.objects.filter(paper=paper,lang='en').exists():
+            sumpaper=SummaryPaper.objects.filter(paper=paper,lang='en')[0]
+        else:
+            sumpaper=''
+            print('no summaries yet')
+
+        print('paper',paper.title)
+        # Generate the PDF file using reportlab
+        #response = HttpResponse(content_type='application/pdf')
+        #response = FileResponse(content_type='application/pdf')
+        #response['Content-Disposition'] = f'attachment; filename="SummarizePaper-{str(arxiv_id)}.pdf"'
+        filename="SummarizePaper-"+str(arxiv_id)+".pdf"
+        response = HttpResponse(content_type="application/pdf")
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename
+        # Create the PDF canvas
+        from fpdf import FPDF, HTMLMixin
+        #from io import BytesIO
+
+        #import latexcodec
+        #from pylatexenc.latex2text import LatexNodes2Text
+        #buffer = BytesIO()
+
+        #print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
+        class MyPDF(FPDF, HTMLMixin):
+            def __init__(self):
+                super().__init__(orientation='P', unit='mm', format='A4')
+                #self.add_font('DejaVu', '', 'font/DejaVuSansCondensed.ttf', uni=True)
+                print('os.path.join(settings.BASE_DIR, "font", "DejaVuSansCondensed.ttf")',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
+                self.add_font('DejaVu', '', "font/DejaVuSansCondensed.ttf", uni=True)
+                self.add_font('DejaVu', 'B', "font/DejaVuSansCondensed-Bold.ttf", uni=True)
+                self.add_font('DejaVu', 'I', "font/DejaVuSansCondensed-Oblique.ttf", uni=True)
+                #self.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
+
+                self.add_page()
+                #self.set_font("Arial", size=12)
+                self.set_font("Helvetica", size=12)
+
+            def header(self):
+                self.set_font("DejaVu", "B", size=14)
+                #self.set_font("Arial","B", size=14)
+                self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
+                self.ln(20)
+
+            def paperdet(self, title, text, url):
+                #self.set_font("DejaVu", "I", size=12)
+                self.set_font("Arial","I", size=12)
+                self.cell(0, 10, "Title: "+title, 0, 1)
+                self.set_font("Arial", size=10)
+
+        pdf = MyPDF()
+
+        if paper.link_doi:
+            link=paper.link_doi
+        else:
+            link=paper.link_homepage
+
+        pdf.paperdet(paper.title.strip(), paper.abstract.lstrip().rstrip(),str(link).strip())
+
+        #out=pdf.output(dest='S')
+        #print('resp',out)
+
+        #pdf.output(BytesIO())
+
+        #out = pdf.output()  # Probably what you want
+        out=pdf.output(dest='S').encode('latin-1')
+        #stream = BytesIO(byte_string)
+        #buffer = BytesIO(out.encode('utf-8'))
+        #response.write(buffer.getvalue())
+
+        #print('buf',buffer)
+        #pdf.output(buffer.getvalue())
+        #pdf_bytes = buffer.getvalue()
+        #buffer.close()
+        #return pdf_bytes
+        #pdf.output('filename.pdf', 'F')
+        #response = HttpResponse(bytes(out), content_type='application/pdf')
+        #response['Content-Disposition'] = "attachment; filename=myfilename.pdf"
+        #return response
+
+        return out
+
+    else:
+        print('no paper')
+
+        return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
+
 def summary_pdf(arxiv_id,language):
     # Get the summary object from the database
     if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
@@ -528,7 +621,7 @@ def summary_pdf(arxiv_id,language):
         #pdf.section("Key Points", summary_2.encode('latin-1', 'replace').decode('latin-1'))
 
         # Save the PDF file
-        out=pdf.output(dest='S')
+        out=pdf.output(dest='S').encode('latin-1')
         print('resp')
 
         return out

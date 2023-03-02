@@ -518,12 +518,24 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         print('in here',request.POST)
         if 'download_pdf' in request.POST:
             print('download')
-            resp=utils.summary_pdf(arxiv_id,lang)
+            pdf_bytes=utils.summary_pdf(arxiv_id,lang)
+            #response = HttpResponse(pdf_bytes, content_type="application/pdf")
+            #response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
+
+            #response = HttpResponse(bytes(pdf_bytes.encode("utf-8")), content_type='application/pdf')
+
             response = HttpResponse(content_type="application/pdf")
             filename="SummarizePaper-"+str(arxiv_id)+".pdf"
             response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
-            response.write(resp)
+            #response.write(resp)
             #print('sumpdf',sumpdf)
+            #from io import BytesIO
+
+            #buffer = BytesIO(pdf_bytes)
+            #response.write(buffer.getvalue())
+            #print('pdf_bytes',pdf_bytes)
+            response.write(pdf_bytes)
+
             return response
 
         if 'run_button' in request.POST:
