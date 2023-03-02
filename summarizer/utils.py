@@ -474,7 +474,7 @@ def summary_pdf(arxiv_id,language):
         from io import BytesIO
 
         #import latexcodec
-        #from pylatexenc.latex2text import LatexNodes2Text
+        from pylatexenc.latex2text import LatexNodes2Text
 
         #print('osss',os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'))
         class MyPDF(FPDF, HTMLMixin):
@@ -502,18 +502,18 @@ def summary_pdf(arxiv_id,language):
                 self.set_font("DejaVu", "I", size=12)
                 #self.set_font("Arial","I", size=12)
                 self.cell(0, 10, "Title: "+title, 0, 1)
-                self.set_font("Arial", size=10)
+                self.set_font("DejaVu", size=10)
 
                 #self.multi_cell(0, 5, "Abstract: "+str(LatexNodes2Text().latex_to_text(text.encode("utf-8"))))
                 #text_str = latex2text(text)
                 #self.set_font("DejaVu", "B", size=14)
 
-                #latex_converter = LatexNodes2Text()
+                latex_converter = LatexNodes2Text()
 
                 # Convert the LaTeX code to plain text
                 #print('latex_converter.latex_to_text(text)',latex_converter.latex_to_text(text))
-                #text_str = latex_converter.latex_to_text(text)#.encode('latin-1')#.encode('utf-8')
-
+                #text = latex_converter.latex_to_text(text)#.encode('latin-1')#.encode('utf-8')
+                text = latex_converter.latex_to_text(text)#.encode('utf-8')
                 self.multi_cell(0, 5, "Abstract: "+text)
 
                 #self.set_font("Arial", "I", size=10)
@@ -620,9 +620,10 @@ def summary_pdf(arxiv_id,language):
 
             if sumpaper.blog:
                 print('pap',sumpaper.blog)
-                pdf.sectionhtml("Blog Article", sumpaper.blog)
-
-                #pdf.section("Blog Article", strip_tags(sumpaper.blog.lstrip().rstrip()))
+                if 'ON_HEROKU' in os.environ:
+                    pdf.sectionhtml("Blog Article", sumpaper.blog)
+                else:
+                    pdf.section("Blog Article", strip_tags(sumpaper.blog.lstrip().rstrip()))
 
         #pdf.section("Blog Article", notestr)
 
