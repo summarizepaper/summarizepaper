@@ -367,9 +367,9 @@ def summary_pdf2(arxiv_id,language):
         #response = HttpResponse(content_type='application/pdf')
         #response = FileResponse(content_type='application/pdf')
         #response['Content-Disposition'] = f'attachment; filename="SummarizePaper-{str(arxiv_id)}.pdf"'
-        filename="SummarizePaper-"+str(arxiv_id)+".pdf"
-        response = HttpResponse(content_type="application/pdf")
-        response['Content-Disposition'] = 'attachment; filename=%s' % filename
+        #filename="SummarizePaper-"+str(arxiv_id)+".pdf"
+        #response = HttpResponse(content_type="application/pdf")
+        #response['Content-Disposition'] = 'attachment; filename=%s' % filename
         # Create the PDF canvas
         from fpdf import FPDF, HTMLMixin
         #from io import BytesIO
@@ -391,13 +391,13 @@ def summary_pdf2(arxiv_id,language):
 
                 self.add_page()
                 #self.set_font("Arial", size=12)
-                self.set_font("Helvetica", size=12)
+                #self.set_font("Helvetica", size=12)
 
-            def header(self):
-                self.set_font("DejaVu", "B", size=14)
-                #self.set_font("Arial","B", size=14)
-                self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
-                self.ln(20)
+            #def header(self):
+            #    self.set_font("DejaVu", "B", size=14)
+            #    #self.set_font("Arial","B", size=14)
+            #    self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
+            #    self.ln(20)
 
             def paperdet(self, title, text, url):
                 #self.set_font("DejaVu", "I", size=12)
@@ -412,15 +412,19 @@ def summary_pdf2(arxiv_id,language):
         else:
             link=paper.link_homepage
 
-        pdf.paperdet(paper.title.strip(), paper.abstract.lstrip().rstrip(),str(link).strip())
+        #pdf.paperdet(paper.title.strip(), paper.abstract.lstrip().rstrip(),str(link).strip())
+
+        pdf.set_font('helvetica', size=12)
+        pdf.cell(txt="hello world")
 
         #out=pdf.output(dest='S')
         #print('resp',out)
 
         #pdf.output(BytesIO())
 
-        #out = pdf.output()  # Probably what you want
-        out=pdf.output(dest='S').encode('latin-1')
+        out = pdf.output()  # Probably what you want
+        #out=pdf.output(dest='S').encode('latin-1')
+
         #stream = BytesIO(byte_string)
         #buffer = BytesIO(out.encode('utf-8'))
         #response.write(buffer.getvalue())
