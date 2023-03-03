@@ -638,6 +638,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             #paper.abstract = escape_latex(paper.abstract)
             notes=''
             kw=''
+            keywords=''
+            notes2=''
             if sumpaper:
                 if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
                     print('nnnnnnoooottees',sumpaper.notes)

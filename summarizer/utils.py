@@ -11,7 +11,8 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
-from django.shortcuts import redirect
+from django.shortcuts import redirect,HttpResponseRedirect
+from django.urls import reverse
 from channels.layers import get_channel_layer
 import re
 from django.http import HttpResponse
@@ -62,85 +63,86 @@ def generate_pdf(request,arxiv_id,lang):
             sumpaper=''
             print('no summaries yet')
 
-        if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
-            print('nnnnnnoooottees',sumpaper.notes)
-            try:
-                notes = ast.literal_eval(sumpaper.notes)
-                notes2=[]
-                for note in notes:
-                    noteb=note.replace('•', '').strip()
-                    if noteb.startswith("-"):
-                        noteb = noteb[1:]
-                    notes2.append(noteb)
-                #notes2 = [note.replace('•', '') for note in notes]
+        if sumpaper:
+            if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
+                print('nnnnnnoooottees',sumpaper.notes)
+                try:
+                    notes = ast.literal_eval(sumpaper.notes)
+                    notes2=[]
+                    for note in notes:
+                        noteb=note.replace('•', '').strip()
+                        if noteb.startswith("-"):
+                            noteb = noteb[1:]
+                        notes2.append(noteb)
+                    #notes2 = [note.replace('•', '') for note in notes]
 
-            except ValueError:
-                # Handle the error by returning a response with an error message to the user
-                return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+                except ValueError:
+                    # Handle the error by returning a response with an error message to the user
+                    return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+            else:
+                notes='No notes yet'
+                notes2=''
+
+            if paper.link_doi:
+                link=paper.link_doi
+            else:
+                link=paper.link_homepage
+
+            if (sumpaper.keywords is not None) and (sumpaper.keywords != "") and (sumpaper.keywords != "['']"):
+                print('keywords',sumpaper.keywords)
+                try:
+                    keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
+                    keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
+                    keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
+                    keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
+                    #keywords = ast.literal_eval('['+sumpaper.keywords+']')
+                except ValueError:
+                    # Handle the error by returning a response with an error message to the user
+                    return HttpResponse("Invalid input: 'keywords' attribute is not a valid Python literal.")
+            else:
+                keywords=''
+
+            from django.utils import timezone
+            now = timezone.localtime(timezone.now()).strftime("%B %d, %Y %I:%M %p")
+            print('now',now)
+
+            template_path = 'summarizer/templatepdf.html'
+            context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords,'now':now}
+            # Render the HTML template
+            template = get_template(template_path)
+            html = template.render(context)
+            # Configure pdfkit options
+            options = {
+                'quiet':'',
+                'page-size': 'Letter',
+                'margin-top': '0.75in',
+                'margin-right': '0.75in',
+                'margin-bottom': '0.75in',
+                'margin-left': '0.75in',
+                #'run-script':'MathJax.Hub.Config({"HTML-CSS": {scale: 200}}); MathJax.Hub.Queue(["Rerender", MathJax.Hub], function () {window.status="finished"})',
+                'window-status': 'finished',
+                #'javascript-delay': '5000'
+                }
+            # Convert HTML to PDF using pdfkit
+            if 'ON_HEROKU' in os.environ:
+                config = pdfkit.configuration(wkhtmltopdf='bin/wkhtmltopdf')
+                pdf = pdfkit.from_string(html, False, options=options,configuration=config)
+            else:
+                pdf = pdfkit.from_string(html, False, options=options)
+
+            #pdfkit.from_string(html_string, output_file, configuration=config)
+
+            #pdf = pdfkit.from_string(html, False, options=options,configuration=config)
+            # Create a response with the PDF file
+            response = HttpResponse(pdf, content_type='application/pdf')
+            filename="SummarizePaper-"+str(arxiv_id)+"-"+lang+".pdf"
+            response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
+            #response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
+            return response
         else:
-            notes='No notes yet'
-            notes2=''
+            print('no paper')
 
-        if paper.link_doi:
-            link=paper.link_doi
-        else:
-            link=paper.link_homepage
-
-        if (sumpaper.keywords is not None) and (sumpaper.keywords != "") and (sumpaper.keywords != "['']"):
-            print('keywords',sumpaper.keywords)
-            try:
-                keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
-                keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
-                keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
-                keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
-                #keywords = ast.literal_eval('['+sumpaper.keywords+']')
-            except ValueError:
-                # Handle the error by returning a response with an error message to the user
-                return HttpResponse("Invalid input: 'keywords' attribute is not a valid Python literal.")
-        else:
-            keywords=''
-
-        from django.utils import timezone
-        now = timezone.localtime(timezone.now()).strftime("%B %d, %Y %I:%M %p")
-        print('now',now)
-
-        template_path = 'summarizer/templatepdf.html'
-        context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords,'now':now}
-        # Render the HTML template
-        template = get_template(template_path)
-        html = template.render(context)
-        # Configure pdfkit options
-        options = {
-            'quiet':'',
-            'page-size': 'Letter',
-            'margin-top': '0.75in',
-            'margin-right': '0.75in',
-            'margin-bottom': '0.75in',
-            'margin-left': '0.75in',
-            #'run-script':'MathJax.Hub.Config({"HTML-CSS": {scale: 200}}); MathJax.Hub.Queue(["Rerender", MathJax.Hub], function () {window.status="finished"})',
-            'window-status': 'finished',
-            #'javascript-delay': '5000'
-            }
-        # Convert HTML to PDF using pdfkit
-        if 'ON_HEROKU' in os.environ:
-            config = pdfkit.configuration(wkhtmltopdf='bin/wkhtmltopdf')
-            pdf = pdfkit.from_string(html, False, options=options,configuration=config)
-        else:
-            pdf = pdfkit.from_string(html, False, options=options)
-
-        #pdfkit.from_string(html_string, output_file, configuration=config)
-
-        #pdf = pdfkit.from_string(html, False, options=options,configuration=config)
-        # Create a response with the PDF file
-        response = HttpResponse(pdf, content_type='application/pdf')
-        filename="SummarizePaper-"+str(arxiv_id)+"-"+lang+".pdf"
-        response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
-        #response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
-        return response
-    else:
-        print('no paper')
-
-        return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
+            return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
 
 def openaipricing(model_name):
