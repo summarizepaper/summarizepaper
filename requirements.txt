@@ -26,4 +26,3 @@ faiss-cpu
 fpdf2
 pylatexenc
 pdfkit
-python-pdf
