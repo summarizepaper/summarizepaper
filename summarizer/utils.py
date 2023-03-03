@@ -118,7 +118,15 @@ def generate_pdf(request,arxiv_id,lang):
             #'javascript-delay': '5000'
             }
         # Convert HTML to PDF using pdfkit
-        pdf = pdfkit.from_string(html, False, options=options)
+        if 'ON_HEROKU' in os.environ:
+            config = pdfkit.configuration(wkhtmltopdf='bin/wkhtmltopdf')
+            pdf = pdfkit.from_string(html, False, options=options,configuration=config)
+        else:
+            pdf = pdfkit.from_string(html, False, options=options)
+
+        #pdfkit.from_string(html_string, output_file, configuration=config)
+
+        #pdf = pdfkit.from_string(html, False, options=options,configuration=config)
         # Create a response with the PDF file
         response = HttpResponse(pdf, content_type='application/pdf')
         filename="SummarizePaper-"+str(arxiv_id)+"-"+lang+".pdf"
