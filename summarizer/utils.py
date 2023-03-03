@@ -44,6 +44,92 @@ model="text-davinci-003"#"text-davinci-002"
 temp=0.3
 method="fromembeddingsandabstract"#"fromembeddings"#"langchain"#quentin
 
+import pdfkit
+#from django.shortcuts import render
+#from django.http import HttpResponse
+from django.template.loader import get_template
+
+def generate_pdf(request,arxiv_id,lang):
+    # Define the HTML template
+    if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+        paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+        if SummaryPaper.objects.filter(paper=paper,lang=lang).exists():
+            sumpaper=SummaryPaper.objects.filter(paper=paper,lang=lang)[0]
+        elif SummaryPaper.objects.filter(paper=paper,lang='en').exists():
+            sumpaper=SummaryPaper.objects.filter(paper=paper,lang='en')[0]
+        else:
+            sumpaper=''
+            print('no summaries yet')
+
+        if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
+            print('nnnnnnoooottees',sumpaper.notes)
+            try:
+                notes = ast.literal_eval(sumpaper.notes)
+                notes2=[]
+                for note in notes:
+                    noteb=note.replace('•', '').strip()
+                    if noteb.startswith("-"):
+                        noteb = noteb[1:]
+                    notes2.append(noteb)
+                #notes2 = [note.replace('•', '') for note in notes]
+
+            except ValueError:
+                # Handle the error by returning a response with an error message to the user
+                return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
+        else:
+            notes='No notes yet'
+            notes2=''
+
+        if paper.link_doi:
+            link=paper.link_doi
+        else:
+            link=paper.link_homepage
+
+        if (sumpaper.keywords is not None) and (sumpaper.keywords != "") and (sumpaper.keywords != "['']"):
+            print('keywords',sumpaper.keywords)
+            try:
+                keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
+                keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
+                keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
+                keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
+                #keywords = ast.literal_eval('['+sumpaper.keywords+']')
+            except ValueError:
+                # Handle the error by returning a response with an error message to the user
+                return HttpResponse("Invalid input: 'keywords' attribute is not a valid Python literal.")
+        else:
+            keywords=''
+
+        template_path = 'summarizer/templatepdf.html'
+        context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords}
+        # Render the HTML template
+        template = get_template(template_path)
+        html = template.render(context)
+        # Configure pdfkit options
+        options = {
+            'quiet':'',
+            'page-size': 'Letter',
+            'margin-top': '0.75in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.75in',
+            'margin-left': '0.75in',
+            #'run-script':'MathJax.Hub.Config({"HTML-CSS": {scale: 200}}); MathJax.Hub.Queue(["Rerender", MathJax.Hub], function () {window.status="finished"})',
+            'window-status': 'finished',
+            #'javascript-delay': '5000'
+            }
+        # Convert HTML to PDF using pdfkit
+        pdf = pdfkit.from_string(html, False, options=options)
+        # Create a response with the PDF file
+        response = HttpResponse(pdf, content_type='application/pdf')
+        filename="SummarizePaper-"+str(arxiv_id)+"-"+lang+".pdf"
+        response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
+        #response['Content-Disposition'] = 'attachment; filename="my_pdf.pdf"'
+        return response
+    else:
+        print('no paper')
+
+        return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
+
 
 def openaipricing(model_name):
     #return cost per token in dollars
@@ -575,14 +661,6 @@ def summary_pdf(arxiv_id,language):
 
 
         pdf = MyPDF()
-        #pdf.add_font('DejaVu', '', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed.ttf'), uni=True)
-        #pdf.add_font('DejaVu', 'B', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Bold.ttf'), uni=True)
-        #pdf.add_font('DejaVu', 'I', os.path.join(settings.BASE_DIR, "font", 'DejaVuSansCondensed-Oblique.ttf'), uni=True)
-
-
-        #print('fonts:',pdf.get_font_family())
-
-
 
         # Add the first summary section to the document
         if paper.link_doi:
@@ -619,6 +697,7 @@ def summary_pdf(arxiv_id,language):
                 pdf.section("Key Points", notestr)
 
             if sumpaper.lay_summary:
+
                 pdf.section("Layman's summary", sumpaper.lay_summary.lstrip().rstrip())
 
             if sumpaper.blog:
@@ -628,13 +707,8 @@ def summary_pdf(arxiv_id,language):
                 else:
                     pdf.section("Blog Article", strip_tags(sumpaper.blog.lstrip().rstrip()))
 
-        #pdf.section("Blog Article", notestr)
 
-        #pdf.section("Key Points", summary_2.encode('latin-1', 'replace').decode('latin-1'))
 
-        # Save the PDF file
-        #out=pdf.output(dest='S').encode('latin-1')
-        #out=pdf.output()
 
         if 'ON_HEROKU' in os.environ:
 

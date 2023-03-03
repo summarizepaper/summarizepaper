@@ -519,11 +519,14 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         if 'download_pdf' in request.POST:
             print('download')
             pdf_bytes=utils.summary_pdf(arxiv_id,lang)
+
+            res=utils.generate_pdf(request,arxiv_id,lang)
             #response = HttpResponse(pdf_bytes, content_type="application/pdf")
             #response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
 
             #response = HttpResponse(bytes(pdf_bytes), content_type='application/pdf')
 
+            '''
             response = HttpResponse(content_type="application/pdf")
             filename="SummarizePaper-"+str(arxiv_id)+".pdf"
             response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
@@ -535,8 +538,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             #response.write(buffer.getvalue())
             #print('pdf_bytes',pdf_bytes)
             response.write(pdf_bytes)
-
-            return response
+            '''
+            return res#response
 
         if 'run_button' in request.POST:
             print('ok run')

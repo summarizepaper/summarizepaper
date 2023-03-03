@@ -25,3 +25,5 @@ openai==0.26.5
 faiss-cpu
 fpdf2
 pylatexenc
+pdfkit
+python-pdf
