@@ -151,16 +151,8 @@
         <h2>{% trans 'AI-generated Blog-like Article' %}</h2>
         <p>{{ sumpaper.blog|safe }}</p>
     </div>
-    <p>From <a href="https://www.summarizepaper.com/">SummarizePaper.com</a> (<span id="local-time"></span>)</p>
+    <p>{% trans 'From' %} <a href="https://www.summarizepaper.com/">SummarizePaper.com</a> (<span id="local-time">{{ now }}</span>)</p>
 
-    <script>
-      //var date = new Date();
-      //var date= new Date()//.toLocaleString();
-      var date = new Date();
-
-      //console.log(s);
-      document.getElementById("local-time").innerHTML = date.toLocaleString();
-    </script>
 
         <script type="text/x-mathjax-config">
         MathJax.Hub.Config({

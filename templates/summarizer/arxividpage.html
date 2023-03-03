@@ -629,6 +629,8 @@
   .paper-resources a:hover {
       text-decoration: underline;
   }
+
+
 </style>
 {% endblock %}
 
@@ -803,9 +805,37 @@
     {% endif %}
     <form id="download-form" action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
-      <input type="submit" value="{% trans 'Download as pdf' %}" name="download_pdf" class="small-button">
+      <input type="hidden" name="local_date" id="localDateInput">
+      <input type="submit" id="submitButton" value="{% trans 'Download as pdf' %}" name="download_pdf" class="small-button">
+      <span id="spinner" class="fa fa-spinner fa-spin" style="display: none;"></span>
     </form>
   </div>
+
+  <script>
+const form = document.getElementById('download-form');
+const submitButton = document.getElementById('submitButton');
+const localDateInput = document.getElementById('localDateInput');
+const spinner = document.getElementById('spinner');
+
+submitButton.addEventListener('click', () => {
+  const date = new Date().toLocaleString();
+  localDateInput.value = date;
+  spinner.style.display = 'inline-block';
+  // Remove scintillation class after animation finishes
+  setTimeout(() => {
+    spinner.style.display = 'none';
+  }, 1000);
+
+  // Prevent default form submission
+  //form.submit();
+
+  /*submitButton.disabled = true;*/
+
+  // Wait for 5 seconds before submitting the form
+    //form.submit();
+
+});
+</script>
 
   <div style="text-align: center;">
   <p>
@@ -1473,7 +1503,7 @@ function sendWebSocketMessage(message2,user) {
 document.getElementById("popover-link").addEventListener("mouseover", function(event) {
   var popover = document.getElementById("popover");
   popover.style.display = "block";
-  popover.style.left = event.clientX + "px";
+  popover.style.left = (event.clientX - 40) + "px";
   popover.style.top = (event.clientY + 20) + "px";
 });
 

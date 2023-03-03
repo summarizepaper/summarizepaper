@@ -519,8 +519,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         if 'download_pdf' in request.POST:
             print('download')
             pdf_bytes=utils.summary_pdf(arxiv_id,lang)
-
-            res=utils.generate_pdf(request,arxiv_id,lang)
+            local_date = request.POST.get('local_date')
+            print('loloooooooooo',local_date)
+            res=utils.generate_pdf(request,arxiv_id,lang,local_date)
             #response = HttpResponse(pdf_bytes, content_type="application/pdf")
             #response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
 

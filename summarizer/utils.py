@@ -50,14 +50,16 @@ import pdfkit
 #from django.http import HttpResponse
 from django.template.loader import get_template
 
-def generate_pdf(request,arxiv_id,lang):
+def generate_pdf(request,arxiv_id,lang,local_date):
     # Define the HTML template
     if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
         paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
-
+        print('gennnnnnnnnn',lang)
         if SummaryPaper.objects.filter(paper=paper,lang=lang).exists():
+            print('gennnnnnnnnn1')
             sumpaper=SummaryPaper.objects.filter(paper=paper,lang=lang)[0]
         elif SummaryPaper.objects.filter(paper=paper,lang='en').exists():
+            print('enffdddfdfdf')
             sumpaper=SummaryPaper.objects.filter(paper=paper,lang='en')[0]
         else:
             sumpaper=''
@@ -107,7 +109,7 @@ def generate_pdf(request,arxiv_id,lang):
             print('now',now)
 
             template_path = 'summarizer/templatepdf.html'
-            context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords,'now':now}
+            context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords,'now':local_date}
             # Render the HTML template
             template = get_template(template_path)
             html = template.render(context)
