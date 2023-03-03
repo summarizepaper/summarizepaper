@@ -801,7 +801,7 @@
       </div>
     </div>
     {% endif %}
-    <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+    <form id="download-form" action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
       <input type="submit" value="{% trans 'Download as pdf' %}" name="download_pdf" class="small-button">
     </form>

@@ -100,8 +100,12 @@ def generate_pdf(request,arxiv_id,lang):
         else:
             keywords=''
 
+        from django.utils import timezone
+        now = timezone.localtime(timezone.now()).strftime("%B %d, %Y %I:%M %p")
+        print('now',now)
+
         template_path = 'summarizer/templatepdf.html'
-        context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords}
+        context = {'link':link,'paper':paper,'sumpaper':sumpaper,'notes':notes,'keywords':keywords,'now':now}
         # Render the HTML template
         template = get_template(template_path)
         html = template.render(context)
