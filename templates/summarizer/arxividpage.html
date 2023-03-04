@@ -785,7 +785,7 @@
           <li>{{ note }}</li>
         {% endfor %}
         </ul>
-        {% else %}The key points are not ready yet{% endif %}
+        {% else %}{% trans 'The key points are not ready yet' %}{% endif %}
       </div>
       <div class="message-tab" style="display:none;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
       <div class="message-tab" style="display:none;">{% if sumpaper.blog %}{{ sumpaper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>

@@ -815,7 +815,8 @@ async def extract_text_from_pdf(pdf_filename):
 
 
         # Return the extracted text
-        return [textlim,text]
+        #return [textlim,text]
+        return [textlim,textlim]
 
 
 async def send_message_now(arxiv_group_name,message):
@@ -1213,11 +1214,13 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     print('language2',language2)
 
     prompt4 = """
-        Summarize the following key points in 5 sentences for a six year old kid: {}
+        Summarize the following key points in 5 sentences for a six year old kid and provide definitions for the 3 most important words in the created summary.: {}
 
-        Give definitions for the 3 most important words in the summary.
+        Summary:
+
 
         Definitions:
+
 
     """.format(keyp)
 
@@ -1272,7 +1275,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     language2 = li['name']
     print('language2',language2)
 
-    prompt5 = f"Create a detailed blog article in html about this research paper: {summary}"
+    prompt5 = f"Create a detailed blog article in html about this research paper (do not show images): {summary}"
     if language != 'en':
         prompt5 += "TRANSLATE THE ANSWER IN "+language2
 
@@ -1554,4 +1557,4 @@ def get_arxiv_metadata(arxiv_id):
                 comments = ''
 
 
-    return [exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments,license_value]
+    return [exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments,license_value,data]

@@ -63,7 +63,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             self.arxiv_group_name, {"type": "progress_blog_update", "message": blog}
         )
 
-    async def computesummary(self,arxiv_id,language,details_paper,message):
+    async def computesummary(self,arxiv_id,language,details_paper,message,data):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
         book_path = "test1.pdf"
         sum=""
@@ -156,11 +156,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
             pickledata = await c
 
+            print('dattaaaaaaaaaaaa',data)
             if pickledata=='':
                 if public==1:
-                    book_text2=full_text
+                    book_text2=data+'    '+full_text
                 else:
-                    book_text2=book_text
+                    book_text2=data+'    '+book_text
 
                 c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
                 created=await c
@@ -392,8 +393,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
         if len(arxivarrayf)>1:
             keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments','license']
-            arxiv_dict = dict(zip(keys, arxivarrayf[1:]))
+            arxiv_dict = dict(zip(keys, arxivarrayf[1:-1]))
             exist=arxivarrayf[0]
+            data=arxivarrayf[-1]
             published_datetime = datetime.strptime(str(arxiv_dict['published_arxiv']), '%Y-%m-%dT%H:%M:%SZ')
             arxiv_dict['published_arxiv']=published_datetime
 
@@ -460,7 +462,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('avantcompute')
         #sumarray = await self.computesummary(v,message)
         detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
-        sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message))
+        sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message,data))
         sumarray=await sumarra
         print('aprescompute')
 
