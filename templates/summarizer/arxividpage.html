@@ -766,7 +766,7 @@
 
 
   <div class="message-box" id="results">
-    <h1 class="message-header">{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id }}</h1>
+    <h1 class="message-header">{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id|dash_slash }}</h1>
     {% if not public %}
     <p class="message-header2"><small><span class="warning-sign">&#9888;</span>{% trans "This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article." %}</small></p>
     {% endif %}
@@ -1104,17 +1104,27 @@ submitButton.addEventListener('click', () => {
         document.getElementById("progress-bar").style.display = "none";
         document.getElementById("progtextupdate").style.animation = "none";
         {% if run2 or run %}
-        window.location.href = window.location.protocol +'//'+ window.location.host + window.location.pathname;
+        var pathname = window.location.pathname;
+
+        // Replace all occurrences of '--' with '/'
+        pathname = pathname.replace(/--/g, '/');
+
+        // Reload the page with the updated pathname
+        window.location.href = window.location.protocol + '//' + window.location.host + pathname;
+
+        //window.location.href = window.location.protocol +'//'+ window.location.host + window.location.pathname;
         //location.reload(true);
         {% endif %}
       }
     }
 
     {% if run %}
+    var arxname = arxivRoomName
+    arxname = arxname.replace(/--/g, '/');
 
     if(data.type=='progress_sum_update'){
-      //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (1/4):' %} "+arxivRoomName;
+
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (1/4):' %} "+arxname;
       document.getElementById("sum").innerHTML = data.message;
       MathJax.typeset();
 
@@ -1122,7 +1132,7 @@ submitButton.addEventListener('click', () => {
     }
     if(data.type=='progress_notes_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (2/4):' %} "+arxivRoomName;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (2/4):' %} "+arxname;
       //console.log(data.message);
       if (Array.isArray(data.message)) {
         const bulletPoints = data.message.map((item) => `<li>${item}</li>`).join('');
@@ -1136,7 +1146,7 @@ submitButton.addEventListener('click', () => {
     }
     if(data.type=='progress_laysum_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (3/4):' %} "+arxivRoomName;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (3/4):' %} "+arxname;
       document.getElementById("laysum").innerHTML = data.message;
       MathJax.typeset();
 
@@ -1144,7 +1154,7 @@ submitButton.addEventListener('click', () => {
     }
     if(data.type=='progress_blog_update'){
       //alert(data.message);
-      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (4/4):' %} "+arxivRoomName;
+      document.getElementsByClassName("message-header")[0].innerHTML = "{% trans 'Results of the summarizing process for the arXiv paper (4/4):' %} "+arxname;
       document.getElementById("blog").innerHTML = data.message;
       MathJax.typeset();
 
@@ -1191,7 +1201,8 @@ submitButton.addEventListener('click', () => {
       if (data.message.link_homepage){
         linkHTML += '<a href="'+data.message.link_homepage+'" target="_blank">';
       }
-        linkHTML += "arXiv: "+arxivRoomName;
+        arxname = arxivRoomName.replace(/--/g, '/');
+        linkHTML += "arXiv: "+arxname;
       if (data.message.link_homepage){
         linkHTML += '</a>';
       }

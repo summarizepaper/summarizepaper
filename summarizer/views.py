@@ -335,11 +335,12 @@ def summarize(request):
             page = 1
 
             # perform search and pagination logic here
+            lang = get_language()
 
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
             query_params = {'q': query, 'page': page}
-            url = f'/search_results/?{urlencode(query_params)}'
+            url = f'/{lang}/search_results/?{urlencode(query_params)}'
             return redirect(url)
             #return redirect('search_results?q={}&page={}'.format(query, page))
 
@@ -349,6 +350,13 @@ def summarize(request):
         else:
             if pattern1.match(arxiv_id):
                 print('arxiv_id1',arxiv_id)
+                if re.search(r'v\d{1,2}$', arxiv_id):
+                    print("Arxiv ID is valid.")
+                else:
+                    # if the arxiv_id does not end with "v1" to "v99", add "v1" to the end
+                    arxiv_id += "v1"
+                    print("Arxiv ID has been updated to:", arxiv_id)
+
                 return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
             if pattern2.match(arxiv_id):
@@ -435,12 +443,23 @@ def escape_latex(abstract):
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
 
+
     print('cat',cat)
     print('id',arxiv_id)
     print('err',error_message)
     if cat is not None:
         arxiv_id=cat+'--'+arxiv_id
         print('comp',arxiv_id)
+
+    if not re.search(r'v\d{1,2}$', arxiv_id):
+        arxiv_id += "v1"
+        #arxiv_id=arxiv_id.replace('--','/')
+        # redirect to the new URL
+        return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id}))
+
+    #if '--' in arxiv_id:
+        #arxiv_id=arxiv_id.replace('--','/')
+        #return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id}))
 
     if 'ON_HEROKU' in os.environ:
         onhero=True
@@ -567,9 +586,14 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     #paper.total_votes = 0
                     #paper.save()
 
+            #arxiv_id=arxiv_id.replace('--','/')
+
             stuff_for_frontend.update({
                 'run':True,
             })
+        print('renderrrrrrrrrrrrr')
+        #return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id,'stuff_for_frontend':stuff_for_frontend}))
+
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
     else:
         if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():

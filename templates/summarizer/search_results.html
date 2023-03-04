@@ -157,6 +157,24 @@
       text-decoration: underline;
     }
 
+    a.back-link {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #3f51b5;
+      text-decoration: none;
+      border-radius: 5px;
+      box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease-in-out;
+    }
+
+    a.back-link:hover {
+      background-color: #2c3e50;
+    }
+
+
   </style>
 {% endblock %}
 
@@ -164,9 +182,9 @@
 
 {% block content %}
   <h1>{% trans 'Search Results for' %} "{{ query }}"</h1>
-
   <div class="search-results">
     {% if page_obj %}
+    <p><a href="/{{ LANGUAGE_CODE }}/" class="back-link">{% trans 'Go back' %}</a></p>
     {% for paper in page_obj %}
     <div class="search-result">
       <div class="search-result-title">
@@ -201,6 +219,8 @@
         {% endif %}
       </span>
     </div>
+    <p><a href="/{{ LANGUAGE_CODE }}/" class="back-link">{% trans 'Go back' %}</a></p>
+
   {% else %}
     <p class="no-results">{% trans 'No results found' %} (<a href="/{{ LANGUAGE_CODE }}/">{% trans 'Go back' %}</a>)</p>
   {% endif %}
