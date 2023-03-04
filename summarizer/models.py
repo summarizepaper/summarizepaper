@@ -127,4 +127,4 @@ class AIassistant(models.Model):
     lang = models.CharField(max_length=10,default='en')
 
     def __str__(self):
-        return self.arxiv_id
+        return self.arxiv_id+' '+self.query
