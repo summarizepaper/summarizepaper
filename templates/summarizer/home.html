@@ -82,6 +82,37 @@
         color: #666;
         margin-top: 5px;
       }
+      .toggle-button {
+      display: block;
+      margin: 0 auto;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #444;
+      background-color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 0px;
+      box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
+      /*box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.3);*/
+      transition: background-color 0.3s ease;
+    }
+    .toggle-button:hover {
+      background-color: #d9d9d9;
+    }
+    .toggle-button:focus {
+      outline: none;
+      box-shadow: 0px 0px 0px 3px rgba(0, 123, 255, 0.5);
+    }
+
+   /* Search syntax styles */
+   .search-syntax {
+     margin: 10px 80px;
+     padding: 10px;
+     border: 1px solid #ccc;
+     background-color: #f5f5f5;
+   }
     </style>
 {% endblock %}
 
@@ -105,6 +136,18 @@
         <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>
     {% endif %}
   </form>
+  <button id="toggle-syntax" class="toggle-button">{% trans 'More advanced Search?' %}</button>
+    <div class="search-syntax" style="display:none;">
+    <p><strong>{% trans 'Search Syntax:' %}</strong></p>
+    <ul>
+      <li>{% trans 'By default, the search engine looks for the query in all fields.' %}</li>
+      <li>{% trans 'Use the field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</li>
+      <li>{% trans 'Enclose search terms with spaces in quotes: au:"John Doe", or if looking for ID numbers id:"2211.04191"' %}</li>
+      <li>{% trans 'Mix several fields in a search request using the Boolean operators "AND", "OR", and "ANDNOT". For example, au:"John Doe" AND abs:"search for life"' %}</li>
+      <li>{% trans 'Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND (abs:"renewable energy" OR abs:solar)' %}</li>
+    </ul>
+  </div>
+
 
   <p class="welcome">{% blocktrans %}Welcome to Summarize<span style="color:#34a853">Paper</span>.com, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
 
@@ -119,4 +162,16 @@
     });
   </script>
 
+  <script>
+    const toggleButton = document.getElementById('toggle-syntax');
+    const searchSyntax = document.querySelector('.search-syntax');
+
+    toggleButton.addEventListener('click', () => {
+      if (searchSyntax.style.display === 'none') {
+        searchSyntax.style.display = 'block';
+      } else {
+        searchSyntax.style.display = 'none';
+      }
+    });
+  </script>
 {% endblock %}

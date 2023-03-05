@@ -65,7 +65,7 @@
 
 {% if auth %}
 <div class="history">
-    <h1 class="history-title">Your History ({{ user.username }})</h1>
+    <h1 class="history-title">{% trans 'Your History' %} ({{ user.username }})</h1>
 {% if paper_history %}
 <ul class="history-list">
 {% for h in paper_history %}
