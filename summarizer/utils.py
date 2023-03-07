@@ -38,7 +38,7 @@ from django.utils.translation import get_language_info
 import nltk
 from xml.etree import ElementTree
 import urllib, urllib.request
-
+import math
 
 channel_layer = get_channel_layer()
 model="text-davinci-003"#"text-davinci-002"
@@ -161,6 +161,13 @@ def openaipricing(model_name):
         cost=1.
 
     return cost/1000.
+
+def nchars_leq_ntokens_approx(maxTokens):
+    #returns a number of characters very likely to correspond <= maxTokens
+    sqrt_margin = 0.5
+    lin_margin = 1.010175047 #= e - 1.001 - sqrt(1 - sqrt_margin) #ensures return 1 when maxTokens=1
+    return max( 0, int(maxTokens*math.exp(1) - lin_margin - math.sqrt(max(0,maxTokens - sqrt_margin) ) ))
+
 
 def dependable_faiss_import():# -> Any:
     """Import faiss if available, otherwise raise error."""
@@ -340,7 +347,32 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
 
         docs = docsearch2.similarity_search(query,k=kvalue)
         print('docs:',docs)
+        print('len docs:',len(docs))
 
+        #import tiktoken
+
+        #MAX_CHARS = 4200  # maximum number of characters to allow in the docs pages
+        MAX_TOKENS=2200
+        MAX_CHARS=nchars_leq_ntokens_approx(MAX_TOKENS)
+        print('MAX_CHARS',MAX_CHARS)
+        num_chars = 0
+        for doc in docs:
+            #encoding = tiktoken.get_encoding("gpt3")
+            #input_ids = encoding.encode(text)
+            #print(input_ids)
+            if num_chars + len(doc.page_content) <= MAX_CHARS:
+                num_chars += len(doc.page_content)
+            else:
+                # suppress text to fit within MAX_CHARS
+                print('enter here',num_chars)
+                remaining_chars = MAX_CHARS - num_chars
+                suppressed_text = doc.page_content[:remaining_chars] + " ..."
+                doc.page_content = suppressed_text
+                num_chars = MAX_CHARS
+                #break
+
+        print('docs22222222222:',docs)
+        print('num_chars',num_chars)
 
         if sum==1:
             template = """We have an existing summary: {existing_answer}

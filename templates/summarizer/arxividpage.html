@@ -411,7 +411,7 @@
   height: 10px;
   border: 1px solid black;
   background-color: black; /* Add this line to set the background color to black */
-  position: absolute;
+  /*position: absolute;*/
   top: 5px; /* Position the square at the top of the chatbot-messages div */
   /*right: 0;*/
   margin-left:10px;
@@ -882,6 +882,9 @@ submitButton.addEventListener('click', () => {
     <input type="submit" value="{% trans 'Run' %}" name="run_button">
   </form>
   </div>
+  {% if not public %}
+  <p style="text-align: center; margin-top: 10px; color: red;max-width: 600px; width: 90%; margin-left: auto; margin-right: auto;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
+  {% endif %}
   {% endif %}
 
 
@@ -952,6 +955,9 @@ submitButton.addEventListener('click', () => {
       <input type="submit" value="{% trans 'Run' %}" name="run_button">
     </form>
     </div>
+    {% if not public %}
+    <p style="text-align: center; margin-top: 10px; color: red;max-width: 600px; width: 90%; margin-left: auto; margin-right: auto;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
+    {% endif %}
     {% endif %}
 
 
