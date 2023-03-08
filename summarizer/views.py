@@ -808,6 +808,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
                 url = arxiv_dict['license']
                 cc_format=''
+                license=''
                 if url != '':
                     parts = url.split('/')
                     print('parts',parts)
@@ -818,10 +819,17 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     else:
                         cc_format = license.upper() + ' ' + version
 
+                public=False
+                #print('lo',license.upper())
+                if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
+                    public=True
+                    print('pub2')
+
                 print(cc_format) # Output: CC BY-NC-SA 4.0
 
                 stuff_for_frontend.update({
                     'exist':exist,
+                    'public':public,
                     'details':arxiv_dict,
                     'cc_format':cc_format
                 })

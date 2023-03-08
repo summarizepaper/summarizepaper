@@ -39,9 +39,10 @@ import nltk
 from xml.etree import ElementTree
 import urllib, urllib.request
 import math
+from langchain.llms import OpenAIChat
 
 channel_layer = get_channel_layer()
-model="text-davinci-003"#"text-davinci-002"
+model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002"
 temp=0.3
 method="fromembeddingsandabstract"#"fromembeddings"#"langchain"#quentin
 
@@ -157,6 +158,8 @@ def openaipricing(model_name):
         cost=0.002
     elif 'ada' in model_name:
         cost=0.0004
+    elif 'turbo' in model_name:
+        cost=0.002
     else:
         cost=1.
 
@@ -322,9 +325,12 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
         #from langchain.chains import ChatVectorDBChain
 
         if sum==1:
-            llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+            #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
         else:
-            llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+
 
         '''
         For streaming
@@ -1097,7 +1103,6 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
 
 
 async def finalise_and_keywords(arxiv_id, language, summary, api_key):
-    endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -1119,7 +1124,24 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+
+    model_forced="text-davinci-003"#=model
+
+    if model_forced=="gpt-3.5-turbo":#force davinci
+        endpoint = "https://api.openai.com/v1/chat/completions"
+
+        mes = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": '"{text}"'.format(text=prompt3b)}
+        ]
+
+        response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+
+    else:
+        endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
+
+
+        response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try2b')
@@ -1136,10 +1158,16 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
-    print('icccciiiiiib',response3b.json()["choices"][0]["text"])
+    if model_forced=="gpt-3.5-turbo":
+        print('icccciiiiiib',response3b.json()["choices"][0]["message"]["content"])
 
-    finalise_and_keywords2 = response3b.json()["choices"][0]["text"].rstrip().lstrip()
-    print('finalise_and_keywords',finalise_and_keywords2)
+        finalise_and_keywords2 = response3b.json()["choices"][0]["message"]["content"].rstrip().lstrip()
+        print('finalise_and_keywords',finalise_and_keywords2)
+    else:
+        print('icccciiiiiib',response3b.json()["choices"][0]["text"])
+
+        finalise_and_keywords2 = response3b.json()["choices"][0]["text"].rstrip().lstrip()
+        print('finalise_and_keywords',finalise_and_keywords2)
 
     # Find the text between the <keywords> tags
     match = re.search(r"<kd>(.*?)</kd>", finalise_and_keywords2)
@@ -1158,8 +1186,6 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
     else:
         print("No keywords found in text")
         keywords_text=''
-
-
 
 
     sentences = nltk.sent_tokenize(finalise_and_keywords2)
@@ -1188,7 +1214,6 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
     return [finalise_and_keywords2,keywords_text]
 
 async def extract_key_points(arxiv_id, language, summary, api_key):
-    endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -1196,15 +1221,29 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
     #Extract the most important key points from the following text
     prompt3 = f"Extract the most important key points from the following text and use bullet points for each of them: {summary}"
     print('key sum',prompt3)
-    if language != 'en':
-        prompt3 += "TRANSLATE THE ANSWER IN "+language2
-
 
     headers3 = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+    if language != 'en':
+        prompt3 += "TRANSLATE THE ANSWER IN "+language2
+
+    if model=="gpt-3.5-turbo":
+        endpoint = "https://api.openai.com/v1/chat/completions"
+
+        mes = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": '"{text}"'.format(text=prompt3)}
+        ]
+
+        response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+    else:
+        endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+        response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
 
     try:
         print('in try2')
@@ -1221,9 +1260,13 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
-    print('icccciiiiii',response3.json()["choices"][0]["text"])
+    if model=="gpt-3.5-turbo":
+        print('icccciiiiii',response3.json()["choices"][0]["message"]["content"])
+        key_points = response3.json()["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
+    else:
+        print('icccciiiiii',response3.json()["choices"][0]["text"])
+        key_points = response3.json()["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
 
-    key_points = response3.json()["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
     print('key_points',key_points)
 
     '''#problem cuz keypoints do not finish with dots
@@ -1240,7 +1283,6 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
     return key_points
 
 async def extract_simple_summary(arxiv_id, language, keyp, api_key):
-    endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -1266,7 +1308,21 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+    if model=="gpt-3.5-turbo":
+        endpoint = "https://api.openai.com/v1/chat/completions"
+
+        mes = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": '"{text}"'.format(text=prompt4)}
+        ]
+
+        response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+    else:
+        endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+
+        response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try3')
@@ -1285,7 +1341,11 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
 
-    simple_sum = response4.json()["choices"][0]["text"]#.strip().split("\n")
+    if model=="gpt-3.5-turbo":
+        simple_sum = response4.json()["choices"][0]["message"]["content"]#.strip().split("\n")
+    else:
+        simple_sum = response4.json()["choices"][0]["text"]#.strip().split("\n")
+
     print('simple_sum',simple_sum)
     # Split the summary into individual sentences
     sentences = nltk.sent_tokenize(simple_sum)
@@ -1297,12 +1357,38 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     #for s in final_summarized_text:
     #    print(s)
     simple_sum = ' '.join(simple_sum)
+    simple_sum = simple_sum.rstrip().lstrip()
     print('simple_sum after',simple_sum)
 
-    return simple_sum.rstrip().lstrip()
+    # Define regular expressions to search for patterns that typically indicate the start of a definitions section
+    definition_regexes = [
+        r"\bdefinitions?\b", # matches "definition", "definitions", "définition", "définitions", etc.
+        r"\bdefinition\b", # matches "definieren" in German
+        r"\bdéfinitions\b",
+        r"\bdéfinition\b",
+        # add more regexes for other languages if needed
+    ]
+
+    # Search for the start of a definitions section using regular expressions
+    definitions_start = None
+    for regex in definition_regexes:
+        match = re.search(regex, simple_sum, re.IGNORECASE)
+        if match:
+            print('match',match)
+            definitions_start = match.start()
+            break
+
+    # Separate the summary and definitions if a definitions section was found
+    if definitions_start is not None:
+        print('not none definitions_start',definitions_start)
+        summary = simple_sum[:definitions_start].strip()
+        definitions = simple_sum[definitions_start:].strip()
+        # Add a few empty lines between the summary and the definitions
+        simple_sum = f"{summary}\n\n\n{definitions}"
+
+    return simple_sum#.rstrip().lstrip()
 
 async def extract_blog_article(arxiv_id, language, summary, api_key):
-    endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -1315,7 +1401,21 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-    response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+
+    if model=="gpt-3.5-turbo":
+        endpoint = "https://api.openai.com/v1/chat/completions"
+
+        mes = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": '"{text}"'.format(text=prompt5)}
+        ]
+
+        response5 = requests.post(endpoint, headers=headers5, json={"model": model, "messages": mes,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+
+    else:
+        endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+
+        response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try5')
@@ -1333,8 +1433,11 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
+    if model=="gpt-3.5-turbo":
+        blog_article = response5.json()["choices"][0]["message"]["content"]#.strip().split("\n")
+    else:
+        blog_article = response5.json()["choices"][0]["text"]#.strip().split("\n")
 
-    blog_article = response5.json()["choices"][0]["text"]#.strip().split("\n")
     print('blog article',blog_article)
     sentences = nltk.sent_tokenize(blog_article)
 

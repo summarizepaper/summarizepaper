@@ -787,7 +787,7 @@
         </ul>
         {% else %}{% trans 'The key points are not ready yet' %}{% endif %}
       </div>
-      <div class="message-tab" style="display:none;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
+      <div class="message-tab" style="display:none;white-space: pre-line;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
       <div class="message-tab" style="display:none;">{% if sumpaper.blog %}{{ sumpaper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
     </div>
 
@@ -1024,7 +1024,7 @@ submitButton.addEventListener('click', () => {
     <div id="notes" class="message-tab" style="display:none;">
       <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
-    <div id="laysum" class="message-tab" style="display:none;">
+    <div id="laysum" class="message-tab" style="display:none;white-space: pre-line;">
       <div class="loading" style="text-align:center;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
     </div>
     <div id="blog" class="message-tab" style="display:none;">
