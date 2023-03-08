@@ -20,8 +20,8 @@ django-bmemcached
 dj-database-url
 tiktoken
 #git+https://github.com/qkral/pyfpdf.git
-langchain
-openai==0.26.5
+langchain==0.0.103
+openai==0.27.0
 faiss-cpu
 fpdf2
 pylatexenc
