@@ -1393,7 +1393,11 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     language2 = li['name']
     print('language2',language2)
 
-    prompt5 = f"Create a detailed blog article in html about this research paper (do not show images): {summary}"
+    prompt5 = """
+         Create a detailed blog article in HTML about this research paper (do not show images): {}
+    """.format(summary)
+
+    #prompt5 = f"Create a detailed blog article in html about this research paper (do not show images): {summary}"
     if language != 'en':
         prompt5 += "TRANSLATE THE ANSWER IN "+language2
 
@@ -1402,18 +1406,23 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         "Authorization": f"Bearer {api_key}"
     }
 
-    if model=="gpt-3.5-turbo":
+    model_forced="text-davinci-003"#=model
+
+    if model_forced=="gpt-3.5-turbo":
         endpoint = "https://api.openai.com/v1/chat/completions"
 
+        print('prompt5555555',prompt5)
         mes = [
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": "You are a blog writer."},
             {"role": "user", "content": '{text}'.format(text=prompt5)}
         ]
+        print('messssssssssssssss',mes)
 
-        response5 = requests.post(endpoint, headers=headers5, json={"model": model, "messages": mes,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        print('response 5', response5.json())
 
     else:
-        endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+        endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
         response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
@@ -1433,7 +1442,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
-    if model=="gpt-3.5-turbo":
+    if model_forced=="gpt-3.5-turbo":
         blog_article = response5.json()["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
         blog_article = response5.json()["choices"][0]["text"]#.strip().split("\n")
