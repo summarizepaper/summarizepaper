@@ -1407,7 +1407,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
         mes = [
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": '"{text}"'.format(text=prompt5)}
+            {"role": "user", "content": '{text}'.format(text=prompt5)}
         ]
 
         response5 = requests.post(endpoint, headers=headers5, json={"model": model, "messages": mes,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
