@@ -1362,17 +1362,17 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
 
     # Define regular expressions to search for patterns that typically indicate the start of a definitions section
     definition_regexes = [
-        r"\bdefinitions?\b", # matches "definition", "definitions", "définition", "définitions", etc.
-        r"\bdefinition\b", # matches "definieren" in German
-        r"\bdéfinitions\b",
-        r"\bdéfinition\b",
+        r"\bDefinitions?\b", # matches "definition", "definitions", "définition", "définitions", etc.
+        r"\bDefinition\b", # matches "definieren" in German
+        r"\bDéfinitions\b",
+        r"\bDéfinition\b",
         # add more regexes for other languages if needed
     ]
 
     # Search for the start of a definitions section using regular expressions
     definitions_start = None
     for regex in definition_regexes:
-        match = re.search(regex, simple_sum, re.IGNORECASE)
+        match = re.search(regex, simple_sum)
         if match:
             print('match',match)
             definitions_start = match.start()
