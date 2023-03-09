@@ -325,11 +325,11 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
         #from langchain.chains import ChatVectorDBChain
 
         if sum==1:
-            #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
-            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+            llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+            #llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
         else:
-            #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
-            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            #llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
 
 
         '''
