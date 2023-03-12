@@ -12,7 +12,7 @@ admin.site.register(AIassistant)
 admin.site.register(Search)
 
 class MyModelAdmin(admin.ModelAdmin):
-    list_display = ('arxiv_id', 'user', 'created', 'updated')
+    list_display = ('arxiv_id', 'user', 'created')
 
 admin.site.register(PaperHistory, MyModelAdmin)
 

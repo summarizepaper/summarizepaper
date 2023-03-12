@@ -130,13 +130,13 @@
     <label for="arxiv-id"></label>
     <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Search for an article' %}">
     <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Search' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
-    <div class="search-helper">{% trans 'Enter keywords, article titles, arXiv IDs, or authors to search (use the language of papers you are interested in)' %}</div> <!-- Search form helper -->
+    <div class="search-helper">{% trans 'Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to search (use the language of papers you are interested in)' %}</div> <!-- Search form helper -->
 
     {% if error %}
         <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>
     {% endif %}
   </form>
-  <button id="toggle-syntax" class="toggle-button">{% trans 'More advanced Search?' %}</button>
+  <button id="toggle-syntax" class="toggle-button">{% trans 'How Search works?' %}</button>
     <div class="search-syntax" style="display:none;">
     <p><strong>{% trans 'Search Syntax:' %}</strong></p>
     <ul>

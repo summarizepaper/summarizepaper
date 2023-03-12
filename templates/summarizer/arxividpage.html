@@ -903,6 +903,18 @@ submitButton.addEventListener('click', () => {
   {% endif %}
   <hr>
 
+  {% if robot %}
+  <div style="text-align:center;color:red;">
+    <p><strong>{% trans 'You are trying to run too many papers in too short a period of time. Are you a robot? If not, wait and retry!' %}</strong></p>
+  </div>
+  {% endif %}
+
+  {% if toomany %}
+  <div style="text-align:center;color:red;">
+    <p><strong>{% trans 'You are limited to running 10 papers in a period of 24 hours. Please come back tomorrow or contact us if you need to run more articles using our tools.' %}</strong></p>
+  </div>
+  {% endif %}
+
   {% if run or run2 %}
     <div class="info-block">
       <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id|dash_slash }}</p>

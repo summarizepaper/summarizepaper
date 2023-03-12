@@ -389,6 +389,7 @@ def summarize(request):
 
         # Compile the regular expression pattern into a regex object
         pattern2 = re.compile(regex_pattern2)
+        lang = get_language()
 
         # Match the pattern against the input string
         if not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
@@ -405,7 +406,6 @@ def summarize(request):
             page = 1
 
             # perform search and pagination logic here
-            lang = get_language()
 
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
@@ -418,6 +418,20 @@ def summarize(request):
             #return render(request, 'summarizer/search_results.html', context)
             #return render(request, 'summarizer/home.html', {'error': 'Invalid arXiv ID format. It should be a four-digit number, a dot, a four or five-digit number, and an optional version number consisting of the letter "v" and one or more digits. For example, 2101.1234, 2101.12345, and 2101.12345v2 are valid identifiers.'})
         else:
+            if request.user.is_authenticated:
+                #if User.objects.filter(username=user).exists():
+                userinst = request.user#User.objects.get(username=user)
+                # Do something with the admin_user instance
+            else:
+                userinst = None# AnonymousUser()
+
+            print('here....')
+            Search.objects.create(
+                query=arxiv_id,
+                user=userinst,
+                lang=lang
+            )
+
             if pattern1.match(arxiv_id):
                 print('arxiv_id1',arxiv_id)
                 if re.search(r'v\d{1,2}$', arxiv_id):
@@ -436,6 +450,7 @@ def summarize(request):
                 cat,arxiv_id_old=arxiv_id.split('/')
                 print('cat,arxiv',cat,arxiv_id_old)
                 return HttpResponseRedirect(reverse('arxividpage', kwargs={'cat': cat,'arxiv_id':arxiv_id_old}))
+
 
 
             #url = reverse('arxividpage', args=['hep-ph/9411346v1'])
@@ -633,34 +648,72 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
         if 'run_button' in request.POST:
             print('ok run')
-            if request.user.is_authenticated:
-                hist, created = PaperHistory.objects.update_or_create(
+            client_ip = request.META['REMOTE_ADDR']
+            print('clientip',client_ip)
+            # Check if this IP address has already voted on this post
+            hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+
+            #check if just run another with same ip (stop robots)
+            ten_seconds_ago = timezone.now() - timezone.timedelta(seconds=10)
+            print('ten_seconds_ago',ten_seconds_ago)
+            recent_record = PaperHistory.objects.filter(ip_address=hashed_ip_address, created__gte=ten_seconds_ago).first()
+            print('recent_record',recent_record)
+
+            #check if too many paper run for one IP address over last 24 hours
+            one_day_ago = timezone.now() - timezone.timedelta(days=1)
+            past_records = PaperHistory.objects.filter(ip_address=hashed_ip_address, created__gte=one_day_ago)
+            print('past_record',past_records,past_records.count())
+            NUM_LIMIT_PER_DAY=10
+
+            if (recent_record is None and past_records.count()<NUM_LIMIT_PER_DAY) or (request.user.is_superuser):#11
+
+                if request.user.is_authenticated:
+                    #if User.objects.filter(username=user).exists():
+                    userinst = request.user#User.objects.get(username=user)
+                    # Do something with the admin_user instance
+                else:
+                    userinst = None# AnonymousUser()
+
+                PaperHistory.objects.create(
                     arxiv_id=arxiv_id,
-                    user=request.user,
-                    defaults={}
+                    user=userinst,
+                    lang=lang,
+                    ip_address=hashed_ip_address
                 )
-            if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
-                print('deja')
-                paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
-                #if SummaryPaper.objects.filter(paper=paper,lang=lang).exists():
-                #    sumpaper=SummaryPaper.objects.filter(paper=paper,lang=lang)[0]
 
-                previous_votes = Vote.objects.filter(paper=paper,lang=lang)
+                if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+                    print('deja')
+                    paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+                    #if SummaryPaper.objects.filter(paper=paper,lang=lang).exists():
+                    #    sumpaper=SummaryPaper.objects.filter(paper=paper,lang=lang)[0]
 
-                if SummaryPaper.objects.filter(paper=paper,lang=lang).exists() and previous_votes.exists():
-                    #we cancel the votes because we rerun the process
-                    print('rerun cancel votes')
-                    for pv in previous_votes:
-                        pv.active=False
-                        pv.save()
-                    #paper.total_votes = 0
-                    #paper.save()
+                    previous_votes = Vote.objects.filter(paper=paper,lang=lang)
 
-            #arxiv_id=arxiv_id.replace('--','/')
+                    if SummaryPaper.objects.filter(paper=paper,lang=lang).exists() and previous_votes.exists():
+                        #we cancel the votes because we rerun the process
+                        print('rerun cancel votes')
+                        for pv in previous_votes:
+                            pv.active=False
+                            pv.save()
+                        #paper.total_votes = 0
+                        #paper.save()
 
-            stuff_for_frontend.update({
-                'run':True,
-            })
+                #arxiv_id=arxiv_id.replace('--','/')
+
+                stuff_for_frontend.update({
+                    'run':True,
+                })
+            else:
+                if recent_record is not None:
+                    #robot running the run button
+                    stuff_for_frontend.update({
+                        'robot':True,
+                    })
+                if past_records.count()>NUM_LIMIT_PER_DAY:
+                    #user running too many papers in 24hrs
+                    stuff_for_frontend.update({
+                        'toomany':True,
+                    })
         print('renderrrrrrrrrrrrr')
         #return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id,'stuff_for_frontend':stuff_for_frontend}))
 
