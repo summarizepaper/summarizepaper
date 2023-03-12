@@ -812,10 +812,22 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     print('keywords',sumpaper.keywords)
                     try:
                         keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
+                        print('keystr',keywords_str)
                         keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
-                        keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
+                        print('keylist',keywords_list)
+                        #keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
+                        keywords_repr = ", ".join([fr"r'{keyword}'" for keyword in keywords_list])
+                        print('keyrepr',keywords_repr)
                         keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
+                        #keywords = ast.literal_eval(keywords_list)  # Evaluate the resulting string as a Python list
+
+                        #keywords_list = [keyword.replace('"', '\\"').strip() for keyword in keywords_str.split(',')]  # Replace double quotes with escaped double quotes
+                        #keywords_repr = ", ".join([f'"{keyword}"' for keyword in keywords_list])  # Enclose each keyword in double quotes and join the list with commas
+                        #keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
+
+
                         #keywords = ast.literal_eval('['+sumpaper.keywords+']')
+                        print('kegggg',keywords)
                     except ValueError:
                         # Handle the error by returning a response with an error message to the user
                         return HttpResponse("Invalid input: 'keywords' attribute is not a valid Python literal.")
