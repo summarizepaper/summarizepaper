@@ -42,7 +42,7 @@ if 'ON_HEROKU' in os.environ:
 else:
     DEBUG = True
 
-CSRF_TRUSTED_ORIGINS = ['https://summarizepaper.herokuapp.com','https://summarizepaper.com/','https://www.summarizepaper.com/','https://*.127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://summarizepaper.herokuapp.com','https://summarizepaper.com','https://www.summarizepaper.com','https://*.127.0.0.1']
 
 ALLOWED_HOSTS = ['summarizepaper.herokuapp.com','summarizepaper.com','127.0.0.1']
 
