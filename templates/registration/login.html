@@ -64,24 +64,24 @@
 {% block content %}
 <div class="form-container">
   <!-- Form header -->
-  <h1 class="form-header">Login</h1>
+  <h1 class="form-header">{% trans 'Login' %}</h1>
 
   <!-- Login form -->
   <form method="post">
     {% csrf_token %}
     <!-- Username field -->
-    <input type="text" class="form-input" placeholder="Username" name="username">
+    <input type="text" class="form-input" placeholder="{% trans 'Username' %}" name="username">
     <!-- Password field -->
-    <input type="password" class="form-input" placeholder="Password" name="password">
+    <input type="password" class="form-input" placeholder="{% trans 'Password' %}" name="password">
     <!-- Submit button -->
-    <input type="submit" class="form-submit" value="Login">
+    <input type="submit" class="form-submit" value="{% trans 'Login' %}">
 
   </form>
   <p style="margin-top: 20px;">
-    No account yet? <a href="{% url 'register' %}" style="text-decoration: none;">Register</a>
+    {% trans 'No account yet?' %} <a href="{% url 'register' %}" style="text-decoration: none;">{% trans 'Register' %}</a>
   </p>
   <p style="margin-top: 20px;">
-    <small><a href="{% url 'password_reset' %}" style="text-decoration: none;">Lost your password?</a></small>
+    <small><a href="{% url 'password_reset' %}" style="text-decoration: none;">{% trans 'Lost your password?' %}</a></small>
   </p>
   {% if form.errors %}
       <ul>

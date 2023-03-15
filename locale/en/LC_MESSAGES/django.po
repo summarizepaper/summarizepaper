@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-12 15:04+0000\n"
+"POT-Creation-Date: 2023-03-15 20:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -84,7 +84,8 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
-#: templates/base.html:262
+#: templates/base.html:262 templates/registration/login.html:67
+#: templates/registration/login.html:77
 msgid "Login"
 msgstr ""
 
@@ -176,6 +177,26 @@ msgid ""
 "access your account and view past summaries. Our login system ensures that "
 "your data is protected and your account is safe. Discover the convenience of "
 "easy-to-read paper summaries."
+msgstr ""
+
+#: templates/registration/login.html:73
+msgid "Username"
+msgstr ""
+
+#: templates/registration/login.html:75
+msgid "Password"
+msgstr ""
+
+#: templates/registration/login.html:81
+msgid "No account yet?"
+msgstr ""
+
+#: templates/registration/login.html:81
+msgid "Register"
+msgstr ""
+
+#: templates/registration/login.html:84
+msgid "Lost your password?"
 msgstr ""
 
 #: templates/summarizer/about.html:5
@@ -552,15 +573,15 @@ msgstr ""
 msgid "AI -"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1381
+#: templates/summarizer/arxividpage.html:1383
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1456
+#: templates/summarizer/arxividpage.html:1458
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1469
+#: templates/summarizer/arxividpage.html:1471
 msgid "You -"
 msgstr ""
 
