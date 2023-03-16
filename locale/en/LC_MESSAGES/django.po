@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-15 20:03+0000\n"
+"POT-Creation-Date: 2023-03-16 16:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: arxivsummarizer/settings.py:151
+#: arxivsummarizer/settings.py:150
 msgid "French"
 msgstr ""
 
-#: arxivsummarizer/settings.py:152
+#: arxivsummarizer/settings.py:151
 msgid "English"
 msgstr ""
 
@@ -713,7 +713,9 @@ msgid "Is the code open-source?"
 msgstr ""
 
 #: templates/summarizer/faq.html:91
-msgid "Yes, the code is open source and freely accessible."
+msgid ""
+" Yes, the code is open source and <a href=\"https://github.com/"
+"summarizepaper/summarizepaper\">freely accessible</a>. "
 msgstr ""
 
 #: templates/summarizer/faq.html:95
@@ -822,15 +824,16 @@ msgstr ""
 
 #: templates/summarizer/home.html:152
 msgid ""
-"Welcome to Summarize<span style=\"color:#34a853\">Paper</span>.com, where "
-"you can stay up-to-date with the latest research on arXiv. Our goal is to "
-"provide you with concise, understandable, and insightful summaries (key-"
-"points, layman's summary, ...) for all arXiv research articles using AI, so "
-"you can quickly get a grasp of the latest developments in your field. In "
-"addition to our summary service, we offer an AI assistant to answer your "
-"questions about arXiv papers. Whether you're a researcher, a student, a "
-"journalist, or simply someone who wants to stay informed, Summarize<span "
-"style=\"color:#34a853\">Paper</span>.com is here to make your life easier."
+"Welcome to our <a href=\"https://github.com/summarizepaper/summarizepaper"
+"\">open-source</a> AI tool, where you can stay up-to-date with the latest "
+"research on arXiv. Our goal is to provide you with concise, understandable, "
+"and insightful summaries (key-points, layman's summary, ...) for all arXiv "
+"research articles using AI, so you can quickly get a grasp of the latest "
+"developments in your field. In addition to our summary service, we offer an "
+"AI assistant to answer your questions about arXiv papers. Whether you're a "
+"researcher, a student, a journalist, or simply someone who wants to stay "
+"informed, Summarize<span style=\"color:#34a853\">Paper</span>.com is here to "
+"make your life easier."
 msgstr ""
 
 #: templates/summarizer/legal-notice.html:5
@@ -927,9 +930,10 @@ msgstr ""
 
 #: templates/summarizer/privacy.html:59
 msgid ""
-"Our website is built as an open source software, which allows for greater "
-"transparency and security. The codebase is available for public inspection "
-"and contributions are welcomed from the open source community."
+" Our website is built as an <a href=\"https://github.com/summarizepaper/"
+"summarizepaper\" target=\"_blank\">open source software</a>, which allows "
+"for greater transparency and security. The codebase is available for public "
+"inspection and contributions are welcomed from the open source community. "
 msgstr ""
 
 #: templates/summarizer/privacy.html:61

@@ -488,7 +488,7 @@ def contact(request):
 
         # Send an email to the specified email address
         subject = 'Paper Summarization Contact Form: ' + name
-        emailto = ['carbonfreeconf@gmail.com']
+        emailto = ['contact@summarizepaper.com']
         #emailto.append(email)
         emailsend = EmailMessage(
             subject,
