@@ -41,6 +41,7 @@ from xml.etree import ElementTree
 import urllib, urllib.request
 import math
 from langchain.llms import OpenAIChat
+import aiohttp
 
 channel_layer = get_channel_layer()
 model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002."
@@ -412,24 +413,35 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
         if sum==1:
             if language != 'en':
                 template += """FINAL ANSWER IN """+language2
+            print('wait here')
             c = asyncio.create_task(sync_to_async(getpaperabstract)(arxiv_id))
+            print('wait...')
             paperabstract=await c
+            print('wait2...')
+
             PROMPT = PromptTemplate(template=template, input_variables=["summaries", "existing_answer"])
         else:
             if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
                 template += """FINAL ANSWER IN """+language2
             PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
 
+        print('wait3...')
         chain = load_qa_with_sources_chain(llm, chain_type="stuff", prompt=PROMPT)
+        print('wait4...')
 
         with get_openai_callback() as cb:
 
             if sum==1:
-                getresponse=chain({"input_documents": docs, "existing_answer": paperabstract}, return_only_outputs=False)
+                print('wait5...')
+                #getresponse=chain({"input_documents": docs, "existing_answer": paperabstract}, return_only_outputs=False)
+                getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "existing_answer": paperabstract}, return_only_outputs=False)
+                print('wait6...')
             else:
-                getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=False)
+                print('gkl')
+                getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "question": query}, return_only_outputs=False)
 
             nbtokensused=cb.total_tokens
+            print('wait7...')
 
         print('nbtokensusedchatbot',nbtokensused)
         print('openai cost chatbot',nbtokensused*openaipricing("text-davinci-003"))
@@ -998,9 +1010,11 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
     elif method=='fromembeddings':
         print('from embeddings')
         query="Create a long detailed summary of the paper, preserve important details"
+
         c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key))
         #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
         final_summarized_text =await c
+
         print('apres final_summarized_text',final_summarized_text)
     elif method=='fromembeddingsandabstract':
         print('from embeddings2')
@@ -1009,6 +1023,7 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
         c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,sum=1))
         #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
         final_summarized_text = await c
+
         print('before nltk final_summarized_text',final_summarized_text)
 
 
@@ -1139,38 +1154,58 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
             {"role": "user", "content": '"{text}"'.format(text=prompt3b)}
         ]
 
-        response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try2b',response)
+                    if response.status != 200:
+                        print("in2b ! 200")
+                        raise Exception(f"Failed to summarize text2b: {response.text}")
+                except Exception as e:
+                    print('in redirect2b')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response3b = await response.json()
 
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
+        print('he')
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try2b',response)
+                    if response.status != 200:
+                        print("in2b ! 200")
+                        raise Exception(f"Failed to summarize text2b: {response.text}")
+                except Exception as e:
+                    print('in redirect2b')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response3b = await response.json()
 
-        response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        print('he2',response3b)
 
-    try:
-        print('in try2b')
-        if response3b.status_code != 200:
-            print("in2b ! 200")
-            raise Exception(f"Failed to summarize text2b: {response3b.text}")
-    except Exception as e:
-        print('in redirect2b')
-        # Redirect to the arxividpage and pass the error message
-        return {
-            "error_message": str(e),
-        }        #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+        #response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        #response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
 
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
     if model_forced=="gpt-3.5-turbo":
-        print('icccciiiiiib',response3b.json()["choices"][0]["message"]["content"])
+        print('icccciiiiiib',response3b["choices"][0]["message"]["content"])
 
-        finalise_and_keywords2 = response3b.json()["choices"][0]["message"]["content"].rstrip().lstrip()
+        finalise_and_keywords2 = response3b["choices"][0]["message"]["content"].rstrip().lstrip()
         print('finalise_and_keywords',finalise_and_keywords2)
     else:
-        print('icccciiiiiib',response3b.json()["choices"][0]["text"])
+        print('icccciiiiiib',response3b["choices"][0]["text"])
 
-        finalise_and_keywords2 = response3b.json()["choices"][0]["text"].rstrip().lstrip()
+        finalise_and_keywords2 = response3b["choices"][0]["text"].rstrip().lstrip()
         print('finalise_and_keywords',finalise_and_keywords2)
 
     # Find the text between the <keywords> tags
@@ -1242,34 +1277,50 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
             {"role": "user", "content": '"{text}"'.format(text=prompt3)}
         ]
 
-        response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        #response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try2',response)
+                    if response.status != 200:
+                        print("in2 ! 200")
+                        raise Exception(f"Failed to summarize text2: {response.text}")
+                except Exception as e:
+                    print('in redirect2')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response3 = await response.json()
 
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
-        response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        #response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try2',response)
+                    if response.status != 200:
+                        print("in2 ! 200")
+                        raise Exception(f"Failed to summarize text2: {response.text}")
+                except Exception as e:
+                    print('in redirect2')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response3 = await response.json()
 
-
-    try:
-        print('in try2')
-        if response3.status_code != 200:
-            print("in2 ! 200")
-            raise Exception(f"Failed to summarize text2: {response3.text}")
-    except Exception as e:
-        print('in redirect2')
-        # Redirect to the arxividpage and pass the error message
-        return {
-            "error_message": str(e),
-        }        #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
     if model=="gpt-3.5-turbo":
-        print('icccciiiiii',response3.json()["choices"][0]["message"]["content"])
-        key_points = response3.json()["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
+        print('icccciiiiii',response3["choices"][0]["message"]["content"])
+        key_points = response3["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
     else:
-        print('icccciiiiii',response3.json()["choices"][0]["text"])
-        key_points = response3.json()["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
+        print('icccciiiiii',response3["choices"][0]["text"])
+        key_points = response3["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
 
     print('key_points',key_points)
 
@@ -1321,34 +1372,48 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
             {"role": "user", "content": '"{text}"'.format(text=prompt4)}
         ]
 
-        response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try4',response)
+                    if response.status != 200:
+                        print("in4 ! 200")
+                        raise Exception(f"Failed to summarize text4: {response.text}")
+                except Exception as e:
+                    print('in redirect4')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response4 = await response.json()
 
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
-        response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-
-    try:
-        print('in try3')
-        if response4.status_code != 200:
-            print("in3 ! 200")
-            raise Exception(f"Failed to summarize text: {response4.text}")
-    except Exception as e:
-        print('in redirect3')
-        # Redirect to the arxividpage and pass the error message
-        return {
-            "error_message": str(e),
-        }
-        #return redirect('arxividpage', arxiv_id=arxiv_id, error_message="e1")
-        #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try4',response)
+                    if response.status != 200:
+                        print("in4 ! 200")
+                        raise Exception(f"Failed to summarize text4: {response.text}")
+                except Exception as e:
+                    print('in redirect4')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response4 = await response.json()
+        #response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
 
     if model=="gpt-3.5-turbo":
-        simple_sum = response4.json()["choices"][0]["message"]["content"]#.strip().split("\n")
+        simple_sum = response4["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
-        simple_sum = response4.json()["choices"][0]["text"]#.strip().split("\n")
+        simple_sum = response4["choices"][0]["text"]#.strip().split("\n")
 
     print('simple_sum',simple_sum)
     # Split the summary into individual sentences
@@ -1422,34 +1487,49 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         ]
         print('messssssssssssssss',mes)
 
-        response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        print('response 5', response5.json())
+        #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        #print('response 5', response5.json())
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try5',response)
+                    if response.status != 200:
+                        print("in5 ! 200")
+                        raise Exception(f"Failed to summarize text5: {response.text}")
+                except Exception as e:
+                    print('in redirect5')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response5 = await response.json()
 
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
-        response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        async with aiohttp.ClientSession() as session:
+            async with session.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}) as response:
+                try:
+                    print('in try5',response)
+                    if response.status != 200:
+                        print("in5 ! 200")
+                        raise Exception(f"Failed to summarize text5: {response.text}")
+                except Exception as e:
+                    print('in redirect5')
+                    # Redirect to the arxividpage and pass the error message
+                    return {
+                        "error_message": str(e),
+                    }
+                response5 = await response.json()
 
-    try:
-        print('in try5')
-        if response5.status_code != 200:
-            print("in5 ! 200")
-            raise Exception(f"Failed to summarize text: {response5.text}")
-    except Exception as e:
-        print('in redirect5')
-        # Redirect to the arxividpage and pass the error message
-        return {
-            "error_message": str(e),
-        }
-        #return redirect('arxividpage', arxiv_id=arxiv_id, error_message="e1")
-        #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+        #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
     if model_forced=="gpt-3.5-turbo":
-        blog_article = response5.json()["choices"][0]["message"]["content"]#.strip().split("\n")
+        blog_article = response5["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
-        blog_article = response5.json()["choices"][0]["text"]#.strip().split("\n")
+        blog_article = response5["choices"][0]["text"]#.strip().split("\n")
 
     print('blog article',blog_article)
     sentences = nltk.sent_tokenize(blog_article)
@@ -1569,50 +1649,52 @@ def arxiv_search(query):
 
     return papers
 
-def get_arxiv_metadata(arxiv_id):
+async def get_arxiv_metadata(arxiv_id):
     print('aaa',arxiv_id)
     if '--' in arxiv_id:
         print('arxiv_id1',arxiv_id)
         arxiv_id=arxiv_id.replace('--','/')
         print('arxiv_id2',arxiv_id)
 
+
     url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"
-    response = requests.get(url)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            try:
+                print('in try arxiv',response.status)
+                if response.status != 200:
+                    print("in ! 200 arxiv")
+                    raise Exception(f"Failed to retrieve data: {response.text}")
+            except Exception as e:
+                print('in redirect arxiv')
+            data = await response.text()
+
+    #response = requests.get(url)
     #if response.status_code != 200:
     #    raise Exception(f"Failed to retrieve data: {response.text}")
 
     arxiv_id2= re.sub(r'v\d+$', '', arxiv_id)
     print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
     url2=f"http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
-    response2 = requests.get(url2)
 
-    try:
-        print('in try arxiv')
-        if response.status_code != 200:
-            print("in ! 200 arxiv")
-            raise Exception(f"Failed to retrieve data: {response.text}")
-    except Exception as e:
-        print('in redirect arxiv')
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url2) as response:
+            try:
+                print('in try arxiv2',response.status)
+                if response.status != 200:
+                    print("in ! 200 arxiv2")
+                    raise Exception(f"Failed to retrieve data2: {response.text}")
+            except Exception as e:
+                print('in redirect arxiv2')
+            data2 = await response.text()
 
-    try:
-        print('in try arxiv2')
-        if response2.status_code != 200:
-            print("in ! 200 arxiv2")
-            raise Exception(f"Failed to retrieve data2: {response2.text}")
-    except Exception as e:
-        print('in redirect arxiv2')
-        # Redirect to the arxividpage and pass the error message
-        #return {
-        #    "error_message": str(e),
-        #}
-        #return redirect('arxividpage', arxiv_id=arxiv_id, error_message="e0")
-        #return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+    #response2 = requests.get(url2)
 
-
-    data = response.text
+    #data = response.text
     print('data',data)
 
-    data2 = response2.text
+    #data2 = response2.text
     print('data2',data2)
 
     # Parse the XML response

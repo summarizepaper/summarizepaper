@@ -189,7 +189,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-
+            sum=''
+            kw=''
+            #await asyncio.sleep(30.)
             c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
             sum = await c
             # Print the summarized text
@@ -382,7 +384,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         #time.sleep(3.)
 
-        arxivarrayf=utils.get_arxiv_metadata(v)
+        #arxivarrayf=utils.get_arxiv_metadata(v)
+        c=asyncio.create_task(utils.get_arxiv_metadata(v))
+        arxivarrayf = await c
 
         #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
         if len(arxivarrayf)>1:

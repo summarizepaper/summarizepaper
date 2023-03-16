@@ -41,6 +41,7 @@ from django.core.paginator import Paginator
 from urllib.parse import urlencode
 import urllib, urllib.request
 from xml.etree import ElementTree
+import asyncio
 
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):
@@ -853,7 +854,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         else:
             print('nope')
             alpaper=False
-            arxiv_detailsf=utils.get_arxiv_metadata(arxiv_id)
+            arxiv_detailsf=asyncio.run(utils.get_arxiv_metadata(arxiv_id))
             exist=arxiv_detailsf[0]
             #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
             if arxiv_detailsf[0] == 0:
