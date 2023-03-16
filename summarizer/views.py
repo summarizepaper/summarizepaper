@@ -813,7 +813,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     try:
                         keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
                         print('keystr',keywords_str)
-                        keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
+                        keywords_list = [keyword.replace("'","\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
                         print('keylist',keywords_list)
                         #keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
                         keywords_repr = ", ".join([fr"r'{keyword}'" for keyword in keywords_list])
