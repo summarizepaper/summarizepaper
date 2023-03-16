@@ -1,6 +1,6 @@
 # arXiv Paper Summarization Website :books::robot:
 
-This is a web application that uses AI to summarize academic papers from arXiv, and provides a virtual assistant :robot: to answer questions about the paper. 
+This is a web application that uses AI to summarize academic papers from arXiv, and provides a virtual assistant :robot: to answer questions about the paper. You can check it live: [SummarizePaper.com](https://www.summarizepaper.com)
 
 ## Features :sparkles:
 
