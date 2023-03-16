@@ -95,7 +95,7 @@ def generate_pdf(request,arxiv_id,lang,local_date):
                 print('keywords',sumpaper.keywords)
                 try:
                     keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
-                    keywords_list = [keyword.replace("'","\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
+                    keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
                     keywords_repr = ", ".join([fr"r'{keyword}'" for keyword in keywords_list])
 
                     #keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
