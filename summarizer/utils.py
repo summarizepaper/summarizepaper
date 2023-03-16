@@ -43,7 +43,7 @@ import math
 from langchain.llms import OpenAIChat
 
 channel_layer = get_channel_layer()
-model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002"
+model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002..."
 temp=0.3
 method="fromembeddingsandabstract"#"fromembeddings"#"langchain"#quentin
 
