@@ -25,6 +25,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views import View
 import six
+import json
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth import authenticate
 from django.core.exceptions import PermissionDenied
@@ -813,12 +814,14 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     try:
                         keywords_str = sumpaper.keywords.strip()  # Remove any leading or trailing whitespace
                         print('keystr',keywords_str)
-                        keywords_list = [keyword.replace("'","\\'").strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
+                        keywords_list = [keyword.strip() for keyword in keywords_str.split(',')]  # Split the keywords string into a list
                         print('keylist',keywords_list)
+                        keywords_repr = json.dumps(keywords_list)
+                        keywords = json.loads(keywords_repr)
                         #keywords_repr = ", ".join([f"'{keyword}'" for keyword in keywords_list])  # Enclose each keyword in quotes and join the list with commas
-                        keywords_repr = ", ".join([fr"r'{keyword}'" for keyword in keywords_list])
+                        #keywords_repr = ", ".join([fr"r'{keyword}'" for keyword in keywords_list])
                         print('keyrepr',keywords_repr)
-                        keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
+                        #keywords = ast.literal_eval('[' + keywords_repr + ']')  # Evaluate the resulting string as a Python list
                         #keywords = ast.literal_eval(keywords_list)  # Evaluate the resulting string as a Python list
 
                         #keywords_list = [keyword.replace('"', '\\"').strip() for keyword in keywords_str.split(',')]  # Replace double quotes with escaped double quotes
