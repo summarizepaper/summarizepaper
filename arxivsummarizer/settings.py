@@ -25,11 +25,10 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '2obu#7)&&hth_obn&*(n3m84uxhk(@f1znm0b-l-bat+cvw(9c'
-OPENAI_KEY = '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'
+SECRET_KEY = os.getenv('SECRET_KEY')
+OPENAI_KEY = os.getenv('OPENAI_KEY')
 SECRETSG = os.getenv('SECRETSG')
 
-#EMAIL_HOST_USER = "quentin.kral@gmail.com"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_PORT = 587
@@ -172,18 +171,11 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-'''
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-    '/var/www/static/',
-]'''
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 ASGI_APPLICATION = 'arxivsummarizer.asgi.application'
 
-#redishost='redis://default:jRzA5ZwUH8J0bgA30uRqIiI1jITwJdbQ@redis-17137.c81.us-east-1-2.ec2.cloud.redislabs.com:17137'
-#print('BROKER_URL',BROKER_URL)
 
 # Number of messages to display per page.
 ROSETTA_MESSAGES_PER_PAGE = 20
