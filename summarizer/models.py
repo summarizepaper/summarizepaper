@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 class CustomUser(User):#add here if want to add CB info
     #address = models.CharField(max_length=100, blank=True)
@@ -50,6 +51,10 @@ class ArxivPaper(models.Model):
 
     def __str__(self):
         return self.arxiv_id+' '+self.title
+
+    def get_absolute_url(self):
+        return reverse('arxividpage',
+                       args=[str(self.arxiv_id)])
 
 class Search(models.Model):
     id = models.AutoField(primary_key=True)

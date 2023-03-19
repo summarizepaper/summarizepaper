@@ -42,6 +42,16 @@ from urllib.parse import urlencode
 import urllib, urllib.request
 from xml.etree import ElementTree
 import asyncio
+from django.views.decorators.http import require_GET
+
+@require_GET
+def robots_txt(request):
+    lines = [
+        "User-Agent: *",
+        "Disallow: /admin",
+        "Sitemap: https://www.summarizepaper.com/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):

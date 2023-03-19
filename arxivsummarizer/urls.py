@@ -17,11 +17,30 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
+from django.contrib.sitemaps.views import sitemap
+from django.contrib.sitemaps import GenericSitemap
+from summarizer.sitemaps import StaticViewSitemap
+from summarizer.models import ArxivPaper
 
 app_name = 'summarizer'
 
+sitemaps = {
+    'static': StaticViewSitemap
+}
+
+sitemaps = {
+    'arxividpage': GenericSitemap({
+        'queryset': ArxivPaper.objects.filter(arxiv_id__isnull=False),
+        'date_field': 'updated',
+    }, priority=0.9),
+    # START
+    'static': StaticViewSitemap,
+    # END
+}
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}),
     path('', include('summarizer.urls')),
 ]
 

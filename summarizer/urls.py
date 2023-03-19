@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', views.summarize, name='summarize'),
+    path('robots.txt/', views.robots_txt),
     #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),
     path("arxiv-id/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     #path("arxiv-id/<str:cat>/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
