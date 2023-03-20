@@ -179,7 +179,17 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-            message["progress"] = 45
+
+
+            sum=''
+            kw=''
+            #await asyncio.sleep(30.)
+            c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
+            sum = await c
+            # Print the summarized text
+            #await sum
+
+            message["progress"] = 50
             if language == 'fr':
                 message["loading_message"] = "Création du résumé en cours..."
             else:
@@ -189,13 +199,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-            sum=''
-            kw=''
-            #await asyncio.sleep(30.)
-            c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
-            sum = await c
-            # Print the summarized text
-            #await sum
             if sum != '':
                 print('sum:',sum)
                 #await task
@@ -215,7 +218,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_sum(sum))
                 await c
 
-                message["progress"] = 50
+                message["progress"] = 60
                 if language == 'fr':
                     message["loading_message"] = "Extraction des points clefs de l'article..."
                 else:
@@ -246,6 +249,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
                 print('hfjggkg2')
+                message["progress"] = 70
+                #message["loading_message"] = "Extracting key points..."
+                if language == 'fr':
+                    message["loading_message"] = "Création d'un résumé vulgarisé"
+                else:
+                    message["loading_message"] = "Creating a simple laymans' summary"
+                c=asyncio.create_task(self.send_message_now(message))
+                await c
 
                 c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, settings.OPENAI_KEY))
                 laysum = await c
@@ -255,14 +266,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     laysum='Error: needs to be re-run'
 
 
-                message["progress"] = 60
-                #message["loading_message"] = "Extracting key points..."
-                if language == 'fr':
-                    message["loading_message"] = "Création d'un résumé vulgarisé"
-                else:
-                    message["loading_message"] = "Creating a simple laymans' summary"
-                c=asyncio.create_task(self.send_message_now(message))
-                await c
+
 
                 c=asyncio.create_task(self.send_message_laysum(laysum))
                 await c

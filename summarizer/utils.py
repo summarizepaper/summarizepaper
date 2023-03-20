@@ -1155,6 +1155,8 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
         ]
 
         #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1169,11 +1171,12 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
                         "error_message": str(e),
                     }
                 response3b = await response.json()
-
+        '''
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
         print('he')
+        '''
         async with aiohttp.ClientSession() as session:
             print('hea')
             async with session.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
@@ -1194,10 +1197,22 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
             print('hed')
 
         print('he2',response3b)
-
+        '''
         #response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
-        #response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
 
+    try:
+        print('in try2b',response3b)
+        if response3b.status_code != 200:
+            print("in2b ! 200")
+            raise Exception(f"Failed to summarize text2b: {response3b.text}")
+    except Exception as e:
+        print('in redirect2b')
+        # Redirect to the arxividpage and pass the error message
+        return {
+            "error_message": str(e),
+        }
+    response3b=response3b.json()
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
@@ -1282,6 +1297,9 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
         ]
 
         #response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1296,10 +1314,13 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
                         "error_message": str(e),
                     }
                 response3 = await response.json()
+        '''
 
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
         #response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1315,7 +1336,21 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
                     }
                 response3 = await response.json()
 
+        '''
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
+    try:
+        print('in try3',response3)
+        if response3.status_code != 200:
+            print("in3 ! 200")
+            raise Exception(f"Failed to summarize text3: {response3.text}")
+    except Exception as e:
+        print('in redirect3')
+        # Redirect to the arxividpage and pass the error message
+        return {
+            "error_message": str(e),
+        }
+    response3=response3.json()
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
@@ -1377,6 +1412,9 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
         ]
 
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1391,10 +1429,11 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
                         "error_message": str(e),
                     }
                 response4 = await response.json()
-
+        '''
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1410,7 +1449,21 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
                     }
                 response4 = await response.json()
         #response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        '''
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
+    try:
+        print('in try4',response4)
+        if response4.status_code != 200:
+            print("in4 ! 200")
+            raise Exception(f"Failed to summarize text4: {response4.text}")
+    except Exception as e:
+        print('in redirect4')
+        # Redirect to the arxividpage and pass the error message
+        return {
+            "error_message": str(e),
+        }
+    response4=response4.json()
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
 
@@ -1493,6 +1546,9 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1507,10 +1563,11 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
                         "error_message": str(e),
                     }
                 response5 = await response.json()
-
+        '''
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
+        '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
@@ -1525,9 +1582,22 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
                         "error_message": str(e),
                     }
                 response5 = await response.json()
-
+        '''
         #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
+    try:
+        print('in try5',response5)
+        if response5.status_code != 200:
+            print("in5 ! 200")
+            raise Exception(f"Failed to summarize text5: {response5.text}")
+    except Exception as e:
+        print('in redirect5')
+        # Redirect to the arxividpage and pass the error message
+        return {
+            "error_message": str(e),
+        }
+    response5=response5.json()
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
     if model_forced=="gpt-3.5-turbo":
