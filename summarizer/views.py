@@ -387,6 +387,9 @@ def search_results(request):
     return render(request, 'summarizer/search_results.html', context)
 
 def summarize(request):
+    stuff_for_frontend = {}
+    lang = get_language()
+
     if request.method == 'POST':
         print('request.POST',request.POST)
         arxiv_id = request.POST['arxiv_id']
@@ -401,7 +404,6 @@ def summarize(request):
 
         # Compile the regular expression pattern into a regex object
         pattern2 = re.compile(regex_pattern2)
-        lang = get_language()
 
         # Match the pattern against the input string
         if not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
@@ -469,8 +471,29 @@ def summarize(request):
             #return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
     activated = request.GET.get('activated', False)
+    latestpapers=SummaryPaper.objects.filter(lang=lang).exclude(summary__exact='', notes__exact='', lay_summary__exact='', blog__exact='', keywords__exact='', summary__isnull=False, notes__isnull=False, lay_summary__isnull=False, blog__isnull=False, keywords__isnull=False).order_by('-updated')[:7]
+    print('latestpapers',latestpapers)
+    '''
+    class SummaryPaper(models.Model):
+        id = models.AutoField(primary_key=True)
+        paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
+        summary = models.TextField(blank=True, null=True)
+        notes = models.TextField(blank=True, null=True)
+        lay_summary = models.TextField(blank=True, null=True)
+        blog = models.TextField(blank=True, null=True)
+        keywords = models.TextField(blank=True, null=True)
+        lang = models.CharField(max_length=10,default='en')
+        created = models.DateTimeField(auto_now_add=True)
+        updated = models.DateTimeField(auto_now=True)
+    '''
 
-    return render(request, 'summarizer/home.html', {'activated':activated})
+    stuff_for_frontend.update({
+        'activated':activated,
+        'latestpapers':latestpapers
+    })
+
+
+    return render(request, 'summarizer/home.html', stuff_for_frontend)
 
 def legal(request):
     stuff_for_frontend = {}

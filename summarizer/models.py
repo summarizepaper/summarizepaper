@@ -74,6 +74,8 @@ class SummaryPaper(models.Model):
     lay_summary = models.TextField(blank=True, null=True)
     blog = models.TextField(blank=True, null=True)
     keywords = models.TextField(blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     lang = models.CharField(max_length=10,default='en')
 
     def __str__(self):

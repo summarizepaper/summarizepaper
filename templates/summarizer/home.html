@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 {% block title %} {% trans 'AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper Summaries' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our AI-powered arXiv paper summarization service provides fast, accurate, and easy-to-read summaries of scientific papers. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
   <style>
       body {
         background-color: #f2f2f2;
@@ -56,6 +58,7 @@
         display: none;
       }
       .welcome {
+        font-family: 'Open Sans', sans-serif;
         font-size: 18px;
         line-height: 1.5;
         max-width: 800px;
@@ -113,6 +116,79 @@
      border: 1px solid #ccc;
      background-color: #f5f5f5;
    }
+   .latest-papers {
+     background-color: #f8f8f8;
+     padding: 20px;
+     text-align: center;
+   }
+
+   .latest-papers h2 {
+     font-size: 24px;
+     font-weight: bold;
+     margin-bottom: 10px;
+   }
+
+   .paper-list {
+     display: flex;
+     flex-wrap: wrap;
+     justify-content: center;
+   }
+
+   .paper {
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin: 10px;
+  width: 120px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.paper:hover {
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+}
+
+.paper a {
+  font-family: "Open Sans", sans-serif;
+  color: #000000;
+  font-size: 14px;
+  text-decoration: none;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paper a:hover {
+  color: #007bff;
+}
+
+.paper .category {
+  font-size: 14px;
+  margin-top: 5px;
+  text-align: center;
+  font-family: "Open Sans", sans-serif;
+}
+
+   @media (min-width: 768px) {
+     .paper {
+       width: 150px;
+       height: 150px;
+     }
+
+     .paper a {
+       font-size: 16px;
+     }
+   }
+
+
+
     </style>
 {% endblock %}
 
@@ -151,7 +227,19 @@
 
   <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper">open-source</a> AI tool, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries (key-points, layman's summary, ...) for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. In addition to our summary service, we offer an AI assistant to answer your questions about arXiv papers. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
 
+  <section class="latest-papers">
+    <h2>{% trans 'Latest Papers summarized with our AI tools' %}</h2>
+    <div class="paper-list">
+      {% for paper in latestpapers %}
+        <div class="paper">
+          <a href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">{{ paper.paper.title|truncatechars:100 }}</a>
+          <div class="category">{{ paper.paper.category }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 {% endblock %}
+
 
 {% block scripts %}
 

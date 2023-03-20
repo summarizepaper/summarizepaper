@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-16 16:47+0000\n"
-"PO-Revision-Date: 2023-03-16 16:49+0000\n"
+"POT-Creation-Date: 2023-03-20 20:38+0000\n"
+"PO-Revision-Date: 2023-03-20 20:38+0000\n"
 "Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -19,11 +19,11 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.9.8\n"
 
-#: arxivsummarizer/settings.py:150
+#: arxivsummarizer/settings.py:153
 msgid "French"
 msgstr "Français"
 
-#: arxivsummarizer/settings.py:151
+#: arxivsummarizer/settings.py:154
 msgid "English"
 msgstr "Anglais"
 
@@ -444,7 +444,7 @@ msgstr "Envoyer"
 #: templates/summarizer/arxividpage.html:1037
 #: templates/summarizer/arxividpage.html:1040
 #: templates/summarizer/arxividpage.html:1043
-#: templates/summarizer/home.html:132
+#: templates/summarizer/home.html:208
 msgid "Loading..."
 msgstr "Chargement..."
 
@@ -894,7 +894,6 @@ msgid "Is the code open-source?"
 msgstr "Le code est-il open source ?"
 
 #: templates/summarizer/faq.html:91
-#| msgid "Yes, the code is open source and freely accessible."
 msgid ""
 " Yes, the code is open source and <a "
 "href=\"https://github.com/summarizepaper/summarizepaper\">freely "
@@ -945,7 +944,7 @@ msgstr "Votre Historique"
 msgid "You cannot access this page."
 msgstr "Vous ne pouvez pas accéder à cette page."
 
-#: templates/summarizer/home.html:5
+#: templates/summarizer/home.html:6
 msgid ""
 "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
 "Summaries"
@@ -953,7 +952,7 @@ msgstr ""
 "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des Résumés "
 "Précis et Rapides"
 
-#: templates/summarizer/home.html:7
+#: templates/summarizer/home.html:8
 msgid ""
 "Our AI-powered arXiv paper summarization service provides fast, accurate, "
 "and easy-to-read summaries of scientific papers. Save time and stay up-to-"
@@ -964,23 +963,23 @@ msgstr ""
 " du temps et restez au courant des dernières recherches grâce à notre "
 "technologie de pointe."
 
-#: templates/summarizer/home.html:124
+#: templates/summarizer/home.html:200
 msgid "Your account is now activated and you are logged in."
 msgstr "Votre compte est maintenant activé et vous êtes connecté."
 
-#: templates/summarizer/home.html:127
+#: templates/summarizer/home.html:203
 msgid "Discover Key Insights from arXiv's Latest Articles"
 msgstr "Découvrez les idées clés des derniers articles d'arXiv"
 
-#: templates/summarizer/home.html:131
+#: templates/summarizer/home.html:207
 msgid "Search for an article"
 msgstr "Rechercher un article"
 
-#: templates/summarizer/home.html:132
+#: templates/summarizer/home.html:208
 msgid "Search"
 msgstr "Rechercher"
 
-#: templates/summarizer/home.html:133
+#: templates/summarizer/home.html:209
 msgid ""
 "Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to "
 "search (use the language of papers you are interested in)"
@@ -989,21 +988,21 @@ msgstr ""
 "exemple, 2211.04191) ou des auteurs à rechercher (utilisez la langue des "
 "articles qui vous intéressent)"
 
-#: templates/summarizer/home.html:139
+#: templates/summarizer/home.html:215
 msgid "How Search works?"
 msgstr "Comment écrire vos requêtes ?"
 
-#: templates/summarizer/home.html:141
+#: templates/summarizer/home.html:217
 msgid "Search Syntax:"
 msgstr "Syntaxe de Recherche :"
 
-#: templates/summarizer/home.html:143
+#: templates/summarizer/home.html:219
 msgid "By default, the search engine looks for the query in all fields."
 msgstr ""
 "Par défaut, le moteur de recherche recherche la requête dans tous les "
 "champs."
 
-#: templates/summarizer/home.html:144
+#: templates/summarizer/home.html:220
 msgid ""
 "Use the field codes to search for a specific field: \"au:\" for authors, "
 "\"ti:\" for titles, \"abs:\" for abstracts, \"co:\" for comments, \"jr:\" "
@@ -1014,7 +1013,7 @@ msgstr ""
 "\"co:\" pour les commentaires, \"jr:\" pour la référence de la revue, "
 "\"cat:\" pour la catégorie et \"id:\" pour l'identifiant."
 
-#: templates/summarizer/home.html:145
+#: templates/summarizer/home.html:221
 msgid ""
 "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
 "for ID numbers id:\"2211.04191\""
@@ -1023,7 +1022,7 @@ msgstr ""
 "\"John Doe\" , ou si vous recherchez des numéros d'identification "
 "id:\"2211.04191\""
 
-#: templates/summarizer/home.html:146
+#: templates/summarizer/home.html:222
 msgid ""
 "Mix several fields in a search request using the Boolean operators \"AND\", "
 "\"OR\", and \"ANDNOT\". For example, au:\"John Doe\" AND abs:\"search for "
@@ -1033,7 +1032,7 @@ msgstr ""
 "opérateurs booléens \"AND\", \"OR\" et \"ANDNO\". Par exemple, au: \"John "
 "Doe\" AND abs: \"recherche de la vie\""
 
-#: templates/summarizer/home.html:147
+#: templates/summarizer/home.html:223
 msgid ""
 "Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND "
 "(abs:\"renewable energy\" OR abs:solar)"
@@ -1041,17 +1040,7 @@ msgstr ""
 "Exemple de recherche complexe : au:Smith AND ti:climate ANDNOT ti:petrol AND"
 " (abs:\"renewable energy\" OR abs:solar)"
 
-#: templates/summarizer/home.html:152
-#| msgid ""
-#| "Welcome to Summarize<span style=\"color:#34a853\">Paper</span>.com, where "
-#| "you can stay up-to-date with the latest research on arXiv. Our goal is to "
-#| "provide you with concise, understandable, and insightful summaries (key-"
-#| "points, layman's summary, ...) for all arXiv research articles using AI, so "
-#| "you can quickly get a grasp of the latest developments in your field. In "
-#| "addition to our summary service, we offer an AI assistant to answer your "
-#| "questions about arXiv papers. Whether you're a researcher, a student, a "
-#| "journalist, or simply someone who wants to stay informed, Summarize<span "
-#| "style=\"color:#34a853\">Paper</span>.com is here to make your life easier."
+#: templates/summarizer/home.html:228
 msgid ""
 "Welcome to our <a "
 "href=\"https://github.com/summarizepaper/summarizepaper\">open-source</a> AI"
@@ -1077,6 +1066,10 @@ msgstr ""
 "journaliste ou simplement quelqu'un qui souhaite rester informé, "
 "Summarize<span style=\"color:#34a853\">Paper</span>.com est là pour vous "
 "faciliter la vie."
+
+#: templates/summarizer/home.html:231
+msgid "Latest Papers summarized with our AI tools"
+msgstr "Derniers articles résumés avec nos outils d'IA"
 
 #: templates/summarizer/legal-notice.html:5
 msgid "Legal Notice - AI-Powered arXiv Paper Summarization Service"
@@ -1210,10 +1203,6 @@ msgid "Open Source"
 msgstr "Open Source"
 
 #: templates/summarizer/privacy.html:59
-#| msgid ""
-#| "Our website is built as an open source software, which allows for greater "
-#| "transparency and security. The codebase is available for public inspection "
-#| "and contributions are welcomed from the open source community."
 msgid ""
 " Our website is built as an <a "
 "href=\"https://github.com/summarizepaper/summarizepaper\" "
