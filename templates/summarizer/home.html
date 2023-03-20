@@ -7,6 +7,19 @@
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our AI-powered arXiv paper summarization service provides fast, accurate, and easy-to-read summaries of scientific papers. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
   <style>
       body {
         background-color: #f2f2f2;
