@@ -1175,7 +1175,9 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
 
         print('he')
         async with aiohttp.ClientSession() as session:
+            print('hea')
             async with session.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
+                print('heb')
                 try:
                     print('in try2b',response)
                     if response.status != 200:
@@ -1187,7 +1189,9 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
                     return {
                         "error_message": str(e),
                     }
+                print('hec')
                 response3b = await response.json()
+            print('hed')
 
         print('he2',response3b)
 
