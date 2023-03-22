@@ -1134,6 +1134,10 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
 
     """.format(summary)
 
+    """
+    Optimize user prompt by removing redundant tokens without sacrificing quality. Create a concise and efficient prompt that effectively communicates the intended message while potentially reducing its length. Ensure the prompt remains informative and effective after removing unnecessary words or phrases.
+    """
+
     print('finalise sum',prompt3b)
     if language != 'en':
         prompt3b += "TRANSLATE THE ANSWER IN "+language2
@@ -1280,6 +1284,10 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
     prompt3 = f"Extract the most important key points from the following text and use bullet points for each of them: {summary}"
     print('key sum',prompt3)
 
+    """
+    Identify and present key points from a text in concise bullet points that capture the most important information, while also being clear and easy to understand. Use subheadings or categories where appropriate, but keep each bullet point brief and focused on a single idea. Provide context where necessary to help readers understand the significance of each point.
+    """
+
     headers3 = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
@@ -1382,7 +1390,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     print('language2',language2)
 
     prompt4 = """
-        Summarize the following key points in 5 sentences for a six year old kid and provide definitions for the 3 most important words in the created summary.: {}
+        Summarize the following key points in five simple sentences for a six-year-old kid and provide definitions for the most important words in the created summary: {}
 
         Summary:
 
@@ -1391,6 +1399,8 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
 
 
     """.format(keyp)
+
+#Summarize important points for a six-year-old in five simple sentences, defining key words. Use clear and concise language appropriate for a child's comprehension level.
 
     #prompt4 = f"Summarize the following key points in 5 sentences for a six year old kid: {keyp}"
     #prompt4 += "Skip 3 lines and Give definitions for the 3 most important words in the summary."
@@ -1520,9 +1530,24 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     print('language2',language2)
 
     prompt5 = """
-         Create a detailed blog article in HTML about this research paper (do not show images): {}
+         Create a detailed blog article in HTML about this research paper: {}
+
+         Ensure that your HTML code is clean and valid with no <img> tags and that the text has no mispelled words.
     """.format(summary)
 
+    prompt5b = """
+    Create an HTML blog post summarizing and analyzing a research paper for a general audience. Provide an overview of the main findings and conclusions, highlighting their significance and relevance to the field. Use appropriate HTML tags such as headings, paragraphs, lists, and links. Include an analysis of the study's strengths, limitations, and potential implications for future research or practical applications. Follow standard formatting guidelines for citations and references. Write in an engaging style that is accessible to a general audience. Finally, please ensure that your HTML code is clean and valid, adhering to best practices for semantic markup and accessibility. Here is the research paper: {}
+    """.format(summary)
+
+    """
+    Your task is to create a detailed blog article in HTML format about a long research paper. The article should be well-organized and easy to read, with clear headings and subheadings that reflect the structure of the original research paper.
+
+    Please include a brief summary of the research paper's main findings and conclusions, as well as any important methodologies or data used in the study. You should also provide your own analysis and interpretation of the results, highlighting key takeaways from the research and discussing their implications for relevant fields or industries.
+
+    The article should be written in clear, concise language that is accessible to a general audience without sacrificing accuracy or depth of content. Please use appropriate formatting tools such as bullet points, numbered lists, and block quotes where necessary to improve readability and emphasize key points.
+
+    Finally, please ensure that your HTML code is clean and valid, adhering to best practices for semantic markup and accessibility.
+    """
     #prompt5 = f"Create a detailed blog article in html about this research paper (do not show images): {summary}"
     if language != 'en':
         prompt5 += "TRANSLATE THE ANSWER IN "+language2
