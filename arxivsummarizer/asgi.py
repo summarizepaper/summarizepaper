@@ -9,7 +9,7 @@ from channels.routing import get_default_application
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'arxivsummarizer.settings')
-os.environ['ASGI_THREADS']="4"
+#os.environ['ASGI_THREADS']="4"#to try later if too many connections arrives or use  pgbouncer https://stackoverflow.com/questions/60339917/fatal-too-many-connections-for-role-heroku-django-only-while-using-asgi
 
 django.setup()
 
