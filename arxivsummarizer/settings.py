@@ -246,3 +246,4 @@ prod_db = dj_database_url.config(conn_max_age=0)
 DATABASES['default'].update(prod_db)
 
 django_heroku.settings(locals())
+DATABASES['default']['CONN_MAX_AGE'] = 0
