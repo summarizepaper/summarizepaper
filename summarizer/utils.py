@@ -1400,7 +1400,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
 
     """.format(keyp)
 
-#Summarize important points for a six-year-old in five simple sentences, defining key words. Use clear and concise language appropriate for a child's comprehension level.
+#Summarize important points  for a six-year-old in five simple sentences, defining key words. Use clear and concise language appropriate for a child's comprehension level.
 
     #prompt4 = f"Summarize the following key points in 5 sentences for a six year old kid: {keyp}"
     #prompt4 += "Skip 3 lines and Give definitions for the 3 most important words in the summary."
