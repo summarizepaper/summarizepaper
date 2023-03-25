@@ -3,10 +3,12 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %} {% trans 'AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper Summaries' %} {% endblock %}
+{% block title %} {% trans 'AI-Powered arXiv Paper Summarization - Ask questions about a Paper' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our AI-powered arXiv paper summarization service provides fast, accurate, and easy-to-read summaries of scientific papers. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/" />
+
   <script>
     MathJax = {
       tex: {

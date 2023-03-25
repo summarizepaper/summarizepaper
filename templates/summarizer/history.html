@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 {% block title %} {% trans 'History of Summarized arXiv papers - Get Accurate and Fast Paper Summaries' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our AI-powered paper summarization service provides fast, accurate, and easy-to-read summaries of research articles. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/history/" />
   <style>
 
     .history {

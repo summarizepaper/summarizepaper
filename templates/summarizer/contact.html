@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %} {% trans 'Contact Us - Get in Touch with Our AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
+{% block title %} {% trans 'Contact Us - Get in Touch with our arXiv Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Have questions or feedback about our AI-powered arXiv paper summarization service? Contact us today to get in touch with our team and learn more.' %}" />
-  <!--add text-->
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/contact/" />
   <style>
     /* Add your CSS styles here */
     .container-contact {
@@ -67,7 +68,7 @@
 {% block content %}
 
 <div class="container-contact">
-  <h2>{% trans 'Contact Us' %}</h2>
+  <h1>{% trans 'Contact Us' %}</h1>
   <p>
     {% blocktrans %} Have questions or concerns about our AI-powered paper summarization
     service? We're here to help! Fill out the form below and we'll get back

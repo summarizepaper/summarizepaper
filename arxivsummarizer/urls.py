@@ -32,7 +32,7 @@ sitemaps = {
     'arxividpage': GenericSitemap({
         'queryset': ArxivPaper.objects.filter(arxiv_id__isnull=False),
         'date_field': 'updated',
-    }, priority=0.9),
+    }, priority=0.9,protocol = 'https'),
     # START
     'static': StaticViewSitemap,
     # END

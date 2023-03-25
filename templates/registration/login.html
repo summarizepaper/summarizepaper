@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 {% block title %} {% trans 'Login - Secure Access to AI-Powered arXiv Paper Summaries' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Log in securely to our AI-powered arXiv paper summarization service to access your account and view past summaries. Our login system ensures that your data is protected and your account is safe. Discover the convenience of easy-to-read paper summaries.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/login/" />
 
   <style>
   /* Style for the form container */

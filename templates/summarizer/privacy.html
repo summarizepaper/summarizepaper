@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 {% block title %} {% trans 'Our Privacy Policy - AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'We take your privacy seriously. Learn more about our privacy policy for our AI-powered arXiv paper summarization service. Discover how we protect your data, what information we collect, and how we use it to improve our service.' %}" />
-  <!--add text-->
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/privacy/" />
   <style>
     body {
       font-family: Arial, sans-serif;

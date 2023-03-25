@@ -424,7 +424,7 @@ def summarize(request):
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
             query_params = {'q': query, 'page': page}
-            url = f'/{lang}/search_results/?{urlencode(query_params)}'
+            url = f'/{lang}/search-results/?{urlencode(query_params)}'
             return redirect(url)
             #return redirect('search_results?q={}&page={}'.format(query, page))
 

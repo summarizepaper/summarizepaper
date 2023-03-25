@@ -7,10 +7,10 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %} {% trans 'AI-Powered arXiv Paper Summarization - Get a Fast and Accurate Summary of Your Paper' %} {% endblock %}
+{% block title %} {% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Get a fast, accurate, and easy-to-read summary of your arXiv paper with our AI-powered summarization service. Our cutting-edge technology uses machine learning and natural language processing to deliver a high-quality summary in just a few seconds. Try it out today!' %}" />
-  <!--add text-->
+  <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{% if details %}{{ details.title }}{% else %}{{ paper.title }}{% endif %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
 
   <script>
     MathJax = {

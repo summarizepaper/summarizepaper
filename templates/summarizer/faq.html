@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
-{% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
+{% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Find answers to commonly asked questions about our AI-powered arXiv paper summarization service. Learn how our technology works, what types of papers we summarize, and how to get started with our service.' %}" />
-  <!--add text-->
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/faq/" />
   <style>
     .container {
      width: 80%;

@@ -7,6 +7,8 @@
 {% block title %} {% trans 'Search Results for your query about a research article' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Discover the latest research about a topic of your choice with our comprehensive search results page. Explore relevant articles, studies, and papers to stay up-to-date on all topics of interest. Find the information you need to inform your research and stay ahead of the curve.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/search-results/" />
+
   <script>
     MathJax = {
       tex: {

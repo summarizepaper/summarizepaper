@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 
 {% block title %} {% trans 'Legal Notice - AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Learn more about our legal notice for our AI-powered arXiv paper summarization service.' %}" />
-  <!--add text-->
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/legal-notice/" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -66,7 +67,6 @@
   <br>
   <hr>
   <p><i>En français.</i></p>
-  <h1>Mentions Légales</h1>
   <h2>Informations sur la Société</h2>
   <p><strong>Nom de la société :</strong> CarbonFreeConf</p>
   <p><strong>Adresse de la société :</strong> 3 bis rue de la Garenne, 17170, Courçon, France</p>
