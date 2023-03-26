@@ -42,6 +42,7 @@ import urllib, urllib.request
 import math
 from langchain.llms import OpenAIChat
 import aiohttp
+from bs4 import BeautifulSoup
 
 channel_layer = get_channel_layer()
 model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002."
@@ -1648,7 +1649,6 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     blog_article = blog_article.rstrip().lstrip()
     print('blog article after',blog_article)
 
-    from bs4 import BeautifulSoup
 
     # Parse the blog string using BeautifulSoup
     soup = BeautifulSoup(blog_article, 'html.parser')
