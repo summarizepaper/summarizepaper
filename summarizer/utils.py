@@ -1369,6 +1369,11 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
         print('icccciiiiii',response3["choices"][0]["text"])
         key_points = response3["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
 
+    #remove if starts with 'Key points:', '',
+    if key_points[1] == "":
+        print('delllll',key_points)
+        del key_points[0:2]
+
     print('key_points',key_points)
 
     '''#problem cuz keypoints do not finish with dots
@@ -1532,7 +1537,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     prompt5 = """
          Create a detailed blog article in HTML about this research paper: {}
 
-         Ensure that your HTML code is clean and valid with no <img> tags and that the text has no mispelled words.
+         Ensure that your HTML code is clean and valid. Provide only the part inside the <body> tags, with no <img> tags and no CSS and ensure that the text has no mispelled words.
     """.format(summary)
 
     prompt5b = """
@@ -1640,9 +1645,51 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     #for s in final_summarized_text:
     #    print(s)
     blog_article = ' '.join(blog_article)
+    blog_article = blog_article.rstrip().lstrip()
     print('blog article after',blog_article)
 
-    return blog_article.rstrip().lstrip()
+    from bs4 import BeautifulSoup
+
+    # Parse the blog string using BeautifulSoup
+    soup = BeautifulSoup(blog_article, 'html.parser')
+
+    # Remove the head tag and its contents
+    if soup.head:
+        head_tag = soup.head.extract()
+
+    # Get the contents within the body tag
+    if soup.body:
+        body_contents = soup.body.contents
+
+        # Combine the contents into a single string
+        body_string = ''.join(str(content) for content in body_contents)
+        soup2 = BeautifulSoup(body_string, 'html.parser')
+        print(body_string)
+
+    else:
+        soup2=soup
+        # Print the resulting string
+
+
+    # Find all HTML tags in the blog
+    tags = soup2.findAll()
+    print('all tags',tags)
+
+    # Check the validity of each tag and correct the errors
+    for tag in tags:
+        # Get the name of the tag and convert it to lowercase
+        tag_name = tag.name.lower()
+        
+        # Find all h1 tags and replace them with h2 tags
+        if tag_name=='h1':
+            print('ta',tag_name)
+            tag.name = 'h2'
+            tag['style'] = 'font-size:24px;'
+
+    blog_article=soup2.prettify()
+    print('ba',blog_article)
+
+    return blog_article
 
 def arxiv_search(query):
 
