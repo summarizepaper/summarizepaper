@@ -1538,7 +1538,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     prompt5 = """
          Create a detailed blog article in HTML about this research paper: {}
 
-         Ensure that your HTML code is clean and valid. Provide only the part inside the <body> tags, with no <img> tags and no CSS and ensure that the text has no mispelled words.
+         Ensure that your HTML code is clean and valid with no <img> tags and no CSS and that the text has no mispelled words.
     """.format(summary)
 
     prompt5b = """
