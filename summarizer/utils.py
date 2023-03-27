@@ -1645,7 +1645,10 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     # Print the full sentences
     #for s in final_summarized_text:
     #    print(s)
+    import html
+    
     blog_article = ' '.join(blog_article)
+    blog_article = html.unescape(blog_article)
     blog_article = blog_article.rstrip().lstrip()
     print('blog article after',blog_article)
 
