@@ -657,7 +657,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         print('in here',request.POST)
         if 'download_pdf' in request.POST:
             print('download')
-            pdf_bytes=utils.summary_pdf(arxiv_id,lang)
+            #pdf_bytes=utils.summary_pdf(arxiv_id,lang)
             local_date = request.POST.get('local_date')
             print('loloooooooooo',local_date)
             res=utils.generate_pdf(request,arxiv_id,lang,local_date)
