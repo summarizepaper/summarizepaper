@@ -1772,7 +1772,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
 
     # Parse the blog string using BeautifulSoup
-    soup = BeautifulSoup(blog_article, 'html5lib')
+    soup = BeautifulSoup(blog_article, 'html.parser')
 
     # Remove the head tag and its contents
     if soup.head:
