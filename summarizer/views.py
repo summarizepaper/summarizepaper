@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, SummaryPaper, AIassistant, Search
+from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -665,6 +665,23 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             #response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
 
             #response = HttpResponse(bytes(pdf_bytes), content_type='application/pdf')
+            client_ip = request.META['REMOTE_ADDR']
+            print('clientip',client_ip)
+            # Check if this IP address has already voted on this post
+            hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+            if request.user.is_authenticated:
+                #if User.objects.filter(username=user).exists():
+                userinst = request.user#User.objects.get(username=user)
+                # Do something with the admin_user instance
+            else:
+                userinst = None# AnonymousUser()
+
+            PDFHistory.objects.create(
+                arxiv_id=arxiv_id,
+                user=userinst,
+                lang=lang,
+                ip_address=hashed_ip_address
+            )
 
             '''
             response = HttpResponse(content_type="application/pdf")
@@ -871,6 +888,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                 else:
                     keywords=''
 
+            #closest_papers=asyncio.run(utils.findclosestpapers(arxiv_id,lang,settings.OPENAI_KEY))
+            #print('closest_papers',closest_papers)
+
             stuff_for_frontend.update({
                 'paper':paper,
                 'keywords':keywords,
@@ -976,8 +996,13 @@ def vote(request, paper_id, direction):
         valuevote=0
 
     if valuevote != 0:
-
-        vote = Vote(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote)
+        if request.user.is_authenticated:
+            #if User.objects.filter(username=user).exists():
+            userinst = request.user#User.objects.get(username=user)
+            # Do something with the admin_user instance
+        else:
+            userinst = None# AnonymousUser
+        vote = Vote(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote, user=userinst)
         vote.save()
         #if paper.total_votes+valuevote>=0:
         #paper.total_votes += valuevote

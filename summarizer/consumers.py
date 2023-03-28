@@ -556,9 +556,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             #query = "Create a summary and tell me who the authors are?"
 
             c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user))
-            #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
             chatbot_text=await c
+
+            #chatbot_text=None
             print('apres chat bot',chatbot_text)
+
+            #c=asyncio.create_task(utils.findclosestpapers(self.arxiv_id,self.language,settings.OPENAI_KEY))
+            #closest_papers = await c
+
+            #print('closest_papers',closest_papers)
 
             #async for text_chunk in utils.chatbot(self.arxiv_id, self.language, message, settings.OPENAI_KEY):
 

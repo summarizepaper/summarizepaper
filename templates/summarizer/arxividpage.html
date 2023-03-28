@@ -710,6 +710,10 @@
     <div class="info-block">
       <div class="info-text"><i class="fas fa-id-badge"></i> <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
     </div>
+    {% else %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
+    </div>
     {% endif %}
     <div class="paper-details">
     {% if paper.abstract %}
@@ -948,6 +952,10 @@ submitButton.addEventListener('click', () => {
     {% if details.license %}
     <div class="info-block">
       <div class="info-text"><i class="fas fa-id-badge"></i> <a href="{{ details.license }}" target="_blank">{{ cc_format }}</a></div>
+    </div>
+    {% else %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
     </div>
     {% endif %}
     <div class="paper-details">

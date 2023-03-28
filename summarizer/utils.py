@@ -200,6 +200,22 @@ def getpaperabstract(arxiv_id):
 
     return paperabstract
 
+def getcategory(arxiv_id):
+    papercat=ArxivPaper.objects.filter(arxiv_id=arxiv_id).values_list('category',flat=True)[0]
+
+    return papercat
+
+def getallpapers(cat):
+    if cat != '':
+        print('in cat')
+        allpapers = ArxivPaper.objects.filter(category=cat)
+    else:
+        print('not in cat')
+        allpapers = ArxivPaper.objects.all()
+
+    print('all',allpapers)
+    return allpapers
+
 def getuserinst(user):
     if User.objects.filter(username=user).exists():
         userinst = User.objects.get(username=user)
@@ -269,7 +285,7 @@ async def createindex(arxiv_id,book_text,api_key):
     #docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
 
     metadatas = [
-        {"source": f"from {texts[i][0:30]} --- to --- {texts[i][len(texts[i])-30:-1]}"}
+        {"arxiv_id":arxiv_id, "source": f"from {texts[i][0:30]} --- to --- {texts[i][len(texts[i])-30:-1]}"}
         for i in range(len(texts))
     ]
 
@@ -306,6 +322,108 @@ async def createindex(arxiv_id,book_text,api_key):
 
     print('ok created',created)
     return created
+
+async def findclosestpapers(arxiv_id,language,api_key):
+    print('findclosestpapers')
+
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
+
+    print('arxiv_id',arxiv_id)
+    c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
+    getstoredpickle = await c
+    print('here')
+
+    cat=''
+    c = asyncio.create_task(sync_to_async(getcategory)(arxiv_id))
+    cat = await c
+    print('cat',cat)
+
+    if getstoredpickle != '':
+        # deserialize the index from a byte buffer
+        #index_buffer = faiss.read_index(storedpickle.buffer)
+        faiss = dependable_faiss_import()
+
+        index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
+
+        docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
+        index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
+        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+
+        docsearch = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
+        print('finished')
+
+    #Now run through all embeddings in database
+    c = asyncio.create_task(sync_to_async(getallpapers)(cat))
+    allpapers = await c
+
+    #print('allpapers',allpapers)
+    print('right')
+    db=''
+    async for paper in allpapers:
+        print('pap',paper)
+        c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
+
+        getstoredpickle2 = await c2
+
+        if getstoredpickle2 != '':
+            # deserialize the index from a byte buffer
+            #index_buffer = faiss.read_index(storedpickle.buffer)
+            #faiss = dependable_faiss_import()
+
+            index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
+
+            docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
+            index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
+
+            docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
+
+            if db == '':
+                db = docsearch2
+                print('db.docstore._dict',db.docstore._dict)
+            else:
+                db.merge_from(docsearch2)
+                print('db.docstore._dict',db.docstore._dict)
+
+    
+        print('doc',docsearch.index)
+        indices = [k for k in docsearch.index_to_docstore_id.keys()]
+
+        print('indices',indices)
+
+        recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
+        print('hhh',docsearch.index.reconstruct(0))
+        print('index_to_docstore_id',docsearch.index_to_docstore_id)
+        #docs_and_scores = db.similarity_search_by_vector(docsearch.index.reconstruct(0),4)
+        docs_and_scores = db.similarity_search_with_score_by_vector(docsearch.index.reconstruct(0),4)
+
+        print('docs_and_scores',docs_and_scores)
+        array_arxiv_ids=[]
+        array_scores=[]
+
+        for document in docs_and_scores:
+            #source_value = document[0].metadata['source']
+            #print('ss',source_value)
+            metadata = document[0].metadata#['arxiv_id']
+            score_value = document[1]
+
+            aid = metadata.get('arxiv_id')
+            if aid is not None:
+                print(aid)
+                array_arxiv_ids.append(aid)
+                array_scores.append(score_value)
+            else:
+                print("Arxiv_id is not present in metadata")
+
+            print('score',score_value)
+
+        print('array_arxiv_ids',array_arxiv_ids)
+        #docs = docsearch2.similarity_search(query,k=kvalue)
+        #print('docs:',docs)
+        #print('len docs:',len(docs))
+
+    return array_arxiv_ids,array_scores
 
 async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
     print('in chatbot')
@@ -1637,24 +1755,24 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         blog_article = response5["choices"][0]["text"]#.strip().split("\n")
 
     print('blog article',blog_article)
-    sentences = nltk.sent_tokenize(blog_article)
+    #sentences = nltk.sent_tokenize(blog_article)
 
     # Filter out sentence fragments
-    blog_article = [s for s in sentences if s.endswith((".", "!", "?"))]
+    #blog_article = [s for s in sentences if s.endswith((".", "!", "?"))]
 
     # Print the full sentences
     #for s in final_summarized_text:
     #    print(s)
     import html
-    
-    blog_article = ' '.join(blog_article)
+
+    #blog_article = ' '.join(blog_article)
     blog_article = html.unescape(blog_article)
     blog_article = blog_article.rstrip().lstrip()
     print('blog article after',blog_article)
 
 
     # Parse the blog string using BeautifulSoup
-    soup = BeautifulSoup(blog_article, 'html.parser')
+    soup = BeautifulSoup(blog_article, 'html5lib')
 
     # Remove the head tag and its contents
     if soup.head:
@@ -1662,12 +1780,14 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
     # Get the contents within the body tag
     if soup.body:
+        print('soup',soup.body)
         body_contents = soup.body.contents
+        print('db',body_contents)
 
         # Combine the contents into a single string
         body_string = ''.join(str(content) for content in body_contents)
         soup2 = BeautifulSoup(body_string, 'html.parser')
-        print(body_string)
+        print('dd',body_string)
 
     else:
         soup2=soup

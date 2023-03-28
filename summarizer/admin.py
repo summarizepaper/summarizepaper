@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ArxivPaper, Author, Vote, SummaryPaper, PaperHistory, PaperAuthor, PickledData, AIassistant, Search
+from .models import ArxivPaper, Author, Vote, SummaryPaper, PaperHistory, PDFHistory, PaperAuthor, PickledData, AIassistant, Search
 from django import forms
 from django.db import models
 
@@ -15,6 +15,7 @@ class MyModelAdmin(admin.ModelAdmin):
     list_display = ('arxiv_id', 'user', 'created')
 
 admin.site.register(PaperHistory, MyModelAdmin)
+admin.site.register(PDFHistory, MyModelAdmin)
 
 from django.utils.translation import gettext_lazy as _
 from django.forms.widgets import ClearableFileInput
