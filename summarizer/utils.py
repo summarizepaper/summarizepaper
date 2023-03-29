@@ -1772,7 +1772,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
 
     # Parse the blog string using BeautifulSoup
-    soup = BeautifulSoup(blog_article, 'html.parser')
+    soup = BeautifulSoup(blog_article, 'html5lib')#lxml devrait etre meilleur à tester ou html5lib plus souple?
 
     # Remove the head tag and its contents
     if soup.head:
@@ -1781,12 +1781,12 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     # Get the contents within the body tag
     if soup.body:
         print('soup',soup.body)
-        body_contents = soup.body.contents
+        body_contents = soup.body.contents#attention ca retire les commentaires ici voir pk <!-- Line Break --> turns into Line break
         print('db',body_contents)
 
         # Combine the contents into a single string
         body_string = ''.join(str(content) for content in body_contents)
-        soup2 = BeautifulSoup(body_string, 'html.parser')
+        soup2 = BeautifulSoup(body_string, 'html5lib')
         print('dd',body_string)
 
     else:
@@ -1809,7 +1809,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
             tag.name = 'h2'
             tag['style'] = 'font-size:24px;'
 
-    blog_article=soup2.prettify()
+    blog_article=soup2.prettify()#turn < p > into &lt; p &gt; check why
     print('ba',blog_article)
 
     return blog_article

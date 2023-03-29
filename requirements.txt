@@ -27,3 +27,4 @@ fpdf2
 pylatexenc
 pdfkit
 beautifulsoup4
+html5lib
