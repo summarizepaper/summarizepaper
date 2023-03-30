@@ -941,6 +941,9 @@ def summarizer(arxiv_id):
 
 async def extract_text_from_pdf(pdf_filename):
     # Open the PDF file
+
+    #need to check first if pdf file and otherwise return an error; to do later
+
     with open(pdf_filename, 'rb') as file:
         # Create a PDF resource manager object that stores shared resources
         resource_manager = PDFResourceManager()

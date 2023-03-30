@@ -979,8 +979,11 @@ def vote(request, paper_id):
         paper = get_object_or_404(ArxivPaper, arxiv_id=paper_id)
         client_ip = request.META['REMOTE_ADDR']
         print('clientip',client_ip)
+        print('clientip2',client_ip.encode('utf-8'))
+
         # Check if this IP address has already voted on this post
         hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+        print('clientiphashed',hashed_ip_address)
 
         previous_votes = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address)
         if previous_votes.exists() and not client_ip=='127.0.0.1':
