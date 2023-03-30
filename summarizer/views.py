@@ -968,6 +968,13 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 def vote(request, paper_id):
     lang = get_language()
@@ -977,7 +984,7 @@ def vote(request, paper_id):
 
         print('in there',lang)
         paper = get_object_or_404(ArxivPaper, arxiv_id=paper_id)
-        client_ip = request.META['REMOTE_ADDR']
+        client_ip = get_client_ip(request)#request.META['REMOTE_ADDR']
         print('clientip',client_ip)
         print('clientip2',client_ip.encode('utf-8'))
 
