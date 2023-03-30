@@ -53,6 +53,14 @@ def robots_txt(request):
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 class CustomAuthenticationForm(AuthenticationForm):
     def clean_username(self):
         print('clean')
@@ -671,7 +679,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             #response['Content-Disposition'] = 'attachment; filename=%s' % filename  # force browser to download file
 
             #response = HttpResponse(bytes(pdf_bytes), content_type='application/pdf')
-            client_ip = request.META['REMOTE_ADDR']
+            client_ip = client_ip = get_client_ip(request)#request.META['REMOTE_ADDR']
             print('clientip',client_ip)
             # Check if this IP address has already voted on this post
             hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
@@ -706,7 +714,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
         if 'run_button' in request.POST:
             print('ok run')
-            client_ip = request.META['REMOTE_ADDR']
+            client_ip = get_client_ip(request)#request.META['REMOTE_ADDR']
             print('clientip',client_ip)
             # Check if this IP address has already voted on this post
             hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
@@ -968,13 +976,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+
 
 def vote(request, paper_id):
     lang = get_language()
