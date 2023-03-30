@@ -12,6 +12,27 @@
   .containera{
     padding: 20px;
   }
+  
+  .disclaimer {
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-top: 40px;
+}
+
+.disclaimer p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  color: #333;
+}
+
+.disclaimer strong {
+  font-weight: bold;
+  color: #0052cc;
+}
+
 </style>
 {% endblock %}
 
@@ -28,6 +49,10 @@
 
 <h2>{% trans 'Our Team' %}</h2>
 <p>{% trans 'The team is currently made up of one researcher in astrophysics (Quentin Kral) with a passion to make complex information more accessible. Our goal is to allow everyone to benefit from all research findings and thereby avoid fake news.' %}</p>
+
+<div class="disclaimer">
+  <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
+</div>
 
 </div>
 {% endblock %}

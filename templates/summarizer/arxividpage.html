@@ -630,6 +630,29 @@
       text-decoration: underline;
   }
 
+  .disclaimer {
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+
+}
+
+.disclaimer p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  color: #333;
+}
+
+.disclaimer strong {
+  font-weight: bold;
+  color: #0052cc;
+}
+
 
 </style>
 {% endblock %}
@@ -708,11 +731,11 @@
     {% endif %}
     {% if paper.license %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
     </div>
     {% else %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
     </div>
     {% endif %}
     <div class="paper-details">
@@ -843,9 +866,17 @@ submitButton.addEventListener('click', () => {
 
   <div style="text-align: center;">
   <p>
-    <a href="{% url 'vote' paper.arxiv_id 'up' %}">
+    <form action="{% url 'vote' paper.arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
+      <button type="submit" name="direction" value="up" style="cursor: pointer;">
+        <i class="fa fa-thumbs-up" style="font-size: 36px;color:blue;"></i>
+      </button>
+    </form>
+    
+    <!--<a href="{% url 'vote' paper.arxiv_id %}">
       <i class="fa fa-thumbs-up" style="font-size: 36px;"></i>
-    </a>
+    </a>-->
   </p>
   <p id="totvote">{% trans 'Total number of votes:' %} {{ total_votes }}
     <span id="popover-link">
@@ -857,9 +888,17 @@ submitButton.addEventListener('click', () => {
     <p>{% trans 'Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.' %}</p>
   </div>
   <p>
-    <a href="{% url 'vote' paper.arxiv_id 'down' %}">
+    <form action="{% url 'vote' paper.arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
+      <button type="submit" name="direction" value="down" style="cursor: pointer;">
+        <i class="fa fa-thumbs-down" style="font-size: 36px; color:blue;"></i>
+      </button>
+    </form>
+
+    <!--<a href="{% url 'vote' paper.arxiv_id %}">
       <i class="fa fa-thumbs-down" style="font-size: 36px;"></i>
-    </a>
+    </a>-->
   </p>
   {% if error_message %}
   <div style="text-align:center;color:red;">
@@ -890,7 +929,9 @@ submitButton.addEventListener('click', () => {
   <p style="text-align: center; margin-top: 10px; color: red;max-width: 600px; width: 90%; margin-left: auto; margin-right: auto;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
   {% endif %}
   {% endif %}
-
+  <div class="disclaimer">
+    <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
+  </div>
 
 
 {% else %}
@@ -951,11 +992,11 @@ submitButton.addEventListener('click', () => {
     {% endif %}
     {% if details.license %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="{{ details.license }}" target="_blank">{{ cc_format }}</a></div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ details.license }}" target="_blank">{{ cc_format }}</a></div>
     </div>
     {% else %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
     </div>
     {% endif %}
     <div class="paper-details">
@@ -1276,7 +1317,7 @@ submitButton.addEventListener('click', () => {
         //console.log(ccFormat); // Output: CC BY-NC-SA 4.0
 
         var liHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-id-badge"></i> ';
-        liHTML += '<a href="'+data.message.license+'" target="_blank">'+ccFormat+'</a>';
+        liHTML += '{% trans "License:" %} <a href="'+data.message.license+'" target="_blank">'+ccFormat+'</a>';
         liHTML += '</div></div>';
         liContainer.innerHTML = liHTML;
       }

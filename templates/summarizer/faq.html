@@ -53,25 +53,49 @@
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "What is this website about?" %}</div>
         <div class="answer">
-          {% trans "This website is a platform that summarizes scientific papers from arXiv using AI and allows you to interrogate our chat bot about the content of all articles." %}
+          {% trans "This website is a platform that summarizes scientific papers from arXiv using AI and allows you to interrogate our virtual assistant about the content of all articles." %}
         </div>
       </div>
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "How does the AI summarization work?" %}</div>
         <div class="answer">
-          {% trans "The AI uses advanced machine learning algorithms to analyze and extract the most important information from the papers, and present it in a condensed and understandable format." %}
+          {% trans "The AI uses advanced machine learning algorithms to analyze and extract the most important information from the papers, and present it in a condensed and understandable format. It is using the latest engines from OpenAI, gpt3, gpt3.5 and gpt4." %}
         </div>
       </div>
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "Who is behind this website?" %}</div>
         <div class="answer">
-          {% trans "This website is developed and maintained by a researcher in astrophysics who want to allow everyone to access research results." %}
+          {% trans "This website is developed and maintained by a researcher in astrophysics (Quentin Kral) who want to allow everyone to access research results." %}
+        </div>
+      </div>
+      <div class="faq">
+        <div class="question" onclick="toggleAnswer(this)">{% trans "How can I cite you?" %}</div>
+        <div class="answer">
+         <p>{% trans 'In bibtex you can use the following snippet' %}</p>
+          <p>
+            {% with curly_open="{{" curly_close="}}" %}
+            <pre style="text-align: left;display: inline-block;margin: 0 auto;">
+              @software{SummarizePaper,
+                author = {{ curly_open }}{{sofauthor}}{{ curly_close }},
+                title = { {{ softitle }} },
+                url = { {{sofurl}} },
+                year = { {{sofyear}} },
+                date = { {{sofdate}} },
+              }
+        </pre>
+        {% endwith %}
+        </p>
+        {% blocktrans %}
+        <p>In other cases, anything which includes our summarizepaper.com URL is OK. For example:
+          "<a href='https://carbonfreeconf.com'>CarbonFreeConf.com</a>; {{ softitle }}; <a href='{{ sofurl }}'>SummarizePaper.com</a> accessed xxxx/xx/xx"</p>      
+          {% endblocktrans %}
+
         </div>
       </div>
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "How can I suggest a paper for summarization?" %}</div>
         <div class="answer">
-          {% trans "You can just type in the arXiv ID of the paper you want to summarize on the homepage and it will show you a summary and more. Note that if it is the first time this specific article is being looked for, then it will have to run our AI code to summarize it, which may take a few minutes." %}
+          {% trans "You can search for a specific paper using the search bar on the home page or just type in the arXiv ID of the paper you want to summarize and it will show you a summary and more. Note that if it is the first time this specific article is being looked for, then it will have to run our AI code to summarize it, which may take a few minutes." %}
         </div>
       </div>
       <div class="faq">
@@ -83,19 +107,19 @@
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "What is the process of summarizing a paper?" %}</div>
         <div class="answer">
-          {% trans "The process of summarizing a paper involves several steps, including text pre-processing, feature extraction, and summarization. The AI uses a combination of natural language processing and machine learning techniques to analyze the paper and generate a concise summary." %}
+          {% trans "The process of summarizing a paper involves several steps, including text pre-processing, feature extraction, and summarization using a series of complex prompts. The AI uses a combination of natural language processing and machine learning techniques to analyze the paper and generate a concise summary." %}
         </div>
       </div>
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "Is the code open-source?" %}</div>
         <div class="answer">
-          {% blocktrans %} Yes, the code is open source and <a href="https://github.com/summarizepaper/summarizepaper">freely accessible</a>. {% endblocktrans %}
+          {% blocktrans %} Yes, the code is open source and <a href="https://github.com/summarizepaper/summarizepaper">freely accessible</a>. You can join us and help to make the tool even better. {% endblocktrans %}
         </div>
       </div>
       <div class="faq">
         <div class="question" onclick="toggleAnswer(this)">{% trans "Is there a limit to the number of papers I can summarize?" %}</div>
         <div class="answer">
-          {% trans "There is no limit to the number of papers you can summarize (but this may change if it gets overloaded). You can use the platform as much as you need to stay updated on the latest research developments." %}
+          {% trans "There is no limit to the number of papers you can summarize (but this may change if it gets overloaded). You can use the platform as much as you need to keep updated on the latest research developments." %}
         </div>
       </div>
     </div>

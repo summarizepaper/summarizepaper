@@ -1654,9 +1654,9 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     print('language2',language2)
 
     prompt5 = """
-         Create a detailed blog article in HTML about this research paper: {}
+         Create a detailed blog article about this research paper: {}
 
-         Ensure that your HTML code is clean and valid with no <img> tags and no CSS and that the text has no mispelled words.
+         The article should be well-organized and easy to read with NO HTML EXCEPT for headings with <h2> tags and subheadings with <h3> tags.
     """.format(summary)
 
     prompt5b = """
@@ -1754,7 +1754,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     else:
         blog_article = response5["choices"][0]["text"]#.strip().split("\n")
 
-    print('blog article',blog_article)
+    #print('blog article',blog_article)
     #sentences = nltk.sent_tokenize(blog_article)
 
     # Filter out sentence fragments
@@ -1763,39 +1763,31 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     # Print the full sentences
     #for s in final_summarized_text:
     #    print(s)
+    '''
     import html
 
     #blog_article = ' '.join(blog_article)
     blog_article = html.unescape(blog_article)
     blog_article = blog_article.rstrip().lstrip()
+    blog_article = blog_article.replace('< /p >','</p>').replace('< p >','<p>').replace('< /P >','</p>').replace('< P >','<P>')
+    blog_article = blog_article.replace('< /strong >','</strong>').replace('< strong >','<strong>').replace('< Strong >','<strong>').replace('< /Strong >','</strong>')
+    blog_article = blog_article.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>')
+    blog_article = blog_article.replace('< /li >','</li>').replace('< li >','<li>').replace('< LI >','<li>').replace('< /LI >','</li>').replace('< /lii >','</li>').replace('< lii >','<li>')
+    blog_article = blog_article.replace('< ul >','<ul>').replace('< /ul >','</ul>').replace('< UL >','<ul>').replace('< /UL >','</ul>')
+    blog_article = blog_article.replace('< em >','<em>').replace('< /em >','</em>').replace('< EM >','<em>').replace('< /EM >','</em>')
+
     print('blog article after',blog_article)
 
 
     # Parse the blog string using BeautifulSoup
     soup = BeautifulSoup(blog_article, 'html5lib')#lxml devrait etre meilleur à tester ou html5lib plus souple?
 
-    # Remove the head tag and its contents
-    if soup.head:
-        head_tag = soup.head.extract()
-
-    # Get the contents within the body tag
-    if soup.body:
-        print('soup',soup.body)
-        body_contents = soup.body.contents#attention ca retire les commentaires ici voir pk <!-- Line Break --> turns into Line break
-        print('db',body_contents)
-
-        # Combine the contents into a single string
-        body_string = ''.join(str(content) for content in body_contents)
-        soup2 = BeautifulSoup(body_string, 'html5lib')
-        print('dd',body_string)
-
-    else:
-        soup2=soup
-        # Print the resulting string
-
+    for attr in ['head','html','body']:
+        if hasattr(soup, attr):
+            getattr(soup, attr).unwrap()
 
     # Find all HTML tags in the blog
-    tags = soup2.findAll()
+    tags = soup.findAll()
     print('all tags',tags)
 
     # Check the validity of each tag and correct the errors
@@ -1809,7 +1801,32 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
             tag.name = 'h2'
             tag['style'] = 'font-size:24px;'
 
-    blog_article=soup2.prettify()#turn < p > into &lt; p &gt; check why
+    
+    if soup.head:
+        head_tag = soup.head.extract()
+        print('head',head_tag)
+    # Get the contents within the body tag
+    if soup.body:
+        print('soup',soup.body)
+        body_contents = soup.body.contents#attention ca retire les commentaires ici voir pk <!-- Line Break --> turns into Line break
+        print('db',body_contents)
+
+        # Combine the contents into a single string
+        body_string = ''.join(str(content) for content in body_contents)
+        blog_article=body_string
+        #soup2 = BeautifulSoup(body_string, 'html5lib')
+        print('dd',body_string)
+
+    else:
+        print('else')
+        #soup2=soup
+        blog_article=soup.prettify()
+        # Print the resulting string
+    '''
+
+    #blog_article=soup.prettify()
+
+    #blog_article=soup2.prettify()#turn < p > into &lt; p &gt; check why
     print('ba',blog_article)
 
     return blog_article

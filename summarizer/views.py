@@ -507,7 +507,13 @@ def about(request):
 
 def faq(request):
     stuff_for_frontend = {}
-
+    stuff_for_frontend.update ({
+        'sofauthor': 'CarbonFreeConf.com',
+        'softitle': 'SummarizePaper: AI Powered Article Summarization and Virtual Assistant',
+        'sofurl': 'https://summarizepaper.com',
+        'sofyear': '2023',
+        'sofdate': '2023-03-30',
+    })
     return render(request, "summarizer/faq.html", stuff_for_frontend)
 
 
@@ -963,50 +969,53 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
 
-def vote(request, paper_id, direction):
+def vote(request, paper_id):
     lang = get_language()
 
-    print('in there',lang)
-    paper = get_object_or_404(ArxivPaper, arxiv_id=paper_id)
-    client_ip = request.META['REMOTE_ADDR']
-    print('clientip',client_ip)
-    # Check if this IP address has already voted on this post
-    hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+    if request.method == 'POST':
+        direction = request.POST.get('direction')
 
-    previous_votes = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address)
-    if previous_votes.exists() and not client_ip=='127.0.0.1':
-        print('exist vote')
+        print('in there',lang)
+        paper = get_object_or_404(ArxivPaper, arxiv_id=paper_id)
+        client_ip = request.META['REMOTE_ADDR']
+        print('clientip',client_ip)
+        # Check if this IP address has already voted on this post
+        hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
-        error_message = 'vote#totvote'
-        #error_message = urllib.parse.quote(error_message)
-        #print('tturleee',error_message)
-        url = '/arxiv-id/' + paper_id + '/' + error_message
-        #print('tturl',url)
-        return redirect(url)
+        previous_votes = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address)
+        if previous_votes.exists() and not client_ip=='127.0.0.1':
+            print('exist vote')
 
-        #return redirect('arxividpage', arxiv_id=paper_id, error_message=error_message)#%2523=#
-        #return redirect('post_detail', post_id=post.pk)
+            error_message = 'vote#totvote'
+            #error_message = urllib.parse.quote(error_message)
+            #print('tturleee',error_message)
+            url = '/arxiv-id/' + paper_id + '/' + error_message
+            #print('tturl',url)
+            return redirect(url)
 
-    # Create a new vote
-    if direction=="up":
-        valuevote=1
-    elif direction=="down":
-        valuevote=-1
-    else:
-        valuevote=0
+            #return redirect('arxividpage', arxiv_id=paper_id, error_message=error_message)#%2523=#
+            #return redirect('post_detail', post_id=post.pk)
 
-    if valuevote != 0:
-        if request.user.is_authenticated:
-            #if User.objects.filter(username=user).exists():
-            userinst = request.user#User.objects.get(username=user)
-            # Do something with the admin_user instance
+        # Create a new vote
+        if direction=="up":
+            valuevote=1
+        elif direction=="down":
+            valuevote=-1
         else:
-            userinst = None# AnonymousUser
-        vote = Vote(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote, user=userinst)
-        vote.save()
-        #if paper.total_votes+valuevote>=0:
-        #paper.total_votes += valuevote
-        #paper.save()
+            valuevote=0
+
+        if valuevote != 0:
+            if request.user.is_authenticated:
+                #if User.objects.filter(username=user).exists():
+                userinst = request.user#User.objects.get(username=user)
+                # Do something with the admin_user instance
+            else:
+                userinst = None# AnonymousUser
+            vote = Vote(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote, user=userinst)
+            vote.save()
+            #if paper.total_votes+valuevote>=0:
+            #paper.total_votes += valuevote
+            #paper.save()
 
     return redirect('arxividpage', arxiv_id=paper_id)
 
