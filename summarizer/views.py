@@ -995,13 +995,13 @@ def vote(request, paper_id):
         print('clientiphashed',hashed_ip_address)
 
         previous_votes = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address)
-        if previous_votes.exists() and not client_ip=='127.0.0.1':
+        if previous_votes.exists():# and not client_ip=='127.0.0.1':
             print('exist vote')
 
             error_message = 'vote#totvote'
             #error_message = urllib.parse.quote(error_message)
             #print('tturleee',error_message)
-            url = '/arxiv-id/' + paper_id + '/' + error_message
+            url = '/'+lang+'/arxiv-id/' + paper_id + '/' + error_message
             #print('tturl',url)
             return redirect(url)
 
