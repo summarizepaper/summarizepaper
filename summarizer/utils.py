@@ -1,6 +1,6 @@
 import time
 import requests
-from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant
+from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore
 from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
@@ -42,7 +42,7 @@ import urllib, urllib.request
 import math
 from langchain.llms import OpenAIChat
 import aiohttp
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
 
 channel_layer = get_channel_layer()
 model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002."
@@ -200,10 +200,10 @@ def getpaperabstract(arxiv_id):
 
     return paperabstract
 
-def getcategory(arxiv_id):
-    papercat=ArxivPaper.objects.filter(arxiv_id=arxiv_id).values_list('category',flat=True)[0]
+def getpaper(arxiv_id):
+    paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
 
-    return papercat
+    return paper
 
 def getallpapers(cat):
     if cat != '':
@@ -235,6 +235,28 @@ def storeconversation(arxiv_id,query,response,user,lang):
         lang=lang
     )
 
+def storeclosest(arxiv_id,ids_and_scores):
+    array_arxiv_ids,array_scores=ids_and_scores
+    # assume you have an array of scores and arxiv_ids
+    #scores_and_arxiv_ids = [(0.8, '1234.5678'), (0.6, '9012.3456'), (0.4, '7890.1234')]
+
+    scores_and_arxiv_ids = list(zip(array_scores, array_arxiv_ids))
+
+    # Paper with the given arxiv_id
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+    #make other related papers inactive
+    oldpapers = PaperScore.objects.filter(from_paper=paper,active=True)
+    for oldpap in oldpapers:
+        oldpap.active=False
+        oldpap.save()
+
+    # create PaperScore objects for each related paper with its associated score
+    for score, arxiv_id2 in scores_and_arxiv_ids:
+        related_paper, created = ArxivPaper.objects.get_or_create(arxiv_id=arxiv_id2)
+        PaperScore.objects.create(from_paper=paper, to_paper=related_paper, score=score)
+
+    return 0
 
 def storepickle(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer):
 
@@ -323,7 +345,7 @@ async def createindex(arxiv_id,book_text,api_key):
     print('ok created',created)
     return created
 
-async def findclosestpapers(arxiv_id,language,api_key):
+async def findclosestpapers(arxiv_id,language,k,api_key):
     print('findclosestpapers')
 
     li = get_language_info(language)
@@ -336,8 +358,9 @@ async def findclosestpapers(arxiv_id,language,api_key):
     print('here')
 
     cat=''
-    c = asyncio.create_task(sync_to_async(getcategory)(arxiv_id))
-    cat = await c
+    c = asyncio.create_task(sync_to_async(getpaper)(arxiv_id))
+    mainpaper = await c
+    cat = mainpaper.category
     print('cat',cat)
 
     if getstoredpickle != '':
@@ -362,66 +385,98 @@ async def findclosestpapers(arxiv_id,language,api_key):
     print('right')
     db=''
     async for paper in allpapers:
-        print('pap',paper)
-        c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
+        if paper != mainpaper:
+            print('pap',paper)
+            c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
 
-        getstoredpickle2 = await c2
+            getstoredpickle2 = await c2
 
-        if getstoredpickle2 != '':
-            # deserialize the index from a byte buffer
-            #index_buffer = faiss.read_index(storedpickle.buffer)
-            #faiss = dependable_faiss_import()
+            if getstoredpickle2 != '':
+                # deserialize the index from a byte buffer
+                #index_buffer = faiss.read_index(storedpickle.buffer)
+                #faiss = dependable_faiss_import()
 
-            index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
+                index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
 
-            docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
-            index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
+                docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
+                index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
 
-            docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
+                docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
 
-            if db == '':
-                db = docsearch2
-                print('db.docstore._dict',db.docstore._dict)
-            else:
-                db.merge_from(docsearch2)
-                print('db.docstore._dict',db.docstore._dict)
+                if db == '':
+                    db = docsearch2
+                    print('db.docstore._dict',db.docstore._dict)
+                else:
+                    db.merge_from(docsearch2)
+                    print('db.docstore._dict',db.docstore._dict)
 
     
-        print('doc',docsearch.index)
-        indices = [k for k in docsearch.index_to_docstore_id.keys()]
+    print('doc',docsearch.index)
+    indices = [k for k in docsearch.index_to_docstore_id.keys()]
 
-        print('indices',indices)
+    print('indices',indices)
 
-        recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
-        print('hhh',docsearch.index.reconstruct(0))
-        print('index_to_docstore_id',docsearch.index_to_docstore_id)
-        #docs_and_scores = db.similarity_search_by_vector(docsearch.index.reconstruct(0),4)
-        docs_and_scores = db.similarity_search_with_score_by_vector(docsearch.index.reconstruct(0),4)
+    recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
+    print('recembeddings',recembeddings)
+    #recembeddings = ','.join(map(str,recembeddings))
+    #print('recembeddings2',recembeddings)
 
-        print('docs_and_scores',docs_and_scores)
-        array_arxiv_ids=[]
-        array_scores=[]
+    print('hhh',docsearch.index.reconstruct(0))
 
-        for document in docs_and_scores:
-            #source_value = document[0].metadata['source']
-            #print('ss',source_value)
-            metadata = document[0].metadata#['arxiv_id']
-            score_value = document[1]
 
-            aid = metadata.get('arxiv_id')
-            if aid is not None:
-                print(aid)
+    #print('index_to_docstore_id',docsearch.index_to_docstore_id)
+    #docs_and_scores = db.similarity_search_by_vector(docsearch.index.reconstruct(0),4)
+    #docs_and_scores = db.similarity_search_with_score_by_vector(docsearch.index.reconstruct(0),k)
+    
+    ''' this works but a bit lengthy
+    docs_and_scores=[]
+    for emb in recembeddings:
+        resultsimsearch=db.similarity_search_with_score_by_vector(emb,k)
+        docs_and_scores+=resultsimsearch
+    '''
+    import numpy as np
+    print('len(recembeddings)',len(recembeddings))
+    if len(recembeddings)>1:
+        recembeddings=np.mean(recembeddings, axis=0)
+    else:
+        recembeddings=docsearch.index.reconstruct(0)
+
+    '''doesn't work for now
+    import numpy as np
+
+    recembeddings = np.concatenate(recembeddings)
+    print('recembeddings2',recembeddings)
+    '''
+    
+    print('len(recembeddings)2',len(recembeddings))
+
+    docs_and_scores = db.similarity_search_with_score_by_vector(recembeddings,k)
+
+    print('docs_and_scores',docs_and_scores)
+    array_arxiv_ids=[]
+    array_scores=[]
+
+    for document in docs_and_scores:
+        #source_value = document[0].metadata['source']
+        #print('ss',source_value)
+        metadata = document[0].metadata#['arxiv_id']
+        score_value = document[1]
+
+        aid = metadata.get('arxiv_id')
+        if aid is not None:
+            print(aid)
+            if aid not in array_arxiv_ids:
                 array_arxiv_ids.append(aid)
                 array_scores.append(score_value)
-            else:
-                print("Arxiv_id is not present in metadata")
+        else:
+            print("Arxiv_id is not present in metadata")
 
-            print('score',score_value)
+        print('score',score_value)
 
-        print('array_arxiv_ids',array_arxiv_ids)
-        #docs = docsearch2.similarity_search(query,k=kvalue)
-        #print('docs:',docs)
-        #print('len docs:',len(docs))
+    print('array_arxiv_ids',array_arxiv_ids)
+    #docs = docsearch2.similarity_search(query,k=kvalue)
+    #print('docs:',docs)
+    #print('len docs:',len(docs))
 
     return array_arxiv_ids,array_scores
 
@@ -1660,6 +1715,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
          Create a detailed blog article about this research paper: {}
 
          The article should be well-organized and easy to read with NO HTML EXCEPT for headings with <h2> tags and subheadings with <h3> tags.
+
     """.format(summary)
 
     prompt5b = """
@@ -1831,6 +1887,9 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
 
     #blog_article=soup2.prettify()#turn < p > into &lt; p &gt; check why
     print('ba',blog_article)
+    blog_article = blog_article.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>').replace('</ h2 >','</h2>').replace('</ h2>','</h2>')
+    blog_article = blog_article.replace('< /h3 >','</h3>').replace('< h3 >','<h3>').replace('< H3 >','<h3>').replace('< /H3 >','</h3>').replace('</ h3 >','</h3>').replace('</ h3>','</h3>')
+
 
     return blog_article
 

@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search
+from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search, PaperScore
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -574,6 +574,21 @@ def escape_latex(abstract):
         abstract = abstract[:start] + "\[" + abstract[start + 1:end] + "\]" + abstract[end + 1:]
     return abstract
 
+def tree(request, arxiv_id):
+    arxiv_id = arxiv_id.strip()
+    lang = get_language()
+    li = get_language_info(lang)
+    language = li['name']
+
+    stuff_for_frontend = {"arxiv_id": arxiv_id,"language":lang}
+
+    alpaper=True
+    stuff_for_frontend.update({
+        'alpaper':alpaper,
+    })
+
+    return render(request, "summarizer/tree.html", stuff_for_frontend)
+
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
 
@@ -669,6 +684,12 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
     if request.method == 'POST':
         print('in here',request.POST)
+        if 'close_button' in request.POST:
+            print('ok close')
+            stuff_for_frontend.update({
+                'close':True,
+            })
+
         if 'download_pdf' in request.POST:
             print('download')
             #pdf_bytes=utils.summary_pdf(arxiv_id,lang)
@@ -784,6 +805,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         #return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id,'stuff_for_frontend':stuff_for_frontend}))
 
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+        
+
     else:
         if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
             print('deja')
@@ -904,9 +927,24 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
             #closest_papers=asyncio.run(utils.findclosestpapers(arxiv_id,lang,settings.OPENAI_KEY))
             #print('closest_papers',closest_papers)
+            relpapers=''
+            scores=[]
+            max_score=0
+            if PaperScore.objects.filter(from_paper=paper,active=True).exists():
+                relpapers = PaperScore.objects.filter(from_paper=paper,active=True)
+                max_score = min(rel.score for rel in relpapers)
+                #for rel in relpapers:
+                #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
+                for pap in relpapers:
+                    newscore = (1.-pap.score)*100
+                    newscore = "{:.1f}".format(newscore)
+                    scores.append(newscore)
 
             stuff_for_frontend.update({
                 'paper':paper,
+                'relpapers':relpapers,
+                'max_score':max_score,
+                'scores':scores,
                 'keywords':keywords,
                 'sumpaper':sumpaper,
                 'sumlang':sumlang,

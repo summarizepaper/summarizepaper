@@ -352,6 +352,51 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #'authors':arxiv_dict['authors'],'affiliation':arxiv_dict['affiliation']
         return paper,created
 
+    async def sendclose(self,v,l,message):
+        print('in sendclose')
+
+        page_running = cache.get(self.arxiv_group_name+'-close')
+        print('pr',page_running)
+
+        if page_running:
+        # Page is already running, do not start it again
+            return
+        else:
+            # Page is not running, start it now and update the status in the cache
+            cache.set(self.arxiv_group_name+'-close', True)
+            #print('get',cache.get(self.arxiv_group_name))
+       
+        message["progress"] = 5
+        if l == 'fr':
+            message["loading_message"] = "Look for closest papers..."
+        else:
+            message["loading_message"] = "Cherche les articles les plus proches..."
+
+        c=asyncio.create_task(self.send_message_now(message))
+        await c
+
+        print('clossseeee')
+        c=asyncio.create_task(utils.findclosestpapers(v,l,4,settings.OPENAI_KEY))
+        closest_papers = await c
+
+        print('closest_papers',closest_papers)
+        #store results in db
+        c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
+        storeclosest = await c
+
+        #await asyncio.sleep(10.)
+        
+        message["progress"] = 100
+        if l == 'fr':
+            message["loading_message"] = "La recherche est terminée"
+        else:
+            message["loading_message"] = "The search is over"
+        c=asyncio.create_task(self.send_message_now(message))
+        await c
+
+        cache.set(self.arxiv_group_name+'-close', False)
+
+
     async def sendmessages(self,v,l,message):
         print('in sendmessages')
 
@@ -476,6 +521,22 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         updatethesum = await c
         #print('testpap',testpaper)
 
+        message["progress"] = 95
+        if l == 'fr':
+            message["loading_message"] = "Recherche des papiers similaires"
+        else:
+            message["loading_message"] = "Finding similar papers"
+        c=asyncio.create_task(self.send_message_now(message))
+        await c
+
+        c=asyncio.create_task(utils.findclosestpapers(v,l,4,settings.OPENAI_KEY))
+        closest_papers = await c
+
+        print('closest_papers',closest_papers)
+        #store results in db
+        c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
+        storeclosest = await c
+
         message["progress"] = 100
         if l == 'fr':
             message["loading_message"] = "L'article est maintenant traité - Regardez les résultats ci-dessous"
@@ -546,6 +607,19 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 #await self.sendmessages(v,message)
                 #await ta
                 asyncio.create_task(self.sendmessages(v,l,message))
+            elif command == 'start_close_task':
+                message = {
+                    "loading_message": "Loading...",
+                    "progress": 0
+                }
+                v=self.arxiv_id
+                l=self.language
+
+                #ta=asyncio.ensure_future(self.sendmessages(v,message))#needed for channel_layer_group_send to work instantaneously
+                #await self.sendmessages(v,message)
+                #await ta
+                asyncio.create_task(self.sendclose(v,l,message))
+
         else:
             message = data["message"]
             print('receive',message)

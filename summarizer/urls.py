@@ -13,6 +13,7 @@ urlpatterns = [
     #path("arxiv-id/<str:cat>/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     re_path(r"^arxiv-id/(?P<cat>[^\d]+)/(?P<arxiv_id>[a-zA-Z0-9]+)/$", views.arxividpage, name="arxividpage"),
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.arxividpage, name="arxividpage"),
+    path("tree/<str:arxiv_id>/", views.tree, name="tree"),
     #path("summary-pdf/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),
     path("search-results/", views.search_results, name="search_results"),

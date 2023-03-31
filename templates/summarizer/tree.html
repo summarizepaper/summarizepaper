@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %} {% trans 'AIer' %} {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Ourh with our cutting-edge technology.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/tree" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.3/d3.min.js"></script>
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+  
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+<p style="margin-left:20px;">Hello, this page is under construction, come back later...</p>
+
+{% if 1 == 0 %}
+<div id="graph"></div>
+<p>{{ arxiv_id }}</p>
+{% endif %}
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+var tooltip = d3.select("body")
+  .append("div")
+  .style("position", "absolute")
+  .style("z-index", "10")
+  .style("visibility", "hidden")
+  .text("a simple tooltip");
+
+function showTooltip(event, d) {
+tooltip.style('opacity', 1)
+  .style('left', (event.pageX + 10) + 'px')
+  .style('top', (event.pageY + 10) + 'px')
+  .html(`<strong>Title: </strong>${d.title}<br>
+        <strong>Arxiv ID: </strong>${d.arxiv_id}<br>
+        <strong>Score: </strong>${d.score.toFixed(2)}`);
+}
+// Define the data for the graph
+const data = [
+  { arxiv_id: 'paper1', title: 'title1', score: 0.8, x: 50, y: 50 },
+  { arxiv_id: 'paper2', title: 'title2', score: 0.6, x: 100, y: 100 },
+  { arxiv_id: 'paper3', title: 'title3', score: 0.4, x: 150, y: 150 }
+];
+
+const maxScore=2;
+
+
+
+// Define the dimensions and margins of the graph
+const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+const width = 500 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+
+// Append the SVG object to the graph div
+const svg = d3.select('#graph')
+  .append('svg')
+  .attr('width', width + margin.left + margin.right)
+  .attr('height', height + margin.top + margin.bottom)
+  .append('g')
+  .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+// Define the scales for the x and y axes
+const xScale = d3.scaleLinear()
+  .domain([0, 200])
+  .range([0, width]);
+
+const yScale = d3.scaleLinear()
+  .domain([0, 200])
+  .range([height, 0]);
+
+const rScale = d3.scaleLinear()
+.domain([0, maxScore])
+.range([5, 30]);
+
+// Add the circles for each paper
+const circles = svg.selectAll('g')
+.data(data)
+.enter()
+.append('g')
+.attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`);
+
+circles.append('circle')
+.attr('r', d => rScale(d.score))
+.attr('fill', 'blue')
+.attr('stroke', 'white')
+.attr('stroke-width', '2px');
+
+circles.append('text')
+.text(d => `Arxiv ID: ${d.arxiv_id}\nScore: ${d.score}`)
+.attr('text-anchor', 'middle')
+.attr('dy', 20);
+
+// Add mouseover and mouseout events to the circles
+circles.on("mouseover", function(){return tooltip.style("visibility", "visible");})
+       .on("mousemove", function(){return tooltip.style("top",
+          (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
+       .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+
+/*.on('mouseover', function(event, d) {
+// Change the circle fill color on mouseover
+d3.select(this)
+  .transition()
+  .duration(200)
+  .attr('fill', 'red');
+
+showTooltip(d3.event, d);
+})
+.on('mouseout', function(event, d) {
+  // Hide the tooltip on mouseout
+  tooltip.transition()
+    .duration(500)
+    .style('opacity', 0);
+  // Change the circle fill color on mouseout
+  d3.select(this)
+    .transition()
+    .duration(200)
+    .attr('fill', 'blue');
+})
+  .on('click', function(event, d) {
+    // Redirect to another URL on click
+    window.location.href = `https://example.com/paper/${d.arxiv_id}`;
+  })
+  .append('title') // Add a title element for each circle
+  .text(d => d.title); // Set the text of the title element to the paper title
+*/
+ 
+
+  // Add the text for each paper title
+svg.selectAll('text.title')
+  .data(data)
+  .enter()
+  .append('text')
+  .attr('class', 'title')
+  .attr('x', d => xScale(d.x))
+  .attr('y', d => yScale(d.y))
+  .style('display', 'none')
+  .text(d => d.title);
+
+// Add the lines to connect the papers
+svg.selectAll('line')
+.data(data)
+.enter()
+.append('line')
+.attr('x1', d => xScale(d.x))
+.attr('y1', d => yScale(d.y))
+.attr('x2', d => xScale(data[0].x))
+.attr('y2', d => yScale(data[0].y))
+.style('stroke', 'gray')
+.style('stroke-width', d => 5 * (1 - d.score))
+.style('opacity', d => 0.2 + d.score);
+
+
+  </script>
+  
+{% endblock %}

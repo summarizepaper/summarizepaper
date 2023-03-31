@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ArxivPaper, Author, Vote, SummaryPaper, PaperHistory, PDFHistory, PaperAuthor, PickledData, AIassistant, Search
+from .models import ArxivPaper, Author, Vote, SummaryPaper, PaperHistory, PDFHistory, PaperScore, PaperAuthor, PickledData, AIassistant, Search
 from django import forms
 from django.db import models
 
@@ -10,6 +10,7 @@ admin.site.register(PaperAuthor)
 admin.site.register(SummaryPaper)
 admin.site.register(AIassistant)
 admin.site.register(Search)
+admin.site.register(PaperScore)
 
 class MyModelAdmin(admin.ModelAdmin):
     list_display = ('arxiv_id', 'user', 'created')

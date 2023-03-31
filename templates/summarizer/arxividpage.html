@@ -11,7 +11,6 @@
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{% if details %}{{ details.title }}{% else %}{{ paper.title }}{% endif %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
-
   <script>
     MathJax = {
       tex: {
@@ -269,6 +268,15 @@
   }
 
   #popover {
+    display: none;
+    position: fixed;
+    background-color: black;
+    color: white;
+    padding: 10px;
+    z-index: 1;
+    right: 20px;
+  }
+  #popover2 {
     display: none;
     position: fixed;
     background-color: black;
@@ -653,6 +661,89 @@
   color: #0052cc;
 }
 
+.latest-papers {
+     background-color: #f8f8f8;
+     padding: 20px;
+     text-align: center;
+   }
+
+   .latest-papers h2 {
+     font-size: 24px;
+     font-weight: bold;
+     margin-bottom: 10px;
+   }
+
+   .paper-list {
+     display: flex;
+     flex-wrap: wrap;
+     justify-content: center;
+   }
+
+   .paper {
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin: 10px;
+  width: 120px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s ease-in-out;
+  height: 120px; /* set a fixed height */
+  justify-content: space-between;
+}
+
+.paper:hover {
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+}
+
+.paper a {
+  font-family: "Open Sans", sans-serif;
+  color: #000000;
+  font-size: 14px;
+  text-decoration: none;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paper a:hover {
+  color: #007bff;
+}
+
+.paper .category {
+  font-size: 14px;
+  margin-top: 5px;
+  text-align: center;
+  font-family: "Open Sans", sans-serif;
+}
+
+   @media (min-width: 768px) {
+     .paper {
+       width: 150px;
+       height: 150px;
+     }
+
+     .paper a {
+       font-size: 16px;
+     }
+   }
+
+   .score {
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      color: #fff;
+      background-color: #007bff;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin-top: 8px;
+    }
+
 
 </style>
 {% endblock %}
@@ -878,10 +969,11 @@ submitButton.addEventListener('click', () => {
       <i class="fa fa-thumbs-up" style="font-size: 36px;"></i>
     </a>-->
   </p>
-  <p id="totvote">{% trans 'Total number of votes:' %} {{ total_votes }}
+  <p id="totvote">{% trans 'Assess the quality of the AI-generated content by voting' %} 
     <span id="popover-link">
       <i class="fas fa-question-circle"></i>
     </span>
+    <p>{% trans 'Score:' %} {{ total_votes }}</p>
   </p>
   <div id="popover">
     <p><strong>{% trans 'Why do we need votes?' %}</strong></p>
@@ -929,10 +1021,43 @@ submitButton.addEventListener('click', () => {
   <p style="text-align: center; margin-top: 10px; color: red;max-width: 600px; width: 90%; margin-left: auto; margin-right: auto;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
   {% endif %}
   {% endif %}
+  
+  {% if relpapers %}
+  <section class="latest-papers" id="closest">
+    <h2>{% trans 'Similar papers summarized with our AI tools' %}</h2>
+    <div class="paper-list">
+      {% for paper in relpapers %}
+        <div class="paper">
+          <div class="score">{{ scores|index:forloop.counter0 }}%</div>
+          <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.to_paper.arxiv_id }}" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:100 }}</a>
+          <div class="category">{{ paper.to_paper.category }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="center" style="margin-bottom:20px;">
+    <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+      {% csrf_token %}
+      
+      <input type="submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button" style="background-color: #333;">
+      
+      <p style="text-align: center;">
+      <label style="color: orange;">(Beta)</label>
+      <span id="popover-link2">
+        <i class="fas fa-question-circle"></i>
+      </span></p>
+    </form>
+    <div id="popover2">
+      <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
+      <p>{% trans 'By clicking on the button above, our algorithm will scan all papers in our database to find the closest based on the contents of the full papers and not just on metadata. Please note that it only works for papers that we have generated summaries for and you can rerun it from time to time to get a more accurate result while our database grows.' %}</p>
+    </div>
+  </div>
   <div class="disclaimer">
     <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
   </div>
-
+ 
 
 {% else %}
 
@@ -940,8 +1065,12 @@ submitButton.addEventListener('click', () => {
 <p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}.{% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
+  {% if close %}
+  <h1>{% trans 'Running our tool to find closest papers' %}</h1>
+  {% else %}
   <h1>{% trans 'Running summarizing tools on a new article' %}</h1>
-  {% if run or run2 %}
+  {% endif %}
+  {% if run or run2 or close %}
   <p style="font-size:20px;"><strong>{% trans 'We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.' %}</strong></p>
   {% else %}
   <p style="font-size:20px;"><strong>{% trans 'This is the first time this article is requested and our AI summarizing tools have never been run on it. We can run our tools now if you click on the button "Run" donw the page but first make sure that it is the right article.' %}</strong></p>
@@ -960,7 +1089,7 @@ submitButton.addEventListener('click', () => {
   </div>
   {% endif %}
 
-  {% if run or run2 %}
+  {% if run or run2 or close %}
     <div class="info-block">
       <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id|dash_slash }}</p>
     </div>
@@ -1024,6 +1153,23 @@ submitButton.addEventListener('click', () => {
 
 {% endif %}
 
+{% if close %}
+{{ arxiv_id|json_script:"arxiv_id" }}
+
+<div class="main-content2">
+
+<div class="loading" style="text-align:center;margin-bottom:40px;"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}" style="display:inline-block;"></div>
+
+<div id="progtextupdate" style="font-size:20px;color:red; text-align: center;animation: blink 2s linear infinite;"></div>
+
+  <div id="loading-message"></div>
+  <div id="progress-bar">
+    <div id="progress" style="width: 0%">
+      <div id="progress-text"></div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {% if run2 %}
 {{ arxiv_id|json_script:"arxiv_id" }}
@@ -1101,7 +1247,7 @@ submitButton.addEventListener('click', () => {
 {% endblock %}
 
 {% block scripts %}
-  {% if run or run2 %}
+  {% if run or run2 or close %}
 
   <script>
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
@@ -1133,9 +1279,15 @@ submitButton.addEventListener('click', () => {
   socketl.onopen = function(event) {
       console.log('WebSocket connection established.');
       //console.log('jkkk');
+      {% if run or run2 %}
       socketl.send(JSON.stringify({
           'command': 'start_background_task'
       }));
+      {% elif close %}
+      socketl.send(JSON.stringify({
+          'command': 'start_close_task'
+      }));
+      {% endif %}
       //console.log('jkkddk');
       // You can now send messages over the WebSocket connection.
   }
@@ -1171,16 +1323,20 @@ submitButton.addEventListener('click', () => {
       if(data.message.progress == 100){
         document.getElementById("progress-bar").style.display = "none";
         document.getElementById("progtextupdate").style.animation = "none";
-        {% if run2 or run %}
+        {% if run2 or run or close %}
         var pathname = window.location.pathname;
 
+        {% if close %}
+        pathname = pathname.replace(/\/$/, '') + '#closest';
+        {% endif %}
         // Replace all occurrences of '--' with '/'
         pathname = pathname.replace(/--/g, '/');
 
         // Reload the page with the updated pathname
         window.location.href = window.location.protocol + '//' + window.location.host + pathname;
-
+        //window.location.href = 'http://127.0.0.1:8000/fr/arxiv-id/1412.5598v1#closest'
         //window.location.href = window.location.protocol +'//'+ window.location.host + window.location.pathname;
+        //location.reload(true);
         //location.reload(true);
         {% endif %}
       }
@@ -1594,6 +1750,21 @@ document.getElementById("popover-link").addEventListener("mouseout", function() 
   popover.style.display = "none";
 });
 </script>
+
+<script>
+  document.getElementById("popover-link2").addEventListener("mouseover", function(event) {
+    var popover2 = document.getElementById("popover2");
+    popover2.style.display = "block";
+    popover2.style.left = (event.clientX - 40) + "px";
+    popover2.style.top = (event.clientY + 20) + "px";
+  });
+  
+  document.getElementById("popover-link2").addEventListener("mouseout", function() {
+    var popover2 = document.getElementById("popover2");
+    popover2.style.display = "none";
+  });
+  </script>
+
 {% endif %}
 
 <script>
