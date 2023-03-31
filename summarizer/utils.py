@@ -206,7 +206,7 @@ def getpaper(arxiv_id):
     return paper
 
 def getallpapers(cat):
-    if cat != '':
+    if 1==0:#cat != '':#for now we look everywhere to be changed
         print('in cat')
         allpapers = ArxivPaper.objects.filter(category=cat)
     else:
