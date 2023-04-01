@@ -588,25 +588,99 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             #allpaperstoredo = await utils.getallpaperstoredo(certain_date)
 
             #print('allpaperstoredo',allpaperstoredo)
+            avoidids=[
+                "2303.10344v1",
+                "2303.15418v1",
+                "2303.08525v1",
+                "2301.05624v1",
+                "2302.12824v1",
+                "2303.03444v1",
+                "1905.03844v1",
+                "1607.03000v1",
+                "0709.1389v1",
+                "2302.12218v1",
+                "2303.14917v1",
+                "astro-ph--0511657v1",
+                "2210.09995v1",
+                "2209.12759v1",
+                "2303.01496v1",
+                "2303.01138v1",
+                "2302.13303v1",
+                "1505.06861v1",
+                "2003.03466v1",
+                "2303.02121v1",
+                "2205.14520v1",
+                "1911.04865v2",
+                "1506.08667v1",
+                "2303.00802v1",
+                "1908.02718v1",
+                "1405.7516v1",
+                "2210.10909v1",
+                "2303.0001v1",
+                "2205.15937v1",
+                "2212.07286v1",
+                "2303.10130v1",
+                "2303.0002v1",
+                "2303.0004v1",
+                "2303.04703v1",
+                "2303.0003v1",
+                "2303.04157v1",
+                "2303.04802v1",
+                "2303.08774v1",
+                "2302.10346v1",
+                "1302.1410v1",
+                "1903.02723v1",
+                "2106.07499v1",
+                "2303.11315v1",
+                "2303.01903v1",
+                "hep-ph--9411346v1",
+                "2302.10071v1",
+                "2303.01177v1",
+                "2301.03063v1",
+                "2101.1234v1",
+                "1612.06582v1",
+                "1110.1365v3",
+                "2204.12956v1",
+                "2210.15353v1",
+                "2302.10328v1",
+                "2210.11424v1",
+                "2004.06572v3",
+                "1706.03762v5",
+                "2303.03378v1",
+                "2303.09549v1",
+                "2303.04081v1",
+                "2212.08073v1",
+                "2303.08830v1",
+                "2206.05802v1",
+                "2212.03007v1",
+                "2303.09014v1",
+                "2009.09941v3",
+                "2303.01248v2"
+            ]
+
+            storeidsa=[]
             async for all in allpaperstoredo:
                 print('all',all)
-                c=asyncio.create_task(utils.get_arxiv_metadata(all.arxiv_id))
-                arxivarrayf = await c
+                if all.arxiv_id not in avoidids:
+                    storeidsa.append(all.arxiv_id)
+                    c=asyncio.create_task(utils.get_arxiv_metadata(all.arxiv_id))
+                    arxivarrayf = await c
 
-                #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
-                if len(arxivarrayf)>1:
-                    keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments','license']
-                    arxiv_dict = dict(zip(keys, arxivarrayf[1:-1]))
-                    exist=arxivarrayf[0]
-                    data=arxivarrayf[-1]
-                    #published_datetime = datetime.strptime(str(arxiv_dict['published_arxiv']), '%Y-%m-%dT%H:%M:%SZ')
-                    #arxiv_dict['published_arxiv']=published_datetime
-                    detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
+                    #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
+                    if len(arxivarrayf)>1:
+                        keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments','license']
+                        arxiv_dict = dict(zip(keys, arxivarrayf[1:-1]))
+                        exist=arxivarrayf[0]
+                        data=arxivarrayf[-1]
+                        #published_datetime = datetime.strptime(str(arxiv_dict['published_arxiv']), '%Y-%m-%dT%H:%M:%SZ')
+                        #arxiv_dict['published_arxiv']=published_datetime
+                        detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
 
-                    rewrite=asyncio.create_task(self.createindexwithsources(all.arxiv_id,detpap,data))
-                    rewritey=await rewrite
-                    print('rewriteb')
-                    #input('ok')
+                        rewrite=asyncio.create_task(self.createindexwithsources(all.arxiv_id,detpap,data))
+                        rewritey=await rewrite
+                        print('rewriteb')
+                        print('storeidsa',storeidsa)
+                        #input('ok')
 
         sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message,data))
         sumarray=await sumarra
