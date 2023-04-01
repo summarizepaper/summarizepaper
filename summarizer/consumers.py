@@ -63,6 +63,66 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             self.arxiv_group_name, {"type": "progress_blog_update", "message": blog}
         )
 
+    async def createindexwithsources(self,arxiv_id,details_paper,data):
+        url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
+        book_path = "test1.pdf"
+        sum=""
+        laysum=""
+        notes=""
+
+        #details_paper=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract']]
+        license,title,abstract,authors=details_paper
+        #look at license first to see what can be done
+        
+
+        print('lic',license)
+        if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
+            public=1
+        else:
+            public=0
+
+
+        print('pubbbllllliiiiiiccccc',public)
+        active=1
+        if active==1:
+            print('active....')
+            if public==1:
+                response = requests.get(url)
+                my_raw_data = response.content
+
+                
+
+                with open("my_pdf.pdf", 'wb') as my_data:
+                    my_data.write(my_raw_data)
+
+                ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+
+                #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
+                c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
+                book_text,full_text=await c
+                print('book:',book_text)
+            else:
+                print('else book text')
+                print('authors',authors)
+                book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+
+            #c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
+            pickledata = ''#await c
+
+            #print('dattaaaaaaaaaaaa',data)
+            if pickledata=='':
+                if public==1:
+                    book_text2=data+'    '+full_text
+                else:
+                    book_text2=data+'    '+book_text
+
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
+                created=await c
+                print('crea',created)
+                print('finished',arxiv_id)
+
+        return 0
+
     async def computesummary(self,arxiv_id,language,details_paper,message,data):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
         book_path = "test1.pdf"
@@ -509,6 +569,45 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('avantcompute')
         #sumarray = await self.computesummary(v,message)
         detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
+
+        
+        if v=='2303.14917v1':
+            print('rewritea')
+
+            certain_date = datetime(2023, 3, 30)  # replace with your desired date
+            print('certain_date',certain_date)
+            #c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
+
+            #c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
+            #pickledata = await c
+
+            c = asyncio.create_task(sync_to_async(utils.getallpaperstoredo)(certain_date))
+            #c = asyncio.create_task(utils.getallpaperstoredo())
+            allpaperstoredo = await c
+            #allpaperstoredo = async_to_sync(utils.getallpaperstoredo)(certain_date)
+            #allpaperstoredo = await utils.getallpaperstoredo(certain_date)
+
+            #print('allpaperstoredo',allpaperstoredo)
+            async for all in allpaperstoredo:
+                print('all',all)
+                c=asyncio.create_task(utils.get_arxiv_metadata(all.arxiv_id))
+                arxivarrayf = await c
+
+                #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
+                if len(arxivarrayf)>1:
+                    keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments','license']
+                    arxiv_dict = dict(zip(keys, arxivarrayf[1:-1]))
+                    exist=arxivarrayf[0]
+                    data=arxivarrayf[-1]
+                    #published_datetime = datetime.strptime(str(arxiv_dict['published_arxiv']), '%Y-%m-%dT%H:%M:%SZ')
+                    #arxiv_dict['published_arxiv']=published_datetime
+                    detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
+
+                    rewrite=asyncio.create_task(self.createindexwithsources(all.arxiv_id,detpap,data))
+                    rewritey=await rewrite
+                    print('rewriteb')
+                    #input('ok')
+
         sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message,data))
         sumarray=await sumarra
         print('aprescompute')

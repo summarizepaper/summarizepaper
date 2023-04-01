@@ -205,6 +205,17 @@ def getpaper(arxiv_id):
 
     return paper
 
+def getallpaperstoredo(certain_date):
+    print('in redo')
+
+    allpaper = ArxivPaper.objects.filter(created__lt=certain_date)
+    #allpaper = ArxivPaper.objects.all()
+
+    #allpapers = ArxivPaper.objects.filter(da)
+    
+    #print('all',allpapers)
+    return allpaper
+
 def getallpapers(cat):
     if 1==0:#cat != '':#for now we look everywhere to be changed
         print('in cat')
