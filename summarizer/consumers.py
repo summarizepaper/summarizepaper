@@ -184,8 +184,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 #time.sleep(3.)
 
-                #print('ookkkkkkkkkk')
-
                 with open("my_pdf.pdf", 'wb') as my_data:
                     my_data.write(my_raw_data)
 
