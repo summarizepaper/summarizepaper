@@ -571,7 +571,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
 
         
-        if v=='2303.14917v1':
+        if 1==0:#v=='2303.14917v1':
             print('rewritea')
 
             certain_date = datetime(2023, 3, 30)  # replace with your desired date
