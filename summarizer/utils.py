@@ -356,8 +356,10 @@ async def createindex(arxiv_id,book_text,api_key):
     print('ok created',created)
     return created
 
-async def findclosestpapers(arxiv_id,language,k,api_key):
+async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
     print('findclosestpapers')
+    message={}
+    arxiv_group_name="ar_%s" % arxiv_id
 
     li = get_language_info(language)
     language2 = li['name']
@@ -373,6 +375,17 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
     mainpaper = await c
     cat = mainpaper.category
     print('cat',cat)
+
+    if but==True:
+        message["progress"] = 35
+        if language == 'fr':
+            message["loading_message"] = "Comparaison en cours..."
+        else:
+            message["loading_message"] = "Comparison in progress..."
+        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
+        await c
+        #await asyncio.sleep(10)
+
 
     if getstoredpickle != '':
         # deserialize the index from a byte buffer
@@ -427,6 +440,13 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
 
     #print('indices',indices)
 
+    if but==True:
+        message["progress"] = 50
+        
+        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
+        await c
+        #await asyncio.sleep(5)
+
     recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
     #print('recembeddings',recembeddings)
     #recembeddings = ','.join(map(str,recembeddings))
@@ -466,6 +486,12 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
     #print('docs_and_scores',docs_and_scores)
     array_arxiv_ids=[]
     array_scores=[]
+
+    if but==True:
+        message["progress"] = 75
+        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
+        await c
+        #await asyncio.sleep(5)
 
     for document in docs_and_scores:
         #source_value = document[0].metadata['source']

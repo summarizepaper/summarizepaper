@@ -477,7 +477,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await c
 
         print('clossseeee')
-        c=asyncio.create_task(utils.findclosestpapers(v,l,4,settings.OPENAI_KEY))
+        c=asyncio.create_task(utils.findclosestpapers(v,l,4,settings.OPENAI_KEY,but=True))
         closest_papers = await c
 
         print('closest_papers',closest_papers)
