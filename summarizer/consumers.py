@@ -426,9 +426,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
        
         message["progress"] = 5
         if l == 'fr':
-            message["loading_message"] = "Look for closest papers..."
-        else:
             message["loading_message"] = "Cherche les articles les plus proches..."
+        else:
+            message["loading_message"] = "Look for closest papers..."
 
         c=asyncio.create_task(self.send_message_now(message))
         await c

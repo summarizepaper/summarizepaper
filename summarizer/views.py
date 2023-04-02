@@ -311,8 +311,11 @@ def search_results(request):
 
     print('url::',url)
     #input('jjk')
+    url = urllib.parse.quote(url, safe=':/=&?+ ')
+    print('url::2',url)
+
     data = urllib.request.urlopen(url).read().decode('utf-8')
-    #print('data',data)
+    print('data',data)
 
     root = ElementTree.fromstring(data)
 
