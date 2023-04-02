@@ -796,7 +796,15 @@
       {% trans ' or Ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
   </div>
 </div>
-
+  {% else %}
+    {% if sumlang %}
+    <div class="info-block" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; background-color: #f7f7f7;">
+        <span style="font-weight: bold;">{% trans 'Summaries already available in other languages:' %}</span>
+        {% for l in sumlang %}
+            <a href="/{{ l }}/arxiv-id/{{ arxiv_id }}" style="margin-left: 10px;">{{ l }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+  {% endif %}
   {% endif %}
     <div class="subtitle">
       {% if paper.authors.all %}
