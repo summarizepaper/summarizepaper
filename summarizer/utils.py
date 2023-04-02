@@ -496,7 +496,9 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
                     existing_version = int(existing_match.group(1))
                     print('existing_version',existing_version)
 
-                    if existing_aid.startswith(aid[:-len(match.group())]) and version <= existing_version:
+                    if existing_aid.startswith(aid[:-len(match.group())]):# and version <= existing_version:
+                        print('len(match.group()',len(match.group()))
+                        print('aid[:-len(match.group())]',aid[:-len(match.group())])
                         break
                 else:
                     if aid not in array_arxiv_ids:
