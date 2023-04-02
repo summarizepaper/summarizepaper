@@ -11,6 +11,7 @@ import requests
 from django.conf import settings
 import time
 from django.core.cache import cache
+import aiohttp
 
 class LoadingConsumer(AsyncWebsocketConsumer):
     sendmessages_running = {}
@@ -86,14 +87,27 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         active=1
         if active==1:
             print('active....')
-            if public==1:
+            if public==1:#tbb
+                '''
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        await response.read()
+
+                response = await asyncio.to_thread(requests.get, url)
+                '''
+                
+
                 response = requests.get(url)
+                print('kici')
+
                 my_raw_data = response.content
 
-                
+                        
+                print('ici')
 
                 with open("my_pdf.pdf", 'wb') as my_data:
                     my_data.write(my_raw_data)
+                print('ici2')
 
                 ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
 
@@ -167,9 +181,23 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         if active==1:
             print('active....')
             if public==1:
-                response = requests.get(url)
+                #response = requests.get(url)
+                response = await asyncio.to_thread(requests.get, url)
                 my_raw_data = response.content
 
+
+                '''
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        try:
+                            print('in try arxiv',response.status)
+                            if response.status != 200:
+                                print("in ! 200 arxiv")
+                                raise Exception(f"Failed to retrieve data: {response.text}")
+                        except Exception as e:
+                            print('in redirect arxiv')
+                        my_raw_data = await response.content
+                '''
                 print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf')
                 message["progress"] = 20
                 if language == 'fr':
@@ -188,11 +216,26 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     my_data.write(my_raw_data)
 
                 ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
-
+                print('raw data done')
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
                 c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
                 book_text,full_text=await c
                 print('book:',book_text)
+                # Create a text queue to store the extracted text
+                #text_queue = asyncio.Queue()
+
+                # Run the extract_text_from_pdf() function asynchronously
+                #task = asyncio.create_task(utils.extract_text_from_pdf('my_pdf.pdf', text_queue))
+
+                # Wait for the extract_text_from_pdf() function to complete and get the extracted text from the text queue
+                #extracted_text = await text_queue.get()
+
+                # Create a StringIO object from the extracted text
+                #book_text = StringIO(extracted_text)
+                #full_text=book_text
+                # Print the extracted text
+                #print(string_io.getvalue())
+
             else:
                 print('else book text')
                 print('authors',authors)

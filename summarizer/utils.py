@@ -7,6 +7,7 @@ from asgiref.sync import sync_to_async,async_to_sync
 from channels.db import database_sync_to_async
 import pdfminer
 from io import StringIO
+#from pdfminer.high_level import PDFResourceManager, PDFPageInterpreter, extract_pages
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
@@ -20,7 +21,6 @@ import os
 from django.conf import settings
 import ast
 import json
-from io import StringIO
 from html.parser import HTMLParser
 from langchain import OpenAI, PromptTemplate, LLMChain
 from langchain.embeddings.openai import OpenAIEmbeddings
@@ -416,23 +416,23 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
 
                 if db == '':
                     db = docsearch2
-                    print('db.docstore._dict',db.docstore._dict)
+                    #print('db.docstore._dict',db.docstore._dict)
                 else:
                     db.merge_from(docsearch2)
-                    print('db.docstore._dict',db.docstore._dict)
+                    #print('db.docstore._dict',db.docstore._dict)
 
     
-    print('doc',docsearch.index)
+    #print('doc',docsearch.index)
     indices = [k for k in docsearch.index_to_docstore_id.keys()]
 
-    print('indices',indices)
+    #print('indices',indices)
 
     recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
-    print('recembeddings',recembeddings)
+    #print('recembeddings',recembeddings)
     #recembeddings = ','.join(map(str,recembeddings))
     #print('recembeddings2',recembeddings)
 
-    print('hhh',docsearch.index.reconstruct(0))
+    #print('hhh',docsearch.index.reconstruct(0))
 
 
     #print('index_to_docstore_id',docsearch.index_to_docstore_id)
@@ -463,7 +463,7 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
 
     docs_and_scores = db.similarity_search_with_score_by_vector(recembeddings,k)
 
-    print('docs_and_scores',docs_and_scores)
+    #print('docs_and_scores',docs_and_scores)
     array_arxiv_ids=[]
     array_scores=[]
 
@@ -473,6 +473,39 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
         metadata = document[0].metadata#['arxiv_id']
         score_value = document[1]
 
+        pattern = r'v(\d+)$'
+
+        aid = metadata.get('arxiv_id')
+        if aid is not None:
+            match = re.search(pattern, aid)
+            print('match',match)
+            if match is None:
+                if aid not in array_arxiv_ids:
+                    print('1',aid)
+                    array_arxiv_ids.append(aid)
+                    array_scores.append(score_value)
+            else:
+                version = int(match.group(1))
+                print('version',version)
+                for existing_aid in array_arxiv_ids:
+                    print('2',existing_aid)
+                    existing_match = re.search(pattern, existing_aid)
+                    print('existing_match',existing_match)
+                    if existing_match is None:
+                        continue
+                    existing_version = int(existing_match.group(1))
+                    print('existing_version',existing_version)
+
+                    if existing_aid.startswith(aid[:-len(match.group())]) and version <= existing_version:
+                        break
+                else:
+                    if aid not in array_arxiv_ids:
+                        array_arxiv_ids.append(aid)
+                        array_scores.append(score_value)
+        else:
+            print("Arxiv_id is not present in metadata")
+
+        '''
         aid = metadata.get('arxiv_id')
         if aid is not None:
             print(aid)
@@ -481,7 +514,7 @@ async def findclosestpapers(arxiv_id,language,k,api_key):
                 array_scores.append(score_value)
         else:
             print("Arxiv_id is not present in metadata")
-
+        '''
         print('score',score_value)
 
     print('array_arxiv_ids',array_arxiv_ids)
@@ -1005,28 +1038,73 @@ def summarizer(arxiv_id):
 
         yield progress
 
+async def extract_pages(file):
+    with file:
+        for page in PDFPage.get_pages(file, caching=False):
+            yield page
+
+
 async def extract_text_from_pdf(pdf_filename):
     # Open the PDF file
-
     #need to check first if pdf file and otherwise return an error; to do later
+    print('in extract')
+    #import aiofiles
+    #from io import BytesIO
 
+    '''
+    async with aiofiles.open(pdf_filename, mode='rb') as f:
+        content = await f.read()
+    with BytesIO(content) as file_like:
+        with pdfplumber.open(file_like) as pdf:
+            pages = pdf.pages
+            text = ''
+            for page in pages:
+                text += page.extract_text()
+    #return text
+
+    return [text,text]
+
+    '''
     with open(pdf_filename, 'rb') as file:
+    #async with aiofiles.open(pdf_filename, 'rb') as file:
         # Create a PDF resource manager object that stores shared resources
-        resource_manager = PDFResourceManager()
+        resource_manager = PDFResourceManager(caching=False)
 
         # Create a string buffer object for text extraction
         text_io = StringIO()
 
         # Create a text converter object
+        #text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
         text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
 
         # Create a PDF page interpreter object
         page_interpreter = PDFPageInterpreter(resource_manager, text_converter)
 
+        print('in extract 2')
+
         # Process each page in the PDF file
-        for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
+        #for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
+
+        #async for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
+        #for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
+        #async for page in async_generator(extract_pages, file):
+        async for page in extract_pages(file):
             page_interpreter.process_page(page)
-            text = text_io.getvalue()
+
+            #async for page in extract_pages(file, caching=True):
+            #for page in PDFPage.get_pages(file, caching=True):
+            #await asyncio.sleep(0)  # Allow other tasks to run while processing the page
+            #print('in extract3')
+
+            #page_interpreter.process_page(page)
+        text = text_io.getvalue()
+
+        # Get the extracted text from the TextConverter object
+        #text = text_converter.get_output()
+
+       
+
+        #text = text_io.getvalue()
 
 
         end = text.find("References")
@@ -1055,11 +1133,11 @@ async def extract_text_from_pdf(pdf_filename):
         text_io.close()
         text_converter.close()
 
-
+        # Put the extracted text into the text queue
+        #await text_queue.put(textlim)
         # Return the extracted text
         #return [textlim,text]
         return [textlim,textlim]
-
 
 async def send_message_now(arxiv_group_name,message):
     print('in sendmesnow')
