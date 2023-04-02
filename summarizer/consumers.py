@@ -477,7 +477,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await c
 
         print('clossseeee')
-        c=asyncio.create_task(utils.findclosestpapers(v,l,4,settings.OPENAI_KEY,but=True))
+        c=asyncio.create_task(utils.findclosestpapers(v,l,7,settings.OPENAI_KEY,but=True))
         closest_papers = await c
 
         print('closest_papers',closest_papers)
@@ -744,7 +744,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
-        c=asyncio.create_task(utils.findclosestpapers(v,l,4,settings.OPENAI_KEY))
+        c=asyncio.create_task(utils.findclosestpapers(v,l,7,settings.OPENAI_KEY))
         closest_papers = await c
 
         print('closest_papers',closest_papers)

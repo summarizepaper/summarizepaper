@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-31 18:40+0000\n"
-"PO-Revision-Date: 2023-03-31 18:42+0000\n"
+"POT-Creation-Date: 2023-04-02 20:55+0000\n"
+"PO-Revision-Date: 2023-04-02 20:55+0000\n"
 "Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -338,12 +338,12 @@ msgstr ""
 " les résultats de la recherche et d'éviter ainsi les fake news."
 
 #: templates/summarizer/about.html:54
-#: templates/summarizer/arxividpage.html:1058
+#: templates/summarizer/arxividpage.html:1066
 msgid "Disclaimer:"
 msgstr "Avertissement :"
 
 #: templates/summarizer/about.html:54
-#: templates/summarizer/arxividpage.html:1058
+#: templates/summarizer/arxividpage.html:1066
 msgid ""
 "The AI-based summarization tool and virtual assistant provided on this "
 "website may not always provide accurate and complete summaries or responses."
@@ -412,29 +412,34 @@ msgstr " ou Posez des questions sur ce document à notre"
 msgid "AI assistant"
 msgstr "Assistant IA"
 
-#: templates/summarizer/arxividpage.html:803
+#: templates/summarizer/arxividpage.html:802
+#| msgid "Available in other languages:"
+msgid "Summaries already available in other languages:"
+msgstr "Résumés déjà disponibles dans d'autres langues :"
+
+#: templates/summarizer/arxividpage.html:811
 msgid "Authors:"
 msgstr "Auteurs :"
 
-#: templates/summarizer/arxividpage.html:825
-#: templates/summarizer/arxividpage.html:829
-#: templates/summarizer/arxividpage.html:1124
-#: templates/summarizer/arxividpage.html:1128
-#: templates/summarizer/arxividpage.html:1472
+#: templates/summarizer/arxividpage.html:833
+#: templates/summarizer/arxividpage.html:837
+#: templates/summarizer/arxividpage.html:1132
+#: templates/summarizer/arxividpage.html:1136
+#: templates/summarizer/arxividpage.html:1484
 msgid "License:"
 msgstr "Licence :"
 
-#: templates/summarizer/arxividpage.html:839
-#: templates/summarizer/arxividpage.html:1138
-#: templates/summarizer/arxividpage.html:1494
+#: templates/summarizer/arxividpage.html:847
+#: templates/summarizer/arxividpage.html:1146
+#: templates/summarizer/arxividpage.html:1506
 msgid "Submitted to arXiv on"
 msgstr "Soumis à arXiv le"
 
-#: templates/summarizer/arxividpage.html:847
+#: templates/summarizer/arxividpage.html:855
 msgid "Ask questions about this paper to our AI assistant"
 msgstr "Posez des questions sur cet article à notre assistant IA"
 
-#: templates/summarizer/arxividpage.html:849
+#: templates/summarizer/arxividpage.html:857
 msgid ""
 "The license of the paper does not allow us to build upon its content and the"
 " AI assistant only knows about the paper metadata rather than the full "
@@ -444,51 +449,51 @@ msgstr ""
 "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
 "que de l'article complet."
 
-#: templates/summarizer/arxividpage.html:858
+#: templates/summarizer/arxividpage.html:866
 msgid "AI"
 msgstr "IA"
 
-#: templates/summarizer/arxividpage.html:863
+#: templates/summarizer/arxividpage.html:871
 msgid "Type your question here"
 msgstr "Saisissez votre question ici"
 
-#: templates/summarizer/arxividpage.html:864
+#: templates/summarizer/arxividpage.html:872
 msgid "Send"
 msgstr "Envoyer"
 
-#: templates/summarizer/arxividpage.html:867
-#: templates/summarizer/arxividpage.html:1161
-#: templates/summarizer/arxividpage.html:1179
-#: templates/summarizer/arxividpage.html:1229
-#: templates/summarizer/arxividpage.html:1232
-#: templates/summarizer/arxividpage.html:1235
-#: templates/summarizer/arxividpage.html:1238
+#: templates/summarizer/arxividpage.html:875
+#: templates/summarizer/arxividpage.html:1169
+#: templates/summarizer/arxividpage.html:1187
+#: templates/summarizer/arxividpage.html:1237
+#: templates/summarizer/arxividpage.html:1240
+#: templates/summarizer/arxividpage.html:1243
+#: templates/summarizer/arxividpage.html:1246
 #: templates/summarizer/home.html:223
 msgid "Loading..."
 msgstr "Chargement..."
 
-#: templates/summarizer/arxividpage.html:871
+#: templates/summarizer/arxividpage.html:879
 msgid "AI assistant instructions?"
 msgstr "Instructions pour utiliser l'assistant IA ?"
 
-#: templates/summarizer/arxividpage.html:873
+#: templates/summarizer/arxividpage.html:881
 msgid ""
 "Welcome to our AI assistant! Here are some important things to keep in mind:"
 msgstr ""
 "Bienvenue dans notre assistant IA ! Voici quelques points importants à "
 "garder à l'esprit :"
 
-#: templates/summarizer/arxividpage.html:875
+#: templates/summarizer/arxividpage.html:883
 msgid ""
 "The assistant will only answer questions related to this specific paper."
 msgstr ""
 "L'assistant ne répondra qu'aux questions liées à ce document spécifique."
 
-#: templates/summarizer/arxividpage.html:876
+#: templates/summarizer/arxividpage.html:884
 msgid "Please note that this is not a bot for casual chatting."
 msgstr "Veuillez noter qu'il ne s'agit pas d'un bot de conversation."
 
-#: templates/summarizer/arxividpage.html:877
+#: templates/summarizer/arxividpage.html:885
 msgid ""
 "If you want the answer in a language other than the language you chose for "
 "navigating the website, simply add \"TRANSLATE IN LANGUAGE L\" at the end of"
@@ -498,7 +503,7 @@ msgstr ""
 "choisie pour naviguer sur le site, ajoutez simplement \"TRADUIRE EN L\" à la"
 " fin de votre requête (remplacez \"L\" par la langue de votre choix)."
 
-#: templates/summarizer/arxividpage.html:878
+#: templates/summarizer/arxividpage.html:886
 msgid ""
 "For example, you could ask \"Can you extract the most important aspect of "
 "the paper? TRANSLATE IN SPANISH\"."
@@ -506,7 +511,7 @@ msgstr ""
 "Par exemple, vous pourriez demander \"Pouvez-vous extraire l'aspect le plus "
 "important du document ? TRADUIRE EN ESPAGNOL\"."
 
-#: templates/summarizer/arxividpage.html:880
+#: templates/summarizer/arxividpage.html:888
 msgid ""
 "If you want to keep the history of your questions/answers you should create "
 "an account."
@@ -514,11 +519,11 @@ msgstr ""
 "Si vous souhaitez conserver l'historique de vos questions/réponses, vous "
 "devez créer un compte."
 
-#: templates/summarizer/arxividpage.html:887
+#: templates/summarizer/arxividpage.html:895
 msgid "Results of the summarizing process for the arXiv paper:"
 msgstr "Résultats du processus de synthèse de l'article arXiv :"
 
-#: templates/summarizer/arxividpage.html:889
+#: templates/summarizer/arxividpage.html:897
 msgid ""
 "This paper's license doesn't allow us to build upon its content and the "
 "summarizing process is here made with the paper's metadata rather than the "
@@ -528,67 +533,67 @@ msgstr ""
 " et le processus de synthèse est ici effectué avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
-#: templates/summarizer/arxividpage.html:892
-#: templates/summarizer/arxividpage.html:1222
+#: templates/summarizer/arxividpage.html:900
+#: templates/summarizer/arxividpage.html:1230
 msgid "Comprehensive Summary"
 msgstr "Résumé Complet"
 
-#: templates/summarizer/arxividpage.html:893
-#: templates/summarizer/arxividpage.html:1223
+#: templates/summarizer/arxividpage.html:901
+#: templates/summarizer/arxividpage.html:1231
 msgid "Key points"
 msgstr "Points clés"
 
-#: templates/summarizer/arxividpage.html:894
-#: templates/summarizer/arxividpage.html:1224
+#: templates/summarizer/arxividpage.html:902
+#: templates/summarizer/arxividpage.html:1232
 msgid "Layman's Summary"
 msgstr "Résumé vulgarisé"
 
-#: templates/summarizer/arxividpage.html:895
-#: templates/summarizer/arxividpage.html:1225
+#: templates/summarizer/arxividpage.html:903
+#: templates/summarizer/arxividpage.html:1233
 msgid "Blog article"
 msgstr "Article de blog"
 
-#: templates/summarizer/arxividpage.html:898
+#: templates/summarizer/arxividpage.html:906
 msgid "The summary is not ready yet"
 msgstr "Le résumé n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:906
+#: templates/summarizer/arxividpage.html:914
 msgid "The key points are not ready yet"
 msgstr "Les points clés ne sont pas encore prêts"
 
-#: templates/summarizer/arxividpage.html:908
+#: templates/summarizer/arxividpage.html:916
 msgid "The Layman's summary is not ready yet"
 msgstr "Le résumé vulgarisé n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:909
+#: templates/summarizer/arxividpage.html:917
 msgid "The blog article is not ready yet"
 msgstr "L'article de blog n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:914
+#: templates/summarizer/arxividpage.html:922
 msgid "Created on"
 msgstr "Créé le"
 
-#: templates/summarizer/arxividpage.html:919
+#: templates/summarizer/arxividpage.html:927
 msgid "Available in other languages:"
 msgstr "Disponible dans d'autres langues :"
 
-#: templates/summarizer/arxividpage.html:927
+#: templates/summarizer/arxividpage.html:935
 msgid "Download as pdf"
 msgstr "Télécharger en pdf"
 
-#: templates/summarizer/arxividpage.html:972
+#: templates/summarizer/arxividpage.html:980
 msgid "Assess the quality of the AI-generated content by voting"
 msgstr "Évaluez la qualité du contenu généré par l'IA en votant"
 
-#: templates/summarizer/arxividpage.html:976
+#: templates/summarizer/arxividpage.html:984
 msgid "Score:"
 msgstr "Note :"
 
-#: templates/summarizer/arxividpage.html:979
+#: templates/summarizer/arxividpage.html:987
 msgid "Why do we need votes?"
 msgstr "Pourquoi avons-nous besoin de votes ?"
 
-#: templates/summarizer/arxividpage.html:980
+#: templates/summarizer/arxividpage.html:988
 msgid ""
 "Votes are used to determine whether we need to re-run our summarizing tools."
 " If the count reaches -10, our tools can be restarted."
@@ -596,7 +601,7 @@ msgstr ""
 "Les votes sont utilisés pour déterminer si nous devons réexécuter nos outils"
 " de synthèse. Si le compte atteint -10, nos outils peuvent être redémarrés."
 
-#: templates/summarizer/arxividpage.html:1005
+#: templates/summarizer/arxividpage.html:1013
 msgid ""
 "The previous summary was created more than a year ago and can be re-run (if "
 "necessary) by clicking on the Run button below."
@@ -604,7 +609,7 @@ msgstr ""
 "Le résumé précédent a été créé il y a plus d'un an et peut être réexécuté "
 "(si nécessaire) en cliquant sur le bouton Exécuter ci-dessous."
 
-#: templates/summarizer/arxividpage.html:1007
+#: templates/summarizer/arxividpage.html:1015
 msgid ""
 "The summaries have many downvotes and can be re-run with our tools if "
 "necessary by clicking on the Run button below."
@@ -612,7 +617,7 @@ msgstr ""
 "Nos résumés ont de nombreux votes négatifs et peuvent être réexécutés avec "
 "nos outils si nécessaire en cliquant sur le bouton Exécuter ci-dessous."
 
-#: templates/summarizer/arxividpage.html:1009
+#: templates/summarizer/arxividpage.html:1017
 msgid ""
 "Some bits of the article are not summarized yet, you can re-run the "
 "summarizing process by clicking on the Run button below."
@@ -621,19 +626,19 @@ msgstr ""
 "relancer le processus de synthèse en cliquant sur le bouton Exécuter ci-"
 "dessous."
 
-#: templates/summarizer/arxividpage.html:1011
+#: templates/summarizer/arxividpage.html:1019
 msgid "Hi, because you are a staff member you can Run the AI tools!"
 msgstr ""
 "Bonjour, parce que vous êtes un membre du personnel, vous pouvez exécuter "
 "les outils d'IA !"
 
-#: templates/summarizer/arxividpage.html:1017
-#: templates/summarizer/arxividpage.html:1145
+#: templates/summarizer/arxividpage.html:1025
+#: templates/summarizer/arxividpage.html:1153
 msgid "Run"
 msgstr "Exécuter"
 
-#: templates/summarizer/arxividpage.html:1021
-#: templates/summarizer/arxividpage.html:1149
+#: templates/summarizer/arxividpage.html:1029
+#: templates/summarizer/arxividpage.html:1157
 msgid ""
 "The license of this specific paper does not allow us to build upon its "
 "content and the summarizing tools will be run using the paper metadata "
@@ -646,25 +651,23 @@ msgstr ""
 "produira quand même un bon résultat, et vous pouvez également essayer nos "
 "outils sur des papiers avec des licences plus ouvertes."
 
-#: templates/summarizer/arxividpage.html:1027
-#| msgid "Latest Papers summarized with our AI tools"
+#: templates/summarizer/arxividpage.html:1035
 msgid "Similar papers summarized with our AI tools"
 msgstr "Articles similaires résumés avec nos outils d'IA"
 
-#: templates/summarizer/arxividpage.html:1044
+#: templates/summarizer/arxividpage.html:1052
 msgid "Search again for closest papers"
 msgstr "Rechercher à nouveau les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:1044
-#| msgid "Search for an article"
+#: templates/summarizer/arxividpage.html:1052
 msgid "Search for closest papers"
 msgstr "Rechercher les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:1053
+#: templates/summarizer/arxividpage.html:1061
 msgid "Look for similar papers (in beta version)"
 msgstr "Recherchez des articles similaires (en version bêta)"
 
-#: templates/summarizer/arxividpage.html:1054
+#: templates/summarizer/arxividpage.html:1062
 msgid ""
 "By clicking on the button above, our algorithm will scan all papers in our "
 "database to find the closest based on the contents of the full papers and "
@@ -680,11 +683,11 @@ msgstr ""
 "obtenir un résultat plus précis pendant que notre base de données "
 "s'agrandit."
 
-#: templates/summarizer/arxividpage.html:1065
+#: templates/summarizer/arxividpage.html:1073
 msgid "There is no existing article with the given arXiv ID:"
 msgstr "Il n'y a aucun article existant avec l'identifiant arXiv donné :"
 
-#: templates/summarizer/arxividpage.html:1065
+#: templates/summarizer/arxividpage.html:1073
 #, python-format
 msgid ""
 " Try again your <a href=\"/%(LANGUAGE_CODE)s/\">search</a> with a new arXiv "
@@ -693,15 +696,15 @@ msgstr ""
 "Réessayez votre <a href=\"/%(LANGUAGE_CODE)s/\">recherche</a> avec un nouvel"
 " identifiant arXiv."
 
-#: templates/summarizer/arxividpage.html:1069
+#: templates/summarizer/arxividpage.html:1077
 msgid "Running our tool to find closest papers"
 msgstr "Exécution de notre outil pour trouver les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:1071
+#: templates/summarizer/arxividpage.html:1079
 msgid "Running summarizing tools on a new article"
 msgstr "Exécution de notre outil de synthèse sur un nouvel article"
 
-#: templates/summarizer/arxividpage.html:1074
+#: templates/summarizer/arxividpage.html:1082
 msgid ""
 "We are now running our AI tools on the requested article. This process may "
 "take a few minutes so please bear with us."
@@ -709,7 +712,7 @@ msgstr ""
 "Nous exécutons maintenant nos outils d'IA sur l'article demandé. Ce "
 "processus peut prendre quelques minutes..."
 
-#: templates/summarizer/arxividpage.html:1076
+#: templates/summarizer/arxividpage.html:1084
 msgid ""
 "This is the first time this article is requested and our AI summarizing "
 "tools have never been run on it. We can run our tools now if you click on "
@@ -721,7 +724,7 @@ msgstr ""
 "maintenant si vous cliquez sur le bouton \"Exécuter\" sur la page mais "
 "assurez-vous d'abord que c'est le bon article."
 
-#: templates/summarizer/arxividpage.html:1082
+#: templates/summarizer/arxividpage.html:1090
 msgid ""
 "You are trying to run too many papers in too short a period of time. Are you"
 " a robot? If not, wait and retry!"
@@ -729,7 +732,7 @@ msgstr ""
 "Vous essayez de faire tourner trop d'articles en trop peu de temps. Êtes-"
 "vous un robot? Sinon, attendez et réessayez!"
 
-#: templates/summarizer/arxividpage.html:1088
+#: templates/summarizer/arxividpage.html:1096
 msgid ""
 "You are limited to running 10 papers in a period of 24 hours. Please come "
 "back tomorrow or contact us if you need to run more articles using our "
@@ -739,33 +742,33 @@ msgstr ""
 "ou contactez-nous si vous avez besoin d'exécuter plus d'articles en "
 "utilisant nos outils."
 
-#: templates/summarizer/arxividpage.html:1094
+#: templates/summarizer/arxividpage.html:1102
 msgid "We are analysing the following arXiv article:"
 msgstr "Nous analysons l'article suivant d'arXiv :"
 
-#: templates/summarizer/arxividpage.html:1133
-#: templates/summarizer/arxividpage.html:1483
+#: templates/summarizer/arxividpage.html:1141
+#: templates/summarizer/arxividpage.html:1495
 msgid "Abstract:"
 msgstr "Résumé :"
 
-#: templates/summarizer/arxividpage.html:1347
+#: templates/summarizer/arxividpage.html:1359
 msgid "Results of the summarizing process for the arXiv paper (1/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (1/4) :"
 
-#: templates/summarizer/arxividpage.html:1355
+#: templates/summarizer/arxividpage.html:1367
 msgid "Results of the summarizing process for the arXiv paper (2/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (2/4) :"
 
-#: templates/summarizer/arxividpage.html:1369
+#: templates/summarizer/arxividpage.html:1381
 msgid "Results of the summarizing process for the arXiv paper (3/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (3/4) :"
 
-#: templates/summarizer/arxividpage.html:1377
+#: templates/summarizer/arxividpage.html:1389
 msgid "Results of the summarizing process for the arXiv paper (4/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (4/4) :"
 
-#: templates/summarizer/arxividpage.html:1465
 #: templates/summarizer/arxividpage.html:1477
+#: templates/summarizer/arxividpage.html:1489
 msgid ""
 "The license of the paper does not allow us to build upon its content and the"
 " summarizing process is here made with the paper metadata rather than the "
@@ -775,19 +778,19 @@ msgstr ""
 "et le processus de synthèse est ici réalisé avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
-#: templates/summarizer/arxividpage.html:1557
+#: templates/summarizer/arxividpage.html:1569
 msgid "AI -"
 msgstr "IA -"
 
-#: templates/summarizer/arxividpage.html:1584
+#: templates/summarizer/arxividpage.html:1596
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr "Erreur: connexion au WebSocket fermée (rechargez la page)."
 
-#: templates/summarizer/arxividpage.html:1659
+#: templates/summarizer/arxividpage.html:1671
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr "Erreur : connexion au WebSocket fermée. Rechargez la page."
 
-#: templates/summarizer/arxividpage.html:1672
+#: templates/summarizer/arxividpage.html:1684
 msgid "You -"
 msgstr "Vous -"
 
