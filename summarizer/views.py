@@ -637,11 +637,15 @@ def tree(request, arxiv_id):
                 # add x and y positions based on distance
                 #x = distance * np.cos(random.random() * np.pi * 2)
                 #y = distance * np.sin(random.random() * np.pi * 2)
+                i=0
                 while True:
+                    i+=1
                     x = distance * np.cos(random.random() * np.pi * 2)
                     y = distance * np.sin(random.random() * np.pi * 2)
                     # check if there are any points within 30px around (x,y)
-                    if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 50 for d in relpapersData):
+                    if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 30 for d in relpapersData):
+                        break
+                    if i==10000:
                         break
 
                 relpapersData.append({
@@ -823,8 +827,11 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         print('in here',request.POST)
         if 'close_button' in request.POST:
             print('ok close')
+            tree = request.POST.get('tree', '1')
+            print('tree',tree)
             stuff_for_frontend.update({
                 'close':True,
+                'treeval':tree
             })
 
         if 'download_pdf' in request.POST:
@@ -1067,8 +1074,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             relpapers=''
             scores=[]
             max_score=0
+            MAX_REL_PAPERS=7
             if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-                relpapers = PaperScore.objects.filter(from_paper=paper,active=True)
+                relpapers = PaperScore.objects.filter(from_paper=paper,active=True)[:MAX_REL_PAPERS]
                 max_score = min(rel.score for rel in relpapers)
                 #for rel in relpapers:
                 #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10

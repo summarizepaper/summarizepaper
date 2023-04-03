@@ -28,11 +28,21 @@ sitemaps = {
     'static': StaticViewSitemap
 }
 
+def get_absolute_url2(obj):
+    return f"/test/{obj.slug}"
+
+
 sitemaps = {
     'arxividpage': GenericSitemap({
         'queryset': ArxivPaper.objects.filter(arxiv_id__isnull=False),
         'date_field': 'updated',
     }, priority=0.9,protocol = 'https'),
+    #'tree': GenericSitemap({
+    #    'queryset': ArxivPaper.objects.filter(arxiv_id__isnull=False),
+    #    'date_field': 'updated',
+        #'location': lambda obj: obj.get_absolute_url2(),
+    #    'location': get_absolute_url2,
+    #}, priority=0.8,protocol = 'https'),
     # START
     'static': StaticViewSitemap,
     # END

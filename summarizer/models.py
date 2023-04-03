@@ -65,8 +65,10 @@ class ArxivPaper(models.Model):
         return self.arxiv_id+' '+self.title
 
     def get_absolute_url(self):
-        return reverse('arxividpage',
-                       args=[str(self.arxiv_id)])
+        return reverse('arxividpage',args=[str(self.arxiv_id)])
+
+    #def get_absolute_url2(self):
+    #    return reverse('tree',args=[str(self.arxiv_id)])
 
 class PaperScore(models.Model):
     id = models.AutoField(primary_key=True)

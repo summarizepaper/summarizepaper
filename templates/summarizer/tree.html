@@ -113,6 +113,36 @@
           text-decoration: underline;
       }
 
+      input[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #3e8e41;
+    }
+
+    #popover2 {
+    display: none;
+    position: fixed;
+    background-color: black;
+    color: white;
+    padding: 10px;
+    z-index: 1;
+    right: 20px;
+  }
+  .center {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   height: 100%;
+ }
     </style>
 {% endblock %}
 
@@ -170,7 +200,7 @@
   {% if  alpaper %}
 
   <div style="text-align: center;margin-top: 40px;">
-  <div style="background-color: #f2f2f2; padding: 20px; border-radius: 10px;">
+  <div style="background-color: #f2f2f2; padding: 20px; border-radius: 10px;" id="closest">
     <p style="font-size: 18px; font-weight: bold; margin-bottom: 10px;"><h2>{% trans 'Explore the paper tree' %}</h2></p>
     <p style="font-size: 16px;">{% trans 'Click on the tree nodes to be redirected to a given paper and access their summaries and virtual assistant' %}</p>
       <div class="paper-resources">
@@ -183,6 +213,23 @@
     </div>
   </div> 
   <div id="graph" style="border: 1px solid #ccc; border-radius: 10px;"></div>
+  <div class="center" style="margin-bottom:20px;">
+    <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="tree" value="0">
+      <input type="submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button" style="background-color: #333;">
+      
+      <p style="text-align: center;">
+      <label style="color: orange;">(Beta)</label>
+      <span id="popover-link2">
+        <i class="fas fa-question-circle"></i>
+      </span></p>
+    </form>
+    <div id="popover2">
+      <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
+      <p>{% trans 'By clicking on the button above, our algorithm will scan all papers in our database to find the closest based on the contents of the full papers and not just on metadata. Please note that it only works for papers that we have generated summaries for and you can rerun it from time to time to get a more accurate result while our database grows.' %}</p>
+    </div>
+  </div>
   {% else %}
   <p class="message">{% trans 'The paper tree for this article is not created yet. To create it, you can run our tools' %} <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}" class="link">{% trans 'on this page' %}</a>.</p>
   {% endif %}
@@ -197,6 +244,20 @@
 
 {% block scripts %}
 {% if alpaper %}
+<script>
+  document.getElementById("popover-link2").addEventListener("mouseover", function(event) {
+    var popover2 = document.getElementById("popover2");
+    popover2.style.display = "block";
+    popover2.style.left = (event.clientX + 20) + "px";
+    popover2.style.top = (event.clientY - 200) + "px";
+  });
+  
+  document.getElementById("popover-link2").addEventListener("mouseout", function() {
+    var popover2 = document.getElementById("popover2");
+    popover2.style.display = "none";
+  });
+  </script>
+
 <script>
 var tooltip = d3.select("body")
   .append("div")
@@ -235,20 +296,6 @@ var tooltip = d3.select("body")
           ${d.main ? '' : `<strong>{% trans 'Score:' %} </strong>${d.score.toFixed(1)}%<br>`}
         </div>`);
 }
-
-/*
-  function showTooltip(event, d) {
-  tooltip.style('opacity', 1)
-    .style('left', (event.pageX + 10) + 'px')
-    .style('top', (event.pageY + 10) + 'px')
-    .style('background-color', 'white')
-    .html(`<div style="padding: 5px">
-          <strong>Title: </strong>${d.title}<br>
-          <strong>Authors: </strong>${d.authors}<br>
-          <strong>Arxiv ID: </strong>${d.arxiv_id}<br>
-          ${d.main ? '' : `<strong>Score: </strong>${d.score.toFixed(1)}%<br>`}
-        </div>`);
-}*/
 
 
 // Define the data for the graph
@@ -322,6 +369,9 @@ circles.append('text')
   const authors = d.authors.split(', ');
   if (authors.length > 2) {
     return `${authors[0]} et al.`;
+  }
+  if (authors.length == 2) {
+    return `${authors[0]} & ${authors[1]}`;
   }
   return `${authors[0]}`;
   })

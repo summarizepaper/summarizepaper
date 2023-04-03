@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-03 14:24+0000\n"
-"PO-Revision-Date: 2023-04-03 14:24+0000\n"
+"POT-Creation-Date: 2023-04-03 19:00+0000\n"
+"PO-Revision-Date: 2023-04-03 19:04+0000\n"
 "Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -668,8 +668,9 @@ msgid "Similar papers summarized with our AI tools"
 msgstr "Articles similaires résumés avec nos outils d'IA"
 
 #: templates/summarizer/arxividpage.html:1046
-msgid "Navigate similar papers with a "
-msgstr "Naviguez dans des papiers similaires avec une "
+#| msgid "Navigate similar papers with a "
+msgid "Navigate through even more similar papers through a "
+msgstr "Naviguez à travers encore plus d'articles similaires en utilisant une"
 
 #: templates/summarizer/arxividpage.html:1047
 msgid "tree representation"

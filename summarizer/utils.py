@@ -259,8 +259,9 @@ def storeclosest(arxiv_id,ids_and_scores):
     #make other related papers inactive
     oldpapers = PaperScore.objects.filter(from_paper=paper,active=True)
     for oldpap in oldpapers:
-        oldpap.active=False
-        oldpap.save()
+        #oldpap.active=False
+        #oldpap.save()
+        oldpap.delete()
 
     # create PaperScore objects for each related paper with its associated score
     for score, arxiv_id2 in scores_and_arxiv_ids:

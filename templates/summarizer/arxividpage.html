@@ -243,7 +243,7 @@
   }
   input[type='submit'] {
    padding: 10px 20px;
-   font-size: 20px;
+   font-size: 18px;
  }
 
  @media only screen and (max-width: 600px) {
@@ -1043,7 +1043,7 @@ submitButton.addEventListener('click', () => {
       {% endfor %}
     </div>
     <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-      <p style="display: inline-block;">{% trans 'Navigate similar papers with a ' %}</p>
+      <p style="display: inline-block;">{% trans 'Navigate through even more similar papers through a ' %}</p>
       <a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}" style="display: inline-block; text-decoration: none; background-color: #007bff; color: #fff; padding: 5px 10px; border-radius: 5px;">{% trans 'tree representation' %}</a>
     </div>
       </section>
@@ -1338,9 +1338,14 @@ submitButton.addEventListener('click', () => {
         {% if run2 or run or close %}
         var pathname = window.location.pathname;
 
-        {% if close %}
+        {% if close and treeval == '1' %}
         pathname = pathname.replace(/\/$/, '') + '#closest';
         {% endif %}
+
+        {% if close and treeval == '0' %}
+        pathname = pathname.replace('arxiv-id', 'tree').replace(/\/$/, '') + '#closest';;
+        {% endif %}
+
         // Replace all occurrences of '--' with '/'
         pathname = pathname.replace(/--/g, '/');
 
