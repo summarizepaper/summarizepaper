@@ -409,7 +409,7 @@ async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
     print('right')
     db=''
     async for paper in allpapers:
-        if paper != mainpaper:
+        if paper != mainpaper and paper.arxiv_id.split("v")[0] != mainpaper.arxiv_id.split("v")[0]:
             print('pap',paper)
             c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
 

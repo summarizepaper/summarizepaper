@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-02 20:55+0000\n"
+"POT-Creation-Date: 2023-04-03 07:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1057,45 +1057,50 @@ msgid ""
 "you need to inform your research and stay ahead of the curve."
 msgstr ""
 
-#: templates/summarizer/search_results.html:186
+#: templates/summarizer/search_results.html:187
 msgid "Search Results for"
 msgstr ""
 
 #: templates/summarizer/search_results.html:189
-#: templates/summarizer/search_results.html:224
-#: templates/summarizer/search_results.html:227
+msgid ""
+"You need to fill in the search field to get a response! Go back and do so..."
+msgstr ""
+
+#: templates/summarizer/search_results.html:193
+#: templates/summarizer/search_results.html:228
+#: templates/summarizer/search_results.html:231
 msgid "Go back"
 msgstr ""
 
-#: templates/summarizer/search_results.html:201
+#: templates/summarizer/search_results.html:205
 msgid "Category:"
 msgstr ""
 
-#: templates/summarizer/search_results.html:210
+#: templates/summarizer/search_results.html:214
 msgid "first"
 msgstr ""
 
-#: templates/summarizer/search_results.html:211
+#: templates/summarizer/search_results.html:215
 msgid "previous"
 msgstr ""
 
-#: templates/summarizer/search_results.html:215
+#: templates/summarizer/search_results.html:219
 msgid "Page"
 msgstr ""
 
-#: templates/summarizer/search_results.html:215
+#: templates/summarizer/search_results.html:219
 msgid "of"
 msgstr ""
 
-#: templates/summarizer/search_results.html:219
+#: templates/summarizer/search_results.html:223
 msgid "next"
 msgstr ""
 
-#: templates/summarizer/search_results.html:220
+#: templates/summarizer/search_results.html:224
 msgid "last"
 msgstr ""
 
-#: templates/summarizer/search_results.html:227
+#: templates/summarizer/search_results.html:231
 msgid "No results found"
 msgstr ""
 

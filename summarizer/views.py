@@ -484,19 +484,6 @@ def summarize(request):
     activated = request.GET.get('activated', False)
     latestpapers=SummaryPaper.objects.filter(lang=lang).exclude(summary__exact='', notes__exact='', lay_summary__exact='', blog__exact='', keywords__exact='', summary__isnull=False, notes__isnull=False, lay_summary__isnull=False, blog__isnull=False, keywords__isnull=False).order_by('-updated')[:7]
     print('latestpapers',latestpapers)
-    '''
-    class SummaryPaper(models.Model):
-        id = models.AutoField(primary_key=True)
-        paper = models.ForeignKey(ArxivPaper, on_delete=models.CASCADE)
-        summary = models.TextField(blank=True, null=True)
-        notes = models.TextField(blank=True, null=True)
-        lay_summary = models.TextField(blank=True, null=True)
-        blog = models.TextField(blank=True, null=True)
-        keywords = models.TextField(blank=True, null=True)
-        lang = models.CharField(max_length=10,default='en')
-        created = models.DateTimeField(auto_now_add=True)
-        updated = models.DateTimeField(auto_now=True)
-    '''
 
     stuff_for_frontend.update({
         'activated':activated,

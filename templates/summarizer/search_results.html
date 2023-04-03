@@ -183,7 +183,11 @@
 {% block header_class %}{% endblock %}
 
 {% block content %}
-  <h1>{% trans 'Search Results for' %} "{{ query }}"</h1>
+  {% if query %}
+    <h1>{% trans 'Search Results for' %} -- {{ query }} --</h1>
+  {% else %}
+    <h1>{% trans 'You need to fill in the search field to get a response! Go back and do so...' %}</h1>
+  {% endif %}
   <div class="search-results">
     {% if page_obj %}
     <p><a href="/{{ LANGUAGE_CODE }}/" class="back-link">{% trans 'Go back' %}</a></p>
