@@ -182,7 +182,7 @@
         </div>
     </div>
   </div> 
-  <div id="graph"></div>
+  <div id="graph" style="border: 1px solid #ccc; border-radius: 10px;"></div>
   {% else %}
   <p class="message">{% trans 'The paper tree for this article is not created yet. To create it, you can run our tools' %} <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}" class="link">{% trans 'on this page' %}</a>.</p>
   {% endif %}
@@ -229,10 +229,10 @@ var tooltip = d3.select("body")
     .style('top', yPos + 'px')
     .style('background-color', 'white')
     .html(`<div style="padding: 5px">
-          <strong>Title: </strong>${d.title}<br>
-          <strong>Authors: </strong>${d.authors}<br>
-          <strong>Arxiv ID: </strong>${d.arxiv_id}<br>
-          ${d.main ? '' : `<strong>Score: </strong>${d.score.toFixed(1)}%<br>`}
+          <strong>{% trans 'Title:' %} </strong>${d.title}<br>
+          <strong>{% trans 'Authors:' %} </strong>${d.authors}<br>
+          <strong>{% trans 'Arxiv ID:' %} </strong>${d.arxiv_id}<br>
+          ${d.main ? '' : `<strong>{% trans 'Score:' %} </strong>${d.score.toFixed(1)}%<br>`}
         </div>`);
 }
 

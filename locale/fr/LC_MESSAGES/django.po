@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-03 14:14+0000\n"
-"PO-Revision-Date: 2023-04-03 14:15+0000\n"
+"POT-Creation-Date: 2023-04-03 14:24+0000\n"
+"PO-Revision-Date: 2023-04-03 14:24+0000\n"
 "Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -419,7 +419,7 @@ msgid "Summaries already available in other languages:"
 msgstr "Résumés déjà disponibles dans d'autres langues :"
 
 #: templates/summarizer/arxividpage.html:811
-#: templates/summarizer/tree.html:130
+#: templates/summarizer/tree.html:130 templates/summarizer/tree.html:233
 msgid "Authors:"
 msgstr "Auteurs :"
 
@@ -597,6 +597,7 @@ msgid "Assess the quality of the AI-generated content by voting"
 msgstr "Évaluez la qualité du contenu généré par l'IA en votant"
 
 #: templates/summarizer/arxividpage.html:984
+#: templates/summarizer/tree.html:235
 msgid "Score:"
 msgstr "Note :"
 
@@ -1500,6 +1501,14 @@ msgstr ""
 #: templates/summarizer/tree.html:187
 msgid "on this page"
 msgstr "sur cette page"
+
+#: templates/summarizer/tree.html:232
+msgid "Title:"
+msgstr "Titre :"
+
+#: templates/summarizer/tree.html:234
+msgid "Arxiv ID:"
+msgstr "ID Arxiv :"
 
 #~ msgid "AIer"
 #~ msgstr "AIer"
