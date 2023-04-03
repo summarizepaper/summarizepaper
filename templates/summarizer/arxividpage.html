@@ -793,7 +793,7 @@
       <a href="#results" onclick="switchTab(0)">{% trans 'Comprehensive summary' %}</a>,
       <a href="#results" onclick="switchTab(2)">{% trans 'Lay summary' %}</a>,
       <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a>;
-      {% trans ' or Ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
+      {% trans ' or ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
   </div>
 </div>
   {% else %}
@@ -839,7 +839,7 @@
     {% endif %}
     <div class="paper-details">
     {% if paper.abstract %}
-      <p style="text-align: justify;"><strong>Abstract:</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
+      <p style="text-align: justify;"><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
     {% endif %}
     </div>
     {% if paper.published_arxiv %}
@@ -1042,7 +1042,11 @@ submitButton.addEventListener('click', () => {
       </div>
       {% endfor %}
     </div>
-  </section>
+    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+      <p style="display: inline-block;">{% trans 'Navigate similar papers with a ' %}</p>
+      <a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}" style="display: inline-block; text-decoration: none; background-color: #007bff; color: #fff; padding: 5px 10px; border-radius: 5px;">{% trans 'tree representation' %}</a>
+    </div>
+      </section>
   {% endif %}
 
   <div class="center" style="margin-bottom:20px;">
@@ -1070,7 +1074,7 @@ submitButton.addEventListener('click', () => {
 {% else %}
 
 {% if exist == 0 %}
-<p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}.{% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
+<p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}. {% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
   {% if close %}

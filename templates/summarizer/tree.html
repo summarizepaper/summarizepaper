@@ -2,10 +2,11 @@
 {% load static %}
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
+{% load dash_slash %}
 
-{% block title %} {% trans 'AIer' %} {% endblock %}
+{% block title %} {% trans 'SummarizePaper Tree - Discovering Connections between Research Papers using AI' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Ourh with our cutting-edge technology.' %}" />
+  <meta name="description" content="{% trans 'Our website, SummarizePaper, leverages the power of artificial intelligence to help you explore and navigate the vast landscape of research papers. With our interactive visual tool, you can easily discover connections between related papers, visualize how they are connected, and explore the relationships between topics. Whether you are a researcher, student, or simply curious about the latest advancements in a field, SummarizePaper can help you make sense of the complex web of information in the world of academia.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/tree" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.3/d3.min.js"></script>
 
@@ -23,56 +24,259 @@
       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
     </script>
   
+    <style>
+      .main-content2 {
+     padding: 16px;
+   }
+
+   .title {
+     font-size: 2xl;
+     font-weight: bold;
+     font-family: sans-serif;
+     margin-bottom: 12px;
+   }
+
+   .subtitle {
+     font-size: 1xl;
+     font-family: serif;
+     margin-bottom: 18px;
+   }
+
+   .info-block {
+     display: flex;
+     align-items: center;
+     margin-bottom: 6px;
+   }
+
+   .info-icon {
+     width: 16px;
+     height: 16px;
+     margin-right: 6px;
+   }
+
+   .info-text {
+     font-size: 14px;
+     font-weight: normal;
+     margin-right: 6px;
+     flex-grow: 1;
+     text-overflow: ellipsis;
+     overflow: hidden;
+   }
+
+   @media (min-width: 768px) {
+     .main-content2 {
+       padding: 16px 32px;
+     }
+
+     .title {
+       font-size: 4xl;
+     }
+     .message-tabs li {
+       font-size: 24px!important;
+     }
+   }
+   .message {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 10px;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .link {
+      color: #4285f4;
+      text-decoration: none;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+    .paper-resources {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      color: #333;
+      background-color: #f8f9a0;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 5px;
+      display: inline-block;
+      }
+
+      .paper-resources a {
+          color: #007bff;
+          text-decoration: none;
+      }
+
+      .paper-resources a:hover {
+          text-decoration: underline;
+      }
+
+    </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
 
 {% block content %}
-<p style="margin-left:20px;">Hello, this page is under construction, come back later...</p>
+<div class="main-content2">
 
-{% if 1 == 0 %}
-<div id="graph"></div>
-<p>{{ arxiv_id }}</p>
+{% if exist != 0 %}
+{% if paper.title %}
+    <div class="title"><h1>{{ paper.title }}</h1></div>
+  {% endif %}
+  <div class="subtitle">
+    {% if paper.authors.all %}
+      <p><b>{% trans 'Authors:' %}</b>
+        {% for author in paper.authors.all %}
+          {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% endif %}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+    {% endif %}
+  </div>
+  {% if paper.journal_ref %}
+  <div class="info-block">
+    <div class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</div>
+  </div>
+  {% endif %}
+  <div class="info-block">
+    <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id|dash_slash }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
+  </div>
+  {% if paper.comments %}
+  <div class="info-block">
+    <div class="info-text"><i class="fas fa-comment"></i> {{ paper.comments }}</div>
+  </div>
+  {% endif %}
+  {% if paper.license %}
+  <div class="info-block">
+    <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
+  </div>
+  {% else %}
+  <div class="info-block">
+    <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
+  </div>
+  {% endif %}
+  <div class="paper-details">
+  {% if paper.abstract %}
+    <p style="text-align: justify;"><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
+  {% endif %}
+  </div>
+  {% if paper.published_arxiv %}
+  <div class="info-block">
+    <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
+  </div>
+  {% endif %}
+
+  {% if  alpaper %}
+
+  <div style="text-align: center;margin-top: 40px;">
+  <div style="background-color: #f2f2f2; padding: 20px; border-radius: 10px;">
+    <p style="font-size: 18px; font-weight: bold; margin-bottom: 10px;"><h2>{% trans 'Explore the paper tree' %}</h2></p>
+    <p style="font-size: 16px;">{% trans 'Click on the tree nodes to be redirected to a given paper and access their summaries and virtual assistant' %}</p>
+      <div class="paper-resources">
+        <div class="paper-resources-text">
+        <span style="float: left;">{% trans 'Also access our AI generated' %}
+        <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}#results">{% trans 'Summaries' %}</a>,
+        {% trans ' or ask questions about this paper to our' %} <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}#assistant">{% trans 'AI assistant' %}</a></span>.
+        </div>
+        </div>
+    </div>
+  </div> 
+  <div id="graph"></div>
+  {% else %}
+  <p class="message">{% trans 'The paper tree for this article is not created yet. To create it, you can run our tools' %} <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}" class="link">{% trans 'on this page' %}</a>.</p>
+  {% endif %}
+{% else %}
+<p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}. {% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% endif %}
+
+
+</div>
 {% endblock %}
 
 
 {% block scripts %}
-
+{% if alpaper %}
 <script>
 var tooltip = d3.select("body")
   .append("div")
   .style("position", "absolute")
   .style("z-index", "10")
   .style("visibility", "hidden")
-  .text("a simple tooltip");
 
-function showTooltip(event, d) {
-tooltip.style('opacity', 1)
-  .style('left', (event.pageX + 10) + 'px')
-  .style('top', (event.pageY + 10) + 'px')
-  .html(`<strong>Title: </strong>${d.title}<br>
-        <strong>Arxiv ID: </strong>${d.arxiv_id}<br>
-        <strong>Score: </strong>${d.score.toFixed(2)}`);
+  function showTooltip(event, d) {
+  // Get tooltip dimensions
+  const tooltipWidth = tooltip.node().offsetWidth;
+  const tooltipHeight = tooltip.node().offsetHeight;
+
+  // Get mouse position and adjust tooltip position based on screen bounds
+  let xPos = event.pageX + 10;
+  let yPos = event.pageY + 10;
+
+  // Check if tooltip goes off right side of screen
+  if (xPos + tooltipWidth > window.innerWidth) {
+    xPos = xPos;//window.innerWidth - tooltipWidth - 10;
+  }
+
+  // Check if tooltip goes off bottom side of screen
+  if (yPos + tooltipHeight > window.innerHeight) {
+    yPos = yPos;//window.innerHeight - tooltipHeight - 10;
+  }
+
+  // Show tooltip and position it correctly
+  tooltip.style('opacity', 1)
+    .style('left', xPos + 'px')
+    .style('top', yPos + 'px')
+    .style('background-color', 'white')
+    .html(`<div style="padding: 5px">
+          <strong>Title: </strong>${d.title}<br>
+          <strong>Authors: </strong>${d.authors}<br>
+          <strong>Arxiv ID: </strong>${d.arxiv_id}<br>
+          ${d.main ? '' : `<strong>Score: </strong>${d.score.toFixed(1)}%<br>`}
+        </div>`);
 }
+
+/*
+  function showTooltip(event, d) {
+  tooltip.style('opacity', 1)
+    .style('left', (event.pageX + 10) + 'px')
+    .style('top', (event.pageY + 10) + 'px')
+    .style('background-color', 'white')
+    .html(`<div style="padding: 5px">
+          <strong>Title: </strong>${d.title}<br>
+          <strong>Authors: </strong>${d.authors}<br>
+          <strong>Arxiv ID: </strong>${d.arxiv_id}<br>
+          ${d.main ? '' : `<strong>Score: </strong>${d.score.toFixed(1)}%<br>`}
+        </div>`);
+}*/
+
+
 // Define the data for the graph
-const data = [
-  { arxiv_id: 'paper1', title: 'title1', score: 0.8, x: 50, y: 50 },
-  { arxiv_id: 'paper2', title: 'title2', score: 0.6, x: 100, y: 100 },
-  { arxiv_id: 'paper3', title: 'title3', score: 0.4, x: 150, y: 150 }
-];
+var data = JSON.parse('{{ relpapers_json|escapejs }}');
+//console.log(data)
 
-const maxScore=2;
+function drawGraph() {
 
-
+// Calculate maximum distance
+var maxDistance = 0;
+for (var i = 0; i < data.length; i++) {
+  var x = data[i].x;
+  var y = data[i].y;
+  var distance = Math.sqrt(x * x + y * y);
+  if (distance > maxDistance) {
+    maxDistance = distance;
+  }
+}
 
 // Define the dimensions and margins of the graph
 const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-const width = 500 - margin.left - margin.right;
-const height = 500 - margin.top - margin.bottom;
+const width = window.innerWidth - margin.left - margin.right;
+const height = window.innerHeight - margin.top - margin.bottom;
+
 
 // Append the SVG object to the graph div
-const svg = d3.select('#graph')
+d3.select('#graph svg').remove();
+var svg = d3.select('#graph')
   .append('svg')
   .attr('width', width + margin.left + margin.right)
   .attr('height', height + margin.top + margin.bottom)
@@ -80,17 +284,31 @@ const svg = d3.select('#graph')
   .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
 // Define the scales for the x and y axes
+let maxY = d3.max(data, d => d.y);
+let minY = d3.min(data, d => d.y);
+
 const xScale = d3.scaleLinear()
-  .domain([0, 200])
-  .range([0, width]);
+.domain([-maxDistance-20, maxDistance+20])
+.range([0, width]);
 
 const yScale = d3.scaleLinear()
-  .domain([0, 200])
+  .domain([minY-40, maxY+40])
   .range([height, 0]);
 
-const rScale = d3.scaleLinear()
-.domain([0, maxScore])
-.range([5, 30]);
+
+// Add the lines to connect the papers
+svg.selectAll('line')
+.data(data)
+.enter()
+.filter(d => !d.main)
+.append('line')
+.attr('x1', d => xScale(d.x))
+.attr('y1', d => yScale(d.y)-10)
+.attr('x2', d => xScale(data[0].x))
+.attr('y2', d => yScale(data[0].y)+10)
+.style('stroke', 'gray')
+.style('stroke-width', d => 5 )
+.style('opacity', d => 0.2 );
 
 // Add the circles for each paper
 const circles = svg.selectAll('g')
@@ -99,51 +317,44 @@ const circles = svg.selectAll('g')
 .append('g')
 .attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`);
 
-circles.append('circle')
-.attr('r', d => rScale(d.score))
-.attr('fill', 'blue')
-.attr('stroke', 'white')
-.attr('stroke-width', '2px');
-
 circles.append('text')
-.text(d => `Arxiv ID: ${d.arxiv_id}\nScore: ${d.score}`)
-.attr('text-anchor', 'middle')
-.attr('dy', 20);
+  .text(d => {
+  const authors = d.authors.split(', ');
+  if (authors.length > 2) {
+    return `${authors[0]} et al.`;
+  }
+  return `${authors[0]}`;
+  })
+  .attr('text-anchor', 'middle')
+  .attr('alignment-baseline', 'middle')
+  .style('fill', '#000')
+  .style('font-size', '14px')
+  .style('font-family', 'Arial')
+  .each(function(d) {
+    // Get the bounding box of the text element
+    const bbox = this.getBBox();
+    // Add a rectangle behind the text to improve readability
+    d3.select(this.parentNode)
+      .insert('rect', ':first-child')
+      .attr('x', -bbox.width / 2 - 2)
+      .attr('y', -bbox.height / 2 - 2)
+      .attr('width', bbox.width + 4)
+      .attr('height', bbox.height + 4)
+      .style('fill', '#fff')
+      .style('stroke', d.main ? 'red' : '#000') // add red stroke if data.main is true
+      .style('stroke-width', d.main ? '2px' : '1px');
+      });
 
 // Add mouseover and mouseout events to the circles
-circles.on("mouseover", function(){return tooltip.style("visibility", "visible");})
-       .on("mousemove", function(){return tooltip.style("top",
-          (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
+circles.on("mouseover", function(){d3.select(this).style("cursor", "pointer"); return tooltip.style("visibility", "visible");})
+       .on("mousemove", function(event, d){return showTooltip(event, d);})
        .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
 
-/*.on('mouseover', function(event, d) {
-// Change the circle fill color on mouseover
-d3.select(this)
-  .transition()
-  .duration(200)
-  .attr('fill', 'red');
-
-showTooltip(d3.event, d);
-})
-.on('mouseout', function(event, d) {
-  // Hide the tooltip on mouseout
-  tooltip.transition()
-    .duration(500)
-    .style('opacity', 0);
-  // Change the circle fill color on mouseout
-  d3.select(this)
-    .transition()
-    .duration(200)
-    .attr('fill', 'blue');
-})
-  .on('click', function(event, d) {
-    // Redirect to another URL on click
-    window.location.href = `https://example.com/paper/${d.arxiv_id}`;
-  })
-  .append('title') // Add a title element for each circle
-  .text(d => d.title); // Set the text of the title element to the paper title
-*/
- 
+circles.on('click', function(event,d) {
+  //console.log(d);
+  //alert('ok');
+  window.open(window.location.origin + '/' + `${d.lang}` + '/arxiv-id/' + `${d.arxiv_id}`, '_blank');
+});
 
   // Add the text for each paper title
 svg.selectAll('text.title')
@@ -155,21 +366,19 @@ svg.selectAll('text.title')
   .attr('y', d => yScale(d.y))
   .style('display', 'none')
   .text(d => d.title);
+}
 
-// Add the lines to connect the papers
-svg.selectAll('line')
-.data(data)
-.enter()
-.append('line')
-.attr('x1', d => xScale(d.x))
-.attr('y1', d => yScale(d.y))
-.attr('x2', d => xScale(data[0].x))
-.attr('y2', d => yScale(data[0].y))
-.style('stroke', 'gray')
-.style('stroke-width', d => 5 * (1 - d.score))
-.style('opacity', d => 0.2 + d.score);
+drawGraph();
 
+  function handleResize() {
+  // Redraw the graph with the new dimensions and scales
+  drawGraph();
+}
+
+
+// Attach the handleResize function to the resize event
+window.addEventListener('resize', handleResize);
 
   </script>
-  
+  {% endif %}
 {% endblock %}

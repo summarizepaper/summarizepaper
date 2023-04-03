@@ -572,9 +572,156 @@ def tree(request, arxiv_id):
 
     stuff_for_frontend = {"arxiv_id": arxiv_id,"language":lang}
 
-    alpaper=True
+    paper=''
+    cc_format=''
+
+    if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+        print('dejab')
+        paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
+
+        url = paper.license
+        license = ''
+        if url != '' and url != None:
+            parts = url.split('/')
+            print('parts',parts)
+            license = parts[-3]
+            version = parts[-2]
+            if license.upper() != "NONEXCLUSIVE-DISTRIB":
+                cc_format = 'CC ' + license.upper() + ' ' + version
+            else:
+                cc_format = license.upper() + ' ' + version
+
+        alpaper=True
+        relpapers=''
+        scores=[]
+        max_score=0
+        if PaperScore.objects.filter(from_paper=paper,active=True).exists():
+            relpapers = PaperScore.objects.filter(from_paper=paper,active=True)
+            relpapersData = []
+            import numpy as np
+            import random
+
+            MAX_AUTHORS = 5
+
+            first_author = paper.authors.first()
+            author_name = first_author.name if first_author else 'Unknown Author'
+
+            paper_authors = paper.authors.all()
+            author_names = ', '.join([author.name for author in paper_authors[:MAX_AUTHORS]])
+            if len(paper_authors) > MAX_AUTHORS:
+                author_names += '...'
+
+            relpapersData.append({
+                    'arxiv_id': paper.arxiv_id,
+                    'title': paper.title,
+                    'score': 0.2*10,
+                    'lang':lang,
+                    'x': 50,
+                    'y': 10,
+                    'first_author': author_name,
+                    'authors': author_names,
+                    'main':True
+                })
+
+            for relpaper in relpapers:
+                first_author = relpaper.to_paper.authors.first()
+                author_name = first_author.name if first_author else 'Unknown Author'
+                paper_authors = relpaper.to_paper.authors.all()
+                author_names = ', '.join([author.name for author in paper_authors[:MAX_AUTHORS]])
+                if len(paper_authors) > MAX_AUTHORS:
+                    author_names += ', ...'
+                #author_names = ', '.join([author.name for author in paper_authors])
+                #author_names = ', '.join([a.name for a in relpaper.to_paper.authors])
+                print('aut',author_names)
+                distance = 100 * (relpaper.score) + 50.
+                # add x and y positions based on distance
+                #x = distance * np.cos(random.random() * np.pi * 2)
+                #y = distance * np.sin(random.random() * np.pi * 2)
+                while True:
+                    x = distance * np.cos(random.random() * np.pi * 2)
+                    y = distance * np.sin(random.random() * np.pi * 2)
+                    # check if there are any points within 30px around (x,y)
+                    if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 50 for d in relpapersData):
+                        break
+
+                relpapersData.append({
+                    'arxiv_id': relpaper.to_paper.arxiv_id,
+                    'title': relpaper.to_paper.title,
+                    'score': (1.-relpaper.score)*100,
+                    'lang':lang,
+                    'x': x,
+                    'y': y,
+                    'first_author': author_name,
+                    'authors': author_names,
+                    'main':False
+                })
+
+           
+            # Convert the list of dictionaries to a JSON string
+            relpapers_json = json.dumps(relpapersData)
+
+            max_score = min(rel.score for rel in relpapers)
+            #for rel in relpapers:
+            #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
+            for pap in relpapers:
+                newscore = (1.-pap.score)*100
+                newscore = "{:.1f}".format(newscore)
+                scores.append(newscore)
+            stuff_for_frontend.update({
+                'relpapers':relpapers,
+                'max_score':str(max_score*10),
+                'relpapers_json':relpapers_json,
+                'scores':scores,
+            })
+
+    else:
+        alpaper=False
+        arxiv_detailsf=asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+        exist=arxiv_detailsf[0]
+        #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
+        if arxiv_detailsf[0] == 0:
+            stuff_for_frontend.update({
+                'exist':exist,
+            })
+        else:
+            arxiv_details=arxiv_detailsf[1:]
+
+            #[authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published_datetime, journal_ref, comments]
+            keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments', 'license']
+
+            arxiv_dict = dict(zip(keys, arxiv_details))
+            print('jfgh',arxiv_detailsf)
+            published_datetime = datetime.strptime(arxiv_dict['published_arxiv'], '%Y-%m-%dT%H:%M:%SZ')
+
+            arxiv_dict['published_arxiv']=published_datetime
+
+            url = arxiv_dict['license']
+            cc_format=''
+            license=''
+            if url != '':
+                parts = url.split('/')
+                print('parts',parts)
+                license = parts[-3]
+                version = parts[-2]
+                if license.upper() != "NONEXCLUSIVE-DISTRIB":
+                    cc_format = 'CC ' + license.upper() + ' ' + version
+                else:
+                    cc_format = license.upper() + ' ' + version
+
+            public=False
+            #print('lo',license.upper())
+            if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
+                public=True
+                print('pub2')
+
+            print(cc_format) # Output: CC BY-NC-SA 4.0
+            paper=arxiv_dict
+
+
     stuff_for_frontend.update({
         'alpaper':alpaper,
+        'cc_format':cc_format,
+        'paper':paper,
     })
 
     return render(request, "summarizer/tree.html", stuff_for_frontend)
