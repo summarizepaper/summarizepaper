@@ -1876,41 +1876,11 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         #print('response 5', response5.json())
         response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
-        '''
-        async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}) as response:
-                try:
-                    print('in try5',response)
-                    if response.status != 200:
-                        print("in5 ! 200")
-                        raise Exception(f"Failed to summarize text5: {response.text}")
-                except Exception as e:
-                    print('in redirect5')
-                    # Redirect to the arxividpage and pass the error message
-                    return {
-                        "error_message": str(e),
-                    }
-                response5 = await response.json()
-        '''
+        
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
-        '''
-        async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}) as response:
-                try:
-                    print('in try5',response)
-                    if response.status != 200:
-                        print("in5 ! 200")
-                        raise Exception(f"Failed to summarize text5: {response.text}")
-                except Exception as e:
-                    print('in redirect5')
-                    # Redirect to the arxividpage and pass the error message
-                    return {
-                        "error_message": str(e),
-                    }
-                response5 = await response.json()
-        '''
+       
         #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
@@ -1933,85 +1903,87 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     else:
         blog_article = response5["choices"][0]["text"]#.strip().split("\n")
 
-    #print('blog article',blog_article)
-    #sentences = nltk.sent_tokenize(blog_article)
-
-    # Filter out sentence fragments
-    #blog_article = [s for s in sentences if s.endswith((".", "!", "?"))]
-
-    # Print the full sentences
-    #for s in final_summarized_text:
-    #    print(s)
-    '''
-    import html
-
-    #blog_article = ' '.join(blog_article)
-    blog_article = html.unescape(blog_article)
-    blog_article = blog_article.rstrip().lstrip()
-    blog_article = blog_article.replace('< /p >','</p>').replace('< p >','<p>').replace('< /P >','</p>').replace('< P >','<P>')
-    blog_article = blog_article.replace('< /strong >','</strong>').replace('< strong >','<strong>').replace('< Strong >','<strong>').replace('< /Strong >','</strong>')
-    blog_article = blog_article.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>')
-    blog_article = blog_article.replace('< /li >','</li>').replace('< li >','<li>').replace('< LI >','<li>').replace('< /LI >','</li>').replace('< /lii >','</li>').replace('< lii >','<li>')
-    blog_article = blog_article.replace('< ul >','<ul>').replace('< /ul >','</ul>').replace('< UL >','<ul>').replace('< /UL >','</ul>')
-    blog_article = blog_article.replace('< em >','<em>').replace('< /em >','</em>').replace('< EM >','<em>').replace('< /EM >','</em>')
-
-    print('blog article after',blog_article)
-
-
-    # Parse the blog string using BeautifulSoup
-    soup = BeautifulSoup(blog_article, 'html5lib')#lxml devrait etre meilleur à tester ou html5lib plus souple?
-
-    for attr in ['head','html','body']:
-        if hasattr(soup, attr):
-            getattr(soup, attr).unwrap()
-
-    # Find all HTML tags in the blog
-    tags = soup.findAll()
-    print('all tags',tags)
-
-    # Check the validity of each tag and correct the errors
-    for tag in tags:
-        # Get the name of the tag and convert it to lowercase
-        tag_name = tag.name.lower()
-        
-        # Find all h1 tags and replace them with h2 tags
-        if tag_name=='h1':
-            print('ta',tag_name)
-            tag.name = 'h2'
-            tag['style'] = 'font-size:24px;'
-
     
-    if soup.head:
-        head_tag = soup.head.extract()
-        print('head',head_tag)
-    # Get the contents within the body tag
-    if soup.body:
-        print('soup',soup.body)
-        body_contents = soup.body.contents#attention ca retire les commentaires ici voir pk <!-- Line Break --> turns into Line break
-        print('db',body_contents)
-
-        # Combine the contents into a single string
-        body_string = ''.join(str(content) for content in body_contents)
-        blog_article=body_string
-        #soup2 = BeautifulSoup(body_string, 'html5lib')
-        print('dd',body_string)
-
-    else:
-        print('else')
-        #soup2=soup
-        blog_article=soup.prettify()
-        # Print the resulting string
-    '''
-
-    #blog_article=soup.prettify()
-
     #blog_article=soup2.prettify()#turn < p > into &lt; p &gt; check why
     print('ba',blog_article)
     blog_article = blog_article.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>').replace('</ h2 >','</h2>').replace('</ h2>','</h2>')
     blog_article = blog_article.replace('< /h3 >','</h3>').replace('< h3 >','<h3>').replace('< H3 >','<h3>').replace('< /H3 >','</h3>').replace('</ h3 >','</h3>').replace('</ h3>','</h3>')
-
+    blog_article = blog_article.rstrip().lstrip()
 
     return blog_article
+
+async def refine_blog_article(arxiv_id, language, roughblog, api_key):
+    li = get_language_info(language)
+    language2 = li['name']
+    print('language2',language2)
+
+    prompt6 = """
+         Improve the text AND remove all unfinished sentences AND make sure there are only <h2> and <h3> HTML tags used: {}
+
+    """.format(roughblog)
+
+    if language != 'en':
+        prompt6 += "THE ANSWER SHOULD BE IN "+language2
+
+    print('prompt6',prompt6)
+
+    headers6 = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    model_forced="text-davinci-003"#=model
+
+    if model_forced=="gpt-3.5-turbo":
+        endpoint = "https://api.openai.com/v1/chat/completions"
+
+        print('prompt5555555',prompt6)
+        mes = [
+            {"role": "system", "content": "You are a blog writer."},
+            {"role": "user", "content": '{text}'.format(text=prompt6)}
+        ]
+        print('messssssssssssssss',mes)
+
+        #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        #print('response 5', response5.json())
+        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+
+        
+    else:
+        endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
+
+       
+        #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+
+    try:
+        print('in try6',response6)
+        if response6.status_code != 200:
+            print("in5 ! 200")
+            raise Exception(f"Failed to summarize text5: {response6.text}")
+    except Exception as e:
+        print('in redirect6')
+        # Redirect to the arxividpage and pass the error message
+        return {
+            "error_message": str(e),
+        }
+
+    response6=response6.json()
+    print('resp6',response6)
+    #if response4.status_code != 200:
+    #    raise Exception(f"Failed to extract key points: {response4.text}")
+    if model_forced=="gpt-3.5-turbo":
+        blog_article2 = response6["choices"][0]["message"]["content"]#.strip().split("\n")
+    else:
+        blog_article2 = response6["choices"][0]["text"]#.strip().split("\n")
+
+    #blog_article=soup2.prettify()#turn < p > into &lt; p &gt; check why
+    print('ba2',blog_article2)
+    blog_article2 = blog_article2.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>').replace('</ h2 >','</h2>').replace('</ h2>','</h2>')
+    blog_article2 = blog_article2.replace('< /h3 >','</h3>').replace('< h3 >','<h3>').replace('< H3 >','<h3>').replace('< /H3 >','</h3>').replace('</ h3 >','</h3>').replace('</ h3>','</h3>')
+    blog_article2 = blog_article2.rstrip().lstrip()
+
+    return blog_article2
 
 def arxiv_search(query):
 
