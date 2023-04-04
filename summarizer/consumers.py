@@ -397,6 +397,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     print("Received error message blog:", blog)
                     blog='Error: needs to be re-run'
                 '''
+
                 
                 c=asyncio.create_task(self.send_message_blog(blog))
                 await c
