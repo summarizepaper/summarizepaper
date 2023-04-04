@@ -1956,6 +1956,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
         print('aqui')
         #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        #response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try6',response6)
