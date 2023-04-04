@@ -383,20 +383,21 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, settings.OPENAI_KEY))
                 roughblog = await c
-                print('blog:',roughblog)
+                print('roughblog:',roughblog)
                 if 'error_message' in roughblog:
                     print("Received error message blog:", roughblog)
                     roughblog='Error: needs to be re-run'
                 
-                c=asyncio.create_task(utils.refine_blog_article(arxiv_id, language, roughblog, settings.OPENAI_KEY))
-                blog = await c
+                cb=asyncio.create_task(utils.refine_blog_article(arxiv_id, language, roughblog, settings.OPENAI_KEY))
+                blog = await cb
                 print('blog:',blog)
                 if 'error_message' in blog:
                     print("Received error message blog:", blog)
                     blog='Error: needs to be re-run'
+                    
                 c=asyncio.create_task(self.send_message_blog(blog))
                 await c
-                
+
             else:
                 sum='Error: needs to be re-run'
                 laysum=sum

@@ -1918,12 +1918,12 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
     print('language2',language2)
 
     prompt6 = """
-         Improve the text AND make sure there are only <h2> and <h3> HTML tags used: {}
+         Improve the text and remove all unfinished sentences from: {}
 
     """.format(roughblog)
 
     if language != 'en':
-        prompt6 += "THE ANSWER SHOULD BE IN "+language2
+        prompt6 += "TRANSLATE IN "+language2
 
     print('prompt6',prompt6)
 
@@ -1952,7 +1952,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
     else:
         endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
 
-       
+        print('aqui')
         #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
