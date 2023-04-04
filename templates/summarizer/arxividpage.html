@@ -1037,7 +1037,7 @@ submitButton.addEventListener('click', () => {
       {% for paper in relpapers %}
         <div class="paper">
           <div class="score">{{ scores|index:forloop.counter0 }}%</div>
-          <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.to_paper.arxiv_id }}" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:100 }}</a>
+          <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.to_paper.arxiv_id }}" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:90 }}</a>
           <div class="category">{{ paper.to_paper.category }}</div>
       </div>
       {% endfor %}

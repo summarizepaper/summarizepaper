@@ -312,6 +312,10 @@ async def createindex(arxiv_id,book_text,api_key):
     '''
     print('tttettxtxtxtxtxtxtxtttzetet',texts)
 
+    regex = r'<latexit>.*?</latexit>'
+    texts = [re.sub(regex, '', text) for text in texts]
+    print('tttettxtxtxtxtxtxtxtttzetet222',texts)
+
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)#text-embedding-ada-002 used in background
 
     new_docsearch=embeddings
