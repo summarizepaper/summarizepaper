@@ -1918,7 +1918,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
     print('language2',language2)
 
     prompt6 = """
-         Improve the text AND remove all unfinished sentences AND make sure there are only <h2> and <h3> HTML tags used: {}
+         Improve the text AND make sure there are only <h2> and <h3> HTML tags used: {}
 
     """.format(roughblog)
 
