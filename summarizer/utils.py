@@ -1896,6 +1896,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
             "error_message": str(e),
         }
     response5=response5.json()
+    print('resp5',response5)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
     if model_forced=="gpt-3.5-turbo":
