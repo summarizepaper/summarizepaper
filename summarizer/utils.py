@@ -312,7 +312,7 @@ async def createindex(arxiv_id,book_text,api_key):
     '''
     print('tttettxtxtxtxtxtxtxtttzetet',texts)
 
-    regex = r'<latexit>.*?</latexit>'
+    regex = r'<latexit.*?</latexit>'
     texts = [re.sub(regex, '', text) for text in texts]
     print('tttettxtxtxtxtxtxtxtttzetet222',texts)
 
