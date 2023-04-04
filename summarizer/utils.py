@@ -1120,7 +1120,6 @@ async def extract_text_from_pdf(pdf_filename):
         async for page in extract_pages(file):
             page_interpreter.process_page(page)
 
-
             #async for page in extract_pages(file, caching=True):
             #for page in PDFPage.get_pages(file, caching=True):
             #await asyncio.sleep(0)  # Allow other tasks to run while processing the page
