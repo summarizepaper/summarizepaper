@@ -228,7 +228,9 @@
     <p><a href="/{{ LANGUAGE_CODE }}/" class="back-link">{% trans 'Go back' %}</a></p>
 
   {% else %}
-    <p class="no-results">{% trans 'No results found' %} (<a href="/{{ LANGUAGE_CODE }}/">{% trans 'Go back' %}</a>)</p>
+    <p class="no-results">{% trans 'No results found.' %} (<a href="/{{ LANGUAGE_CODE }}/">{% trans 'Go back' %}</a>)</p>
+    <p style="text-align: center;color: red;">{% trans 'Make sure to search with the language used in the arXiv paper, i.e. use mostly English.' %}</p>
+    <p style="text-align: center;color: red;">{% trans 'You can also use field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</p>
   {% endif %}
 </div>
 

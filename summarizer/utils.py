@@ -1568,7 +1568,7 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
     print('key_points after',key_points)
     '''
 
-    return [finalise_and_keywords2,keywords_text]
+    return [finalise_and_keywords2.rstrip().lstrip(),keywords_text]
 
 async def extract_key_points(arxiv_id, language, summary, api_key):
     li = get_language_info(language)
@@ -1784,6 +1784,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
 
     print('simple_sum',simple_sum)
     # Split the summary into individual sentences
+    '''
     sentences = nltk.sent_tokenize(simple_sum)
 
     # Filter out sentence fragments
@@ -1793,6 +1794,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     #for s in final_summarized_text:
     #    print(s)
     simple_sum = ' '.join(simple_sum)
+    '''
     simple_sum = simple_sum.rstrip().lstrip()
     print('simple_sum after',simple_sum)
 

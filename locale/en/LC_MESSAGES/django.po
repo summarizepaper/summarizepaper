@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-03 19:00+0000\n"
+"POT-Creation-Date: 2023-04-04 08:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -310,11 +310,11 @@ msgstr ""
 msgid "Blog-like article"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:796 templates/summarizer/tree.html:180
+#: templates/summarizer/arxividpage.html:796 templates/summarizer/tree.html:210
 msgid " or ask questions about this paper to our"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:796 templates/summarizer/tree.html:180
+#: templates/summarizer/arxividpage.html:796 templates/summarizer/tree.html:210
 msgid "AI assistant"
 msgstr ""
 
@@ -322,8 +322,8 @@ msgstr ""
 msgid "Summaries already available in other languages:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:811 templates/summarizer/tree.html:130
-#: templates/summarizer/tree.html:233
+#: templates/summarizer/arxividpage.html:811 templates/summarizer/tree.html:160
+#: templates/summarizer/tree.html:294
 msgid "Authors:"
 msgstr ""
 
@@ -331,22 +331,22 @@ msgstr ""
 #: templates/summarizer/arxividpage.html:837
 #: templates/summarizer/arxividpage.html:1136
 #: templates/summarizer/arxividpage.html:1140
-#: templates/summarizer/arxividpage.html:1488
-#: templates/summarizer/tree.html:152 templates/summarizer/tree.html:156
+#: templates/summarizer/arxividpage.html:1493
+#: templates/summarizer/tree.html:182 templates/summarizer/tree.html:186
 msgid "License:"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:842
 #: templates/summarizer/arxividpage.html:1145
-#: templates/summarizer/arxividpage.html:1499
-#: templates/summarizer/tree.html:161
+#: templates/summarizer/arxividpage.html:1504
+#: templates/summarizer/tree.html:191
 msgid "Abstract:"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:847
 #: templates/summarizer/arxividpage.html:1150
-#: templates/summarizer/arxividpage.html:1510
-#: templates/summarizer/tree.html:166
+#: templates/summarizer/arxividpage.html:1515
+#: templates/summarizer/tree.html:196
 msgid "Submitted to arXiv on"
 msgstr ""
 
@@ -484,7 +484,7 @@ msgstr ""
 msgid "Assess the quality of the AI-generated content by voting"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:984 templates/summarizer/tree.html:235
+#: templates/summarizer/arxividpage.html:984 templates/summarizer/tree.html:296
 msgid "Score:"
 msgstr ""
 
@@ -547,18 +547,22 @@ msgid "tree representation"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1056
+#: templates/summarizer/tree.html:220
 msgid "Search again for closest papers"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1056
+#: templates/summarizer/tree.html:220
 msgid "Search for closest papers"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1065
+#: templates/summarizer/tree.html:229
 msgid "Look for similar papers (in beta version)"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1066
+#: templates/summarizer/tree.html:230
 msgid ""
 "By clicking on the button above, our algorithm will scan all papers in our "
 "database to find the closest based on the contents of the full papers and "
@@ -568,12 +572,12 @@ msgid ""
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1077
-#: templates/summarizer/tree.html:190
+#: templates/summarizer/tree.html:237
 msgid "There is no existing article with the given arXiv ID:"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1077
-#: templates/summarizer/tree.html:190
+#: templates/summarizer/tree.html:237
 #, python-format
 msgid ""
 " Try again your <a href=\"/%(LANGUAGE_CODE)s/\">search</a> with a new arXiv "
@@ -618,43 +622,43 @@ msgstr ""
 msgid "We are analysing the following arXiv article:"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1363
+#: templates/summarizer/arxividpage.html:1368
 msgid "Results of the summarizing process for the arXiv paper (1/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1371
+#: templates/summarizer/arxividpage.html:1376
 msgid "Results of the summarizing process for the arXiv paper (2/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1385
+#: templates/summarizer/arxividpage.html:1390
 msgid "Results of the summarizing process for the arXiv paper (3/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1393
+#: templates/summarizer/arxividpage.html:1398
 msgid "Results of the summarizing process for the arXiv paper (4/4):"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1481
-#: templates/summarizer/arxividpage.html:1493
+#: templates/summarizer/arxividpage.html:1486
+#: templates/summarizer/arxividpage.html:1498
 msgid ""
 "The license of the paper does not allow us to build upon its content and the "
 "summarizing process is here made with the paper metadata rather than the "
 "article."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1573
+#: templates/summarizer/arxividpage.html:1578
 msgid "AI -"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1600
+#: templates/summarizer/arxividpage.html:1605
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1675
+#: templates/summarizer/arxividpage.html:1680
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1688
+#: templates/summarizer/arxividpage.html:1693
 msgid "You -"
 msgstr ""
 
@@ -1116,7 +1120,20 @@ msgid "last"
 msgstr ""
 
 #: templates/summarizer/search_results.html:231
-msgid "No results found"
+msgid "No results found."
+msgstr ""
+
+#: templates/summarizer/search_results.html:232
+msgid ""
+"Make sure to search with the language used in the arXiv paper, i.e. use "
+"mostly English."
+msgstr ""
+
+#: templates/summarizer/search_results.html:233
+msgid ""
+"You can also use field codes to search for a specific field: \"au:\" for "
+"authors, \"ti:\" for titles, \"abs:\" for abstracts, \"co:\" for comments, "
+"\"jr:\" for journal reference,\"cat:\" for category, and \"id:\" for ID."
 msgstr ""
 
 #: templates/summarizer/templatepdf.html:122
@@ -1157,38 +1174,38 @@ msgid ""
 "academia."
 msgstr ""
 
-#: templates/summarizer/tree.html:174
+#: templates/summarizer/tree.html:204
 msgid "Explore the paper tree"
 msgstr ""
 
-#: templates/summarizer/tree.html:175
+#: templates/summarizer/tree.html:205
 msgid ""
 "Click on the tree nodes to be redirected to a given paper and access their "
 "summaries and virtual assistant"
 msgstr ""
 
-#: templates/summarizer/tree.html:178
+#: templates/summarizer/tree.html:208
 msgid "Also access our AI generated"
 msgstr ""
 
-#: templates/summarizer/tree.html:179
+#: templates/summarizer/tree.html:209
 msgid "Summaries"
 msgstr ""
 
-#: templates/summarizer/tree.html:187
+#: templates/summarizer/tree.html:234
 msgid ""
 "The paper tree for this article is not created yet. To create it, you can "
 "run our tools"
 msgstr ""
 
-#: templates/summarizer/tree.html:187
+#: templates/summarizer/tree.html:234
 msgid "on this page"
 msgstr ""
 
-#: templates/summarizer/tree.html:232
+#: templates/summarizer/tree.html:293
 msgid "Title:"
 msgstr ""
 
-#: templates/summarizer/tree.html:234
+#: templates/summarizer/tree.html:295
 msgid "Arxiv ID:"
 msgstr ""
