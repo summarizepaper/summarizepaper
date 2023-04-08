@@ -1117,7 +1117,7 @@ async def async_iter(generator):
         except asyncio.TimeoutError:
             continue
 
-from pdfminer.high_level import extract_text_to_fp
+#from pdfminer.high_level import extract_text_to_fp
 import aiofiles
 from io import BytesIO
 
