@@ -1118,7 +1118,8 @@ async def async_iter(generator):
             continue
 
 #from pdfminer.high_level import extract_text_to_fp
-import aiofiles
+#import aiofiles
+'''
 from io import BytesIO
 
 async def extract_text_from_pdf2(pdf_file_path):
@@ -1129,13 +1130,13 @@ async def extract_text_from_pdf2(pdf_file_path):
     text = output_buffer.getvalue().decode()
     pdf_file.close()
     return text
-
+'''
 
 async def extract_text_from_pdf(pdf_filename):
     # Open the PDF file
     #need to check first if pdf file and otherwise return an error; to do later
     print('in extract')
-    import aiofiles
+    #import aiofiles
     #import concurrent.futures
     #from PyPDF2 import PdfFileReader
     #from pdfminer.high_level import extract_pages
