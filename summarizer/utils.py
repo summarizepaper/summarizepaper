@@ -1071,17 +1071,75 @@ def summarizer(arxiv_id):
 
         yield progress
 
+#from concurrent.futures import ThreadPoolExecutor
+#from pdfminer.high_level import extract_pages
+
+async def extract_pages_async(file):
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor() as pool:
+        for page_layout in await loop.run_in_executor(pool, extract_pages, file):
+            yield page_layout
+
 async def extract_pages(file):
+    print(type(file))
+#    for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
+#        yield page
+#        await asyncio.sleep(0)
     with file:
         for page in PDFPage.get_pages(file, caching=False):
             yield page
+   
+#from pdfminer.high_level import extract_pages as _extract_pages
+#from pdfminer.layout import LTPage, LTTextContainer, LAParams
+#from pdfminer.pdfparser import PDFParser
+#from pdfminer.pdfdocument import PDFDocument
+
+'''
+async def extract_pages(pdf_file, laparams=None):
+    reader = asyncio.StreamReader()
+    reader_protocol = asyncio.StreamReaderProtocol(reader)
+    await asyncio.ensure_future(pdf_file.readinto(reader_protocol))
+    pdf_stream = BytesIO(reader_protocol.buffer.tobytes())
+    
+    parser = PDFParser(pdf_stream)
+    document = PDFDocument(parser)
+    
+    laparams = laparams or LAParams()
+    pages = _extract_pages(document, laparams=laparams)
+    return [page for page in pages if isinstance(page, LTPage)]
+'''
+async def async_iter(generator):
+    while True:
+        try:
+            yield await asyncio.wait_for(generator.__anext__(), timeout=1)
+        except StopAsyncIteration:
+            return
+        except asyncio.TimeoutError:
+            continue
+
+from pdfminer.high_level import extract_text_to_fp
+import aiofiles
+from io import BytesIO
+
+async def extract_text_from_pdf2(pdf_file_path):
+    loop = asyncio.get_running_loop()
+    pdf_file = await aiofiles.open(pdf_file_path, 'rb')
+    output_buffer = BytesIO()
+    await loop.run_in_executor(None, extract_text_to_fp, pdf_file, output_buffer)
+    text = output_buffer.getvalue().decode()
+    pdf_file.close()
+    return text
 
 
 async def extract_text_from_pdf(pdf_filename):
     # Open the PDF file
     #need to check first if pdf file and otherwise return an error; to do later
     print('in extract')
-    #import aiofiles
+    import aiofiles
+    #import concurrent.futures
+    #from PyPDF2 import PdfFileReader
+    #from pdfminer.high_level import extract_pages
+    ##from pdfminer.layout import LAParams, LTTextBoxHorizontal
     #from io import BytesIO
 
     '''
@@ -1099,7 +1157,23 @@ async def extract_text_from_pdf(pdf_filename):
 
     '''
     with open(pdf_filename, 'rb') as file:
+    #async with open_pdf_file(pdf_filename) as f:
     #async with aiofiles.open(pdf_filename, 'rb') as file:
+        if 1==0:
+            async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
+                texts = []
+                #for page_layout in pages:
+                for element in page_layout:
+                    if isinstance(element, LTTextContainer):
+                        texts.append(element.get_text())
+                        print('t',texts)
+            text = "".join(texts), texts
+            print('text',text)
+
+    
+
+        #async with aiofiles.open(pdf_filename, 'rb') as file:
+        #file = await aiofiles.open(pdf_filename, 'rb')
         # Create a PDF resource manager object that stores shared resources
         resource_manager = PDFResourceManager(caching=False)
 
@@ -1117,7 +1191,6 @@ async def extract_text_from_pdf(pdf_filename):
 
         # Process each page in the PDF file
         #for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
-
         #async for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
         #for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
         #async for page in async_generator(extract_pages, file):
@@ -1132,13 +1205,19 @@ async def extract_text_from_pdf(pdf_filename):
             #page_interpreter.process_page(page)
         text = text_io.getvalue()
 
+        #async for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
+         #   page_interpreter.process_page(page)
+            #yield text_io.getvalue()
+            #text_io.truncate(0)
+            #text_io.seek(0)
+            #await asyncio.sleep(0)
+
         # Get the extracted text from the TextConverter object
         #text = text_converter.get_output()
 
        
 
         #text = text_io.getvalue()
-
 
         end = text.find("References")
         end2 = text.find("REFERENCES")
@@ -1165,7 +1244,7 @@ async def extract_text_from_pdf(pdf_filename):
 
         text_io.close()
         text_converter.close()
-
+        file.close()
         # Put the extracted text into the text queue
         #await text_queue.put(textlim)
         # Return the extracted text

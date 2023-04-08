@@ -247,7 +247,7 @@
     <div class="paper-list">
       {% for paper in latestpapers %}
         <div class="paper">
-          <a href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">{{ paper.paper.title|truncatechars:90 }}</a>
+          <a href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">{{ paper.paper.title|truncatechars:80 }}</a>
           <div class="category">{{ paper.paper.category }}</div>
       </div>
       {% endfor %}

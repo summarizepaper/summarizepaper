@@ -112,6 +112,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
 
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
+                    
                 c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
                 book_text,full_text=await c
                 print('book:',book_text)
@@ -398,7 +399,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     blog='Error: needs to be re-run'
                 '''
 
-                
+
                 c=asyncio.create_task(self.send_message_blog(blog))
                 await c
 
