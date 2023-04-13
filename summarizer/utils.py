@@ -34,6 +34,14 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.llms import OpenAI
 from langchain.callbacks import get_openai_callback
+from langchain import ConversationChain     
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
 import pickle
 from django.utils.translation import get_language_info
 import nltk
@@ -557,12 +565,70 @@ async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
 
     return array_arxiv_ids,array_scores
 
+def construct_prompt(documents, question):
+
+    PROMPT_TEMPLATE = """
+    =========== BEGIN DOCUMENTS =============
+    {documents}
+    ============ END DOCUMENTS ==============
+    Question: {question}
+    """
+
+
+    return PROMPT_TEMPLATE.format(
+        documents="\n".join([construct_document_prompt(d) for d in documents]),
+        question=question,
+    )
+
+
+def construct_document_prompt(document):
+
+    DOCUMENT_TEMPLATE = """
+    ------------ BEGIN DOCUMENT -------------
+    {content}
+    ------------- END DOCUMENT --------------
+    """
+
+    DOCUMENT_TEMPLATE_WITH_SOURCE = """
+    ------------ BEGIN DOCUMENT -------------
+    --------------- CONTENT -----------------
+    {content}
+    ---------------- SOURCE -----------------
+    {source}
+    ------------- END DOCUMENT --------------
+    """
+
+    return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["source"])
+
+
 async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
     print('in chatbot')
 
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
+
+    MIN_DOCUMENT_LENGTH = 20
+
+    SYSTEM_PROMPT = """
+    You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
+    (labeled with DOCUMENT) and a question.
+    Answer the question using information from the knowledge base.
+    If the answer is not available in the documents or there are no documents,
+    still try to answer the question, but say that you used your general knowledge and not the documentation.
+    """
+
+    SYSTEM_PROMPT_WITH_SOURCES = """
+    You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
+    (labeled with DOCUMENT and SOURCE) and a question.
+    Answer the question using information from the knowledge base, including references ("SOURCES").
+    If you don't know the answer, just say that you don't know. Don't try to make up an answer.
+    ALWAYS return a "SOURCES" part in your answer.
+    """
+
+    if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
+        SYSTEM_PROMPT += """FINAL ANSWER IN """+language2
+        SYSTEM_PROMPT_WITH_SOURCES += """FINAL ANSWER IN """+language2
 
     c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
 
@@ -614,7 +680,7 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
         #import tiktoken
 
         #MAX_CHARS = 4200  # maximum number of characters to allow in the docs pages
-        MAX_TOKENS=2200
+        MAX_TOKENS=1500#2200
         MAX_CHARS=nchars_leq_ntokens_approx(MAX_TOKENS)
         print('MAX_CHARS',MAX_CHARS)
         num_chars = 0
@@ -647,14 +713,18 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
                 """
         else:
             template = """Given the following extracted parts of a long document and a question, create a final answer.
-            If you are not sure about the answer, just say that you are not sure before making up an answer.
+            If you are not sure about the answer, just say that you are not sure before making up an answer.  
 
             QUESTION: {question}
             =========
             {summaries}
             =========
 
+            If the question IS NOT about the document, DO NOT say it is not related to document but rather just be a helpful assistant, FRIENDLY and conversational and ANSWER the question anyway.
+
             """
+
+        #If the question IS NOT about the document, just be an helpful assistant and CHAT with the user.
 
         #if language != 'en'
         #    template += """FINAL ANSWER IN """+language2
@@ -676,6 +746,8 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
                 template += """FINAL ANSWER IN """+language2
             PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
 
+            
+
         print('wait3...')
         chain = load_qa_with_sources_chain(llm, chain_type="stuff", prompt=PROMPT)
         print('wait4...')
@@ -689,7 +761,28 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
                 print('wait6...')
             else:
                 print('gkl')
-                getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "question": query}, return_only_outputs=False)
+
+                chat_input = construct_prompt(docs, question=query)
+                system_prompt = SystemMessagePromptTemplate.from_template(SYSTEM_PROMPT)
+                print('system_prompt',system_prompt)
+
+                memory = ConversationBufferMemory(return_messages=True)
+                print('memory',memory)
+
+                prompt = ChatPromptTemplate.from_messages(
+                    [
+                        system_prompt,
+                        MessagesPlaceholder(variable_name="history"),
+                        HumanMessagePromptTemplate.from_template("{input}"),
+                    ]
+                )
+                conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm)
+                #response = conversation.predict(input=chat_input)
+                print('chatinput',chat_input)
+
+                getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
+
+                #getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "question": query}, return_only_outputs=False)
 
             nbtokensused=cb.total_tokens
             print('wait7...')
@@ -708,9 +801,10 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
 
         #getresponse=chain.run(input_documents=docs, question=query)
         print('getresponse',getresponse)
-        print('getresponse2',getresponse['output_text'])
+        #print('getresponse2',getresponse['output_text'])
 
-        finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
+        #finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
+        finalresp=getresponse.replace(':\n', '').rstrip().lstrip()
 
         #store the query and answer
         if sum != 1:
