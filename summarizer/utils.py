@@ -803,8 +803,10 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
         print('getresponse',getresponse)
         #print('getresponse2',getresponse['output_text'])
 
-        #finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
-        finalresp=getresponse.replace(':\n', '').rstrip().lstrip()
+        if sum==1:
+            finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
+        else:
+            finalresp=getresponse.replace(':\n', '').rstrip().lstrip()
 
         #store the query and answer
         if sum != 1:
