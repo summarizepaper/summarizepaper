@@ -853,12 +853,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             message = data["message"]
             print('receive',message)
             user = data["user"]
+            ip = data["ip"]
             print('receive',user)
             #response = "reponse brah"#process_message(message)
             print('avant chat bot')
             #query = "Create a summary and tell me who the authors are?"
+            from langchain.memory import ConversationBufferMemory
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user))
+            memory = ConversationBufferMemory(memory_key="history",return_messages=True)
+
+            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip))
             chatbot_text=await c
 
             #chatbot_text=None

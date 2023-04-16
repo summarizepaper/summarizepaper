@@ -1,3 +1,4 @@
+from ipaddress import ip_address
 import time
 import requests
 from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore
@@ -35,7 +36,6 @@ from langchain.chains.qa_with_sources import load_qa_with_sources_chain
 from langchain.llms import OpenAI
 from langchain.callbacks import get_openai_callback
 from langchain import ConversationChain     
-from langchain.memory import ConversationBufferMemory
 from langchain.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
@@ -185,7 +185,14 @@ def nchars_leq_ntokens_approx(maxTokens):
     lin_margin = 1.010175047 #= e - 1.001 - sqrt(1 - sqrt_margin) #ensures return 1 when maxTokens=1
     return max( 0, int(maxTokens*math.exp(1) - lin_margin - math.sqrt(max(0,maxTokens - sqrt_margin) ) ))
 
-
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+    
 def dependable_faiss_import():# -> Any:
     """Import faiss if available, otherwise raise error."""
     try:
@@ -244,15 +251,42 @@ def getuserinst(user):
 
     return userinst
 
-def storeconversation(arxiv_id,query,response,user,lang):
+def storeconversation(arxiv_id,query,response,user,lang,ip=None):
 
-    AIassistant.objects.create(
-        arxiv_id=arxiv_id,
-        query=query,
-        response=response,
-        user=user,
-        lang=lang
-    )
+    if ip:
+        AIassistant.objects.create(
+            arxiv_id=arxiv_id,
+            query=query,
+            ip_address=ip,
+            response=response,
+            user=user,
+            lang=lang
+        )
+    else:
+        AIassistant.objects.create(
+            arxiv_id=arxiv_id,
+            query=query,
+            response=response,
+            user=user,
+            lang=lang
+        )
+
+def getconversationmemory(arxiv_id,user,lang,ip,nb_mem):
+
+    if user != None:
+        conv=AIassistant.objects.filter(
+            arxiv_id=arxiv_id,
+            user=user,
+            lang=lang
+        ).order_by('-created')[:nb_mem]
+    else:
+        conv=AIassistant.objects.filter(
+            arxiv_id=arxiv_id,
+            ip_address=ip,
+            lang=lang
+        ).order_by('-created')[:nb_mem]
+
+    return conv
 
 def storeclosest(arxiv_id,ids_and_scores):
     array_arxiv_ids,array_scores=ids_and_scores
@@ -565,20 +599,31 @@ async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
 
     return array_arxiv_ids,array_scores
 
-def construct_prompt(documents, question):
+def construct_prompt(documents, question, language, mem):
+
+    li = get_language_info(language)
+    language2 = li['name']
 
     PROMPT_TEMPLATE = """
     =========== BEGIN DOCUMENTS =============
     {documents}
     ============ END DOCUMENTS ==============
+
     Question: {question}
     """
-
+    if language != 'en' and not 'TRANSLATE' in question and not 'TRADUIRE' in question:
+        PROMPT_TEMPLATE += """FINAL ANSWER IN """+language2
 
     return PROMPT_TEMPLATE.format(
         documents="\n".join([construct_document_prompt(d) for d in documents]),
         question=question,
+        mem=mem
     )
+
+def filter_documents(documents):
+    MIN_DOCUMENT_LENGTH = 20
+
+    return [d for d in documents if len(d.page_content) > MIN_DOCUMENT_LENGTH]
 
 
 def construct_document_prompt(document):
@@ -601,22 +646,41 @@ def construct_document_prompt(document):
     return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["source"])
 
 
-async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
+async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None):
     print('in chatbot')
 
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
 
-    MIN_DOCUMENT_LENGTH = 20
+
+    #The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+
+    #SYSTEM_PROMPT = """
+    #You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
+    #(labeled with DOCUMENT) and a question.
+    #Answer the question using information from the knowledge base.
+    #If the answer is not available in the documents or there are no documents,
+    #still try to answer the question, but say that you used your general knowledge and not the documentation.
+    #"""
 
     SYSTEM_PROMPT = """
-    You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
-    (labeled with DOCUMENT) and a question.
-    Answer the question using information from the knowledge base.
+    The following is a friendly conversation between a human and an AI. The AI is talkative and provides
+    lots of specific details from its context (an extract of a paper or article). If the AI does not know the answer to a question, it truthfully says it does not know.
+    The question can specify to TRANSLATE the response in another language, which the AI should do.
+    If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining one article. 
+    """
+
+    '''
+    SYSTEM_PROMPT = """
+    The following is a friendly conversation between a human and an AI. The AI is talkative and provides
+    lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
+    Answer the question using information from the knowledge base labeled with DOCUMENT.
     If the answer is not available in the documents or there are no documents,
     still try to answer the question, but say that you used your general knowledge and not the documentation.
     """
+    '''
+    
 
     SYSTEM_PROMPT_WITH_SOURCES = """
     You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
@@ -626,9 +690,9 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
     ALWAYS return a "SOURCES" part in your answer.
     """
 
-    if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
-        SYSTEM_PROMPT += """FINAL ANSWER IN """+language2
-        SYSTEM_PROMPT_WITH_SOURCES += """FINAL ANSWER IN """+language2
+    #if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
+    #    SYSTEM_PROMPT += """FINAL ANSWER IN """+language2
+    #    SYSTEM_PROMPT_WITH_SOURCES += """FINAL ANSWER IN """+language2
 
     c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
 
@@ -762,12 +826,34 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
             else:
                 print('gkl')
 
-                chat_input = construct_prompt(docs, question=query)
+                docs = filter_documents(docs)
+                #from langchain.memory import ConversationBufferMemory
+
+                c = asyncio.create_task(sync_to_async(getuserinst)(user))
+                userinst = await c
+
+                if ip:
+                    NBMEM=5#remembers last three messages
+                    print('clientip.....',ip)
+                    # Check if this IP address has already voted on this post
+                    c = asyncio.create_task(sync_to_async(getconversationmemory)(arxiv_id,userinst,language,ip,NBMEM))
+                    memorystored = await c
+                    async for memstored in memorystored:
+                        memory.chat_memory.add_user_message(memstored.query)
+                        memory.chat_memory.add_ai_message(memstored.response)
+
+
+                #memory2 = ConversationBufferMemory(return_messages=True)
+                #memory.chat_memory.add_user_message(query)
+                #memory.chat_memory.add_ai_message(getresponse)
+
+                #print('memory',memory.load_memory_variables({}))
+                memory_dict = memory.load_memory_variables({})
+                history_value = memory_dict['history']
+
+                chat_input = construct_prompt(docs, query, language, history_value)
                 system_prompt = SystemMessagePromptTemplate.from_template(SYSTEM_PROMPT)
                 print('system_prompt',system_prompt)
-
-                memory = ConversationBufferMemory(return_messages=True)
-                print('memory',memory)
 
                 prompt = ChatPromptTemplate.from_messages(
                     [
@@ -776,11 +862,43 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
                         HumanMessagePromptTemplate.from_template("{input}"),
                     ]
                 )
-                conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm)
+
+                #conversation = ConversationChain(memory=memory, llm=llm, verbose=True)
+                conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm, verbose=False)
+
                 #response = conversation.predict(input=chat_input)
                 print('chatinput',chat_input)
 
-                getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
+                #getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
+                
+                print('mememememme',memory)
+
+                try:
+                    import openai
+                    getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
+                except openai.error.InvalidRequestError as e:
+                    # Catch the error and extract the requested length from the error message
+                    #requested_length = int(str(e).split(" ")[-2])
+                    #print('requested_length',requested_length)
+                    # Reduce the input length by the excess amount
+                    #excess_length = requested_length - 4097
+                    #chat_input = chat_input[:-excess_length]
+                    
+                    print('clear memory')
+                    memory.clear()
+
+                    # Rerun the function with the reduced input
+                    conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm, verbose=False)
+
+                    getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
+
+
+                #if memory is not None:
+                    #memory.chat_memory.add_user_message(query)
+                    #memory.chat_memory.add_ai_message(getresponse)
+                    #memory2.save_context({"input": query}, {"ouput": getresponse})
+                    #print('memory',memory2.load_memory_variables({}))
+
 
                 #getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "question": query}, return_only_outputs=False)
 
@@ -806,15 +924,16 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None):
         if sum==1:
             finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
         else:
-            finalresp=getresponse.replace(':\n', '').rstrip().lstrip()
+            finalresp=getresponse.replace(':\n', '').replace('AI: ', '').rstrip().lstrip()
 
         #store the query and answer
         if sum != 1:
-            c = asyncio.create_task(sync_to_async(getuserinst)(user))
-            userinst = await c
-
-            c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language))
-            await c
+            if ip:
+                c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language,ip=ip))
+                await c
+            else:
+                c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language))
+                await c
 
         return finalresp
     #else:
@@ -1167,14 +1286,16 @@ def summarizer(arxiv_id):
 
         yield progress
 
-#from concurrent.futures import ThreadPoolExecutor
-#from pdfminer.high_level import extract_pages
+'''
+from concurrent.futures import ThreadPoolExecutor
+from pdfminer.high_level import extract_pages
 
 async def extract_pages_async(file):
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor() as pool:
         for page_layout in await loop.run_in_executor(pool, extract_pages, file):
             yield page_layout
+'''
 
 async def extract_pages(file):
     print(type(file))
@@ -1227,6 +1348,14 @@ async def extract_text_from_pdf2(pdf_file_path):
     pdf_file.close()
     return text
 '''
+#from async_generator import async_generator
+#from pdfminer.high_level import extract_pages
+
+#@async_generator
+#async def async_extract_pages(pdf_file):
+#    for page in extract_pages(pdf_file):
+#        yield page
+
 
 async def extract_text_from_pdf(pdf_filename):
     # Open the PDF file
@@ -1236,8 +1365,12 @@ async def extract_text_from_pdf(pdf_filename):
     #import concurrent.futures
     #from PyPDF2 import PdfFileReader
     #from pdfminer.high_level import extract_pages
-    ##from pdfminer.layout import LAParams, LTTextBoxHorizontal
+    #from pdfminer.layout import LAParams, LTTextBoxHorizontal
+    #from pdfminer.high_level import extract_text_to_fp
     #from io import BytesIO
+    #from pdfminer.high_level import extract_pages
+    
+    #from pdfminer.layout import LTTextContainer
 
     '''
     async with aiofiles.open(pdf_filename, mode='rb') as f:
@@ -1253,6 +1386,26 @@ async def extract_text_from_pdf(pdf_filename):
     return [text,text]
 
     '''
+
+    ''' it works in async with pypdf and they opened a ticket to read greek letters and double ff+maths stuff but for now, not as good as pdfminer
+    import aiofiles
+    import pypdf
+    import io
+
+    async with aiofiles.open(pdf_filename, "rb") as f:
+        pdf_data = await f.read()
+        pdf_stream = io.BytesIO(pdf_data)
+        pdf_reader = pypdf.PdfReader(pdf_stream)
+        text = ""
+        for num in range(len(pdf_reader.pages)):
+            page = pdf_reader.pages[num]
+            text += page.extract_text(0)
+
+    print('text',text)
+    input('ok')
+    '''
+    
+
     with open(pdf_filename, 'rb') as file:
     #async with open_pdf_file(pdf_filename) as f:
     #async with aiofiles.open(pdf_filename, 'rb') as file:
@@ -1267,7 +1420,8 @@ async def extract_text_from_pdf(pdf_filename):
             text = "".join(texts), texts
             print('text',text)
 
-    
+        
+        #f = await aiofiles.open('filename.txt', mode='w').__aenter__()
 
         #async with aiofiles.open(pdf_filename, 'rb') as file:
         #file = await aiofiles.open(pdf_filename, 'rb')
@@ -1285,12 +1439,13 @@ async def extract_text_from_pdf(pdf_filename):
         page_interpreter = PDFPageInterpreter(resource_manager, text_converter)
 
         print('in extract 2')
-
         # Process each page in the PDF file
         #for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
         #async for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
         #for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
         #async for page in async_generator(extract_pages, file):
+        #async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
+
         async for page in extract_pages(file):
             page_interpreter.process_page(page)
 

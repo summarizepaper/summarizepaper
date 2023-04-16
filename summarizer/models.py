@@ -157,6 +157,7 @@ class AIassistant(models.Model):
     query = models.TextField(blank=True, null=True)
     response = models.TextField(blank=True, null=True)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    ip_address = models.TextField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
     lang = models.CharField(max_length=10,default='en')
