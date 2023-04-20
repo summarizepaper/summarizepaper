@@ -1,7 +1,7 @@
 from ipaddress import ip_address
 import time
 import requests
-from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore
+from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore, Author, PaperAuthor
 from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
@@ -162,6 +162,44 @@ def generate_pdf(request,arxiv_id,lang,local_date):
             return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
 
+def updatearvixdatapaper(arxiv_id,arxiv_dict):
+
+        authors = []
+        for author_name,aff in zip(arxiv_dict['authors'],arxiv_dict['affiliation']):
+            try:
+                author, createdauthor = Author.objects.get_or_create(name=author_name,affiliation=aff)
+            except Exception as e:
+                # handle the exception here
+                print("An error occurred while getting or creating the author:", e)
+
+            #author.affiliation = aff
+            #author.save()
+            #except Author.DoesNotExist:
+            #    author = Author.objects.create(name=author_name, affiliation=aff)
+            #author, created = Author.objects.get_or_create(name=author_name,affiliation=aff)
+            authors.append(author)
+
+        print('a',arxiv_dict['abstract'])
+        arxiv_dict['abstract']=arxiv_dict['abstract'].replace('\n',' ')
+        #input('llll')
+
+        paper, created = ArxivPaper.objects.update_or_create(
+            arxiv_id=arxiv_id,
+            defaults={'link_homepage':arxiv_dict['link_homepage'], 'title':arxiv_dict['title'], 'link_doi':arxiv_dict['link_doi'], 'abstract':arxiv_dict['abstract'], 'category':arxiv_dict['category'], 'updated':arxiv_dict['updated'], 'published_arxiv':arxiv_dict['published_arxiv'], 'journal_ref':arxiv_dict['journal_ref'], 'comments':arxiv_dict['comments'],'license':arxiv_dict['license']}
+        )
+
+        for i, author in enumerate(authors):
+            paper_author, created = PaperAuthor.objects.get_or_create(author=author, paper=paper, author_order=i)
+
+        #authors_ids = [autho.id for autho in authors]
+        #.set(authors_ids)
+        #paper.authors.set(arxiv_dict['authors'])
+        paper.save()
+
+        #print('retdd',created)
+        #'authors':arxiv_dict['authors'],'affiliation':arxiv_dict['affiliation']
+        return paper,created
+
 def openaipricing(model_name):
     #return cost per token in dollars
     if 'davinci' in model_name:
@@ -215,6 +253,11 @@ def getpaperabstract(arxiv_id):
 
     return paperabstract
 
+def getlicense(arxiv_id):
+    license=ArxivPaper.objects.filter(arxiv_id=arxiv_id).values_list('license',flat=True)[0]
+
+    return license
+
 def getpaper(arxiv_id):
     paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
 
@@ -240,6 +283,12 @@ def getallpapers(cat):
         allpapers = ArxivPaper.objects.all()
 
     print('all',allpapers)
+    return allpapers
+
+def getpapersfromlist(list):
+    
+    allpapers = ArxivPaper.objects.filter(arxiv_id__in=list)
+    
     return allpapers
 
 def getuserinst(user):
@@ -599,7 +648,7 @@ async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
 
     return array_arxiv_ids,array_scores
 
-def construct_prompt(documents, question, language, mem):
+def construct_prompt(documents, question, language, mem,mul=None):
 
     li = get_language_info(language)
     language2 = li['name']
@@ -615,7 +664,7 @@ def construct_prompt(documents, question, language, mem):
         PROMPT_TEMPLATE += """FINAL ANSWER IN """+language2
 
     return PROMPT_TEMPLATE.format(
-        documents="\n".join([construct_document_prompt(d) for d in documents]),
+        documents="\n".join([construct_document_prompt(d,mul) for d in documents]),
         question=question,
         mem=mem
     )
@@ -626,7 +675,7 @@ def filter_documents(documents):
     return [d for d in documents if len(d.page_content) > MIN_DOCUMENT_LENGTH]
 
 
-def construct_document_prompt(document):
+def construct_document_prompt(document,mul=None):
 
     DOCUMENT_TEMPLATE = """
     ------------ BEGIN DOCUMENT -------------
@@ -642,11 +691,16 @@ def construct_document_prompt(document):
     {source}
     ------------- END DOCUMENT --------------
     """
+    
+    if mul:
+        return DOCUMENT_TEMPLATE_WITH_SOURCE.format(content=document.page_content, source=document.metadata["arxiv_id"])
+    else:
+        return DOCUMENT_TEMPLATE.format(content=document.page_content)
 
-    return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["source"])
+    #return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["arxiv_id"])
 
 
-async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None):
+async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None):
     print('in chatbot')
 
     li = get_language_info(language)
@@ -664,12 +718,7 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
     #still try to answer the question, but say that you used your general knowledge and not the documentation.
     #"""
 
-    SYSTEM_PROMPT = """
-    The following is a friendly conversation between a human and an AI. The AI is talkative and provides
-    lots of specific details from its context (an extract of a paper or article). If the AI does not know the answer to a question, it truthfully says it does not know.
-    The question can specify to TRANSLATE the response in another language, which the AI should do.
-    If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining one article. 
-    """
+    
 
     '''
     SYSTEM_PROMPT = """
@@ -694,43 +743,91 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
     #    SYSTEM_PROMPT += """FINAL ANSWER IN """+language2
     #    SYSTEM_PROMPT_WITH_SOURCES += """FINAL ANSWER IN """+language2
 
-    c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
+    if sum==1:
+        #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+        llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+    else:
+        #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
+        llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
 
-    getstoredpickle = await c
+    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
 
-    if getstoredpickle != '':
-        # deserialize the index from a byte buffer
-        #index_buffer = faiss.read_index(storedpickle.buffer)
-        faiss = dependable_faiss_import()
+    if 1==1:
+        if selectedpapers:
+            SYSTEM_PROMPT = """
+            The following is a friendly conversation between a human and an AI. The AI is talkative and provides
+            lots of specific details from its context (multiple extracts of papers or articles). If the AI does not know the answer to a question, it truthfully says it does not know.
+            The question can specify to TRANSLATE the response in another language, which the AI should do.
+            If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining articles only. 
+            Return a "SOURCES" part in your answer if it is relevant.
+            """
+            print('sel',selectedpapers)
+            #allpapers = json.loads(selectedpapers)
+            #print('allpapers',allpapers)
+            db=''
 
-        index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
+            #c = asyncio.create_task(sync_to_async(getallpapers)(cat))
+            #allpapers = await c
+            c = asyncio.create_task(sync_to_async(getpapersfromlist)(selectedpapers))
+            allpapers = await c
 
-        docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
-        index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
+            #print('allpapers',allpapers)
 
-        #from langchain.chains import ChatVectorDBChain
+            async for paper in allpapers:
+                print('paper',paper)
+                if 1==1:
+                    faiss = dependable_faiss_import()
+        
+                    print('pap',paper)
+                    c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
 
-        if sum==1:
-            #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
-            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+                    getstoredpickle2 = await c2
+
+                    if getstoredpickle2 != '':
+                        # deserialize the index from a byte buffer
+                        #index_buffer = faiss.read_index(storedpickle.buffer)
+                        #faiss = dependable_faiss_import()
+
+                        index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
+
+                        docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
+                        index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
+
+                        docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
+
+                        if db == '':
+                            db = docsearch2
+                            #print('db.docstore._dict',db.docstore._dict)
+                        else:
+                            db.merge_from(docsearch2)
+                            #print('db.docstore._dict',db.docstore._dict)
+            
+            docsearch2=db
         else:
-            #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
-            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            SYSTEM_PROMPT = """
+            The following is a friendly conversation between a human and an AI. The AI is talkative and provides
+            lots of specific details from its context (an extract of a paper or article). If the AI does not know the answer to a question, it truthfully says it does not know.
+            The question can specify to TRANSLATE the response in another language, which the AI should do.
+            If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining one article. 
+            """
+            c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
 
+            getstoredpickle = await c
 
-        '''
-        For streaming
-        from langchain.callbacks.base import CallbackManager
-        from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+            if getstoredpickle != '':
+                # deserialize the index from a byte buffer
+                #index_buffer = faiss.read_index(storedpickle.buffer)
+                faiss = dependable_faiss_import()
 
-        llm = OpenAI(streaming=True, callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]), verbose=True, temperature=0.3,openai_api_key=api_key)
-        #llm = OpenAI(model_name=modelforsummarizing,max_tokens=1000,best_of=1,n=1,temperature=0.3,openai_api_key=api_key)
-        #best_of=2,streaming=True
-        '''
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+                index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
 
-        #return cls(embeddings.embed_query, index, docstore, index_to_docstore_id)
-        docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
+                docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
+                index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
+
+        
+
+            #return cls(embeddings.embed_query, index, docstore, index_to_docstore_id)
+            docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
 
         if sum == 1:
             kvalue=3
@@ -832,10 +929,11 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
                 c = asyncio.create_task(sync_to_async(getuserinst)(user))
                 userinst = await c
 
-                if ip:
-                    NBMEM=5#remembers last three messages
+                if ip or userinst:
+                    NBMEM=5#remembers last five messages
                     print('clientip.....',ip)
                     # Check if this IP address has already voted on this post
+                    print('arx',arxiv_id)
                     c = asyncio.create_task(sync_to_async(getconversationmemory)(arxiv_id,userinst,language,ip,NBMEM))
                     memorystored = await c
                     async for memstored in memorystored:
@@ -849,7 +947,9 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
 
                 #print('memory',memory.load_memory_variables({}))
                 memory_dict = memory.load_memory_variables({})
+
                 history_value = memory_dict['history']
+                print('history_value',history_value)
 
                 chat_input = construct_prompt(docs, query, language, history_value)
                 system_prompt = SystemMessagePromptTemplate.from_template(SYSTEM_PROMPT)
@@ -928,10 +1028,13 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
 
         #store the query and answer
         if sum != 1:
+            print('clientip22.....',ip)
+
             if ip:
                 c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language,ip=ip))
                 await c
             else:
+                print('elseip')
                 c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language))
                 await c
 

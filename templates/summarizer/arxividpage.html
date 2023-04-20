@@ -204,6 +204,10 @@
       background-color: #3e8e41;
     }
 
+    input[type='submit'] {
+      padding: 10px 20px;
+      font-size: 18px;
+    }
 
   #progress-bar {
     max-width: 100%;
@@ -241,10 +245,7 @@
     color:red;
     padding: 20px;
   }
-  input[type='submit'] {
-   padding: 10px 20px;
-   font-size: 18px;
- }
+ 
 
  @media only screen and (max-width: 600px) {
    #progress-bar {
@@ -360,12 +361,14 @@
     color: #000;
     margin-bottom: 5px;
     margin-top: 15px;
+    margin-right: 10px;
     text-align: justify;
 }
 
 .chatbot-body .chatbot-messages .chatbot-response {
     color: #555;
     margin-left: 20px;
+    margin-right: 10px;
     text-align: justify;
 }
 
@@ -853,6 +856,7 @@
     <div class="chatbot-body">
     <div class="chatbot-header">
       <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
+      <p style="margin-top:-10px;"><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>
       {% if not public %}
       <p style="max-width: 400px;display: inline-block; margin-top:-10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
       {% endif %}

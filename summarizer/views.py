@@ -43,6 +43,7 @@ import urllib, urllib.request
 from xml.etree import ElementTree
 import asyncio
 from django.views.decorators.http import require_GET
+from django.http import JsonResponse
 
 @require_GET
 def robots_txt(request):
@@ -570,7 +571,7 @@ def tree(request, arxiv_id):
     cc_format=''
 
     if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
-        print('dejab')
+        print('dejabbbbbbbbbbbb')
         paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
 
         url = paper.license
@@ -723,6 +724,47 @@ def tree(request, arxiv_id):
     })
 
     return render(request, "summarizer/tree.html", stuff_for_frontend)
+
+def create_embed(request):
+    stuff_for_frontend = {}
+
+    if request.method == 'POST':
+        paper_id = request.POST.get('paper_id')
+        print('embed',paper_id)
+        
+        # Create embeddings for paper with the given ID
+        return JsonResponse({'paper_id': paper_id})
+
+    stuff_for_frontend.update({
+        'test':1,
+    })
+
+    return redirect(reverse('home'))
+
+
+def chat(request):
+    stuff_for_frontend = {}
+    lang = get_language()
+    li = get_language_info(lang)
+    language = li['name']
+
+
+    max_nb_paper = 10
+
+    client_ip = utils.get_client_ip(request)#request.META['REMOTE_ADDR']
+    #print('clientip',client_ip)
+    #print('clientip2',client_ip.encode('utf-8'))
+
+    # Check if this IP address has already voted on this post
+    hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+    
+    stuff_for_frontend.update({
+        'language':lang,
+        'hashed_ip_address':hashed_ip_address,
+        'max_nb_paper':max_nb_paper,
+    })
+
+    return render(request, "summarizer/chat.html", stuff_for_frontend)
 
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
@@ -951,8 +993,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         
 
     else:
+        print('arxivjjj',arxiv_id)
         if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
-            print('deja')
+            print('dejatttt')
             paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
             sumpaper=''
             sumlang=''

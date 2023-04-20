@@ -13,6 +13,166 @@ import time
 from django.core.cache import cache
 import aiohttp
 
+class EmbeddingConsumer(AsyncWebsocketConsumer):
+
+    async def connect(self):
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        pass
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        paper_id = text_data_json['paper_id']
+        c = self.create_embeddings(paper_id)
+        licenseurl = await c
+
+        url = licenseurl
+        cc_format=''
+        license = ''
+        if url != '' and url != None:
+            parts = url.split('/')
+            print('parts',parts)
+            license = parts[-3]
+            version = parts[-2]
+            if license.upper() != "NONEXCLUSIVE-DISTRIB":
+                cc_format = 'CC ' + license.upper() + ' ' + version
+            else:
+                cc_format = license.upper() + ' ' + version
+
+            public=False
+            #print('lo',license.upper())
+            if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
+                public=True
+                print('pub')
+
+            print('cc',cc_format) # Output: CC BY-NC-SA 4.0
+
+        await self.send(text_data=json.dumps({
+            'message': 'completed',
+            'paper_id': paper_id,
+            'licenseurl':licenseurl,
+            'licensecc':cc_format,
+            'publiclicense':public
+        }))
+
+    async def create_embeddings(self, paper_id):
+        # Here you can put the code to create embeddings for the given paper ID
+        # First check if embeddings already there
+
+        c = asyncio.create_task(sync_to_async(utils.getstorepickle)(paper_id))
+        pickledata = await c
+
+        if pickledata=='':
+
+            print(f"Creating embeddings for paper {paper_id}...")
+            #time.sleep(1)
+            url = 'https://arxiv.org/pdf/'+paper_id+'.pdf'
+            book_path = "test1.pdf"
+
+            c=asyncio.create_task(utils.get_arxiv_metadata(paper_id))
+            arxivarrayf = await c
+
+            #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
+            if len(arxivarrayf)>1:
+                keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments','license']
+                arxiv_dict = dict(zip(keys, arxivarrayf[1:-1]))
+                exist=arxivarrayf[0]
+                data=arxivarrayf[-1]
+                print('a',arxiv_dict)
+                print("arxiv_dict['published_arxiv']",arxiv_dict['published_arxiv'])
+                published_datetime = datetime.strptime(str(arxiv_dict['published_arxiv']), '%Y-%m-%dT%H:%M:%SZ')
+                arxiv_dict['published_arxiv']=published_datetime
+
+            #date = published_datetime.date()
+
+            #print('published_datetime',published_datetime,date)
+
+            if exist == 1:
+                #arxivarray=[authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published_datetime, journal_ref, comments]
+
+                #keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments']
+
+                #arxiv_dict = dict(zip(keys, arxivarray))
+                #print('arxiv_dict',arxiv_dict)
+                print('hered',paper_id)
+                #time.sleep(30.)
+                paper_id=paper_id.replace('/','--')
+                print('hered2',paper_id)
+
+                c = asyncio.create_task(sync_to_async(utils.updatearvixdatapaper)(paper_id,arxiv_dict))
+                arvixupdate = await c
+
+            detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
+
+
+            #details_paper=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract']]
+            license,title,abstract,authors=detpap
+            #look at license first to see what can be done
+            
+
+            print('lic',license)
+            if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
+                public=1
+            else:
+                public=0
+
+
+            print('pubbbllllliiiiiiccccc',public)
+            active=1
+            if active==1:
+                print('active....')
+                if public==1:
+                    #response = requests.get(url)
+                    response = await asyncio.to_thread(requests.get, url)
+                    my_raw_data = response.content
+
+                    with open("my_pdf.pdf", 'wb') as my_data:
+                        my_data.write(my_raw_data)
+
+                    ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                    print('raw data done')
+                    #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
+                    c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
+                    book_text,full_text=await c
+                    print('book:',book_text)
+                    
+
+                else:
+                    print('else book text')
+                    print('authors',authors)
+                    book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+
+
+
+                #c = asyncio.create_task(sync_to_async(utils.getstorepickle)(paper_id))
+                #pickledata = await c
+
+                #print('dattaaaaaaaaaaaa',data)
+                if 1==1:#pickledata=='':
+                    if public==1:
+                        book_text2=data+'    '+full_text
+                    else:
+                        book_text2=data+'    '+book_text
+
+                    c = asyncio.create_task(utils.createindex(paper_id, book_text2, settings.OPENAI_KEY))
+                    created=await c
+                    print('crea',created)
+
+                #input('stop here')
+
+            print(f"Embeddings created for paper {paper_id}")
+        else:
+            c = asyncio.create_task(sync_to_async(utils.getlicense)(paper_id))
+            license = await c
+
+            print(f"Embeddings already exist for paper {paper_id}")
+
+        return license
+
+
+    
+
 class LoadingConsumer(AsyncWebsocketConsumer):
     sendmessages_running = {}
 
@@ -429,6 +589,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         )
         return sumpaper,created
 
+    '''
     def updatearvixdatapaper(self,arxiv_id,arxiv_dict):
 
         authors = []
@@ -466,7 +627,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #print('retdd',created)
         #'authors':arxiv_dict['authors'],'affiliation':arxiv_dict['affiliation']
         return paper,created
-
+    '''
     async def sendclose(self,v,l,message):
         print('in sendclose')
 
@@ -575,7 +736,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             print('here')
             #time.sleep(30.)
 
-            c = asyncio.create_task(sync_to_async(self.updatearvixdatapaper)(v,arxiv_dict))
+            c = asyncio.create_task(sync_to_async(utils.updatearvixdatapaper)(v,arxiv_dict))
             arvixupdate = await c
             #arvixupdate = await sync_to_async(self.updatearvixdatapaper)(v,arxiv_dict)
 
@@ -854,6 +1015,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             print('receive',message)
             user = data["user"]
             ip = data["ip"]
+            selectedpapers=''
+
+            if "selectedpapers" in data:
+                selectedpapers=data["selectedpapers"]
+                print('selectedpapers',selectedpapers)
+
             print('receive',user)
             #response = "reponse brah"#process_message(message)
             print('avant chat bot')
@@ -862,7 +1029,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
             memory = ConversationBufferMemory(memory_key="history",return_messages=True)
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip))
+            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers))
             chatbot_text=await c
 
             #chatbot_text=None

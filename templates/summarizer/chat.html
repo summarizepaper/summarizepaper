@@ -1,0 +1,1218 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+
+{% block title %} {% trans 'Chat with Arxiv Papers' %} {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Chat with Arxiv Papers' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/chat/" />
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+  <style>
+    
+    .selected-papers-column {
+  width: 50%;
+  float: left;
+}
+
+#selected-papers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list-group-item {
+  border: none;
+  border-radius: 0;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  margin-bottom: 10px;
+}
+
+.list-group-item:hover {
+  background-color: #e9ecef;
+}
+
+.list-group-item.active {
+  background-color: #70fbf0;
+  color: #fff;
+}
+
+.list-group-item strong {
+  font-size: 18px;
+}
+
+.list-group-item span {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+    .paper-item {
+  display: block;
+  margin-right: 10px;
+  padding: 1.5rem 1.25rem;
+  margin-bottom: 0.5rem;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.paper-item:hover {
+  cursor: pointer;
+  background-color: #f5f5f5;
+}
+
+.paper-item > strong {
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.paper-item > small {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.info-text > small {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.selected-paper {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.selected-paper:hover {
+  background-color: #f9f9f9;
+}
+
+.selected-paper-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #6c757d;
+  border-radius: 50%;
+}
+
+.selected-paper-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-results-column {
+  flex-basis: 50%;
+}
+body, html {
+  /*height: 100%;*/
+}
+
+.selected-papers-column {
+  flex-basis: 50%;
+}
+
+.separator {
+  border-left: 3px solid #ccc;
+  background-color: #ddd;
+  margin-left:10px;
+  margin-right:10px;
+}
+
+.columns-container {
+  margin-left: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  height: 100%;
+}
+.related-paper.selected {
+  background-color: #f5f5f5;
+}
+.remove-symbol {
+  float: right;
+  color: red;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+.search-container {
+    display: flex;
+    align-items: center;
+    border: 2px solid #ccc;
+    border-radius: 25px;
+    padding: 10px;
+    margin-bottom: 20px;
+    width: 90%;
+  }
+
+  .search-container label {
+    margin-right: 10px;
+  }
+
+  #search {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 16px;
+  }
+
+  #spinner {
+    margin-left: 10px;
+  }
+  h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.searchform form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+hr {
+  border: none;
+  height: 1px;
+  margin: 1rem 0;
+  background-color: #eee;
+}
+
+#paper-id {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+  max-width: 700px;
+}
+
+#add-paper {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.3s ease;
+  margin-bottom:20px;
+}
+
+#add-paper:hover {
+  background-color: #0062cc;
+}
+
+
+.add-paper-container {
+ width:40%;
+ min-width: 200px;
+}
+
+/*.spinner {
+  float: right;
+  color: red;
+  font-size: 1.5em;
+}*/
+
+.remove-spinner-container {
+  display: flex;
+  align-items: center;
+  float: right;
+}
+
+.spinner-container {
+  margin-left: 5px; /* adjust as needed */
+}
+
+
+.green-symbol {
+  color: green!important;
+  margin-left: 5px;
+}
+
+.chatbot-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom:10px;
+  margin-top:30px;
+  width: 100%;
+  height: 100%;
+}
+
+
+
+.chatbot-header {
+  background-color: #f7f7f7;
+  /*display: flex;*/
+  text-align:center;
+  /*justify-content: center;
+  align-items: center;*/
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.chatbot-body {
+  width: 700px;
+  height: 400px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  font-family: sans-serif;
+}
+
+.chatbot-body .chatbot-messages {
+  height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.chatbot-form {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+.chatbot-form input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+}
+
+.chatbot-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4CAF50;
+  color: #fff;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+
+.chatbot-body .chatbot-messages .chatbot-message {
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 5px;
+    margin-top: 15px;
+    margin-right: 10px;
+    text-align: justify;
+}
+
+.chatbot-body .chatbot-messages .chatbot-response {
+    color: #555;
+    margin-left: 20px;
+    margin-right: 10px;
+    text-align: justify;
+}
+
+/* Small devices (phones, 576px and up) */
+@media (min-width: 300px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 300px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+/* Small devices (phones, 576px and up) */
+@media (min-width: 576px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 400px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+@media (min-width: 900px) {
+  .chatbot-body {
+    width: 100%;
+    max-width: 700px;
+    height: 100%;
+    max-height: 400px;
+  }
+}
+
+.chatbot-message {
+  position: relative;
+}
+
+
+.blinking-square {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid black;
+  background-color: black; /* Add this line to set the background color to black */
+  /*position: absolute;*/
+  top: 5px; /* Position the square at the top of the chatbot-messages div */
+  /*right: 0;*/
+  margin-left:10px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+#loading-spinner {
+  margin-left: 5px;
+}
+
+
+
+
+
+#chatbot-toggle {
+  display: block;
+  width: 200px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+
+#chatbot-toggle:hover {
+  background-color: #e8e8e8;
+}
+
+
+.chatbot-instructions p {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+
+
+.chatbot-instructions {
+  display: none;
+  margin: 20px auto;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.chatbot-instructions ol {
+    counter-reset: my-counter;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.chatbot-instructions ol li {
+    counter-increment: my-counter;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.chatbot-instructions ol li:before {
+    content: counter(my-counter) ".";
+    background-color: #2196f3;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    height: 24px;
+    line-height: 24px;
+    margin-right: 10px;
+    text-align: center;
+    width: 24px;
+}
+
+.chatbot-instructions ol li:last-child {
+    margin-bottom: 0;
+}
+
+.chatbot-instructions ol li:last-child:before {
+    content: counter(my-counter) ".";
+    background-color: #2196f3;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    height: 24px;
+    line-height: 24px;
+    margin-right: 10px;
+    text-align: center;
+    width: 24px;
+}
+
+
+  </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+<div id="warnassistant" style="display:none; text-align: center;">
+  <p style="color: red;margin-left: 10px;margin-right: 10px;"><strong>{% trans 'The AI assistant is now accessible down the page to start asking questions but you can keep on adding more papers (up to 10) to chat with' %}</strong></p>
+</div>
+<div class="columns-container">
+    <div class="search-results-column">
+      <h3>{% trans 'Select papers to chat with' %}</h3>
+      <form class="searchform">
+        <div class="search-container">
+          <label for="search"><i class="fas fa-search"></i></label>
+          <input type="text" id="search" placeholder="{% trans 'Search for papers' %}">
+          <div id="spinner" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+        </div>
+        
+        <div class="list-group" id="search-results">
+
+        </div>
+        <div class="add-paper-container">
+          <p style="margin-bottom: 5px!important;"><strong>{% trans 'Add a paper directly' %}</strong></p>
+          <div class="input-container">
+            <input type="text" id="paper-id" placeholder="{% trans 'Enter Arxiv ID (e.g. 2211.04191v1)' %}">
+          </div>
+          <div id="errID" style="display: none;color: red;"><p>{% trans 'This ID does not exist' %}</p></div>
+          <button type="button" id="add-paper">{% trans 'Add' %}</button>
+        </div>
+      </form>
+    </div>
+    <div class="separator"></div>
+    <div class="selected-papers-column">
+      <h3>{% trans 'Selected Papers' %}</h3>
+      <ul class="list-group" id="selected-papers">
+        <p id="nopap" style="margin-right: 20px;">{% trans 'No papers selected yet. Search for papers to chat with using the search field on the left or add a paper directly via its arXiv ID using the form and clicking the Add button.' %}</p>
+      </ul>
+      <div id='maxpapreached' style="display: none;"><p style="color:red;"><span class='warning-sign'>&#9888;</span>{% trans 'You have reached the limit of' %} {{ max_nb_paper }} {% trans 'papers you can interact with and cannot add more.' %}</p></div>
+    </div>
+</div>
+<div class="chatbot-container" id="assistant" style="display:none">
+  <div class="chatbot-body">
+  <div class="chatbot-header">
+    <h3>{% trans 'Ask questions about selected papers to our AI assistant' %}</h3>
+    <p id="licencewarn" style="max-width: 400px;display: none; margin-top:-10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
+  </div>
+  </div>
+  <div class="chatbot-body">
+    <div class="chatbot-messages">
+      {% if chathistory %}
+        {% for chat in chathistory %}
+          <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
+          <div class="chatbot-response">{% trans 'AI' %} - {{ chat.response }}</div>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <form class="chatbot-form">
+      <input type="text" placeholder="{% trans 'Type your question here' %}">
+      <button type="submit" id="send-btn">{% trans 'Send' %}</button>
+    </form>
+    <div id="loading-spinner" style="display: none;text-align:right;">
+    <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
+  </div>
+  </div>
+<a id="chatbot-toggle" href="#">{% trans 'AI assistant instructions?' %}</a>
+<div class="chatbot-instructions" style="display: none;">
+  <p>{% trans 'Welcome to our AI assistant! Here are some important things to keep in mind:' %}</p>
+  <ol>
+      <li>{% trans 'The assistant will only answer questions related to the specific papers selected above.' %}</li>
+      <li>{% trans 'Please note that this is not a bot for casual chatting.' %}</li>
+      <li>{% trans 'If you want the answer in a language other than the language you chose for navigating the website, simply add "TRANSLATE IN LANGUAGE L" at the end of your query (replace "LANGUAGE L" with the language of your choice).' %}</li>
+      <li>{% trans 'For example, you could ask "Can you extract the most important aspect of the papers? TRANSLATE IN SPANISH".' %}</li>
+      {% if not request.user.is_authenticated %}
+      <li>{% trans 'If you want to keep the history of your questions/answers you should create an account.' %}</li>
+      {% endif %}
+  </ol>
+</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+  const chatbotToggle = document.querySelector('#chatbot-toggle');
+  const chatbotInstructions = document.querySelector('.chatbot-instructions');
+
+  chatbotToggle.addEventListener('click', () => {
+    event.preventDefault();
+    chatbotInstructions.style.display = chatbotInstructions.style.display === 'none' ? 'block' : 'none';
+  });
+</script>
+
+<script>
+
+var paperLicenses = {};
+// Initialize the count and ID array
+var count = 0;
+var privateIDs = [];
+var licenceWarn = document.getElementById("licencewarn");
+
+  var socket = new WebSocket('ws://' + window.location.host + '/ws/emb/');
+socket.onopen = function() {
+  console.log('WebSocket connected.');
+};
+
+socket.onmessage = function(event) {
+  var data = JSON.parse(event.data);
+  if (data.message === 'completed') {
+    var id2 = data.paper_id;
+    var selectedPaper = document.querySelector('.remove-symbol[id="' + id2 + '"]');
+    var listItem = selectedPaper.closest('li');
+    var publishedElement = listItem.querySelector('small:nth-of-type(2)');
+
+     // Create a new div element to hold the license information
+    var licenseDiv = document.createElement('div');
+    licenseDiv.classList.add('info-text');
+    licenseDiv.style.textAlign = 'left';
+
+    // Create and set the license text
+    
+    var licenseText = '<small><i class="fas fa-id-badge"></i> {% trans "License:" %} <a href="' + data.licenseurl + '" target="_blank">' + data.licensecc + '</a></small>';
+    licenseDiv.innerHTML = licenseText;
+
+    // Insert the new div element after the "Published" element
+    publishedElement.after(licenseDiv);
+      //  selectedPaper.innerHTML +='<div class="info-text" style="align:left"><i class="fas fa-id-badge"></i> {% trans "License:" %} <a href="'+data.licenseurl+'" target="_blank">'+data.licensecc+'</a></div>';
+
+    paperLicenses[id2] = {
+    licenseUrl: data.licenseurl,
+    licenseCc: data.licensecc,
+    publicLicense: data.publiclicense
+    };
+
+    /*for (const key in paperLicenses) {
+      console.log(key, paperLicenses[key]);
+    }*/
+
+    // Iterate through the paperLicenses object
+    if (paperLicenses[id2].publicLicense === false) {
+      count++;
+      privateIDs.push(id2);
+    }
+
+    //console.log(count+'g');
+    // Print the count and IDs
+    if (count > 0) {
+      var idString = privateIDs.join(', ');
+      var privateIDsMsg = " (" + idString + ")";
+      if (count == 1){
+        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of ' %}" + count + "{% trans ' paper' %}" + privateIDsMsg + " {% trans 'does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small>";
+      }else{
+        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The licenses of ' %}" + count + "{% trans ' papers' %}" + privateIDsMsg + " {% trans 'do not allow us to build upon their contents and the AI assistant only knows about the papers metadata rather than the full articles.' %}</small>";
+      }  
+      licenceWarn.innerHTML = warningMsg;
+      licenceWarn.style.display = "inline-block";
+      licenceWarn.style.maxWidth = "400px";
+      licenceWarn.style.marginTop = "-10px";
+
+      //console.log('There are ' + count + ' papers with private licenses: ' + idString);
+    } else {
+      //console.log('All papers have public licenses');
+      licenceWarn.style.display = "none";
+    }
+
+    //console.log(data.licenseurl+' '+data.licensecc+' '+data.publiclicense);
+
+    //selectedPaper.innerHTML += '<span class="green-symbol">&#10003;</span>';
+    setTimeout(function() {
+      selectedPaper.innerHTML += '<span class="green-symbol">&#10003;</span>';
+      selectedPaper.closest('.remove-spinner-container').querySelector('.spinner').style.display = 'none';
+      //spinner.style.display = 'none';
+    }, 1000);
+
+   
+  }
+};
+
+</script>
+<script>
+  var selectedPaperIds = [];
+
+// function to add a paper ID to the array
+function addSelectedPaperId(id) {
+  selectedPaperIds.push(id);
+  //console.log(selectedPaperIds);
+}
+
+// function to remove a paper ID from the array
+function removeSelectedPaperId(id) {
+  var index = selectedPaperIds.indexOf(id);
+  if (index > -1) {
+    selectedPaperIds.splice(index, 1);
+  }
+  //console.log(selectedPaperIds);
+}
+
+  function showSpinner() {
+  var spinner = document.querySelector('#spinner');
+  spinner.style.display = 'block';
+  //console.log('ok');
+}
+
+function hideSpinner() {
+  var spinner = document.querySelector('#spinner');
+  spinner.style.display = 'none';
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var selectedPapers = [];
+  var maxNumberPapers = {{ max_nb_paper }};
+  //console.log(maxNumberPapers);
+  var searchInput = document.getElementById('search');
+  var searchResults = document.getElementById('search-results');
+  var paperIdInput = document.getElementById('paper-id');
+  var addPaperButton = document.getElementById('add-paper');
+  var selectedPapersList = document.getElementById('selected-papers');
+  var nopap = document.getElementById('nopap');
+  var assistant = document.getElementById('assistant');
+  var warnassistant = document.getElementById('warnassistant');
+  var maxpapreached = document.getElementById('maxpapreached');
+  var errID = document.getElementById('errID');
+
+  
+  // Event listener for search input
+searchInput.addEventListener('keyup', function() {
+  var query = searchInput.value;
+  errID.style.display = 'none';
+  if (query.length >= 3) {
+    showSpinner();
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://export.arxiv.org/api/query?search_query=' + query + '&max_results=10');
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        var data = xhr.responseXML;
+        var entries = data.getElementsByTagName('entry');
+        searchResults.innerHTML = '';
+        for (var i = 0; i < entries.length; i++) {
+          var title = entries[i].getElementsByTagName('title')[0].textContent;
+          var author = entries[i].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
+          var dateString = entries[i].getElementsByTagName('published')[0].textContent;
+          //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
+          var year = dateString.substr(0, 4);
+          var month = dateString.substr(5, 2) - 1; // subtract 1 from the month since Date object uses 0-indexed months
+          var day = dateString.substr(8, 2);
+          var hour = dateString.substr(11, 2);
+          var minute = dateString.substr(14, 2);
+          var second = dateString.substr(17, 2);
+          var dateObj = new Date(Date.UTC(year, month, day, hour, minute, second)); // create a date object using UTC time
+          var published = dateObj.toLocaleString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}); 
+          //var idElement = entries[i].getElementsByTagName('id')[0];
+          //console.log(idElement);
+          id=entries[i].getElementsByTagName('id')[0].textContent.split('/abs/')[1]
+          //console.log(id);
+
+          var resultItem = document.createElement('a');
+          resultItem.classList.add('list-group-item', 'list-group-item-action', 'paper-item');
+          resultItem.setAttribute('data-id', id);
+          resultItem.innerHTML = '<strong>' + title + '</strong><br>' +
+                                  '<small>First Author: ' + author + '</small><br>' +
+                                  '<small>Published: ' + published + '</small>';
+          searchResults.appendChild(resultItem);
+          MathJax.typeset();
+        }
+      }
+    };
+    xhr.send();
+    setTimeout(function() {
+      hideSpinner();
+    }, 1000);
+    //hideSpinner();
+  } else {
+    searchResults.innerHTML = '';
+    //console.log('aui');
+  }
+});
+
+selectedPapersList.addEventListener('click', function(event) {
+  if (event.target.classList.contains('remove-symbol')) {
+    var item = event.target.closest('.selected-papers');
+    var id2 = event.target.getAttribute('id');
+    var removeSymbolElement = event.target.closest('li').querySelector('.remove-symbol');
+    var id = removeSymbolElement.id;
+
+    //clean up the selectedpapers list
+    selectedPapers = selectedPapers.filter(function(paper) { return paper.id !== id; });
+    if(id2){
+      selectedPapersList.removeChild(item);
+    }
+    //console.log('id:', id);
+    var selectedPaper = document.querySelector('[data-id="' + id + '"]');
+    //console.log(selectedPaper);
+    if (selectedPaper) {
+      selectedPaper.classList.remove('active');
+    }   
+    removeSelectedPaperId(id);
+    
+
+    // Iterate through the paperLicenses object
+    if (paperLicenses[id].publicLicense === false) {
+      count--;
+      const index = privateIDs.indexOf(id);
+      if (index !== -1) {
+        privateIDs.splice(index, 1);
+      }
+    }
+
+
+    delete paperLicenses[id];
+
+    if (count > 0) {
+      var idString = privateIDs.join(', ');
+      var privateIDsMsg = " (" + idString + ")";
+      if (count == 1){
+        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of ' %}" + count + "{% trans ' paper' %}" + privateIDsMsg + " {% trans 'does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small>";
+      }else{
+        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The licenses of ' %}" + count + "{% trans ' papers' %}" + privateIDsMsg + " {% trans 'do not allow us to build upon their contents and the AI assistant only knows about the papers metadata rather than the full articles.' %}</small>";
+      }      
+      licenceWarn.innerHTML = warningMsg;
+      licenceWarn.style.display = "inline-block";
+      licenceWarn.style.maxWidth = "400px";
+      licenceWarn.style.marginTop = "-10px";
+
+      //console.log('There are ' + count + ' papers with private licenses: ' + idString);
+    } else {
+      //console.log('All papers have public licenses');
+      licenceWarn.style.display = "none";
+    }
+
+    /*for (const key in paperLicenses) {
+      console.log('r:',key, paperLicenses[key]);
+    }*/
+
+    // Check if the list is empty
+    if (selectedPapersList.childElementCount === 1) {
+      nopap.style.display = 'block';
+      assistant.style.display = 'none';
+      warnassistant.style.display = 'none';
+    }
+    if(selectedPapersList.childElementCount<=maxNumberPapers){
+      //console.log('nope');
+      maxpapreached.style.display = 'none';
+
+    }
+   }
+   else {
+    if (event.target.closest('.info-text')) {
+      console.log('');
+
+    }else{
+    
+    //var id = event.target.getAttribute('id');
+    //var id = event.target.nextElementSibling.id;
+    var removeSymbolElement = event.target.closest('li').querySelector('.remove-symbol');
+    var id = removeSymbolElement.id;
+    //console.log(id);
+    window.open('/arxiv-id/'+id, '_blank'); // open the URL in a new tab
+    }
+   }
+
+});
+
+searchResults.addEventListener('click', function(event) {
+  if (event.target.classList.contains('list-group-item')) {
+    event.preventDefault(); // Prevent the link from navigating to a new page
+    var id = event.target.getAttribute('data-id');
+    var title = event.target.getElementsByTagName('strong')[0].textContent;
+    var author = event.target.childNodes[2].textContent;
+    var published = event.target.childNodes[4].textContent;
+    //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
+    var alreadySelected = selectedPapers.some(function(paper) { // check if the paper has already been added to the list
+      return paper.id === id;
+    });
+    if (!alreadySelected && selectedPapersList.childElementCount<=maxNumberPapers) { 
+      if (selectedPapersList.childElementCount >= 1) {
+        nopap.style.display = 'none';
+        assistant.style.display = '';
+        warnassistant.style.display = '';
+      }
+    addSelectedPaperId(id);
+    selectedPapers.push({id: id, title: title, author: author, published: published});
+    event.target.classList.add('active');
+    var selectedPaperItem = document.createElement('li');
+    selectedPaperItem.classList.add('list-group-item','selected-papers', 'list-group-item-action', 'paper-item');
+    selectedPaperItem.innerHTML = '<strong>' + title + '</strong><br><small>' + author + '</small><br><small>' + published + '</small><div class="remove-spinner-container"><span class="remove-symbol" id="'+id+'">&#128465;</span><span class="spinner-container"><i class="fas fa-spinner fa-spin spinner"></i></span></div>';
+    
+    selectedPapersList.appendChild(selectedPaperItem);
+    var spinner = selectedPaperItem.querySelector('.spinner');
+    spinner.style.display = 'inline-block';
+    
+    /*need to start embeddings if do not exist*/
+
+    socket.send(JSON.stringify({'paper_id': id}));
+
+    }
+    if(selectedPapersList.childElementCount>maxNumberPapers){
+      //console.log('nope');
+      maxpapreached.style.display = '';
+
+    }
+  } else if (event.target.parentElement.classList.contains('list-group-item')) {
+    event.preventDefault(); // Prevent the link from navigating to a new page
+    var id = event.target.parentElement.getAttribute('data-id');
+    var title = event.target.parentElement.getElementsByTagName('strong')[0].textContent;
+    var author = event.target.parentElement.childNodes[2].textContent;
+    var published = event.target.parentElement.childNodes[4].textContent;
+    //console.log('rr'+id+published);
+    var alreadySelected = selectedPapers.some(function(paper) { // check if the paper has already been added to the list
+      return paper.id === id;
+    });
+    if (!alreadySelected && selectedPapersList.childElementCount<=maxNumberPapers) { 
+      if (selectedPapersList.childElementCount >= 1) {
+        nopap.style.display = 'none';
+        assistant.style.display = '';
+        warnassistant.style.display = '';
+      }
+    addSelectedPaperId(id);
+    selectedPapers.push({id: id, title: title, author: author, published: published});
+    event.target.parentElement.classList.add('active');
+    var selectedPaperItem = document.createElement('li');
+    selectedPaperItem.classList.add('list-group-item','selected-papers', 'list-group-item-action', 'paper-item');
+    selectedPaperItem.innerHTML = '<strong>' + title + '</strong><br><small>' + author + '</small><br><small>' + published + '</small><div class="remove-spinner-container"><span class="remove-symbol" id="'+id+'">&#128465;</span><span class="spinner-container"><i class="fas fa-spinner fa-spin spinner"></i></span></div>';
+    
+    selectedPapersList.appendChild(selectedPaperItem);
+    var spinner = selectedPaperItem.querySelector('.spinner');
+    spinner.style.display = 'inline-block';
+    
+    /*need to start embeddings if do not exist*/
+
+    socket.send(JSON.stringify({'paper_id': id}));
+    }
+    if(selectedPapersList.childElementCount>maxNumberPapers){
+      //console.log('nope');
+      maxpapreached.style.display = '';
+
+    }
+  }
+  MathJax.typeset();
+});
+
+
+
+  addPaperButton.addEventListener('click', function() {
+    var id = paperIdInput.value.trim();
+    if (!id.match(/v\d+$/)) {
+      id += 'v1';
+    }
+    if (id) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'https://export.arxiv.org/api/query?id_list=' + id);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          errID.style.display = 'none';
+          var data = xhr.responseXML;
+          var entries = data.getElementsByTagName('entry');
+          if (entries[0].getElementsByTagName('title')[0]){
+
+          var title = entries[0].getElementsByTagName('title')[0].textContent;
+          var author = entries[0].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
+          //var published = entries[0].getElementsByTagName('published')[0].textContent;
+          var dateString = entries[0].getElementsByTagName('published')[0].textContent;
+          //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
+          var year = dateString.substr(0, 4);
+          var month = dateString.substr(5, 2) - 1; // subtract 1 from the month since Date object uses 0-indexed months
+          var day = dateString.substr(8, 2);
+          var hour = dateString.substr(11, 2);
+          var minute = dateString.substr(14, 2);
+          var second = dateString.substr(17, 2);
+          var dateObj = new Date(Date.UTC(year, month, day, hour, minute, second)); // create a date object using UTC time
+          var alreadySelected = selectedPapers.some(function(paper) { // check if the paper has already been added to the list
+            return paper.id === id;
+          });
+          if (!alreadySelected && selectedPapersList.childElementCount<=maxNumberPapers) { 
+            if (selectedPapersList.childElementCount >= 1) {
+              nopap.style.display = 'none';
+              assistant.style.display = '';
+              warnassistant.style.display = '';
+            }
+          var published = dateObj.toLocaleString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}); 
+          addSelectedPaperId(id);
+          selectedPapers.push({id: id, title: title, author: author, published: published});
+          var selectedPaperItem = document.createElement('li');
+          selectedPaperItem.classList.add('list-group-item','selected-papers', 'list-group-item-action', 'paper-item');
+          selectedPaperItem.innerHTML = '<strong>' + title + '</strong><br><small>First author: ' + author + '</small><br><small>Published: ' + published + '</small><div class="remove-spinner-container"><span class="remove-symbol" id="'+id+'">&#128465;</span><span class="spinner-container"><i class="fas fa-spinner fa-spin spinner"></i></span></div>';
+          
+          selectedPapersList.appendChild(selectedPaperItem);
+          var spinner = selectedPaperItem.querySelector('.spinner');
+          spinner.style.display = 'inline-block';
+
+          /*need to start embeddings if do not exist*/
+
+          socket.send(JSON.stringify({'paper_id': id}));
+          }
+          if(selectedPapersList.childElementCount>maxNumberPapers){
+            //console.log('nope');
+            maxpapreached.style.display = '';
+
+          }
+          MathJax.typeset();
+        }else{
+          errID.style.display = '';
+        }
+        } else {
+          errID.style.display = '';
+          //console.log('Request failed. Returned status of ' + xhr.status);
+        }
+      };
+      xhr.send();
+    }
+  });
+});
+</script>
+
+<script>
+
+  function addTheListeners() {
+    //alert('ok');
+    if (socketl && socketl.readyState === WebSocket.OPEN) {
+      //console.log('adding...')
+      socketl.addEventListener("open", function(event) {
+        //console.log("WebSocket connected");
+        connecting = false;
+        //alert(socketl+' '+socketl.readyState);
+      });
+  
+      socketl.addEventListener("message", function(event) {
+        //socketl.onmessage = function(event) {
+        //console.log('Received message:', event);
+        const messageb = JSON.parse(event.data).message;
+        const chatbotResponse = document.createElement('div');
+        chatbotResponse.classList.add('chatbot-response');
+        chatbotResponse.innerText = "{% trans 'AI -' %} "+messageb;
+        chatbotMessages.appendChild(chatbotResponse);
+        var blinkingSquare = document.querySelector(".blinking-square");
+  
+        blinkingSquare.remove();
+  
+        var loadingSpinner = document.getElementById("loading-spinner");
+        loadingSpinner.style.display = "none";
+  
+        /*var messagesContainer = document.querySelector(".chatbot-messages");
+  
+        // Function to scroll the container to the bottom
+        function scrollToBottom() {
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }*/
+        MathJax.typeset();
+  
+        // Scroll the container to the bottom
+        scrollToBottom();
+  
+  
+      });
+  
+      socketl.addEventListener("close", function(event) {
+        // If the WebSocket connection is closed, display an error message
+        var messagesContainer = document.querySelector(".chatbot-messages");
+        var errorMessage = document.createElement("div");
+        errorMessage.innerHTML = "{% trans 'Error: WebSocket connection closed (reload the page).' %}";
+        messagesContainer.appendChild(errorMessage);
+        console.log("WebSocket disconnected: ");
+      });
+  
+      socketl.addEventListener("error", function(event) {
+        console.error("WebSocket error: " + event);
+      });
+      isListenerAdded = true;
+  
+    } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
+      //console.log("WebSocket connecting 2...");
+      setTimeout(function() {
+        addTheListeners();
+        //console.log("wait 2");
+      }, 1000);
+    } else {
+      console.error("WebSocket is not open 2");
+    }
+  }
+  </script>
+  
+  <script>
+    const min = 100000000000000; // Minimum 15-digit number
+    const max = 999999999999999; // Maximum 15-digit number
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    //console.log(randomNumber); // Outputs a random integer with 15 digits
+    const randomString = randomNumber.toString();
+
+    const arxivRoomName = randomString;//"multiple";//selectedPaperIds;//JSON.parse(document.getElementById('arxiv_id').textContent);
+    const language = "{{ language }}"
+    //console.log(language);
+    const user = "{{ request.user }}"
+    const ip = "{{ hashed_ip_address }}"
+  
+    let isListenerAdded = false;
+  
+    const chatbotMessages = document.querySelector('.chatbot-messages');
+    const chatbotForm = document.querySelector('.chatbot-form');
+    const chatbotInput = chatbotForm.querySelector('input[type="text"]');
+  
+    var sendBtn = document.getElementById("send-btn");
+    let socketl=null;
+    let connecting = false;
+  
+    sendBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+  
+      if (socketl === null) {
+        //console.log('connecting...')
+      {% if onhero %}
+      socketl = new WebSocket(
+          'wss://'
+          + window.location.host
+          + '/ws/arxivid/'
+          + arxivRoomName
+          + '/'
+          + language
+          + '/'
+      );
+      {% else %}
+      socketl = new WebSocket(
+          'ws://'
+          + window.location.host
+          + '/ws/arxivid/'
+          + arxivRoomName
+          + '/'
+          + language
+          + '/'
+      );
+      {% endif %}
+      connecting = true;
+    }
+  
+  
+  //chatbotForm.addEventListener('submit', function(event) {
+    //event.preventDefault();
+    //alert('ok');
+    var inputValue = chatbotInput.value.trim();
+    var messagesContainer = document.querySelector(".chatbot-messages");
+  
+    /*if (socketl.readyState !== WebSocket.OPEN) {
+      var errorMessage = document.createElement("div");
+      errorMessage.innerHTML = "{% trans 'Error: WebSocket connection closed. Reload the page.' %}";
+      messagesContainer.appendChild(errorMessage);
+      return;
+    }*/
+  
+    if (inputValue === "") {
+      return;
+    }
+  
+    const messagec = chatbotInput.value;
+    chatbotInput.value = '';
+    const chatbotMessage = document.createElement('div');
+    chatbotMessage.classList.add('chatbot-message');
+    chatbotMessage.innerText = "{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %} "+messagec;
+    const blinkingSquare = document.createElement('span');
+    blinkingSquare.classList.add('blinking-square');
+    chatbotMessage.appendChild(blinkingSquare);
+    chatbotMessages.appendChild(chatbotMessage);
+    //var messagesContainer = document.querySelector(".chatbot-messages");
+    var loadingSpinner = document.getElementById("loading-spinner");
+    loadingSpinner.style.display = "block";
+    MathJax.typeset();
+  
+    // Function to scroll the container to the bottom
+    /*function scrollToBottom() {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }*/
+  
+    // Scroll the container to the bottom
+    scrollToBottom();
+  
+    sendWebSocketMessage(messagec,user,ip,selectedPaperIds);
+    //socketl.send(JSON.stringify({message: messagec}));
+  
+    if (!isListenerAdded) {
+      addTheListeners();
+    }
+  });
+  
+  </script>
+  
+  
+  <script>
+  
+  function sendWebSocketMessage(message2,user,ip,selectedpapers) {
+    if (socketl && socketl.readyState === WebSocket.OPEN) {
+      //console.log('sending...')
+      socketl.send(JSON.stringify({message: message2, user:user, ip:ip, selectedpapers:selectedpapers}));
+    } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
+      //console.log("WebSocket connecting...");
+      setTimeout(function() {
+        sendWebSocketMessage(message2,user,ip,selectedpapers);
+        //console.log("wait");
+      }, 1000);
+    } else {
+      console.error("WebSocket is not open");
+    }
+  }
+  
+  </script>
+  
+  <script>
+    // Define a function that scrolls to the bottom of the chatbot-messages div
+    function scrollToBottom() {
+      var messagesContainer = document.querySelector(".chatbot-messages");
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  
+    // Call the scrollToBottom function when the page is fully loaded
+    window.addEventListener("load", scrollToBottom);
+  </script>
+
+{% endblock %}
