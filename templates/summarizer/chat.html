@@ -603,14 +603,11 @@ var licenceWarn = document.getElementById("licencewarn");
 
 
   {% if onhero %}
-    console.log('onhero');
+  //console.log('onhero');
   var socket = new WebSocket('wss://' + window.location.host + '/ws/emb/');
-
   {% else %}
-  console.log('notonhero');
-
+  //console.log('notonhero');
   var socket = new WebSocket('ws://' + window.location.host + '/ws/emb/');
-
   {% endif %}
 
 socket.onopen = function() {

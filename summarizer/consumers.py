@@ -28,6 +28,8 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
         licenseurl = await c
 
         url = licenseurl
+        print('url',url)
+
         cc_format=''
         license = ''
         if url != '' and url != None:
@@ -47,6 +49,10 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                 print('pub')
 
             print('cc',cc_format) # Output: CC BY-NC-SA 4.0
+        else:
+            public=False
+            licenseurl="http://arxiv.org/licenses/assumed-1991-2003/" 
+            cc_format="ASSUMED 1991-2003"
 
         await self.send(text_data=json.dumps({
             'message': 'completed',
