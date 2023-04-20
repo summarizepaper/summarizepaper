@@ -749,6 +749,11 @@ def chat(request):
     language = li['name']
 
 
+    if 'ON_HEROKU' in os.environ:
+        onhero=True
+    else:
+        onhero=False
+
     max_nb_paper = 10
 
     client_ip = utils.get_client_ip(request)#request.META['REMOTE_ADDR']
@@ -759,6 +764,7 @@ def chat(request):
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
     
     stuff_for_frontend.update({
+        'onhero':onhero,
         'language':lang,
         'hashed_ip_address':hashed_ip_address,
         'max_nb_paper':max_nb_paper,
