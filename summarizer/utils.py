@@ -286,7 +286,11 @@ def getallpapers(cat):
     return allpapers
 
 def getpapersfromlist(list):
-    
+    for i in range(len(list)):
+        list[i] = list[i].replace('/', '--')
+
+    print('list',list)    
+        
     allpapers = ArxivPaper.objects.filter(arxiv_id__in=list)
     
     return allpapers
