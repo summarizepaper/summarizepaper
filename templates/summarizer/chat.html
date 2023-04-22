@@ -147,7 +147,7 @@
   }
   .selected-papers-column {
     width: 50%;
-    margin-right: 10px;
+    /*margin-right: 10px;*/
   }
   .columns-container {
     width: 90%;
@@ -185,6 +185,9 @@
     padding: 10px;
     margin-bottom: 20px;
     width: 90%;
+    max-width: 90%;
+    overflow: hidden;
+    position: relative;
   }
 
   .search-container label {
@@ -199,7 +202,10 @@
   }
 
   #spinner {
-    margin-left: 10px;
+    position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 10px;
   }
   h3 {
   font-size: 1.5rem;
