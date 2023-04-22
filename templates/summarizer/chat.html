@@ -134,14 +134,32 @@
 .search-results-column {
   flex-basis: 50%;
 }
-body, html {
-  /*height: 100%;*/
-}
+
 
 .selected-papers-column {
   flex-basis: 50%;
 }
 
+@media (min-width: 768px) {
+  .search-results-column {
+    width: 50%;
+    margin-bottom: 0;
+  }
+  .selected-papers-column {
+    width: 50%;
+    margin-right: 10px;
+  }
+}
+@media (min-width: 992px) {
+  .search-results-column {
+    width: 60%;
+    margin-bottom: 0;
+  }
+  .selected-papers-column {
+    width: 40%;
+    margin-right: 10px;
+  }
+}
 .separator {
   border-left: 3px solid #ccc;
   background-color: #ddd;
