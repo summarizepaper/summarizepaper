@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-22 12:47+0000\n"
+"POT-Creation-Date: 2023-04-22 14:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -332,7 +332,7 @@ msgstr ""
 #: templates/summarizer/arxividpage.html:1140
 #: templates/summarizer/arxividpage.html:1144
 #: templates/summarizer/arxividpage.html:1497
-#: templates/summarizer/chat.html:633 templates/summarizer/chat.html:638
+#: templates/summarizer/chat.html:644 templates/summarizer/chat.html:649
 #: templates/summarizer/tree.html:182 templates/summarizer/tree.html:186
 msgid "License:"
 msgstr ""
@@ -362,22 +362,22 @@ msgid ""
 "\">chat with multiple papers at once here</a>."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:861 templates/summarizer/chat.html:548
+#: templates/summarizer/arxividpage.html:861 templates/summarizer/chat.html:559
 msgid ""
 "The license of the paper does not allow us to build upon its content and the "
 "AI assistant only knows about the paper metadata rather than the full "
 "article."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:870 templates/summarizer/chat.html:556
+#: templates/summarizer/arxividpage.html:870 templates/summarizer/chat.html:567
 msgid "AI"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:875 templates/summarizer/chat.html:561
+#: templates/summarizer/arxividpage.html:875 templates/summarizer/chat.html:572
 msgid "Type your question here"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:876 templates/summarizer/chat.html:562
+#: templates/summarizer/arxividpage.html:876 templates/summarizer/chat.html:573
 msgid "Send"
 msgstr ""
 
@@ -388,15 +388,15 @@ msgstr ""
 #: templates/summarizer/arxividpage.html:1248
 #: templates/summarizer/arxividpage.html:1251
 #: templates/summarizer/arxividpage.html:1254
-#: templates/summarizer/chat.html:565 templates/summarizer/home.html:259
+#: templates/summarizer/chat.html:576 templates/summarizer/home.html:259
 msgid "Loading..."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:883 templates/summarizer/chat.html:568
+#: templates/summarizer/arxividpage.html:883 templates/summarizer/chat.html:579
 msgid "AI assistant instructions?"
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:885 templates/summarizer/chat.html:570
+#: templates/summarizer/arxividpage.html:885 templates/summarizer/chat.html:581
 msgid ""
 "Welcome to our AI assistant! Here are some important things to keep in mind:"
 msgstr ""
@@ -406,11 +406,11 @@ msgid ""
 "The assistant will only answer questions related to this specific paper."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:888 templates/summarizer/chat.html:573
+#: templates/summarizer/arxividpage.html:888 templates/summarizer/chat.html:584
 msgid "Please note that this is not a bot for casual chatting."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:889 templates/summarizer/chat.html:574
+#: templates/summarizer/arxividpage.html:889 templates/summarizer/chat.html:585
 msgid ""
 "If you want the answer in a language other than the language you chose for "
 "navigating the website, simply add \"TRANSLATE IN LANGUAGE L\" at the end of "
@@ -423,7 +423,7 @@ msgid ""
 "the paper? TRANSLATE IN SPANISH\"."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:892 templates/summarizer/chat.html:577
+#: templates/summarizer/arxividpage.html:892 templates/summarizer/chat.html:588
 msgid ""
 "If you want to keep the history of your questions/answers you should create "
 "an account."
@@ -655,22 +655,22 @@ msgid ""
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1582
-#: templates/summarizer/chat.html:1055
+#: templates/summarizer/chat.html:1081
 msgid "AI -"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1609
-#: templates/summarizer/chat.html:1082
+#: templates/summarizer/chat.html:1108
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1686
-#: templates/summarizer/chat.html:1165
+#: templates/summarizer/chat.html:1191
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1699
-#: templates/summarizer/chat.html:1178
+#: templates/summarizer/chat.html:1204
 msgid "You -"
 msgstr ""
 
@@ -678,98 +678,106 @@ msgstr ""
 msgid "Chat with Arxiv Papers"
 msgstr ""
 
-#: templates/summarizer/chat.html:507
+#: templates/summarizer/chat.html:509
 msgid ""
-"The AI assistant is now accessible down the page to start asking questions "
-"but you can keep on adding more papers (up to 10) to chat with"
-msgstr ""
-
-#: templates/summarizer/chat.html:511
-msgid "Select papers to chat with"
+"The AI assistant is now accessible below to start asking questions. You can "
+"keep on adding up to 10 papers to chat with."
 msgstr ""
 
 #: templates/summarizer/chat.html:515
-msgid "Search for papers"
+msgid "Select papers to chat with"
 msgstr ""
 
 #: templates/summarizer/chat.html:520
+msgid "Search for papers"
+msgstr ""
+
+#: templates/summarizer/chat.html:525
 msgid "Enter at least 3 letters for the search to start"
 msgstr ""
 
-#: templates/summarizer/chat.html:526
+#: templates/summarizer/chat.html:531
 msgid "Add a paper directly"
 msgstr ""
 
-#: templates/summarizer/chat.html:528
+#: templates/summarizer/chat.html:533
 msgid "Enter Arxiv ID (e.g. 2211.04191v1)"
 msgstr ""
 
-#: templates/summarizer/chat.html:530
+#: templates/summarizer/chat.html:535
 msgid "This ID does not exist"
 msgstr ""
 
-#: templates/summarizer/chat.html:531
-msgid "Add"
+#: templates/summarizer/chat.html:536
+msgid "Paper added!"
 msgstr ""
 
 #: templates/summarizer/chat.html:537
+msgid "Paper already added!"
+msgstr ""
+
+#: templates/summarizer/chat.html:538
+msgid "Add"
+msgstr ""
+
+#: templates/summarizer/chat.html:545
 msgid "Selected Papers"
 msgstr ""
 
-#: templates/summarizer/chat.html:539
+#: templates/summarizer/chat.html:549
 msgid ""
 "No papers selected yet. Search for papers to chat with using the search "
 "field on the left or add a paper directly via its arXiv ID using the form "
 "and clicking the Add button."
 msgstr ""
 
-#: templates/summarizer/chat.html:541
+#: templates/summarizer/chat.html:552
 msgid "You have reached the limit of"
 msgstr ""
 
-#: templates/summarizer/chat.html:541
+#: templates/summarizer/chat.html:552
 msgid "papers you can interact with and cannot add more."
 msgstr ""
 
-#: templates/summarizer/chat.html:547
+#: templates/summarizer/chat.html:558
 msgid "Ask questions about selected papers to our AI assistant"
 msgstr ""
 
-#: templates/summarizer/chat.html:572
+#: templates/summarizer/chat.html:583
 msgid ""
 "The assistant will only answer questions related to the specific papers "
 "selected above."
 msgstr ""
 
-#: templates/summarizer/chat.html:575
+#: templates/summarizer/chat.html:586
 msgid ""
 "For example, you could ask \"Can you extract the most important aspect of "
 "the papers? TRANSLATE IN SPANISH\"."
 msgstr ""
 
-#: templates/summarizer/chat.html:662 templates/summarizer/chat.html:838
+#: templates/summarizer/chat.html:673 templates/summarizer/chat.html:853
 msgid "The license of "
 msgstr ""
 
-#: templates/summarizer/chat.html:662 templates/summarizer/chat.html:838
+#: templates/summarizer/chat.html:673 templates/summarizer/chat.html:853
 msgid " paper"
 msgstr ""
 
-#: templates/summarizer/chat.html:662 templates/summarizer/chat.html:838
+#: templates/summarizer/chat.html:673 templates/summarizer/chat.html:853
 msgid ""
 "does not allow us to build upon its content and the AI assistant only knows "
 "about the paper metadata rather than the full article."
 msgstr ""
 
-#: templates/summarizer/chat.html:664 templates/summarizer/chat.html:840
+#: templates/summarizer/chat.html:675 templates/summarizer/chat.html:855
 msgid "The licenses of "
 msgstr ""
 
-#: templates/summarizer/chat.html:664 templates/summarizer/chat.html:840
+#: templates/summarizer/chat.html:675 templates/summarizer/chat.html:855
 msgid " papers"
 msgstr ""
 
-#: templates/summarizer/chat.html:664 templates/summarizer/chat.html:840
+#: templates/summarizer/chat.html:675 templates/summarizer/chat.html:855
 msgid ""
 "do not allow us to build upon their contents and the AI assistant only knows "
 "about the papers metadata rather than the full articles."
