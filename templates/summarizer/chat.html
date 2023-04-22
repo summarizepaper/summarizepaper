@@ -140,24 +140,18 @@
   flex-basis: 50%;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 768px) {
   .search-results-column {
-    width: 50%;
+    width: 70%;
     margin-bottom: 0;
   }
   .selected-papers-column {
-    width: 50%;
+    width: 70%;
     margin-right: 10px;
   }
-}
-@media (min-width: 992px) {
-  .search-results-column {
-    width: 60%;
-    margin-bottom: 0;
-  }
-  .selected-papers-column {
-    width: 40%;
-    margin-right: 10px;
+  .columns-container {
+    width: 90%;
+    overflow-x: visible;
   }
 }
 .separator {
