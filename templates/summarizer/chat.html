@@ -514,14 +514,12 @@ hr {
     width: 24px;
 }
 .input-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  overflow-x: hidden;
+  width: 80%;
+  max-width: 500px;
+  overflow: hidden;
 }
 .input-container input {
-  max-width: 70%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -558,7 +556,7 @@ hr {
         <div class="add-paper-container">
           <p style="margin-bottom: 5px; font-weight: bold; font-size: 18px; color: #555;"><strong>{% trans 'Add a paper directly' %}</strong></p>
           <div class="input-container">
-            <input type="text" id="paper-id" placeholder="{% trans 'Enter Arxiv ID (e.g. 2211.04191v1)' %}">
+            <input type="text" id="paper-id" placeholder="{% trans 'Arxiv ID (e.g. 2211.04191v1)' %}">
           </div>
           <div id="errID" style="display: none;color: red;"><p>{% trans 'This ID does not exist' %}</p></div>
           <div id="OKID" style="display: none;color: green;"><p>{% trans 'Paper added!' %}</p></div>
