@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-20 19:59+0000\n"
-"PO-Revision-Date: 2023-04-20 20:00+0000\n"
+"POT-Creation-Date: 2023-04-22 12:47+0000\n"
+"PO-Revision-Date: 2023-04-22 12:47+0000\n"
 "Last-Translator:   <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -428,7 +428,7 @@ msgstr "Auteurs :"
 #: templates/summarizer/arxividpage.html:1140
 #: templates/summarizer/arxividpage.html:1144
 #: templates/summarizer/arxividpage.html:1497
-#: templates/summarizer/chat.html:624 templates/summarizer/chat.html:629
+#: templates/summarizer/chat.html:633 templates/summarizer/chat.html:638
 #: templates/summarizer/tree.html:182 templates/summarizer/tree.html:186
 msgid "License:"
 msgstr "Licence :"
@@ -461,7 +461,7 @@ msgstr ""
 "primary\">discutez avec plusieurs papiers à la fois ici</a>."
 
 #: templates/summarizer/arxividpage.html:861
-#: templates/summarizer/chat.html:547
+#: templates/summarizer/chat.html:548
 msgid ""
 "The license of the paper does not allow us to build upon its content and the"
 " AI assistant only knows about the paper metadata rather than the full "
@@ -472,17 +472,17 @@ msgstr ""
 "que de l'article complet."
 
 #: templates/summarizer/arxividpage.html:870
-#: templates/summarizer/chat.html:555
+#: templates/summarizer/chat.html:556
 msgid "AI"
 msgstr "IA"
 
 #: templates/summarizer/arxividpage.html:875
-#: templates/summarizer/chat.html:560
+#: templates/summarizer/chat.html:561
 msgid "Type your question here"
 msgstr "Saisissez votre question ici"
 
 #: templates/summarizer/arxividpage.html:876
-#: templates/summarizer/chat.html:561
+#: templates/summarizer/chat.html:562
 msgid "Send"
 msgstr "Envoyer"
 
@@ -493,17 +493,17 @@ msgstr "Envoyer"
 #: templates/summarizer/arxividpage.html:1248
 #: templates/summarizer/arxividpage.html:1251
 #: templates/summarizer/arxividpage.html:1254
-#: templates/summarizer/chat.html:564 templates/summarizer/home.html:259
+#: templates/summarizer/chat.html:565 templates/summarizer/home.html:259
 msgid "Loading..."
 msgstr "Chargement..."
 
 #: templates/summarizer/arxividpage.html:883
-#: templates/summarizer/chat.html:567
+#: templates/summarizer/chat.html:568
 msgid "AI assistant instructions?"
 msgstr "Instructions pour utiliser l'assistant IA ?"
 
 #: templates/summarizer/arxividpage.html:885
-#: templates/summarizer/chat.html:569
+#: templates/summarizer/chat.html:570
 msgid ""
 "Welcome to our AI assistant! Here are some important things to keep in mind:"
 msgstr ""
@@ -517,12 +517,12 @@ msgstr ""
 "L'assistant ne répondra qu'aux questions liées à ce document spécifique."
 
 #: templates/summarizer/arxividpage.html:888
-#: templates/summarizer/chat.html:572
+#: templates/summarizer/chat.html:573
 msgid "Please note that this is not a bot for casual chatting."
 msgstr "Veuillez noter qu'il ne s'agit pas d'un bot de conversation."
 
 #: templates/summarizer/arxividpage.html:889
-#: templates/summarizer/chat.html:573
+#: templates/summarizer/chat.html:574
 msgid ""
 "If you want the answer in a language other than the language you chose for "
 "navigating the website, simply add \"TRANSLATE IN LANGUAGE L\" at the end of"
@@ -541,7 +541,7 @@ msgstr ""
 "important du document ? TRADUIRE EN ESPAGNOL\"."
 
 #: templates/summarizer/arxividpage.html:892
-#: templates/summarizer/chat.html:576
+#: templates/summarizer/chat.html:577
 msgid ""
 "If you want to keep the history of your questions/answers you should create "
 "an account."
@@ -819,22 +819,22 @@ msgstr ""
 "l'article plutôt qu'avec l'article en tant que tel."
 
 #: templates/summarizer/arxividpage.html:1582
-#: templates/summarizer/chat.html:1036
+#: templates/summarizer/chat.html:1055
 msgid "AI -"
 msgstr "IA -"
 
 #: templates/summarizer/arxividpage.html:1609
-#: templates/summarizer/chat.html:1063
+#: templates/summarizer/chat.html:1082
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr "Erreur: connexion au WebSocket fermée (rechargez la page)."
 
 #: templates/summarizer/arxividpage.html:1686
-#: templates/summarizer/chat.html:1146
+#: templates/summarizer/chat.html:1165
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr "Erreur : connexion au WebSocket fermée. Rechargez la page."
 
 #: templates/summarizer/arxividpage.html:1699
-#: templates/summarizer/chat.html:1159
+#: templates/summarizer/chat.html:1178
 msgid "You -"
 msgstr "Vous -"
 
@@ -859,27 +859,31 @@ msgstr "Sélectionnez les papiers avec lesquels discuter"
 msgid "Search for papers"
 msgstr "Recherche d'articles"
 
-#: templates/summarizer/chat.html:525
+#: templates/summarizer/chat.html:520
+msgid "Enter at least 3 letters for the search to start"
+msgstr "Entrez au moins 3 lettres pour que la recherche démarre"
+
+#: templates/summarizer/chat.html:526
 msgid "Add a paper directly"
 msgstr "Ajouter un papier directement"
 
-#: templates/summarizer/chat.html:527
+#: templates/summarizer/chat.html:528
 msgid "Enter Arxiv ID (e.g. 2211.04191v1)"
-msgstr "Entrez l'ID Arxiv (par exemple 2211. 04191v1)"
+msgstr "Entrez l'ID Arxiv (par exemple 2211.04191v1)"
 
-#: templates/summarizer/chat.html:529
+#: templates/summarizer/chat.html:530
 msgid "This ID does not exist"
 msgstr "Cet ID n'existe pas"
 
-#: templates/summarizer/chat.html:530
+#: templates/summarizer/chat.html:531
 msgid "Add"
 msgstr "Ajouter"
 
-#: templates/summarizer/chat.html:536
+#: templates/summarizer/chat.html:537
 msgid "Selected Papers"
 msgstr "Articles Sélectionnés"
 
-#: templates/summarizer/chat.html:538
+#: templates/summarizer/chat.html:539
 msgid ""
 "No papers selected yet. Search for papers to chat with using the search "
 "field on the left or add a paper directly via its arXiv ID using the form "
@@ -890,22 +894,22 @@ msgstr ""
 "article directement via son identifiant arXiv en utilisant le formulaire et "
 "en cliquant sur le bouton Ajouter."
 
-#: templates/summarizer/chat.html:540
+#: templates/summarizer/chat.html:541
 msgid "You have reached the limit of"
 msgstr "Vous avez atteint la limite de"
 
-#: templates/summarizer/chat.html:540
+#: templates/summarizer/chat.html:541
 msgid "papers you can interact with and cannot add more."
 msgstr ""
 "papiers avec lesquels vous pouvez interagir et ne pouvez pas en ajouter "
 "d'autres."
 
-#: templates/summarizer/chat.html:546
+#: templates/summarizer/chat.html:547
 msgid "Ask questions about selected papers to our AI assistant"
 msgstr ""
 "Posez des questions sur les articles sélectionnés à notre assistant IA"
 
-#: templates/summarizer/chat.html:571
+#: templates/summarizer/chat.html:572
 msgid ""
 "The assistant will only answer questions related to the specific papers "
 "selected above."
@@ -913,7 +917,7 @@ msgstr ""
 "L'assistant ne répondra qu'aux questions liées aux articles spécifiques "
 "sélectionnés ci-dessus."
 
-#: templates/summarizer/chat.html:574
+#: templates/summarizer/chat.html:575
 msgid ""
 "For example, you could ask \"Can you extract the most important aspect of "
 "the papers? TRANSLATE IN SPANISH\"."
@@ -921,19 +925,15 @@ msgstr ""
 "Par exemple, vous pourriez demander \"Pouvez-vous extraire l'aspect le plus "
 "important des papiers? TRADUIRE EN ESPAGNOL\"."
 
-#: templates/summarizer/chat.html:653 templates/summarizer/chat.html:819
+#: templates/summarizer/chat.html:662 templates/summarizer/chat.html:838
 msgid "The license of "
 msgstr "La licence de "
 
-#: templates/summarizer/chat.html:653 templates/summarizer/chat.html:819
+#: templates/summarizer/chat.html:662 templates/summarizer/chat.html:838
 msgid " paper"
 msgstr " papier"
 
-#: templates/summarizer/chat.html:653 templates/summarizer/chat.html:819
-#| msgid ""
-#| "The license of the paper does not allow us to build upon its content and the"
-#| " AI assistant only knows about the paper metadata rather than the full "
-#| "article."
+#: templates/summarizer/chat.html:662 templates/summarizer/chat.html:838
 msgid ""
 "does not allow us to build upon its content and the AI assistant only knows "
 "about the paper metadata rather than the full article."
@@ -941,19 +941,15 @@ msgstr ""
 "ne nous permet pas de nous appuyer sur son contenu et l'assistant IA ne "
 "connaît que les métadonnées du papier plutôt que l'article complet."
 
-#: templates/summarizer/chat.html:655 templates/summarizer/chat.html:821
+#: templates/summarizer/chat.html:664 templates/summarizer/chat.html:840
 msgid "The licenses of "
 msgstr "Les licences de "
 
-#: templates/summarizer/chat.html:655 templates/summarizer/chat.html:821
+#: templates/summarizer/chat.html:664 templates/summarizer/chat.html:840
 msgid " papers"
 msgstr " papiers"
 
-#: templates/summarizer/chat.html:655 templates/summarizer/chat.html:821
-#| msgid ""
-#| "The license of the paper does not allow us to build upon its content and the"
-#| " AI assistant only knows about the paper metadata rather than the full "
-#| "article."
+#: templates/summarizer/chat.html:664 templates/summarizer/chat.html:840
 msgid ""
 "do not allow us to build upon their contents and the AI assistant only knows"
 " about the papers metadata rather than the full articles."

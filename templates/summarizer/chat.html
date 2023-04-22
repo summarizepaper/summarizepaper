@@ -503,12 +503,17 @@ hr {
 {% block header_class %}{% endblock %}
 
 {% block content %}
-<div id="warnassistant" style="display:none; text-align: center;">
-  <p style="color: red;margin-left: 10px;margin-right: 10px;"><strong>{% trans 'The AI assistant is now accessible down the page to start asking questions but you can keep on adding more papers (up to 10) to chat with' %}</strong></p>
+
+<div id="warnassistant" style="display:none; text-align: center; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px;">
+  <p style="color: #155724;  margin-left: 10px; margin-right: 10px; font-weight: bold;">
+    {% trans 'The AI assistant is now accessible below to start asking questions. You can keep on adding up to 10 papers to chat with.' %}
+  </p>
 </div>
 <div class="columns-container">
     <div class="search-results-column">
-      <h3>{% trans 'Select papers to chat with' %}</h3>
+      <div style="background-color: #f6f6f6; border: 1px solid #ddd; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 20px;margin-top: 10px;">
+        <h3 style="color: #333; text-align: center; font-weight: bold; margin-top: 0; margin-bottom: 0;">{% trans 'Select papers to chat with' %}</h3>
+      </div>      
       <form class="searchform">
         <div class="search-container">
           <label for="search"><i class="fas fa-search"></i></label>
@@ -517,25 +522,32 @@ hr {
             <i class="fas fa-spinner fa-spin"></i>
           </div>
         </div>
+        <div id="atleast" style="display: none;color: red;"><p><small>{% trans 'Enter at least 3 letters for the search to start' %}</small></p></div>
         
         <div class="list-group" id="search-results">
 
         </div>
         <div class="add-paper-container">
-          <p style="margin-bottom: 5px!important;"><strong>{% trans 'Add a paper directly' %}</strong></p>
+          <p style="margin-bottom: 5px; font-weight: bold; font-size: 18px; color: #555;"><strong>{% trans 'Add a paper directly' %}</strong></p>
           <div class="input-container">
             <input type="text" id="paper-id" placeholder="{% trans 'Enter Arxiv ID (e.g. 2211.04191v1)' %}">
           </div>
           <div id="errID" style="display: none;color: red;"><p>{% trans 'This ID does not exist' %}</p></div>
+          <div id="OKID" style="display: none;color: green;"><p>{% trans 'Paper added!' %}</p></div>
+          <div id="alID" style="display: none;color: red;"><p>{% trans 'Paper already added!' %}</p></div>
           <button type="button" id="add-paper">{% trans 'Add' %}</button>
         </div>
       </form>
     </div>
     <div class="separator"></div>
     <div class="selected-papers-column">
-      <h3>{% trans 'Selected Papers' %}</h3>
+      <div style="background-color: #f6f6f6; border: 1px solid #ddd; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 20px;margin-top: 10px;margin-right: 10px;">
+        <h3 style="color: #333; text-align: center; font-weight: bold; margin-top: 0; margin-bottom: 0;">{% trans 'Selected Papers' %}</h3>
+      </div>    
       <ul class="list-group" id="selected-papers">
-        <p id="nopap" style="margin-right: 20px;">{% trans 'No papers selected yet. Search for papers to chat with using the search field on the left or add a paper directly via its arXiv ID using the form and clicking the Add button.' %}</p>
+        <p id="nopap" style="margin-right: 20px; margin-bottom: 20px; font-size: 16px; line-height: 1.4em; text-align: justify; color: #555;">
+          {% trans 'No papers selected yet. Search for papers to chat with using the search field on the left or add a paper directly via its arXiv ID using the form and clicking the Add button.' %}
+        </p>      
       </ul>
       <div id='maxpapreached' style="display: none;"><p style="color:red;"><span class='warning-sign'>&#9888;</span>{% trans 'You have reached the limit of' %} {{ max_nb_paper }} {% trans 'papers you can interact with and cannot add more.' %}</p></div>
     </div>
@@ -732,13 +744,19 @@ document.addEventListener('DOMContentLoaded', function() {
   var warnassistant = document.getElementById('warnassistant');
   var maxpapreached = document.getElementById('maxpapreached');
   var errID = document.getElementById('errID');
+  var OKID = document.getElementById('OKID');
+  var alID = document.getElementById('alID');
+  var atleast = document.getElementById("atleast");
 
   
   // Event listener for search input
 searchInput.addEventListener('keyup', function() {
   var query = searchInput.value;
   errID.style.display = 'none';
+  OKID.style.display = 'none';
+  alID.style.display = 'none';
   if (query.length >= 3) {
+    atleast.style.display = "none";
     showSpinner();
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://export.arxiv.org/api/query?search_query=' + query + '&max_results=10');
@@ -782,7 +800,15 @@ searchInput.addEventListener('keyup', function() {
     }, 1000);
     //hideSpinner();
   } else {
+
     searchResults.innerHTML = '';
+    if (query.length == 0) {
+      atleast.style.display = "none";
+    }
+    else {
+      atleast.style.display = "";
+    }
+
     //console.log('aui');
   }
 });
@@ -962,6 +988,7 @@ searchResults.addEventListener('click', function(event) {
       xhr.open('GET', 'https://export.arxiv.org/api/query?id_list=' + id);
       xhr.onload = function() {
         if (xhr.status === 200) {
+          console.log('joe');
           errID.style.display = 'none';
           var data = xhr.responseXML;
           var entries = data.getElementsByTagName('entry');
@@ -998,10 +1025,16 @@ searchResults.addEventListener('click', function(event) {
           selectedPapersList.appendChild(selectedPaperItem);
           var spinner = selectedPaperItem.querySelector('.spinner');
           spinner.style.display = 'inline-block';
-
+          OKID.style.display = '';
+          alID.style.display = 'none';
           /*need to start embeddings if do not exist*/
 
           socket.send(JSON.stringify({'paper_id': id}));
+          }
+          else{
+            alID.style.display = '';
+            errID.style.display = 'none';
+            OKID.style.display = 'none';
           }
           if(selectedPapersList.childElementCount>maxNumberPapers){
             //console.log('nope');
@@ -1011,9 +1044,13 @@ searchResults.addEventListener('click', function(event) {
           MathJax.typeset();
         }else{
           errID.style.display = '';
+          OKID.style.display = 'none';
+          alID.style.display = 'none';
         }
         } else {
           errID.style.display = '';
+          OKID.style.display = 'none';
+          alID.style.display = 'none';
           //console.log('Request failed. Returned status of ' + xhr.status);
         }
       };
