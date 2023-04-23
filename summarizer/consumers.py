@@ -1026,6 +1026,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             if "selectedpapers" in data:
                 selectedpapers=data["selectedpapers"]
                 print('selectedpapers',selectedpapers)
+            if "count" in data:
+                countpaperwithlicenses=data["count"]
 
             print('receive',user)
             #response = "reponse brah"#process_message(message)
@@ -1035,7 +1037,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
             memory = ConversationBufferMemory(memory_key="history",return_messages=True)
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers))
+            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers,countpaperwithlicenses=countpaperwithlicenses))
             chatbot_text=await c
 
             #chatbot_text=None

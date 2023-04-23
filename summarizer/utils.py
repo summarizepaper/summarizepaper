@@ -290,7 +290,7 @@ def getpapersfromlist(list):
         list[i] = list[i].replace('/', '--')
 
     print('list',list)    
-        
+
     allpapers = ArxivPaper.objects.filter(arxiv_id__in=list)
     
     return allpapers
@@ -704,13 +704,14 @@ def construct_document_prompt(document,mul=None):
     #return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["arxiv_id"])
 
 
-async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None):
+async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None,countpaperwithlicenses=None):
     print('in chatbot')
 
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
 
+    print('countpaperwithlicenses',countpaperwithlicenses)
 
     #The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
 
@@ -765,6 +766,12 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
             If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining articles only. 
             Return a "SOURCES" part in your answer if it is relevant.
             """
+
+            if countpaperwithlicenses>0:
+                SYSTEM_PROMPT += """
+                The licenses of some of the selected papers do not allow us to read the papers so if you do not find an answer warn the reader that it may be due to that.
+                """
+
             print('sel',selectedpapers)
             #allpapers = json.loads(selectedpapers)
             #print('allpapers',allpapers)
@@ -814,6 +821,12 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
             The question can specify to TRANSLATE the response in another language, which the AI should do.
             If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining one article. 
             """
+
+            if countpaperwithlicenses>0:
+                SYSTEM_PROMPT += """
+                The license of the selected paper is not fully open source and does not allow us to read the paper so if you do not find an answer warn the reader that it may be due to that.
+                """
+
             c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
 
             getstoredpickle = await c

@@ -1010,11 +1010,12 @@ searchResults.addEventListener('click', function(event) {
       id += 'v1';
     }
     if (id) {
+      try {
       var xhr = new XMLHttpRequest();
       xhr.open('GET', 'https://export.arxiv.org/api/query?id_list=' + id);
       xhr.onload = function() {
         if (xhr.status === 200) {
-          console.log('joe');
+          //console.log('joe');
           errID.style.display = 'none';
           var data = xhr.responseXML;
           var entries = data.getElementsByTagName('entry');
@@ -1073,15 +1074,31 @@ searchResults.addEventListener('click', function(event) {
           OKID.style.display = 'none';
           alID.style.display = 'none';
         }
-        } else {
+        } else if (xhr.status === 400) {
+          // handle 400 Bad Request error
+          console.error('The ID does not exist');
+         }
+         else {
           errID.style.display = '';
           OKID.style.display = 'none';
           alID.style.display = 'none';
           //console.log('Request failed. Returned status of ' + xhr.status);
         }
       };
+      xhr.onerror = function() {
+        console.log('re');
+      };
+      try {
+
       xhr.send();
+      } catch (error) {
+        console.log('hi');
+      }
+      } catch (error) {
+      console.log('ok');
     }
+    }
+
   });
 });
 </script>
@@ -1245,7 +1262,7 @@ searchResults.addEventListener('click', function(event) {
     // Scroll the container to the bottom
     scrollToBottom();
   
-    sendWebSocketMessage(messagec,user,ip,selectedPaperIds);
+    sendWebSocketMessage(messagec,user,ip,selectedPaperIds,count);
     //socketl.send(JSON.stringify({message: messagec}));
   
     if (!isListenerAdded) {
@@ -1258,14 +1275,14 @@ searchResults.addEventListener('click', function(event) {
   
   <script>
   
-  function sendWebSocketMessage(message2,user,ip,selectedpapers) {
+  function sendWebSocketMessage(message2,user,ip,selectedpapers,count) {
     if (socketl && socketl.readyState === WebSocket.OPEN) {
       //console.log('sending...')
-      socketl.send(JSON.stringify({message: message2, user:user, ip:ip, selectedpapers:selectedpapers}));
+      socketl.send(JSON.stringify({message: message2, user:user, ip:ip, selectedpapers:selectedpapers, count:count}));
     } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
       //console.log("WebSocket connecting...");
       setTimeout(function() {
-        sendWebSocketMessage(message2,user,ip,selectedpapers);
+        sendWebSocketMessage(message2,user,ip,selectedpapers,count);
         //console.log("wait");
       }, 1000);
     } else {

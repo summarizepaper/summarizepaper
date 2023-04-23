@@ -1638,7 +1638,12 @@ function addTheListeners() {
   //console.log(language);
   const user = "{{ request.user }}"
   const ip = "{{ hashed_ip_address }}"
+  var count = 0
 
+  {% if not public %}
+  count=1
+  {% endif %}
+  
   let isListenerAdded = false;
 
   const chatbotMessages = document.querySelector('.chatbot-messages');
@@ -1718,7 +1723,7 @@ function addTheListeners() {
   // Scroll the container to the bottom
   scrollToBottom();
 
-  sendWebSocketMessage(messagec,user,ip);
+  sendWebSocketMessage(messagec,user,ip,count);
   //socketl.send(JSON.stringify({message: messagec}));
 
   if (!isListenerAdded) {
@@ -1731,14 +1736,14 @@ function addTheListeners() {
 
 <script>
 
-function sendWebSocketMessage(message2,user,ip) {
+function sendWebSocketMessage(message2,user,ip,count) {
   if (socketl && socketl.readyState === WebSocket.OPEN) {
     //console.log('sending...')
-    socketl.send(JSON.stringify({message: message2, user:user, ip:ip}));
+    socketl.send(JSON.stringify({message: message2, user:user, ip:ip, count:count}));
   } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
     //console.log("WebSocket connecting...");
     setTimeout(function() {
-      sendWebSocketMessage(message2,user,ip);
+      sendWebSocketMessage(message2,user,ip,count);
       //console.log("wait");
     }, 1000);
   } else {
