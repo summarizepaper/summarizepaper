@@ -767,10 +767,11 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
             Return a "SOURCES" part in your answer if it is relevant.
             """
 
-            if countpaperwithlicenses>0:
-                SYSTEM_PROMPT += """
-                The licenses of some of the selected papers do not allow us to read the papers so if you do not find an answer warn the reader that it may be due to that.
-                """
+            if countpaperwithlicenses!=None:
+                if countpaperwithlicenses>0:
+                    SYSTEM_PROMPT += """
+                    The licenses of some of the selected papers do not allow us to read the papers so if you do not find an answer warn the reader that it may be due to that.
+                    """
 
             print('sel',selectedpapers)
             #allpapers = json.loads(selectedpapers)
@@ -821,11 +822,11 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
             The question can specify to TRANSLATE the response in another language, which the AI should do.
             If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining one article. 
             """
-
-            if countpaperwithlicenses>0:
-                SYSTEM_PROMPT += """
-                The license of the selected paper is not fully open source and does not allow us to read the paper so if you do not find an answer warn the reader that it may be due to that.
-                """
+            if countpaperwithlicenses!=None:
+                if countpaperwithlicenses>0:
+                    SYSTEM_PROMPT += """
+                    The license of the selected paper is not fully open source and does not allow us to read the paper so if you do not find an answer warn the reader that it may be due to that.
+                    """
 
             c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
 
