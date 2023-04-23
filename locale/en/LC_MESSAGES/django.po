@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-22 15:08+0000\n"
+"POT-Creation-Date: 2023-04-23 13:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -388,7 +388,7 @@ msgstr ""
 #: templates/summarizer/arxividpage.html:1252
 #: templates/summarizer/arxividpage.html:1255
 #: templates/summarizer/arxividpage.html:1258
-#: templates/summarizer/chat.html:602 templates/summarizer/home.html:259
+#: templates/summarizer/chat.html:602 templates/summarizer/home.html:276
 msgid "Loading..."
 msgstr ""
 
@@ -655,22 +655,22 @@ msgid ""
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1586
-#: templates/summarizer/chat.html:1107
+#: templates/summarizer/chat.html:1124
 msgid "AI -"
 msgstr ""
 
 #: templates/summarizer/arxividpage.html:1613
-#: templates/summarizer/chat.html:1134
+#: templates/summarizer/chat.html:1151
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1690
-#: templates/summarizer/chat.html:1217
+#: templates/summarizer/arxividpage.html:1695
+#: templates/summarizer/chat.html:1234
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr ""
 
-#: templates/summarizer/arxividpage.html:1703
-#: templates/summarizer/chat.html:1230
+#: templates/summarizer/arxividpage.html:1708
+#: templates/summarizer/chat.html:1247
 msgid "You -"
 msgstr ""
 
@@ -979,96 +979,98 @@ msgid ""
 "date with the latest research with our cutting-edge technology."
 msgstr ""
 
-#: templates/summarizer/home.html:251
+#: templates/summarizer/home.html:268
 msgid "Your account is now activated and you are logged in."
 msgstr ""
 
-#: templates/summarizer/home.html:254
+#: templates/summarizer/home.html:271
 msgid "Discover Key Insights from arXiv's Latest Articles"
 msgstr ""
 
-#: templates/summarizer/home.html:258
+#: templates/summarizer/home.html:275
 msgid "Search for an article"
 msgstr ""
 
-#: templates/summarizer/home.html:259
+#: templates/summarizer/home.html:276
 msgid "Search"
 msgstr ""
 
-#: templates/summarizer/home.html:260
+#: templates/summarizer/home.html:277
 msgid ""
 "Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to "
 "search (use the language of papers you are interested in)"
 msgstr ""
 
-#: templates/summarizer/home.html:266
+#: templates/summarizer/home.html:283
 msgid "Refine your Search"
 msgstr ""
 
-#: templates/summarizer/home.html:268
+#: templates/summarizer/home.html:285
 msgid "Search Syntax:"
 msgstr ""
 
-#: templates/summarizer/home.html:270
+#: templates/summarizer/home.html:287
 msgid "By default, the search engine looks for the query in all fields."
 msgstr ""
 
-#: templates/summarizer/home.html:271
+#: templates/summarizer/home.html:288
 msgid ""
 "Use the field codes to search for a specific field: \"au:\" for authors, "
 "\"ti:\" for titles, \"abs:\" for abstracts, \"co:\" for comments, \"jr:\" "
 "for journal reference,\"cat:\" for category, and \"id:\" for ID."
 msgstr ""
 
-#: templates/summarizer/home.html:272
+#: templates/summarizer/home.html:289
 msgid ""
 "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
 "for ID numbers id:\"2211.04191\""
 msgstr ""
 
-#: templates/summarizer/home.html:273
+#: templates/summarizer/home.html:290
 msgid ""
 "Mix several fields in a search request using the Boolean operators \"AND\", "
 "\"OR\", and \"ANDNOT\". For example, au:\"John Doe\" AND abs:\"search for "
 "life\""
 msgstr ""
 
-#: templates/summarizer/home.html:274
+#: templates/summarizer/home.html:291
 msgid ""
 "Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND "
 "(abs:\"renewable energy\" OR abs:solar)"
 msgstr ""
 
-#: templates/summarizer/home.html:280
+#: templates/summarizer/home.html:297
+#, python-format
 msgid ""
-"Welcome to our <a href=\"https://github.com/summarizepaper/summarizepaper"
-"\">open-source</a> AI tool, where you can stay up-to-date with the latest "
-"research on arXiv. Our goal is to provide you with concise, understandable, "
-"and insightful summaries (key-points, layman's summary, ...) for all arXiv "
-"research articles using AI, so you can quickly get a grasp of the latest "
-"developments in your field. In addition to our summary service, we offer an "
-"AI assistant to answer your questions about arXiv papers. Whether you're a "
+"Welcome to our <a href=\"https://github.com/summarizepaper/summarizepaper\" "
+"class=\"chat-link\">open-source</a> AI tool, where you can stay up-to-date "
+"with the latest research on arXiv. Our goal is to provide you with concise, "
+"understandable, and insightful summaries (key-points, layman's summary, ...) "
+"for all arXiv research articles using AI, so you can quickly get a grasp of "
+"the latest developments in your field. In addition to our summary service, "
+"we offer an <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">AI "
+"assistant</a> to answer your questions about arXiv papers. Whether you're a "
 "researcher, a student, a journalist, or simply someone who wants to stay "
 "informed, Summarize<span style=\"color:#34a853\">Paper</span>.com is here to "
 "make your life easier."
 msgstr ""
 
-#: templates/summarizer/home.html:284
+#: templates/summarizer/home.html:301
 msgid "Chat with arXiv Papers"
 msgstr ""
 
-#: templates/summarizer/home.html:285
+#: templates/summarizer/home.html:302
 msgid ""
 "Did you know you can chat directly with one or several arXiv papers? Our "
 "chatbot allows you to have a conversation with any paper on arXiv, enabling "
 "you to get more insights and ask questions in a natural language way."
 msgstr ""
 
-#: templates/summarizer/home.html:286
+#: templates/summarizer/home.html:303
 msgid "Start Chatting"
 msgstr ""
 
-#: templates/summarizer/home.html:292
+#: templates/summarizer/home.html:309
 msgid "Latest Papers summarized with our AI tools"
 msgstr ""
 

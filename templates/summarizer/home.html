@@ -238,6 +238,23 @@
   background-color: #0062cc;
 }
 
+.chat-link {
+  display: inline-block;
+  background-color: #008CBA;
+  color: white;
+  padding: 8px 14px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 14px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16);
+  transition: all 0.3s ease;
+}
+
+.chat-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.24);
+}
 
 
     </style>
@@ -277,7 +294,7 @@
 
   
   
-  <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper">open-source</a> AI tool, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries (key-points, layman's summary, ...) for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. In addition to our summary service, we offer an AI assistant to answer your questions about arXiv papers. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
+  <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries (key-points, layman's summary, ...) for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. In addition to our summary service, we offer an <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> to answer your questions about arXiv papers. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
 
   <div class="arxiv-chat-section">
     <div class="container">
