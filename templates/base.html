@@ -77,7 +77,7 @@
       display: none;
     }
 
-    @media screen and (max-width: 950px) {
+    @media screen and (max-width: 1050px) {
       .nav-links {
         display: none;
       }
@@ -248,6 +248,7 @@
     </div>
     <ul class="nav-links">
       <li><a href="/{{LANGUAGE_CODE}}">{% trans 'Home' %}</a></li>
+      <li><a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a></li>
       <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
       <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
       {% if request.user.is_authenticated %}

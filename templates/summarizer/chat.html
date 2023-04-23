@@ -4,9 +4,9 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %} {% trans 'Chat with Arxiv Papers' %} {% endblock %}
+{% block title %} {% trans 'Chat with Arxiv Papers - Ask Any Questions You Like!' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Chat with Arxiv Papers' %}" />
+  <meta name="description" content="{% trans 'Welcome to Chat with Arxiv Papers, where you can engage in interactive conversations with one or several academic papers from the Arxiv preprint repository. Our innovative platform allows you to pose any questions you may have about the research, methodology, or findings presented in the papers, and receive immediate responses from our intelligent chatbot powered by state-of-the-art language models. Whether you are a student, researcher, or simply curious about the latest developments in your field of interest, Chat with Arxiv Papers offers a unique opportunity to explore cutting-edge research in a conversational and engaging way. Try it now and discover a new world of knowledge at your fingertips!' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/chat/" />
 
   <script>
@@ -549,7 +549,8 @@ hr {
           </div>
         </div>
         <div id="atleast" style="display: none;color: red;"><p><small>{% trans 'Enter at least 3 letters for the search to start' %}</small></p></div>
-        
+        <div id="nonefound" style="display: none;color: red;"><p><small>{% trans 'No papers found' %}</small></p></div>
+
         <div class="list-group" id="search-results">
 
         </div>
@@ -773,6 +774,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var OKID = document.getElementById('OKID');
   var alID = document.getElementById('alID');
   var atleast = document.getElementById("atleast");
+  var nonefound = document.getElementById("nonefound");
 
   
   // Event listener for search input
@@ -781,44 +783,52 @@ searchInput.addEventListener('keyup', function() {
   errID.style.display = 'none';
   OKID.style.display = 'none';
   alID.style.display = 'none';
+  nonefound.style.display = "none";
+
   if (query.length >= 3) {
     atleast.style.display = "none";
     showSpinner();
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://export.arxiv.org/api/query?search_query=' + query + '&max_results=10');
+    //console.log('https://export.arxiv.org/api/query?search_query=' + query + '&max_results=10');
     xhr.onload = function() {
       if (xhr.status === 200) {
         var data = xhr.responseXML;
         var entries = data.getElementsByTagName('entry');
         searchResults.innerHTML = '';
-        for (var i = 0; i < entries.length; i++) {
-          var title = entries[i].getElementsByTagName('title')[0].textContent;
-          var author = entries[i].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
-          var dateString = entries[i].getElementsByTagName('published')[0].textContent;
-          //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
-          var year = dateString.substr(0, 4);
-          var month = dateString.substr(5, 2) - 1; // subtract 1 from the month since Date object uses 0-indexed months
-          var day = dateString.substr(8, 2);
-          var hour = dateString.substr(11, 2);
-          var minute = dateString.substr(14, 2);
-          var second = dateString.substr(17, 2);
-          var dateObj = new Date(Date.UTC(year, month, day, hour, minute, second)); // create a date object using UTC time
-          var published = dateObj.toLocaleString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}); 
-          //var idElement = entries[i].getElementsByTagName('id')[0];
-          //console.log(idElement);
-          id=entries[i].getElementsByTagName('id')[0].textContent.split('/abs/')[1]
-          //console.log(id);
+        if (entries.length != 0) {
+          for (var i = 0; i < entries.length; i++) {
+            var title = entries[i].getElementsByTagName('title')[0].textContent;
+            var author = entries[i].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
+            var dateString = entries[i].getElementsByTagName('published')[0].textContent;
+            //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
+            var year = dateString.substr(0, 4);
+            var month = dateString.substr(5, 2) - 1; // subtract 1 from the month since Date object uses 0-indexed months
+            var day = dateString.substr(8, 2);
+            var hour = dateString.substr(11, 2);
+            var minute = dateString.substr(14, 2);
+            var second = dateString.substr(17, 2);
+            var dateObj = new Date(Date.UTC(year, month, day, hour, minute, second)); // create a date object using UTC time
+            var published = dateObj.toLocaleString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}); 
+            //var idElement = entries[i].getElementsByTagName('id')[0];
+            //console.log(idElement);
+            id=entries[i].getElementsByTagName('id')[0].textContent.split('/abs/')[1]
+            //console.log(id);
 
-          var resultItem = document.createElement('a');
-          resultItem.classList.add('list-group-item', 'list-group-item-action', 'paper-item');
-          resultItem.setAttribute('data-id', id);
-          resultItem.innerHTML = '<strong>' + title + '</strong><br>' +
-                                  '<small>First Author: ' + author + '</small><br>' +
-                                  '<small>Published: ' + published + '</small>';
-          searchResults.appendChild(resultItem);
-          MathJax.typeset();
-        }
-      }
+            var resultItem = document.createElement('a');
+            resultItem.classList.add('list-group-item', 'list-group-item-action', 'paper-item');
+            resultItem.setAttribute('data-id', id);
+            resultItem.innerHTML = '<strong>' + title + '</strong><br>' +
+                                    '<small>First Author: ' + author + '</small><br>' +
+                                    '<small>Published: ' + published + '</small>';
+            searchResults.appendChild(resultItem);
+            MathJax.typeset();
+          }
+        
+        } else {
+          searchResults.innerHTML = '';
+          nonefound.style.display = "";
+        }}
     };
     xhr.send();
     setTimeout(function() {
@@ -830,9 +840,11 @@ searchInput.addEventListener('keyup', function() {
     searchResults.innerHTML = '';
     if (query.length == 0) {
       atleast.style.display = "none";
+      nonefound.style.display = "none";
     }
     else {
       atleast.style.display = "";
+      nonefound.style.display = "none";
     }
 
     //console.log('aui');

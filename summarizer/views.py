@@ -218,6 +218,7 @@ def search_results(request):
     max_results=30
     print('query',query)
 
+    '''
     query1 = query# urllib.parse.quote(query)
     print('query1',query1)
 
@@ -245,7 +246,6 @@ def search_results(request):
             # This is a search term
             prefix, value = term.split(':')
             value = value.strip(' "\t')
-            value=value.replace(" ","+")
             print('prefix, value',prefix, value)
             if 1==1:#prefix == 'all':
                 # Replace 'all:' with the appropriate sequence
@@ -268,18 +268,24 @@ def search_results(request):
                     prefix = 'rn'
                 #value = value.replace('all:', f'{prefix}:')
             #new_terms.append(f'{prefix}:{value}')
+            if  prefix=='au':
+                value=value.replace(" ","_")
+            else:
+                value=value.replace(" ","%20")
+
+
             print('value',value,urllib.parse.quote(value))
             new_terms.append(f'{prefix}:"{value}"')
-        elif term.lower() in ('and', 'or', 'andnot'):
+        elif term in ('AND', 'OR', 'ANDNOT'):
             # This is a boolean operator
             #new_terms.append(term.upper())
-            new_terms.append(f"+{term.upper()}+")
+            new_terms.append(f"+{term}+")
         elif term in ('(',')'):
             new_terms.append(f"{term}")
 
     if new_terms==[]:
-        query1=query1.replace(" ","+")
-        new_terms.append('all:'+'"'+query1+'"')
+        query1=query1.replace(" ","%20")
+        new_terms.append('all:'+query1)
         print('new terms',new_terms)
 
     # Construct the final URL for the API request
@@ -288,7 +294,10 @@ def search_results(request):
     print('query2',query2)
     #query2=urllib.parse.urlencode(query2)
     #print('query2',query2)
-    url = f'http://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+
+    '''
+    url = f'https://export.arxiv.org/api/query?search_query={query}&start=0&max_results={max_results}&sortBy=relevance&sortOrder=descending'
+    #url = f'http://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
 
     # Define the API endpoint URL
     #url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
