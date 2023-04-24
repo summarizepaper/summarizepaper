@@ -620,8 +620,9 @@ def tree(request, arxiv_id):
                     'title': paper.title,
                     'score': 0.2*10,
                     'lang':lang,
-                    'x': 50,
-                    'y': 10,
+                    'distance':0,
+                    'x': 0,
+                    'y': 0,
                     'first_author': author_name,
                     'authors': author_names,
                     'main':True
@@ -642,21 +643,27 @@ def tree(request, arxiv_id):
                 #x = distance * np.cos(random.random() * np.pi * 2)
                 #y = distance * np.sin(random.random() * np.pi * 2)
                 i=0
+                #print('cos',np.cos(np.pi * 2),random.random(),random.random(),random.random(),random.random())
+                #print('cos',np.cos(np.pi/2.))
+
                 while True:
                     i+=1
-                    x = distance * np.cos(random.random() * np.pi * 2)
-                    y = distance * np.sin(random.random() * np.pi * 2)
+                    ran=random.random()
+                    x = distance * np.cos(ran * np.pi * 2)
+                    y = distance * np.sin(ran * np.pi * 2)
                     # check if there are any points within 30px around (x,y)
                     if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 30 for d in relpapersData):
                         break
                     if i==10000:
                         break
 
+                print('x,y,score',x,y,(0.5-relpaper.score)*200,distance,relpaper.score)
                 relpapersData.append({
                     'arxiv_id': relpaper.to_paper.arxiv_id,
                     'title': relpaper.to_paper.title,
-                    'score': (1.-relpaper.score)*100,
+                    'score': (0.5-relpaper.score)*200,
                     'lang':lang,
+                    'distance':distance,
                     'x': x,
                     'y': y,
                     'first_author': author_name,
@@ -664,7 +671,25 @@ def tree(request, arxiv_id):
                     'main':False
                 })
 
-           
+            # Get maximum x and y values
+            max_d = max(item['distance'] for item in relpapersData)
+            #min_d = min(item['distance'] for item in relpapersData)
+            min_d = min(filter(lambda item: item['distance'] != 0, relpapersData), key=lambda item: item['distance'])['distance']
+            print('max_d',max_d)
+            print('min_d',min_d)
+
+            for item in relpapersData:
+                print("item['distance']1",item['distance'])
+                if item['distance'] != 0:
+                    newdist = ((item['distance'] - min_d+5) / (max_d - min_d+5)) * 100
+                    item['x']=item['x']/item['distance']*newdist
+                    item['y']=item['y']/item['distance']*newdist
+                print("item['distance']2",item['distance'])
+            # Renormalize x and y values
+            #for item in relpapersData:
+            #   item['x'] = (item['x'] / max_x) * 100
+            #   item['y'] = (item['y'] / max_y) * 100
+
             # Convert the list of dictionaries to a JSON string
             relpapers_json = json.dumps(relpapersData)
 
@@ -672,7 +697,7 @@ def tree(request, arxiv_id):
             #for rel in relpapers:
             #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
             for pap in relpapers:
-                newscore = (1.-pap.score)*100
+                newscore = (0.5-pap.score)*200
                 newscore = "{:.1f}".format(newscore)
                 scores.append(newscore)
             stuff_for_frontend.update({
@@ -1138,7 +1163,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                 #for rel in relpapers:
                 #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
                 for pap in relpapers:
-                    newscore = (1.-pap.score)*100
+                    newscore = (0.5-pap.score)*200
                     newscore = "{:.1f}".format(newscore)
                     scores.append(newscore)
 
