@@ -304,7 +304,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         return 0
 
-    async def computesummary(self,arxiv_id,language,details_paper,message,data):
+    async def computesummary(self,arxiv_id,language,details_paper,message,data,p):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
         book_path = "test1.pdf"
         sum=""
@@ -353,25 +353,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 my_raw_data = response.content
 
 
-                '''
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
-                        try:
-                            print('in try arxiv',response.status)
-                            if response.status != 200:
-                                print("in ! 200 arxiv")
-                                raise Exception(f"Failed to retrieve data: {response.text}")
-                        except Exception as e:
-                            print('in redirect arxiv')
-                        my_raw_data = await response.content
-                '''
-                print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf')
+                
                 message["progress"] = 20
                 if language == 'fr':
                     message["loading_message"] = "Lecture du fichier pdf..."
                 else:
                     message["loading_message"] = "Reading the pdf file..."
-                print('hhjfkfkkfkfkf')
                 #time.sleep(10.)
 
                 c=asyncio.create_task(self.send_message_now(message))
@@ -383,32 +370,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     my_data.write(my_raw_data)
 
                 ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
-                print('raw data done')
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
                 c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
                 book_text,full_text=await c
-                print('book:',book_text)
-                # Create a text queue to store the extracted text
-                #text_queue = asyncio.Queue()
-
-                # Run the extract_text_from_pdf() function asynchronously
-                #task = asyncio.create_task(utils.extract_text_from_pdf('my_pdf.pdf', text_queue))
-
-                # Wait for the extract_text_from_pdf() function to complete and get the extracted text from the text queue
-                #extracted_text = await text_queue.get()
-
-                # Create a StringIO object from the extracted text
-                #book_text = StringIO(extracted_text)
-                #full_text=book_text
-                # Print the extracted text
-                #print(string_io.getvalue())
+                #print('book:',book_text)
+                
 
             else:
-                print('else book text')
-                print('authors',authors)
+              
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
-
-
 
             message["progress"] = 30
             if language == 'fr':
@@ -424,7 +394,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
             pickledata = await c
 
-            print('dattaaaaaaaaaaaa',data)
+            #print('dattaaaaaaaaaaaa',data)
             if pickledata=='':
                 if public==1:
                     book_text2=data+'    '+full_text
@@ -433,7 +403,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
                 created=await c
-                print('crea',created)
+                #print('crea',created)
 
             #input('stop here')
 
@@ -452,7 +422,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             sum=''
             kw=''
             #await asyncio.sleep(30.)
-            c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, settings.OPENAI_KEY))
+            c = asyncio.create_task(utils.summarize_book(arxiv_id, language, book_text, p, settings.OPENAI_KEY))
             sum = await c
             # Print the summarized text
             #await sum
@@ -474,11 +444,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     print("Received error message sum:", sum)
                     sum='Error: needs to be re-run'
 
-                print('hfjggkg0a')
 
 
-
-                c=asyncio.create_task(utils.finalise_and_keywords(arxiv_id, language, sum, settings.OPENAI_KEY))
+                c=asyncio.create_task(utils.finalise_and_keywords(arxiv_id, language, sum, p, settings.OPENAI_KEY))
                 sum, kw = await c
 
 
@@ -493,19 +461,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     message["loading_message"] = "Extracting key points of the article..."
                 #await self.send_message_now(message)
 
-                print('hfjggkg0')
 
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
-                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, settings.OPENAI_KEY))
+                c = asyncio.create_task(utils.extract_key_points(arxiv_id, language, sum, p, settings.OPENAI_KEY))
                 notes = await c
                 if 'error_message' in notes:
                     print("Received error message notes:", notes)
                     notes='Error: needs to be re-run'
 
-
-                print('hfjggkg3')
 
                 # Print the key points
                 for key_point in notes:
@@ -526,7 +491,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
-                c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, settings.OPENAI_KEY))
+                c=asyncio.create_task(utils.extract_simple_summary(arxiv_id, language, notes, p, settings.OPENAI_KEY))
                 laysum = await c
                 print('laysum:',laysum)
                 if 'error_message' in laysum:
@@ -548,7 +513,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
-                c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, settings.OPENAI_KEY))
+                c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, p, settings.OPENAI_KEY))
                 #roughblog = await c
                 blog = await c
                 print('roughblog:',blog)
@@ -679,7 +644,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         cache.set(self.arxiv_group_name+'-close', False)
 
 
-    async def sendmessages(self,v,l,message):
+    async def sendmessages(self,v,l,message,p):
         print('in sendmessages')
 
         page_running = cache.get(self.arxiv_group_name)
@@ -697,9 +662,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         #self.sendmessages_running[self.arxiv_group_name] = True
 
-        print('in sendmessages2')
-
-        print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf1')
+        #print('in sendmessages2')
 
         message["progress"] = 5
         if l == 'fr':
@@ -711,7 +674,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await c
         #await asyncio.sleep(10.)
 
-        print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf1b')
 
         #time.sleep(3.)
 
@@ -733,20 +695,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #print('published_datetime',published_datetime,date)
 
         if exist == 1:
-            #arxivarray=[authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published_datetime, journal_ref, comments]
-
-            #keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract', 'category', 'updated', 'published_arxiv', 'journal_ref', 'comments']
-
-            #arxiv_dict = dict(zip(keys, arxivarray))
-            #print('arxiv_dict',arxiv_dict)
-            print('here')
-            #time.sleep(30.)
-
+  
             c = asyncio.create_task(sync_to_async(utils.updatearvixdatapaper)(v,arxiv_dict))
             arvixupdate = await c
-            #arvixupdate = await sync_to_async(self.updatearvixdatapaper)(v,arxiv_dict)
 
-            print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf2')
 
             message["progress"] = 10
             if l == 'fr':
@@ -759,10 +711,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             #time.sleep(10.)
 
 
-
-            print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf2ba')
-
-
             published2 = published_datetime.strftime("%d %b. %Y")
             print('published2',published2)
             #arxiv_array2=[authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published2, journal_ref, comments]
@@ -771,10 +719,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             arxiv_dict2['published_arxiv']=published2
             c = asyncio.create_task(self.send_message_arxiv(arxiv_dict2))
             await c
-
-        print('exist',exist)
-
-        print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf3')
 
         message["progress"] = 15
         if l == 'fr':
@@ -785,19 +729,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await c
         #time.sleep(10.)
 
-        print('hhjfkfkkfkfkfcfjkndkjvhfdkjvnkgjfdnvkjf3b')
-
         #now compute Summary
-        print('avantcompute')
+        #print('avantcompute')
         #sumarray = await self.computesummary(v,message)
         detpap=[arxiv_dict['license'],arxiv_dict['title'],arxiv_dict['abstract'],arxiv_dict['authors']]
 
         
         if 1==0:#v=='2303.14917v1':
-            print('rewritea')
 
             certain_date = datetime(2023, 3, 30)  # replace with your desired date
-            print('certain_date',certain_date)
+            #print('certain_date',certain_date)
             #c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
 
             #c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
@@ -905,14 +846,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                         print('storeidsa',storeidsa)
                         #input('ok')
 
-        sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message,data))
+        sumarra=asyncio.create_task(self.computesummary(v,l,detpap,message,data,p))
         sumarray=await sumarra
         print('aprescompute')
 
         keysum = ['summary', 'lay_summary', 'notes','blog', 'keywords']
         sum_dict = dict(zip(keysum, sumarray))
 
-        print('suma',sum_dict)
+        #print('suma',sum_dict)
         c = asyncio.create_task(sync_to_async(self.updatesumpaper)(v,l,sum_dict))
         updatethesum = await c
         #print('testpap',testpaper)
@@ -928,7 +869,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(utils.findclosestpapers(v,l,15,settings.OPENAI_KEY))
         closest_papers = await c
 
-        print('closest_papers',closest_papers)
+        #print('closest_papers',closest_papers)
         #store results in db
         c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
         storeclosest = await c
@@ -941,17 +882,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
-
-        '''
-        for progress in utils.summarizer(v):
-            message["progress"] = progress
-            message["loading_message"] = "Loading data..."
-            if message["progress"] == 100:
-                message["loading_message"] = "Loading finished"
-            await self.channel_layer.group_send(
-                self.arxiv_group_name, {"type": "progress_update", "message": message}
-            )
-        '''
 
         #del self.sendmessages_running[self.arxiv_group_name]
         cache.set(self.arxiv_group_name, False)
@@ -990,6 +920,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         if 'command' in data:
             command = data['command']
+            paid = data['paid']
 
             if command == 'start_background_task':
                 message = {
@@ -1002,7 +933,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 #ta=asyncio.ensure_future(self.sendmessages(v,message))#needed for channel_layer_group_send to work instantaneously
                 #await self.sendmessages(v,message)
                 #await ta
-                asyncio.create_task(self.sendmessages(v,l,message))
+                #if paid:
+                #    print('paiddddddd')
+
+                asyncio.create_task(self.sendmessages(v,l,message,paid))
             elif command == 'start_close_task':
                 message = {
                     "loading_message": "Loading...",

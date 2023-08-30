@@ -751,6 +751,34 @@
       margin-top: 8px;
     }
 
+    .paid-account-message {
+      border: 2px solid #4CAF50;
+      border-radius: 8px;
+      padding: 12px;
+      position: relative;
+      max-width: fit-content;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .paid-account-message p {
+      margin: 0;
+      font-family: Montserrat, sans-serif;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .star-icon {
+      color: #ff9307;
+      position: absolute;
+      top: -20px;
+      left: -10px;
+      font-size: 24px;
+    }
+
+    .highlight {
+      color: #ff9307;
+    }
 
 </style>
 {% endblock %}
@@ -766,7 +794,9 @@
 </div>
 {% else %}
 
+
 {% if alpaper %}
+
 
   {% if paper.title %}
     <div class="title"><h2>{{ paper.title }}</h2></div>
@@ -1085,6 +1115,13 @@ submitButton.addEventListener('click', () => {
 <p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}. {% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
+{% if paid %}
+<div class="paid-account-message">
+  <span class="star-icon">&#9733;</span>
+  <p>{% blocktrans %} Congratulations, you have a paid account and can benefit from <span class="highlight">GPT-4</span> capabilities!{% endblocktrans %}</p>
+</div>
+{% endif %}
+
   {% if close %}
   <h1>{% trans 'Running our tool to find closest papers' %}</h1>
   {% else %}
@@ -1301,7 +1338,8 @@ submitButton.addEventListener('click', () => {
       //console.log('jkkk');
       {% if run or run2 %}
       socketl.send(JSON.stringify({
-          'command': 'start_background_task'
+          'command': 'start_background_task',
+          'paid':{% if paid %}true{% else %}false{% endif %}
       }));
       {% elif close %}
       socketl.send(JSON.stringify({

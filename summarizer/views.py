@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search, PaperScore
+from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search, PaperScore, UserPlan
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -806,9 +806,29 @@ def chat(request):
 
     return render(request, "summarizer/chat.html", stuff_for_frontend)
 
+def user_payment_situation(user_id):
+    user = get_object_or_404(User, pk=user_id)
+    user_plan = UserPlan.objects.filter(user=user).last() # get the latest user plan
+    if user_plan:
+        payment_plan = user_plan.payment_plan
+        paid = user_plan.paid
+        auto_renew = payment_plan.auto_renew
+        '''
+        if auto_renew:
+            duration = payment_plan.duration_choices
+            if duration == '1M':
+                renewal_date = user_plan.created_at + timedelta(days=30)
+            elif duration == '1Y':
+                renewal_date = user_plan.created_at + timedelta(days=365)
+            if datetime.now() > renewal_date:
+                paid = False
+        '''
+        return {"paid": paid}
+    return {"paid": False}
+
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
-
+    
 
     print('cat',cat)
     print('id',arxiv_id)
@@ -847,7 +867,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
 
-    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address}
+    paid = user_payment_situation(request.user.id)['paid']#request.user.paid
+    print('paid',paid)
+
+    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid}
 
     print('jk')
     regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'

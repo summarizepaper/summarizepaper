@@ -704,7 +704,7 @@ def construct_document_prompt(document,mul=None):
     #return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["arxiv_id"])
 
 
-async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None,countpaperwithlicenses=None):
+async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None,countpaperwithlicenses=None,p=None):
     print('in chatbot')
 
     li = get_language_info(language)
@@ -750,10 +750,16 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
 
     if sum==1:
         #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
-        llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+        if p:
+            llm = OpenAIChat(model_name="gpt-4",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+        else:
+            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
     else:
-        #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
-        llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+        if p:
+            llm = OpenAIChat(model_name="gpt-4",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+        else:
+            #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
 
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
 
@@ -1418,6 +1424,11 @@ async def extract_pages_async(file):
             yield page_layout
 '''
 
+async def extract_pages2(file):
+
+    async for page in agen(PDFPage.get_pages(file, caching=False)):
+        yield page
+
 async def extract_pages(file):
     print(type(file))
 #    for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
@@ -1478,6 +1489,27 @@ async def extract_text_from_pdf2(pdf_file_path):
 #        yield page
 
 
+class WrappedStopIteration(Exception):
+    """ "StopIteration" can't be transferred through a Future, so we need our own replacement"""
+    pass
+
+
+def nextwrap(it):
+    try:
+        return next(it)
+    except StopIteration as e:
+        raise WrappedStopIteration(e)
+
+
+async def agen(it):
+    loop = asyncio.get_running_loop()
+    try:
+        while True:
+            v = await loop.run_in_executor(None, nextwrap, it)
+            yield v
+    except WrappedStopIteration:
+        pass
+
 async def extract_text_from_pdf(pdf_filename):
     # Open the PDF file
     #need to check first if pdf file and otherwise return an error; to do later
@@ -1507,7 +1539,7 @@ async def extract_text_from_pdf(pdf_filename):
     return [text,text]
 
     '''
-
+    #import aiofiles
     ''' it works in async with pypdf and they opened a ticket to read greek letters and double ff+maths stuff but for now, not as good as pdfminer
     import aiofiles
     import pypdf
@@ -1567,8 +1599,11 @@ async def extract_text_from_pdf(pdf_filename):
         #async for page in async_generator(extract_pages, file):
         #async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
 
-        async for page in extract_pages(file):
+        async for page in extract_pages2(file):
             page_interpreter.process_page(page)
+
+        #async for page in extract_pages(file):
+        #    page_interpreter.process_page(page)
 
             #async for page in extract_pages(file, caching=True):
             #for page in PDFPage.get_pages(file, caching=True):
@@ -1633,7 +1668,7 @@ async def send_message_now(arxiv_group_name,message):
 
 
 
-async def summarize_book(arxiv_id, language, book_text, api_key):
+async def summarize_book(arxiv_id, language, book_text, p, api_key):
     endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
 
     message={}
@@ -1762,7 +1797,7 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
         print('from embeddings')
         query="Create a long detailed summary of the paper, preserve important details"
 
-        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key))
+        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,p=p))
         #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
         final_summarized_text =await c
 
@@ -1872,7 +1907,7 @@ async def summarize_book(arxiv_id, language, book_text, api_key):
     return final_summarized_text
 
 
-async def finalise_and_keywords(arxiv_id, language, summary, api_key):
+async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -1899,9 +1934,12 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
         "Authorization": f"Bearer {api_key}"
     }
 
-    model_forced="text-davinci-003"#=model
+    if p:
+        model_forced="gpt-4"#=model
+    else:
+        model_forced="text-davinci-003"#=model
 
-    if model_forced=="gpt-3.5-turbo":#force davinci
+    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":#force davinci
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         mes = [
@@ -1909,6 +1947,8 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
             {"role": "user", "content": '"{text}"'.format(text=prompt3b)}
         ]
 
+        print('gpt45')
+        
         #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
         response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
         '''
@@ -1971,16 +2011,16 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
-    if model_forced=="gpt-3.5-turbo":
-        print('icccciiiiiib',response3b["choices"][0]["message"]["content"])
+    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
+        #print('icccciiiiiib',response3b["choices"][0]["message"]["content"])
 
         finalise_and_keywords2 = response3b["choices"][0]["message"]["content"].rstrip().lstrip()
-        print('finalise_and_keywords',finalise_and_keywords2)
+        #print('finalise_and_keywords',finalise_and_keywords2)
     else:
-        print('icccciiiiiib',response3b["choices"][0]["text"])
+        #print('icccciiiiiib',response3b["choices"][0]["text"])
 
         finalise_and_keywords2 = response3b["choices"][0]["text"].rstrip().lstrip()
-        print('finalise_and_keywords',finalise_and_keywords2)
+        #print('finalise_and_keywords',finalise_and_keywords2)
 
     # Find the text between the <keywords> tags
     match = re.search(r"<kd>(.*?)</kd>", finalise_and_keywords2)
@@ -2026,7 +2066,7 @@ async def finalise_and_keywords(arxiv_id, language, summary, api_key):
 
     return [finalise_and_keywords2.rstrip().lstrip(),keywords_text]
 
-async def extract_key_points(arxiv_id, language, summary, api_key):
+async def extract_key_points(arxiv_id, language, summary, p, api_key):
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -2047,7 +2087,7 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
     if language != 'en':
         prompt3 += "TRANSLATE THE ANSWER IN "+language2
 
-    if model=="gpt-3.5-turbo":
+    if model=="gpt-3.5-turbo" or p:
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         mes = [
@@ -2055,8 +2095,14 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
             {"role": "user", "content": '"{text}"'.format(text=prompt3)}
         ]
 
+        if p:
+            model_take="gpt-4"
+        else:
+            model_take=model
+
+
         #response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model_take, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
         '''
         async with aiohttp.ClientSession() as session:
@@ -2113,7 +2159,7 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
-    if model=="gpt-3.5-turbo":
+    if model=="gpt-3.5-turbo" or p:
         print('icccciiiiii',response3["choices"][0]["message"]["content"])
         key_points = response3["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
     else:
@@ -2140,7 +2186,7 @@ async def extract_key_points(arxiv_id, language, summary, api_key):
 
     return key_points
 
-async def extract_simple_summary(arxiv_id, language, keyp, api_key):
+async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -2169,7 +2215,8 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
         "Authorization": f"Bearer {api_key}"
     }
 
-    if model=="gpt-3.5-turbo":
+
+    if model=="gpt-3.5-turbo" or p:
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         mes = [
@@ -2177,8 +2224,12 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
             {"role": "user", "content": '"{text}"'.format(text=prompt4)}
         ]
 
+        if p:
+            model_take="gpt-4"
+        else:
+            model_take=model
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
         '''
         async with aiohttp.ClientSession() as session:
@@ -2233,7 +2284,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
 
-    if model=="gpt-3.5-turbo":
+    if model=="gpt-3.5-turbo" or p:
         simple_sum = response4["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
         simple_sum = response4["choices"][0]["text"]#.strip().split("\n")
@@ -2282,7 +2333,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, api_key):
 
     return simple_sum#.rstrip().lstrip()
 
-async def extract_blog_article(arxiv_id, language, summary, api_key):
+async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -2316,9 +2367,12 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
         "Authorization": f"Bearer {api_key}"
     }
 
-    model_forced="text-davinci-003"#=model
+    if p:
+        model_forced="gpt-4"#=model
+    else:
+        model_forced="text-davinci-003"#=model
 
-    if model_forced=="gpt-3.5-turbo":
+    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         print('prompt5555555',prompt5)
@@ -2355,7 +2409,7 @@ async def extract_blog_article(arxiv_id, language, summary, api_key):
     print('resp5',response5)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
-    if model_forced=="gpt-3.5-turbo":
+    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
         blog_article = response5["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
         blog_article = response5["choices"][0]["text"]#.strip().split("\n")
