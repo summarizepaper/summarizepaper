@@ -14,7 +14,6 @@ class PaymentPlan(models.Model):
     auto_renew = models.BooleanField(default=False)
 
 class CustomUser(User):
-
     pass
     '''
     id = models.AutoField(primary_key=True)
