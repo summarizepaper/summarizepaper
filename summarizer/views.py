@@ -142,7 +142,7 @@ class ActivateView(View):
             user = None
             print('none')
 
-        if user is not None:# and generate_token.check_token(user, token):
+        if user is not None and generate_token.check_token(user, token):
             user.is_active = True
             print('aqyui')
             user.save()
