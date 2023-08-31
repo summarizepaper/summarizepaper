@@ -866,9 +866,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
     # Check if this IP address has already voted on this post
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
-
-    paid = user_payment_situation(request.user.id)['paid']#request.user.paid
-    print('paid',paid)
+    paid=False
+    if request.user.is_authenticated:
+        paid = user_payment_situation(request.user.id)['paid']#request.user.paid
+        print('paid',paid)
 
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid}
 
