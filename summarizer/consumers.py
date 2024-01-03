@@ -918,9 +918,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('rec',text_data)
         data = json.loads(text_data)
 
+        paid=None
+        if 'paid' in data:
+            paid = data['paid']
+
         if 'command' in data:
             command = data['command']
-            paid = data['paid']
 
             if command == 'start_background_task':
                 message = {
@@ -971,7 +974,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
             memory = ConversationBufferMemory(memory_key="history",return_messages=True)
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers,countpaperwithlicenses=countpaperwithlicenses))
+            print('PAIDDDD',paid)
+
+            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers,countpaperwithlicenses=countpaperwithlicenses,p=paid))
             chatbot_text=await c
 
             #chatbot_text=None

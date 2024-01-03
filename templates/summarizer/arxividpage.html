@@ -1676,6 +1676,8 @@ function addTheListeners() {
   //console.log(language);
   const user = "{{ request.user }}"
   const ip = "{{ hashed_ip_address }}"
+  const paid = {% if paid %}true{% else %}false{% endif %}
+
   var count = 0
 
   {% if not public %}
@@ -1761,7 +1763,7 @@ function addTheListeners() {
   // Scroll the container to the bottom
   scrollToBottom();
 
-  sendWebSocketMessage(messagec,user,ip,count);
+  sendWebSocketMessage(messagec,user,ip,count,paid);
   //socketl.send(JSON.stringify({message: messagec}));
 
   if (!isListenerAdded) {
@@ -1774,14 +1776,14 @@ function addTheListeners() {
 
 <script>
 
-function sendWebSocketMessage(message2,user,ip,count) {
+function sendWebSocketMessage(message2,user,ip,count,paid) {
   if (socketl && socketl.readyState === WebSocket.OPEN) {
     //console.log('sending...')
-    socketl.send(JSON.stringify({message: message2, user:user, ip:ip, count:count}));
+    socketl.send(JSON.stringify({message: message2, user:user, ip:ip, count:count, paid:paid}));
   } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
     //console.log("WebSocket connecting...");
     setTimeout(function() {
-      sendWebSocketMessage(message2,user,ip,count);
+      sendWebSocketMessage(message2,user,ip,count,paid);
       //console.log("wait");
     }, 1000);
   } else {

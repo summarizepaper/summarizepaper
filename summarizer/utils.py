@@ -707,6 +707,9 @@ def construct_document_prompt(document,mul=None):
 async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None,countpaperwithlicenses=None,p=None):
     print('in chatbot')
 
+    if p:
+        print('gpt-4 chatbot')
+
     li = get_language_info(language)
     language2 = li['name']
     print('language2',language2)
@@ -751,11 +754,13 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
     if sum==1:
         #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
         if p:
+            print('gpt-4 cb sum')
             llm = OpenAIChat(model_name="gpt-4",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
         else:
             llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
     else:
         if p:
+            print('gpt-4 cb')
             llm = OpenAIChat(model_name="gpt-4",temperature=0.3,max_tokens=700,openai_api_key=api_key)
         else:
             #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
@@ -1030,7 +1035,7 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
             print('wait7...')
 
         print('nbtokensusedchatbot',nbtokensused)
-        print('openai cost chatbot',nbtokensused*openaipricing("text-davinci-003"))
+        print('openai cost chatbot',nbtokensused*openaipricing("gpt-3.5-turbo-instruct"))#"text-davinci-003"))
 
         #qa = ChatVectorDBChain.from_llm(llm, docs)
         #chat_history = []
@@ -1806,7 +1811,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
         print('from embeddings2')
         query="Create a long detailed summary of the paper"
 
-        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,sum=1))
+        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,sum=1,p=p))
         #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
         final_summarized_text = await c
 
@@ -1838,7 +1843,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
 
     else:
         #llm = OpenAI(temperature=0,openai_api_key=api_key)
-        modelforsummarizing="text-davinci-003"#"text-curie-001"
+        modelforsummarizing="gpt-3.5-turbo-instruct"#"text-davinci-003"#"text-curie-001"
         #text-davinci-003#4000 tokens#chunk_size=2000#max_tokens=1000
         #text-curie-001#2048 tokens
         #text-babbage-001#2048 tokens
@@ -1936,8 +1941,9 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
 
     if p:
         model_forced="gpt-4"#=model
+        print('gpt-4 1')
     else:
-        model_forced="text-davinci-003"#=model
+        model_forced="gpt-3.5-turbo-instruct"#"text-davinci-003"#=model
 
     if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":#force davinci
         endpoint = "https://api.openai.com/v1/chat/completions"
@@ -2012,6 +2018,8 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
     if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
+        if model_forced=="gpt-4":
+            print('gpt-4 2')
         #print('icccciiiiiib',response3b["choices"][0]["message"]["content"])
 
         finalise_and_keywords2 = response3b["choices"][0]["message"]["content"].rstrip().lstrip()
@@ -2097,6 +2105,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
 
         if p:
             model_take="gpt-4"
+            print('gpt-4 3')
         else:
             model_take=model
 
@@ -2226,6 +2235,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
 
         if p:
             model_take="gpt-4"
+            print('gpt-4 4')
         else:
             model_take=model
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
@@ -2369,8 +2379,9 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
 
     if p:
         model_forced="gpt-4"#=model
+        print('gpt-4 5')
     else:
-        model_forced="text-davinci-003"#=model
+        model_forced="gpt-3.5-turbo-instruct"#"text-davinci-003"#=model
 
     if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
         endpoint = "https://api.openai.com/v1/chat/completions"
@@ -2443,7 +2454,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
         "Authorization": f"Bearer {api_key}"
     }
 
-    model_forced="text-davinci-003"#=model
+    model_forced="gpt-3.5-turbo-instruct"#"text-davinci-003"#=model
 
     if model_forced=="gpt-3.5-turbo":
         endpoint = "https://api.openai.com/v1/chat/completions"
