@@ -275,7 +275,7 @@ def getallpaperstoredo(certain_date):
     return allpaper
 
 def getallpapers(cat):
-    if 1==0:#cat != '':#for now we look everywhere to be changed
+    if cat != '':#for now we look everywhere to be changed
         print('in cat')
         allpapers = ArxivPaper.objects.filter(category=cat)
     else:
