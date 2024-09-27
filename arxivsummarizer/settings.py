@@ -48,7 +48,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 # SECURITY WARNING: don't run with debug turned on in production!
 if 'ON_HEROKU' in os.environ:
-    DEBUG = True#False
+    DEBUG = False
 else:
     DEBUG = True
 
