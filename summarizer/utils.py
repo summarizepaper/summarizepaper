@@ -1819,7 +1819,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
 
 
         # Download the nltk punkt tokenizer if necessary
-        nltk.download('punkt')
+        nltk.download('punkt_tab')
 
 
         # Split the summary into individual sentences
