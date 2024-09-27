@@ -2,7 +2,7 @@ asgiref==3.6.0
 channels==4.0.0
 django==4.1.6
 pdfminer==20191125
-requests==2.23.0
+requests[security]
 six==1.10.0
 daphne
 django-rosetta
@@ -18,7 +18,7 @@ django-redis-cache
 django_heroku
 django-bmemcached
 dj-database-url
-tiktoken
+tiktoken==0.5.2
 #git+https://github.com/qkral/pyfpdf.git
 langchain==0.0.124
 openai==0.27.0

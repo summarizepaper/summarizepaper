@@ -251,8 +251,10 @@ def get_cache():
 CACHES = get_cache()
 
 
-prod_db = dj_database_url.config(conn_max_age=0)
-DATABASES['default'].update(prod_db)
+if 'ON_HEROKU' in os.environ:
 
-django_heroku.settings(locals())
-DATABASES['default']['CONN_MAX_AGE'] = 0
+    prod_db = dj_database_url.config(conn_max_age=0)
+    DATABASES['default'].update(prod_db)
+
+    django_heroku.settings(locals())
+    DATABASES['default']['CONN_MAX_AGE'] = 0
