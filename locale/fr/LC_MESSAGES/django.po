@@ -2130,6 +2130,16 @@ msgstr ""
 "aider à protéger le site Web contre les attaques de falsification de "
 "requêtes inter-sites)."
 
+#: templates/summarizer/privacy.html
+msgid ""
+"We measure our audience with Umami, which sets no cookies and does not store "
+"IP addresses or any personal information. We only see aggregate figures such "
+"as page views, referring sites and countries."
+msgstr ""
+"Nous mesurons notre audience avec Umami, qui ne dépose aucun cookie et ne "
+"conserve ni adresse IP ni aucune donnée personnelle. Nous ne voyons que des "
+"chiffres agrégés comme les pages vues, les sites référents et les pays."
+
 #: templates/summarizer/privacy.html:36
 msgid ""
 "Users have the option to disable cookies in their web browser, but this may "

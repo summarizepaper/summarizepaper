@@ -48,6 +48,9 @@ GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 
 SITE_URL = os.getenv('SITE_URL', 'https://www.summarizepaper.com' if 'ON_HEROKU' in os.environ else '')
 
+#Cookieless audience measurement on cloud.umami.is, production only so local visits are not counted
+UMAMI_WEBSITE_ID = os.getenv('UMAMI_WEBSITE_ID', '8e319191-25d0-44cc-bdcb-299b768ca7a7' if 'ON_HEROKU' in os.environ else '')
+
 EMAIL_HOST = 'smtp.cloudmta.net'
 EMAIL_HOST_USER = '19e06dea731b2f94'
 EMAIL_HOST_PASSWORD= SECRETCMTA
@@ -125,6 +128,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'summarizer.context_processors.analytics',
             ],
         },
     },
