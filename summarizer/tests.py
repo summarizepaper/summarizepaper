@@ -952,3 +952,26 @@ class ArxivTimeoutTests(TestCase):
         with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError()):
             self.assertEqual(Client().get('/en/arxiv-id/2401.99999v1/').status_code, 503)
             self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
+
+
+from summarizer.models import Vote
+
+
+class VoteTests(TestCase):
+    def setUp(self):
+        self.paper = ArxivPaper.objects.create(arxiv_id='2101.00003v1', title='Voted', abstract='Abs.')
+
+    def test_fetch_vote_returns_score(self):
+        c = Client(HTTP_HOST='localhost')
+        r = c.post('/fr/vote/2101.00003v1/', {'direction': 'up'}, HTTP_X_REQUESTED_WITH='fetch')
+        self.assertEqual(r.json(), {'total': 1, 'message': 'Merci pour votre vote', 'already': False})
+        r = c.post('/fr/vote/2101.00003v1/', {'direction': 'down'}, HTTP_X_REQUESTED_WITH='fetch')
+        self.assertEqual(r.json(), {'total': 1, 'message': 'Vous avez déjà voté', 'already': True})
+        self.assertEqual(Vote.objects.filter(paper=self.paper).count(), 1)
+
+    def test_form_vote_redirects(self):
+        c = Client(HTTP_HOST='localhost')
+        r = c.post('/en/vote/2101.00003v1/', {'direction': 'down'})
+        self.assertRedirects(r, '/en/arxiv-id/2101.00003v1/', fetch_redirect_response=False)
+        r = c.post('/en/vote/2101.00003v1/', {'direction': 'down'})
+        self.assertRedirects(r, '/en/arxiv-id/2101.00003v1/vote#totvote', fetch_redirect_response=False)

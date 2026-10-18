@@ -301,6 +301,7 @@
 .vote-btn.down:hover { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
 .vote-score { min-width: 64px; text-align: center; font-weight: 600; color: var(--text); }
 .inline-error { margin: 12px 0 0; color: var(--danger); font-weight: 600; text-align: center; }
+.inline-error.ok { color: var(--success); }
 
 .rerun { margin: 32px 0 0; padding: 20px 24px; border: 1px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-muted); }
 .rerun p { margin: 0 0 14px; }
@@ -612,7 +613,7 @@ submitButton.addEventListener('click', () => {
         <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
         <button type="submit" name="direction" value="up" class="vote-btn up" aria-label="+1"><i class="fa fa-thumbs-up"></i></button>
       </form>
-      <span class="vote-score">{% trans 'Score:' %} {{ total_votes }}</span>
+      <span class="vote-score">{% trans 'Score:' %} <span id="vote-total">{{ total_votes }}</span></span>
       <form action="{% url 'vote' paper.arxiv_id %}" method="post">
         {% csrf_token %}
         <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
@@ -624,9 +625,35 @@ submitButton.addEventListener('click', () => {
       <p>{% trans 'Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.' %}</p>
     </div>
   </div>
-  {% if error_message %}
-  <p class="inline-error">{{ error_message }}</p>
-  {% endif %}
+  <p class="inline-error" id="vote-message"{% if not error_message %} hidden{% endif %}>{{ error_message }}</p>
+  <script>
+  document.querySelectorAll('.vote-actions form').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var direction = (event.submitter || form.querySelector('button')).value;
+      var data = new FormData(form);
+      data.append('direction', direction);
+      var buttons = document.querySelectorAll('.vote-btn');
+      buttons.forEach(function (b) { b.disabled = true; });
+      fetch(form.action, {method: 'POST', body: data, headers: {'X-Requested-With': 'fetch'}})
+        .then(function (r) { if (!r.ok) throw r; return r.json(); })
+        .then(function (res) {
+          document.getElementById('vote-total').textContent = res.total;
+          var msg = document.getElementById('vote-message');
+          msg.textContent = res.message;
+          msg.classList.toggle('ok', !res.already);
+          msg.hidden = false;
+        })
+        .catch(function () {
+          var input = document.createElement('input');
+          input.type = 'hidden'; input.name = 'direction'; input.value = direction;
+          form.appendChild(input);
+          form.submit();
+        })
+        .finally(function () { buttons.forEach(function (b) { b.disabled = false; }); });
+    });
+  });
+  </script>
 
   {% if not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog or toolong or total_votes < -9 or user.is_staff %}
   <div class="rerun">

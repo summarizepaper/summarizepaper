@@ -37,7 +37,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
 from django.contrib import messages
 import os
-from django.utils.translation import get_language,get_language_info
+from django.utils.translation import get_language, get_language_info, gettext as _
 from django.db.models import Sum
 from django.core.paginator import Paginator
 from urllib.parse import urlencode
@@ -940,10 +940,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
     if error_message:
         print('rrr',error_message)
         if error_message=="vote":
-            if lang =='fr':
-                error_message="Vous avez déjà voté"
-            else:
-                error_message="You have already voted"
+            error_message=_('You have already voted')
 
         else:
             error_message=""
@@ -1276,54 +1273,30 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
 def vote(request, paper_id):
     lang = get_language()
+    # The paper page posts with fetch and updates the score in place; without
+    # JavaScript the form posts normally and we redirect back to the page.
+    wants_json = request.headers.get('x-requested-with') == 'fetch'
 
     if request.method == 'POST':
         direction = request.POST.get('direction')
-
-        print('in there',lang)
         paper = get_object_or_404(ArxivPaper, arxiv_id=paper_id)
-        client_ip = utils.get_client_ip(request)#request.META['REMOTE_ADDR']
-        print('clientip',client_ip)
-        print('clientip2',client_ip.encode('utf-8'))
+        hashed_ip_address = access.hash_ip(utils.get_client_ip(request))
 
-        # Check if this IP address has already voted on this post
-        hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
-        print('clientiphashed',hashed_ip_address)
+        already = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address).exists()
+        valuevote = {'up': 1, 'down': -1}.get(direction, 0)
+        if not already and valuevote != 0:
+            userinst = request.user if request.user.is_authenticated else None
+            Vote.objects.create(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote, user=userinst)
 
-        previous_votes = Vote.objects.filter(paper=paper, lang=lang, ip_address=hashed_ip_address)
-        if previous_votes.exists():# and not client_ip=='127.0.0.1':
-            print('exist vote')
-
-            error_message = 'vote#totvote'
-            #error_message = urllib.parse.quote(error_message)
-            #print('tturleee',error_message)
-            url = '/'+lang+'/arxiv-id/' + paper_id + '/' + error_message
-            #print('tturl',url)
-            return redirect(url)
-
-            #return redirect('arxividpage', arxiv_id=paper_id, error_message=error_message)#%2523=#
-            #return redirect('post_detail', post_id=post.pk)
-
-        # Create a new vote
-        if direction=="up":
-            valuevote=1
-        elif direction=="down":
-            valuevote=-1
-        else:
-            valuevote=0
-
-        if valuevote != 0:
-            if request.user.is_authenticated:
-                #if User.objects.filter(username=user).exists():
-                userinst = request.user#User.objects.get(username=user)
-                # Do something with the admin_user instance
-            else:
-                userinst = None# AnonymousUser
-            vote = Vote(paper=paper, lang=lang, ip_address=hashed_ip_address, vote=valuevote, user=userinst)
-            vote.save()
-            #if paper.total_votes+valuevote>=0:
-            #paper.total_votes += valuevote
-            #paper.save()
+        if wants_json:
+            total = Vote.objects.filter(paper=paper, lang=lang, active=True).aggregate(Sum('vote'))['vote__sum'] or 0
+            return JsonResponse({
+                'total': total,
+                'message': _('You have already voted') if already else _('Thank you for your vote'),
+                'already': already,
+            })
+        if already:
+            return redirect('/' + lang + '/arxiv-id/' + paper_id + '/vote#totvote')
 
     return redirect('arxividpage', arxiv_id=paper_id)
 
