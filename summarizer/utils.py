@@ -1751,6 +1751,10 @@ def arxiv_search(query):
 
     return papers
 
+# aiohttp waits up to 5 minutes by default; a page waiting on arXiv also holds a database connection
+ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=20)
+
+
 async def get_arxiv_metadata(arxiv_id):
     print('aaa',arxiv_id)
     if '--' in arxiv_id:
@@ -1761,7 +1765,7 @@ async def get_arxiv_metadata(arxiv_id):
 
     url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
         async with session.get(url) as response:
             try:
                 print('in try arxiv',response.status)
@@ -1780,7 +1784,7 @@ async def get_arxiv_metadata(arxiv_id):
     print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
     url2=f"https://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
         async with session.get(url2) as response:
             try:
                 print('in try arxiv2',response.status)

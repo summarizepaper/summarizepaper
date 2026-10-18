@@ -44,6 +44,7 @@ from urllib.parse import urlencode
 import urllib, urllib.request
 from xml.etree import ElementTree
 import asyncio
+import aiohttp
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.utils.safestring import mark_safe
@@ -545,6 +546,19 @@ def escape_latex(abstract):
         abstract = abstract[:start] + "\[" + abstract[start + 1:end] + "\]" + abstract[end + 1:]
     return abstract
 
+def arxiv_metadata_or_none(arxiv_id):
+    try:
+        return asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        return None
+
+
+def arxiv_unavailable(request, arxiv_id):
+    return render(request, 'summarizer/arxividpage.html',
+                  {'arxiv_id': arxiv_id, 'errormess': 'arXiv is not responding right now. Please try again in a moment.'},
+                  status=503)
+
+
 def tree(request, arxiv_id):
     arxiv_id = arxiv_id.strip()
     lang = get_language()
@@ -577,7 +591,8 @@ def tree(request, arxiv_id):
         scores=[]
         max_score=0
         if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-            relpapers = PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')
+            relpapers = (PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')
+                         .select_related('to_paper').prefetch_related('to_paper__authors'))
             relpapersData = []
             import numpy as np
             import random
@@ -605,10 +620,12 @@ def tree(request, arxiv_id):
                     'main':True
                 })
 
-            for relpaper in relpapers:
-                first_author = relpaper.to_paper.authors.first()
+            # spread the papers evenly around the main one: searching random free spots took seconds
+            start_angle = random.random() * 2 * np.pi
+            for k, relpaper in enumerate(relpapers):
+                paper_authors = list(relpaper.to_paper.authors.all())
+                first_author = min(paper_authors, key=lambda a: a.pk) if paper_authors else None
                 author_name = first_author.name if first_author else 'Unknown Author'
-                paper_authors = relpaper.to_paper.authors.all()
                 author_names = ', '.join([author.name for author in paper_authors[:MAX_AUTHORS]])
                 if len(paper_authors) > MAX_AUTHORS:
                     author_names += ', ...'
@@ -619,20 +636,9 @@ def tree(request, arxiv_id):
                 # add x and y positions based on distance
                 #x = distance * np.cos(random.random() * np.pi * 2)
                 #y = distance * np.sin(random.random() * np.pi * 2)
-                i=0
-                #print('cos',np.cos(np.pi * 2),random.random(),random.random(),random.random(),random.random())
-                #print('cos',np.cos(np.pi/2.))
-
-                while True:
-                    i+=1
-                    ran=random.random()
-                    x = distance * np.cos(ran * np.pi * 2)
-                    y = distance * np.sin(ran * np.pi * 2)
-                    # check if there are any points within 30px around (x,y)
-                    if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 30 for d in relpapersData):
-                        break
-                    if i==10000:
-                        break
+                angle = start_angle + 2 * np.pi * k / len(relpapers)
+                x = distance * np.cos(angle)
+                y = distance * np.sin(angle)
 
                 relpapersData.append({
                     'arxiv_id': relpaper.to_paper.arxiv_id,
@@ -683,7 +689,9 @@ def tree(request, arxiv_id):
 
     else:
         alpaper=False
-        arxiv_detailsf=asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+        arxiv_detailsf=arxiv_metadata_or_none(arxiv_id)
+        if arxiv_detailsf is None:
+            return arxiv_unavailable(request, arxiv_id)
         exist=arxiv_detailsf[0]
         #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
         if arxiv_detailsf[0] == 0:
@@ -1201,7 +1209,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         else:
             print('nope')
             alpaper=False
-            arxiv_detailsf=asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+            arxiv_detailsf=arxiv_metadata_or_none(arxiv_id)
+            if arxiv_detailsf is None:
+                return arxiv_unavailable(request, arxiv_id)
             exist=arxiv_detailsf[0]
             #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
             if arxiv_detailsf[0] == 0:

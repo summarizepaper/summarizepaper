@@ -926,3 +926,29 @@ class ArxivApiRelayTests(TestCase):
         with mock.patch('summarizer.views.requests.get', side_effect=requests.ConnectionError()):
             self.assertEqual(Client().get('/en/arxiv-api/', {'id_list': '2304.01202v1'}).status_code, 502)
 
+
+class TreePageTests(TestCase):
+    def test_fifteen_related_papers_in_constant_queries(self):
+        from summarizer.models import Author, PaperAuthor, PaperScore
+        main = ArxivPaper.objects.create(arxiv_id='2401.00001v1', title='main', category='astro-ph.GA')
+        for i in range(15):
+            other = ArxivPaper.objects.create(arxiv_id='2401.%05dv1' % (i + 2), title='p%d' % i, category='astro-ph.GA')
+            for j in range(2):
+                PaperAuthor.objects.create(paper=other, author=Author.objects.create(name='A%d-%d' % (i, j), affiliation=''),
+                                           author_order=j)
+            # close scores put every paper on the same ring: the old random placement struggled here
+            PaperScore.objects.create(from_paper=main, to_paper=other, score=0.30 + i / 1000, active=True)
+        with self.assertNumQueries(9):
+            r = Client().get('/en/tree/2401.00001v1/')
+        self.assertEqual(r.status_code, 200)
+        data = _json.loads(r.context['relpapers_json'])
+        self.assertEqual(len(data), 16)
+        self.assertEqual(data[1]['first_author'], 'A0-0')
+
+
+class ArxivTimeoutTests(TestCase):
+    def test_slow_arxiv_gives_503_instead_of_hanging(self):
+        import asyncio
+        with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError()):
+            self.assertEqual(Client().get('/en/arxiv-id/2401.99999v1/').status_code, 503)
+            self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
