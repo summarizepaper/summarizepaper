@@ -15,7 +15,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
           integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
   <link rel="shortcut icon" type="image/x-icon" href="{% static 'summarizer/images/favicon.ico' %}">
-  {% if UMAMI_WEBSITE_ID %}<script defer src="https://cloud.umami.is/script.js" data-website-id="{{ UMAMI_WEBSITE_ID }}"></script>{% endif %}
+  {% if UMAMI_WEBSITE_ID %}
+  <script>
+    // Drop hits from automated browsers (scrapers driving headless Chrome)
+    function umamiBeforeSend(type, payload) {
+      if (navigator.webdriver || /HeadlessChrome|PhantomJS|Puppeteer|Playwright|bot|crawl|spider/i.test(navigator.userAgent)) return false;
+      return payload;
+    }
+  </script>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="{{ UMAMI_WEBSITE_ID }}" data-before-send="umamiBeforeSend"></script>
+  {% endif %}
 
   {% block extra_head_tags %}
     <meta name="description" content="{% trans 'SummarizePaper.com uses artificial intelligence to generate summaries of scientific papers from arXiv.org. Get quick insights into complex research topics with our AI-powered summaries. Try it out today!' %}" />
