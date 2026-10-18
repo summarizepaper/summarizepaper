@@ -3,14 +3,40 @@
 {% load i18n %}
 {% load index %}
 {% load dash_slash %}
+{% load seo %}
 
 {% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %} {% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }} {% endblock %}
+{% block title %}{% firstof paper.title details.title as paper_title %}{% if paper_title %}{{ paper_title|oneline|truncatechars:90 }} | {% trans 'AI summary' %}{% else %}{% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{% if details %}{{ details.title }}{% else %}{{ paper.title }}{% endif %}" />
+  {% firstof paper.title details.title as paper_title %}
+  {% firstof sumpaper.lay_summary sumpaper.summary paper.abstract details.abstract as page_excerpt %}
+  {% if page_excerpt %}
+  <meta name="description" content="{{ page_excerpt|plaintext|truncatechars:158 }}" />
+  {% else %}
+  <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{{ paper_title }}" />
+  {% endif %}
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
+  {% if sumpaper %}
+  <link rel="alternate" hreflang="{{ LANGUAGE_CODE }}" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/" />
+  {% for other_lang in sumlang %}
+  <link rel="alternate" hreflang="{{ other_lang }}" href="https://www.summarizepaper.com/{{ other_lang }}/arxiv-id/{{ arxiv_id }}/" />
+  {% endfor %}
+  {% else %}
+  {# no summary in this language yet: a bare "Run" page, keep it out of search results #}
+  <meta name="robots" content="noindex" />
+  {% endif %}
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="SummarizePaper" />
+  <meta property="og:title" content="{{ paper_title|default:arxiv_id|oneline }}" />
+  <meta property="og:description" content="{{ page_excerpt|plaintext|truncatechars:200 }}" />
+  <meta property="og:url" content="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
+  <meta property="og:image" content="https://www.summarizepaper.com{% static 'summarizer/images/logo.png' %}" />
+  <meta name="twitter:card" content="summary" />
+  {% if structured_data %}
+  <script type="application/ld+json">{{ structured_data }}</script>
+  {% endif %}
   <script>
     MathJax = {
       tex: {

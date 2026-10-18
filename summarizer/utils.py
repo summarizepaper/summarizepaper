@@ -231,6 +231,12 @@ def nchars_leq_ntokens_approx(maxTokens):
     lin_margin = 1.010175047 #= e - 1.001 - sqrt(1 - sqrt_margin) #ensures return 1 when maxTokens=1
     return max( 0, int(maxTokens*math.exp(1) - lin_margin - math.sqrt(max(0,maxTokens - sqrt_margin) ) ))
 
+def ensure_nltk_punkt():
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        nltk.download('punkt_tab')
+
 def get_client_ip(request):
     from .access import client_ip
     return client_ip(request)
@@ -430,7 +436,8 @@ async def createindex(arxiv_id,book_text,api_key):
     #for metadata in metadatas:
     #    print('met',metadata)
 
-    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=metadatas)
+    #embeds every chunk through the OpenAI API: run in a thread so the event loop keeps serving pages
+    docsearch = await asyncio.to_thread(FAISS.from_texts, texts, new_docsearch, metadatas=metadatas)
 
 
 
@@ -867,7 +874,7 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
         else:
             kvalue=3
 
-        docs = docsearch2.similarity_search(query,k=kvalue)
+        docs = await asyncio.to_thread(docsearch2.similarity_search, query, k=kvalue)
         print('docs:',docs)
         print('len docs:',len(docs))
 
@@ -1519,154 +1526,28 @@ async def agen(it):
     except WrappedStopIteration:
         pass
 
-async def extract_text_from_pdf(pdf_filename):
-    # Open the PDF file
-    #need to check first if pdf file and otherwise return an error; to do later
-    print('in extract')
-    #import aiofiles
-    #import concurrent.futures
-    #from PyPDF2 import PdfFileReader
-    #from pdfminer.high_level import extract_pages
-    #from pdfminer.layout import LAParams, LTTextBoxHorizontal
-    #from pdfminer.high_level import extract_text_to_fp
-    #from io import BytesIO
-    #from pdfminer.high_level import extract_pages
-    
-    #from pdfminer.layout import LTTextContainer
+def _pdf_bytes_to_text(pdf_bytes):
+    #pdfminer is slow pure Python, keep it off the event loop (see extract_text_from_pdf)
+    from io import BytesIO
+    resource_manager = PDFResourceManager(caching=False)
+    text_io = StringIO()
+    text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
+    page_interpreter = PDFPageInterpreter(resource_manager, text_converter)
+    for page in PDFPage.get_pages(BytesIO(pdf_bytes)):
+        page_interpreter.process_page(page)
+    text = text_io.getvalue()
+    text_converter.close()
+    text_io.close()
 
-    '''
-    async with aiofiles.open(pdf_filename, mode='rb') as f:
-        content = await f.read()
-    with BytesIO(content) as file_like:
-        with pdfplumber.open(file_like) as pdf:
-            pages = pdf.pages
-            text = ''
-            for page in pages:
-                text += page.extract_text()
-    #return text
+    #drop references and acknowledgements
+    ends = [text.find(marker) for marker in ("References", "REFERENCES", "Acknowledgements", "ACKNOWLEDGEMENTS")]
+    ends = [e for e in ends if e > 0]
+    endf = min(ends) if ends else -1
+    return text[0:endf].strip()
 
-    return [text,text]
-
-    '''
-    #import aiofiles
-    ''' it works in async with pypdf and they opened a ticket to read greek letters and double ff+maths stuff but for now, not as good as pdfminer
-    import aiofiles
-    import pypdf
-    import io
-
-    async with aiofiles.open(pdf_filename, "rb") as f:
-        pdf_data = await f.read()
-        pdf_stream = io.BytesIO(pdf_data)
-        pdf_reader = pypdf.PdfReader(pdf_stream)
-        text = ""
-        for num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[num]
-            text += page.extract_text(0)
-
-    print('text',text)
-    input('ok')
-    '''
-    
-
-    with open(pdf_filename, 'rb') as file:
-    #async with open_pdf_file(pdf_filename) as f:
-    #async with aiofiles.open(pdf_filename, 'rb') as file:
-        if 1==0:
-            async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
-                texts = []
-                #for page_layout in pages:
-                for element in page_layout:
-                    if isinstance(element, LTTextContainer):
-                        texts.append(element.get_text())
-                        print('t',texts)
-            text = "".join(texts), texts
-            print('text',text)
-
-        
-        #f = await aiofiles.open('filename.txt', mode='w').__aenter__()
-
-        #async with aiofiles.open(pdf_filename, 'rb') as file:
-        #file = await aiofiles.open(pdf_filename, 'rb')
-        # Create a PDF resource manager object that stores shared resources
-        resource_manager = PDFResourceManager(caching=False)
-
-        # Create a string buffer object for text extraction
-        text_io = StringIO()
-
-        # Create a text converter object
-        #text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
-        text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
-
-        # Create a PDF page interpreter object
-        page_interpreter = PDFPageInterpreter(resource_manager, text_converter)
-
-        print('in extract 2')
-        # Process each page in the PDF file
-        #for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
-        #async for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
-        #for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
-        #async for page in async_generator(extract_pages, file):
-        #async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
-
-        async for page in extract_pages2(file):
-            page_interpreter.process_page(page)
-
-        #async for page in extract_pages(file):
-        #    page_interpreter.process_page(page)
-
-            #async for page in extract_pages(file, caching=True):
-            #for page in PDFPage.get_pages(file, caching=True):
-            #await asyncio.sleep(0)  # Allow other tasks to run while processing the page
-            #print('in extract3')
-
-            #page_interpreter.process_page(page)
-        text = text_io.getvalue()
-
-        #async for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
-         #   page_interpreter.process_page(page)
-            #yield text_io.getvalue()
-            #text_io.truncate(0)
-            #text_io.seek(0)
-            #await asyncio.sleep(0)
-
-        # Get the extracted text from the TextConverter object
-        #text = text_converter.get_output()
-
-       
-
-        #text = text_io.getvalue()
-
-        end = text.find("References")
-        end2 = text.find("REFERENCES")
-        end3 = text.find("Acknowledgements")
-        end4 = text.find("ACKNOWLEDGEMENTS")
-
-        print('end,end2,end3,end4',end,end2,end3,end4)
-        numbers=[end,end2,end3,end4]
-        min_positive = float('inf')
-        for number in numbers:
-            if number > 0 and number < min_positive:
-                min_positive = number
-
-        if min_positive != float('inf'):
-            print("The smallest positive number is", min_positive)
-            endf=min_positive
-        else:
-            print("There are no positive numbers in the list")
-            endf=-1
-
-        print('abs:',text[0:endf].strip())
-        textlim=text[0:endf].strip()
-        # Close the text buffer and the text converter
-
-        text_io.close()
-        text_converter.close()
-        file.close()
-        # Put the extracted text into the text queue
-        #await text_queue.put(textlim)
-        # Return the extracted text
-        #return [textlim,text]
-        return [textlim,textlim]
+async def extract_text_from_pdf(pdf_bytes):
+    text = await asyncio.to_thread(_pdf_bytes_to_text, pdf_bytes)
+    return [text, text]
 
 async def send_message_now(arxiv_group_name,message):
     print('in sendmesnow')
@@ -1823,7 +1704,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
 
 
         # Download the nltk punkt tokenizer if necessary
-        nltk.download('punkt_tab')
+        await asyncio.to_thread(ensure_nltk_punkt)
 
 
         # Split the summary into individual sentences

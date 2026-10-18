@@ -45,6 +45,7 @@ from xml.etree import ElementTree
 import asyncio
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
+from django.utils.safestring import mark_safe
 
 @require_GET
 def robots_txt(request):
@@ -813,6 +814,34 @@ def chat(request):
 
     return render(request, "summarizer/chat.html", stuff_for_frontend)
 
+def paper_structured_data(paper, sumpaper, lang):
+    """schema.org JSON-LD for a paper page, already escaped for a <script> tag."""
+    arxiv_url = 'https://arxiv.org/abs/' + paper.arxiv_id.replace('--', '/')
+    title = re.sub(r'\s+', ' ', paper.title or paper.arxiv_id).strip()
+    data = {
+        '@context': 'https://schema.org',
+        '@type': 'ScholarlyArticle',
+        'headline': title[:110],
+        'name': title,
+        'identifier': paper.arxiv_id.replace('--', '/'),
+        'url': 'https://www.summarizepaper.com/%s/arxiv-id/%s/' % (lang, paper.arxiv_id),
+        'sameAs': arxiv_url,
+        'inLanguage': lang,
+        'author': [{'@type': 'Person', 'name': a.name} for a in paper.authors.all()[:20]],
+    }
+    if paper.published_arxiv:
+        data['datePublished'] = paper.published_arxiv.isoformat()
+    if paper.category:
+        data['about'] = paper.category
+    if sumpaper and sumpaper.summary:
+        data['abstract'] = sumpaper.summary.strip()
+    elif paper.abstract:
+        data['abstract'] = re.sub(r'\s+', ' ', paper.abstract).strip()
+    if sumpaper and sumpaper.keywords:
+        data['keywords'] = sumpaper.keywords
+    escaped = json.dumps(data).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+    return mark_safe(escaped)
+
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
     
@@ -1159,6 +1188,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
             stuff_for_frontend.update({
                 'paper':paper,
+                'structured_data':paper_structured_data(paper, sumpaper, lang),
                 'relpapers':relpapers,
                 'max_score':max_score,
                 'scores':scores,

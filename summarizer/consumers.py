@@ -131,16 +131,13 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                 print('active....')
                 if public==1:
                     #response = requests.get(url)
-                    response = await asyncio.to_thread(requests.get, url)
+                    response = await asyncio.to_thread(requests.get, url, timeout=120)
                     my_raw_data = response.content
 
-                    with open("my_pdf.pdf", 'wb') as my_data:
-                        my_data.write(my_raw_data)
-
-                    ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                    ###book_text = utils.extract_text_from_pdf(my_raw_data)
                     print('raw data done')
                     #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-                    c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
+                    c=asyncio.create_task(utils.extract_text_from_pdf(my_raw_data))
                     book_text,full_text=await c
                     print('book:',book_text)
                     
@@ -260,27 +257,24 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     async with session.get(url) as response:
                         await response.read()
 
-                response = await asyncio.to_thread(requests.get, url)
+                response = await asyncio.to_thread(requests.get, url, timeout=120)
                 '''
                 
 
-                response = requests.get(url)
+                response = await asyncio.to_thread(requests.get, url, timeout=120)
                 print('kici')
 
                 my_raw_data = response.content
 
                         
                 print('ici')
-
-                with open("my_pdf.pdf", 'wb') as my_data:
-                    my_data.write(my_raw_data)
                 print('ici2')
 
-                ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                ###book_text = utils.extract_text_from_pdf(my_raw_data)
 
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
                     
-                c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
+                c=asyncio.create_task(utils.extract_text_from_pdf(my_raw_data))
                 book_text,full_text=await c
                 print('book:',book_text)
             else:
@@ -350,7 +344,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             print('active....')
             if public==1:
                 #response = requests.get(url)
-                response = await asyncio.to_thread(requests.get, url)
+                response = await asyncio.to_thread(requests.get, url, timeout=120)
                 my_raw_data = response.content
 
 
@@ -367,12 +361,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 #time.sleep(3.)
 
-                with open("my_pdf.pdf", 'wb') as my_data:
-                    my_data.write(my_raw_data)
-
-                ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                ###book_text = utils.extract_text_from_pdf(my_raw_data)
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-                c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
+                c=asyncio.create_task(utils.extract_text_from_pdf(my_raw_data))
                 book_text,full_text=await c
                 #print('book:',book_text)
                 

@@ -261,3 +261,9 @@ if 'ON_HEROKU' in os.environ:
 
     django_heroku.settings(locals())
     DATABASES['default']['CONN_MAX_AGE'] = 0
+
+    #Heroku's router tells us whether the visitor used https
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
