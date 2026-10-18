@@ -10,16 +10,25 @@
 {% endblock %}
 
 {% block content %}
-<div class="page prose">
+<div class="page guides-index">
   <header class="page-header">
     <h1>{% trans 'Guides' %}</h1>
     <p class="lead">{% trans 'Guides by SummarizePaper on keeping up with arXiv, reading research papers faster and choosing AI tools for research.' %}</p>
   </header>
+  <div class="guide-list">
   {% for guide in guides %}
-    <h2><a href="/{{ LANGUAGE_CODE }}/guides/{{ guide.slug }}/">{{ guide.title }}</a></h2>
-    <p>{{ guide.description }}</p>
+    <a class="guide-card" href="/{{ LANGUAGE_CODE }}/guides/{{ guide.slug }}/">
+      <h2>{{ guide.title }}</h2>
+      <p>{{ guide.description }}</p>
+      <span class="guide-meta">
+        <time datetime="{{ guide.updated|date:'Y-m-d' }}">{{ guide.updated|date:'j F Y' }}</time>
+        · {% blocktrans count minutes=guide.minutes %}{{ minutes }} min read{% plural %}{{ minutes }} min read{% endblocktrans %}
+        {% if guide.draft %}<span class="badge-draft">{% trans 'Draft' %}</span>{% endif %}
+      </span>
+    </a>
   {% empty %}
     <p class="muted">{% trans 'No guides yet.' %}</p>
   {% endfor %}
+  </div>
 </div>
 {% endblock %}

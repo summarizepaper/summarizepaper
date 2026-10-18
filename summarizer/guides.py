@@ -52,6 +52,7 @@ def _parse(path, mtime):
     if text.startswith('---'):
         _, front, text = text.split('---', 2)
         meta = yaml.safe_load(front) or {}
+    meta['minutes'] = max(1, round(len(text.split()) / 220))
     html = markdown.markdown(text, extensions=['extra', 'sane_lists', 'toc'])
     # a wrapper lets wide tables scroll on phones instead of widening the page
     meta['html'] = html.replace('<table>', '<div class="table-wrap"><table>').replace('</table>', '</table></div>')
@@ -76,7 +77,7 @@ def load(lang, slug):
     return guide
 
 
-def published(lang=None):
+def published(lang=None, include_drafts=False):
     """Published guides, newest first, in one language or all of them."""
     langs = [lang] if lang else [l for l, _ in settings.LANGUAGES]
     guides = []
@@ -87,7 +88,7 @@ def published(lang=None):
         for name in os.listdir(folder):
             if name.endswith('.md'):
                 guide = load(l, name[:-3])
-                if guide and not guide.get('draft'):
+                if guide and (include_drafts or not guide.get('draft')):
                     guides.append(guide)
     return sorted(guides, key=lambda g: str(g.get('date') or ''), reverse=True)
 
@@ -141,7 +142,7 @@ def _json_ld(guide):
 
 
 def guide_index(request):
-    guides = published(request.LANGUAGE_CODE)
+    guides = published(request.LANGUAGE_CODE, include_drafts=request.user.is_staff)
     return render(request, 'summarizer/guides.html', {'guides': guides})
 
 

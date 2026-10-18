@@ -2724,3 +2724,10 @@ msgstr "Code source de SummarizePaper"
 #: templates/summarizer
 msgid "More about the author"
 msgstr "En savoir plus sur l'auteur"
+
+#: templates/summarizer/guides.html
+#, python-format
+msgid "%(minutes)s min read"
+msgid_plural "%(minutes)s min read"
+msgstr[0] "%(minutes)s min de lecture"
+msgstr[1] "%(minutes)s min de lecture"

@@ -1047,6 +1047,13 @@ Read the **listings** <b>daily</b>.
         self.assertEqual(r.status_code, 200)
         self.assertIn('noindex', r.content.decode())
 
+    def test_staff_sees_drafts_in_the_index(self):
+        self.write('en', 'wip', self.GUIDE.replace('date:', 'draft: true\ndate:'))
+        self.client.force_login(User.objects.create_user('staff', password='x', is_staff=True))
+        html = self.client.get('/en/guides/').content.decode()
+        self.assertIn('/en/guides/wip/', html)
+        self.assertIn('min read', html)
+
     def test_published_guide_listed_in_sitemap_and_llms_txt(self):
         self.assertIn('/en/guides/keep-up/', self.client.get('/sitemap-guides.xml').content.decode())
         self.assertIn('- [Keeping up with arXiv](https://www.summarizepaper.com/en/guides/keep-up/)',
