@@ -1118,7 +1118,7 @@ submitButton.addEventListener('click', () => {
 {% if paid %}
 <div class="paid-account-message">
   <span class="star-icon">&#9733;</span>
-  <p>{% blocktrans %} Congratulations, you have a paid account and can benefit from <span class="highlight">GPT-4</span> capabilities!{% endblocktrans %}</p>
+  <p>{% blocktrans %}Premium account: your summaries and answers use our <span class="highlight">most capable model</span>.{% endblocktrans %}</p>
 </div>
 {% endif %}
 
@@ -1338,8 +1338,7 @@ submitButton.addEventListener('click', () => {
       //console.log('jkkk');
       {% if run or run2 %}
       socketl.send(JSON.stringify({
-          'command': 'start_background_task',
-          'paid':{% if paid %}true{% else %}false{% endif %}
+          'command': 'start_background_task'
       }));
       {% elif close %}
       socketl.send(JSON.stringify({
@@ -1674,9 +1673,6 @@ function addTheListeners() {
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
   const language = "{{ language }}"
   //console.log(language);
-  const user = "{{ request.user }}"
-  const ip = "{{ hashed_ip_address }}"
-  const paid = {% if paid %}true{% else %}false{% endif %}
 
   var count = 0
 
@@ -1763,7 +1759,7 @@ function addTheListeners() {
   // Scroll the container to the bottom
   scrollToBottom();
 
-  sendWebSocketMessage(messagec,user,ip,count,paid);
+  sendWebSocketMessage(messagec,count);
   //socketl.send(JSON.stringify({message: messagec}));
 
   if (!isListenerAdded) {
@@ -1776,14 +1772,14 @@ function addTheListeners() {
 
 <script>
 
-function sendWebSocketMessage(message2,user,ip,count,paid) {
+function sendWebSocketMessage(message2,count) {
   if (socketl && socketl.readyState === WebSocket.OPEN) {
     //console.log('sending...')
-    socketl.send(JSON.stringify({message: message2, user:user, ip:ip, count:count, paid:paid}));
+    socketl.send(JSON.stringify({message: message2, count:count}));
   } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
     //console.log("WebSocket connecting...");
     setTimeout(function() {
-      sendWebSocketMessage(message2,user,ip,count,paid);
+      sendWebSocketMessage(message2,count);
       //console.log("wait");
     }, 1000);
   } else {

@@ -1192,8 +1192,6 @@ searchResults.addEventListener('click', function(event) {
     const arxivRoomName = randomString;//"multiple";//selectedPaperIds;//JSON.parse(document.getElementById('arxiv_id').textContent);
     const language = "{{ language }}"
     //console.log(language);
-    const user = "{{ request.user }}"
-    const ip = "{{ hashed_ip_address }}"
   
     let isListenerAdded = false;
   
@@ -1274,7 +1272,7 @@ searchResults.addEventListener('click', function(event) {
     // Scroll the container to the bottom
     scrollToBottom();
   
-    sendWebSocketMessage(messagec,user,ip,selectedPaperIds,count);
+    sendWebSocketMessage(messagec,selectedPaperIds,count);
     //socketl.send(JSON.stringify({message: messagec}));
   
     if (!isListenerAdded) {
@@ -1287,14 +1285,14 @@ searchResults.addEventListener('click', function(event) {
   
   <script>
   
-  function sendWebSocketMessage(message2,user,ip,selectedpapers,count) {
+  function sendWebSocketMessage(message2,selectedpapers,count) {
     if (socketl && socketl.readyState === WebSocket.OPEN) {
       //console.log('sending...')
-      socketl.send(JSON.stringify({message: message2, user:user, ip:ip, selectedpapers:selectedpapers, count:count}));
+      socketl.send(JSON.stringify({message: message2, selectedpapers:selectedpapers, count:count}));
     } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
       //console.log("WebSocket connecting...");
       setTimeout(function() {
-        sendWebSocketMessage(message2,user,ip,selectedpapers,count);
+        sendWebSocketMessage(message2,selectedpapers,count);
         //console.log("wait");
       }, 1000);
     } else {

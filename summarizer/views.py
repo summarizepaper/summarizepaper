@@ -11,6 +11,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
+from summarizer import access
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -812,26 +813,6 @@ def chat(request):
 
     return render(request, "summarizer/chat.html", stuff_for_frontend)
 
-def user_payment_situation(user_id):
-    user = get_object_or_404(User, pk=user_id)
-    user_plan = UserPlan.objects.filter(user=user).last() # get the latest user plan
-    if user_plan:
-        payment_plan = user_plan.payment_plan
-        paid = user_plan.paid
-        auto_renew = payment_plan.auto_renew
-        '''
-        if auto_renew:
-            duration = payment_plan.duration_choices
-            if duration == '1M':
-                renewal_date = user_plan.created_at + timedelta(days=30)
-            elif duration == '1Y':
-                renewal_date = user_plan.created_at + timedelta(days=365)
-            if datetime.now() > renewal_date:
-                paid = False
-        '''
-        return {"paid": paid}
-    return {"paid": False}
-
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
     
@@ -872,10 +853,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
     # Check if this IP address has already voted on this post
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
-    paid=False
-    if request.user.is_authenticated:
-        paid = user_payment_situation(request.user.id)['paid']#request.user.paid
-        print('paid',paid)
+    paid = access.is_paid(request.user)
 
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid}
 
@@ -940,6 +918,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             print('ok close')
             tree = request.POST.get('tree', '1')
             print('tree',tree)
+            access.grant_run(request.session, arxiv_id, 'close')
             stuff_for_frontend.update({
                 'close':True,
                 'treeval':tree
@@ -990,24 +969,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
         if 'run_button' in request.POST:
             print('ok run')
-            client_ip = utils.get_client_ip(request)#request.META['REMOTE_ADDR']
-            print('clientip',client_ip)
-            # Check if this IP address has already voted on this post
-            hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+            hashed_ip_address = access.hash_ip(access.client_ip(request))
+            allowed, refusal = access.run_quota(request.user, hashed_ip_address)
 
-            #check if just run another with same ip (stop robots)
-            ten_seconds_ago = timezone.now() - timezone.timedelta(seconds=10)
-            print('ten_seconds_ago',ten_seconds_ago)
-            recent_record = PaperHistory.objects.filter(ip_address=hashed_ip_address, created__gte=ten_seconds_ago).first()
-            print('recent_record',recent_record)
-
-            #check if too many paper run for one IP address over last 24 hours
-            one_day_ago = timezone.now() - timezone.timedelta(days=1)
-            past_records = PaperHistory.objects.filter(ip_address=hashed_ip_address, created__gte=one_day_ago)
-            print('past_record',past_records,past_records.count())
-            NUM_LIMIT_PER_DAY=10
-
-            if (recent_record is None and past_records.count()<NUM_LIMIT_PER_DAY) or (request.user.is_superuser):#11
+            if allowed:
 
                 if request.user.is_authenticated:
                     #if User.objects.filter(username=user).exists():
@@ -1042,20 +1007,15 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
                 #arxiv_id=arxiv_id.replace('--','/')
 
+                access.grant_run(request.session, arxiv_id, 'run')
                 stuff_for_frontend.update({
                     'run':True,
                 })
             else:
-                if recent_record is not None:
-                    #robot running the run button
-                    stuff_for_frontend.update({
-                        'robot':True,
-                    })
-                if past_records.count()>NUM_LIMIT_PER_DAY:
-                    #user running too many papers in 24hrs
-                    stuff_for_frontend.update({
-                        'toomany':True,
-                    })
+                #refusal is 'robot' (runs too close together) or 'toomany' (daily limit)
+                stuff_for_frontend.update({
+                    refusal:True,
+                })
         print('renderrrrrrrrrrrrr')
         #return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id,'stuff_for_frontend':stuff_for_frontend}))
 
@@ -1355,6 +1315,9 @@ def history(request):
 
 
 def update_cache(request):
+    #clears the "summary already running" lock of a paper, staff only
+    if not request.user.is_staff:
+        raise PermissionDenied
     arxiv_id = request.GET.get('arxiv_id')
     arxiv_group_name = "ar_%s" % arxiv_id
     cache.set(arxiv_group_name, False)

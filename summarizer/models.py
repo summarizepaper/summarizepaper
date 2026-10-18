@@ -41,6 +41,10 @@ class UserPlan(models.Model):
     user = models.ForeignKey(User,blank=True, null=True, on_delete=models.CASCADE)
     payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, blank=True, null=True)
     paid = models.BooleanField(default=False)
+    #end of the paid period; None = no end (plans granted by hand in the admin)
+    expires = models.DateTimeField(blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=100, blank=True, default='')
+    stripe_subscription_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

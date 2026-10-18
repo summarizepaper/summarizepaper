@@ -232,12 +232,8 @@ def nchars_leq_ntokens_approx(maxTokens):
     return max( 0, int(maxTokens*math.exp(1) - lin_margin - math.sqrt(max(0,maxTokens - sqrt_margin) ) ))
 
 def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
+    from .access import client_ip
+    return client_ip(request)
     
 def dependable_faiss_import():# -> Any:
     """Import faiss if available, otherwise raise error."""

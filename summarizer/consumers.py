@@ -3,6 +3,7 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
+from summarizer import access
 from channels.db import database_sync_to_async
 from .models import ArxivPaper, Author, PaperAuthor, SummaryPaper
 from datetime import datetime
@@ -900,6 +901,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         self.arxiv_group_name = "ar_%s" % self.arxiv_id
         print('self.arxiv_group_name',self.arxiv_group_name)
+
+        #identity and paid status come from the session cookie, never from the client messages
+        self.user = self.scope.get("user")
+        self.hashed_ip = access.hash_ip(access.client_ip_from_scope(self.scope))
+        self.paid = await database_sync_to_async(access.is_paid)(self.user)
         # Join room group
         await self.channel_layer.group_add(self.arxiv_group_name, self.channel_name)
         await self.accept()
@@ -923,14 +929,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('rec',text_data)
         data = json.loads(text_data)
 
-        paid=None
-        if 'paid' in data:
-            paid = data['paid']
+        paid = self.paid
 
         if 'command' in data:
             command = data['command']
 
             if command == 'start_background_task':
+                #only start what the HTTP view allowed (quota checked there), otherwise just listen to the group
+                if not await self.consume_run('run'):
+                    return
                 message = {
                     "loading_message": "Loading...",
                     "progress": 0
@@ -946,6 +953,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 asyncio.create_task(self.sendmessages(v,l,message,paid))
             elif command == 'start_close_task':
+                if not await self.consume_run('close'):
+                    return
                 message = {
                     "loading_message": "Loading...",
                     "progress": 0
@@ -961,9 +970,18 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         else:
             message = data["message"]
             print('receive',message)
-            user = data["user"]
-            ip = data["ip"]
+            user = self.user.username if self.user is not None and self.user.is_authenticated else None
+            ip = self.hashed_ip
             selectedpapers=''
+            countpaperwithlicenses=None
+
+            if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) <= 0:
+                if self.language == 'fr':
+                    limit_text = "Vous avez atteint la limite quotidienne de questions. Revenez demain ou passez au compte Premium."
+                else:
+                    limit_text = "You have reached the daily question limit. Come back tomorrow or upgrade to Premium."
+                await self.send(text_data=json.dumps({'message': limit_text}))
+                return
 
             if "selectedpapers" in data:
                 selectedpapers=data["selectedpapers"]
@@ -1064,6 +1082,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             'type': 'progress_update',
             'message': event['message']
         }))
+
+    async def consume_run(self, kind):
+        session = self.scope.get("session")
+        if session is None:
+            return False
+        allowed = await database_sync_to_async(access.consume_run)(session, self.arxiv_id, kind)
+        if allowed:
+            await database_sync_to_async(session.save)()
+        return allowed
 
     async def disconnect(self, close_code):
         print('closed')
