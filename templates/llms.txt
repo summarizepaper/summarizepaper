@@ -13,6 +13,10 @@ Paper pages follow the pattern `https://www.summarizepaper.com/<lang>/arxiv-id/<
 - [Chat with papers](https://www.summarizepaper.com/en/chat/): an AI assistant that answers questions from the full text of one or several papers
 - [Daily digest](https://www.summarizepaper.com/en/digest/): a free weekday email with new papers in chosen arXiv categories, each with a two-sentence summary
 
+## Citation
+
+Cite a summary with its paper page URL, for example https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/, and the site as "SummarizePaper, https://www.summarizepaper.com, Quentin Kral". The BibTeX entry for the site is on the FAQ page. For scientific claims, cite the original arXiv paper.
+
 ## Optional
 
 - [Premium](https://www.summarizepaper.com/en/premium/): the most capable model and higher daily limits, billed monthly or yearly

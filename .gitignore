@@ -137,3 +137,6 @@ dump.rdb
 /*.pkl
 /savedocsearch/
 /req.txt
+
+# local agent progress notes
+*.local.md

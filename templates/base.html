@@ -37,6 +37,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'summarizer/css/site.css' %}">
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@graph": [
+    {"@type": "Organization", "@id": "https://www.summarizepaper.com/#organization", "name": "SummarizePaper", "url": "https://www.summarizepaper.com/", "logo": "https://www.summarizepaper.com{% static 'summarizer/images/logo.png' %}", "legalName": "CarbonFreeConf", "founder": {"@type": "Person", "name": "Quentin Kral"}, "sameAs": ["https://github.com/summarizepaper/summarizepaper"]},
+    {"@type": "WebSite", "@id": "https://www.summarizepaper.com/#website", "name": "SummarizePaper", "url": "https://www.summarizepaper.com/", "inLanguage": ["en", "fr"], "publisher": {"@id": "https://www.summarizepaper.com/#organization"},
+     "potentialAction": {"@type": "SearchAction", "target": "https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/search-results/?q={search_term_string}", "query-input": "required name=search_term_string"}}
+  ]}
+  </script>
   {% block extrahead %}{% endblock %}
 
 </head>
