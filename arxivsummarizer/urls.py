@@ -20,6 +20,7 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemap_views
 from summarizer.sitemaps import StaticViewSitemap, SummarizedPaperSitemap
 from summarizer import billing
+from summarizer.views import robots_txt
 
 app_name = 'summarizer'
 
@@ -30,6 +31,7 @@ sitemaps = {
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('robots.txt', robots_txt),
     path('stripe/webhook/', billing.webhook, name='stripe_webhook'),
     path('sitemap.xml', sitemap_views.index, {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap-section'}),
     path('sitemap-<section>.xml', sitemap_views.sitemap, {'sitemaps': sitemaps}, name='sitemap-section'),

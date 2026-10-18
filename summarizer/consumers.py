@@ -595,6 +595,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         return paper,created
     '''
     async def sendclose(self,v,l,message):
+        try:
+            await self._sendclose(v,l,message)
+        except Exception:
+            logger.exception('Closest papers search failed for %s', v)
+            cache.set(self.arxiv_group_name+'-close', False)
+            await self.send_failure(l)
+
+    async def _sendclose(self,v,l,message):
         print('in sendclose')
 
         page_running = cache.get(self.arxiv_group_name+'-close')
@@ -640,6 +648,22 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
     async def sendmessages(self,v,l,message,p):
+        try:
+            await self._sendmessages(v,l,message,p)
+        except Exception:
+            logger.exception('Summary failed for %s', v)
+            #release the "running" lock so the paper can be run again
+            cache.set(self.arxiv_group_name, False)
+            await self.send_failure(l)
+
+    async def send_failure(self, l):
+        if l == 'fr':
+            text = "Une erreur s'est produite pendant le traitement. Réessayez plus tard ou contactez-nous."
+        else:
+            text = "Something went wrong while processing the paper. Please try again later or contact us."
+        await self.send_message_now({"loading_message": text, "progress": 0})
+
+    async def _sendmessages(self,v,l,message,p):
         print('in sendmessages')
 
         page_running = cache.get(self.arxiv_group_name)

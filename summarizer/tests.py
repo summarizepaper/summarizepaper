@@ -407,3 +407,25 @@ class LoginTests(TestCase):
         User.objects.create_user('awake', password='pw-123456')
         r = Client().post('/en/login/?next=/en/premium/', {'username': 'awake', 'password': 'pw-123456'})
         self.assertEqual(r['Location'], '/en/premium/')
+
+
+@override_settings(CHANNEL_LAYERS={'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}})
+class ConsumerFailureTests(TransactionTestCase):
+    async def test_failed_run_releases_lock_and_tells_the_user(self):
+        from summarizer.routing import websocket_urlpatterns
+        session = SessionStore()
+        access.grant_run(session, '2101.00009v1', 'run')
+        comm = WebsocketCommunicator(URLRouter(websocket_urlpatterns), '/ws/arxivid/2101.00009v1/en/')
+        comm.scope['user'] = AnonymousUser()
+        comm.scope['session'] = session
+        await comm.connect()
+        with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=RuntimeError('arXiv down')):
+            await comm.send_json_to({'command': 'start_background_task'})
+            last = ''
+            for _ in range(5):
+                last = (await comm.receive_json_from(timeout=5))['message']['loading_message']
+                if 'Something went wrong' in last:
+                    break
+        self.assertIn('Something went wrong', last)
+        self.assertFalse(cache.get('ar_2101.00009v1'))
+        await comm.disconnect()
