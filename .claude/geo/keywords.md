@@ -9,7 +9,7 @@
 
 | Cluster | Requêtes et prompts IA réels | Intention | Famille → skill | Priorité | Hub (page pilier) | Statut |
 |---|---|---|---|---|---|---|
-| Outils de résumé d'articles | best AI tool to summarize research papers ; arxiv paper summarizer ; alternatives to Scholarcy | commercial | comparison-page | haute | à créer | à faire |
+| Outils de résumé d'articles | best AI tool to summarize research papers ; arxiv paper summarizer ; alternatives to Scholarcy | commercial | comparison-page | haute | /en/guides/best-ai-tools-to-summarize-arxiv-papers/ | publié (4 pages) |
 | Suivre arXiv | how to keep up with arxiv ; arxiv daily digest ; arxiv email alerts | how-to | foundational-article | haute | /en/digest/ | à faire |
 | Chiffres arXiv | arxiv statistics ; number of papers on arxiv per year ; most popular arxiv categories | data | statistics-article | haute | /en/guides/arxiv-statistics/ | brouillons (2) |
 | Chat avec un article | chat with a research paper ; ask questions about a paper | commercial / how-to | comparison-page | moyenne | /en/chat/ | à faire |
