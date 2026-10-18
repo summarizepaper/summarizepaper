@@ -67,6 +67,12 @@
 <div class="form-container">
   <!-- Form header -->
   <h1 class="form-header">{% trans 'Login' %}</h1>
+  {% for message in messages %}
+  <p style="color:#d93025;">{% if 'not activated' in message.message %}{% trans 'Your account is not activated yet. Click the link in the activation email we sent you.' %}{% else %}{{ message }}{% endif %}</p>
+  {% endfor %}
+  {% if form.non_field_errors %}
+  <p style="color:#d93025;">{% trans 'Wrong username or password.' %}</p>
+  {% endif %}
 
   <!-- Login form -->
   <form method="post">

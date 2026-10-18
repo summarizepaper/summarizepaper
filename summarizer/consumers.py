@@ -3,7 +3,10 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access
+from summarizer import access, assistant
+import logging
+
+logger = logging.getLogger(__name__)
 from channels.db import database_sync_to_async
 from .models import ArxivPaper, Author, PaperAuthor, SummaryPaper
 from datetime import datetime
@@ -131,14 +134,12 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                 print('active....')
                 if public==1:
                     #response = requests.get(url)
-                    response = await asyncio.to_thread(requests.get, url, timeout=120)
-                    my_raw_data = response.content
+                    book_text, text_source = await utils.read_paper(paper_id, url)
 
                     ###book_text = utils.extract_text_from_pdf(my_raw_data)
                     print('raw data done')
                     #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-                    c=asyncio.create_task(utils.extract_text_from_pdf(my_raw_data))
-                    book_text,full_text=await c
+                    full_text=book_text
                     print('book:',book_text)
                     
 
@@ -146,6 +147,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                     print('else book text')
                     print('authors',authors)
                     book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+                    text_source='abstract'
 
 
 
@@ -159,7 +161,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                     else:
                         book_text2=data+'    '+book_text
 
-                    c = asyncio.create_task(utils.createindex(paper_id, book_text2, settings.OPENAI_KEY))
+                    c = asyncio.create_task(utils.createindex(paper_id, book_text2, settings.OPENAI_KEY, source=text_source))
                     created=await c
                     print('crea',created)
 
@@ -261,10 +263,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 '''
                 
 
-                response = await asyncio.to_thread(requests.get, url, timeout=120)
-                print('kici')
-
-                my_raw_data = response.content
+                book_text, text_source = await utils.read_paper(arxiv_id, url)
 
                         
                 print('ici')
@@ -274,13 +273,13 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
                     
-                c=asyncio.create_task(utils.extract_text_from_pdf(my_raw_data))
-                book_text,full_text=await c
+                full_text=book_text
                 print('book:',book_text)
             else:
                 print('else book text')
                 print('authors',authors)
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+                text_source='abstract'
 
             #c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
             pickledata = ''#await c
@@ -292,7 +291,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 else:
                     book_text2=data+'    '+book_text
 
-                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY, source=text_source))
                 created=await c
                 print('crea',created)
                 print('finished',arxiv_id)
@@ -344,8 +343,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             print('active....')
             if public==1:
                 #response = requests.get(url)
-                response = await asyncio.to_thread(requests.get, url, timeout=120)
-                my_raw_data = response.content
+                book_text, text_source = await utils.read_paper(arxiv_id, url)
 
 
                 
@@ -363,14 +361,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 ###book_text = utils.extract_text_from_pdf(my_raw_data)
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-                c=asyncio.create_task(utils.extract_text_from_pdf(my_raw_data))
-                book_text,full_text=await c
+                full_text=book_text
                 #print('book:',book_text)
                 
 
             else:
               
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+                text_source='abstract'
 
             message["progress"] = 30
             if language == 'fr':
@@ -393,7 +391,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 else:
                     book_text2=data+'    '+book_text
 
-                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY, source=text_source))
                 created=await c
                 #print('crea',created)
 
@@ -961,10 +959,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         else:
             message = data["message"]
             print('receive',message)
-            user = self.user.username if self.user is not None and self.user.is_authenticated else None
-            ip = self.hashed_ip
             selectedpapers=''
-            countpaperwithlicenses=None
 
             if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) <= 0:
                 if self.language == 'fr':
@@ -977,44 +972,33 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             if "selectedpapers" in data:
                 selectedpapers=data["selectedpapers"]
                 print('selectedpapers',selectedpapers)
-            if "count" in data:
-                countpaperwithlicenses=data["count"]
 
-            print('receive',user)
-            #response = "reponse brah"#process_message(message)
-            print('avant chat bot')
-            #query = "Create a summary and tell me who the authors are?"
-            from langchain.memory import ConversationBufferMemory
+            #the multi-paper chat page sends the papers to discuss, a paper page discusses its own paper
+            if selectedpapers:
+                arxiv_ids = [str(p).replace('/', '--') for p in selectedpapers][:10]
+            else:
+                arxiv_ids = [self.arxiv_id]
 
-            memory = ConversationBufferMemory(memory_key="history",return_messages=True)
+            async def send_delta(delta):
+                await self.send(text_data=json.dumps({'type': 'chat_delta', 'delta': delta}))
 
-            print('PAIDDDD',paid)
+            try:
+                chatbot_text = await assistant.answer(
+                    arxiv_ids, self.language, message, paid, user=self.user, hashed_ip=self.hashed_ip,
+                    on_delta=send_delta, conversation_id=self.arxiv_id)
+            except Exception:
+                logger.exception('Assistant failed for %s', self.arxiv_id)
+                chatbot_text = None
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers,countpaperwithlicenses=countpaperwithlicenses,p=paid))
-            chatbot_text=await c
-
-            #chatbot_text=None
-            print('apres chat bot',chatbot_text)
-
-            #c=asyncio.create_task(utils.findclosestpapers(self.arxiv_id,self.language,settings.OPENAI_KEY))
-            #closest_papers = await c
-
-            #print('closest_papers',closest_papers)
-
-            #async for text_chunk in utils.chatbot(self.arxiv_id, self.language, message, settings.OPENAI_KEY):
-
-            #    await self.send(text_data=json.dumps({
-            #        'message': text_chunk
-            #    }))
-
-            if chatbot_text==None:
-                chatbot_text="Something went wrong... Contact the administrators if it keeps on happening."
-            # Send the response back to the client over the WebSocket connection
+            if not chatbot_text:
+                if self.language == 'fr':
+                    chatbot_text = "Une erreur s'est produite. Contactez-nous si le problème persiste."
+                else:
+                    chatbot_text = "Something went wrong... Contact the administrators if it keeps on happening."
 
             await self.send(text_data=json.dumps({
-                'message': chatbot_text.lstrip(": ")
+                'message': chatbot_text
             }))
-            print('send 2',chatbot_text)
 
 
     async def progress_text_update(self, event):

@@ -1631,9 +1631,10 @@ function updateCache(arxiv_id) {
 
 <script>
 
+let currentResponse = null;
 function addTheListeners() {
   //alert('ok');
-  if (socketl && socketl.readyState === WebSocket.OPEN) {
+  if (socketl && (socketl.readyState === WebSocket.OPEN || socketl.readyState === WebSocket.CONNECTING)) {
     //console.log('adding...')
     socketl.addEventListener("open", function(event) {
       //console.log("WebSocket connected");
@@ -1644,27 +1645,38 @@ function addTheListeners() {
     socketl.addEventListener("message", function(event) {
       //socketl.onmessage = function(event) {
       //console.log('Received message:', event);
-      const messageb = JSON.parse(event.data).message;
-      const chatbotResponse = document.createElement('div');
-      chatbotResponse.classList.add('chatbot-response');
-      chatbotResponse.innerText = "{% trans 'AI -' %} "+messageb;
-      chatbotMessages.appendChild(chatbotResponse);
+      const data = JSON.parse(event.data);
+      // the answer streams in as chat_delta pieces, then arrives whole as {message}
+      if (data.type === 'chat_delta') {
+        if (!currentResponse) {
+          currentResponse = document.createElement('div');
+          currentResponse.classList.add('chatbot-response');
+          currentResponse.innerText = "{% trans 'AI -' %} ";
+          chatbotMessages.appendChild(currentResponse);
+          var loadingSpinner = document.getElementById("loading-spinner");
+          loadingSpinner.style.display = "none";
+        }
+        currentResponse.innerText += data.delta;
+        scrollToBottom();
+        return;
+      }
+      if (data.message === undefined) {
+        return;
+      }
+      if (!currentResponse) {
+        currentResponse = document.createElement('div');
+        currentResponse.classList.add('chatbot-response');
+        chatbotMessages.appendChild(currentResponse);
+      }
+      currentResponse.innerText = "{% trans 'AI -' %} " + data.message;
+      currentResponse = null;
       var blinkingSquare = document.querySelector(".blinking-square");
-
-      blinkingSquare.remove();
-
+      if (blinkingSquare) {
+        blinkingSquare.remove();
+      }
       var loadingSpinner = document.getElementById("loading-spinner");
       loadingSpinner.style.display = "none";
-
-      /*var messagesContainer = document.querySelector(".chatbot-messages");
-
-      // Function to scroll the container to the bottom
-      function scrollToBottom() {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }*/
       MathJax.typeset();
-
-      // Scroll the container to the bottom
       scrollToBottom();
 
 

@@ -261,3 +261,15 @@ class DigestDelivery(models.Model):
 
     class Meta:
         unique_together = ('subscription', 'arxiv_id')
+
+
+class PaperText(models.Model):
+    """Text of a paper as given to the language model (see paper_source.py)."""
+    SOURCES = [('html', 'arXiv HTML'), ('pdf', 'PDF'), ('abstract', 'Metadata and abstract only'), ('index', 'Rebuilt from FAISS index')]
+    arxiv_id = models.CharField(max_length=40, unique=True)
+    text = models.TextField()
+    source = models.CharField(max_length=10, choices=SOURCES)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.source)

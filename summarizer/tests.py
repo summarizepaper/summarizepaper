@@ -272,3 +272,138 @@ class DigestTests(TestCase):
         sub = DigestSubscription.objects.get(user=self.user)
         self.assertEqual((sub.categories, sub.keywords, sub.lang), ('cs.LG,quant-ph,math.AP', 'transformer', 'fr'))
         self.assertContains(c.post('/en/digest/', {'other': ''}), 'Choose at least one category.')
+
+
+from summarizer import assistant, paper_source
+from summarizer.models import ArxivPaper, PaperText
+
+
+class FakeStreamResponse:
+    status = 200
+
+    def __init__(self, lines):
+        self._lines = lines
+
+    @property
+    def content(self):
+        async def gen():
+            for line in self._lines:
+                yield line
+        return gen()
+
+    async def text(self):
+        return ''
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class FakeSession:
+    last_payload = None
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def post(self, url, json=None, headers=None):
+        FakeSession.last_payload = json
+        chunks = [{'choices': [{'delta': {'content': piece}}]} for piece in ('The ', 'answer.')]
+        lines = [b': keep-alive\n'] + [('data: %s\n' % _json.dumps(c)).encode() for c in chunks] + [b'data: [DONE]\n']
+        return FakeStreamResponse(lines)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+class PaperSourceTests(TestCase):
+    def test_merge_chunks_drops_overlap(self):
+        a = 'Para one.\n\nPara two is long enough to be a probe for the overlap detection.'
+        b = 'Para two is long enough to be a probe for the overlap detection.\n\nPara three.'
+        self.assertEqual(paper_source._merge_chunks([a, b]), a + '\n\nPara three.')
+
+    def test_html_to_text_keeps_latex_and_drops_references(self):
+        html = ('<article><h2>1 Introduction</h2><p>Energy <math alttext="E=mc^{2}"><mi>E</mi></math> holds.</p>'
+                '<section class="ltx_bibliography"><p>[1] Someone 1905</p></section></article>')
+        text = paper_source.html_to_text(html)
+        self.assertIn('## 1 Introduction', text)
+        self.assertIn('$E=mc^{2}$', text)
+        self.assertNotIn('Someone', text)
+
+    def test_store_text_strips_api_answer(self):
+        paper_source.store_text('1', '<?xml version="1.0"?><feed>x</feed>    Real text', 'pdf')
+        self.assertEqual(PaperText.objects.get(arxiv_id='1').text, 'Real text')
+
+
+class AssistantTests(TransactionTestCase):
+    def setUp(self):
+        self.open = ArxivPaper.objects.create(arxiv_id='2101.00001v1', title='Open\n  paper', abstract='Abs open.',
+                                              license='http://creativecommons.org/licenses/by/4.0/')
+        self.closed = ArxivPaper.objects.create(arxiv_id='2101.00002v1', title='Closed', abstract='Abs closed.',
+                                                license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
+        PaperText.objects.create(arxiv_id='2101.00001v1', text='FULL TEXT OF THE OPEN PAPER', source='html')
+        PaperText.objects.create(arxiv_id='2101.00002v1', text='FULL TEXT OF THE CLOSED PAPER', source='pdf')
+
+    def test_context_respects_licenses(self):
+        context = assistant.build_context(['2101.00001v1', '2101.00002v1'])
+        self.assertIn('FULL TEXT OF THE OPEN PAPER', context)
+        self.assertNotIn('FULL TEXT OF THE CLOSED PAPER', context)
+        self.assertIn('Abs closed.', context)
+        self.assertIn('Title: Open paper', context)
+
+    def test_answer_streams_stores_and_reuses_history(self):
+        import asyncio
+        deltas = []
+
+        async def on_delta(d):
+            deltas.append(d)
+
+        with mock.patch('summarizer.assistant.aiohttp.ClientSession', FakeSession):
+            text = asyncio.run(assistant.answer(['2101.00001v1'], 'en', 'What is it?', False, hashed_ip='h', on_delta=on_delta))
+            self.assertEqual(text, 'The answer.')
+            self.assertEqual(deltas, ['The ', 'answer.'])
+            self.assertEqual(AIassistant.objects.get().response, 'The answer.')
+            asyncio.run(assistant.answer(['2101.00001v1'], 'en', 'And then?', True, hashed_ip='h'))
+        messages = FakeSession.last_payload['messages']
+        self.assertEqual([m['role'] for m in messages], ['system', 'user', 'assistant', 'user'])
+        self.assertEqual(FakeSession.last_payload['model'], assistant.MODEL_PAID)
+        self.assertTrue(FakeSession.last_payload['stream'])
+
+
+@override_settings(CHANNEL_LAYERS={'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}})
+class ConsumerChatTests(TransactionTestCase):
+    async def test_chat_streams_deltas_then_message(self):
+        from summarizer.routing import websocket_urlpatterns
+
+        async def fake_answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_delta=None, conversation_id=None):
+            self.assertEqual((arxiv_ids, paid, conversation_id), (['2101.00001v1'], False, '2101.00001v1'))
+            await on_delta('Hel')
+            await on_delta('lo')
+            return 'Hello'
+
+        comm = WebsocketCommunicator(URLRouter(websocket_urlpatterns), '/ws/arxivid/2101.00001v1/en/')
+        comm.scope['user'] = AnonymousUser()
+        comm.scope['session'] = SessionStore()
+        await comm.connect()
+        with mock.patch('summarizer.assistant.answer', fake_answer):
+            await comm.send_json_to({'message': 'hi', 'paid': True})
+            self.assertEqual(await comm.receive_json_from(), {'type': 'chat_delta', 'delta': 'Hel'})
+            self.assertEqual(await comm.receive_json_from(), {'type': 'chat_delta', 'delta': 'lo'})
+            self.assertEqual(await comm.receive_json_from(), {'message': 'Hello'})
+        await comm.disconnect()
+
+
+class LoginTests(TestCase):
+    def test_inactive_account_gets_a_message_not_a_500(self):
+        User.objects.create_user('sleepy', password='pw-123456', is_active=False)
+        r = Client().post('/en/login/', {'username': 'sleepy', 'password': 'pw-123456'})
+        self.assertEqual(r.status_code, 200)
+
+    def test_login_follows_next(self):
+        User.objects.create_user('awake', password='pw-123456')
+        r = Client().post('/en/login/?next=/en/premium/', {'username': 'awake', 'password': 'pw-123456'})
+        self.assertEqual(r['Location'], '/en/premium/')
