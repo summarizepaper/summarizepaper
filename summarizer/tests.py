@@ -187,7 +187,16 @@ class BillingTests(TestCase):
         kwargs = create.call_args.kwargs
         self.assertEqual(kwargs['client_reference_id'], str(self.user.id))
         self.assertEqual(kwargs['line_items'][0]['price'], 'price_m')
-        self.assertTrue(kwargs['success_url'].endswith('/en/premium/?success=1'))
+        self.assertEqual(kwargs['success_url'], 'http://testserver/en/premium/?success=1')
+        self.assertEqual(kwargs['cancel_url'], 'http://testserver/en/premium/')
+
+    def test_portal_return_url(self):
+        UserPlan.objects.create(user=self.user, paid=True, stripe_customer_id='cus_1')
+        c = Client(); c.force_login(self.user)
+        with override_settings(SITE_URL='https://www.summarizepaper.com'), \
+             mock.patch('stripe.billing_portal.Session.create', return_value=mock.Mock(url='https://billing.stripe.com/x')) as create:
+            c.post('/fr/premium/portal/')
+        self.assertEqual(create.call_args.kwargs['return_url'], 'https://www.summarizepaper.com/fr/premium/')
 
 
 from django.core import mail

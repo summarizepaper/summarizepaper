@@ -20,7 +20,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import get_language
 from django.views.decorators.csrf import csrf_exempt
@@ -41,10 +40,11 @@ def _stripe():
     return stripe
 
 
-def _absolute(request, name):
+def _absolute(request, path):
+    """Absolute URL of a page in the current language, e.g. 'premium/'."""
     #behind Cloudflare the request can look like plain http, so don't derive the scheme from it
     base = settings.SITE_URL or request.build_absolute_uri('/').rstrip('/')
-    return '%s/%s%s' % (base, get_language(), reverse(name))
+    return '%s/%s/%s' % (base, get_language(), path)
 
 
 def _latest_plan(user):
@@ -95,8 +95,8 @@ def checkout(request):
         'mode': 'subscription',
         'line_items': [{'price': price, 'quantity': 1}],
         'client_reference_id': str(request.user.id),
-        'success_url': _absolute(request, 'premium') + '?success=1',
-        'cancel_url': _absolute(request, 'premium'),
+        'success_url': _absolute(request, 'premium/') + '?success=1',
+        'cancel_url': _absolute(request, 'premium/'),
         'allow_promotion_codes': True,
         'subscription_data': {'metadata': {'user_id': str(request.user.id)}},
     }
@@ -116,7 +116,7 @@ def portal(request):
         return redirect('premium')
     session = _stripe().billing_portal.Session.create(
         customer=plan.stripe_customer_id,
-        return_url=_absolute(request, 'premium'),
+        return_url=_absolute(request, 'premium/'),
     )
     return redirect(session.url, permanent=False)
 
