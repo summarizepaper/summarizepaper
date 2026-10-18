@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 13:55+0000\n"
+"POT-Creation-Date: 2026-10-18 15:38+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,7 +59,7 @@ msgid "The activation link is invalid or has already been used."
 msgstr "Le lien d'activation est invalide ou a déjà été utilisé."
 
 #: templates/account_activation_invalid.html:17
-#: templates/account_activation_sent.html:42
+#: templates/account_activation_sent.html:18
 #: templates/accounts/login_link_invalid.html:14
 msgid "Get a new link"
 msgstr "Recevoir un nouveau lien"
@@ -67,8 +67,7 @@ msgstr "Recevoir un nouveau lien"
 #: templates/account_activation_sent.html:5
 msgid "Activate Your Account - AI-Powered arXiv Paper Summarization Service"
 msgstr ""
-"Activez Votre Compte - Service De Résumés d'articles arXiv Alimentés Par "
-"L'IA"
+"Activez Votre Compte - Service De Résumés d'articles arXiv Alimentés Par L'IA"
 
 #: templates/account_activation_sent.html:7
 msgid ""
@@ -77,26 +76,26 @@ msgid ""
 "account activation process is quick and easy, and our cutting-edge "
 "technology will keep you up-to-date with the latest research."
 msgstr ""
-"Activez votre compte pour notre service de résumés de papiers arXiv alimenté"
-" par l'IA et commencez à obtenir des résumés rapides sur des recherches "
+"Activez votre compte pour notre service de résumés de papiers arXiv alimenté "
+"par l'IA et commencez à obtenir des résumés rapides sur des recherches "
 "scientifiques, précis et faciles à lire. Notre processus d'activation de "
 "compte est rapide et facile, et notre technologie de pointe vous tiendra au "
 "courant des dernières recherches."
 
-#: templates/account_activation_sent.html:40
+#: templates/account_activation_sent.html:16
 msgid "Activation email sent"
 msgstr "Email d'activation envoyé"
 
-#: templates/account_activation_sent.html:41
+#: templates/account_activation_sent.html:17
 msgid ""
-"We have sent you an email with an activation link. Click it to activate your"
-" account. It can take a few minutes; also look in your spam folder."
+"We have sent you an email with an activation link. Click it to activate your "
+"account. It can take a few minutes; also look in your spam folder."
 msgstr ""
 "Nous vous avons envoyé un email contenant un lien d'activation. Cliquez "
 "dessus pour activer votre compte. Cela peut prendre quelques minutes ; "
 "pensez aussi à regarder dans vos spams."
 
-#: templates/account_activation_sent.html:42
+#: templates/account_activation_sent.html:18
 msgid "Nothing received?"
 msgstr "Rien reçu ?"
 
@@ -108,8 +107,7 @@ msgstr "Continuer avec Google"
 msgid "or"
 msgstr "ou"
 
-#: templates/accounts/email_login.html:5
-#: templates/accounts/email_login.html:13
+#: templates/accounts/email_login.html:5 templates/accounts/email_login.html:13
 #: templates/accounts/google_error.html:14
 msgid "Log in with an email link"
 msgstr "Se connecter par lien email"
@@ -121,14 +119,14 @@ msgid ""
 "activated yet."
 msgstr ""
 "Saisissez l'adresse email de votre compte. Nous vous enverrons un lien qui "
-"vous connecte, sans mot de passe. Il active aussi un compte qui ne l'est pas"
-" encore."
+"vous connecte, sans mot de passe. Il active aussi un compte qui ne l'est pas "
+"encore."
 
 #: templates/accounts/email_login.html:20
 msgid "Enter a valid email address."
 msgstr "Saisissez une adresse email valide."
 
-#: templates/accounts/email_login.html:21 templates/register.html:96
+#: templates/accounts/email_login.html:21 templates/register.html:35
 msgid "Email address"
 msgstr "Adresse email"
 
@@ -140,8 +138,8 @@ msgstr "M'envoyer un lien de connexion"
 msgid "Log in with a password"
 msgstr "Se connecter avec un mot de passe"
 
-#: templates/accounts/email_login.html:24 templates/register.html:82
-#: templates/registration/login.html:102
+#: templates/accounts/email_login.html:24 templates/register.html:21
+#: templates/registration/login.html:53
 msgid "Register"
 msgstr "S'inscrire"
 
@@ -186,17 +184,17 @@ msgid ""
 "We could not log you in with Google. Please try again, or log in with an "
 "email link."
 msgstr ""
-"Nous n'avons pas pu vous connecter avec Google. Réessayez, ou connectez-vous"
-" avec un lien par email."
+"Nous n'avons pas pu vous connecter avec Google. Réessayez, ou connectez-vous "
+"avec un lien par email."
 
-#: templates/accounts/google_error.html:14 templates/base.html:265
-#: templates/registration/login.html:70 templates/registration/login.html:95
+#: templates/accounts/google_error.html:14 templates/base.html:73
+#: templates/registration/login.html:20 templates/registration/login.html:45
 msgid "Login"
 msgstr "Se connecter"
 
 #: templates/accounts/login_link_confirm.html:4
-#: templates/accounts/login_link_confirm.html:12
-#: templates/summarizer/digest.html:31 templates/summarizer/premium.html:76
+#: templates/accounts/login_link_confirm.html:12 templates/register.html:64
+#: templates/summarizer/digest.html:33 templates/summarizer/premium.html:80
 msgid "Log in"
 msgstr "Se connecter"
 
@@ -295,51 +293,51 @@ msgstr ""
 "rapide de sujets de recherche complexes grâce à nos résumés alimentés par "
 "l'intelligence artificielle. Essayez-le dès aujourd'hui !"
 
-#: templates/base.html:251
-msgid "Home"
-msgstr "Accueil"
+#: templates/base.html:43
+msgid "Menu"
+msgstr "Menu"
 
-#: templates/base.html:252
+#: templates/base.html:47
 msgid "Chat with Papers"
 msgstr "Conversation"
 
-#: templates/base.html:253
-msgid "FAQ"
-msgstr "FAQ"
-
-#: templates/base.html:254
+#: templates/base.html:48
 msgid "Daily digest"
 msgstr "Digest quotidien"
 
-#: templates/base.html:255 templates/summarizer/premium.html:57
+#: templates/base.html:49
+msgid "FAQ"
+msgstr "FAQ"
+
+#: templates/base.html:50 templates/summarizer/premium.html:61
 msgid "Premium"
 msgstr "Premium"
 
-#: templates/base.html:257
+#: templates/base.html:52
 msgid "My history"
 msgstr "Mon historique"
 
-#: templates/base.html:260
+#: templates/base.html:71
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: templates/base.html:271
-msgid "Language"
-msgstr "Langue"
+#: templates/base.html:89
+msgid "Open source"
+msgstr "Open source"
 
-#: templates/base.html:303
+#: templates/base.html:91
 msgid "About"
 msgstr "A propos"
 
-#: templates/base.html:304
+#: templates/base.html:92
 msgid "Contact"
 msgstr "Contactez Nous"
 
-#: templates/base.html:305 templates/summarizer/privacy.html:32
+#: templates/base.html:93 templates/summarizer/privacy.html:18
 msgid "Privacy Policy"
 msgstr "Confidentialité"
 
-#: templates/base.html:306
+#: templates/base.html:94
 msgid "Legal Notice"
 msgstr "Mentions Légales"
 
@@ -389,9 +387,9 @@ msgstr ""
 
 #: templates/password_reset_complete.html:7
 msgid ""
-"Your password has been successfully reset! Log in securely to our AI-powered"
-" arXiv paper summarization service to access your account and view your past"
-" summaries. Our secure system ensures that your data is protected and your "
+"Your password has been successfully reset! Log in securely to our AI-powered "
+"arXiv paper summarization service to access your account and view your past "
+"summaries. Our secure system ensures that your data is protected and your "
 "account is safe. Get fast, accurate, and easy-to-read paper summaries."
 msgstr ""
 "Votre mot de passe a été réinitialisé avec succès ! Connectez-vous en toute "
@@ -417,13 +415,12 @@ msgstr ""
 "Confirmez la réinitialisation de votre mot de passe pour notre service de "
 "résumés d'articles arXiv alimenté par l'IA avec notre formulaire de "
 "confirmation sécurisé. Suivez les instructions et revenez dans votre compte "
-"pour accéder à vos résumés. Obtenez des résumés rapides, précis et faciles à"
-" lire."
+"pour accéder à vos résumés. Obtenez des résumés rapides, précis et faciles à "
+"lire."
 
 #: templates/password_reset_done.html:5
 msgid ""
-"Password Reset Successful - Secure Access to AI-Powered arXiv Paper "
-"Summaries"
+"Password Reset Successful - Secure Access to AI-Powered arXiv Paper Summaries"
 msgstr ""
 "Réinitialisation du mot de passe réussie - Accès sécurisé aux Résumés des "
 "papiers arXiv alimentés par l'IA"
@@ -435,23 +432,23 @@ msgid ""
 "summaries. Our secure system ensures that your data is protected and your "
 "account is safe. Get fast, accurate, and easy-to-read paper summaries."
 msgstr ""
-"La réinitialisation de votre mot de passe a réussi ! Connectez-vous en toute"
-" sécurité à notre service de résumé d'articles arXiv alimenté par l'IA pour "
-"accéder à votre compte. Notre système sécurisé garantit la protection de vos"
-" données et la sécurité de votre compte. Obtenez des résumés rapides, précis"
-" et faciles à lire."
+"La réinitialisation de votre mot de passe a réussi ! Connectez-vous en toute "
+"sécurité à notre service de résumé d'articles arXiv alimenté par l'IA pour "
+"accéder à votre compte. Notre système sécurisé garantit la protection de vos "
+"données et la sécurité de votre compte. Obtenez des résumés rapides, précis "
+"et faciles à lire."
 
 #: templates/password_reset_form.html:5
 msgid "Reset Your Password - Securely Access AI-Powered arXiv Paper Summaries"
 msgstr ""
-"Réinitialisez Votre Mot De Passe - Accédez En Toute Sécurité Aux Résumés des"
-" Papiers d'arXiv Alimentés Par L'IA"
+"Réinitialisez Votre Mot De Passe - Accédez En Toute Sécurité Aux Résumés des "
+"Papiers d'arXiv Alimentés Par L'IA"
 
 #: templates/password_reset_form.html:7
 msgid ""
 "Reset your password for our AI-powered arXiv paper summarization service "
-"with our secure password reset form. Enter your email address and follow the"
-" steps to get back into your account and access your paper summaries. Get "
+"with our secure password reset form. Enter your email address and follow the "
+"steps to get back into your account and access your paper summaries. Get "
 "fast, accurate, and easy-to-read paper summaries."
 msgstr ""
 "Réinitialisez votre mot de passe pour notre service de résumé de papiers "
@@ -496,8 +493,7 @@ msgid ""
 "The account and its email address have been removed. We will not write to "
 "you again."
 msgstr ""
-"Le compte et son adresse email ont été supprimés. Nous ne vous écrirons "
-"plus."
+"Le compte et son adresse email ont été supprimés. Nous ne vous écrirons plus."
 
 #: templates/register.html:6
 msgid "Register - Get Fast and Accurate AI-Powered arXiv Paper Summaries"
@@ -516,39 +512,44 @@ msgstr ""
 "faciles à lire. Notre processus d'inscription rapide et facile vous tiendra "
 "au courant des dernières recherches. Inscrivez-vous aujourd'hui !"
 
-#: templates/register.html:85
+#: templates/register.html:24
 msgid "An account already uses this email address."
 msgstr "Un compte utilise déjà cette adresse email."
 
-#: templates/register.html:86
+#: templates/register.html:25
 msgid "Get a login link by email"
 msgstr "Recevoir un lien de connexion par email"
 
-#: templates/register.html:92
+#: templates/register.html:31
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
-#: templates/register.html:100 templates/registration/login.html:93
+#: templates/register.html:39 templates/registration/login.html:43
 msgid "Password"
 msgstr "Mot de Passe"
 
-#: templates/register.html:103
+#: templates/register.html:42
 msgid "At least 8 characters, not a common password and not only digits."
 msgstr ""
 "Au moins 8 caractères, pas un mot de passe courant et pas uniquement des "
 "chiffres."
 
-#: templates/register.html:105
+#: templates/register.html:44
 msgid "Confirm password"
 msgstr "Confirmer le mot de passe"
 
-#: templates/register.html:108
+#: templates/register.html:47
 msgid "Sign up"
 msgstr "S'inscrire"
 
-#: templates/register.html:111
+#: templates/register.html:50
 msgid "Please fix the following errors:"
 msgstr "Veuillez corriger les erreurs suivantes :"
+
+#: templates/register.html:64 templates/summarizer/digest.html:33
+#: templates/summarizer/premium.html:80
+msgid "Already registered?"
+msgstr "Déjà inscrit ?"
 
 #: templates/registration/login.html:6
 msgid "Login - Secure Access to AI-Powered arXiv Paper Summaries"
@@ -558,43 +559,43 @@ msgstr "Connexion - Accès sécurisé aux Résumés arXiv alimentés par l'IA"
 msgid ""
 "Log in securely to our AI-powered arXiv paper summarization service to "
 "access your account and view past summaries. Our login system ensures that "
-"your data is protected and your account is safe. Discover the convenience of"
-" easy-to-read paper summaries."
+"your data is protected and your account is safe. Discover the convenience of "
+"easy-to-read paper summaries."
 msgstr ""
 "Connectez-vous en toute sécurité à notre service de résumé d'articles arXiv "
 "alimenté par l'IA pour accéder à votre compte et consulter les résumés "
-"antérieurs. Notre système de connexion garantit la protection de vos données"
-" et la sécurité de votre compte. Découvrez la commodité des résumés "
+"antérieurs. Notre système de connexion garantit la protection de vos données "
+"et la sécurité de votre compte. Découvrez la commodité des résumés "
 "scientifiques faciles à lire."
 
-#: templates/registration/login.html:73
+#: templates/registration/login.html:23
 msgid ""
 "Your account is not activated yet. We can send you a new activation link."
 msgstr ""
 "Votre compte n'est pas encore activé. Nous pouvons vous envoyer un nouveau "
 "lien d'activation."
 
-#: templates/registration/login.html:79
+#: templates/registration/login.html:29
 msgid "Resend the activation email"
 msgstr "Renvoyer l'email d'activation"
 
-#: templates/registration/login.html:83
+#: templates/registration/login.html:33
 msgid "Wrong username or password."
 msgstr "Nom d'utilisateur ou mot de passe incorrect."
 
-#: templates/registration/login.html:91
+#: templates/registration/login.html:41
 msgid "Username or email"
 msgstr "Nom d'utilisateur ou email"
 
-#: templates/registration/login.html:99
+#: templates/registration/login.html:50
 msgid "Log in with an email link (no password)"
 msgstr "Se connecter par lien email (sans mot de passe)"
 
-#: templates/registration/login.html:102
+#: templates/registration/login.html:53
 msgid "No account yet?"
 msgstr "Pas encore de compte?"
 
-#: templates/registration/login.html:105
+#: templates/registration/login.html:56
 msgid "Lost your password?"
 msgstr "Vous avez perdu votre mot de passe ?"
 
@@ -612,17 +613,17 @@ msgid ""
 msgstr ""
 "En savoir plus sur notre service innovant de synthèse de papiers arXiv "
 "alimenté par l'IA. Découvrez comment notre équipe d'experts tire parti des "
-"technologies de pointe pour fournir des résumés rapides, précis et faciles à"
-" lire."
+"technologies de pointe pour fournir des résumés rapides, précis et faciles à "
+"lire."
 
-#: templates/summarizer/about.html:44
+#: templates/summarizer/about.html:23
 msgid "About Us"
 msgstr "A propos"
 
-#: templates/summarizer/about.html:45
+#: templates/summarizer/about.html:24
 msgid ""
-"Welcome to our website, where we use cutting-edge AI technology to summarize"
-" the latest research papers from arXiv. Our goal is to make it easy for you "
+"Welcome to our website, where we use cutting-edge AI technology to summarize "
+"the latest research papers from arXiv. Our goal is to make it easy for you "
 "to stay up-to-date on the latest developments in your field of interest, "
 "without having to spend hours reading through lengthy research papers. It "
 "can also be useful if you are not a researcher but want to understand the "
@@ -641,11 +642,11 @@ msgstr ""
 "désinformation. Nous souhaitons remercier arXiv pour l'utilisation de son "
 "interopérabilité en libre accès."
 
-#: templates/summarizer/about.html:47
+#: templates/summarizer/about.html:26
 msgid "How We Do It"
 msgstr "Comment procède-t-on"
 
-#: templates/summarizer/about.html:48
+#: templates/summarizer/about.html:27
 msgid ""
 "Our AI algorithms analyze each paper and extract the key findings and "
 "conclusions, presenting them to you in a concise and easily digestible "
@@ -654,39 +655,37 @@ msgid ""
 "fraction of the time it would take you to read them all in their entirety. "
 msgstr ""
 "Nos algorithmes d'IA analysent chaque article et extraient les résultats et "
-"conclusions clés, en vous les présentant dans un format concis et facilement"
-" digestible. En automatisant ce processus, nous sommes en mesure de vous "
+"conclusions clés, en vous les présentant dans un format concis et facilement "
+"digestible. En automatisant ce processus, nous sommes en mesure de vous "
 "fournir un assistant IA pour répondre à vos questions sur le contenu des "
 "articles en une fraction du temps qu'il vous faudrait pour les lire tous "
 "dans leur intégralité. "
 
-#: templates/summarizer/about.html:50
+#: templates/summarizer/about.html:29
 msgid "Our Team"
 msgstr "Notre équipe"
 
-#: templates/summarizer/about.html:51
+#: templates/summarizer/about.html:30
 msgid ""
 "The team is currently made up of one researcher in astrophysics (Quentin "
 "Kral) with a passion to make complex information more accessible. Our goal "
-"is to allow everyone to benefit from all research findings and thereby avoid"
-" fake news."
+"is to allow everyone to benefit from all research findings and thereby avoid "
+"fake news."
 msgstr ""
 "L'équipe est actuellement composée d'un chercheur en astrophysique (Quentin "
 "Kral) qui souhaite rendre accessible des informations complexes au plus "
-"grand nombre. Notre objectif est de permettre à chacun de bénéficier de tous"
-" les résultats de la recherche et d'éviter ainsi les fake news."
+"grand nombre. Notre objectif est de permettre à chacun de bénéficier de tous "
+"les résultats de la recherche et d'éviter ainsi les fake news."
 
-#: templates/summarizer/about.html:54
-#: templates/summarizer/arxividpage.html:1137
+#: templates/summarizer/about.html:34 templates/summarizer/arxividpage.html:689
 msgid "Disclaimer:"
 msgstr "Avertissement :"
 
-#: templates/summarizer/about.html:54
-#: templates/summarizer/arxividpage.html:1137
+#: templates/summarizer/about.html:34 templates/summarizer/arxividpage.html:689
 msgid ""
 "The AI-based summarization tool and virtual assistant provided on this "
-"website may not always provide accurate and complete summaries or responses."
-" We encourage you to carefully review and evaluate the generated content to "
+"website may not always provide accurate and complete summaries or responses. "
+"We encourage you to carefully review and evaluate the generated content to "
 "ensure its quality and relevance to your needs."
 msgstr ""
 "Notre outil de synthèse basé sur l'IA et l'assistant virtuel fournis sur ce "
@@ -711,94 +710,92 @@ msgstr "Résumé facile à lire du document arXiv"
 msgid "entitled "
 msgstr "intitulé "
 
-#: templates/summarizer/arxividpage.html:832
+#: templates/summarizer/arxividpage.html:403 templates/summarizer/tree.html:71
+#: templates/summarizer/tree.html:207
+msgid "Authors:"
+msgstr "Auteurs :"
+
+#: templates/summarizer/arxividpage.html:426
+#: templates/summarizer/arxividpage.html:430
+#: templates/summarizer/arxividpage.html:764
+#: templates/summarizer/arxividpage.html:768
+#: templates/summarizer/arxividpage.html:1121
+#: templates/summarizer/chat.html:289 templates/summarizer/chat.html:294
+#: templates/summarizer/tree.html:93 templates/summarizer/tree.html:97
+msgid "License:"
+msgstr "Licence :"
+
+#: templates/summarizer/arxividpage.html:436
 #: templates/summarizer/templatepdf.html:126
 msgid "AI-generated keywords:"
 msgstr "Mots clés générés par l'IA :"
 
-#: templates/summarizer/arxividpage.html:842
+#: templates/summarizer/arxividpage.html:446
 #: templates/summarizer/templatepdf.html:139
 msgid "AI-generated Key Points"
 msgstr "Points clés générés par l'IA"
 
-#: templates/summarizer/arxividpage.html:844
+#: templates/summarizer/arxividpage.html:448
 msgid ""
-"The license of the paper does not allow us to build upon its content and the"
-" key points are generated using the paper metadata rather than the full "
+"The license of the paper does not allow us to build upon its content and the "
+"key points are generated using the paper metadata rather than the full "
 "article."
 msgstr ""
 "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-"et les points clés sont générés à l'aide des métadonnées de l'article plutôt"
-" que de l'article complet."
+"et les points clés sont générés à l'aide des métadonnées de l'article plutôt "
+"que de l'article complet."
 
-#: templates/summarizer/arxividpage.html:855
+#: templates/summarizer/arxividpage.html:459
 msgid "Also access our AI generated:"
 msgstr "Accédez également à nos autres résultats générés par IA :"
 
-#: templates/summarizer/arxividpage.html:856
+#: templates/summarizer/arxividpage.html:460
 msgid "Comprehensive summary"
 msgstr "Résumé complet"
 
-#: templates/summarizer/arxividpage.html:857
+#: templates/summarizer/arxividpage.html:461
 msgid "Lay summary"
 msgstr "Résumé vulgarisé"
 
-#: templates/summarizer/arxividpage.html:858
+#: templates/summarizer/arxividpage.html:462
 msgid "Blog-like article"
 msgstr "Article de type blog"
 
-#: templates/summarizer/arxividpage.html:859
-#: templates/summarizer/tree.html:210
+#: templates/summarizer/arxividpage.html:463 templates/summarizer/tree.html:120
 msgid " or ask questions about this paper to our"
 msgstr " ou posez des questions sur cet article à notre"
 
-#: templates/summarizer/arxividpage.html:859
-#: templates/summarizer/tree.html:210
+#: templates/summarizer/arxividpage.html:463 templates/summarizer/tree.html:120
 msgid "AI assistant"
 msgstr "Assistant IA"
 
-#: templates/summarizer/arxividpage.html:865
+#: templates/summarizer/arxividpage.html:469
 msgid "Summaries already available in other languages:"
 msgstr "Résumés déjà disponibles dans d'autres langues :"
 
-#: templates/summarizer/arxividpage.html:874
-#: templates/summarizer/tree.html:160 templates/summarizer/tree.html:294
-msgid "Authors:"
-msgstr "Auteurs :"
-
-#: templates/summarizer/arxividpage.html:896
-#: templates/summarizer/arxividpage.html:900
-#: templates/summarizer/arxividpage.html:1211
-#: templates/summarizer/arxividpage.html:1215
-#: templates/summarizer/arxividpage.html:1568
-#: templates/summarizer/chat.html:671 templates/summarizer/chat.html:676
-#: templates/summarizer/tree.html:182 templates/summarizer/tree.html:186
-msgid "License:"
-msgstr "Licence :"
-
-#: templates/summarizer/arxividpage.html:905
-#: templates/summarizer/arxividpage.html:1220
-#: templates/summarizer/arxividpage.html:1579
-#: templates/summarizer/tree.html:191
+#: templates/summarizer/arxividpage.html:478
+#: templates/summarizer/arxividpage.html:773
+#: templates/summarizer/arxividpage.html:1132
+#: templates/summarizer/tree.html:102
 msgid "Abstract:"
 msgstr "Résumé :"
 
-#: templates/summarizer/arxividpage.html:910
-#: templates/summarizer/arxividpage.html:1225
-#: templates/summarizer/arxividpage.html:1590
-#: templates/summarizer/tree.html:196
+#: templates/summarizer/arxividpage.html:483
+#: templates/summarizer/arxividpage.html:778
+#: templates/summarizer/arxividpage.html:1143
+#: templates/summarizer/tree.html:107
 msgid "Submitted to arXiv on"
 msgstr "Soumis à arXiv le"
 
-#: templates/summarizer/arxividpage.html:914
+#: templates/summarizer/arxividpage.html:487
 msgid "Cite this paper (BibTeX)"
 msgstr "Citer cet article (BibTeX)"
 
-#: templates/summarizer/arxividpage.html:921
+#: templates/summarizer/arxividpage.html:492
 msgid "Ask questions about this paper to our AI assistant"
 msgstr "Posez des questions sur cet article à notre assistant IA"
 
-#: templates/summarizer/arxividpage.html:922
+#: templates/summarizer/arxividpage.html:493
 #, python-format
 msgid ""
 "You can also <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"btn btn-"
@@ -807,79 +804,75 @@ msgstr ""
 "Vous pouvez aussi <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"btn btn-"
 "primary\">discutez avec plusieurs papiers à la fois ici</a>."
 
-#: templates/summarizer/arxividpage.html:924
-#: templates/summarizer/chat.html:586
+#: templates/summarizer/arxividpage.html:495 templates/summarizer/chat.html:203
 msgid ""
-"The license of the paper does not allow us to build upon its content and the"
-" AI assistant only knows about the paper metadata rather than the full "
+"The license of the paper does not allow us to build upon its content and the "
+"AI assistant only knows about the paper metadata rather than the full "
 "article."
 msgstr ""
 "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
 "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
 "que de l'article complet."
 
-#: templates/summarizer/arxividpage.html:933
-#: templates/summarizer/chat.html:594
+#: templates/summarizer/arxividpage.html:499
+msgid "Ask anything about this paper."
+msgstr "Posez n'importe quelle question sur cet article."
+
+#: templates/summarizer/arxividpage.html:502 templates/summarizer/chat.html:210
 msgid "AI"
 msgstr "IA"
 
-#: templates/summarizer/arxividpage.html:938
-#: templates/summarizer/chat.html:599
+#: templates/summarizer/arxividpage.html:506 templates/summarizer/chat.html:215
 msgid "Type your question here"
 msgstr "Saisissez votre question ici"
 
-#: templates/summarizer/arxividpage.html:939
-#: templates/summarizer/chat.html:600
+#: templates/summarizer/arxividpage.html:507 templates/summarizer/chat.html:216
 msgid "Send"
 msgstr "Envoyer"
 
-#: templates/summarizer/arxividpage.html:942
-#: templates/summarizer/arxividpage.html:1248
-#: templates/summarizer/arxividpage.html:1266
-#: templates/summarizer/arxividpage.html:1316
-#: templates/summarizer/arxividpage.html:1319
-#: templates/summarizer/arxividpage.html:1322
-#: templates/summarizer/arxividpage.html:1325
-#: templates/summarizer/chat.html:603 templates/summarizer/home.html:276
+#: templates/summarizer/arxividpage.html:510
+#: templates/summarizer/arxividpage.html:801
+#: templates/summarizer/arxividpage.html:819
+#: templates/summarizer/arxividpage.html:869
+#: templates/summarizer/arxividpage.html:872
+#: templates/summarizer/arxividpage.html:875
+#: templates/summarizer/arxividpage.html:878 templates/summarizer/chat.html:219
+#: templates/summarizer/home.html:226
 msgid "Loading..."
 msgstr "Chargement..."
 
-#: templates/summarizer/arxividpage.html:946
-#: templates/summarizer/chat.html:606
+#: templates/summarizer/arxividpage.html:514 templates/summarizer/chat.html:223
 msgid "AI assistant instructions?"
 msgstr "Instructions pour utiliser l'assistant IA ?"
 
-#: templates/summarizer/arxividpage.html:948
-#: templates/summarizer/chat.html:608
+#: templates/summarizer/arxividpage.html:516 templates/summarizer/chat.html:225
 msgid ""
 "Welcome to our AI assistant! Here are some important things to keep in mind:"
 msgstr ""
 "Bienvenue dans notre assistant IA ! Voici quelques points importants à "
 "garder à l'esprit :"
 
-#: templates/summarizer/arxividpage.html:950
+#: templates/summarizer/arxividpage.html:518
 msgid ""
 "The assistant will only answer questions related to this specific paper."
 msgstr ""
 "L'assistant ne répondra qu'aux questions liées à ce document spécifique."
 
-#: templates/summarizer/arxividpage.html:951
-#: templates/summarizer/chat.html:611
+#: templates/summarizer/arxividpage.html:519 templates/summarizer/chat.html:228
 msgid "Please note that this is not a bot for casual chatting."
 msgstr "Veuillez noter qu'il ne s'agit pas d'un bot de conversation."
 
-#: templates/summarizer/arxividpage.html:952
-#: templates/summarizer/chat.html:612
+#: templates/summarizer/arxividpage.html:520 templates/summarizer/chat.html:229
 msgid ""
 "If you want the answer in a language other than the language you chose for "
-"navigating the website, simply add \"TRANSLATE IN LANGUAGE L\" at the end of"
-" your query (replace \"LANGUAGE L\" with the language of your choice)."
+"navigating the website, simply add \"TRANSLATE IN LANGUAGE L\" at the end of "
+"your query (replace \"LANGUAGE L\" with the language of your choice)."
 msgstr ""
 "Si vous souhaitez la réponse dans une langue autre que celle que vous avez "
-"choisie pour naviguer sur le site, ajoutez simplement \"TRADUIRE EN L\" à la"
-" fin de votre requête (remplacez \"L\" par la langue de votre choix)."
+"choisie pour naviguer sur le site, ajoutez simplement \"TRADUIRE EN L\" à la "
+"fin de votre requête (remplacez \"L\" par la langue de votre choix)."
 
-#: templates/summarizer/arxividpage.html:953
+#: templates/summarizer/arxividpage.html:521
 msgid ""
 "For example, you could ask \"Can you extract the most important aspect of "
 "the paper? TRANSLATE IN SPANISH\"."
@@ -887,8 +880,7 @@ msgstr ""
 "Par exemple, vous pourriez demander \"Pouvez-vous extraire l'aspect le plus "
 "important du document ? TRADUIRE EN ESPAGNOL\"."
 
-#: templates/summarizer/arxividpage.html:955
-#: templates/summarizer/chat.html:615
+#: templates/summarizer/arxividpage.html:523 templates/summarizer/chat.html:232
 msgid ""
 "If you want to keep the history of your questions/answers you should create "
 "an account."
@@ -896,90 +888,89 @@ msgstr ""
 "Si vous souhaitez conserver l'historique de vos questions/réponses, vous "
 "devez créer un compte."
 
-#: templates/summarizer/arxividpage.html:962
+#: templates/summarizer/arxividpage.html:530
 msgid "Results of the summarizing process for the arXiv paper:"
 msgstr "Résultats du processus de synthèse de l'article arXiv :"
 
-#: templates/summarizer/arxividpage.html:964
+#: templates/summarizer/arxividpage.html:532
 msgid ""
 "This paper's license doesn't allow us to build upon its content and the "
 "summarizing process is here made with the paper's metadata rather than the "
 "article."
 msgstr ""
-"La licence de cet article ne nous permet pas de nous appuyer sur son contenu"
-" et le processus de synthèse est ici effectué avec les métadonnées de "
+"La licence de cet article ne nous permet pas de nous appuyer sur son contenu "
+"et le processus de synthèse est ici effectué avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
-#: templates/summarizer/arxividpage.html:967
-#: templates/summarizer/arxividpage.html:1309
+#: templates/summarizer/arxividpage.html:535
+#: templates/summarizer/arxividpage.html:862
 msgid "Comprehensive Summary"
 msgstr "Résumé Complet"
 
-#: templates/summarizer/arxividpage.html:968
-#: templates/summarizer/arxividpage.html:1310
+#: templates/summarizer/arxividpage.html:536
+#: templates/summarizer/arxividpage.html:863
 msgid "Key points"
 msgstr "Points clés"
 
-#: templates/summarizer/arxividpage.html:969
-#: templates/summarizer/arxividpage.html:1311
+#: templates/summarizer/arxividpage.html:537
+#: templates/summarizer/arxividpage.html:864
 msgid "Layman's Summary"
 msgstr "Résumé vulgarisé"
 
-#: templates/summarizer/arxividpage.html:970
-#: templates/summarizer/arxividpage.html:1312
+#: templates/summarizer/arxividpage.html:538
+#: templates/summarizer/arxividpage.html:865
 msgid "Blog article"
 msgstr "Article de blog"
 
-#: templates/summarizer/arxividpage.html:973
+#: templates/summarizer/arxividpage.html:541
 msgid "The summary is not ready yet"
 msgstr "Le résumé n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:981
+#: templates/summarizer/arxividpage.html:549
 msgid "The key points are not ready yet"
 msgstr "Les points clés ne sont pas encore prêts"
 
-#: templates/summarizer/arxividpage.html:983
+#: templates/summarizer/arxividpage.html:551
 msgid "The Layman's summary is not ready yet"
 msgstr "Le résumé vulgarisé n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:984
+#: templates/summarizer/arxividpage.html:552
 msgid "The blog article is not ready yet"
 msgstr "L'article de blog n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:989
+#: templates/summarizer/arxividpage.html:559
 msgid "Created on"
 msgstr "Créé le"
 
-#: templates/summarizer/arxividpage.html:994
+#: templates/summarizer/arxividpage.html:564
 msgid "Available in other languages:"
 msgstr "Disponible dans d'autres langues :"
 
-#: templates/summarizer/arxividpage.html:1002
+#: templates/summarizer/arxividpage.html:573
 msgid "Download as pdf"
 msgstr "Télécharger en pdf"
 
-#: templates/summarizer/arxividpage.html:1047
+#: templates/summarizer/arxividpage.html:606
 msgid "Assess the quality of the AI-generated content by voting"
 msgstr "Évaluez la qualité du contenu généré par l'IA en votant"
 
-#: templates/summarizer/arxividpage.html:1051
-#: templates/summarizer/tree.html:296
+#: templates/summarizer/arxividpage.html:615 templates/summarizer/tree.html:209
 msgid "Score:"
 msgstr "Note :"
 
-#: templates/summarizer/arxividpage.html:1054
+#: templates/summarizer/arxividpage.html:623
 msgid "Why do we need votes?"
 msgstr "Pourquoi avons-nous besoin de votes ?"
 
-#: templates/summarizer/arxividpage.html:1055
+#: templates/summarizer/arxividpage.html:624
 msgid ""
-"Votes are used to determine whether we need to re-run our summarizing tools."
-" If the count reaches -10, our tools can be restarted."
+"Votes are used to determine whether we need to re-run our summarizing tools. "
+"If the count reaches -10, our tools can be restarted."
 msgstr ""
-"Les votes sont utilisés pour déterminer si nous devons réexécuter nos outils"
-" de synthèse. Si le compte atteint -10, nos outils peuvent être redémarrés."
+"Les votes sont utilisés pour déterminer si nous devons réexécuter nos outils "
+"de synthèse. Si le compte atteint -10, nos outils peuvent être redémarrés."
 
-#: templates/summarizer/arxividpage.html:1080
+#: templates/summarizer/arxividpage.html:635
 msgid ""
 "The previous summary was created more than a year ago and can be re-run (if "
 "necessary) by clicking on the Run button below."
@@ -987,7 +978,7 @@ msgstr ""
 "Le résumé précédent a été créé il y a plus d'un an et peut être réexécuté "
 "(si nécessaire) en cliquant sur le bouton Exécuter ci-dessous."
 
-#: templates/summarizer/arxividpage.html:1082
+#: templates/summarizer/arxividpage.html:637
 msgid ""
 "The summaries have many downvotes and can be re-run with our tools if "
 "necessary by clicking on the Run button below."
@@ -995,7 +986,7 @@ msgstr ""
 "Nos résumés ont de nombreux votes négatifs et peuvent être réexécutés avec "
 "nos outils si nécessaire en cliquant sur le bouton Exécuter ci-dessous."
 
-#: templates/summarizer/arxividpage.html:1084
+#: templates/summarizer/arxividpage.html:639
 msgid ""
 "Some bits of the article are not summarized yet, you can re-run the "
 "summarizing process by clicking on the Run button below."
@@ -1004,24 +995,24 @@ msgstr ""
 "relancer le processus de synthèse en cliquant sur le bouton Exécuter ci-"
 "dessous."
 
-#: templates/summarizer/arxividpage.html:1086
+#: templates/summarizer/arxividpage.html:641
 msgid "Hi, because you are a staff member you can Run the AI tools!"
 msgstr ""
 "Bonjour, parce que vous êtes un membre du personnel, vous pouvez exécuter "
 "les outils d'IA !"
 
-#: templates/summarizer/arxividpage.html:1092
-#: templates/summarizer/arxividpage.html:1232
+#: templates/summarizer/arxividpage.html:646
+#: templates/summarizer/arxividpage.html:785
 msgid "Run"
 msgstr "Exécuter"
 
-#: templates/summarizer/arxividpage.html:1096
-#: templates/summarizer/arxividpage.html:1236
+#: templates/summarizer/arxividpage.html:649
+#: templates/summarizer/arxividpage.html:789
 msgid ""
 "The license of this specific paper does not allow us to build upon its "
 "content and the summarizing tools will be run using the paper metadata "
-"rather than the full article. However, it still does a good job, and you can"
-" also try our tools on papers with more open licenses."
+"rather than the full article. However, it still does a good job, and you can "
+"also try our tools on papers with more open licenses."
 msgstr ""
 "La licence de cet article spécifique ne nous permet pas de nous appuyer sur "
 "son contenu et les outils de synthèse seront exécutés en utilisant les "
@@ -1029,62 +1020,56 @@ msgstr ""
 "produira quand même un bon résultat, et vous pouvez également essayer nos "
 "outils sur des papiers avec des licences plus ouvertes."
 
-#: templates/summarizer/arxividpage.html:1102
+#: templates/summarizer/arxividpage.html:656
 msgid "Similar papers summarized with our AI tools"
 msgstr "Articles similaires résumés avec nos outils d'IA"
 
-#: templates/summarizer/arxividpage.html:1113
+#: templates/summarizer/arxividpage.html:667
 msgid "Navigate through even more similar papers through a "
 msgstr "Naviguez à travers encore plus d'articles similaires en utilisant une"
 
-#: templates/summarizer/arxividpage.html:1114
+#: templates/summarizer/arxividpage.html:668
 msgid "tree representation"
 msgstr "représentation arborescente"
 
-#: templates/summarizer/arxividpage.html:1123
-#: templates/summarizer/tree.html:220
+#: templates/summarizer/arxividpage.html:676 templates/summarizer/tree.html:129
 msgid "Search again for closest papers"
 msgstr "Rechercher à nouveau les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:1123
-#: templates/summarizer/tree.html:220
+#: templates/summarizer/arxividpage.html:676 templates/summarizer/tree.html:129
 msgid "Search for closest papers"
 msgstr "Rechercher les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:1132
-#: templates/summarizer/tree.html:229
+#: templates/summarizer/arxividpage.html:684 templates/summarizer/tree.html:137
 msgid "Look for similar papers (in beta version)"
 msgstr "Recherchez des articles similaires (en version bêta)"
 
-#: templates/summarizer/arxividpage.html:1133
-#: templates/summarizer/tree.html:230
+#: templates/summarizer/arxividpage.html:685 templates/summarizer/tree.html:138
 msgid ""
 "By clicking on the button above, our algorithm compares the title and "
 "abstract of this paper with all the papers of the same arXiv category that "
 "we have summarized, and finds the closest ones. You can rerun it from time "
 "to time: the results improve as our database grows."
 msgstr ""
-"En cliquant sur le bouton ci-dessus, notre algorithme compare le titre et le"
-" résumé de cet article à tous les articles de la même catégorie arXiv que "
+"En cliquant sur le bouton ci-dessus, notre algorithme compare le titre et le "
+"résumé de cet article à tous les articles de la même catégorie arXiv que "
 "nous avons résumés, et trouve les plus proches. Vous pouvez le relancer de "
 "temps en temps : les résultats s'améliorent à mesure que notre base grandit."
 
-#: templates/summarizer/arxividpage.html:1144
-#: templates/summarizer/tree.html:237
+#: templates/summarizer/arxividpage.html:696 templates/summarizer/tree.html:145
 msgid "There is no existing article with the given arXiv ID:"
 msgstr "Il n'y a aucun article existant avec l'identifiant arXiv donné :"
 
-#: templates/summarizer/arxividpage.html:1144
-#: templates/summarizer/tree.html:237
+#: templates/summarizer/arxividpage.html:696 templates/summarizer/tree.html:145
 #, python-format
 msgid ""
 " Try again your <a href=\"/%(LANGUAGE_CODE)s/\">search</a> with a new arXiv "
 "ID."
 msgstr ""
-"Réessayez votre <a href=\"/%(LANGUAGE_CODE)s/\">recherche</a> avec un nouvel"
-" identifiant arXiv."
+"Réessayez votre <a href=\"/%(LANGUAGE_CODE)s/\">recherche</a> avec un nouvel "
+"identifiant arXiv."
 
-#: templates/summarizer/arxividpage.html:1150
+#: templates/summarizer/arxividpage.html:703
 msgid ""
 "Premium account: your summaries and answers use our <span "
 "class=\"highlight\">most capable model</span>."
@@ -1092,15 +1077,15 @@ msgstr ""
 "Compte Premium : vos résumés et réponses utilisent notre <span "
 "class=\"highlight\">modèle le plus performant</span>."
 
-#: templates/summarizer/arxividpage.html:1155
+#: templates/summarizer/arxividpage.html:708
 msgid "Running our tool to find closest papers"
 msgstr "Exécution de notre outil pour trouver les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:1157
+#: templates/summarizer/arxividpage.html:710
 msgid "Running summarizing tools on a new article"
 msgstr "Exécution de notre outil de synthèse sur un nouvel article"
 
-#: templates/summarizer/arxividpage.html:1160
+#: templates/summarizer/arxividpage.html:713
 msgid ""
 "We are now running our AI tools on the requested article. This process may "
 "take a few minutes so please bear with us."
@@ -1108,89 +1093,88 @@ msgstr ""
 "Nous exécutons maintenant nos outils d'IA sur l'article demandé. Ce "
 "processus peut prendre quelques minutes..."
 
-#: templates/summarizer/arxividpage.html:1162
+#: templates/summarizer/arxividpage.html:715
 msgid ""
 "This is the first time this article is requested and our AI summarizing "
 "tools have never been run on it. We can run our tools now if you click on "
 "the button \"Run\" donw the page but first make sure that it is the right "
 "article."
 msgstr ""
-"C'est la première fois que cet article est demandé et nos outils de synthèse"
-" d'IA n'ont jamais été exécutés dessus. Nous pouvons exécuter nos outils "
+"C'est la première fois que cet article est demandé et nos outils de synthèse "
+"d'IA n'ont jamais été exécutés dessus. Nous pouvons exécuter nos outils "
 "maintenant si vous cliquez sur le bouton \"Exécuter\" sur la page mais "
 "assurez-vous d'abord que c'est le bon article."
 
-#: templates/summarizer/arxividpage.html:1168
+#: templates/summarizer/arxividpage.html:721
 msgid ""
-"You are trying to run too many papers in too short a period of time. Are you"
-" a robot? If not, wait and retry!"
+"You are trying to run too many papers in too short a period of time. Are you "
+"a robot? If not, wait and retry!"
 msgstr ""
 "Vous essayez de faire tourner trop d'articles en trop peu de temps. Êtes-"
 "vous un robot? Sinon, attendez et réessayez!"
 
-#: templates/summarizer/arxividpage.html:1174
+#: templates/summarizer/arxividpage.html:727
 msgid ""
 "You are limited to running 10 papers in a period of 24 hours. Please come "
-"back tomorrow or contact us if you need to run more articles using our "
-"tools."
+"back tomorrow or contact us if you need to run more articles using our tools."
 msgstr ""
 "Vous êtes limité à 10 articles sur une période de 24 heures. Revenez demain "
 "ou contactez-nous si vous avez besoin d'exécuter plus d'articles en "
 "utilisant nos outils."
 
-#: templates/summarizer/arxividpage.html:1175
+#: templates/summarizer/arxividpage.html:728
 msgid "Premium accounts have no daily limit."
 msgstr "Les comptes Premium n'ont pas de limite quotidienne."
 
-#: templates/summarizer/arxividpage.html:1181
+#: templates/summarizer/arxividpage.html:734
 msgid "We are analysing the following arXiv article:"
 msgstr "Nous analysons l'article suivant d'arXiv :"
 
-#: templates/summarizer/arxividpage.html:1443
+#: templates/summarizer/arxividpage.html:996
 msgid "Results of the summarizing process for the arXiv paper (1/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (1/4) :"
 
-#: templates/summarizer/arxividpage.html:1451
+#: templates/summarizer/arxividpage.html:1004
 msgid "Results of the summarizing process for the arXiv paper (2/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (2/4) :"
 
-#: templates/summarizer/arxividpage.html:1465
+#: templates/summarizer/arxividpage.html:1018
 msgid "Results of the summarizing process for the arXiv paper (3/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (3/4) :"
 
-#: templates/summarizer/arxividpage.html:1473
+#: templates/summarizer/arxividpage.html:1026
 msgid "Results of the summarizing process for the arXiv paper (4/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (4/4) :"
 
-#: templates/summarizer/arxividpage.html:1561
-#: templates/summarizer/arxividpage.html:1573
+#: templates/summarizer/arxividpage.html:1114
+#: templates/summarizer/arxividpage.html:1126
 msgid ""
-"The license of the paper does not allow us to build upon its content and the"
-" summarizing process is here made with the paper metadata rather than the "
+"The license of the paper does not allow us to build upon its content and the "
+"summarizing process is here made with the paper metadata rather than the "
 "article."
 msgstr ""
 "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
 "et le processus de synthèse est ici réalisé avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
-#: templates/summarizer/arxividpage.html:1657
-#: templates/summarizer/arxividpage.html:1674
-#: templates/summarizer/chat.html:1140 templates/summarizer/chat.html:1157
+#: templates/summarizer/arxividpage.html:1210
+#: templates/summarizer/arxividpage.html:1227
+#: templates/summarizer/chat.html:767 templates/summarizer/chat.html:784
 msgid "AI -"
 msgstr "IA -"
 
-#: templates/summarizer/arxividpage.html:1692
-#: templates/summarizer/chat.html:1175
+#: templates/summarizer/arxividpage.html:1245
+#: templates/summarizer/chat.html:802
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr "Erreur: connexion au WebSocket fermée (rechargez la page)."
 
-#: templates/summarizer/arxividpage.html:1773
-#: templates/summarizer/chat.html:1256
+#: templates/summarizer/arxividpage.html:1326
+#: templates/summarizer/chat.html:883
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr "Erreur : connexion au WebSocket fermée. Rechargez la page."
 
-#: templates/summarizer/arxividpage.html:1786
-#: templates/summarizer/chat.html:1269
+#: templates/summarizer/arxividpage.html:1339
+#: templates/summarizer/chat.html:896
 msgid "You -"
 msgstr "Vous -"
 
@@ -1204,14 +1188,14 @@ msgstr ""
 msgid ""
 "Welcome to Chat with Arxiv Papers, where you can engage in interactive "
 "conversations with one or several academic papers from the Arxiv preprint "
-"repository. Our innovative platform allows you to pose any questions you may"
-" have about the research, methodology, or findings presented in the papers, "
+"repository. Our innovative platform allows you to pose any questions you may "
+"have about the research, methodology, or findings presented in the papers, "
 "and receive immediate responses from our intelligent chatbot powered by "
 "state-of-the-art language models. Whether you are a student, researcher, or "
-"simply curious about the latest developments in your field of interest, Chat"
-" with Arxiv Papers offers a unique opportunity to explore cutting-edge "
-"research in a conversational and engaging way. Try it now and discover a new"
-" world of knowledge at your fingertips!"
+"simply curious about the latest developments in your field of interest, Chat "
+"with Arxiv Papers offers a unique opportunity to explore cutting-edge "
+"research in a conversational and engaging way. Try it now and discover a new "
+"world of knowledge at your fingertips!"
 msgstr ""
 "Bienvenue dans la partie pour discuter avec des papiers Arxiv, où vous "
 "pouvez engager des conversations interactives avec un ou plusieurs articles "
@@ -1225,7 +1209,22 @@ msgstr ""
 "pointe de manière conversationnelle et engageante. Essayez-le maintenant et "
 "découvrez un nouveau monde de connaissances à portée de main !"
 
-#: templates/summarizer/chat.html:535
+#: templates/summarizer/chat.html:148 templates/summarizer/home.html:254
+msgid "Chat with arXiv Papers"
+msgstr "Discuter avec des papiers arXiv"
+
+#: templates/summarizer/chat.html:149 templates/summarizer/home.html:255
+msgid ""
+"Did you know you can chat directly with one or several arXiv papers? Our "
+"chatbot allows you to have a conversation with any paper on arXiv, enabling "
+"you to get more insights and ask questions in a natural language way."
+msgstr ""
+"Saviez-vous que vous pouvez discuter directement avec un ou plusieurs "
+"articles arXiv ? Notre chatbot vous permet d'avoir une conversation avec "
+"n'importe quel papier sur arXiv, ce qui vous permet d'obtenir plus "
+"d'informations et de poser des questions en langage naturel."
+
+#: templates/summarizer/chat.html:154
 msgid ""
 "The AI assistant is now accessible below to start asking questions. You can "
 "keep on adding up to 10 papers to chat with."
@@ -1234,51 +1233,51 @@ msgstr ""
 "des questions. Vous pouvez continuer à ajouter jusqu'à 10 papiers avec "
 "lesquels discuter."
 
-#: templates/summarizer/chat.html:541
+#: templates/summarizer/chat.html:159
 msgid "Select papers to chat with"
 msgstr "Sélectionnez les papiers avec lesquels discuter"
 
-#: templates/summarizer/chat.html:546
+#: templates/summarizer/chat.html:163
 msgid "Search for papers"
 msgstr "Recherche d'articles"
 
-#: templates/summarizer/chat.html:551
+#: templates/summarizer/chat.html:168
 msgid "Enter at least 3 letters for the search to start"
 msgstr "Entrez au moins 3 lettres pour que la recherche démarre"
 
-#: templates/summarizer/chat.html:552
+#: templates/summarizer/chat.html:169
 msgid "No papers found"
 msgstr "Aucun article trouvé"
 
-#: templates/summarizer/chat.html:558
+#: templates/summarizer/chat.html:175
 msgid "Add a paper directly"
 msgstr "Ajouter un papier directement"
 
-#: templates/summarizer/chat.html:560
+#: templates/summarizer/chat.html:178
 msgid "Arxiv ID (e.g. 2211.04191v1)"
 msgstr "ID Arxiv (e.g. 2211.04191v1)"
 
-#: templates/summarizer/chat.html:562
-msgid "This ID does not exist"
-msgstr "Cet ID n'existe pas"
-
-#: templates/summarizer/chat.html:563
-msgid "Paper added!"
-msgstr "Papier ajouté !"
-
-#: templates/summarizer/chat.html:564
-msgid "Paper already added!"
-msgstr "Papier déjà ajouté !"
-
-#: templates/summarizer/chat.html:565
+#: templates/summarizer/chat.html:180
 msgid "Add"
 msgstr "Ajouter"
 
-#: templates/summarizer/chat.html:572
+#: templates/summarizer/chat.html:182
+msgid "This ID does not exist"
+msgstr "Cet ID n'existe pas"
+
+#: templates/summarizer/chat.html:183
+msgid "Paper added!"
+msgstr "Papier ajouté !"
+
+#: templates/summarizer/chat.html:184
+msgid "Paper already added!"
+msgstr "Papier déjà ajouté !"
+
+#: templates/summarizer/chat.html:190
 msgid "Selected Papers"
 msgstr "Articles Sélectionnés"
 
-#: templates/summarizer/chat.html:576
+#: templates/summarizer/chat.html:193
 msgid ""
 "No papers selected yet. Search for papers to chat with using the search "
 "field on the left or add a paper directly via its arXiv ID using the form "
@@ -1289,22 +1288,21 @@ msgstr ""
 "article directement via son identifiant arXiv en utilisant le formulaire et "
 "en cliquant sur le bouton Ajouter."
 
-#: templates/summarizer/chat.html:579
+#: templates/summarizer/chat.html:196
 msgid "You have reached the limit of"
 msgstr "Vous avez atteint la limite de"
 
-#: templates/summarizer/chat.html:579
+#: templates/summarizer/chat.html:196
 msgid "papers you can interact with and cannot add more."
 msgstr ""
 "papiers avec lesquels vous pouvez interagir et ne pouvez pas en ajouter "
 "d'autres."
 
-#: templates/summarizer/chat.html:585
+#: templates/summarizer/chat.html:202
 msgid "Ask questions about selected papers to our AI assistant"
-msgstr ""
-"Posez des questions sur les articles sélectionnés à notre assistant IA"
+msgstr "Posez des questions sur les articles sélectionnés à notre assistant IA"
 
-#: templates/summarizer/chat.html:610
+#: templates/summarizer/chat.html:227
 msgid ""
 "The assistant will only answer questions related to the specific papers "
 "selected above."
@@ -1312,7 +1310,7 @@ msgstr ""
 "L'assistant ne répondra qu'aux questions liées aux articles spécifiques "
 "sélectionnés ci-dessus."
 
-#: templates/summarizer/chat.html:613
+#: templates/summarizer/chat.html:230
 msgid ""
 "For example, you could ask \"Can you extract the most important aspect of "
 "the papers? TRANSLATE IN SPANISH\"."
@@ -1320,15 +1318,15 @@ msgstr ""
 "Par exemple, vous pourriez demander \"Pouvez-vous extraire l'aspect le plus "
 "important des papiers? TRADUIRE EN ESPAGNOL\"."
 
-#: templates/summarizer/chat.html:700 templates/summarizer/chat.html:891
+#: templates/summarizer/chat.html:318 templates/summarizer/chat.html:518
 msgid "The license of "
 msgstr "La licence de "
 
-#: templates/summarizer/chat.html:700 templates/summarizer/chat.html:891
+#: templates/summarizer/chat.html:318 templates/summarizer/chat.html:518
 msgid " paper"
 msgstr " papier"
 
-#: templates/summarizer/chat.html:700 templates/summarizer/chat.html:891
+#: templates/summarizer/chat.html:318 templates/summarizer/chat.html:518
 msgid ""
 "does not allow us to build upon its content and the AI assistant only knows "
 "about the paper metadata rather than the full article."
@@ -1336,22 +1334,21 @@ msgstr ""
 "ne nous permet pas de nous appuyer sur son contenu et l'assistant IA ne "
 "connaît que les métadonnées du papier plutôt que l'article complet."
 
-#: templates/summarizer/chat.html:702 templates/summarizer/chat.html:893
+#: templates/summarizer/chat.html:320 templates/summarizer/chat.html:520
 msgid "The licenses of "
 msgstr "Les licences de "
 
-#: templates/summarizer/chat.html:702 templates/summarizer/chat.html:893
+#: templates/summarizer/chat.html:320 templates/summarizer/chat.html:520
 msgid " papers"
 msgstr " papiers"
 
-#: templates/summarizer/chat.html:702 templates/summarizer/chat.html:893
+#: templates/summarizer/chat.html:320 templates/summarizer/chat.html:520
 msgid ""
-"do not allow us to build upon their contents and the AI assistant only knows"
-" about the papers metadata rather than the full articles."
+"do not allow us to build upon their contents and the AI assistant only knows "
+"about the papers metadata rather than the full articles."
 msgstr ""
 "ne nous permettent pas de nous appuyer sur leurs contenus et l'assistant IA "
-"ne connaît que les métadonnées des articles plutôt que les articles "
-"complets."
+"ne connaît que les métadonnées des articles plutôt que les articles complets."
 
 #: templates/summarizer/contact.html:7
 msgid "Contact Us - Get in Touch with our arXiv Summarization Service"
@@ -1362,15 +1359,15 @@ msgid ""
 "Have questions or feedback about our AI-powered arXiv paper summarization "
 "service? Contact us today to get in touch with our team and learn more."
 msgstr ""
-"Vous avez des questions ou des commentaires sur notre service de synthèse de"
-" documents arXiv alimenté par l'IA ? Contactez-nous dès aujourd'hui pour "
+"Vous avez des questions ou des commentaires sur notre service de synthèse de "
+"documents arXiv alimenté par l'IA ? Contactez-nous dès aujourd'hui pour "
 "entrer en contact avec notre équipe et en savoir plus."
 
-#: templates/summarizer/contact.html:71 templates/summarizer/privacy.html:66
+#: templates/summarizer/contact.html:25 templates/summarizer/privacy.html:53
 msgid "Contact Us"
 msgstr "Contactez Nous"
 
-#: templates/summarizer/contact.html:73
+#: templates/summarizer/contact.html:27
 msgid ""
 " Have questions or concerns about our AI-powered paper summarization\n"
 "    service? We're here to help! Fill out the form below and we'll get back\n"
@@ -1378,28 +1375,27 @@ msgid ""
 msgstr ""
 "Vous avez des questions ou des inquiétudes concernant notre service de "
 "résumé d'articles alimenté par l'IA ? Nous sommes là pour vous aider ! "
-"Remplissez le formulaire ci-dessous et nous vous répondrons dès que "
-"possible."
+"Remplissez le formulaire ci-dessous et nous vous répondrons dès que possible."
 
-#: templates/summarizer/contact.html:80
+#: templates/summarizer/contact.html:35
 msgid "Name:"
 msgstr "Nom :"
 
-#: templates/summarizer/contact.html:83
+#: templates/summarizer/contact.html:38
 msgid "Email:"
 msgstr "Email :"
 
-#: templates/summarizer/contact.html:86
+#: templates/summarizer/contact.html:41
 msgid "Message:"
 msgstr "Message :"
 
-#: templates/summarizer/contact.html:92
+#: templates/summarizer/contact.html:47
 msgid "The email was successfully sent. You'll hear back from us shortly."
 msgstr ""
 "L'email a été envoyé avec succès. Nous faisons notre possible pour vous "
 "répondre le plus radipement possible."
 
-#: templates/summarizer/contact.html:96
+#: templates/summarizer/contact.html:51
 msgid "The email could not be sent. If it happens again, please contact us."
 msgstr "L'email n'a pas pu être envoyé. Si cela se reproduit, contactez nous."
 
@@ -1418,76 +1414,71 @@ msgstr ""
 #: templates/summarizer/digest.html:27
 #, python-format
 msgid ""
-"Every morning, up to %(papers_per_email)s new papers from the categories you"
-" follow, each with a 2-sentence summary anyone can understand, and a link to"
-" the full AI summary. Free."
+"Every morning, up to %(papers_per_email)s new papers from the categories you "
+"follow, each with a 2-sentence summary anyone can understand, and a link to "
+"the full AI summary. Free."
 msgstr ""
 "Chaque matin, jusqu'à %(papers_per_email)s nouveaux articles des catégories "
 "que vous suivez, chacun avec un résumé en 2 phrases compréhensible par tous "
 "et un lien vers le résumé IA complet. Gratuit."
 
-#: templates/summarizer/digest.html:30
+#: templates/summarizer/digest.html:32
 msgid "Create a free account"
 msgstr "Créer un compte gratuit"
 
-#: templates/summarizer/digest.html:31 templates/summarizer/premium.html:76
-msgid "Already registered?"
-msgstr "Déjà inscrit ?"
-
-#: templates/summarizer/digest.html:33
+#: templates/summarizer/digest.html:36
 #, python-format
 msgid "Saved. Your next digest goes to %(email)s."
 msgstr "Enregistré. Votre prochain digest sera envoyé à %(email)s."
 
-#: templates/summarizer/digest.html:34
+#: templates/summarizer/digest.html:37
 msgid "Your digest is paused. Save the form to resume it."
-msgstr ""
-"Votre digest est en pause. Enregistrez le formulaire pour le relancer."
+msgstr "Votre digest est en pause. Enregistrez le formulaire pour le relancer."
 
-#: templates/summarizer/digest.html:35
+#: templates/summarizer/digest.html:38
 msgid "Choose at least one category."
 msgstr "Choisissez au moins une catégorie."
 
-#: templates/summarizer/digest.html:38
+#: templates/summarizer/digest.html:41
 #, python-format
 msgid "Categories (up to %(max_categories)s)"
 msgstr "Catégories (jusqu'à %(max_categories)s)"
 
-#: templates/summarizer/digest.html:44
+#: templates/summarizer/digest.html:47
 msgid "Other arXiv categories, comma-separated (e.g."
 msgstr "Autres catégories arXiv, séparées par des virgules (ex."
 
-#: templates/summarizer/digest.html:48
+#: templates/summarizer/digest.html:51
 msgid "Keywords (optional)"
 msgstr "Mots-clés (facultatif)"
 
-#: templates/summarizer/digest.html:49
+#: templates/summarizer/digest.html:52
 msgid "Only papers mentioning at least one of these words, comma-separated:"
 msgstr ""
-"Uniquement les articles qui mentionnent au moins un de ces mots, séparés par"
-" des virgules :"
+"Uniquement les articles qui mentionnent au moins un de ces mots, séparés par "
+"des virgules :"
 
-#: templates/summarizer/digest.html:53
+#: templates/summarizer/digest.html:56
 msgid "Language of the summaries"
 msgstr "Langue des résumés"
 
-#: templates/summarizer/digest.html:60
+#: templates/summarizer/digest.html:65
 msgid "Delivery time"
 msgstr "Heure d'envoi"
 
-#: templates/summarizer/digest.html:61
+#: templates/summarizer/digest.html:66
 msgid "Send my digest every day at"
 msgstr "M'envoyer le digest chaque jour à"
 
-#: templates/summarizer/digest.html:65
+#: templates/summarizer/digest.html:70
 msgid "Time zone"
 msgstr "Fuseau horaire"
 
-#: templates/summarizer/digest.html:81
+#: templates/summarizer/digest.html:86
 msgid "Save"
 msgstr "Enregistrer"
 
-#: templates/summarizer/digest.html:81
+#: templates/summarizer/digest.html:86
 msgid "Start my digest"
 msgstr "Lancer mon digest"
 
@@ -1521,157 +1512,261 @@ msgstr "Foire aux Questions - Notre Service de Synthèse Basé Sur l'IA"
 
 #: templates/summarizer/faq.html:8
 msgid ""
-"Find answers to commonly asked questions about our AI-powered arXiv paper "
-"summarization service. Learn how our technology works, what types of papers "
-"we summarize, and how to get started with our service."
+"Answers to common questions about SummarizePaper: how the AI summaries and "
+"assistant work, free limits, Premium, the daily arXiv digest, accounts and "
+"citing us."
 msgstr ""
-"Trouvez des réponses aux questions fréquemment posées sur notre service de "
-"résumés d'articles arXiv alimenté par l'IA. Découvrez comment fonctionne "
-"notre technologie, quels types de documents nous résumons et comment "
-"démarrer avec notre service."
+"Réponses aux questions fréquentes sur SummarizePaper : fonctionnement des "
+"résumés et de l'assistant IA, limites gratuites, Premium, digest arXiv "
+"quotidien, comptes et citation."
 
-#: templates/summarizer/faq.html:52
+#: templates/summarizer/faq.html:17
 msgid "Frequently Asked Questions"
 msgstr "Foire Aux Questions"
 
-#: templates/summarizer/faq.html:54
+#: templates/summarizer/faq.html:20
 msgid "What is this website about?"
 msgstr "De quoi parle ce site Web ?"
 
-#: templates/summarizer/faq.html:56
+#: templates/summarizer/faq.html:22
 msgid ""
-"This website is a platform that summarizes scientific papers from arXiv "
-"using AI and allows you to interrogate our virtual assistant about the "
-"content of all articles."
+"SummarizePaper summarizes arXiv papers with AI: for each paper you get a "
+"detailed summary, the key points, a lay summary anyone can understand and a "
+"blog-style article, in English or French, as well as a list of related "
+"papers. An AI assistant answers your questions about one or several papers, "
+"and a free daily email digest brings you the new papers in your fields."
 msgstr ""
-"Ce site Web est une plateforme qui résume les articles scientifiques d'arXiv"
-" en utilisant l'IA et vous permet d'interroger notre assistant virtuel sur "
-"le contenu de tous les articles."
+"SummarizePaper résume les articles arXiv grâce à l'IA : pour chaque article, "
+"vous obtenez un résumé détaillé, les points clés, un résumé vulgarisé "
+"compréhensible par tous et un article de blog, en français ou en anglais, "
+"ainsi qu'une liste d'articles proches. Un assistant IA répond à vos "
+"questions sur un ou plusieurs articles, et un digest quotidien gratuit par "
+"email vous apporte les nouveaux articles de vos domaines."
 
-#: templates/summarizer/faq.html:60
+#: templates/summarizer/faq.html:26
 msgid "How does the AI summarization work?"
 msgstr "Comment fonctionne la synthèse de notre IA ?"
 
-#: templates/summarizer/faq.html:62
+#: templates/summarizer/faq.html:28
 msgid ""
-"The AI uses advanced machine learning algorithms to analyze and extract the "
-"most important information from the papers, and present it in a condensed "
-"and understandable format. It is using the latest engines from OpenAI, gpt3,"
-" gpt3.5 and gpt4."
+"We read the full text of the paper (the HTML version published by arXiv when "
+"it exists, the PDF otherwise) and send it to recent OpenAI language models "
+"with a series of prompts that produce each part of the summary. Free users "
+"get our standard model; Premium subscribers get our most capable model, for "
+"summaries as well as for answers."
 msgstr ""
-"L'IA utilise des algorithmes avancés d'apprentissage automatique pour "
-"analyser et extraire les informations les plus importantes des documents, et"
-" les présenter dans un format condensé et compréhensible. Nous utilisons les"
-" derniers moteurs d'OpenAI, gpt3, gpt3. 5 et gpt4."
+"Nous lisons le texte intégral de l'article (la version HTML publiée par "
+"arXiv quand elle existe, le PDF sinon) et l'envoyons à des modèles de "
+"langage récents d'OpenAI avec une série de prompts qui produisent chaque "
+"partie du résumé. Les utilisateurs gratuits ont notre modèle standard ; les "
+"abonnés Premium ont notre modèle le plus performant, pour les résumés comme "
+"pour les réponses."
 
-#: templates/summarizer/faq.html:66
-msgid "Who is behind this website?"
-msgstr "Qui est derrière ce site ?"
+#: templates/summarizer/faq.html:32
+msgid "How do I get the summary of a paper?"
+msgstr "Comment obtenir le résumé d'un article ?"
 
-#: templates/summarizer/faq.html:68
+#: templates/summarizer/faq.html:34
 msgid ""
-"This website is developed and maintained by a researcher in astrophysics "
-"(Quentin Kral) who want to allow everyone to access research results."
+"Search for a paper with the search bar on the home page, or type its arXiv "
+"ID. If the paper has already been summarized, the summary shows up "
+"immediately. If it is the first time someone looks for it, our AI has to "
+"read and summarize it first, which can take a few minutes; the progress is "
+"shown on the page."
 msgstr ""
-"Ce site est développé et maintenu par un chercheur en astrophysique (Quentin"
-" Kral) qui souhaite permettre à tous d'accéder aux résultats de la "
-"recherche."
+"Cherchez un article avec la barre de recherche de la page d'accueil, ou "
+"tapez son identifiant arXiv. Si l'article a déjà été résumé, le résumé "
+"s'affiche immédiatement. Si c'est la première fois que quelqu'un le cherche, "
+"notre IA doit d'abord le lire et le résumer, ce qui peut prendre quelques "
+"minutes ; la progression s'affiche sur la page."
 
-#: templates/summarizer/faq.html:72
-msgid "How can I cite you?"
-msgstr "Comment puis-je vous citer ?"
+#: templates/summarizer/faq.html:38
+msgid "Does the AI assistant read the whole paper?"
+msgstr "L'assistant IA lit-il l'article en entier ?"
 
-#: templates/summarizer/faq.html:74
-msgid "In bibtex you can use the following snippet"
-msgstr "Dans bibtex, vous pouvez utiliser l'extrait suivant"
-
-#: templates/summarizer/faq.html:88
+#: templates/summarizer/faq.html:40
 #, python-format
 msgid ""
-"\n"
-"        <p>In other cases, anything which includes our summarizepaper.com URL is OK. For example:\n"
-"          \"<a href='https://carbonfreeconf.com'>CarbonFreeConf.com</a>; %(softitle)s; <a href='%(sofurl)s'>SummarizePaper.com</a> accessed xxxx/xx/xx\"</p>      \n"
-"          "
+"Yes. The assistant answers from the full text of the paper, not just the "
+"abstract, and its answers appear as they are written. Ask it questions from "
+"the paper page, or on the <a href=\"/%(LANGUAGE_CODE)s/chat/\">chat page</a> "
+"to question several papers at once."
 msgstr ""
-"\n"
-"<p>Dans les autres cas, tout ce qui inclut notre URL summarizepaper.com est correcte. Exemple:\n"
-"          \"<a href='https://carbonfreeconf.com'>CarbonFreeConf.com</a>; %(softitle)s; <a href='%(sofurl)s'>SummarizePaper.com </a> accédé le xx/xx/xxxx\"</p>      \n"
-"          "
+"Oui. L'assistant répond à partir du texte intégral de l'article, pas "
+"seulement du résumé, et ses réponses s'affichent au fur et à mesure qu'elles "
+"s'écrivent. Posez-lui vos questions depuis la page de l'article, ou sur la "
+"<a href=\"/%(LANGUAGE_CODE)s/chat/\">page de chat</a> pour interroger "
+"plusieurs articles à la fois."
 
-#: templates/summarizer/faq.html:96
-msgid "How can I suggest a paper for summarization?"
-msgstr "Comment puis-je suggérer un article pour le résumer avec vos outils ?"
-
-#: templates/summarizer/faq.html:98
-msgid ""
-"You can search for a specific paper using the search bar on the home page or"
-" just type in the arXiv ID of the paper you want to summarize and it will "
-"show you a summary and more. Note that if it is the first time this specific"
-" article is being looked for, then it will have to run our AI code to "
-"summarize it, which may take a few minutes."
-msgstr ""
-"Vous pouvez rechercher un article spécifique en utilisant la barre de "
-"recherche sur la page d'accueil ou simplement taper l'identifiant arXiv de "
-"l'article que vous souhaitez résumer et vous obtiendrez un résumé et plus "
-"encore. Notez que si c'est la première fois que cet article spécifique est "
-"recherché, notre outil d'IA devra être exécuté pour le résumer, ce qui peut "
-"prendre quelques minutes."
-
-#: templates/summarizer/faq.html:102
+#: templates/summarizer/faq.html:44
 msgid "Is this website free to use?"
 msgstr "L'utilisation de ce site Web est-elle gratuite ?"
 
-#: templates/summarizer/faq.html:104
-msgid "Yes, this website is completely free to use."
-msgstr "Oui, l'utilisation de ce site Web est entièrement gratuite."
-
-#: templates/summarizer/faq.html:108
-msgid "What is the process of summarizing a paper?"
-msgstr "Quel est le processus de synthèse d'un article ?"
-
-#: templates/summarizer/faq.html:110
+#: templates/summarizer/faq.html:46
+#, python-format
 msgid ""
-"The process of summarizing a paper involves several steps, including text "
-"pre-processing, feature extraction, and summarization using a series of "
-"complex prompts. The AI uses a combination of natural language processing "
-"and machine learning techniques to analyze the paper and generate a concise "
-"summary."
+"Yes. Reading summaries, asking questions and receiving the daily digest are "
+"free, within the daily limits below. An optional <a href=\"/"
+"%(LANGUAGE_CODE)s/premium/\">Premium subscription</a> gives you our most "
+"capable model and higher limits."
 msgstr ""
-"Le processus de synthèse d'un article comporte plusieurs étapes, notamment "
-"le prétraitement du texte, l'extraction des caractéristiques et la synthèse "
-"à l'aide d'une série de prompts complexes. L'IA utilise une combinaison de "
-"techniques de traitement du langage naturel et d'apprentissage automatique "
-"pour analyser le document et générer un résumé concis."
+"Oui. Lire les résumés, poser des questions et recevoir le digest quotidien "
+"sont gratuits, dans les limites quotidiennes ci-dessous. Un <a href=\"/"
+"%(LANGUAGE_CODE)s/premium/\">abonnement Premium</a> optionnel vous donne "
+"notre modèle le plus performant et des limites plus élevées."
 
-#: templates/summarizer/faq.html:114
-msgid "Is the code open-source?"
-msgstr "Le code est-il open source ?"
-
-#: templates/summarizer/faq.html:116
-msgid ""
-" Yes, the code is open source and <a "
-"href=\"https://github.com/summarizepaper/summarizepaper\">freely "
-"accessible</a>. You can join us and help to make the tool even better. "
-msgstr ""
-" Oui, le code est open source et <a "
-"href=\"https://github.com/summarizepaper/summarizepaper\"> librement "
-"accessible</a>. Vous pouvez nous rejoindre et aider à rendre l'outil encore "
-"meilleur. "
-
-#: templates/summarizer/faq.html:120
+#: templates/summarizer/faq.html:50
 msgid "Is there a limit to the number of papers I can summarize?"
 msgstr "Y a-t-il une limite au nombre d'articles que je peux résumer ?"
 
-#: templates/summarizer/faq.html:122
+#: templates/summarizer/faq.html:52
+#, python-format
 msgid ""
-"There is no limit to the number of papers you can summarize (but this may "
-"change if it gets overloaded). You can use the platform as much as you need "
-"to keep updated on the latest research developments."
+"Reading papers that are already summarized is unlimited. Starting new "
+"summaries is limited to %(runs_per_day)s per day for free users and "
+"unlimited with Premium."
 msgstr ""
-"Il n'y a pas de limite au nombre d'articles que vous pouvez résumer (mais "
-"cela pourrait changer si l'outil devient surchargé). Vous pouvez utiliser la"
-" plate-forme autant que nécessaire pour vous tenir au courant des derniers "
-"développements de la recherche."
+"La lecture des articles déjà résumés est illimitée. Le lancement de nouveaux "
+"résumés est limité à %(runs_per_day)s par jour pour les utilisateurs "
+"gratuits, et illimité avec Premium."
+
+#: templates/summarizer/faq.html:53
+#, python-format
+msgid ""
+"Questions to the AI assistant are limited to %(chat_anonymous)s per day "
+"without an account, %(chat_free)s per day with a free account and "
+"%(chat_paid)s per day with Premium."
+msgstr ""
+"Les questions à l'assistant IA sont limitées à %(chat_anonymous)s par jour "
+"sans compte, %(chat_free)s par jour avec un compte gratuit et %(chat_paid)s "
+"par jour avec Premium."
+
+#: templates/summarizer/faq.html:57
+msgid "What does Premium include and how do I cancel?"
+msgstr "Que comprend Premium et comment résilier ?"
+
+#: templates/summarizer/faq.html:59
+#, python-format
+msgid ""
+"Premium gives you our most capable AI model for summaries and answers, no "
+"daily summary limit and %(chat_paid)s questions per day to the assistant. It "
+"is billed monthly or yearly through Stripe; we never see your card details. "
+"You can cancel in one click with the \"Manage my subscription\" button on "
+"the <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium page</a>: Premium then "
+"stays active until the end of the period you paid for."
+msgstr ""
+"Premium vous donne notre modèle d'IA le plus performant pour les résumés et "
+"les réponses, aucune limite quotidienne de résumés et %(chat_paid)s "
+"questions par jour à l'assistant. Il est facturé au mois ou à l'année via "
+"Stripe ; nous ne voyons jamais vos coordonnées bancaires. Vous pouvez "
+"résilier en un clic avec le bouton « Gérer mon abonnement » de la <a href=\"/"
+"%(LANGUAGE_CODE)s/premium/\">page Premium</a> : Premium reste alors actif "
+"jusqu'à la fin de la période payée."
+
+#: templates/summarizer/faq.html:63
+msgid "How does the daily digest work?"
+msgstr "Comment fonctionne le digest quotidien ?"
+
+#: templates/summarizer/faq.html:65
+#, python-format
+msgid ""
+"On the <a href=\"/%(LANGUAGE_CODE)s/digest/\">digest page</a>, choose up to "
+"%(max_categories)s arXiv categories, optional keywords, the language of the "
+"summaries and the time you want to receive it. Every weekday, you get up to "
+"%(papers_per_email)s new papers, each with a 2-sentence plain-language "
+"summary and a link to the full AI summary. No digest is sent on Saturday and "
+"Sunday in your time zone. Every email has a link to unsubscribe in one click."
+msgstr ""
+"Sur la <a href=\"/%(LANGUAGE_CODE)s/digest/\">page du digest</a>, choisissez "
+"jusqu'à %(max_categories)s catégories arXiv, des mots-clés optionnels, la "
+"langue des résumés et l'heure à laquelle vous voulez le recevoir. Chaque "
+"jour de semaine, vous recevez jusqu'à %(papers_per_email)s nouveaux "
+"articles, chacun avec un résumé vulgarisé de 2 phrases et un lien vers le "
+"résumé IA complet. Aucun digest n'est envoyé le samedi et le dimanche dans "
+"votre fuseau horaire. Chaque email contient un lien de désinscription en un "
+"clic."
+
+#: templates/summarizer/faq.html:69
+msgid "Do I need an account?"
+msgstr "Ai-je besoin d'un compte ?"
+
+#: templates/summarizer/faq.html:71
+msgid ""
+"No account is needed to read summaries or ask a few questions. A free "
+"account is needed for the daily digest, for Premium and for more questions "
+"per day. You can sign in with Google, or receive a login link by email: no "
+"password to remember."
+msgstr ""
+"Aucun compte n'est nécessaire pour lire les résumés ou poser quelques "
+"questions. Un compte gratuit est nécessaire pour le digest quotidien, pour "
+"Premium et pour poser plus de questions par jour. Vous pouvez vous connecter "
+"avec Google, ou recevoir un lien de connexion par email : aucun mot de passe "
+"à retenir."
+
+#: templates/summarizer/faq.html:75
+msgid "Can I export a summary or a reference?"
+msgstr "Puis-je exporter un résumé ou une référence ?"
+
+#: templates/summarizer/faq.html:77
+msgid ""
+"Yes. Each paper page lets you download the summary as a PDF and get the "
+"BibTeX entry of the paper for your bibliography."
+msgstr ""
+"Oui. Chaque page d'article vous permet de télécharger le résumé en PDF et "
+"d'obtenir l'entrée BibTeX de l'article pour votre bibliographie."
+
+#: templates/summarizer/faq.html:81
+msgid "Who is behind this website?"
+msgstr "Qui est derrière ce site ?"
+
+#: templates/summarizer/faq.html:83
+msgid ""
+"This website is developed and maintained by a researcher in astrophysics "
+"(Quentin Kral) who wants to allow everyone to access research results."
+msgstr ""
+"Ce site est développé et maintenu par un chercheur en astrophysique (Quentin "
+"Kral) qui souhaite permettre à tous d'accéder aux résultats de la recherche."
+
+#: templates/summarizer/faq.html:87
+msgid "How can I cite you?"
+msgstr "Comment puis-je vous citer ?"
+
+#: templates/summarizer/faq.html:89
+msgid "In bibtex you can use the following snippet"
+msgstr "Dans bibtex, vous pouvez utiliser l'extrait suivant"
+
+#: templates/summarizer/faq.html:101
+#, python-format
+msgid ""
+"\n"
+"        <p>In other cases, anything which includes our summarizepaper.com "
+"URL is OK. For example:\n"
+"          \"<a href='https://carbonfreeconf.com'>CarbonFreeConf.com</a>; "
+"%(softitle)s; <a href='%(sofurl)s'>SummarizePaper.com</a> accessed xxxx/xx/"
+"xx\"</p>      \n"
+"          "
+msgstr ""
+"\n"
+"<p>Dans les autres cas, tout ce qui inclut notre URL summarizepaper.com est "
+"correcte. Exemple:\n"
+"          \"<a href='https://carbonfreeconf.com'>CarbonFreeConf.com</a>; "
+"%(softitle)s; <a href='%(sofurl)s'>SummarizePaper.com </a> accédé le xx/xx/"
+"xxxx\"</p>      \n"
+"          "
+
+#: templates/summarizer/faq.html:109
+msgid "Is the code open-source?"
+msgstr "Le code est-il open source ?"
+
+#: templates/summarizer/faq.html:111
+msgid ""
+" Yes, the code is open source and <a href=\"https://github.com/"
+"summarizepaper/summarizepaper\">freely accessible</a>. You can join us and "
+"help to make the tool even better. "
+msgstr ""
+" Oui, le code est open source et <a href=\"https://github.com/summarizepaper/"
+"summarizepaper\"> librement accessible</a>. Vous pouvez nous rejoindre et "
+"aider à rendre l'outil encore meilleur. "
 
 #: templates/summarizer/history.html:6
 msgid ""
@@ -1682,20 +1777,20 @@ msgstr ""
 
 #: templates/summarizer/history.html:8
 msgid ""
-"Our AI-powered paper summarization service provides fast, accurate, and "
-"easy-to-read summaries of research articles. Save time and stay up-to-date "
-"with the latest research with our cutting-edge technology."
+"Our AI-powered paper summarization service provides fast, accurate, and easy-"
+"to-read summaries of research articles. Save time and stay up-to-date with "
+"the latest research with our cutting-edge technology."
 msgstr ""
 "Notre service de résumé de papiers scientifiques fournit des résumés "
-"rapides, précis et faciles à lire des articles de recherche. Gagnez du temps"
-" et restez au courant des dernières recherches grâce à notre technologie de "
+"rapides, précis et faciles à lire des articles de recherche. Gagnez du temps "
+"et restez au courant des dernières recherches grâce à notre technologie de "
 "pointe."
 
-#: templates/summarizer/history.html:70
+#: templates/summarizer/history.html:33
 msgid "Your History"
 msgstr "Votre Historique"
 
-#: templates/summarizer/history.html:85
+#: templates/summarizer/history.html:47
 msgid "You cannot access this page."
 msgstr "Vous ne pouvez pas accéder à cette page."
 
@@ -1712,27 +1807,29 @@ msgid ""
 "date with the latest research with our cutting-edge technology."
 msgstr ""
 "Notre service de synthèse de documents arXiv alimenté par l'IA fournit des "
-"résumés rapides, précis et faciles à lire des articles scientifiques. Gagnez"
-" du temps et restez au courant des dernières recherches grâce à notre "
+"résumés rapides, précis et faciles à lire des articles scientifiques. Gagnez "
+"du temps et restez au courant des dernières recherches grâce à notre "
 "technologie de pointe."
 
-#: templates/summarizer/home.html:268
+#: templates/summarizer/home.html:214
 msgid "Your account is now activated and you are logged in."
 msgstr "Votre compte est maintenant activé et vous êtes connecté."
 
-#: templates/summarizer/home.html:271
+#: templates/summarizer/home.html:219
 msgid "Discover Key Insights from arXiv's Latest Articles"
 msgstr "Découvrez les idées clés des derniers articles d'arXiv"
 
-#: templates/summarizer/home.html:275
+#: templates/summarizer/home.html:222 templates/summarizer/home.html:225
+#: templates/summarizer/search_results.html:68
 msgid "Search for an article"
 msgstr "Rechercher un article"
 
-#: templates/summarizer/home.html:276
+#: templates/summarizer/home.html:226
+#: templates/summarizer/search_results.html:69
 msgid "Search"
 msgstr "Rechercher"
 
-#: templates/summarizer/home.html:277
+#: templates/summarizer/home.html:228
 msgid ""
 "Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to "
 "search (use the language of papers you are interested in)"
@@ -1741,32 +1838,31 @@ msgstr ""
 "exemple, 2211.04191) ou des auteurs à rechercher (utilisez la langue des "
 "articles qui vous intéressent)"
 
-#: templates/summarizer/home.html:283
+#: templates/summarizer/home.html:233
 msgid "Refine your Search"
 msgstr "Affinez votre Recherche"
 
-#: templates/summarizer/home.html:285
+#: templates/summarizer/home.html:235
 msgid "Search Syntax:"
 msgstr "Syntaxe de Recherche :"
 
-#: templates/summarizer/home.html:287
+#: templates/summarizer/home.html:237
 msgid "By default, the search engine looks for the query in all fields."
 msgstr ""
-"Par défaut, le moteur de recherche recherche la requête dans tous les "
-"champs."
+"Par défaut, le moteur de recherche recherche la requête dans tous les champs."
 
-#: templates/summarizer/home.html:288
+#: templates/summarizer/home.html:238
 msgid ""
 "Use the field codes to search for a specific field: \"au:\" for authors, "
 "\"ti:\" for titles, \"abs:\" for abstracts, \"co:\" for comments, \"jr:\" "
 "for journal reference,\"cat:\" for category, and \"id:\" for ID."
 msgstr ""
 "Utilisez les codes de champ pour rechercher un champ spécifique : \"au:\" "
-"pour les auteurs, \"ti:\" pour les titres, \"abs:\" pour les résumés, "
-"\"co:\" pour les commentaires, \"jr:\" pour la référence de la revue, "
-"\"cat:\" pour la catégorie et \"id:\" pour l'identifiant."
+"pour les auteurs, \"ti:\" pour les titres, \"abs:\" pour les résumés, \"co:"
+"\" pour les commentaires, \"jr:\" pour la référence de la revue, \"cat:\" "
+"pour la catégorie et \"id:\" pour l'identifiant."
 
-#: templates/summarizer/home.html:289
+#: templates/summarizer/home.html:239
 msgid ""
 "Example for an author - au:John Doe; for a title - ti:The universe and "
 "beyond; for words contained in abstract - abs:covid; for an arXiv ID - "
@@ -1776,72 +1872,56 @@ msgstr ""
 "delà; pour les mots contenus dans le résumé - abs:covid; pour un ID arXiv - "
 "id:2211.04191"
 
-#: templates/summarizer/home.html:290
+#: templates/summarizer/home.html:240
 msgid ""
 "Mix several fields in a search request using the Boolean operators \"AND\", "
 "\"OR\", and \"ANDNOT\". For example, au:John Smith AND abs:search for life"
 msgstr ""
 "Mélangez plusieurs champs dans une requête de recherche à l'aide des "
-"opérateurs booléens \"AND\", \"OR\" et \"ANDNO\". Par exemple, au:John Smith"
-" AND abs:search for life"
+"opérateurs booléens \"AND\", \"OR\" et \"ANDNO\". Par exemple, au:John Smith "
+"AND abs:search for life"
 
-#: templates/summarizer/home.html:291
+#: templates/summarizer/home.html:241
 msgid ""
 "Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND "
 "(abs:renewable energy OR abs:solar)"
 msgstr ""
-"Exemple de recherche complexe : au:Smith AND ti:climate ANDNOT ti:petrol AND"
-" (abs:renewable energy OR abs:solar)"
+"Exemple de recherche complexe : au:Smith AND ti:climate ANDNOT ti:petrol AND "
+"(abs:renewable energy OR abs:solar)"
 
-#: templates/summarizer/home.html:297
+#: templates/summarizer/home.html:250
 #, python-format
 msgid ""
 "Welcome to our <a href=\"https://github.com/summarizepaper/summarizepaper\" "
 "class=\"chat-link\">open-source</a> AI tool, where you can stay up-to-date "
 "with the latest research on arXiv. Our goal is to provide you with concise, "
-"understandable, and insightful summaries (key-points, layman's summary, ...)"
-" for all arXiv research articles using AI, so you can quickly get a grasp of"
-" the latest developments in your field. In addition to our summary service, "
+"understandable, and insightful summaries (key-points, layman's summary, ...) "
+"for all arXiv research articles using AI, so you can quickly get a grasp of "
+"the latest developments in your field. In addition to our summary service, "
 "we offer an <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">AI "
 "assistant</a> to answer your questions about arXiv papers. Whether you're a "
 "researcher, a student, a journalist, or simply someone who wants to stay "
-"informed, Summarize<span style=\"color:#34a853\">Paper</span>.com is here to"
-" make your life easier."
+"informed, Summarize<span style=\"color:#34a853\">Paper</span>.com is here to "
+"make your life easier."
 msgstr ""
-"Bienvenue sur notre outil d'IA <a "
-"href=\"https://github.com/summarizepaper/summarizepaper\" class=\"chat-"
-"link\"> open source</a> où vous pouvez vous tenir au courant des dernières "
-"recherches sur arXiv. Notre objectif est de vous fournir des résumés concis,"
-" compréhensibles et perspicaces (points clés, résumé vulgarisé,...) pour "
-"tous les articles de recherche arXiv en utilisant l'IA, afin que vous "
-"puissiez rapidement vous familiariser avec les derniers développements dans "
-"votre domaine. En plus de notre service de synthèse, nous proposons un <a "
-"href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">assistant IA</a> pour "
-"répondre à vos questions sur les papiers arXiv. Que vous soyez chercheur, "
-"étudiant, journaliste ou simplement quelqu'un qui souhaite rester informé, "
-"Summarize<span style=\"color:#34a853\">Paper</span>.com est là pour vous "
-"faciliter la vie."
+"Bienvenue sur notre outil d'IA <a href=\"https://github.com/summarizepaper/"
+"summarizepaper\" class=\"chat-link\"> open source</a> où vous pouvez vous "
+"tenir au courant des dernières recherches sur arXiv. Notre objectif est de "
+"vous fournir des résumés concis, compréhensibles et perspicaces (points "
+"clés, résumé vulgarisé,...) pour tous les articles de recherche arXiv en "
+"utilisant l'IA, afin que vous puissiez rapidement vous familiariser avec les "
+"derniers développements dans votre domaine. En plus de notre service de "
+"synthèse, nous proposons un <a href=\"/%(LANGUAGE_CODE)s/chat/\" "
+"class=\"chat-link\">assistant IA</a> pour répondre à vos questions sur les "
+"papiers arXiv. Que vous soyez chercheur, étudiant, journaliste ou simplement "
+"quelqu'un qui souhaite rester informé, Summarize<span "
+"style=\"color:#34a853\">Paper</span>.com est là pour vous faciliter la vie."
 
-#: templates/summarizer/home.html:301
-msgid "Chat with arXiv Papers"
-msgstr "Discuter avec des papiers arXiv"
-
-#: templates/summarizer/home.html:302
-msgid ""
-"Did you know you can chat directly with one or several arXiv papers? Our "
-"chatbot allows you to have a conversation with any paper on arXiv, enabling "
-"you to get more insights and ask questions in a natural language way."
-msgstr ""
-"Saviez-vous que vous pouvez discuter directement avec un ou plusieurs "
-"articles arXiv ? Notre chatbot vous permet d'avoir une conversation avec "
-"n'importe quel papier sur arXiv, ce qui vous permet d'obtenir plus "
-"d'informations et de poser des questions en langage naturel."
-
-#: templates/summarizer/home.html:303
+#: templates/summarizer/home.html:256
 msgid "Start Chatting"
 msgstr "Commencez à Discuter"
 
-#: templates/summarizer/home.html:309
+#: templates/summarizer/home.html:263
 msgid "Latest Papers summarized with our AI tools"
 msgstr "Derniers articles résumés avec nos outils d'IA"
 
@@ -1855,42 +1935,42 @@ msgid ""
 "Learn more about our legal notice for our AI-powered arXiv paper "
 "summarization service."
 msgstr ""
-"En savoir plus sur nos mentions légales pour notre service de résumés de pdf"
-" arXiv alimenté par l'IA."
+"En savoir plus sur nos mentions légales pour notre service de résumés de pdf "
+"arXiv alimenté par l'IA."
 
-#: templates/summarizer/premium.html:6 templates/summarizer/premium.html:29
+#: templates/summarizer/premium.html:6 templates/summarizer/premium.html:32
 msgid "SummarizePaper Premium"
 msgstr "SummarizePaper Premium"
 
 #: templates/summarizer/premium.html:8
 msgid ""
-"Premium gives you our most capable AI model for arXiv summaries and answers,"
-" no daily summary limit and many more questions to the AI assistant."
+"Premium gives you our most capable AI model for arXiv summaries and answers, "
+"no daily summary limit and many more questions to the AI assistant."
 msgstr ""
 "Premium vous donne notre modèle d'IA le plus performant pour les résumés et "
 "réponses sur arXiv, aucune limite quotidienne de résumés et bien plus de "
 "questions à l'assistant IA."
 
-#: templates/summarizer/premium.html:30
+#: templates/summarizer/premium.html:33
 msgid "For researchers and students who read papers every day."
 msgstr ""
 "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
 
-#: templates/summarizer/premium.html:34
+#: templates/summarizer/premium.html:38
 msgid "You are Premium."
 msgstr "Vous êtes Premium."
 
-#: templates/summarizer/premium.html:37
+#: templates/summarizer/premium.html:41
 #, python-format
 msgid "Your subscription is cancelled: Premium stays active until %(date)s."
 msgstr "Votre abonnement est annulé : Premium reste actif jusqu'au %(date)s."
 
-#: templates/summarizer/premium.html:39
+#: templates/summarizer/premium.html:43
 #, python-format
 msgid "Next renewal on %(date)s."
 msgstr "Prochain renouvellement le %(date)s."
 
-#: templates/summarizer/premium.html:44
+#: templates/summarizer/premium.html:48
 msgid ""
 "Thank you! Your Premium subscription is being activated, it can take a few "
 "seconds."
@@ -1898,62 +1978,62 @@ msgstr ""
 "Merci ! Votre abonnement Premium est en cours d'activation, cela peut "
 "prendre quelques secondes."
 
-#: templates/summarizer/premium.html:49
+#: templates/summarizer/premium.html:53
 msgid "Free"
 msgstr "Gratuit"
 
-#: templates/summarizer/premium.html:51
+#: templates/summarizer/premium.html:55
 #, python-format
 msgid "%(runs_per_day)s new summaries per day"
 msgstr "%(runs_per_day)s nouveaux résumés par jour"
 
-#: templates/summarizer/premium.html:52
+#: templates/summarizer/premium.html:56
 #, python-format
 msgid "%(chat_free)s questions per day to the AI assistant"
 msgstr "%(chat_free)s questions par jour à l'assistant IA"
 
-#: templates/summarizer/premium.html:53
+#: templates/summarizer/premium.html:57
 msgid "Standard AI model"
 msgstr "Modèle d'IA standard"
 
-#: templates/summarizer/premium.html:59
+#: templates/summarizer/premium.html:63
 msgid "Our most capable AI model for summaries and answers"
 msgstr "Notre modèle d'IA le plus performant pour les résumés et les réponses"
 
-#: templates/summarizer/premium.html:60
+#: templates/summarizer/premium.html:64
 msgid "No daily summary limit"
 msgstr "Aucune limite quotidienne de résumés"
 
-#: templates/summarizer/premium.html:61
+#: templates/summarizer/premium.html:65
 #, python-format
 msgid "%(chat_paid)s questions per day to the AI assistant"
 msgstr "%(chat_paid)s questions par jour à l'assistant IA"
 
-#: templates/summarizer/premium.html:62
+#: templates/summarizer/premium.html:66
 msgid "Cancel anytime in one click"
 msgstr "Résiliable à tout moment en un clic"
 
-#: templates/summarizer/premium.html:68 templates/summarizer/premium.html:88
+#: templates/summarizer/premium.html:72 templates/summarizer/premium.html:92
 msgid "Manage my subscription"
 msgstr "Gérer mon abonnement"
 
-#: templates/summarizer/premium.html:72
+#: templates/summarizer/premium.html:76
 msgid "Subscriptions open soon."
 msgstr "Les abonnements ouvrent bientôt."
 
-#: templates/summarizer/premium.html:75
+#: templates/summarizer/premium.html:79
 msgid "Create a free account to subscribe"
 msgstr "Créez un compte gratuit pour vous abonner"
 
-#: templates/summarizer/premium.html:80
+#: templates/summarizer/premium.html:84
 msgid "Subscribe monthly"
 msgstr "S'abonner au mois"
 
-#: templates/summarizer/premium.html:83
+#: templates/summarizer/premium.html:87
 msgid "Subscribe yearly"
 msgstr "S'abonner à l'année"
 
-#: templates/summarizer/premium.html:95
+#: templates/summarizer/premium.html:99
 msgid "Payments are handled by Stripe. We never see your card details."
 msgstr ""
 "Les paiements sont gérés par Stripe. Nous ne voyons jamais vos données de "
@@ -1971,74 +2051,74 @@ msgid ""
 "AI-powered arXiv paper summarization service. Discover how we protect your "
 "data, what information we collect, and how we use it to improve our service."
 msgstr ""
-"Nous prenons votre vie privée au sérieux. En savoir plus sur notre politique"
-" de confidentialité pour notre service de synthèse de papiers arXiv alimenté"
-" par l'IA. Découvrez comment nous protégeons vos données, quelles "
+"Nous prenons votre vie privée au sérieux. En savoir plus sur notre politique "
+"de confidentialité pour notre service de synthèse de papiers arXiv alimenté "
+"par l'IA. Découvrez comment nous protégeons vos données, quelles "
 "informations nous collectons et comment nous les utilisons pour améliorer "
 "notre service."
 
-#: templates/summarizer/privacy.html:33
+#: templates/summarizer/privacy.html:19
 msgid "Last update:"
 msgstr "Dernière mise à jour :"
 
-#: templates/summarizer/privacy.html:35
+#: templates/summarizer/privacy.html:22
 msgid ""
 "Our website is committed to protecting the privacy of its users. This "
 "Privacy Policy outlines the types of information we collect, how we use it, "
-"and how we protect it. We are dedicated to following industry best practices"
-" and respecting the General Data Protection Regulation (GDPR) and other "
+"and how we protect it. We are dedicated to following industry best practices "
+"and respecting the General Data Protection Regulation (GDPR) and other "
 "relevant privacy laws."
 msgstr ""
 "Notre site Web s'engage à protéger la vie privée de ses utilisateurs. Cette "
 "Politique de confidentialité décrit les types d'informations que nous "
-"recueillons, comment nous les utilisons et comment nous les protégeons. Nous"
-" nous engageons à suivre les meilleures pratiques du secteur et à respecter "
-"le Règlement Général sur la Protection des Données (RGPD) et les autres lois"
-" pertinentes sur la confidentialité."
+"recueillons, comment nous les utilisons et comment nous les protégeons. Nous "
+"nous engageons à suivre les meilleures pratiques du secteur et à respecter "
+"le Règlement Général sur la Protection des Données (RGPD) et les autres lois "
+"pertinentes sur la confidentialité."
 
-#: templates/summarizer/privacy.html:37
+#: templates/summarizer/privacy.html:24
 msgid "Information Collection and Use"
 msgstr "Collecte et Utilisation des Informations"
 
-#: templates/summarizer/privacy.html:39
+#: templates/summarizer/privacy.html:26
 msgid ""
 "We do not collect information from our users when they use our website "
-"unless they create an account. The only time we do keep personal information"
-" is when users contact us via our contact form so that we can then reply to "
+"unless they create an account. The only time we do keep personal information "
+"is when users contact us via our contact form so that we can then reply to "
 "them. In this case, we keep the name, email address and message."
 msgstr ""
-"Nous ne recueillons pas d'informations auprès de nos utilisateurs lorsqu'ils"
-" utilisent notre site Web, sauf s'ils créent un compte. Le seul moment où "
+"Nous ne recueillons pas d'informations auprès de nos utilisateurs lorsqu'ils "
+"utilisent notre site Web, sauf s'ils créent un compte. Le seul moment où "
 "nous conservons des informations personnelles est lorsque les utilisateurs "
 "nous contactent via notre formulaire de contact afin que nous puissions "
-"ensuite leur répondre. Dans ce cas, nous conservons le nom, l'adresse e-mail"
-" et le message."
+"ensuite leur répondre. Dans ce cas, nous conservons le nom, l'adresse e-mail "
+"et le message."
 
-#: templates/summarizer/privacy.html:42
+#: templates/summarizer/privacy.html:29
 msgid ""
-"We do not sell or share any personal information with third-party companies."
-" All user data is kept confidential and is only used in accordance with this"
-" Privacy Policy."
+"We do not sell or share any personal information with third-party companies. "
+"All user data is kept confidential and is only used in accordance with this "
+"Privacy Policy."
 msgstr ""
 "Nous ne vendons ni ne partageons aucune information personnelle avec des "
 "sociétés tierces. Toutes les données des utilisateurs sont gardées "
 "confidentielles et ne sont utilisées que conformément à la présente "
 "Politique de confidentialité."
 
-#: templates/summarizer/privacy.html:44
+#: templates/summarizer/privacy.html:31
 msgid "Cookies"
 msgstr "Cookies"
 
-#: templates/summarizer/privacy.html:46
+#: templates/summarizer/privacy.html:33
 msgid ""
 "Our website only uses necessary cookies (e.g. to help protect the website "
 "against Cross-Site Request Forgery attacks)."
 msgstr ""
-"Notre site Web utilise uniquement les cookies nécessaires (par exemple, pour"
-" aider à protéger le site Web contre les attaques de falsification de "
+"Notre site Web utilise uniquement les cookies nécessaires (par exemple, pour "
+"aider à protéger le site Web contre les attaques de falsification de "
 "requêtes inter-sites)."
 
-#: templates/summarizer/privacy.html:49
+#: templates/summarizer/privacy.html:36
 msgid ""
 "Users have the option to disable cookies in their web browser, but this may "
 "affect the functionality of our website."
@@ -2046,17 +2126,17 @@ msgstr ""
 "Les utilisateurs ont la possibilité de désactiver les cookies dans leur "
 "navigateur Web, mais cela peut affecter la fonctionnalité de notre site Web."
 
-#: templates/summarizer/privacy.html:51
+#: templates/summarizer/privacy.html:38
 msgid "Data Security"
 msgstr "Sécurité des Données"
 
-#: templates/summarizer/privacy.html:53
+#: templates/summarizer/privacy.html:40
 #, python-format
 msgid ""
 "We take appropriate measures to protect the security of our users' personal "
 "information. However, no data transmission over the internet can be "
-"guaranteed to be 100%% secure. As a result, we cannot guarantee the security"
-" of any information transmitted to our website."
+"guaranteed to be 100%% secure. As a result, we cannot guarantee the security "
+"of any information transmitted to our website."
 msgstr ""
 "Nous prenons les mesures appropriées pour protéger la sécurité des "
 "informations personnelles de nos utilisateurs. Cependant, aucune "
@@ -2064,7 +2144,7 @@ msgstr ""
 "sécurisée. Par conséquent, nous ne pouvons garantir la sécurité des "
 "informations transmises à notre site Web."
 
-#: templates/summarizer/privacy.html:56
+#: templates/summarizer/privacy.html:43
 msgid ""
 "In the unlikely event of a data breach, we will promptly notify affected "
 "users and take appropriate measures to secure their information."
@@ -2073,36 +2153,33 @@ msgstr ""
 "rapidement les utilisateurs concernés et prendrons les mesures appropriées "
 "pour sécuriser leurs informations."
 
-#: templates/summarizer/privacy.html:58
+#: templates/summarizer/privacy.html:45
 msgid "Open Source"
 msgstr "Open Source"
 
-#: templates/summarizer/privacy.html:60
+#: templates/summarizer/privacy.html:47
 msgid ""
-" Our website is built as an <a "
-"href=\"https://github.com/summarizepaper/summarizepaper\" "
-"target=\"_blank\">open source software</a>, which allows for greater "
-"transparency and security. The codebase is available for public inspection "
-"and contributions are welcomed from the open source community. "
+" Our website is built as an <a href=\"https://github.com/summarizepaper/"
+"summarizepaper\" target=\"_blank\">open source software</a>, which allows "
+"for greater transparency and security. The codebase is available for public "
+"inspection and contributions are welcomed from the open source community. "
 msgstr ""
-"Notre site Web est construit comme un <a "
-"href=\"https://github.com/summarizepaper/summarizepaper\" target = "
-"\"_blank\">logiciel open source</a>, ce qui permet une plus grande "
-"transparence et sécurité. La base du code est disponible pour consultation "
-"publique et les contributions de la communauté open source sont les "
-"bienvenues. "
+"Notre site Web est construit comme un <a href=\"https://github.com/"
+"summarizepaper/summarizepaper\" target = \"_blank\">logiciel open source</"
+"a>, ce qui permet une plus grande transparence et sécurité. La base du code "
+"est disponible pour consultation publique et les contributions de la "
+"communauté open source sont les bienvenues. "
 
-#: templates/summarizer/privacy.html:62
+#: templates/summarizer/privacy.html:49
 msgid "Changes to this Privacy Policy"
 msgstr "Modifications de cette Politique de confidentialité"
 
-#: templates/summarizer/privacy.html:64
+#: templates/summarizer/privacy.html:51
 msgid ""
 "We reserve the right to make changes to this Privacy Policy at any time. If "
-"changes are made, we will notify users by updating the \"Effective Date\" at"
-" the top of this page. We encourage users to periodically review this "
-"Privacy Policy to stay informed about how we are protecting their "
-"information."
+"changes are made, we will notify users by updating the \"Effective Date\" at "
+"the top of this page. We encourage users to periodically review this Privacy "
+"Policy to stay informed about how we are protecting their information."
 msgstr ""
 "Nous nous réservons le droit d'apporter des modifications à cette Politique "
 "de confidentialité à tout moment. Si des modifications sont apportées, nous "
@@ -2111,7 +2188,7 @@ msgstr ""
 "consulter périodiquement cette Politique de confidentialité pour rester "
 "informés de la manière dont nous protégeons leurs informations."
 
-#: templates/summarizer/privacy.html:68
+#: templates/summarizer/privacy.html:55
 msgid ""
 "If you have any questions or concerns about this Privacy Policy, please "
 "contact us using the"
@@ -2119,11 +2196,11 @@ msgstr ""
 "Si vous avez des questions ou des préoccupations concernant cette politique "
 "de confidentialité, veuillez nous contacter en utilisant la"
 
-#: templates/summarizer/privacy.html:68
+#: templates/summarizer/privacy.html:55
 msgid "dedicated page"
 msgstr "page dédiée"
 
-#: templates/summarizer/privacy.html:68
+#: templates/summarizer/privacy.html:55
 msgid ""
 "We are always happy to hear from our users and will make every effort to "
 "address any issues."
@@ -2143,62 +2220,56 @@ msgid ""
 "papers to stay up-to-date on all topics of interest. Find the information "
 "you need to inform your research and stay ahead of the curve."
 msgstr ""
-"Découvrez les dernières recherches sur un sujet de votre choix grâce à notre"
-" page de résultats de recherche complète. Explorez des articles, des études "
+"Découvrez les dernières recherches sur un sujet de votre choix grâce à notre "
+"page de résultats de recherche complète. Explorez des articles, des études "
 "et des articles pertinents pour vous tenir au courant de tous les sujets "
 "d'intérêt. Trouvez les informations dont vous avez besoin pour orienter vos "
 "recherches et garder une longueur d'avance."
 
-#: templates/summarizer/search_results.html:187
+#: templates/summarizer/search_results.html:59
 msgid "Search Results for"
 msgstr "Résultats de recherche pour"
 
-#: templates/summarizer/search_results.html:189
+#: templates/summarizer/search_results.html:61
 msgid ""
 "You need to fill in the search field to get a response! Go back and do so..."
 msgstr ""
 "Vous devez remplir le champ de recherche pour obtenir une réponse ! Revenez "
 "en arrière..."
 
-#: templates/summarizer/search_results.html:193
-#: templates/summarizer/search_results.html:228
-#: templates/summarizer/search_results.html:231
-msgid "Go back"
-msgstr "Revenir en arrière"
-
-#: templates/summarizer/search_results.html:205
+#: templates/summarizer/search_results.html:83
 msgid "Category:"
 msgstr "Catégorie :"
 
-#: templates/summarizer/search_results.html:214
+#: templates/summarizer/search_results.html:91
 msgid "first"
 msgstr "première"
 
-#: templates/summarizer/search_results.html:215
+#: templates/summarizer/search_results.html:92
 msgid "previous"
 msgstr "précédente"
 
-#: templates/summarizer/search_results.html:219
+#: templates/summarizer/search_results.html:94
 msgid "Page"
 msgstr "Page"
 
-#: templates/summarizer/search_results.html:219
+#: templates/summarizer/search_results.html:94
 msgid "of"
 msgstr "sur"
 
-#: templates/summarizer/search_results.html:223
+#: templates/summarizer/search_results.html:96
 msgid "next"
 msgstr "prochaine"
 
-#: templates/summarizer/search_results.html:224
+#: templates/summarizer/search_results.html:97
 msgid "last"
 msgstr "dernière"
 
-#: templates/summarizer/search_results.html:231
+#: templates/summarizer/search_results.html:103
 msgid "No results found."
 msgstr "Aucun résultat trouvé."
 
-#: templates/summarizer/search_results.html:232
+#: templates/summarizer/search_results.html:104
 msgid ""
 "Make sure to search with the language used in the arXiv paper, i.e. use "
 "mostly English."
@@ -2206,7 +2277,7 @@ msgstr ""
 "Assurez-vous de faire la recherche avec la langue utilisée dans l'article "
 "arXiv, i.e., utilisez principalement l'anglais."
 
-#: templates/summarizer/search_results.html:233
+#: templates/summarizer/search_results.html:105
 msgid ""
 "You can also use field codes to search for a specific field: \"au:\" for "
 "authors, \"ti:\" for titles, \"abs:\" for abstracts, \"co:\" for comments, "
@@ -2249,8 +2320,8 @@ msgstr ""
 #: templates/summarizer/tree.html:9
 msgid ""
 "Our website, SummarizePaper, leverages the power of artificial intelligence "
-"to help you explore and navigate the vast landscape of research papers. With"
-" our interactive visual tool, you can easily discover connections between "
+"to help you explore and navigate the vast landscape of research papers. With "
+"our interactive visual tool, you can easily discover connections between "
 "related papers, visualize how they are connected, and explore the "
 "relationships between topics. Whether you are a researcher, student, or "
 "simply curious about the latest advancements in a field, SummarizePaper can "
@@ -2266,11 +2337,11 @@ msgstr ""
 "dans un domaine, SummarizePaper peut vous aider à comprendre le réseau "
 "complexe d'informations dans le monde universitaire."
 
-#: templates/summarizer/tree.html:204
+#: templates/summarizer/tree.html:114
 msgid "Explore the paper tree"
 msgstr "Explorez l'arbre d'article"
 
-#: templates/summarizer/tree.html:205
+#: templates/summarizer/tree.html:115
 msgid ""
 "Click on the tree nodes to be redirected to a given paper and access their "
 "summaries and virtual assistant"
@@ -2278,77 +2349,150 @@ msgstr ""
 "Cliquez sur les nœuds de l'arborescence pour être redirigé vers un article "
 "donné et accéder à leurs résumés et assistant virtuel"
 
-#: templates/summarizer/tree.html:208
+#: templates/summarizer/tree.html:118
 msgid "Also access our AI generated"
 msgstr "Accédez également à nos"
 
-#: templates/summarizer/tree.html:209
+#: templates/summarizer/tree.html:119
 msgid "Summaries"
 msgstr "Résumés"
 
-#: templates/summarizer/tree.html:234
+#: templates/summarizer/tree.html:142
 msgid ""
 "The paper tree for this article is not created yet. To create it, you can "
 "run our tools"
 msgstr ""
-"L'arbre d'articles pour ce papier n'est pas encore créé. Pour le créer, vous"
-" pouvez exécuter nos outils"
+"L'arbre d'articles pour ce papier n'est pas encore créé. Pour le créer, vous "
+"pouvez exécuter nos outils"
 
-#: templates/summarizer/tree.html:234
+#: templates/summarizer/tree.html:142
 msgid "on this page"
 msgstr "sur cette page"
 
-#: templates/summarizer/tree.html:293
+#: templates/summarizer/tree.html:206
 msgid "Title:"
 msgstr "Titre :"
 
-#: templates/summarizer/tree.html:295
+#: templates/summarizer/tree.html:208
 msgid "Arxiv ID:"
 msgstr "ID Arxiv :"
 
+#~ msgid "Home"
+#~ msgstr "Accueil"
+
+#~ msgid "Language"
+#~ msgstr "Langue"
+
 #~ msgid ""
-#~ "Your account is not activated yet. Click the link in the activation email we"
-#~ " sent you."
+#~ "Find answers to commonly asked questions about our AI-powered arXiv paper "
+#~ "summarization service. Learn how our technology works, what types of "
+#~ "papers we summarize, and how to get started with our service."
+#~ msgstr ""
+#~ "Trouvez des réponses aux questions fréquemment posées sur notre service "
+#~ "de résumés d'articles arXiv alimenté par l'IA. Découvrez comment "
+#~ "fonctionne notre technologie, quels types de documents nous résumons et "
+#~ "comment démarrer avec notre service."
+
+#~ msgid ""
+#~ "This website is a platform that summarizes scientific papers from arXiv "
+#~ "using AI and allows you to interrogate our virtual assistant about the "
+#~ "content of all articles."
+#~ msgstr ""
+#~ "Ce site Web est une plateforme qui résume les articles scientifiques "
+#~ "d'arXiv en utilisant l'IA et vous permet d'interroger notre assistant "
+#~ "virtuel sur le contenu de tous les articles."
+
+#~ msgid ""
+#~ "The AI uses advanced machine learning algorithms to analyze and extract "
+#~ "the most important information from the papers, and present it in a "
+#~ "condensed and understandable format. It is using the latest engines from "
+#~ "OpenAI, gpt3, gpt3.5 and gpt4."
+#~ msgstr ""
+#~ "L'IA utilise des algorithmes avancés d'apprentissage automatique pour "
+#~ "analyser et extraire les informations les plus importantes des documents, "
+#~ "et les présenter dans un format condensé et compréhensible. Nous "
+#~ "utilisons les derniers moteurs d'OpenAI, gpt3, gpt3. 5 et gpt4."
+
+#~ msgid "How can I suggest a paper for summarization?"
+#~ msgstr ""
+#~ "Comment puis-je suggérer un article pour le résumer avec vos outils ?"
+
+#~ msgid "Yes, this website is completely free to use."
+#~ msgstr "Oui, l'utilisation de ce site Web est entièrement gratuite."
+
+#~ msgid "What is the process of summarizing a paper?"
+#~ msgstr "Quel est le processus de synthèse d'un article ?"
+
+#~ msgid ""
+#~ "The process of summarizing a paper involves several steps, including text "
+#~ "pre-processing, feature extraction, and summarization using a series of "
+#~ "complex prompts. The AI uses a combination of natural language processing "
+#~ "and machine learning techniques to analyze the paper and generate a "
+#~ "concise summary."
+#~ msgstr ""
+#~ "Le processus de synthèse d'un article comporte plusieurs étapes, "
+#~ "notamment le prétraitement du texte, l'extraction des caractéristiques et "
+#~ "la synthèse à l'aide d'une série de prompts complexes. L'IA utilise une "
+#~ "combinaison de techniques de traitement du langage naturel et "
+#~ "d'apprentissage automatique pour analyser le document et générer un "
+#~ "résumé concis."
+
+#~ msgid ""
+#~ "There is no limit to the number of papers you can summarize (but this may "
+#~ "change if it gets overloaded). You can use the platform as much as you "
+#~ "need to keep updated on the latest research developments."
+#~ msgstr ""
+#~ "Il n'y a pas de limite au nombre d'articles que vous pouvez résumer (mais "
+#~ "cela pourrait changer si l'outil devient surchargé). Vous pouvez utiliser "
+#~ "la plate-forme autant que nécessaire pour vous tenir au courant des "
+#~ "derniers développements de la recherche."
+
+#~ msgid "Go back"
+#~ msgstr "Revenir en arrière"
+
+#~ msgid ""
+#~ "Your account is not activated yet. Click the link in the activation email "
+#~ "we sent you."
 #~ msgstr ""
 #~ "Votre compte n'est pas encore activé. Cliquez sur le lien de l'email "
 #~ "d'activation que nous vous avons envoyé."
 
 #~ msgid ""
-#~ "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
-#~ "for ID numbers id:\"2211.04191\""
+#~ "Enclose search terms with spaces in quotes: au:\"John Doe\", or if "
+#~ "looking for ID numbers id:\"2211.04191\""
 #~ msgstr ""
 #~ "Entourez les termes de recherche contenant des espaces de guillemets: au: "
-#~ "\"John Doe\" , ou si vous recherchez des numéros d'identification "
-#~ "id:\"2211.04191\""
+#~ "\"John Doe\" , ou si vous recherchez des numéros d'identification id:"
+#~ "\"2211.04191\""
 
 #, fuzzy
 #~ msgid ""
-#~ "The license of \" + count + \" paper\" + privateIDsMsg + \" does not allow "
-#~ "us to build upon its content and the AI assistant only knows about the paper"
-#~ " metadata rather than the full article."
+#~ "The license of \" + count + \" paper\" + privateIDsMsg + \" does not "
+#~ "allow us to build upon its content and the AI assistant only knows about "
+#~ "the paper metadata rather than the full article."
 #~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son "
+#~ "contenu et l'assistant IA ne peut se servir que des métadonnées de "
+#~ "l'article plutôt que de l'article complet."
 
 #, fuzzy
 #~ msgid ""
-#~ "The licenses of \" + count + \" papers\" + privateIDsMsg + \" do not allow "
-#~ "us to build upon their contents and the AI assistant only knows about the "
-#~ "papers\\"
+#~ "The licenses of \" + count + \" papers\" + privateIDsMsg + \" do not "
+#~ "allow us to build upon their contents and the AI assistant only knows "
+#~ "about the papers\\"
 #~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son "
+#~ "contenu et l'assistant IA ne peut se servir que des métadonnées de "
+#~ "l'article plutôt que de l'article complet."
 
 #, fuzzy
 #~ msgid ""
-#~ "do not allow us to build upon their contents and the AI assistant only knows"
-#~ " about the papers\\"
+#~ "do not allow us to build upon their contents and the AI assistant only "
+#~ "knows about the papers\\"
 #~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son "
+#~ "contenu et l'assistant IA ne peut se servir que des métadonnées de "
+#~ "l'article plutôt que de l'article complet."
 
 #~ msgid "AIer"
 #~ msgstr "AIer"
@@ -2372,23 +2516,23 @@ msgstr "ID Arxiv :"
 #~ msgstr "Comment écrire vos requêtes ?"
 
 #~ msgid ""
-#~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "
-#~ "AI-powered summarization service. Our cutting-edge technology uses machine "
-#~ "learning and natural language processing to deliver a high-quality summary "
-#~ "in just a few seconds. Try it out today!"
+#~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with "
+#~ "our AI-powered summarization service. Our cutting-edge technology uses "
+#~ "machine learning and natural language processing to deliver a high-"
+#~ "quality summary in just a few seconds. Try it out today!"
 #~ msgstr ""
 #~ "Obtenez un résumé rapide, précis et facile à lire de votre document arXiv "
-#~ "avec notre service de résumé alimenté par l'IA. Notre technologie de pointe "
-#~ "utilise l'apprentissage automatique et le traitement du langage naturel pour"
-#~ " fournir un résumé de haute qualité en quelques minutes seulement. Essayez-"
-#~ "le aujourd'hui !"
+#~ "avec notre service de résumé alimenté par l'IA. Notre technologie de "
+#~ "pointe utilise l'apprentissage automatique et le traitement du langage "
+#~ "naturel pour fournir un résumé de haute qualité en quelques minutes "
+#~ "seulement. Essayez-le aujourd'hui !"
 
 #~ msgid ""
-#~ "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
-#~ "Summaries"
+#~ "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast "
+#~ "Paper Summaries"
 #~ msgstr ""
-#~ "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des Résumés "
-#~ "Précis et Rapides"
+#~ "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des "
+#~ "Résumés Précis et Rapides"
 
 #~ msgid "More advanced Search?"
 #~ msgstr "Recherche avancée ?"
@@ -2409,51 +2553,40 @@ msgstr "ID Arxiv :"
 #~ msgstr "Notre promesse"
 
 #~ msgid ""
-#~ "At our website, we are committed to providing you with the highest quality "
-#~ "summaries of the latest research. We do our best to make sure that our AI "
-#~ "algorithms accurately reflect the key findings and conclusions of each "
-#~ "paper, so that you can stay informed and ahead of the curve in your field of"
-#~ " interest. "
+#~ "At our website, we are committed to providing you with the highest "
+#~ "quality summaries of the latest research. We do our best to make sure "
+#~ "that our AI algorithms accurately reflect the key findings and "
+#~ "conclusions of each paper, so that you can stay informed and ahead of the "
+#~ "curve in your field of interest. "
 #~ msgstr ""
 #~ "Sur notre site Web, nous nous engageons à vous fournir des résumés de la "
 #~ "plus haute qualité des dernières recherches. Nous faisons tout notre "
-#~ "possible pour que nos algorithmes d'IA reflètent fidèlement les principaux "
-#~ "résultats et conclusions de chaque article, afin que vous puissiez rester "
-#~ "informé et prendre une longueur d'avance dans votre domaine d'intérêt."
+#~ "possible pour que nos algorithmes d'IA reflètent fidèlement les "
+#~ "principaux résultats et conclusions de chaque article, afin que vous "
+#~ "puissiez rester informé et prendre une longueur d'avance dans votre "
+#~ "domaine d'intérêt."
 
 #~ msgid ""
 #~ "Yes, this website is completely free to use. There are no hidden fees or "
 #~ "charges."
 #~ msgstr ""
-#~ "Oui, l'utilisation de ce site Web est entièrement gratuite. Il n'y a pas de "
-#~ "frais cachés."
+#~ "Oui, l'utilisation de ce site Web est entièrement gratuite. Il n'y a pas "
+#~ "de frais cachés."
 
 #~ msgid ""
-#~ "Our website uses cookies to store information about user preferences and to "
-#~ "keep track of user activity on our site. This information is used to provide"
-#~ " a more personalized user experience and to improve the functionality of our"
-#~ " website."
+#~ "Our website uses cookies to store information about user preferences and "
+#~ "to keep track of user activity on our site. This information is used to "
+#~ "provide a more personalized user experience and to improve the "
+#~ "functionality of our website."
 #~ msgstr ""
 #~ "Notre site Web utilise des cookies pour stocker des informations sur les "
-#~ "préférences des utilisateurs et pour suivre l'activité des utilisateurs sur "
-#~ "notre site. Ces informations sont utilisées pour offrir une expérience "
-#~ "utilisateur plus personnalisée et pour améliorer les fonctionnalités de "
-#~ "notre site Web."
+#~ "préférences des utilisateurs et pour suivre l'activité des utilisateurs "
+#~ "sur notre site. Ces informations sont utilisées pour offrir une "
+#~ "expérience utilisateur plus personnalisée et pour améliorer les "
+#~ "fonctionnalités de notre site Web."
 
 #~ msgid "10-yrs old Summary"
 #~ msgstr "Résumé pour un enfant de 10 ans"
 
 #~ msgid "The 10-yrs old summary is not ready yet"
 #~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
-
-#: templates/base.html
-msgid "Menu"
-msgstr "Menu"
-
-#: templates/base.html
-msgid "Open source"
-msgstr "Open source"
-
-#: templates/summarizer/arxividpage.html
-msgid "Ask anything about this paper."
-msgstr "Posez n'importe quelle question sur cet article."

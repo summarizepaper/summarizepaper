@@ -11,7 +11,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, similar
+from summarizer import access, accounts, digest, similar
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -493,6 +493,12 @@ def faq(request):
         'sofurl': 'https://summarizepaper.com',
         'sofyear': '2023',
         'sofdate': '2023-03-30',
+        'runs_per_day': access.RUNS_PER_DAY,
+        'chat_anonymous': access.CHAT_MESSAGES_PER_DAY['anonymous'],
+        'chat_free': access.CHAT_MESSAGES_PER_DAY['user'],
+        'chat_paid': access.CHAT_MESSAGES_PER_DAY['paid'],
+        'papers_per_email': digest.PAPERS_PER_EMAIL,
+        'max_categories': digest.MAX_CATEGORIES,
     })
     return render(request, "summarizer/faq.html", stuff_for_frontend)
 

@@ -5,7 +5,7 @@
 
 {% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Find answers to commonly asked questions about our AI-powered arXiv paper summarization service. Learn how our technology works, what types of papers we summarize, and how to get started with our service.' %}" />
+  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: how the AI summaries and assistant work, free limits, Premium, the daily arXiv digest, accounts and citing us.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/faq/" />
 {% endblock %}
 
@@ -19,19 +19,68 @@
       <details>
         <summary>{% trans "What is this website about?" %}</summary>
         <div class="answer">
-          {% trans "This website is a platform that summarizes scientific papers from arXiv using AI and allows you to interrogate our virtual assistant about the content of all articles." %}
+          {% trans "SummarizePaper summarizes arXiv papers with AI: for each paper you get a detailed summary, the key points, a lay summary anyone can understand and a blog-style article, in English or French, as well as a list of related papers. An AI assistant answers your questions about one or several papers, and a free daily email digest brings you the new papers in your fields." %}
         </div>
       </details>
       <details>
         <summary>{% trans "How does the AI summarization work?" %}</summary>
         <div class="answer">
-          {% trans "The AI uses advanced machine learning algorithms to analyze and extract the most important information from the papers, and present it in a condensed and understandable format. It is using the latest engines from OpenAI, gpt3, gpt3.5 and gpt4." %}
+          {% trans "We read the full text of the paper (the HTML version published by arXiv when it exists, the PDF otherwise) and send it to recent OpenAI language models with a series of prompts that produce each part of the summary. Free users get our standard model; Premium subscribers get our most capable model, for summaries as well as for answers." %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "How do I get the summary of a paper?" %}</summary>
+        <div class="answer">
+          {% trans "Search for a paper with the search bar on the home page, or type its arXiv ID. If the paper has already been summarized, the summary shows up immediately. If it is the first time someone looks for it, our AI has to read and summarize it first, which can take a few minutes; the progress is shown on the page." %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Does the AI assistant read the whole paper?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}Yes. The assistant answers from the full text of the paper, not just the abstract, and its answers appear as they are written. Ask it questions from the paper page, or on the <a href="/{{ LANGUAGE_CODE }}/chat/">chat page</a> to question several papers at once.{% endblocktrans %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Is this website free to use?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}Yes. Reading summaries, asking questions and receiving the daily digest are free, within the daily limits below. An optional <a href="/{{ LANGUAGE_CODE }}/premium/">Premium subscription</a> gives you our most capable model and higher limits.{% endblocktrans %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Is there a limit to the number of papers I can summarize?" %}</summary>
+        <div class="answer">
+          <p>{% blocktrans %}Reading papers that are already summarized is unlimited. Starting new summaries is limited to {{ runs_per_day }} per day for free users and unlimited with Premium.{% endblocktrans %}</p>
+          <p>{% blocktrans %}Questions to the AI assistant are limited to {{ chat_anonymous }} per day without an account, {{ chat_free }} per day with a free account and {{ chat_paid }} per day with Premium.{% endblocktrans %}</p>
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "What does Premium include and how do I cancel?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}Premium gives you our most capable AI model for summaries and answers, no daily summary limit and {{ chat_paid }} questions per day to the assistant. It is billed monthly or yearly through Stripe; we never see your card details. You can cancel in one click with the "Manage my subscription" button on the <a href="/{{ LANGUAGE_CODE }}/premium/">Premium page</a>: Premium then stays active until the end of the period you paid for.{% endblocktrans %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "How does the daily digest work?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to {{ papers_per_email }} new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. Every email has a link to unsubscribe in one click.{% endblocktrans %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Do I need an account?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}No account is needed to read summaries or ask a few questions. A free account is needed for the daily digest, for Premium and for more questions per day. You can sign in with Google, or receive a login link by email: no password to remember.{% endblocktrans %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Can I export a summary or a reference?" %}</summary>
+        <div class="answer">
+          {% trans "Yes. Each paper page lets you download the summary as a PDF and get the BibTeX entry of the paper for your bibliography." %}
         </div>
       </details>
       <details>
         <summary>{% trans "Who is behind this website?" %}</summary>
         <div class="answer">
-          {% trans "This website is developed and maintained by a researcher in astrophysics (Quentin Kral) who want to allow everyone to access research results." %}
+          {% trans "This website is developed and maintained by a researcher in astrophysics (Quentin Kral) who wants to allow everyone to access research results." %}
         </div>
       </details>
       <details>
@@ -57,33 +106,9 @@
         </div>
       </details>
       <details>
-        <summary>{% trans "How can I suggest a paper for summarization?" %}</summary>
-        <div class="answer">
-          {% trans "You can search for a specific paper using the search bar on the home page or just type in the arXiv ID of the paper you want to summarize and it will show you a summary and more. Note that if it is the first time this specific article is being looked for, then it will have to run our AI code to summarize it, which may take a few minutes." %}
-        </div>
-      </details>
-      <details>
-        <summary>{% trans "Is this website free to use?" %}</summary>
-        <div class="answer">
-          {% trans "Yes, this website is completely free to use." %}
-        </div>
-      </details>
-      <details>
-        <summary>{% trans "What is the process of summarizing a paper?" %}</summary>
-        <div class="answer">
-          {% trans "The process of summarizing a paper involves several steps, including text pre-processing, feature extraction, and summarization using a series of complex prompts. The AI uses a combination of natural language processing and machine learning techniques to analyze the paper and generate a concise summary." %}
-        </div>
-      </details>
-      <details>
         <summary>{% trans "Is the code open-source?" %}</summary>
         <div class="answer">
           {% blocktrans %} Yes, the code is open source and <a href="https://github.com/summarizepaper/summarizepaper">freely accessible</a>. You can join us and help to make the tool even better. {% endblocktrans %}
-        </div>
-      </details>
-      <details>
-        <summary>{% trans "Is there a limit to the number of papers I can summarize?" %}</summary>
-        <div class="answer">
-          {% trans "There is no limit to the number of papers you can summarize (but this may change if it gets overloaded). You can use the platform as much as you need to keep updated on the latest research developments." %}
         </div>
       </details>
       </div>
