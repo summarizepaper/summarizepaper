@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 13:37+0000\n"
+"POT-Creation-Date: 2026-10-18 13:55+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -459,6 +459,45 @@ msgstr ""
 "passe sécurisé. Entrez votre adresse e-mail et suivez les étapes pour vous "
 "reconnecter à votre compte et accéder à vos résumés. Obtenez des résumés "
 "rapides, précis et faciles à lire."
+
+#: templates/reactivation/delete_confirm.html:3
+#: templates/reactivation/delete_confirm.html:10
+#: templates/reactivation/delete_done.html:3
+msgid "Delete this account"
+msgstr "Supprimer ce compte"
+
+#: templates/reactivation/delete_confirm.html:11
+#, python-format
+msgid ""
+"The account <strong>%(name)s</strong> was never activated. Deleting it "
+"removes it and its email address from SummarizePaper."
+msgstr ""
+"Le compte <strong>%(name)s</strong> n'a jamais été activé. Le supprimer "
+"l'efface de SummarizePaper, avec son adresse email."
+
+#: templates/reactivation/delete_confirm.html:13
+msgid "Delete the account"
+msgstr "Supprimer le compte"
+
+#: templates/reactivation/delete_done.html:11
+msgid ""
+"This account is in use, so it was not deleted. Log in and contact us if you "
+"want it removed."
+msgstr ""
+"Ce compte est utilisé, il n'a donc pas été supprimé. Connectez-vous et "
+"contactez-nous si vous voulez le supprimer."
+
+#: templates/reactivation/delete_done.html:13
+msgid "Account deleted"
+msgstr "Compte supprimé"
+
+#: templates/reactivation/delete_done.html:14
+msgid ""
+"The account and its email address have been removed. We will not write to "
+"you again."
+msgstr ""
+"Le compte et son adresse email ont été supprimés. Nous ne vous écrirons "
+"plus."
 
 #: templates/register.html:6
 msgid "Register - Get Fast and Accurate AI-Powered arXiv Paper Summaries"

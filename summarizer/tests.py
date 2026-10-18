@@ -805,3 +805,66 @@ class SimilarPapersTests(TestCase):
         self.assertEqual(PaperEmbedding.objects.count(), 3)
         self.assertEqual(PaperScore.objects.count(), 6)
         self.assertIn('3 papers to embed', out.getvalue())
+
+
+class ReactivationTests(TestCase):
+    def inactive(self, username, email, days_ago=100):
+        user = User.objects.create_user(username, email, 'pw', is_active=False)
+        user.date_joined = timezone.now() - timezone.timedelta(days=days_ago)
+        user.save()
+        return user
+
+    def test_random_usernames_are_left_out(self):
+        from summarizer.reactivation import looks_random
+        for name in ('zBAybMjDxpQcJ', 'eNbfmlwp', 'EGGTozxHH', 'DLRGhhVCAQKAR', 'UYQWSlYkZM'):
+            self.assertTrue(looks_random(name, 'victim@yahoo.com'), name)
+        for name, email in (('asif_chishti', 'a@gmail.com'), ('heyman.jonathan', 'j@gmail.com'),
+                            ('JohnSmith', 'john.smith@gmail.com'), ('kazuki', 'k@x.jp'), ('Ayodamola', 'a@gmail.com')):
+            self.assertFalse(looks_random(name, email), name)
+
+    def test_candidates_and_single_send(self):
+        from django.core import mail
+        from summarizer import reactivation
+        real = self.inactive('brieuc.langlois', 'brieuc@example.org', 10)
+        self.inactive('brieuc2', 'BRIEUC@example.org', 20)        # same address: one email only
+        self.inactive('zBAybMjDxpQcJ', 'victim@yahoo.com')       # bombing victim
+        self.inactive('taken', 'active@example.org')
+        User.objects.create_user('activeone', 'active@example.org', 'pw')
+        self.assertEqual(reactivation.candidates(), [real])
+        self.assertEqual(reactivation.run('https://www.summarizepaper.com', 10), 1)
+        self.assertEqual(reactivation.run('https://www.summarizepaper.com', 10), 0)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('List-Unsubscribe', mail.outbox[0].extra_headers)
+        self.assertIn('/en/login/link/', mail.outbox[0].body)
+
+    def test_activation_link_lasts_30_days_and_normal_links_3(self):
+        import re
+        from django.core import mail
+        from summarizer import accounts, reactivation
+        user = self.inactive('brieuc.langlois', 'brieuc@example.org')
+        reactivation.run('https://www.summarizepaper.com', 10)
+        path = re.search(r'https://www\.summarizepaper\.com(/en/login/link/\S+/)', mail.outbox[0].body).group(1)
+        short = accounts.make_link_token(user)
+        later = _time.time() + 10 * 24 * 3600
+        with mock.patch('django.core.signing.time.time', return_value=later):
+            self.assertIsNone(accounts.user_from_link_token(short))
+            r = Client().post(path)
+        self.assertEqual(r.status_code, 302)
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+
+    def test_delete_link_removes_only_unused_accounts(self):
+        import re
+        from django.core import mail
+        from summarizer import reactivation
+        user = self.inactive('brieuc.langlois', 'brieuc@example.org')
+        reactivation.run('https://www.summarizepaper.com', 10)
+        path = re.search(r'https://www\.summarizepaper\.com(/en/account/delete/\S+/)', mail.outbox[0].body).group(1)
+        self.assertContains(Client().get(path), 'Delete the account')
+        self.assertTrue(User.objects.filter(pk=user.pk).exists())
+        Client().post(path)
+        self.assertFalse(User.objects.filter(pk=user.pk).exists())
+        used = User.objects.create_user('used', 'u@example.org', 'pw')
+        r = Client().post('/en/account/delete/%s/' % reactivation.delete_token(used))
+        self.assertContains(r, 'not deleted')
+        self.assertTrue(User.objects.filter(pk=used.pk).exists())

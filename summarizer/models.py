@@ -306,3 +306,13 @@ class PaperEmbedding(models.Model):
 
     def __str__(self):
         return '%s (%s)' % (self.arxiv_id, self.model)
+
+
+class ReactivationEmail(models.Model):
+    """One-off email to accounts whose activation email never arrived (see reactivation.py)."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    email = models.EmailField()
+    sent = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.email, self.sent)

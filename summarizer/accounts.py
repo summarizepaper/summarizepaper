@@ -33,6 +33,7 @@ from . import access
 logger = logging.getLogger(__name__)
 
 LINK_MAX_AGE = 3 * 24 * 3600
+LONG_LINK_MAX_AGE = 30 * 24 * 3600  # links in the one-off reactivation email (reactivation.py)
 LINK_SALT = 'summarizer.login-link'
 STAMP_SALT = 'summarizer.form-stamp'
 HONEYPOT_FIELD = 'website'
@@ -92,13 +93,18 @@ def _last_login_stamp(user):
     return user.last_login.isoformat() if user.last_login else ''
 
 
-def make_link_token(user):
-    return signing.dumps({'u': user.pk, 'l': _last_login_stamp(user)}, salt=LINK_SALT)
+def make_link_token(user, long_lived=False):
+    data = {'u': user.pk, 'l': _last_login_stamp(user)}
+    if long_lived:
+        data['long'] = 1
+    return signing.dumps(data, salt=LINK_SALT)
 
 
 def user_from_link_token(token):
     try:
-        data = signing.loads(token, salt=LINK_SALT, max_age=LINK_MAX_AGE)
+        data = signing.loads(token, salt=LINK_SALT, max_age=LONG_LINK_MAX_AGE)
+        if not data.get('long'):
+            signing.loads(token, salt=LINK_SALT, max_age=LINK_MAX_AGE)
         user = User.objects.get(pk=data['u'])
     except (signing.BadSignature, User.DoesNotExist, KeyError, TypeError):
         return None

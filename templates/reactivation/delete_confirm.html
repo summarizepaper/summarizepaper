@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Delete this account' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+{% block content %}
+<div class="account-box">
+  <h1>{% trans 'Delete this account' %}</h1>
+  <p>{% blocktrans with name=account.username %}The account <strong>{{ name }}</strong> was never activated. Deleting it removes it and its email address from SummarizePaper.{% endblocktrans %}</p>
+  <form method="post">{% csrf_token %}
+    <button type="submit" style="background:#d93025;">{% trans 'Delete the account' %}</button>
+  </form>
+</div>
+{% endblock %}

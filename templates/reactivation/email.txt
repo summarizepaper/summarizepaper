@@ -1,0 +1,20 @@
+Hello {{ user.username }},
+
+On {{ user.date_joined|date:"F j, Y" }} you created an account on SummarizePaper.com, but the activation email never reached you. That was a problem on our side, sorry.
+
+One click activates your account and logs you in (the link works for 30 days):
+{{ activate_url }}
+
+The site has changed a lot since then:
+- Summaries written from the full text of arXiv papers (key points, lay summary, blog-style article), in English and French
+- An AI assistant that answers your questions about a paper, or about several papers at once
+- A daily email digest of new arXiv papers in the categories you follow
+- Related papers, BibTeX export and PDF export of summaries
+
+You can also log in with Google, or ask for a login link by email, so no password is needed.
+
+Did not create this account? Someone may have used your address. Ignore this email and we will not write again, or delete the account now:
+{{ delete_url }}
+
+The SummarizePaper team
+{{ base_url }}
