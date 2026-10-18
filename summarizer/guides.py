@@ -10,6 +10,10 @@ front matter block:
     updated: 2026-10-20          # optional
     draft: true                  # drafts are only shown to staff, never listed
     product: true                # optional, adds SummarizePaper as SoftwareApplication (comparisons)
+    dataset:                     # optional, first-party data behind a statistics guide
+      name: ...
+      description: ...
+      temporalCoverage: 2023-02-24/2026-10-18
     faq:                         # optional, rendered and marked up as FAQPage
       - q: Question?
         a: Answer.
@@ -129,6 +133,17 @@ def _json_ld(guide):
                 {'@type': 'Offer', 'name': 'Premium', 'price': '7.00', 'priceCurrency': 'EUR',
                  'url': SITE + '/en/premium/'},
             ],
+        })
+    if guide.get('dataset'):
+        dataset = guide['dataset']
+        graph.append({
+            '@type': 'Dataset',
+            'name': dataset.get('name'),
+            'description': dataset.get('description'),
+            'temporalCoverage': dataset.get('temporalCoverage'),
+            'url': guide['url'],
+            'creator': {'@id': SITE + '/#organization'},
+            'isAccessibleForFree': True,
         })
     if guide.get('faq'):
         graph.append({

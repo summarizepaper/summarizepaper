@@ -1020,6 +1020,12 @@ Read the **listings** <b>daily</b>.
         self.assertNotIn('hreflang="fr"', html)
         self.assertNotIn('SoftwareApplication', html)
 
+    def test_dataset_adds_dataset_markup(self):
+        self.write('en', 'stats', self.GUIDE.replace('date:', 'dataset:\n  name: Usage stats\n  description: Counts.\n  temporalCoverage: 2023-02-24/2026-10-18\ndate:'))
+        html = self.client.get('/en/guides/stats/').content.decode()
+        self.assertIn('"@type": "Dataset"', html)
+        self.assertIn('"temporalCoverage": "2023-02-24/2026-10-18"', html)
+
     def test_product_flag_adds_software_application(self):
         self.write('en', 'vs', self.GUIDE.replace('date:', 'product: true\ndate:'))
         self.assertIn('"@type": "SoftwareApplication"', self.client.get('/en/guides/vs/').content.decode())

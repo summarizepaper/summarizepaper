@@ -134,6 +134,8 @@ Comparing January–September 2026 with January–September 2025 (arXiv, Submiss
 
 cs.AI went from the fifth-largest category in 2025 to nearly tied with cs.CL for third place in 2026.
 
+What people choose to read is a different picture: see [which arXiv categories readers summarize](https://www.summarizepaper.com/en/guides/what-researchers-summarize/), where language models are 2.8 times over-represented and mathematics almost absent.
+
 ## How to keep up with this volume
 
 At about 780 new papers a day in 2025, and more in 2026, nobody reads everything in even one large category: cs.LG alone received about 70 papers a day in 2025. Two habits help:

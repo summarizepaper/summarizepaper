@@ -23,8 +23,8 @@
 | 2 | BOFU → `comparison-page` | alphaXiv vs SummarizePaper | « alphaXiv alternative » | Outils de résumé | 1 | fonctionnalités alphaXiv |
 | 3 | BOFU → `comparison-page` | Scholarcy alternatives for arXiv papers | « Scholarcy alternative » | Outils de résumé | 1 | prix Scholarcy |
 | 4 | BOFU → `comparison-page` | ChatPDF vs SummarizePaper for research papers | « chat with a research paper » | Chat avec un article | /en/chat/ | limites de ChatPDF |
-| 5 | Stats → `statistics-article` | arXiv statistics 2026: submissions per year and by category | « how many papers are on arXiv » | Chiffres arXiv | page elle-même (hub) | chiffres arXiv (source primaire : statistiques publiées par arXiv) |
-| 6 | Stats (first-party) → `statistics-article` | What researchers summarize: the most-read arXiv categories on SummarizePaper | « most popular arxiv categories » | Chiffres arXiv | 5 | chaque chiffre validé par le membre, agrégats seulement |
+| 5 ✓ brouillon | Stats → `statistics-article` | arXiv statistics 2026: submissions per year and by category | « how many papers are on arXiv » | Chiffres arXiv | page elle-même (hub) | chiffres arXiv (source primaire : statistiques publiées par arXiv) |
+| 6 ✓ brouillon | Stats (first-party) → `statistics-article` | What researchers summarize: the most-read arXiv categories on SummarizePaper | « most popular arxiv categories » | Chiffres arXiv | 5 | chaque chiffre validé par le membre, agrégats seulement |
 | 7 | Fond → `foundational-article` | How to keep up with new arXiv papers in your field | « how to keep up with arxiv » | Suivre arXiv | /en/digest/ | aucun chiffre non sourcé |
 | 8 | Fond → `foundational-article` | Triage arXiv's daily listings in 10 minutes | « too many arxiv papers to read » | Suivre arXiv | /en/digest/ | méthode testée par l'auteur |
 
