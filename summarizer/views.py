@@ -750,6 +750,37 @@ def create_embed(request):
     return redirect(reverse('home'))
 
 
+ARXIV_API_URL = 'https://export.arxiv.org/api/query'
+
+
+def arxiv_api(request):
+    """Relay the chat page's arXiv lookups: arXiv sends no CORS header, so browsers block direct calls."""
+    search_query = request.GET.get('search_query', '').strip()[:300]
+    id_list = request.GET.get('id_list', '').strip()[:100]
+    if bool(search_query) == bool(id_list):
+        return HttpResponse('Give either search_query or id_list.', status=400, content_type='text/plain')
+    if id_list:
+        params = {'id_list': id_list}
+    else:
+        try:
+            max_results = min(max(int(request.GET.get('max_results', 10)), 1), 20)
+        except ValueError:
+            max_results = 10
+        params = {'search_query': search_query, 'max_results': max_results}
+
+    cache_key = 'arxiv-api:' + hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()
+    body = cache.get(cache_key)
+    if body is None:
+        try:
+            r = requests.get(ARXIV_API_URL, params=params, timeout=15)
+            r.raise_for_status()
+        except requests.RequestException:
+            return HttpResponse('arXiv is not reachable right now.', status=502, content_type='text/plain')
+        body = r.content
+        cache.set(cache_key, body, 600)
+    return HttpResponse(body, content_type='application/atom+xml; charset=utf-8')
+
+
 def chat(request):
     stuff_for_frontend = {}
     lang = get_language()

@@ -21,6 +21,7 @@ urlpatterns = [
     path("create-embed/", views.create_embed, name="create_embed"),
     path("about/", views.about, name="about"),
     path("chat/", views.chat, name="chat"),
+    path("arxiv-api/", views.arxiv_api, name="arxiv_api"),
     path("faq/", views.faq, name="faq"),
     path("contact/", views.contact, name="contact"),
     path("history/", views.history, name="history"),

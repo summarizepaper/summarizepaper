@@ -883,3 +883,37 @@ class ReactivationTests(TestCase):
         r = Client().post('/en/account/delete/%s/' % reactivation.delete_token(used))
         self.assertContains(r, 'not deleted')
         self.assertTrue(User.objects.filter(pk=used.pk).exists())
+
+
+class ArxivApiRelayTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def fake(self, body=b'<feed/>'):
+        return mock.Mock(content=body, raise_for_status=mock.Mock())
+
+    def test_search_is_relayed_with_capped_results(self):
+        with mock.patch('summarizer.views.requests.get', return_value=self.fake(b'<feed>x</feed>')) as get:
+            r = Client().get('/en/arxiv-api/', {'search_query': 'dark matter', 'max_results': '500'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.content, b'<feed>x</feed>')
+        self.assertTrue(r['Content-Type'].startswith('application/atom+xml'))
+        self.assertEqual(get.call_args.kwargs['params'], {'search_query': 'dark matter', 'max_results': 20})
+
+    def test_answers_are_cached(self):
+        with mock.patch('summarizer.views.requests.get', return_value=self.fake()) as get:
+            Client().get('/en/arxiv-api/', {'id_list': '2304.01202v1'})
+            Client().get('/en/arxiv-api/', {'id_list': '2304.01202v1'})
+        self.assertEqual(get.call_count, 1)
+
+    def test_needs_exactly_one_kind_of_query(self):
+        with mock.patch('summarizer.views.requests.get') as get:
+            self.assertEqual(Client().get('/en/arxiv-api/').status_code, 400)
+            self.assertEqual(Client().get('/en/arxiv-api/', {'id_list': 'a', 'search_query': 'b'}).status_code, 400)
+        get.assert_not_called()
+
+    def test_arxiv_down_gives_502(self):
+        import requests
+        with mock.patch('summarizer.views.requests.get', side_effect=requests.ConnectionError()):
+            self.assertEqual(Client().get('/en/arxiv-api/', {'id_list': '2304.01202v1'}).status_code, 502)
