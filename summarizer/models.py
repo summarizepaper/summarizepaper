@@ -244,6 +244,8 @@ class DigestSubscription(models.Model):
         if delay >= self.CATCH_UP_HOURS:
             return False
         slot_start = (local_now - datetime.timedelta(hours=delay)).replace(minute=0, second=0, microsecond=0)
+        if slot_start.weekday() >= 5:  # arXiv announces nothing new for Saturday and Sunday
+            return False
         return self.last_sent is None or self.last_sent < slot_start
 
     def category_list(self):

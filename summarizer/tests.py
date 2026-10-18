@@ -294,6 +294,18 @@ class DigestTests(TestCase):
         sub.timezone = 'Not/AZone'
         self.assertTrue(sub.is_due(at(20, 8)))    # unknown zone falls back to UTC
 
+    def test_no_digest_on_weekends(self):
+        utc = datetime.timezone.utc
+        at = lambda d, h: datetime.datetime(2026, 10, d, h, 0, tzinfo=utc)
+        sub = DigestSubscription(user=self.user, categories='cs.LG', send_hour=7, timezone='Europe/Paris')
+        self.assertTrue(sub.is_due(at(23, 5)))    # Friday 07:00 in Paris
+        self.assertFalse(sub.is_due(at(24, 5)))   # Saturday
+        self.assertFalse(sub.is_due(at(25, 6)))   # Sunday
+        self.assertTrue(sub.is_due(at(26, 6)))    # Monday
+        tokyo = DigestSubscription(user=self.user, categories='cs.LG', send_hour=7, timezone='Asia/Tokyo')
+        self.assertFalse(tokyo.is_due(at(23, 22)))  # Friday 22:00 UTC is already Saturday in Tokyo
+        self.assertTrue(tokyo.is_due(at(25, 22)))   # Monday 07:00 in Tokyo
+
     def test_run_skips_subscribers_not_due(self):
         DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP', send_hour=7, timezone='Asia/Tokyo')
         with mock.patch('summarizer.digest.fetch_all') as fetch:
