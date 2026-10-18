@@ -13,8 +13,8 @@
 
 {% block content %}
 
-<h2>Invalid activation link</h2>
-    <p>The activation link is invalid or has already been used. Please request a new activation email if you haven't already activated your account.</p>
+<h2>{% trans 'Invalid activation link' %}</h2>
+    <p>{% trans 'The activation link is invalid or has already been used.' %} <a href="{% url 'email_login' %}">{% trans 'Get a new link' %}</a></p>
 
 {% endblock %}
 

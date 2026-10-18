@@ -2,6 +2,9 @@ import html
 import re
 
 from django import template
+from django.utils.safestring import mark_safe
+
+from summarizer import keypoints
 
 register = template.Library()
 
@@ -19,3 +22,9 @@ def plaintext(value):
     text = re.sub(r'\s+', ' ', html.unescape(text)).strip()
     #some generated summaries start with a bare "Summary"/"Résumé" label glued to the text
     return re.sub(r'^(Summary|Résumé)\s*:?\s*(?=[A-ZÀ-Ý])', '', text)
+
+
+@register.filter
+def keypoint(value):
+    """A key point as safe HTML: no markdown, short leading label in bold."""
+    return mark_safe(keypoints.point_html(str(value or '')))

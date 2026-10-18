@@ -9,7 +9,9 @@
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/register/" />
   <style>
       form {
-          width: 500px;
+          max-width: 500px;
+          box-sizing: border-box;
+          padding: 0 16px;
           margin: 50px auto;
           text-align: center;
       }
@@ -76,7 +78,14 @@
 
 <form method="post">
     {% csrf_token %}
-    <h2>Register</h2>
+    {% include 'accounts/_antibot.html' %}
+    <h2>{% trans 'Register' %}</h2>
+    {% if email_taken %}
+    <p style="background:#fff8e1;border:1px solid #fbbc05;border-radius:6px;padding:12px;">
+      {% trans 'An account already uses this email address.' %}
+      <a href="{% url 'email_login' %}?email={{ email_taken|urlencode }}">{% trans 'Get a login link by email' %}</a>
+    </p>
+    {% endif %}
 
     <div class="form-group">
         <label for="{{ form.username.id_for_label }}">Username:</label>

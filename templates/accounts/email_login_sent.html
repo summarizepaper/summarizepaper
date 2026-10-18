@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Check your email' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="account-box">
+  <h1>{% trans 'Check your email' %}</h1>
+  <p>{% blocktrans %}If an account uses <strong>{{ email }}</strong>, we have just sent it a login link.{% endblocktrans %}</p>
+  <p class="muted">{% trans 'It can take a few minutes. Also look in your spam folder.' %}</p>
+  <p><small><a href="{% url 'email_login' %}">{% trans 'Try another address' %}</a></small></p>
+</div>
+{% endblock %}

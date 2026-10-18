@@ -11,7 +11,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access
+from summarizer import access, accounts
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -60,55 +60,35 @@ def robots_txt(request):
 
 
 class CustomAuthenticationForm(AuthenticationForm):
-    def clean_username(self):
-        print('clean')
+    """Accepts the email address as well as the username, and tells apart accounts not activated yet."""
+    inactive_user = None
+
+    def clean(self):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
-        user = authenticate(username=username, password=password)
+        if username and password and '@' in username:
+            for candidate in User.objects.filter(email__iexact=username.strip()).order_by('-is_active', '-last_login'):
+                if candidate.check_password(password):
+                    self.cleaned_data['username'] = candidate.username
+                    break
+            username = self.cleaned_data['username']
+        if username and password:
+            inactive = User.objects.filter(username=username, is_active=False).first()
+            if inactive is not None and inactive.check_password(password):
+                self.inactive_user = inactive
+                raise ValidationError("Your account is not activated yet.", code='inactive')
+        return super().clean()
 
-        print('user',user)
-        if user is not None and not user.is_active:
-            print('activate brah')
-            raise ValidationError("Your account is not activated yet.")
-        return username
 
 class CustomLoginView(auth_views.LoginView):
     authentication_form = CustomAuthenticationForm
 
-    def dispatch(self, request, *args, **kwargs):
-        print('dis')
-        try:
-            print('ok')
-            return super().dispatch(request, *args, **kwargs)
-        except PermissionDenied as e:
-            print('pasok')
-            messages.error(self.request, str(e))
-            return self.form_invalid(self.get_form())
-
-    def form_valid(self, form):
-        print('not perm a')
-
-        username = form.cleaned_data['username']
-        password = form.cleaned_data['password']
-        try:
-            user = authenticate(username=username, password=password)
-        except Exception as e:
-            print(e)
-            return self.form_invalid(form)
-        #user = authenticate(username=username, password=password)
-        print('not perm')
-
-        if user is not None and not user.is_active:
-            print('perm')
-            raise PermissionDenied("Your account is not activated yet.")
-        try:
-            return super().form_valid(form)
-        except PermissionDenied as e:
-            print('ret')
-            return self.render_to_response(
-                self.get_context_data(form=form, permission_denied=str(e))
-            )
-        #return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context.get('form')
+        context['inactive_user'] = getattr(form, 'inactive_user', None)
+        context.update(accounts.antibot_context())
+        return context
 
     def get_success_url(self):
         #honour a safe ?next= (e.g. coming back to the Premium page)
@@ -167,51 +147,35 @@ class ActivateView(View):
 class RegisterView(View):
     def get(self, request):
         form = RegistrationForm()
-        return render(request, 'register.html', {'form': form})
+        return render(request, 'register.html', {'form': form, **accounts.antibot_context()})
 
     def post(self, request):
         form = RegistrationForm(request.POST)
+        context = {'form': form, **accounts.antibot_context()}
+        ip = access.hash_ip(access.client_ip(request))
+        if accounts.looks_like_bot(request.POST) or accounts.signups_exhausted(ip):
+            # no account and no email, but the same page a person would see
+            return redirect('account_activation_sent')
         if form.is_valid():
             username = form.cleaned_data.get('username')
             if User.objects.filter(username=username).exists():
                 form.add_error('username', 'This username is already taken')
-                return render(request, 'register.html', {'form': form})
+                return render(request, 'register.html', context)
 
             email = form.cleaned_data.get('email')
+            if User.objects.filter(email__iexact=email).exists():
+                context['email_taken'] = email
+                return render(request, 'register.html', context)
+
             password1 = form.cleaned_data.get('password1')
-            password2 = form.cleaned_data.get('password2')
-
-            if password1 and password2 and password1 != password2:
-                form.add_error(None, "Passwords don't match")
-                return render(request, 'register.html', {'form': form})
-
             user = User.objects.create_user(username=username, email=email, password=password1)
             user.is_active = False
             user.save()
-
-            current_site = get_current_site(request)
-            mail_subject = 'Activate your account.'
-            print('user.pk',user.pk)
-            uid=urlsafe_base64_encode(force_bytes(user.pk))
-            token=generate_token.make_token(user)
-            print('uid1',uid)
-            print('token1',token)
-            print('current_site.domain',current_site.domain)
-            message = render_to_string('acc_active_email.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': uid,#urlsafe_base64_encode(force_bytes(user.pk)).decode(),
-                'token': token,
-            })
-            to_email = email
-            email = EmailMessage(mail_subject, message, to=[to_email])
-            email.content_subtype = "html"
-
-            email.send()
-
+            accounts.count_signup(ip)
+            accounts.send_login_link(request, user)
             return redirect('account_activation_sent')
 
-        return render(request, 'register.html', {'form': form})
+        return render(request, 'register.html', context)
 
 
 def logout_view(request):

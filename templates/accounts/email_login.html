@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Log in with an email link' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="account-box">
+  <h1>{% trans 'Log in with an email link' %}</h1>
+  <p class="muted">{% trans 'Enter the email address of your account. We will send you a link that logs you in, no password needed. It also activates an account that is not activated yet.' %}</p>
+  <form method="post" action="{% url 'email_login' %}">
+    {% csrf_token %}
+    {% include 'accounts/_antibot.html' %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    {% if form.email.errors %}<p class="error">{% trans 'Enter a valid email address.' %}</p>{% endif %}
+    <input type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="{% trans 'Email address' %}" required autofocus>
+    <button type="submit">{% trans 'Send me a login link' %}</button>
+  </form>
+  <p><small><a href="{% url 'login' %}">{% trans 'Log in with a password' %}</a> · <a href="{% url 'register' %}">{% trans 'Register' %}</a></small></p>
+</div>
+{% endblock %}

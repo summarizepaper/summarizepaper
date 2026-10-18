@@ -11,7 +11,8 @@
   <style>
   /* Style for the form container */
   .form-container {
-    width: 500px;
+    max-width: 500px;
+    box-sizing: border-box;
     margin: auto;
     margin-top: 40px;
     text-align: center;
@@ -67,10 +68,18 @@
 <div class="form-container">
   <!-- Form header -->
   <h1 class="form-header">{% trans 'Login' %}</h1>
-  {% for message in messages %}
-  <p style="color:#d93025;">{% if 'not activated' in message.message %}{% trans 'Your account is not activated yet. Click the link in the activation email we sent you.' %}{% else %}{{ message }}{% endif %}</p>
-  {% endfor %}
-  {% if form.non_field_errors %}
+  {% if inactive_user %}
+  <div style="background:#fff8e1;border:1px solid #fbbc05;border-radius:6px;padding:12px;margin-bottom:20px;">
+    <p style="margin-top:0;">{% trans 'Your account is not activated yet. We can send you a new activation link.' %}</p>
+    <form method="post" action="{% url 'email_login' %}">
+      {% csrf_token %}
+      {% include 'accounts/_antibot.html' %}
+      <input type="hidden" name="email" value="{{ inactive_user.email }}">
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <input type="submit" class="form-submit" style="background:#34a853;" value="{% trans 'Resend the activation email' %}">
+    </form>
+  </div>
+  {% elif form.non_field_errors %}
   <p style="color:#d93025;">{% trans 'Wrong username or password.' %}</p>
   {% endif %}
 
@@ -78,7 +87,7 @@
   <form method="post">
     {% csrf_token %}
     <!-- Username field -->
-    <input type="text" class="form-input" placeholder="{% trans 'Username' %}" name="username">
+    <input type="text" class="form-input" placeholder="{% trans 'Username or email' %}" name="username">
     <!-- Password field -->
     <input type="password" class="form-input" placeholder="{% trans 'Password' %}" name="password">
     <!-- Submit button -->
@@ -86,23 +95,14 @@
 
   </form>
   <p style="margin-top: 20px;">
+    <a href="{% url 'email_login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" style="text-decoration: none;">{% trans 'Log in with an email link (no password)' %}</a>
+  </p>
+  <p style="margin-top: 20px;">
     {% trans 'No account yet?' %} <a href="{% url 'register' %}" style="text-decoration: none;">{% trans 'Register' %}</a>
   </p>
   <p style="margin-top: 20px;">
     <small><a href="{% url 'password_reset' %}" style="text-decoration: none;">{% trans 'Lost your password?' %}</a></small>
   </p>
-  {% if form.errors %}
-      <ul>
-        {% for field in form %}
-          {% for error in field.errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-        {% endfor %}
-        {% for error in form.non_field_errors %}
-          <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
 </div>
 
 {% endblock %}

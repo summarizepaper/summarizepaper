@@ -1,0 +1,10 @@
+{% load i18n %}{% blocktrans with name=user.username %}Hello {{ name }},{% endblocktrans %}
+
+{% if activation %}{% trans 'Click this link to activate your SummarizePaper account and log in:' %}{% else %}{% trans 'Click this link to log in to SummarizePaper:' %}{% endif %}
+
+{{ link }}
+
+{% blocktrans %}The link works once and for {{ hours }} hours. If you did not ask for it, ignore this email.{% endblocktrans %}
+
+{% trans 'The SummarizePaper team' %}
+https://www.summarizepaper.com

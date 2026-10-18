@@ -1,0 +1,1 @@
+{% load i18n %}{% if activation %}{% trans 'Activate your SummarizePaper account' %}{% else %}{% trans 'Your SummarizePaper login link' %}{% endif %}

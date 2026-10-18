@@ -557,3 +557,133 @@ class DigestRateLimitTests(TestCase):
             self.assertEqual(digest.run(now=at(7)), digest.MAX_EMAILS_PER_RUN)
             self.assertEqual(digest.run(now=at(8)), 3)  # the rest go out the next hour
         self.assertEqual(len(mail.outbox), digest.MAX_EMAILS_PER_RUN + 3)
+
+
+class KeyPointTests(TestCase):
+    RAW = ('Voici les points clés :\n\n'
+           '- **Nature de l’étude :** il s’agit d’une étude de faisabilité.\n'
+           '- **Performances envisagées :** 200 à 300 antennes, **0,3 µJy par faisceau**.\n'
+           '* Point without label <script>x</script>\n'
+           '3. Numbered point.')
+
+    def test_markdown_is_removed_when_stored(self):
+        self.assertEqual(summarizer_utils.keypoints.clean_points(self.RAW), [
+            'Nature de l’étude : il s’agit d’une étude de faisabilité.',
+            'Performances envisagées : 200 à 300 antennes, 0,3 µJy par faisceau.',
+            'Point without label <script>x</script>',
+            'Numbered point.',
+        ])
+
+    def test_old_markdown_points_render_with_bold_label(self):
+        from summarizer.templatetags.seo import keypoint
+        self.assertEqual(keypoint('- **Nature de l’étude :** il s’agit d’une étude.'),
+                         '<strong>Nature de l’étude :</strong> il s’agit d’une étude.')
+        self.assertEqual(keypoint('Point <script>x</script>'), 'Point &lt;script&gt;x&lt;/script&gt;')
+        self.assertEqual(keypoint('The ratio is 3.5: high'), 'The ratio is 3.5: high')
+
+
+class AccountTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def stamp(self, age=10):
+        import time
+        from django.core import signing
+        from summarizer import accounts
+        return signing.dumps(time.time() - age, salt=accounts.STAMP_SALT)
+
+    def register(self, **extra):
+        data = {'username': 'newbie', 'email': 'new@example.org', 'password1': 'Abcdef1!x',
+                'password2': 'Abcdef1!x', 'form_stamp': self.stamp()}
+        data.update(extra)
+        return Client().post('/en/register/', data)
+
+    def link_from_mail(self):
+        from django.core import mail
+        import re
+        return re.search(r'http\S+/login/link/\S+/', mail.outbox[-1].body).group(0)
+
+    def test_signup_sends_a_one_time_activation_link(self):
+        from django.core import mail
+        r = self.register()
+        self.assertEqual(r.status_code, 302)
+        user = User.objects.get(username='newbie')
+        self.assertFalse(user.is_active)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Activate', mail.outbox[0].subject)
+        path = self.link_from_mail().split('://', 1)[1].split('/', 1)[1]
+        client = Client()
+        r = client.get('/' + path)  # a mail scanner opening the link changes nothing
+        self.assertContains(r, 'Activate and log me in')
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+        r = client.post('/' + path)
+        self.assertEqual(r['Location'], '/en/?activated=True')
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+        self.assertEqual(int(client.session['_auth_user_id']), user.pk)
+        self.assertEqual(Client().post('/' + path).status_code, 400)
+
+    def test_bots_get_no_account(self):
+        from django.core import mail
+        self.register(website='http://spam.example')
+        self.register(username='fast', form_stamp=self.stamp(age=0))
+        self.register(username='nostamp', form_stamp='')
+        self.assertFalse(User.objects.exists())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_email_already_used(self):
+        User.objects.create_user('first', 'new@example.org', 'pw', is_active=False)
+        r = self.register(email='NEW@example.org')
+        self.assertContains(r, 'already uses this email')
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_inactive_login_offers_a_new_activation_email(self):
+        User.objects.create_user('sleepy', 'sleepy@example.org', 'pw-123456', is_active=False)
+        r = Client().post('/en/login/', {'username': 'sleepy', 'password': 'pw-123456'})
+        self.assertContains(r, 'Resend the activation email')
+        self.assertContains(r, 'sleepy@example.org')
+        r = Client().post('/en/login/', {'username': 'sleepy', 'password': 'wrong'})
+        self.assertNotContains(r, 'Resend the activation email')
+        self.assertNotContains(r, 'sleepy@example.org')
+
+    def test_login_with_email_address(self):
+        User.objects.create_user('awake', 'Awake@example.org', 'pw-123456')
+        r = Client().post('/en/login/', {'username': 'awake@example.org', 'password': 'pw-123456'})
+        self.assertEqual(r.status_code, 302)
+
+    def test_email_link_login(self):
+        from django.core import mail
+        User.objects.create_user('awake', 'awake@example.org', 'pw-123456')
+        r = Client().post('/en/login/email/', {'email': 'awake@example.org', 'form_stamp': self.stamp(),
+                                                'next': '/en/premium/'})
+        self.assertContains(r, 'Check your email')
+        link = self.link_from_mail()
+        self.assertIn('?next=/en/premium/', mail.outbox[0].body)
+        path = '/' + link.split('://', 1)[1].split('/', 1)[1]
+        r = Client().post(path)
+        self.assertEqual(r['Location'], '/en/premium/')
+
+    def test_unknown_email_and_rate_limit(self):
+        from django.core import mail
+        from summarizer import accounts
+        r = Client().post('/en/login/email/', {'email': 'nobody@example.org', 'form_stamp': self.stamp()})
+        self.assertContains(r, 'Check your email')
+        User.objects.create_user('awake', 'awake@example.org', 'pw-123456')
+        for _ in range(accounts.LINKS_PER_EMAIL_PER_HOUR + 2):
+            Client().post('/en/login/email/', {'email': 'awake@example.org', 'form_stamp': self.stamp()})
+        self.assertEqual(len(mail.outbox), accounts.LINKS_PER_EMAIL_PER_HOUR)
+
+    def test_offsite_next_is_ignored(self):
+        User.objects.create_user('awake', 'awake@example.org', 'pw-123456')
+        Client().post('/en/login/email/', {'email': 'awake@example.org', 'form_stamp': self.stamp(),
+                                           'next': 'https://evil.example/'})
+        self.assertNotIn('evil', self.link_from_mail())
+
+    def test_form_errors_do_not_use_the_signup_quota(self):
+        from summarizer import accounts
+        for _ in range(accounts.SIGNUPS_PER_IP_PER_DAY + 2):
+            self.register(password2='mismatch')
+        self.register()
+        self.assertTrue(User.objects.filter(username='newbie').exists())

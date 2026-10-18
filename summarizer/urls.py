@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import views, billing, digest
+from . import views, billing, digest, accounts
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -35,6 +35,8 @@ urlpatterns = [
     path("premium/portal/", billing.portal, name="premium_portal"),
     #path('login/', auth_views.LoginView.as_view(), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
+    path('login/email/', accounts.email_login, name='email_login'),
+    path('login/link/<str:token>/', accounts.login_link, name='login_link'),
     path('logout/', logout_view, name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'), name='password_reset'),

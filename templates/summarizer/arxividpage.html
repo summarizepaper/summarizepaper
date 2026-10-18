@@ -847,7 +847,7 @@
   <div class="key-points-body">
     <ul>
       {% for point in notes2 %}
-      <li>{{ point }}</li>
+      <li>{{ point|keypoint }}</li>
       {% endfor %}
     </ul>
   </div>
@@ -975,7 +975,7 @@
         {% if sumpaper.notes %}
         <ul style="list-style: none;padding-left: 20px; text-indent: -10px;">
         {% for note in notes %}
-          <li>{{ note }}</li>
+          <li>{{ note|keypoint }}</li>
         {% endfor %}
         </ul>
         {% else %}{% trans 'The key points are not ready yet' %}{% endif %}

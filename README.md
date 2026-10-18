@@ -24,6 +24,7 @@ Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL o
 | `summarizer/access.py` | Client IP, paid status, quotas (never trusts the browser) |
 | `summarizer/billing.py` | Stripe Checkout, Customer Portal, webhook |
 | `summarizer/digest.py` | Daily digest selection, blurbs and emails |
+| `summarizer/accounts.py` | Email login links (also activate new accounts), signup bot checks |
 
 ## Local setup :floppy_disk:
 

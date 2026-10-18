@@ -37,8 +37,9 @@
 
 {% block content %}
 <div class="container">
-<h2>Activation email sent</h2>
-  <p>An activation email has been sent. Please follow the instructions in the email to activate your account.</p>
+<h2>{% trans 'Activation email sent' %}</h2>
+  <p>{% trans 'We have sent you an email with an activation link. Click it to activate your account. It can take a few minutes; also look in your spam folder.' %}</p>
+  <p><small>{% trans 'Nothing received?' %} <a href="{% url 'email_login' %}">{% trans 'Get a new link' %}</a></small></p>
 </div>
 {% endblock %}
 

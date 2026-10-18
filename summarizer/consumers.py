@@ -3,7 +3,7 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant
+from summarizer import access, assistant, keypoints
 import logging
 
 logger = logging.getLogger(__name__)
@@ -471,7 +471,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 for key_point in notes:
                     print('note',key_point)
 
-                c=asyncio.create_task(self.send_message_notes(notes))
+                shown = notes if isinstance(notes, str) else [keypoints.point_html(n) for n in notes]
+                c=asyncio.create_task(self.send_message_notes(shown))
                 await c
 
 

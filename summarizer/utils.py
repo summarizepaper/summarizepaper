@@ -2,6 +2,7 @@ from ipaddress import ip_address
 import time
 import requests
 from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore, Author, PaperAuthor
+from . import keypoints
 from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
@@ -1060,7 +1061,7 @@ def summary_pdf(arxiv_id,language):
             notestr=''
             if notesarr:
                 for note in notesarr:
-                    notestr+='-'+note+'\n'
+                    notestr+='- '+keypoints.clean_point(note)+'\n'
                     print('n',note)
 
             if sumpaper.notes:
@@ -1645,7 +1646,9 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
     print('language2',language2)
 
     #Extract the most important key points from the following text
-    prompt3 = f"Extract the most important key points from the following text and use bullet points for each of them: {summary}"
+    prompt3 = ("Extract the most important key points from the following text. Write one key point per line, "
+               "each line starting with '- '. Plain text only: no markdown, no asterisks, no title. A point may "
+               "start with a short label followed by a colon. Text: " + summary)
     print('key sum',prompt3)
 
     """
@@ -1734,16 +1737,9 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
     if model in (MODEL_FREE, MODEL_PAID) or p:
-        print('icccciiiiii',response3["choices"][0]["message"]["content"])
-        key_points = response3["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
+        key_points = keypoints.clean_points(response3["choices"][0]["message"]["content"])
     else:
-        print('icccciiiiii',response3["choices"][0]["text"])
-        key_points = response3["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
-
-    #remove if starts with 'Key points:', '',
-    if key_points[1] == "":
-        print('delllll',key_points)
-        del key_points[0:2]
+        key_points = keypoints.clean_points(response3["choices"][0]["text"])
 
     print('key_points',key_points)
 
