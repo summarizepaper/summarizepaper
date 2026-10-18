@@ -706,7 +706,7 @@ class GoogleLoginTests(TestCase):
     def test_new_google_user_gets_an_active_account(self):
         client = Client()
         r = self.callback(client, self.start(client), {'email': 'Jane.Doe@gmail.com', 'email_verified': True})
-        self.assertEqual(r['Location'], '/fr/?activated=True')
+        self.assertContains(r, 'content="0;url=/fr/?activated=True"')
         user = User.objects.get(email='jane.doe@gmail.com')
         self.assertTrue(user.is_active)
         self.assertFalse(user.has_usable_password())
@@ -716,7 +716,7 @@ class GoogleLoginTests(TestCase):
         old = User.objects.create_user('jane', 'jane@gmail.com', 'pw', is_active=False)
         client = Client()
         r = self.callback(client, self.start(client, '/fr/premium/'), {'email': 'jane@gmail.com', 'email_verified': True})
-        self.assertEqual(r['Location'], '/fr/premium/')
+        self.assertContains(r, 'window.location.replace("/fr/premium/")')
         old.refresh_from_db()
         self.assertTrue(old.is_active)
         self.assertEqual(User.objects.count(), 1)
@@ -728,6 +728,12 @@ class GoogleLoginTests(TestCase):
         r = self.callback(client, self.start(client), {'email': 'a@b.c', 'email_verified': False})
         self.assertEqual(r.status_code, 400)
         self.assertFalse(User.objects.exists())
+
+    def test_next_cannot_break_out_of_the_script(self):
+        client = Client()
+        r = self.callback(client, self.start(client, '/fr/%3C/script%3E%3Cscript%3Ealert(1)'),
+                          {'email': 'jane@gmail.com', 'email_verified': True})
+        self.assertNotContains(r, '</script><script>')
 
     def test_username_collision(self):
         User.objects.create_user('jane', 'other@example.org', 'pw')

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 13:13+0000\n"
+"POT-Creation-Date: 2026-10-18 13:20+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -167,6 +167,14 @@ msgstr ""
 #: templates/accounts/email_login_sent.html:15
 msgid "Try another address"
 msgstr "Essayer une autre adresse"
+
+#: templates/accounts/google_done.html:10
+msgid "You are logged in."
+msgstr "Vous êtes connecté."
+
+#: templates/accounts/google_done.html:10
+msgid "Continue"
+msgstr "Continuer"
 
 #: templates/accounts/google_error.html:4
 #: templates/accounts/google_error.html:12

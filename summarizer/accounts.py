@@ -5,6 +5,7 @@ working as soon as it has been used (logging in updates last_login) and after
 LINK_MAX_AGE. Opening the link shows a button and only the POST logs in, so
 mail scanners that prefetch links cannot spend it.
 """
+import json
 import logging
 import re
 import secrets
@@ -268,6 +269,9 @@ def google_callback(request):
             return render(request, 'accounts/google_error.html', status=400)
         user, fresh = google_user(email)
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-    if pending.get('next'):
-        return redirect(pending['next'])
-    return redirect('/%s/%s' % (lang, '?activated=True' if fresh else ''))
+        target = pending.get('next') or '/%s/%s' % (lang, '?activated=True' if fresh else '')
+        # Not a redirect: browsers may leave the new session cookie off the next hop of a
+        # redirect chain that started on accounts.google.com. A page that moves on by itself
+        # starts a same-site navigation, which carries the cookie.
+        return render(request, 'accounts/google_done.html',
+                      {'target': target, 'target_json': json.dumps(target).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026'), 'lang': lang})
