@@ -830,6 +830,9 @@ class ReactivationTests(TestCase):
         self.inactive('zBAybMjDxpQcJ', 'victim@yahoo.com')       # bombing victim
         self.inactive('taken', 'active@example.org')
         User.objects.create_user('activeone', 'active@example.org', 'pw')
+        fresh = self.inactive('just.signed.up', 'new@example.org', 0)  # still has a working activation link
+        fresh.date_joined = reactivation.CUTOFF + timezone.timedelta(hours=1)
+        fresh.save()
         self.assertEqual(reactivation.candidates(), [real])
         self.assertEqual(reactivation.run('https://www.summarizepaper.com', 10), 1)
         self.assertEqual(reactivation.run('https://www.summarizepaper.com', 10), 0)

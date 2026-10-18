@@ -10,6 +10,7 @@ username does not look like such a random string.
 Each address gets at most one email (ReactivationEmail), with a 30-day
 activation link and a link that deletes the account.
 """
+import datetime
 import logging
 import re
 
@@ -30,6 +31,8 @@ from .models import ReactivationEmail
 logger = logging.getLogger(__name__)
 
 DELETE_SALT = 'summarizer.reactivation-delete'
+# signups from this date on got a working activation email (accounts.py)
+CUTOFF = datetime.datetime(2026, 10, 18, tzinfo=datetime.timezone.utc)
 LANG = 'en'
 
 
@@ -52,7 +55,7 @@ def candidates():
     taken = {e.lower() for e in User.objects.filter(is_active=True).values_list('email', flat=True)}
     already = {e.lower() for e in ReactivationEmail.objects.values_list('email', flat=True)}
     seen, chosen = set(), []
-    for user in User.objects.filter(is_active=False, last_login__isnull=True).exclude(email='').order_by('-date_joined'):
+    for user in User.objects.filter(is_active=False, last_login__isnull=True, date_joined__lt=CUTOFF).exclude(email='').order_by('-date_joined'):
         email = user.email.strip().lower()
         if email in seen or email in taken or email in already or looks_random(user.username, user.email):
             continue
