@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import views, billing, digest, accounts, reactivation
+from . import views, billing, digest, accounts, reactivation, guides
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -23,6 +23,9 @@ urlpatterns = [
     path("chat/", views.chat, name="chat"),
     path("arxiv-api/", views.arxiv_api, name="arxiv_api"),
     path("faq/", views.faq, name="faq"),
+    path("guides/", guides.guide_index, name="guides"),
+    path("guides/<slug:slug>/", guides.guide_detail, name="guide"),
+    path("author/quentin-kral/", TemplateView.as_view(template_name="summarizer/author.html"), name="author"),
     path("contact/", views.contact, name="contact"),
     path("history/", views.history, name="history"),
     path("privacy/", views.privacy, name="privacy"),

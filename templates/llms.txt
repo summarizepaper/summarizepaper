@@ -1,4 +1,4 @@
-# SummarizePaper
+{% autoescape off %}# SummarizePaper
 
 > SummarizePaper (summarizepaper.com) publishes AI summaries of arXiv research papers, in English and French. Each paper page gives a detailed summary, the key points, a lay summary anyone can understand, a blog-style article, related papers and the BibTeX entry, all generated from the full text of the paper. It is free to read and is run by an astrophysics researcher, Quentin Kral.
 
@@ -11,9 +11,14 @@ Paper pages follow the pattern `https://www.summarizepaper.com/<lang>/arxiv-id/<
 - [FAQ](https://www.summarizepaper.com/en/faq/): how the summaries are made, limits, Premium, digest, exports, how to cite
 - [About](https://www.summarizepaper.com/en/about/): who runs the site and why
 - [Chat with papers](https://www.summarizepaper.com/en/chat/): an AI assistant that answers questions from the full text of one or several papers
+- [About the author](https://www.summarizepaper.com/en/author/quentin-kral/): Quentin Kral, astronomer at the Paris Observatory
 - [Daily digest](https://www.summarizepaper.com/en/digest/): a free weekday email with new papers in chosen arXiv categories, each with a two-sentence summary
 
-## Citation
+{% if guides %}## Guides
+
+{% for guide in guides %}- [{{ guide.title }}]({{ guide.url }}): {{ guide.description }}
+{% endfor %}
+{% endif %}## Citation
 
 Cite a summary with its paper page URL, for example https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/, and the site as "SummarizePaper, https://www.summarizepaper.com, Quentin Kral". The BibTeX entry for the site is on the FAQ page. For scientific claims, cite the original arXiv paper.
 
@@ -22,3 +27,4 @@ Cite a summary with its paper page URL, for example https://www.summarizepaper.c
 - [Premium](https://www.summarizepaper.com/en/premium/): the most capable model and higher daily limits, billed monthly or yearly
 - [Privacy policy](https://www.summarizepaper.com/en/privacy/)
 - [Source code](https://github.com/summarizepaper/summarizepaper): the site is open source
+{% endautoescape %}

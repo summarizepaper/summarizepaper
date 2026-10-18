@@ -46,8 +46,8 @@ Aucune page éditoriale (pas de blog). Le contenu indexable existant est :
 - Title, meta description, canonical : OK sur les pages article ; meta description de l'accueil générique (« cutting-edge technology »)
 - Sitemap vérifié le : 2026-10-18 — OK, index déclaré dans robots.txt, 10 037 pages article
 - Bots IA autorisés vérifié le : 2026-10-18 — OK (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, CCBot en 200, sans challenge)
-- JSON-LD : `ScholarlyArticle` sur les pages article ; **manque `Organization` et `WebSite` au niveau du site** (aucun JSON-LD sur l'accueil)
-- Page auteur : **manquante**
+- JSON-LD : `ScholarlyArticle` sur les pages article ; `Organization` + `WebSite` sur toutes les pages (2026-10-18)
+- Page auteur : OK, /en/author/quentin-kral/ (2026-10-18)
 - hreflang : OK sur les pages article
 - llms.txt : OK (2026-10-18), sans section « Citation » pour l'instant
-- Blocages ouverts : aucun blocage bloquant. À corriger avant la production en masse : (1) pas de dossier ni de vue pour publier des pages éditoriales ; (2) schema `Organization` / `WebSite` ; (3) page auteur ; (4) Search Console à configurer.
+- Blocages ouverts : aucun. Reste : meta description de l'accueil (plan §0.7).

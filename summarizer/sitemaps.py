@@ -2,6 +2,7 @@ from django.contrib.sitemaps import Sitemap
 from django.db.models import Q
 from django.shortcuts import reverse
 
+from . import guides
 from .models import SummaryPaper
 
 
@@ -12,7 +13,10 @@ class StaticViewSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        return ['summarize','about','faq','contact','privacy','legal','digest','premium']
+        items = ['summarize','about','author','faq','contact','privacy','legal','digest','premium']
+        if guides.published('en'):
+            items.append('guides')
+        return items
 
     def location(self, item):
         return reverse(item)
@@ -40,3 +44,18 @@ class SummarizedPaperSitemap(Sitemap):
 
     def lastmod(self, item):
         return item.updated
+
+
+class GuideSitemap(Sitemap):
+    """Published Markdown guides, every language."""
+    priority = 0.8
+    protocol = 'https'
+
+    def items(self):
+        return guides.published()
+
+    def location(self, item):
+        return '/%s/guides/%s/' % (item['lang'], item['slug'])
+
+    def lastmod(self, item):
+        return item.get('updated')

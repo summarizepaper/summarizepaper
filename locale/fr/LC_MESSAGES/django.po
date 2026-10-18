@@ -2612,3 +2612,115 @@ msgstr "ID Arxiv :"
 
 #~ msgid "The 10-yrs old summary is not ready yet"
 #~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
+
+#: templates/summarizer
+msgid "Guides"
+msgstr "Guides"
+
+#: templates/summarizer
+msgid "By"
+msgstr "Par"
+
+#: templates/summarizer
+msgid "Updated"
+msgstr "Mis à jour le"
+
+#: templates/summarizer
+msgid "Draft"
+msgstr "Brouillon"
+
+#: templates/summarizer
+msgid "Sources"
+msgstr "Sources"
+
+#: templates/summarizer
+msgid "Profiles"
+msgstr "Profils"
+
+#: templates/summarizer
+msgid "Guides to reading and following arXiv research"
+msgstr "Guides pour lire et suivre la recherche sur arXiv"
+
+#: templates/summarizer
+msgid ""
+"Guides by SummarizePaper on keeping up with arXiv, reading research papers "
+"faster and choosing AI tools for research."
+msgstr ""
+"Les guides de SummarizePaper pour suivre arXiv, lire les articles de "
+"recherche plus vite et choisir ses outils d'IA pour la recherche."
+
+#: templates/summarizer
+msgid "No guides yet."
+msgstr "Aucun guide pour l'instant."
+
+#: templates/summarizer
+msgid "Quentin Kral, astronomer and creator of SummarizePaper"
+msgstr "Quentin Kral, astronome et créateur de SummarizePaper"
+
+#: templates/summarizer
+msgid ""
+"Quentin Kral is an astronomer at the Paris Observatory working on exoplanets"
+" and debris disks. He created and runs SummarizePaper."
+msgstr ""
+"Quentin Kral est astronome à l'Observatoire de Paris et travaille sur les "
+"exoplanètes et les disques de débris. Il a créé SummarizePaper et le fait "
+"vivre."
+
+#: templates/summarizer
+msgid "Astronomer at the Paris Observatory, creator of SummarizePaper"
+msgstr "Astronome à l'Observatoire de Paris, créateur de SummarizePaper"
+
+#: templates/summarizer
+msgid ""
+"Quentin Kral has been an astronomer (astronome adjoint) at the Paris "
+"Observatory since 2018. His research covers exoplanets, the Solar System and"
+" circumstellar disks, in particular debris disks, as well as the detection "
+"of exomoons and the origin of water on Earth."
+msgstr ""
+"Quentin Kral est astronome adjoint à l'Observatoire de Paris depuis 2018. "
+"Ses recherches portent sur les exoplanètes, le Système solaire et les "
+"disques circumstellaires, en particulier les disques de débris, ainsi que "
+"sur la détection d'exolunes et l'origine de l'eau sur Terre."
+
+#: templates/summarizer
+msgid ""
+"He studied at the École normale supérieure (Ulm) and the Paris Observatory, "
+"where he obtained his PhD in 2014, followed by about four years as a "
+"postdoctoral researcher at Cambridge. His thesis received the PhD prize of "
+"the French Society of Astronomy and Astrophysics (SF2A) in 2015, and he "
+"obtained his habilitation (HDR) in 2024. He is in charge of the "
+"Encyclopaedia of exoplanetary systems."
+msgstr ""
+"Il a étudié à l'École normale supérieure (Ulm) et à l'Observatoire de Paris,"
+" où il a soutenu sa thèse en 2014, puis a été chercheur postdoctoral à "
+"Cambridge pendant environ quatre ans. Sa thèse a reçu le prix de thèse de la"
+" Société française d'astronomie et d'astrophysique (SF2A) en 2015, et il a "
+"obtenu son habilitation à diriger des recherches (HDR) en 2024. Il est "
+"responsable de l'Encyclopédie des planètes extrasolaires."
+
+#: templates/summarizer
+msgid "Why SummarizePaper"
+msgstr "Pourquoi SummarizePaper"
+
+#: templates/summarizer
+msgid ""
+"Quentin created SummarizePaper in 2023 and develops it alone. His goal is to"
+" make complex research easier to access, so that everyone, researchers or "
+"not, can benefit from research findings and check information at its source."
+msgstr ""
+"Quentin a créé SummarizePaper en 2023 et le développe seul. Son objectif : "
+"rendre la recherche complexe plus accessible, pour que chacun, chercheur ou "
+"non, profite des résultats de la recherche et puisse vérifier l'information "
+"à la source."
+
+#: templates/summarizer
+msgid "Encyclopaedia of exoplanetary systems"
+msgstr "Encyclopédie des planètes extrasolaires"
+
+#: templates/summarizer
+msgid "SummarizePaper source code"
+msgstr "Code source de SummarizePaper"
+
+#: templates/summarizer
+msgid "More about the author"
+msgstr "En savoir plus sur l'auteur"

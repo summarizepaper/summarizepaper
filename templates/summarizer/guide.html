@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ guide.title }} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{{ guide.description }}" />
+  <link rel="canonical" href="{{ guide.url }}" />
+  {% for alt in alternates %}<link rel="alternate" hreflang="{{ alt.lang }}" href="{{ alt.url }}" />
+  {% endfor %}
+  {% if guide.draft %}<meta name="robots" content="noindex" />{% endif %}
+  <script type="application/ld+json">{{ json_ld|safe }}</script>
+{% endblock %}
+
+{% block content %}
+<article class="page prose">
+  <header class="page-header">
+    <p class="muted"><a href="/{{ LANGUAGE_CODE }}/guides/">{% trans 'Guides' %}</a></p>
+    <h1>{{ guide.title }}</h1>
+    <p class="lead"><small>
+      {% trans 'By' %} <a href="/{{ LANGUAGE_CODE }}/author/quentin-kral/">Quentin Kral</a>
+      · {% trans 'Updated' %} <time datetime="{{ guide.updated|date:'Y-m-d' }}">{{ guide.updated|date:'Y-m-d' }}</time>
+      {% if guide.draft %}· <strong>{% trans 'Draft' %}</strong>{% endif %}
+    </small></p>
+  </header>
+
+  {{ guide.html|safe }}
+
+  {% if guide.faq %}
+  <h2>{% trans 'FAQ' %}</h2>
+  {% for item in guide.faq %}
+    <h3>{{ item.q }}</h3>
+    <p>{{ item.a }}</p>
+  {% endfor %}
+  {% endif %}
+
+  {% if guide.sources %}
+  <h2>{% trans 'Sources' %}</h2>
+  <ul>
+    {% for source in guide.sources %}<li><a href="{{ source.url }}">{{ source.label }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</article>
+{% endblock %}

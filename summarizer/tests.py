@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.models import User
 from django.contrib.sessions.backends.db import SessionStore
 from django.test import TestCase, RequestFactory
@@ -975,3 +976,85 @@ class VoteTests(TestCase):
         self.assertRedirects(r, '/en/arxiv-id/2101.00003v1/', fetch_redirect_response=False)
         r = c.post('/en/vote/2101.00003v1/', {'direction': 'down'})
         self.assertRedirects(r, '/en/arxiv-id/2101.00003v1/vote#totvote', fetch_redirect_response=False)
+
+
+class GuideTests(TestCase):
+    GUIDE = """---
+title: Keeping up with arXiv
+description: How to follow new papers.
+date: 2026-10-20
+faq:
+  - q: Is it free?
+    a: Yes.
+sources:
+  - label: arXiv stats
+    url: https://arxiv.org/stats
+---
+Read the **listings** <b>daily</b>.
+"""
+
+    def setUp(self):
+        import tempfile
+        from unittest import mock
+        from summarizer import guides
+        self.dir = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.dir, 'en'))
+        os.makedirs(os.path.join(self.dir, 'fr'))
+        self.write('en', 'keep-up', self.GUIDE)
+        patcher = mock.patch.object(guides, 'CONTENT_DIR', self.dir)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def write(self, lang, slug, text):
+        with open(os.path.join(self.dir, lang, slug + '.md'), 'w') as f:
+            f.write(text)
+
+    def test_guide_page_renders_markdown_faq_and_schema(self):
+        r = self.client.get('/en/guides/keep-up/')
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn('<strong>listings</strong>', html)
+        self.assertIn('"@type": "FAQPage"', html)
+        self.assertIn('"@type": "Article"', html)
+        self.assertIn('https://arxiv.org/stats', html)
+        self.assertNotIn('hreflang="fr"', html)
+
+    def test_missing_language_is_404(self):
+        self.assertEqual(self.client.get('/fr/guides/keep-up/').status_code, 404)
+
+    def test_both_languages_link_with_hreflang(self):
+        self.write('fr', 'keep-up', self.GUIDE.replace('Keeping up', 'Suivre'))
+        html = self.client.get('/en/guides/keep-up/').content.decode()
+        self.assertIn('hreflang="fr" href="https://www.summarizepaper.com/fr/guides/keep-up/"', html)
+
+    def test_draft_hidden_from_public_lists_and_sitemap(self):
+        self.write('en', 'wip', self.GUIDE.replace('date:', 'draft: true\ndate:'))
+        self.assertEqual(self.client.get('/en/guides/wip/').status_code, 404)
+        self.assertNotIn('/en/guides/wip/', self.client.get('/en/guides/').content.decode())
+        self.assertNotIn('wip', self.client.get('/sitemap-guides.xml').content.decode())
+        self.assertNotIn('wip', self.client.get('/llms.txt').content.decode())
+
+    def test_draft_visible_to_staff_with_noindex(self):
+        self.write('en', 'wip', self.GUIDE.replace('date:', 'draft: true\ndate:'))
+        staff = User.objects.create_user('staff', password='x', is_staff=True)
+        self.client.force_login(staff)
+        r = self.client.get('/en/guides/wip/')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('noindex', r.content.decode())
+
+    def test_published_guide_listed_in_sitemap_and_llms_txt(self):
+        self.assertIn('/en/guides/keep-up/', self.client.get('/sitemap-guides.xml').content.decode())
+        self.assertIn('- [Keeping up with arXiv](https://www.summarizepaper.com/en/guides/keep-up/)',
+                      self.client.get('/llms.txt').content.decode())
+
+    def test_bad_slug_is_404(self):
+        self.assertEqual(self.client.get('/en/guides/..%2Fsecret/').status_code, 404)
+
+
+class AuthorPageTests(TestCase):
+    def test_author_page_in_both_languages(self):
+        en = self.client.get('/en/author/quentin-kral/')
+        self.assertEqual(en.status_code, 200)
+        self.assertIn('orcid.org/0000-0001-6527-4684', en.content.decode())
+        fr = self.client.get('/fr/author/quentin-kral/')
+        self.assertIn('Observatoire de Paris depuis 2018', fr.content.decode())

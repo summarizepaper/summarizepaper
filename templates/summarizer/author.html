@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Quentin Kral, astronomer and creator of SummarizePaper' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Quentin Kral is an astronomer at the Paris Observatory working on exoplanets and debris disks. He created and runs SummarizePaper.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/author/quentin-kral/" />
+  <link rel="alternate" hreflang="en" href="https://www.summarizepaper.com/en/author/quentin-kral/" />
+  <link rel="alternate" hreflang="fr" href="https://www.summarizepaper.com/fr/author/quentin-kral/" />
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "ProfilePage",
+   "mainEntity": {"@type": "Person", "@id": "https://www.summarizepaper.com/en/author/quentin-kral/#person",
+     "name": "Quentin Kral", "url": "https://www.summarizepaper.com/en/author/quentin-kral/",
+     "jobTitle": "Astronome adjoint",
+     "worksFor": {"@type": "Organization", "name": "Observatoire de Paris"},
+     "alumniOf": [{"@type": "Organization", "name": "École normale supérieure"}, {"@type": "Organization", "name": "Observatoire de Paris"}],
+     "award": "SF2A PhD thesis prize (2015)",
+     "knowsAbout": ["Exoplanets", "Debris disks", "Planetary systems", "Solar System"],
+     "sameAs": ["https://fr.wikipedia.org/wiki/Quentin_Kral", "https://www.wikidata.org/wiki/Q116781126", "https://orcid.org/0000-0001-6527-4684"]}}
+  </script>
+{% endblock %}
+
+{% block content %}
+<div class="page prose">
+  <header class="page-header">
+    <h1>Quentin Kral</h1>
+    <p class="lead">{% trans 'Astronomer at the Paris Observatory, creator of SummarizePaper' %}</p>
+  </header>
+
+  <p>{% trans 'Quentin Kral has been an astronomer (astronome adjoint) at the Paris Observatory since 2018. His research covers exoplanets, the Solar System and circumstellar disks, in particular debris disks, as well as the detection of exomoons and the origin of water on Earth.' %}</p>
+  <p>{% trans 'He studied at the École normale supérieure (Ulm) and the Paris Observatory, where he obtained his PhD in 2014, followed by about four years as a postdoctoral researcher at Cambridge. His thesis received the PhD prize of the French Society of Astronomy and Astrophysics (SF2A) in 2015, and he obtained his habilitation (HDR) in 2024. He is in charge of the Encyclopaedia of exoplanetary systems.' %}</p>
+
+  <h2>{% trans 'Why SummarizePaper' %}</h2>
+  <p>{% trans 'Quentin created SummarizePaper in 2023 and develops it alone. His goal is to make complex research easier to access, so that everyone, researchers or not, can benefit from research findings and check information at its source.' %}</p>
+
+  <h2>{% trans 'Profiles' %}</h2>
+  <ul>
+    <li><a href="https://fr.wikipedia.org/wiki/Quentin_Kral">Wikipédia</a></li>
+    <li><a href="https://orcid.org/0000-0001-6527-4684">ORCID 0000-0001-6527-4684</a></li>
+    <li><a href="https://exoplanet.eu">{% trans 'Encyclopaedia of exoplanetary systems' %}</a></li>
+    <li><a href="https://github.com/summarizepaper/summarizepaper">{% trans 'SummarizePaper source code' %}</a></li>
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Guides to reading and following arXiv research' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Guides by SummarizePaper on keeping up with arXiv, reading research papers faster and choosing AI tools for research.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/guides/" />
+  {% if not guides %}<meta name="robots" content="noindex" />{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page prose">
+  <header class="page-header">
+    <h1>{% trans 'Guides' %}</h1>
+    <p class="lead">{% trans 'Guides by SummarizePaper on keeping up with arXiv, reading research papers faster and choosing AI tools for research.' %}</p>
+  </header>
+  {% for guide in guides %}
+    <h2><a href="/{{ LANGUAGE_CODE }}/guides/{{ guide.slug }}/">{{ guide.title }}</a></h2>
+    <p>{{ guide.description }}</p>
+  {% empty %}
+    <p class="muted">{% trans 'No guides yet.' %}</p>
+  {% endfor %}
+</div>
+{% endblock %}

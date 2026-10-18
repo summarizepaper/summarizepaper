@@ -61,7 +61,8 @@ def robots_txt(request):
 
 def llms_txt(request):
     """Plain-text overview of the site for LLM crawlers, see llmstxt.org."""
-    return render(request, 'llms.txt', content_type='text/plain; charset=utf-8')
+    from summarizer.guides import published
+    return render(request, 'llms.txt', {'guides': published('en')}, content_type='text/plain; charset=utf-8')
 
 
 

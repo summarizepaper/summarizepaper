@@ -106,13 +106,13 @@ Usage validé par le membre le 2026-10-18 : **chiffres agrégés uniquement**, j
 ## 10. Site et stack
 
 - **Framework** : Django 5.2 (templates serveur), servi par Daphne sur Heroku, derrière Cloudflare.
-- **Dossier des pages de contenu** : aucun aujourd'hui. Les seules pages de contenu sont les pages article générées (`templates/summarizer/arxividpage.html`). Un dossier de contenu éditorial est à créer (proposition : `content/en/<slug>.md` rendu par une vue Django).
-- **Format d'une page** : templates Django ; Markdown + vue à créer pour l'éditorial.
+- **Dossier des pages de contenu** : `content/guides/<lang>/<slug>.md`, servi sous `/<lang>/guides/<slug>/` par `summarizer/guides.py`. Front matter YAML : `title`, `description`, `date`, `updated`, `draft`, `faq` (liste q/a), `sources` (liste label/url). Le même slug dans `en/` et `fr/` est relié par hreflang. Les brouillons (`draft: true`) ne sont visibles que par le staff, en noindex, et restent hors du sitemap et du llms.txt.
+- **Format d'une page** : Markdown (extensions extra, toc, sane_lists), rendu par `templates/summarizer/guide.html`, qui émet le JSON-LD `Article`, `BreadcrumbList` et `FAQPage`, et affiche la FAQ et les sources.
 - **Rendu** : SSR (texte du résumé présent dans le HTML brut, vérifié le 2026-10-18).
 - **Internationalisation** : préfixes `/en/` et `/fr/` (i18n_patterns), hreflang présent sur les pages article.
 - **Sitemap** : `/sitemap.xml` (index) → `sitemap-papers.xml` (pages résumées seulement) + `sitemap-static.xml`.
 - **robots.txt autorise les bots IA** : oui (seul `/admin` interdit). GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot et CCBot reçoivent la page en 200, sans challenge Cloudflare (vérifié le 2026-10-18).
-- **Page auteur et schema author** : à créer (Quentin Kral n'est cité que dans /about/ et /faq/).
+- **Page auteur et schema author** : existe, /en/author/quentin-kral/
 - **Adaptateur choisi** : `markdown-generic` (blog Markdown maison dans Django).
 - **Exemple de page de référence** : `templates/summarizer/faq.html` (structure et mise en page du site).
 - **llms.txt** : `/llms.txt` servi depuis `templates/llms.txt` (en ligne depuis le 2026-10-18).
@@ -121,7 +121,7 @@ Usage validé par le membre le 2026-10-18 : **chiffres agrégés uniquement**, j
 
 - **Suivi de la visibilité IA** : aucun (mesure manuelle des prompts)
 - **Analytics produit** : Umami Cloud (sans cookie, depuis le 2026-10-18)
-- **Google Search Console** : non configurée (à faire)
+- **Google Search Console** : configurée par le membre le 2026-10-18 (sitemap soumis) ; pas d'accès direct pour Claude, mesure par exports
 - **Emailing** : SMTP transactionnel du site (digest, comptes) ; Lumail disponible en MCP dans la session
 - **Automatisation navigateur** : aucun
 - **Recherche de mots-clés** : aucun (expansion manuelle)
@@ -129,9 +129,9 @@ Usage validé par le membre le 2026-10-18 : **chiffres agrégés uniquement**, j
 ## 12. Auteur (E-E-A-T)
 
 - **Nom** : Quentin Kral
-- **Bio en deux lignes** : chercheur en astrophysique, créateur et seul développeur de SummarizePaper. `[À CONFIRMER : poste, institution, domaine précis]`
-- **Page auteur** : à créer (proposition : https://www.summarizepaper.com/en/about/ enrichie, ou /en/author/quentin-kral/)
-- **Profils publics à lier** (sameAs) : `[À CONFIRMER : ORCID, page institutionnelle, Google Scholar, LinkedIn, GitHub]`
+- **Bio en deux lignes** : astronome adjoint à l'Observatoire de Paris depuis 2018 (exoplanètes, disques de débris, Système solaire), docteur de l'Observatoire de Paris (2014), prix de thèse SF2A 2015, HDR 2024, responsable de l'Encyclopédie des planètes extrasolaires. Créateur et seul développeur de SummarizePaper. Source : Wikipédia FR, validée par le membre le 2026-10-18.
+- **Page auteur** : https://www.summarizepaper.com/en/author/quentin-kral/ (schema `Person`, `@id` …/#person, référencé par `Organization.founder` et par l'`author` de chaque guide)
+- **Profils publics à lier** (sameAs) : https://fr.wikipedia.org/wiki/Quentin_Kral, https://www.wikidata.org/wiki/Q116781126, https://orcid.org/0000-0001-6527-4684
 
 ## 13. Multi-produits (optionnel)
 

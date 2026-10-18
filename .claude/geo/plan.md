@@ -9,10 +9,10 @@
 |---|---|---|---|
 | 0.1 | Schema `Organization` + `WebSite` (avec SearchAction) dans `templates/base.html` | Claude | fait (2026-10-18) |
 | 0.2 | Section « Citation » dans `/llms.txt` | Claude | fait (2026-10-18) |
-| 0.3 | Configurer Google Search Console (vérification DNS via Cloudflare), soumettre `/sitemap.xml` | membre | à faire |
-| 0.4 | Valider la bio auteur et les profils `sameAs` (profil §12) | membre | à faire |
-| 0.5 | Page auteur `/en/author/quentin-kral/` avec schema `Person`, liée depuis /about/ et chaque article éditorial | Claude | après 0.4 |
-| 0.6 | Mini-blog Markdown dans Django : `content/en/<slug>.md` → `/en/guides/<slug>/`, JSON-LD `Article` + `FAQPage`, ajout au sitemap et au llms.txt | Claude | à faire |
+| 0.3 | Configurer Google Search Console (vérification DNS via Cloudflare), soumettre `/sitemap.xml` | membre | fait (2026-10-18) |
+| 0.4 | Valider la bio auteur et les profils `sameAs` (profil §12) | membre | fait (Wikipédia, 2026-10-18) |
+| 0.5 | Page auteur `/en/author/quentin-kral/` avec schema `Person`, liée depuis /about/ et chaque article éditorial | Claude | fait (2026-10-18) |
+| 0.6 | Mini-blog Markdown dans Django : `content/en/<slug>.md` → `/en/guides/<slug>/`, JSON-LD `Article` + `FAQPage`, ajout au sitemap et au llms.txt | Claude | fait (2026-10-18) |
 | 0.7 | Meta description de l'accueil réécrite (sans « cutting-edge »), alignée sur la phrase du profil §2 | Claude | à faire |
 
 ## 1. Pages à produire, par ordre de bataille
