@@ -12,6 +12,7 @@
 <div class="account-box">
   <h1>{% trans 'Log in with an email link' %}</h1>
   <p class="muted">{% trans 'Enter the email address of your account. We will send you a link that logs you in, no password needed. It also activates an account that is not activated yet.' %}</p>
+  {% include 'accounts/_google_button.html' %}
   <form method="post" action="{% url 'email_login' %}">
     {% csrf_token %}
     {% include 'accounts/_antibot.html' %}

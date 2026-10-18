@@ -42,6 +42,10 @@ STRIPE_PRICE_YEARLY = os.getenv('STRIPE_PRICE_YEARLY', '')
 LOGIN_URL = '/login/'
 
 #public address of the site, for links built outside a browser request (Stripe, emails)
+#Sign in with Google, see summarizer/accounts.py (the button is hidden while unset)
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
+
 SITE_URL = os.getenv('SITE_URL', 'https://www.summarizepaper.com' if 'ON_HEROKU' in os.environ else '')
 
 EMAIL_HOST = 'smtp.cloudmta.net'

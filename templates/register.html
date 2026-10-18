@@ -86,6 +86,7 @@
       <a href="{% url 'email_login' %}?email={{ email_taken|urlencode }}">{% trans 'Get a login link by email' %}</a>
     </p>
     {% endif %}
+    {% include 'accounts/_google_button.html' %}
 
     <div class="form-group">
         <label for="{{ form.username.id_for_label }}">Username:</label>

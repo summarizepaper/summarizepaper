@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Google sign-in failed' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="account-box">
+  <h1>{% trans 'Google sign-in failed' %}</h1>
+  <p>{% trans 'We could not log you in with Google. Please try again, or log in with an email link.' %}</p>
+  <p><a href="{% url 'login' %}">{% trans 'Login' %}</a> · <a href="{% url 'email_login' %}">{% trans 'Log in with an email link' %}</a></p>
+</div>
+{% endblock %}

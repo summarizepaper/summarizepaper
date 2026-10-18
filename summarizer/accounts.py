@@ -1,4 +1,4 @@
-"""Email login links, which also activate new accounts, and signup bot checks.
+"""Email login links, which also activate new accounts, Google sign-in, and signup bot checks.
 
 A login link carries a signed user id and the user's last_login, so it stops
 working as soon as it has been used (logging in updates last_login) and after
@@ -6,7 +6,12 @@ LINK_MAX_AGE. Opening the link shows a button and only the POST logs in, so
 mail scanners that prefetch links cannot spend it.
 """
 import logging
+import re
+import secrets
 import time
+from urllib.parse import urlencode
+
+import requests
 
 from django import forms
 from django.conf import settings
@@ -19,6 +24,7 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils import translation
 from django.utils.translation import get_language
 
 from . import access
@@ -42,8 +48,10 @@ def form_stamp():
     return signing.dumps(time.time(), salt=STAMP_SALT)
 
 
-def antibot_context():
-    return {'antibot_stamp': form_stamp(), 'antibot_field': HONEYPOT_FIELD}
+def auth_context():
+    """Context of the login and signup pages: bot check fields and the Google button."""
+    return {'antibot_stamp': form_stamp(), 'antibot_field': HONEYPOT_FIELD,
+            'google_login': bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)}
 
 
 def looks_like_bot(data):
@@ -155,7 +163,7 @@ def email_login(request):
             return render(request, 'accounts/email_login_sent.html', {'email': email})
     else:
         form = EmailLinkForm(initial={'email': request.GET.get('email', '')})
-    return render(request, 'accounts/email_login.html', {'form': form, 'next': next_url, **antibot_context()})
+    return render(request, 'accounts/email_login.html', {'form': form, 'next': next_url, **auth_context()})
 
 
 def login_link(request, token):
@@ -176,3 +184,90 @@ def login_link(request, token):
     if activated:
         response['Location'] += '?activated=True'
     return response
+
+
+# --- Sign in with Google ------------------------------------------------------
+
+GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth'
+GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
+GOOGLE_USERINFO = 'https://openidconnect.googleapis.com/v1/userinfo'
+GOOGLE_SESSION_KEY = 'google_oauth'
+
+
+def _google_redirect_uri(request):
+    # one URL outside the language prefix, as registered in Google Cloud Console
+    return _base_url(request) + '/google/callback/'
+
+
+def google_start(request):
+    if not auth_context()['google_login']:
+        return redirect('login')
+    state = secrets.token_urlsafe(24)
+    request.session[GOOGLE_SESSION_KEY] = {
+        'state': state, 'lang': get_language(),
+        'next': _safe_next(request, request.GET.get('next')),
+    }
+    params = {
+        'client_id': settings.GOOGLE_CLIENT_ID, 'redirect_uri': _google_redirect_uri(request),
+        'response_type': 'code', 'scope': 'openid email profile', 'state': state,
+        'prompt': 'select_account',
+    }
+    return redirect('%s?%s' % (GOOGLE_AUTH, urlencode(params)))
+
+
+def _google_profile(request, code):
+    token = requests.post(GOOGLE_TOKEN, timeout=20, data={
+        'code': code, 'client_id': settings.GOOGLE_CLIENT_ID, 'client_secret': settings.GOOGLE_CLIENT_SECRET,
+        'redirect_uri': _google_redirect_uri(request), 'grant_type': 'authorization_code',
+    })
+    token.raise_for_status()
+    profile = requests.get(GOOGLE_USERINFO, timeout=20,
+                           headers={'Authorization': 'Bearer %s' % token.json()['access_token']})
+    profile.raise_for_status()
+    return profile.json()
+
+
+def _new_username(email):
+    base = re.sub(r'[^\w.@+-]', '', email.split('@')[0])[:24] or 'user'
+    username, n = base, 1
+    while User.objects.filter(username__iexact=username).exists():
+        n += 1
+        username = '%s%d' % (base, n)
+    return username
+
+
+def google_user(email):
+    """(user, created_or_activated) for a Google-verified address."""
+    user = account_for_email(email)
+    if user is None:
+        user = User(username=_new_username(email), email=email, is_active=True)
+        user.set_unusable_password()
+        user.save()
+        return user, True
+    if not user.is_active:
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+        return user, True
+    return user, False
+
+
+def google_callback(request):
+    pending = request.session.pop(GOOGLE_SESSION_KEY, None) or {}
+    lang = pending.get('lang') or settings.LANGUAGE_CODE
+    with translation.override(lang):
+        if (not pending.get('state') or request.GET.get('state') != pending['state']
+                or 'code' not in request.GET):
+            return render(request, 'accounts/google_error.html', status=400)
+        try:
+            profile = _google_profile(request, request.GET['code'])
+        except (requests.RequestException, KeyError, ValueError):
+            logger.exception('Google sign-in failed')
+            return render(request, 'accounts/google_error.html', status=502)
+        email = (profile.get('email') or '').strip().lower()
+        if not email or not profile.get('email_verified'):
+            return render(request, 'accounts/google_error.html', status=400)
+        user, fresh = google_user(email)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    if pending.get('next'):
+        return redirect(pending['next'])
+    return redirect('/%s/%s' % (lang, '?activated=True' if fresh else ''))

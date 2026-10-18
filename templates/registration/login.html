@@ -83,6 +83,7 @@
   <p style="color:#d93025;">{% trans 'Wrong username or password.' %}</p>
   {% endif %}
 
+  {% include 'accounts/_google_button.html' %}
   <!-- Login form -->
   <form method="post">
     {% csrf_token %}

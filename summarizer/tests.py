@@ -687,3 +687,55 @@ class AccountTests(TestCase):
             self.register(password2='mismatch')
         self.register()
         self.assertTrue(User.objects.filter(username='newbie').exists())
+
+
+@override_settings(GOOGLE_CLIENT_ID='cid', GOOGLE_CLIENT_SECRET='secret', SITE_URL='https://www.summarizepaper.com')
+class GoogleLoginTests(TestCase):
+    def start(self, client, next_url=''):
+        from urllib.parse import parse_qs, urlparse
+        r = client.get('/fr/login/google/' + ('?next=' + next_url if next_url else ''))
+        self.assertTrue(r['Location'].startswith('https://accounts.google.com/'))
+        query = parse_qs(urlparse(r['Location']).query)
+        self.assertEqual(query['redirect_uri'], ['https://www.summarizepaper.com/google/callback/'])
+        return query['state'][0]
+
+    def callback(self, client, state, profile):
+        with mock.patch('summarizer.accounts._google_profile', return_value=profile):
+            return client.get('/google/callback/', {'state': state, 'code': 'c'})
+
+    def test_new_google_user_gets_an_active_account(self):
+        client = Client()
+        r = self.callback(client, self.start(client), {'email': 'Jane.Doe@gmail.com', 'email_verified': True})
+        self.assertEqual(r['Location'], '/fr/?activated=True')
+        user = User.objects.get(email='jane.doe@gmail.com')
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.has_usable_password())
+        self.assertEqual(int(client.session['_auth_user_id']), user.pk)
+
+    def test_existing_inactive_account_is_activated_and_next_followed(self):
+        old = User.objects.create_user('jane', 'jane@gmail.com', 'pw', is_active=False)
+        client = Client()
+        r = self.callback(client, self.start(client, '/fr/premium/'), {'email': 'jane@gmail.com', 'email_verified': True})
+        self.assertEqual(r['Location'], '/fr/premium/')
+        old.refresh_from_db()
+        self.assertTrue(old.is_active)
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_bad_state_or_unverified_email_is_refused(self):
+        client = Client()
+        self.start(client)
+        self.assertEqual(self.callback(client, 'forged', {'email': 'a@b.c', 'email_verified': True}).status_code, 400)
+        r = self.callback(client, self.start(client), {'email': 'a@b.c', 'email_verified': False})
+        self.assertEqual(r.status_code, 400)
+        self.assertFalse(User.objects.exists())
+
+    def test_username_collision(self):
+        User.objects.create_user('jane', 'other@example.org', 'pw')
+        client = Client()
+        self.callback(client, self.start(client), {'email': 'jane@gmail.com', 'email_verified': True})
+        self.assertTrue(User.objects.filter(username='jane2', email='jane@gmail.com').exists())
+
+    def test_button_only_when_configured(self):
+        self.assertContains(Client().get('/en/login/'), 'Continue with Google')
+        with override_settings(GOOGLE_CLIENT_ID=''):
+            self.assertNotContains(Client().get('/en/login/'), 'Continue with Google')

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 12:53+0000\n"
+"POT-Creation-Date: 2026-10-18 13:13+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,11 +19,11 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.9.8\n"
 
-#: arxivsummarizer/settings.py:174
+#: arxivsummarizer/settings.py:178
 msgid "French"
 msgstr "Français"
 
-#: arxivsummarizer/settings.py:175
+#: arxivsummarizer/settings.py:179
 msgid "English"
 msgstr "Anglais"
 
@@ -100,8 +100,17 @@ msgstr ""
 msgid "Nothing received?"
 msgstr "Rien reçu ?"
 
+#: templates/accounts/_google_button.html:4
+msgid "Continue with Google"
+msgstr "Continuer avec Google"
+
+#: templates/accounts/_google_button.html:6
+msgid "or"
+msgstr "ou"
+
 #: templates/accounts/email_login.html:5
 #: templates/accounts/email_login.html:13
+#: templates/accounts/google_error.html:14
 msgid "Log in with an email link"
 msgstr "Se connecter par lien email"
 
@@ -115,24 +124,24 @@ msgstr ""
 "vous connecte, sans mot de passe. Il active aussi un compte qui ne l'est pas"
 " encore."
 
-#: templates/accounts/email_login.html:19
+#: templates/accounts/email_login.html:20
 msgid "Enter a valid email address."
 msgstr "Saisissez une adresse email valide."
 
-#: templates/accounts/email_login.html:20
+#: templates/accounts/email_login.html:21
 msgid "Email address"
 msgstr "Adresse email"
 
-#: templates/accounts/email_login.html:21
+#: templates/accounts/email_login.html:22
 msgid "Send me a login link"
 msgstr "M'envoyer un lien de connexion"
 
-#: templates/accounts/email_login.html:23
+#: templates/accounts/email_login.html:24
 msgid "Log in with a password"
 msgstr "Se connecter avec un mot de passe"
 
-#: templates/accounts/email_login.html:23 templates/register.html:82
-#: templates/registration/login.html:101
+#: templates/accounts/email_login.html:24 templates/register.html:82
+#: templates/registration/login.html:102
 msgid "Register"
 msgstr "S'inscrire"
 
@@ -158,6 +167,24 @@ msgstr ""
 #: templates/accounts/email_login_sent.html:15
 msgid "Try another address"
 msgstr "Essayer une autre adresse"
+
+#: templates/accounts/google_error.html:4
+#: templates/accounts/google_error.html:12
+msgid "Google sign-in failed"
+msgstr "La connexion avec Google a échoué"
+
+#: templates/accounts/google_error.html:13
+msgid ""
+"We could not log you in with Google. Please try again, or log in with an "
+"email link."
+msgstr ""
+"Nous n'avons pas pu vous connecter avec Google. Réessayez, ou connectez-vous"
+" avec un lien par email."
+
+#: templates/accounts/google_error.html:14 templates/base.html:265
+#: templates/registration/login.html:70 templates/registration/login.html:95
+msgid "Login"
+msgstr "Se connecter"
 
 #: templates/accounts/login_link_confirm.html:4
 #: templates/accounts/login_link_confirm.html:12
@@ -287,11 +314,6 @@ msgstr "Mon historique"
 #: templates/base.html:260
 msgid "Logout"
 msgstr "Déconnexion"
-
-#: templates/base.html:265 templates/registration/login.html:70
-#: templates/registration/login.html:94
-msgid "Login"
-msgstr "Se connecter"
 
 #: templates/base.html:271
 msgid "Language"
@@ -487,23 +509,23 @@ msgstr "Renvoyer l'email d'activation"
 msgid "Wrong username or password."
 msgstr "Nom d'utilisateur ou mot de passe incorrect."
 
-#: templates/registration/login.html:90
+#: templates/registration/login.html:91
 msgid "Username or email"
 msgstr "Nom d'utilisateur ou email"
 
-#: templates/registration/login.html:92
+#: templates/registration/login.html:93
 msgid "Password"
 msgstr "Mot de Passe"
 
-#: templates/registration/login.html:98
+#: templates/registration/login.html:99
 msgid "Log in with an email link (no password)"
 msgstr "Se connecter par lien email (sans mot de passe)"
 
-#: templates/registration/login.html:101
+#: templates/registration/login.html:102
 msgid "No account yet?"
 msgstr "Pas encore de compte?"
 
-#: templates/registration/login.html:104
+#: templates/registration/login.html:105
 msgid "Lost your password?"
 msgstr "Vous avez perdu votre mot de passe ?"
 

@@ -36,6 +36,7 @@ urlpatterns = [
     #path('login/', auth_views.LoginView.as_view(), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('login/email/', accounts.email_login, name='email_login'),
+    path('login/google/', accounts.google_start, name='google_login'),
     path('login/link/<str:token>/', accounts.login_link, name='login_link'),
     path('logout/', logout_view, name='logout'),
     path('register/', RegisterView.as_view(), name='register'),

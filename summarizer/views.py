@@ -87,7 +87,7 @@ class CustomLoginView(auth_views.LoginView):
         context = super().get_context_data(**kwargs)
         form = context.get('form')
         context['inactive_user'] = getattr(form, 'inactive_user', None)
-        context.update(accounts.antibot_context())
+        context.update(accounts.auth_context())
         return context
 
     def get_success_url(self):
@@ -147,11 +147,11 @@ class ActivateView(View):
 class RegisterView(View):
     def get(self, request):
         form = RegistrationForm()
-        return render(request, 'register.html', {'form': form, **accounts.antibot_context()})
+        return render(request, 'register.html', {'form': form, **accounts.auth_context()})
 
     def post(self, request):
         form = RegistrationForm(request.POST)
-        context = {'form': form, **accounts.antibot_context()}
+        context = {'form': form, **accounts.auth_context()}
         ip = access.hash_ip(access.client_ip(request))
         if accounts.looks_like_bot(request.POST) or accounts.signups_exhausted(ip):
             # no account and no email, but the same page a person would see
