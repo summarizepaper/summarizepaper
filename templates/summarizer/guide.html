@@ -47,3 +47,26 @@
   {% endif %}
 </article>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  // Tooltip for chart marks carrying a data-tip attribute
+  document.querySelectorAll('.viz').forEach(function (fig) {
+    var tip = document.createElement('div');
+    tip.className = 'viz-tip';
+    tip.hidden = true;
+    fig.appendChild(tip);
+    fig.querySelectorAll('[data-tip]').forEach(function (mark) {
+      mark.addEventListener('mousemove', function (e) {
+        var box = fig.getBoundingClientRect();
+        tip.textContent = mark.getAttribute('data-tip');
+        tip.hidden = false;
+        var half = tip.offsetWidth / 2;
+        tip.style.left = Math.min(Math.max(e.clientX - box.left, half), box.width - half) + 'px';
+        tip.style.top = (e.clientY - box.top) + 'px';
+      });
+      mark.addEventListener('mouseleave', function () { tip.hidden = true; });
+    });
+  });
+</script>
+{% endblock %}

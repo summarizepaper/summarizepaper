@@ -14,8 +14,8 @@ Aucune page éditoriale (pas de blog). Le contenu indexable existant est :
 | /en/guides/alphaxiv-vs-summarizepaper/ | BOFU | Outils de résumé | en | 2026-10-18 | — | /en/guides/, hub, autres comparatifs | hub, accueil, digest | publié par le membre, points du brief ouverts |
 | /en/guides/scholarcy-alternatives/ | BOFU | Outils de résumé | en | 2026-10-18 | — | /en/guides/, hub, autres comparatifs | hub, accueil, digest, chat | publié par le membre, points du brief ouverts |
 | /en/guides/chatpdf-vs-summarizepaper/ | BOFU | Outils de résumé | en | 2026-10-18 | — | /en/guides/, hub, autres comparatifs | hub, accueil, digest, chat | publié par le membre, points du brief ouverts |
-| /en/guides/arxiv-statistics/ | stats | Chiffres arXiv (hub) | en | brouillon 2026-10-18 | — | what-researchers-summarize | digest, accueil, hub outils, what-researchers-summarize | à faire (brief stats-articles) |
-| /en/guides/what-researchers-summarize/ | stats (first-party) | Chiffres arXiv | en | brouillon 2026-10-18 | — | arxiv-statistics | arxiv-statistics, accueil, digest | à faire (brief stats-articles) |
+| /en/guides/arxiv-statistics/ | stats | Chiffres arXiv (hub) | en | 2026-10-18 | — | what-researchers-summarize, /en/guides/ | digest, accueil, hub outils, what-researchers-summarize | validé par le membre (brief stats-articles) |
+| /en/guides/what-researchers-summarize/ | stats (first-party) | Chiffres arXiv | en | 2026-10-18 | — | arxiv-statistics, /en/guides/ | arxiv-statistics, accueil, digest | validé par le membre (brief stats-articles) |
 | /en/author/quentin-kral/ | page auteur | — | en, fr | 2026-10-18 | — | /about/, schema Organization | Wikipédia, ORCID | validé (Wikipédia) |
 | /en/faq/ | page produit | — | en, fr | — | 2026-10 | menu | pages du site | validé |
 | /en/about/ | page produit / auteur | — | en, fr | — | — | menu | — | à enrichir (E-E-A-T) |

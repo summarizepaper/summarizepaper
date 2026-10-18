@@ -5,7 +5,7 @@
 | `content/guides/en/arxiv-statistics.md` | « arxiv statistics », « how many papers on arxiv », « arxiv submissions per year » | Sources primaires arXiv, téléchargées le 2026-10-18 |
 | `content/guides/en/what-researchers-summarize.md` | « most popular arxiv categories », « what papers do people summarize » | Base SummarizePaper (agrégats) + arXiv |
 
-Les deux sont en brouillon et se citent mutuellement : à publier ensemble.
+Publiés ensemble le 2026-10-18. Points 1 et 2 validés par le membre ; graphiques ajoutés (point 3).
 
 ## Données et reproductibilité
 

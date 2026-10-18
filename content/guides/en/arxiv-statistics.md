@@ -2,7 +2,6 @@
 title: "arXiv statistics 2026: submissions per year, growth and top categories"
 description: "How many papers are on arXiv, how fast submissions grow and which categories dominate, from arXiv's own data, updated October 2026."
 date: 2026-10-18
-draft: true
 faq:
   - q: "How many papers are on arXiv?"
     a: "arXiv had received 3,215,245 submissions as of 18 October 2026, according to its monthly submissions statistics."
@@ -49,6 +48,49 @@ arXiv had received **3,215,245 submissions** as of 18 October 2026, with statist
 It took arXiv until **2015** to reach 100,000 submissions in a single year (105,280). Ten years later, in 2025, it received 284,486.
 
 ## How many papers are submitted to arXiv each year?
+
+
+<figure class="viz">
+<figcaption><strong>New arXiv submissions per year, 2015–2026</strong><span>2026 counted to 18 October. Source: arXiv monthly submissions.</span></figcaption>
+<div class="viz-scroll"><svg viewBox="0 0 760 340" role="img" aria-label="Column chart of new arXiv submissions per year from 2015 (105,280) to 2025 (284,486), with 2026 already at 293,057 by 18 October.">
+<line class="grid" x1="56" x2="744" y1="304.0" y2="304.0"/>
+<text class="tick" x="48" y="304.0" text-anchor="end" dy="4">0</text>
+<line class="grid" x1="56" x2="744" y1="212.0" y2="212.0"/>
+<text class="tick" x="48" y="212.0" text-anchor="end" dy="4">100K</text>
+<line class="grid" x1="56" x2="744" y1="120.0" y2="120.0"/>
+<text class="tick" x="48" y="120.0" text-anchor="end" dy="4">200K</text>
+<line class="grid" x1="56" x2="744" y1="28.0" y2="28.0"/>
+<text class="tick" x="48" y="28.0" text-anchor="end" dy="4">300K</text>
+<g class="hit" data-tip="2015: 105,280 submissions"><rect x="56.0" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M72.7,304.0 V211.1 Q72.7,207.1 76.7,207.1 H92.7 Q96.7,207.1 96.7,211.1 V304.0 Z"/></g>
+<text class="tick" x="84.7" y="328" text-anchor="middle">'15</text>
+<text class="val" x="84.7" y="199.1" text-anchor="middle">105K</text>
+<g class="hit" data-tip="2016: 113,380 submissions"><rect x="113.3" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M130.0,304.0 V203.7 Q130.0,199.7 134.0,199.7 H150.0 Q154.0,199.7 154.0,203.7 V304.0 Z"/></g>
+<text class="tick" x="142.0" y="328" text-anchor="middle">'16</text>
+<g class="hit" data-tip="2017: 123,523 submissions"><rect x="170.7" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M187.3,304.0 V194.4 Q187.3,190.4 191.3,190.4 H207.3 Q211.3,190.4 211.3,194.4 V304.0 Z"/></g>
+<text class="tick" x="199.3" y="328" text-anchor="middle">'17</text>
+<g class="hit" data-tip="2018: 140,616 submissions"><rect x="228.0" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M244.7,304.0 V178.6 Q244.7,174.6 248.7,174.6 H264.7 Q268.7,174.6 268.7,178.6 V304.0 Z"/></g>
+<text class="tick" x="256.7" y="328" text-anchor="middle">'18</text>
+<g class="hit" data-tip="2019: 155,866 submissions"><rect x="285.3" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M302.0,304.0 V164.6 Q302.0,160.6 306.0,160.6 H322.0 Q326.0,160.6 326.0,164.6 V304.0 Z"/></g>
+<text class="tick" x="314.0" y="328" text-anchor="middle">'19</text>
+<g class="hit" data-tip="2020: 178,329 submissions"><rect x="342.7" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M359.3,304.0 V143.9 Q359.3,139.9 363.3,139.9 H379.3 Q383.3,139.9 383.3,143.9 V304.0 Z"/></g>
+<text class="tick" x="371.3" y="328" text-anchor="middle">'20</text>
+<g class="hit" data-tip="2021: 181,630 submissions"><rect x="400.0" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M416.7,304.0 V140.9 Q416.7,136.9 420.7,136.9 H436.7 Q440.7,136.9 440.7,140.9 V304.0 Z"/></g>
+<text class="tick" x="428.7" y="328" text-anchor="middle">'21</text>
+<g class="hit" data-tip="2022: 185,692 submissions"><rect x="457.3" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M474.0,304.0 V137.2 Q474.0,133.2 478.0,133.2 H494.0 Q498.0,133.2 498.0,137.2 V304.0 Z"/></g>
+<text class="tick" x="486.0" y="328" text-anchor="middle">'22</text>
+<g class="hit" data-tip="2023: 208,493 submissions"><rect x="514.7" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M531.3,304.0 V116.2 Q531.3,112.2 535.3,112.2 H551.3 Q555.3,112.2 555.3,116.2 V304.0 Z"/></g>
+<text class="tick" x="543.3" y="328" text-anchor="middle">'23</text>
+<g class="hit" data-tip="2024: 244,031 submissions"><rect x="572.0" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M588.7,304.0 V83.5 Q588.7,79.5 592.7,79.5 H608.7 Q612.7,79.5 612.7,83.5 V304.0 Z"/></g>
+<text class="tick" x="600.7" y="328" text-anchor="middle">'24</text>
+<g class="hit" data-tip="2025: 284,486 submissions"><rect x="629.3" y="28" width="57.3" height="276" fill="transparent"/><path class="bar" d="M646.0,304.0 V46.3 Q646.0,42.3 650.0,42.3 H666.0 Q670.0,42.3 670.0,46.3 V304.0 Z"/></g>
+<text class="tick" x="658.0" y="328" text-anchor="middle">'25</text>
+<text class="val" x="658.0" y="34.3" text-anchor="middle">284K</text>
+<g class="hit" data-tip="2026: 293,057 submissions (to 18 October)"><rect x="686.7" y="28" width="57.3" height="276" fill="transparent"/><path class="bar partial" d="M703.3,304.0 V38.4 Q703.3,34.4 707.3,34.4 H723.3 Q727.3,34.4 727.3,38.4 V304.0 Z"/></g>
+<text class="tick" x="715.3" y="328" text-anchor="middle">'26</text>
+<text class="val" x="715.3" y="26.4" text-anchor="middle">293K</text>
+<line class="axis" x1="56" x2="744" y1="304.0" y2="304.0"/>
+</svg></div>
+</figure>
 
 | Year | New submissions | Change on previous year |
 |---|---|---|

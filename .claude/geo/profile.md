@@ -91,7 +91,7 @@ Usage validé par le membre le 2026-10-18 : **chiffres agrégés uniquement**, j
   - réglages du digest : catégories arXiv choisies par les abonnés (agréger seulement).
 - **Comment y accéder en lecture** : requêtes `SELECT` agrégées via `heroku pg:psql -a summarizepaper`, ou un script de commande Django en lecture seule. Le membre valide la requête avant exécution.
 - **Chiffres canoniques** (requêtés le 2026-10-18, à réutiliser à l'identique) : 9 995 articles arXiv résumés entre février 2023 et octobre 2026 ; 10 037 résumés (en, fr) ; 10 963 demandes de résumé ; 7 618 questions à l'assistant ; 1 431 exports PDF ; 64,8 % d'articles d'informatique (contre 44,2 % sur arXiv, mars 2023 à septembre 2026) ; cs.CL 15,9 % (2,8 fois sa part d'arXiv) ; mathématiques 2,9 % (contre 16,1 %) ; âge médian au premier résumé 387 jours ; 75,3 % de votes positifs sur 344. Requêtes : `data/first-party-queries.sql`.
-- **Études ou pages de données** : /en/guides/what-researchers-summarize/ (first-party) et /en/guides/arxiv-statistics/ (sources arXiv), brouillons du 2026-10-18.
+- **Études ou pages de données** : /en/guides/what-researchers-summarize/ (first-party) et /en/guides/arxiv-statistics/ (sources arXiv), publiés le 2026-10-18.
 
 > Ne jamais mettre d'identifiant de base, de clé ou de token ici. Ce fichier est versionné.
 

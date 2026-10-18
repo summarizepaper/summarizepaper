@@ -629,6 +629,54 @@ img { max-width: 100%; }
 .guide .sources { font-size: 14px; color: var(--text-muted); }
 .guide .sources li { margin-bottom: 4px; }
 
+/* Charts in guides (SVG generated from the article's data) */
+.viz {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  position: relative;
+  margin: 12px 0 32px;
+  padding: 20px 20px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.viz figcaption { margin-bottom: 8px; }
+.viz figcaption strong { display: block; font-size: 15px; color: var(--text); }
+.viz figcaption span { font-size: 13px; color: var(--text-muted); }
+.viz-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.viz svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.viz .grid { stroke: var(--border); stroke-width: 1; }
+.viz .axis { stroke: #c9c9d6; stroke-width: 1; }
+.viz .tick { font: 12px var(--font); fill: var(--text-muted); }
+.viz .val { font: 600 12px var(--font); fill: var(--text); }
+.viz .row { font: 13px var(--font); fill: var(--text-muted); }
+.viz .row .cat { font-weight: 600; fill: var(--text); }
+.viz .bar { fill: var(--viz-1); }
+.viz .bar.partial { fill: #8fb6ea; }
+.viz .link { stroke: #c9c9d6; stroke-width: 2; }
+.viz .dot { stroke: var(--surface); stroke-width: 2; }
+.viz .hit { cursor: default; }
+.viz .hit:hover .bar { fill: #1f63b5; }
+.viz .hit:hover .bar.partial { fill: #6f9fe0; }
+.viz .hit:hover .link { stroke: var(--text-muted); }
+.viz-legend { display: flex; gap: 16px; margin: 4px 0 4px; font-size: 13px; color: var(--text-muted); }
+.viz-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; vertical-align: -1px; }
+.viz-tip {
+  position: absolute;
+  z-index: 2;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: #fff;
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+}
+@media (max-width: 600px) {
+  .viz { padding: 14px 12px 4px; }
+}
+
 /* Guides index */
 .guides-index { max-width: 800px; }
 .guide-list { display: grid; gap: 16px; padding-bottom: 24px; }

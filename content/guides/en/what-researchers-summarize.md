@@ -2,7 +2,6 @@
 title: "What researchers summarize: arXiv categories on SummarizePaper (2023–2026 data)"
 description: "Which arXiv papers people summarize with AI, from 9,995 papers summarized on SummarizePaper since 2023, compared with arXiv's own category shares."
 date: 2026-10-18
-draft: true
 dataset:
   name: "SummarizePaper usage by arXiv category, 2023–2026"
   description: "Aggregate counts of arXiv papers summarized, summary requests, assistant questions, PDF exports and summary votes on SummarizePaper, by arXiv primary category, from February 2023 to 18 October 2026."
@@ -73,6 +72,82 @@ The ten most summarized primary categories, compared with each category's share 
 | 10 | quant-ph | Quantum physics | 217 | 2.2% | 4.2% | 0.5× |
 
 A ratio above 1 means the category is summarized more often than its weight on arXiv would predict.
+
+<figure class="viz">
+<figcaption><strong>Share of papers summarized on SummarizePaper vs share of arXiv submissions</strong><span>Selected primary categories. SummarizePaper: 9,995 papers, Feb 2023–Oct 2026. arXiv: Mar 2023–Sep 2026.</span></figcaption>
+<div class="viz-legend"><span><i style="background:var(--viz-1)"></i>SummarizePaper</span><span><i style="background:var(--viz-2)"></i>arXiv</span></div>
+<div class="viz-scroll"><svg viewBox="0 0 760 368" role="img" aria-label="Dot chart comparing each category's share of papers summarized on SummarizePaper with its share of arXiv submissions. cs.CL is 15.9% on SummarizePaper against 5.7% on arXiv; mathematics is 2.9% against 16.1%.">
+<line class="grid" x1="270.0" x2="270.0" y1="24" y2="338"/>
+<text class="tick" x="270.0" y="356" text-anchor="middle">0%</text>
+<line class="grid" x1="343.3" x2="343.3" y1="24" y2="338"/>
+<text class="tick" x="343.3" y="356" text-anchor="middle">3%</text>
+<line class="grid" x1="416.7" x2="416.7" y1="24" y2="338"/>
+<text class="tick" x="416.7" y="356" text-anchor="middle">6%</text>
+<line class="grid" x1="490.0" x2="490.0" y1="24" y2="338"/>
+<text class="tick" x="490.0" y="356" text-anchor="middle">9%</text>
+<line class="grid" x1="563.3" x2="563.3" y1="24" y2="338"/>
+<text class="tick" x="563.3" y="356" text-anchor="middle">12%</text>
+<line class="grid" x1="636.7" x2="636.7" y1="24" y2="338"/>
+<text class="tick" x="636.7" y="356" text-anchor="middle">15%</text>
+<line class="grid" x1="710.0" x2="710.0" y1="24" y2="338"/>
+<text class="tick" x="710.0" y="356" text-anchor="middle">18%</text>
+<text class="row" x="256" y="49.0" dy="4" text-anchor="end"><tspan class="cat">cs.CL</tspan> <tspan class="topic">Computation and language</tspan></text>
+<g class="hit" data-tip="cs.CL: 15.9% of papers summarized vs 5.7% of arXiv"><rect x="0" y="34.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="658.7" x2="409.3" y1="49.0" y2="49.0"/>
+<circle class="dot" cx="409.3" cy="49.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="658.7" cy="49.0" r="6" fill="var(--viz-1)"/></g>
+<text class="val" x="670.7" y="49.0" dy="4">15.9%</text>
+<text class="val" x="397.3" y="49.0" dy="4" text-anchor="end">5.7%</text>
+<text class="row" x="256" y="79.0" dy="4" text-anchor="end"><tspan class="cat">cs.CV</tspan> <tspan class="topic">Computer vision</tspan></text>
+<g class="hit" data-tip="cs.CV: 11.8% of papers summarized vs 9.5% of arXiv"><rect x="0" y="64.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="558.4" x2="502.2" y1="79.0" y2="79.0"/>
+<circle class="dot" cx="502.2" cy="79.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="558.4" cy="79.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="109.0" dy="4" text-anchor="end"><tspan class="cat">cs.LG</tspan> <tspan class="topic">Machine learning</tspan></text>
+<g class="hit" data-tip="cs.LG: 11.7% of papers summarized vs 8.6% of arXiv"><rect x="0" y="94.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="556.0" x2="480.2" y1="109.0" y2="109.0"/>
+<circle class="dot" cx="480.2" cy="109.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="556.0" cy="109.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="139.0" dy="4" text-anchor="end"><tspan class="cat">cs.AI</tspan> <tspan class="topic">Artificial intelligence</tspan></text>
+<g class="hit" data-tip="cs.AI: 5.3% of papers summarized vs 3.1% of arXiv"><rect x="0" y="124.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="399.6" x2="345.8" y1="139.0" y2="139.0"/>
+<circle class="dot" cx="345.8" cy="139.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="399.6" cy="139.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="169.0" dy="4" text-anchor="end"><tspan class="cat">astro-ph.GA</tspan> <tspan class="topic">Galaxies</tspan></text>
+<g class="hit" data-tip="astro-ph.GA: 3.4% of papers summarized vs 1.7% of arXiv"><rect x="0" y="154.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="353.1" x2="311.6" y1="169.0" y2="169.0"/>
+<circle class="dot" cx="311.6" cy="169.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="353.1" cy="169.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="199.0" dy="4" text-anchor="end"><tspan class="cat">cs.CY</tspan> <tspan class="topic">Computers and society</tspan></text>
+<g class="hit" data-tip="cs.CY: 2.8% of papers summarized vs 0.8% of arXiv"><rect x="0" y="184.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="338.4" x2="289.6" y1="199.0" y2="199.0"/>
+<circle class="dot" cx="289.6" cy="199.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="338.4" cy="199.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="229.0" dy="4" text-anchor="end"><tspan class="cat">astro-ph.EP</tspan> <tspan class="topic">Planetary astrophysics</tspan></text>
+<g class="hit" data-tip="astro-ph.EP: 2.2% of papers summarized vs 0.8% of arXiv"><rect x="0" y="214.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="323.8" x2="289.6" y1="229.0" y2="229.0"/>
+<circle class="dot" cx="289.6" cy="229.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="323.8" cy="229.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="259.0" dy="4" text-anchor="end"><tspan class="cat">econ.GN</tspan> <tspan class="topic">General economics</tspan></text>
+<g class="hit" data-tip="econ.GN: 1.1% of papers summarized vs 0.3% of arXiv"><rect x="0" y="244.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="296.9" x2="277.3" y1="259.0" y2="259.0"/>
+<circle class="dot" cx="277.3" cy="259.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="296.9" cy="259.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="289.0" dy="4" text-anchor="end"><tspan class="cat">quant-ph</tspan> <tspan class="topic">Quantum physics</tspan></text>
+<g class="hit" data-tip="quant-ph: 2.2% of papers summarized vs 4.2% of arXiv"><rect x="0" y="274.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="323.8" x2="372.7" y1="289.0" y2="289.0"/>
+<circle class="dot" cx="372.7" cy="289.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="323.8" cy="289.0" r="6" fill="var(--viz-1)"/></g>
+<text class="row" x="256" y="319.0" dy="4" text-anchor="end"><tspan class="cat">math</tspan> <tspan class="topic">All mathematics</tspan></text>
+<g class="hit" data-tip="math: 2.9% of papers summarized vs 16.1% of arXiv"><rect x="0" y="304.0" width="760" height="30" fill="transparent"/>
+<line class="link" x1="340.9" x2="663.6" y1="319.0" y2="319.0"/>
+<circle class="dot" cx="663.6" cy="319.0" r="6" fill="var(--viz-2)"/>
+<circle class="dot" cx="340.9" cy="319.0" r="6" fill="var(--viz-1)"/></g>
+<text class="val" x="675.6" y="319.0" dy="4">16.1%</text>
+<text class="val" x="328.9" y="319.0" dy="4" text-anchor="end">2.9%</text>
+</svg></div>
+</figure>
+
 
 ## Which fields are over-represented?
 
