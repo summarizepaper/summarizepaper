@@ -178,7 +178,7 @@ def login_link(request, token):
     if activated:
         user.is_active = True
         user.save(update_fields=['is_active'])
-    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
     if next_url:
         return redirect(next_url)
     response = redirect('summarize')
@@ -268,7 +268,7 @@ def google_callback(request):
         if not email or not profile.get('email_verified'):
             return render(request, 'accounts/google_error.html', status=400)
         user, fresh = google_user(email)
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
         target = pending.get('next') or '/%s/%s' % (lang, '?activated=True' if fresh else '')
         # Not a redirect: browsers may leave the new session cookie off the next hop of a
         # redirect chain that started on accounts.google.com. A page that moves on by itself

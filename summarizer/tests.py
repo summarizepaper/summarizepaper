@@ -623,6 +623,7 @@ class AccountTests(TestCase):
         user.refresh_from_db()
         self.assertTrue(user.is_active)
         self.assertEqual(int(client.session['_auth_user_id']), user.pk)
+        self.assertContains(client.get('/en/'), '(newbie)')  # still logged in on the next page
         self.assertEqual(Client().post('/' + path).status_code, 400)
 
     def test_bots_get_no_account(self):
@@ -710,7 +711,7 @@ class GoogleLoginTests(TestCase):
         user = User.objects.get(email='jane.doe@gmail.com')
         self.assertTrue(user.is_active)
         self.assertFalse(user.has_usable_password())
-        self.assertEqual(int(client.session['_auth_user_id']), user.pk)
+        self.assertContains(client.get('/fr/'), '(%s)' % user.username)  # still logged in on the next page
 
     def test_existing_inactive_account_is_activated_and_next_followed(self):
         old = User.objects.create_user('jane', 'jane@gmail.com', 'pw', is_active=False)
