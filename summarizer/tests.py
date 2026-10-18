@@ -159,6 +159,15 @@ class BillingTests(TestCase):
         plan = UserPlan.objects.get(user=self.user)
         self.assertEqual((plan.stripe_customer_id, plan.stripe_subscription_id), ('cus_1', 'sub_1'))
 
+        cancelled = self.subscription('active')
+        cancelled['cancel_at_period_end'] = True
+        self.post_event(self.event('customer.subscription.updated', cancelled))
+        self.assertTrue(access.is_paid(self.user))
+        self.assertTrue(UserPlan.objects.get(user=self.user).canceling)
+        c = Client(); c.force_login(self.user)
+        with mock.patch('summarizer.billing.price_label', return_value=None):
+            self.assertContains(c.get('/fr/premium/'), 'Premium reste actif jusqu')
+
         self.post_event(self.event('customer.subscription.deleted', self.subscription('canceled')))
         self.assertFalse(access.is_paid(self.user))
         self.assertEqual(UserPlan.objects.filter(user=self.user).count(), 1)

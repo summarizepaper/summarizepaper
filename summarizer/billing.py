@@ -76,6 +76,7 @@ def premium(request):
         'monthly_price': price_label(settings.STRIPE_PRICE_MONTHLY),
         'yearly_price': price_label(settings.STRIPE_PRICE_YEARLY),
         'is_paid': access.is_paid(request.user),
+        'plan': plan,
         'can_manage': bool(plan and plan.stripe_customer_id),
         'runs_per_day': access.RUNS_PER_DAY,
         'chat_free': access.CHAT_MESSAGES_PER_DAY['user'],
@@ -148,6 +149,7 @@ def sync_subscription(subscription, user=None):
     # past_due keeps access while Stripe retries the card; expires still bounds it
     plan.paid = subscription['status'] in ('active', 'trialing', 'past_due')
     plan.expires = _period_end(subscription)
+    plan.canceling = bool(subscription.get('cancel_at_period_end') or subscription.get('cancel_at'))
     plan.save()
     return plan
 

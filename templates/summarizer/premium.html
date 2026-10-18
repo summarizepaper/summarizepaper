@@ -19,6 +19,7 @@
   .plan .price { font-size: 22px; font-weight: bold; margin: 8px 0 16px; }
   .premium button, .premium .button { background: #34a853; color: #fff; border: 0; border-radius: 6px; padding: 10px 18px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; margin: 4px 0; }
   .premium button.secondary { background: #555; }
+  .status { background: #fff8e1; border: 2px solid #fbbc05; border-radius: 8px; padding: 14px 18px; font-size: 17px; }
   .notice { background: #e8f5e9; border: 1px solid #34a853; border-radius: 6px; padding: 12px 16px; }
 </style>
 {% endblock %}
@@ -28,7 +29,18 @@
   <h1>{% trans 'SummarizePaper Premium' %}</h1>
   <p class="lead">{% trans 'For researchers and students who read papers every day.' %}</p>
 
-  {% if success %}
+  {% if is_paid %}
+  <p class="status">
+    <strong>&#9733; {% trans 'You are Premium.' %}</strong>
+    {% if plan.expires %}
+      {% if plan.canceling %}
+        {% blocktrans with date=plan.expires|date:"j F Y" %}Your subscription is cancelled: Premium stays active until {{ date }}.{% endblocktrans %}
+      {% else %}
+        {% blocktrans with date=plan.expires|date:"j F Y" %}Next renewal on {{ date }}.{% endblocktrans %}
+      {% endif %}
+    {% endif %}
+  </p>
+  {% elif success %}
   <p class="notice">{% trans 'Thank you! Your Premium subscription is being activated, it can take a few seconds.' %}</p>
   {% endif %}
 
@@ -51,7 +63,6 @@
       </ul>
 
       {% if is_paid %}
-        <p><strong>{% trans 'You are Premium.' %}</strong></p>
         {% if can_manage %}
         <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
           <button type="submit" class="secondary">{% trans 'Manage my subscription' %}</button>

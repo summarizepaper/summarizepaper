@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 10:40+0000\n"
+"POT-Creation-Date: 2026-10-18 11:37+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,11 +19,11 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.9.8\n"
 
-#: arxivsummarizer/settings.py:171
+#: arxivsummarizer/settings.py:174
 msgid "French"
 msgstr "Français"
 
-#: arxivsummarizer/settings.py:172
+#: arxivsummarizer/settings.py:175
 msgid "English"
 msgstr "Anglais"
 
@@ -100,7 +100,7 @@ msgstr "FAQ"
 msgid "Daily digest"
 msgstr "Digest quotidien"
 
-#: templates/base.html:255 templates/summarizer/premium.html:45
+#: templates/base.html:255 templates/summarizer/premium.html:57
 msgid "Premium"
 msgstr "Premium"
 
@@ -1156,11 +1156,11 @@ msgstr ""
 msgid "Create a free account"
 msgstr "Créer un compte gratuit"
 
-#: templates/summarizer/digest.html:31 templates/summarizer/premium.html:65
+#: templates/summarizer/digest.html:31 templates/summarizer/premium.html:76
 msgid "Already registered?"
 msgstr "Déjà inscrit ?"
 
-#: templates/summarizer/digest.html:31 templates/summarizer/premium.html:65
+#: templates/summarizer/digest.html:31 templates/summarizer/premium.html:76
 msgid "Log in"
 msgstr "Se connecter"
 
@@ -1576,7 +1576,7 @@ msgstr ""
 "En savoir plus sur nos mentions légales pour notre service de résumés de pdf"
 " arXiv alimenté par l'IA."
 
-#: templates/summarizer/premium.html:6 templates/summarizer/premium.html:28
+#: templates/summarizer/premium.html:6 templates/summarizer/premium.html:29
 msgid "SummarizePaper Premium"
 msgstr "SummarizePaper Premium"
 
@@ -1589,12 +1589,26 @@ msgstr ""
 "réponses sur arXiv, aucune limite quotidienne de résumés et bien plus de "
 "questions à l'assistant IA."
 
-#: templates/summarizer/premium.html:29
+#: templates/summarizer/premium.html:30
 msgid "For researchers and students who read papers every day."
 msgstr ""
 "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
 
-#: templates/summarizer/premium.html:32
+#: templates/summarizer/premium.html:34
+msgid "You are Premium."
+msgstr "Vous êtes Premium."
+
+#: templates/summarizer/premium.html:37
+#, python-format
+msgid "Your subscription is cancelled: Premium stays active until %(date)s."
+msgstr "Votre abonnement est annulé : Premium reste actif jusqu'au %(date)s."
+
+#: templates/summarizer/premium.html:39
+#, python-format
+msgid "Next renewal on %(date)s."
+msgstr "Prochain renouvellement le %(date)s."
+
+#: templates/summarizer/premium.html:44
 msgid ""
 "Thank you! Your Premium subscription is being activated, it can take a few "
 "seconds."
@@ -1602,66 +1616,62 @@ msgstr ""
 "Merci ! Votre abonnement Premium est en cours d'activation, cela peut "
 "prendre quelques secondes."
 
-#: templates/summarizer/premium.html:37
+#: templates/summarizer/premium.html:49
 msgid "Free"
 msgstr "Gratuit"
 
-#: templates/summarizer/premium.html:39
+#: templates/summarizer/premium.html:51
 #, python-format
 msgid "%(runs_per_day)s new summaries per day"
 msgstr "%(runs_per_day)s nouveaux résumés par jour"
 
-#: templates/summarizer/premium.html:40
+#: templates/summarizer/premium.html:52
 #, python-format
 msgid "%(chat_free)s questions per day to the AI assistant"
 msgstr "%(chat_free)s questions par jour à l'assistant IA"
 
-#: templates/summarizer/premium.html:41
+#: templates/summarizer/premium.html:53
 msgid "Standard AI model"
 msgstr "Modèle d'IA standard"
 
-#: templates/summarizer/premium.html:47
+#: templates/summarizer/premium.html:59
 msgid "Our most capable AI model for summaries and answers"
 msgstr "Notre modèle d'IA le plus performant pour les résumés et les réponses"
 
-#: templates/summarizer/premium.html:48
+#: templates/summarizer/premium.html:60
 msgid "No daily summary limit"
 msgstr "Aucune limite quotidienne de résumés"
 
-#: templates/summarizer/premium.html:49
+#: templates/summarizer/premium.html:61
 #, python-format
 msgid "%(chat_paid)s questions per day to the AI assistant"
 msgstr "%(chat_paid)s questions par jour à l'assistant IA"
 
-#: templates/summarizer/premium.html:50
+#: templates/summarizer/premium.html:62
 msgid "Cancel anytime in one click"
 msgstr "Résiliable à tout moment en un clic"
 
-#: templates/summarizer/premium.html:54
-msgid "You are Premium."
-msgstr "Vous êtes Premium."
-
-#: templates/summarizer/premium.html:57 templates/summarizer/premium.html:77
+#: templates/summarizer/premium.html:68 templates/summarizer/premium.html:88
 msgid "Manage my subscription"
 msgstr "Gérer mon abonnement"
 
-#: templates/summarizer/premium.html:61
+#: templates/summarizer/premium.html:72
 msgid "Subscriptions open soon."
 msgstr "Les abonnements ouvrent bientôt."
 
-#: templates/summarizer/premium.html:64
+#: templates/summarizer/premium.html:75
 msgid "Create a free account to subscribe"
 msgstr "Créez un compte gratuit pour vous abonner"
 
-#: templates/summarizer/premium.html:69
+#: templates/summarizer/premium.html:80
 msgid "Subscribe monthly"
 msgstr "S'abonner au mois"
 
-#: templates/summarizer/premium.html:72
+#: templates/summarizer/premium.html:83
 msgid "Subscribe yearly"
 msgstr "S'abonner à l'année"
 
-#: templates/summarizer/premium.html:84
+#: templates/summarizer/premium.html:95
 msgid "Payments are handled by Stripe. We never see your card details."
 msgstr ""
 "Les paiements sont gérés par Stripe. Nous ne voyons jamais vos données de "
@@ -1768,9 +1778,9 @@ msgid ""
 msgstr ""
 "Nous prenons les mesures appropriées pour protéger la sécurité des "
 "informations personnelles de nos utilisateurs. Cependant, aucune "
-"transmission de données sur Internet ne peut être garantie à 100%% sécurisée."
-" Par conséquent, nous ne pouvons garantir la sécurité des informations "
-"transmises à notre site Web."
+"transmission de données sur Internet ne peut être garantie à 100%% "
+"sécurisée. Par conséquent, nous ne pouvons garantir la sécurité des "
+"informations transmises à notre site Web."
 
 #: templates/summarizer/privacy.html:56
 msgid ""
