@@ -75,7 +75,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
             print(f"Creating embeddings for paper {paper_id}...")
             #time.sleep(1)
             url = 'https://arxiv.org/pdf/'+paper_id+'.pdf'
-            book_path = "test1.pdf"
+            book_path = None
 
             c=asyncio.create_task(utils.get_arxiv_metadata(paper_id))
             arxivarrayf = await c
@@ -230,7 +230,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
     async def createindexwithsources(self,arxiv_id,details_paper,data):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
-        book_path = "test1.pdf"
+        book_path = None
         sum=""
         laysum=""
         notes=""
@@ -301,7 +301,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
     async def computesummary(self,arxiv_id,language,details_paper,message,data,p):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
-        book_path = "test1.pdf"
+        book_path = None
         sum=""
         laysum=""
         notes=""
