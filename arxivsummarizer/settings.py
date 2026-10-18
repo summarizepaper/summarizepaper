@@ -30,12 +30,21 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'#'same-origin'
 SECRET_KEY = os.getenv('SECRET_KEY')
 OPENAI_KEY = os.getenv('OPENAI_KEY')
 SECRETSG = os.getenv('SECRETSG')
+SECRETCMTA = os.getenv('SECRETCMTA')
+
+DEFAULT_FROM_EMAIL = 'contact@summarizepaper.com'
+
+EMAIL_HOST = 'smtp.cloudmta.net'
+EMAIL_HOST_USER = '19e06dea731b2f94'
+EMAIL_HOST_PASSWORD= SECRETCMTA
+
+if 1==0:
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_HOST_USER = 'apikey'
+    EMAIL_HOST_PASSWORD = SECRETSG
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'apikey'
-EMAIL_HOST_PASSWORD = SECRETSG
 EMAIL_USE_TLS = True
 # SECURITY WARNING: don't run with debug turned on in production!
 if 'ON_HEROKU' in os.environ:
@@ -192,7 +201,8 @@ if 'ON_HEROKU' in os.environ:
         "default": {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                "hosts": [(BROKER_URL)],
+                #redis-py 8 defaults socket_timeout to 5s = channels_redis blocking read -> TimeoutError / ws 1011
+                "hosts": [{"address": BROKER_URL, "socket_timeout": None, "socket_keepalive": True, "health_check_interval": 30}],
             },
         },
     }
@@ -242,8 +252,10 @@ def get_cache():
 CACHES = get_cache()
 
 
-prod_db = dj_database_url.config(conn_max_age=0)
-DATABASES['default'].update(prod_db)
+if 'ON_HEROKU' in os.environ:
 
-django_heroku.settings(locals())
-DATABASES['default']['CONN_MAX_AGE'] = 0
+    prod_db = dj_database_url.config(conn_max_age=0)
+    DATABASES['default'].update(prod_db)
+
+    django_heroku.settings(locals())
+    DATABASES['default']['CONN_MAX_AGE'] = 0

@@ -1,11 +1,55 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.contrib.auth.models import AbstractUser
 
-class CustomUser(User):#add here if want to add CB info
+class PaymentPlan(models.Model):
+    DURATION_CHOICES = [
+        ('1M', '1 Month'),
+        ('1Y', '1 Year'),
+    ]
+    name = models.CharField(max_length=50)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    duration_choices = models.CharField(max_length=2, choices=DURATION_CHOICES)
+    auto_renew = models.BooleanField(default=False)
+
+class CustomUser(User):
+    pass
+    '''
+    id = models.AutoField(primary_key=True)
+    #user = models.OneToOneField(User, blank=True, null=True, on_delete=models.CASCADE)
+    payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, blank=True, null=True)
+    paid = models.BooleanField(default=False)
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_users',
+        blank=True,
+        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+        verbose_name='groups',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_users',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
+    '''
+class UserPlan(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User,blank=True, null=True, on_delete=models.CASCADE)
+    payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, blank=True, null=True)
+    paid = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+#class CustomUser(User):#add here if want to add CB info
     #address = models.CharField(max_length=100, blank=True)
     #phone_number = models.CharField(max_length=20, blank=True)
-    pass
+#    payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, blank=True, null=True)
+#    paid = models.BooleanField(default=False)
+    #pass
 
 class Author(models.Model):
     id = models.AutoField(primary_key=True)

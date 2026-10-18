@@ -340,7 +340,7 @@ const xScale = d3.scaleLinear()
 
 const yScale = d3.scaleLinear()
   .domain([minY-40, maxY+40])
-  .range([height, 0]);
+  .range([0,height]);
 
 
 // Add the lines to connect the papers
@@ -406,7 +406,7 @@ circles.on('click', function(event,d) {
   window.open(window.location.origin + '/' + `${d.lang}` + '/arxiv-id/' + `${d.arxiv_id}`, '_blank');
 });
 
-  // Add the text for each paper title
+// Add the text for each paper title
 svg.selectAll('text.title')
   .data(data)
   .enter()

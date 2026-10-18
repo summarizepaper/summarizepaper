@@ -6,7 +6,7 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search, PaperScore
+from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search, PaperScore, UserPlan
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -147,7 +147,13 @@ class ActivateView(View):
             print('aqyui')
             user.save()
             login(request, user)
-            return redirect('summarize/?activated=True')
+            #return redirect('summarize/?activated=True')
+            response = redirect('summarize')
+            response['Location'] += '?activated=True'
+            return response
+
+            #return render(request, 'summarizer/home.html', {'activated': True})
+
         return render(request, 'account_activation_invalid.html')
 
 
@@ -620,8 +626,9 @@ def tree(request, arxiv_id):
                     'title': paper.title,
                     'score': 0.2*10,
                     'lang':lang,
-                    'x': 50,
-                    'y': 10,
+                    'distance':0,
+                    'x': 0,
+                    'y': 0,
                     'first_author': author_name,
                     'authors': author_names,
                     'main':True
@@ -642,21 +649,27 @@ def tree(request, arxiv_id):
                 #x = distance * np.cos(random.random() * np.pi * 2)
                 #y = distance * np.sin(random.random() * np.pi * 2)
                 i=0
+                #print('cos',np.cos(np.pi * 2),random.random(),random.random(),random.random(),random.random())
+                #print('cos',np.cos(np.pi/2.))
+
                 while True:
                     i+=1
-                    x = distance * np.cos(random.random() * np.pi * 2)
-                    y = distance * np.sin(random.random() * np.pi * 2)
+                    ran=random.random()
+                    x = distance * np.cos(ran * np.pi * 2)
+                    y = distance * np.sin(ran * np.pi * 2)
                     # check if there are any points within 30px around (x,y)
                     if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 30 for d in relpapersData):
                         break
                     if i==10000:
                         break
 
+                print('x,y,score',x,y,(0.5-relpaper.score)*200,distance,relpaper.score)
                 relpapersData.append({
                     'arxiv_id': relpaper.to_paper.arxiv_id,
                     'title': relpaper.to_paper.title,
-                    'score': (1.-relpaper.score)*100,
+                    'score': (0.5-relpaper.score)*200,
                     'lang':lang,
+                    'distance':distance,
                     'x': x,
                     'y': y,
                     'first_author': author_name,
@@ -664,7 +677,25 @@ def tree(request, arxiv_id):
                     'main':False
                 })
 
-           
+            # Get maximum x and y values
+            max_d = max(item['distance'] for item in relpapersData)
+            #min_d = min(item['distance'] for item in relpapersData)
+            min_d = min(filter(lambda item: item['distance'] != 0, relpapersData), key=lambda item: item['distance'])['distance']
+            print('max_d',max_d)
+            print('min_d',min_d)
+
+            for item in relpapersData:
+                print("item['distance']1",item['distance'])
+                if item['distance'] != 0:
+                    newdist = ((item['distance'] - min_d+5) / (max_d - min_d+5)) * 100
+                    item['x']=item['x']/item['distance']*newdist
+                    item['y']=item['y']/item['distance']*newdist
+                print("item['distance']2",item['distance'])
+            # Renormalize x and y values
+            #for item in relpapersData:
+            #   item['x'] = (item['x'] / max_x) * 100
+            #   item['y'] = (item['y'] / max_y) * 100
+
             # Convert the list of dictionaries to a JSON string
             relpapers_json = json.dumps(relpapersData)
 
@@ -672,7 +703,7 @@ def tree(request, arxiv_id):
             #for rel in relpapers:
             #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
             for pap in relpapers:
-                newscore = (1.-pap.score)*100
+                newscore = (0.5-pap.score)*200
                 newscore = "{:.1f}".format(newscore)
                 scores.append(newscore)
             stuff_for_frontend.update({
@@ -781,9 +812,29 @@ def chat(request):
 
     return render(request, "summarizer/chat.html", stuff_for_frontend)
 
+def user_payment_situation(user_id):
+    user = get_object_or_404(User, pk=user_id)
+    user_plan = UserPlan.objects.filter(user=user).last() # get the latest user plan
+    if user_plan:
+        payment_plan = user_plan.payment_plan
+        paid = user_plan.paid
+        auto_renew = payment_plan.auto_renew
+        '''
+        if auto_renew:
+            duration = payment_plan.duration_choices
+            if duration == '1M':
+                renewal_date = user_plan.created_at + timedelta(days=30)
+            elif duration == '1Y':
+                renewal_date = user_plan.created_at + timedelta(days=365)
+            if datetime.now() > renewal_date:
+                paid = False
+        '''
+        return {"paid": paid}
+    return {"paid": False}
+
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
-
+    
 
     print('cat',cat)
     print('id',arxiv_id)
@@ -821,8 +872,12 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
     # Check if this IP address has already voted on this post
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
+    paid=False
+    if request.user.is_authenticated:
+        paid = user_payment_situation(request.user.id)['paid']#request.user.paid
+        print('paid',paid)
 
-    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address}
+    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid}
 
     print('jk')
     regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
@@ -1138,7 +1193,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                 #for rel in relpapers:
                 #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
                 for pap in relpapers:
-                    newscore = (1.-pap.score)*100
+                    newscore = (0.5-pap.score)*200
                     newscore = "{:.1f}".format(newscore)
                     scores.append(newscore)
 
