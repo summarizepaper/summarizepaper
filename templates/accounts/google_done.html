@@ -1,0 +1,13 @@
+{% load i18n %}<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0;url={{ target }}">
+<title>SummarizePaper</title>
+</head>
+<body style="font-family:Arial,sans-serif;text-align:center;margin-top:80px;">
+<p>{% trans 'You are logged in.' %} <a href="{{ target }}">{% trans 'Continue' %}</a></p>
+<script>window.location.replace({{ target_json|safe }});</script>
+</body>
+</html>

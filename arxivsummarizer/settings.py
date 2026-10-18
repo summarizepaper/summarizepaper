@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 from urllib.parse import urlparse
-import django_heroku
 import dj_database_url
 
 
@@ -34,6 +33,21 @@ SECRETCMTA = os.getenv('SECRETCMTA')
 
 DEFAULT_FROM_EMAIL = 'contact@summarizepaper.com'
 
+#Premium subscriptions, see summarizer/billing.py
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRICE_MONTHLY = os.getenv('STRIPE_PRICE_MONTHLY', '')
+STRIPE_PRICE_YEARLY = os.getenv('STRIPE_PRICE_YEARLY', '')
+
+LOGIN_URL = '/login/'
+
+#public address of the site, for links built outside a browser request (Stripe, emails)
+#Sign in with Google, see summarizer/accounts.py (the button is hidden while unset)
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
+
+SITE_URL = os.getenv('SITE_URL', 'https://www.summarizepaper.com' if 'ON_HEROKU' in os.environ else '')
+
 EMAIL_HOST = 'smtp.cloudmta.net'
 EMAIL_HOST_USER = '19e06dea731b2f94'
 EMAIL_HOST_PASSWORD= SECRETCMTA
@@ -54,7 +68,7 @@ else:
 
 CSRF_TRUSTED_ORIGINS = ['https://summarizepaper.herokuapp.com','https://summarizepaper.com','https://www.summarizepaper.com','https://*.127.0.0.1']
 
-ALLOWED_HOSTS = ['summarizepaper.herokuapp.com','summarizepaper.com','127.0.0.1']
+ALLOWED_HOSTS = ['summarizepaper.herokuapp.com','summarizepaper.com','www.summarizepaper.com','127.0.0.1','localhost']
 
 
 BROKER_URL = os.environ.get("REDISCLOUD_URL", "django://")
@@ -118,6 +132,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'arxivsummarizer.wsgi.application'
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -171,8 +187,6 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
@@ -184,7 +198,10 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 ASGI_APPLICATION = 'arxivsummarizer.asgi.application'
 
@@ -220,42 +237,56 @@ else:
 
 
 
-def get_cache():
-  import os
-  try:
-    servers = os.environ['MEMCACHIER_SERVERS']
-    username = os.environ['MEMCACHIER_USERNAME']
-    password = os.environ['MEMCACHIER_PASSWORD']
-    return {
-      'default': {
-        'BACKEND': 'django_bmemcached.memcached.BMemcached',
-        # TIMEOUT is not the connection timeout! It's the default expiration
-        # timeout that should be applied to keys! Setting it to `None`
-        # disables expiration.
-        #'TIMEOUT': None,
-        'TIMEOUT': 60 * 10,
-        'LOCATION': servers,
-        'OPTIONS': {
-          'username': username,
-          'password': password,
+#small, short-lived entries: "summary running" locks, Stripe price labels
+if os.environ.get("REDISCLOUD_URL"):
+    CACHES = {
+        'default': {
+            'BACKEND': 'summarizer.cache.SharedPoolRedisCache',
+            'LOCATION': os.environ["REDISCLOUD_URL"],
+            'TIMEOUT': 60 * 10,
         }
-      }
     }
-  except:
-    return {
-      'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'TIMEOUT': 60*10,
-      }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'TIMEOUT': 60 * 10,
+        }
     }
 
-CACHES = get_cache()
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'root': {'handlers': ['console'], 'level': 'WARNING'},
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'summarizer': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+    },
+}
 
 
 if 'ON_HEROKU' in os.environ:
+    ALLOWED_HOSTS = ['summarizepaper.herokuapp.com', 'summarizepaper.com', 'www.summarizepaper.com']
 
-    prod_db = dj_database_url.config(conn_max_age=0)
-    DATABASES['default'].update(prod_db)
+    #Daphne serves every request from one process: a small connection pool instead of
+    #opening a new SSL connection to Postgres for each request (CONN_MAX_AGE must stay 0)
+    DATABASES = {'default': dj_database_url.config(conn_max_age=0, ssl_require=True)}
+    DATABASES['default'].setdefault('OPTIONS', {})['pool'] = {'min_size': 2, 'max_size': 8, 'timeout': 20}
 
-    django_heroku.settings(locals())
-    DATABASES['default']['CONN_MAX_AGE'] = 0
+    #Heroku's router tells us whether the visitor used https
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+
+#error alerts: active only when the SENTRY_DSN config var is set
+if os.getenv('SENTRY_DSN'):
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=os.environ['SENTRY_DSN'],
+        environment='production' if 'ON_HEROKU' in os.environ else 'development',
+        send_default_pii=False,
+        traces_sample_rate=0.0,
+    )

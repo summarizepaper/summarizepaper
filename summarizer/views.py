@@ -11,6 +11,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
+from summarizer import access, accounts, similar
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -34,6 +35,7 @@ from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
+from django.contrib import messages
 import os
 from django.utils.translation import get_language,get_language_info
 from django.db.models import Sum
@@ -42,8 +44,10 @@ from urllib.parse import urlencode
 import urllib, urllib.request
 from xml.etree import ElementTree
 import asyncio
+import aiohttp
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
+from django.utils.safestring import mark_safe
 
 @require_GET
 def robots_txt(request):
@@ -57,57 +61,41 @@ def robots_txt(request):
 
 
 class CustomAuthenticationForm(AuthenticationForm):
-    def clean_username(self):
-        print('clean')
+    """Accepts the email address as well as the username, and tells apart accounts not activated yet."""
+    inactive_user = None
+
+    def clean(self):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
-        user = authenticate(username=username, password=password)
+        if username and password and '@' in username:
+            for candidate in User.objects.filter(email__iexact=username.strip()).order_by('-is_active', '-last_login'):
+                if candidate.check_password(password):
+                    self.cleaned_data['username'] = candidate.username
+                    break
+            username = self.cleaned_data['username']
+        if username and password:
+            inactive = User.objects.filter(username=username, is_active=False).first()
+            if inactive is not None and inactive.check_password(password):
+                self.inactive_user = inactive
+                raise ValidationError("Your account is not activated yet.", code='inactive')
+        return super().clean()
 
-        print('user',user)
-        if user is not None and not user.is_active:
-            print('activate brah')
-            raise ValidationError("Your account is not activated yet.")
-        return username
 
 class CustomLoginView(auth_views.LoginView):
     authentication_form = CustomAuthenticationForm
 
-    def dispatch(self, request, *args, **kwargs):
-        print('dis')
-        try:
-            print('ok')
-            return super().dispatch(request, *args, **kwargs)
-        except PermissionDenied as e:
-            print('pasok')
-            messages.error(self.request, str(e))
-            return self.form_invalid(self.get_form())
-
-    def form_valid(self, form):
-        print('not perm a')
-
-        username = form.cleaned_data['username']
-        password = form.cleaned_data['password']
-        try:
-            user = authenticate(username=username, password=password)
-        except Exception as e:
-            print(e)
-            return self.form_invalid(form)
-        #user = authenticate(username=username, password=password)
-        print('not perm')
-
-        if user is not None and not user.is_active:
-            print('perm')
-            raise PermissionDenied("Your account is not activated yet.")
-        try:
-            return super().form_valid(form)
-        except PermissionDenied as e:
-            print('ret')
-            return self.render_to_response(
-                self.get_context_data(form=form, permission_denied=str(e))
-            )
-        #return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = context.get('form')
+        context['inactive_user'] = getattr(form, 'inactive_user', None)
+        context.update(accounts.auth_context())
+        return context
 
     def get_success_url(self):
+        #honour a safe ?next= (e.g. coming back to the Premium page)
+        next_url = self.get_redirect_url()
+        if next_url:
+            return next_url
         user = self.request.user
         if user.is_staff:
             return reverse_lazy('about')
@@ -160,51 +148,35 @@ class ActivateView(View):
 class RegisterView(View):
     def get(self, request):
         form = RegistrationForm()
-        return render(request, 'register.html', {'form': form})
+        return render(request, 'register.html', {'form': form, **accounts.auth_context()})
 
     def post(self, request):
         form = RegistrationForm(request.POST)
+        context = {'form': form, **accounts.auth_context()}
+        ip = access.hash_ip(access.client_ip(request))
+        if accounts.looks_like_bot(request.POST) or accounts.signups_exhausted(ip):
+            # no account and no email, but the same page a person would see
+            return redirect('account_activation_sent')
         if form.is_valid():
             username = form.cleaned_data.get('username')
             if User.objects.filter(username=username).exists():
                 form.add_error('username', 'This username is already taken')
-                return render(request, 'register.html', {'form': form})
+                return render(request, 'register.html', context)
 
             email = form.cleaned_data.get('email')
+            if User.objects.filter(email__iexact=email).exists():
+                context['email_taken'] = email
+                return render(request, 'register.html', context)
+
             password1 = form.cleaned_data.get('password1')
-            password2 = form.cleaned_data.get('password2')
-
-            if password1 and password2 and password1 != password2:
-                form.add_error(None, "Passwords don't match")
-                return render(request, 'register.html', {'form': form})
-
             user = User.objects.create_user(username=username, email=email, password=password1)
             user.is_active = False
             user.save()
-
-            current_site = get_current_site(request)
-            mail_subject = 'Activate your account.'
-            print('user.pk',user.pk)
-            uid=urlsafe_base64_encode(force_bytes(user.pk))
-            token=generate_token.make_token(user)
-            print('uid1',uid)
-            print('token1',token)
-            print('current_site.domain',current_site.domain)
-            message = render_to_string('acc_active_email.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': uid,#urlsafe_base64_encode(force_bytes(user.pk)).decode(),
-                'token': token,
-            })
-            to_email = email
-            email = EmailMessage(mail_subject, message, to=[to_email])
-            email.content_subtype = "html"
-
-            email.send()
-
+            accounts.count_signup(ip)
+            accounts.send_login_link(request, user)
             return redirect('account_activation_sent')
 
-        return render(request, 'register.html', {'form': form})
+        return render(request, 'register.html', context)
 
 
 def logout_view(request):
@@ -303,10 +275,10 @@ def search_results(request):
 
     '''
     url = f'https://export.arxiv.org/api/query?search_query={query}&start=0&max_results={max_results}&sortBy=relevance&sortOrder=descending'
-    #url = f'http://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+    #url = f'https://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
 
     # Define the API endpoint URL
-    #url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
+    #url = f"https://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
 
     #response = urllib.request.urlopen(url)
     #data = response.read()
@@ -316,8 +288,8 @@ def search_results(request):
     ns = {'ns0': 'http://www.w3.org/2005/Atom','ns1':'http://a9.com/-/spec/opensearch/1.1/','ns2':'http://arxiv.org/schemas/atom'} # add more as needed
     #tit=root.find('ns0:title', ns).text
 
-    #url = 'http://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
-    #url = 'http://export.arxiv.org/api/query?search_query=all:"'+query1+'"&start=0&max_results='+str(max_results)+'&sortBy=submittedDate&sortOrder=descending'
+    #url = 'https://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
+    #url = 'https://export.arxiv.org/api/query?search_query=all:"'+query1+'"&start=0&max_results='+str(max_results)+'&sortBy=submittedDate&sortOrder=descending'
 
     print('url::',url)
     #input('jjk')
@@ -574,6 +546,19 @@ def escape_latex(abstract):
         abstract = abstract[:start] + "\[" + abstract[start + 1:end] + "\]" + abstract[end + 1:]
     return abstract
 
+def arxiv_metadata_or_none(arxiv_id):
+    try:
+        return asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        return None
+
+
+def arxiv_unavailable(request, arxiv_id):
+    return render(request, 'summarizer/arxividpage.html',
+                  {'arxiv_id': arxiv_id, 'errormess': 'arXiv is not responding right now. Please try again in a moment.'},
+                  status=503)
+
+
 def tree(request, arxiv_id):
     arxiv_id = arxiv_id.strip()
     lang = get_language()
@@ -606,7 +591,8 @@ def tree(request, arxiv_id):
         scores=[]
         max_score=0
         if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-            relpapers = PaperScore.objects.filter(from_paper=paper,active=True)
+            relpapers = (PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')
+                         .select_related('to_paper').prefetch_related('to_paper__authors'))
             relpapersData = []
             import numpy as np
             import random
@@ -634,10 +620,12 @@ def tree(request, arxiv_id):
                     'main':True
                 })
 
-            for relpaper in relpapers:
-                first_author = relpaper.to_paper.authors.first()
+            # spread the papers evenly around the main one: searching random free spots took seconds
+            start_angle = random.random() * 2 * np.pi
+            for k, relpaper in enumerate(relpapers):
+                paper_authors = list(relpaper.to_paper.authors.all())
+                first_author = min(paper_authors, key=lambda a: a.pk) if paper_authors else None
                 author_name = first_author.name if first_author else 'Unknown Author'
-                paper_authors = relpaper.to_paper.authors.all()
                 author_names = ', '.join([author.name for author in paper_authors[:MAX_AUTHORS]])
                 if len(paper_authors) > MAX_AUTHORS:
                     author_names += ', ...'
@@ -648,26 +636,14 @@ def tree(request, arxiv_id):
                 # add x and y positions based on distance
                 #x = distance * np.cos(random.random() * np.pi * 2)
                 #y = distance * np.sin(random.random() * np.pi * 2)
-                i=0
-                #print('cos',np.cos(np.pi * 2),random.random(),random.random(),random.random(),random.random())
-                #print('cos',np.cos(np.pi/2.))
+                angle = start_angle + 2 * np.pi * k / len(relpapers)
+                x = distance * np.cos(angle)
+                y = distance * np.sin(angle)
 
-                while True:
-                    i+=1
-                    ran=random.random()
-                    x = distance * np.cos(ran * np.pi * 2)
-                    y = distance * np.sin(ran * np.pi * 2)
-                    # check if there are any points within 30px around (x,y)
-                    if all(np.linalg.norm([d['x'] - x, d['y'] - y]) > 30 for d in relpapersData):
-                        break
-                    if i==10000:
-                        break
-
-                print('x,y,score',x,y,(0.5-relpaper.score)*200,distance,relpaper.score)
                 relpapersData.append({
                     'arxiv_id': relpaper.to_paper.arxiv_id,
                     'title': relpaper.to_paper.title,
-                    'score': (0.5-relpaper.score)*200,
+                    'score': 100 * (1 - relpaper.score),
                     'lang':lang,
                     'distance':distance,
                     'x': x,
@@ -703,9 +679,7 @@ def tree(request, arxiv_id):
             #for rel in relpapers:
             #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
             for pap in relpapers:
-                newscore = (0.5-pap.score)*200
-                newscore = "{:.1f}".format(newscore)
-                scores.append(newscore)
+                scores.append(similar.percent(pap.score))
             stuff_for_frontend.update({
                 'relpapers':relpapers,
                 'max_score':str(max_score*10),
@@ -715,7 +689,9 @@ def tree(request, arxiv_id):
 
     else:
         alpaper=False
-        arxiv_detailsf=asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+        arxiv_detailsf=arxiv_metadata_or_none(arxiv_id)
+        if arxiv_detailsf is None:
+            return arxiv_unavailable(request, arxiv_id)
         exist=arxiv_detailsf[0]
         #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
         if arxiv_detailsf[0] == 0:
@@ -782,6 +758,37 @@ def create_embed(request):
     return redirect(reverse('home'))
 
 
+ARXIV_API_URL = 'https://export.arxiv.org/api/query'
+
+
+def arxiv_api(request):
+    """Relay the chat page's arXiv lookups: arXiv sends no CORS header, so browsers block direct calls."""
+    search_query = request.GET.get('search_query', '').strip()[:300]
+    id_list = request.GET.get('id_list', '').strip()[:100]
+    if bool(search_query) == bool(id_list):
+        return HttpResponse('Give either search_query or id_list.', status=400, content_type='text/plain')
+    if id_list:
+        params = {'id_list': id_list}
+    else:
+        try:
+            max_results = min(max(int(request.GET.get('max_results', 10)), 1), 20)
+        except ValueError:
+            max_results = 10
+        params = {'search_query': search_query, 'max_results': max_results}
+
+    cache_key = 'arxiv-api:' + hashlib.sha256(json.dumps(params, sort_keys=True).encode()).hexdigest()
+    body = cache.get(cache_key)
+    if body is None:
+        try:
+            r = requests.get(ARXIV_API_URL, params=params, timeout=15)
+            r.raise_for_status()
+        except requests.RequestException:
+            return HttpResponse('arXiv is not reachable right now.', status=502, content_type='text/plain')
+        body = r.content
+        cache.set(cache_key, body, 600)
+    return HttpResponse(body, content_type='application/atom+xml; charset=utf-8')
+
+
 def chat(request):
     stuff_for_frontend = {}
     lang = get_language()
@@ -812,25 +819,33 @@ def chat(request):
 
     return render(request, "summarizer/chat.html", stuff_for_frontend)
 
-def user_payment_situation(user_id):
-    user = get_object_or_404(User, pk=user_id)
-    user_plan = UserPlan.objects.filter(user=user).last() # get the latest user plan
-    if user_plan:
-        payment_plan = user_plan.payment_plan
-        paid = user_plan.paid
-        auto_renew = payment_plan.auto_renew
-        '''
-        if auto_renew:
-            duration = payment_plan.duration_choices
-            if duration == '1M':
-                renewal_date = user_plan.created_at + timedelta(days=30)
-            elif duration == '1Y':
-                renewal_date = user_plan.created_at + timedelta(days=365)
-            if datetime.now() > renewal_date:
-                paid = False
-        '''
-        return {"paid": paid}
-    return {"paid": False}
+def paper_structured_data(paper, sumpaper, lang):
+    """schema.org JSON-LD for a paper page, already escaped for a <script> tag."""
+    arxiv_url = 'https://arxiv.org/abs/' + paper.arxiv_id.replace('--', '/')
+    title = re.sub(r'\s+', ' ', paper.title or paper.arxiv_id).strip()
+    data = {
+        '@context': 'https://schema.org',
+        '@type': 'ScholarlyArticle',
+        'headline': title[:110],
+        'name': title,
+        'identifier': paper.arxiv_id.replace('--', '/'),
+        'url': 'https://www.summarizepaper.com/%s/arxiv-id/%s/' % (lang, paper.arxiv_id),
+        'sameAs': arxiv_url,
+        'inLanguage': lang,
+        'author': [{'@type': 'Person', 'name': a.name} for a in paper.authors.all()[:20]],
+    }
+    if paper.published_arxiv:
+        data['datePublished'] = paper.published_arxiv.isoformat()
+    if paper.category:
+        data['about'] = paper.category
+    if sumpaper and sumpaper.summary:
+        data['abstract'] = sumpaper.summary.strip()
+    elif paper.abstract:
+        data['abstract'] = re.sub(r'\s+', ' ', paper.abstract).strip()
+    if sumpaper and sumpaper.keywords:
+        data['keywords'] = sumpaper.keywords
+    escaped = json.dumps(data).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+    return mark_safe(escaped)
 
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
@@ -872,10 +887,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
     # Check if this IP address has already voted on this post
     hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
 
-    paid=False
-    if request.user.is_authenticated:
-        paid = user_payment_situation(request.user.id)['paid']#request.user.paid
-        print('paid',paid)
+    paid = access.is_paid(request.user)
 
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid}
 
@@ -940,6 +952,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             print('ok close')
             tree = request.POST.get('tree', '1')
             print('tree',tree)
+            access.grant_run(request.session, arxiv_id, 'close')
             stuff_for_frontend.update({
                 'close':True,
                 'treeval':tree
@@ -990,24 +1003,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
         if 'run_button' in request.POST:
             print('ok run')
-            client_ip = utils.get_client_ip(request)#request.META['REMOTE_ADDR']
-            print('clientip',client_ip)
-            # Check if this IP address has already voted on this post
-            hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
+            hashed_ip_address = access.hash_ip(access.client_ip(request))
+            allowed, refusal = access.run_quota(request.user, hashed_ip_address)
 
-            #check if just run another with same ip (stop robots)
-            ten_seconds_ago = timezone.now() - timezone.timedelta(seconds=10)
-            print('ten_seconds_ago',ten_seconds_ago)
-            recent_record = PaperHistory.objects.filter(ip_address=hashed_ip_address, created__gte=ten_seconds_ago).first()
-            print('recent_record',recent_record)
-
-            #check if too many paper run for one IP address over last 24 hours
-            one_day_ago = timezone.now() - timezone.timedelta(days=1)
-            past_records = PaperHistory.objects.filter(ip_address=hashed_ip_address, created__gte=one_day_ago)
-            print('past_record',past_records,past_records.count())
-            NUM_LIMIT_PER_DAY=10
-
-            if (recent_record is None and past_records.count()<NUM_LIMIT_PER_DAY) or (request.user.is_superuser):#11
+            if allowed:
 
                 if request.user.is_authenticated:
                     #if User.objects.filter(username=user).exists():
@@ -1042,20 +1041,15 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
                 #arxiv_id=arxiv_id.replace('--','/')
 
+                access.grant_run(request.session, arxiv_id, 'run')
                 stuff_for_frontend.update({
                     'run':True,
                 })
             else:
-                if recent_record is not None:
-                    #robot running the run button
-                    stuff_for_frontend.update({
-                        'robot':True,
-                    })
-                if past_records.count()>NUM_LIMIT_PER_DAY:
-                    #user running too many papers in 24hrs
-                    stuff_for_frontend.update({
-                        'toomany':True,
-                    })
+                #refusal is 'robot' (runs too close together) or 'toomany' (daily limit)
+                stuff_for_frontend.update({
+                    refusal:True,
+                })
         print('renderrrrrrrrrrrrr')
         #return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id,'stuff_for_frontend':stuff_for_frontend}))
 
@@ -1188,17 +1182,16 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             max_score=0
             MAX_REL_PAPERS=7
             if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-                relpapers = PaperScore.objects.filter(from_paper=paper,active=True)[:MAX_REL_PAPERS]
+                relpapers = PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')[:MAX_REL_PAPERS]
                 max_score = min(rel.score for rel in relpapers)
                 #for rel in relpapers:
                 #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
                 for pap in relpapers:
-                    newscore = (0.5-pap.score)*200
-                    newscore = "{:.1f}".format(newscore)
-                    scores.append(newscore)
+                    scores.append(similar.percent(pap.score))
 
             stuff_for_frontend.update({
                 'paper':paper,
+                'structured_data':paper_structured_data(paper, sumpaper, lang),
                 'relpapers':relpapers,
                 'max_score':max_score,
                 'scores':scores,
@@ -1216,7 +1209,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         else:
             print('nope')
             alpaper=False
-            arxiv_detailsf=asyncio.run(utils.get_arxiv_metadata(arxiv_id))
+            arxiv_detailsf=arxiv_metadata_or_none(arxiv_id)
+            if arxiv_detailsf is None:
+                return arxiv_unavailable(request, arxiv_id)
             exist=arxiv_detailsf[0]
             #exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments
             if arxiv_detailsf[0] == 0:
@@ -1355,7 +1350,38 @@ def history(request):
 
 
 def update_cache(request):
+    #clears the "summary already running" lock of a paper, staff only
+    if not request.user.is_staff:
+        raise PermissionDenied
     arxiv_id = request.GET.get('arxiv_id')
     arxiv_group_name = "ar_%s" % arxiv_id
     cache.set(arxiv_group_name, False)
     return HttpResponse("Cache updated")
+
+
+def bibtex(request, arxiv_id):
+    """BibTeX entry of a paper in the format arXiv itself suggests."""
+    paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
+    ref = paper.arxiv_id.replace('--', '/')
+    bare = re.sub(r'v\d+$', '', ref)
+    authors = [a.name for a in paper.authors.all()]
+    year = paper.published_arxiv.year if paper.published_arxiv else ''
+    first_word = next((w for w in re.findall(r'[A-Za-z]+', paper.title or '') if len(w) > 3), 'paper')
+    last_name = re.sub(r'[^A-Za-z]', '', authors[0].split()[-1]) if authors else 'arxiv'
+    lines = [
+        '@misc{%s%s%s,' % (last_name.lower(), year, first_word.lower()),
+        '  title={%s},' % ' '.join((paper.title or '').split()),
+        '  author={%s},' % ' and '.join(authors),
+        '  year={%s},' % year,
+        '  eprint={%s},' % bare,
+        '  archivePrefix={arXiv},',
+    ]
+    if paper.category:
+        lines.append('  primaryClass={%s},' % paper.category)
+    if paper.link_doi and 'doi.org' in paper.link_doi:
+        lines.append('  doi={%s},' % paper.link_doi.split('doi.org/')[-1])
+    lines.append('  url={https://arxiv.org/abs/%s}' % bare)
+    lines.append('}')
+    response = HttpResponse('\n'.join(lines) + '\n', content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = 'inline; filename="%s.bib"' % bare.replace('/', '_')
+    return response

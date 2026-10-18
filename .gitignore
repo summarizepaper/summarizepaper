@@ -131,3 +131,9 @@ dmypy.json
 # macOS / local data
 .DS_Store
 dump.rdb
+
+# local test artifacts (PDFs, pickles, FAISS dumps)
+/*.pdf
+/*.pkl
+/savedocsearch/
+/req.txt

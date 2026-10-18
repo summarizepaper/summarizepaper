@@ -41,6 +41,12 @@ class UserPlan(models.Model):
     user = models.ForeignKey(User,blank=True, null=True, on_delete=models.CASCADE)
     payment_plan = models.ForeignKey(PaymentPlan, on_delete=models.CASCADE, blank=True, null=True)
     paid = models.BooleanField(default=False)
+    #end of the paid period; None = no end (plans granted by hand in the admin)
+    expires = models.DateTimeField(blank=True, null=True)
+    #the subscriber cancelled: still paid until `expires`, not renewed after
+    canceling = models.BooleanField(default=False)
+    stripe_customer_id = models.CharField(max_length=100, blank=True, default='')
+    stripe_subscription_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -208,3 +214,107 @@ class AIassistant(models.Model):
 
     def __str__(self):
         return self.arxiv_id+' '+self.query
+
+
+class DigestSubscription(models.Model):
+    """Daily email of new arXiv papers in the categories a user follows."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='digest')
+    categories = models.CharField(max_length=500)  # comma-separated arXiv categories, e.g. "astro-ph.EP,cs.LG"
+    keywords = models.CharField(max_length=500, blank=True, default='')  # comma-separated, optional filter
+    lang = models.CharField(max_length=10, default='en')
+    send_hour = models.PositiveSmallIntegerField(default=7)  # local hour, 0-23
+    timezone = models.CharField(max_length=64, default='Europe/Paris')  # IANA name
+    active = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    last_sent = models.DateTimeField(blank=True, null=True)
+
+    CATCH_UP_HOURS = 3  # a missed hourly run is caught up, but never hours late at night
+
+    def is_due(self, now):
+        """True during the hours after the chosen local time, if this slot was not sent yet."""
+        import datetime
+        from zoneinfo import ZoneInfo
+        try:
+            tz = ZoneInfo(self.timezone)
+        except Exception:
+            tz = ZoneInfo('UTC')
+        local_now = now.astimezone(tz)
+        delay = (local_now.hour - self.send_hour) % 24
+        if delay >= self.CATCH_UP_HOURS:
+            return False
+        slot_start = (local_now - datetime.timedelta(hours=delay)).replace(minute=0, second=0, microsecond=0)
+        if slot_start.weekday() >= 5:  # arXiv announces nothing new for Saturday and Sunday
+            return False
+        return self.last_sent is None or self.last_sent < slot_start
+
+    def category_list(self):
+        return [c for c in (x.strip() for x in self.categories.split(',')) if c]
+
+    def keyword_list(self):
+        return [k for k in (x.strip().lower() for x in self.keywords.split(',')) if k]
+
+    def __str__(self):
+        return '%s: %s' % (self.user.username, self.categories)
+
+
+class DigestItem(models.Model):
+    """A new paper with its short plain-language blurb, generated once per language."""
+    arxiv_id = models.CharField(max_length=40)
+    lang = models.CharField(max_length=10, default='en')
+    title = models.TextField()
+    authors = models.TextField(blank=True, default='')
+    categories = models.CharField(max_length=300, blank=True, default='')
+    published = models.DateTimeField(blank=True, null=True)
+    blurb = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('arxiv_id', 'lang')
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.lang)
+
+
+class DigestDelivery(models.Model):
+    """Which paper was already sent to which subscriber, so no paper is sent twice."""
+    subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='deliveries')
+    arxiv_id = models.CharField(max_length=40)
+    sent = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('subscription', 'arxiv_id')
+
+
+class PaperText(models.Model):
+    """Text of a paper as given to the language model (see paper_source.py)."""
+    SOURCES = [('html', 'arXiv HTML'), ('pdf', 'PDF'), ('abstract', 'Metadata and abstract only'), ('index', 'Rebuilt from FAISS index')]
+    arxiv_id = models.CharField(max_length=40, unique=True)
+    text = models.TextField()
+    source = models.CharField(max_length=10, choices=SOURCES)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.source)
+
+
+class PaperEmbedding(models.Model):
+    """One vector per paper, from its title and abstract (see similar.py)."""
+    arxiv_id = models.CharField(max_length=40, unique=True)
+    category = models.CharField(max_length=40, blank=True, db_index=True)
+    model = models.CharField(max_length=60)
+    vector = models.BinaryField()
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.model)
+
+
+class ReactivationEmail(models.Model):
+    """One-off email to accounts whose activation email never arrived (see reactivation.py)."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    email = models.EmailField()
+    sent = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.email, self.sent)

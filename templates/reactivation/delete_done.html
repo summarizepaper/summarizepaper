@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Delete this account' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+{% block content %}
+<div class="account-box">
+  {% if kept %}
+  <p>{% trans 'This account is in use, so it was not deleted. Log in and contact us if you want it removed.' %}</p>
+  {% else %}
+  <h1>{% trans 'Account deleted' %}</h1>
+  <p>{% trans 'The account and its email address have been removed. We will not write to you again.' %}</p>
+  {% endif %}
+</div>
+{% endblock %}

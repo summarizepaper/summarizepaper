@@ -3,6 +3,10 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
+from summarizer import access, assistant, keypoints, similar
+import logging
+
+logger = logging.getLogger(__name__)
 from channels.db import database_sync_to_async
 from .models import ArxivPaper, Author, PaperAuthor, SummaryPaper
 from datetime import datetime
@@ -66,15 +70,12 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
         # Here you can put the code to create embeddings for the given paper ID
         # First check if embeddings already there
 
-        c = asyncio.create_task(sync_to_async(utils.getstorepickle)(paper_id))
-        pickledata = await c
-
-        if pickledata=='':
+        if not await sync_to_async(utils.has_paper_text)(paper_id):
 
             print(f"Creating embeddings for paper {paper_id}...")
             #time.sleep(1)
             url = 'https://arxiv.org/pdf/'+paper_id+'.pdf'
-            book_path = "test1.pdf"
+            book_path = None
 
             c=asyncio.create_task(utils.get_arxiv_metadata(paper_id))
             arxivarrayf = await c
@@ -130,17 +131,12 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                 print('active....')
                 if public==1:
                     #response = requests.get(url)
-                    response = await asyncio.to_thread(requests.get, url)
-                    my_raw_data = response.content
+                    book_text, text_source = await utils.read_paper(paper_id, url)
 
-                    with open("my_pdf.pdf", 'wb') as my_data:
-                        my_data.write(my_raw_data)
-
-                    ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                    ###book_text = utils.extract_text_from_pdf(my_raw_data)
                     print('raw data done')
                     #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-                    c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
-                    book_text,full_text=await c
+                    full_text=book_text
                     print('book:',book_text)
                     
 
@@ -148,6 +144,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                     print('else book text')
                     print('authors',authors)
                     book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+                    text_source='abstract'
 
 
 
@@ -161,7 +158,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                     else:
                         book_text2=data+'    '+book_text
 
-                    c = asyncio.create_task(utils.createindex(paper_id, book_text2, settings.OPENAI_KEY))
+                    c = asyncio.create_task(utils.createindex(paper_id, book_text2, settings.OPENAI_KEY, source=text_source))
                     created=await c
                     print('crea',created)
 
@@ -232,7 +229,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
     async def createindexwithsources(self,arxiv_id,details_paper,data):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
-        book_path = "test1.pdf"
+        book_path = None
         sum=""
         laysum=""
         notes=""
@@ -259,33 +256,27 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     async with session.get(url) as response:
                         await response.read()
 
-                response = await asyncio.to_thread(requests.get, url)
+                response = await asyncio.to_thread(requests.get, url, timeout=120)
                 '''
                 
 
-                response = requests.get(url)
-                print('kici')
-
-                my_raw_data = response.content
+                book_text, text_source = await utils.read_paper(arxiv_id, url)
 
                         
                 print('ici')
-
-                with open("my_pdf.pdf", 'wb') as my_data:
-                    my_data.write(my_raw_data)
                 print('ici2')
 
-                ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                ###book_text = utils.extract_text_from_pdf(my_raw_data)
 
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
                     
-                c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
-                book_text,full_text=await c
+                full_text=book_text
                 print('book:',book_text)
             else:
                 print('else book text')
                 print('authors',authors)
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+                text_source='abstract'
 
             #c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
             pickledata = ''#await c
@@ -297,7 +288,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 else:
                     book_text2=data+'    '+book_text
 
-                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY, source=text_source))
                 created=await c
                 print('crea',created)
                 print('finished',arxiv_id)
@@ -306,7 +297,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
     async def computesummary(self,arxiv_id,language,details_paper,message,data,p):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
-        book_path = "test1.pdf"
+        book_path = None
         sum=""
         laysum=""
         notes=""
@@ -349,8 +340,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             print('active....')
             if public==1:
                 #response = requests.get(url)
-                response = await asyncio.to_thread(requests.get, url)
-                my_raw_data = response.content
+                book_text, text_source = await utils.read_paper(arxiv_id, url)
 
 
                 
@@ -366,19 +356,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 #time.sleep(3.)
 
-                with open("my_pdf.pdf", 'wb') as my_data:
-                    my_data.write(my_raw_data)
-
-                ###book_text = utils.extract_text_from_pdf("my_pdf.pdf")
+                ###book_text = utils.extract_text_from_pdf(my_raw_data)
                 #c=asyncio.create_task(utils.extract_text_from_pdf(book_path))
-                c=asyncio.create_task(utils.extract_text_from_pdf("my_pdf.pdf"))
-                book_text,full_text=await c
+                full_text=book_text
                 #print('book:',book_text)
                 
 
             else:
               
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
+                text_source='abstract'
 
             message["progress"] = 30
             if language == 'fr':
@@ -391,17 +378,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             await c
 
 
-            c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
-            pickledata = await c
-
             #print('dattaaaaaaaaaaaa',data)
-            if pickledata=='':
+            if not await sync_to_async(utils.has_paper_text)(arxiv_id):
                 if public==1:
                     book_text2=data+'    '+full_text
                 else:
                     book_text2=data+'    '+book_text
 
-                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY))
+                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY, source=text_source))
                 created=await c
                 #print('crea',created)
 
@@ -481,7 +465,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 for key_point in notes:
                     print('note',key_point)
 
-                c=asyncio.create_task(self.send_message_notes(notes))
+                shown = notes if isinstance(notes, str) else [keypoints.point_html(n) for n in notes]
+                c=asyncio.create_task(self.send_message_notes(shown))
                 await c
 
 
@@ -605,6 +590,14 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         return paper,created
     '''
     async def sendclose(self,v,l,message):
+        try:
+            await self._sendclose(v,l,message)
+        except Exception:
+            logger.exception('Closest papers search failed for %s', v)
+            cache.set(self.arxiv_group_name+'-close', False)
+            await self.send_failure(l)
+
+    async def _sendclose(self,v,l,message):
         print('in sendclose')
 
         page_running = cache.get(self.arxiv_group_name+'-close')
@@ -628,13 +621,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await c
 
         print('clossseeee')
-        c=asyncio.create_task(utils.findclosestpapers(v,l,15,settings.OPENAI_KEY,but=True))
-        closest_papers = await c
-
-        print('closest_papers',closest_papers)
-        #store results in db
-        c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
-        storeclosest = await c
+        message["progress"] = 50
+        await self.send_message_now(message)
+        await asyncio.to_thread(similar.find_and_store, v)
 
         #await asyncio.sleep(10.)
         
@@ -650,6 +639,22 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
     async def sendmessages(self,v,l,message,p):
+        try:
+            await self._sendmessages(v,l,message,p)
+        except Exception:
+            logger.exception('Summary failed for %s', v)
+            #release the "running" lock so the paper can be run again
+            cache.set(self.arxiv_group_name, False)
+            await self.send_failure(l)
+
+    async def send_failure(self, l):
+        if l == 'fr':
+            text = "Une erreur s'est produite pendant le traitement. Réessayez plus tard ou contactez-nous."
+        else:
+            text = "Something went wrong while processing the paper. Please try again later or contact us."
+        await self.send_message_now({"loading_message": text, "progress": 0})
+
+    async def _sendmessages(self,v,l,message,p):
         print('in sendmessages')
 
         page_running = cache.get(self.arxiv_group_name)
@@ -673,7 +678,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         if l == 'fr':
             message["loading_message"] = "Chargement des informations du papier arXiv..."
         else:
-            message["loading_message"] = "Loading the arXiv paper informartion..."
+            message["loading_message"] = "Loading the arXiv paper information..."
 
         c=asyncio.create_task(self.send_message_now(message))
         await c
@@ -871,13 +876,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
-        c=asyncio.create_task(utils.findclosestpapers(v,l,15,settings.OPENAI_KEY))
-        closest_papers = await c
-
-        #print('closest_papers',closest_papers)
-        #store results in db
-        c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
-        storeclosest = await c
+        await asyncio.to_thread(similar.find_and_store, v)
 
         message["progress"] = 100
         if l == 'fr':
@@ -900,6 +899,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         self.arxiv_group_name = "ar_%s" % self.arxiv_id
         print('self.arxiv_group_name',self.arxiv_group_name)
+
+        #identity and paid status come from the session cookie, never from the client messages
+        self.user = self.scope.get("user")
+        self.hashed_ip = access.hash_ip(access.client_ip_from_scope(self.scope))
+        self.paid = await database_sync_to_async(access.is_paid)(self.user)
         # Join room group
         await self.channel_layer.group_add(self.arxiv_group_name, self.channel_name)
         await self.accept()
@@ -923,14 +927,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('rec',text_data)
         data = json.loads(text_data)
 
-        paid=None
-        if 'paid' in data:
-            paid = data['paid']
+        paid = self.paid
 
         if 'command' in data:
             command = data['command']
 
             if command == 'start_background_task':
+                #only start what the HTTP view allowed (quota checked there), otherwise just listen to the group
+                if not await self.consume_run('run'):
+                    return
                 message = {
                     "loading_message": "Loading...",
                     "progress": 0
@@ -946,6 +951,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
                 asyncio.create_task(self.sendmessages(v,l,message,paid))
             elif command == 'start_close_task':
+                if not await self.consume_run('close'):
+                    return
                 message = {
                     "loading_message": "Loading...",
                     "progress": 0
@@ -961,51 +968,46 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         else:
             message = data["message"]
             print('receive',message)
-            user = data["user"]
-            ip = data["ip"]
             selectedpapers=''
+
+            if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) <= 0:
+                if self.language == 'fr':
+                    limit_text = "Vous avez atteint la limite quotidienne de questions. Revenez demain ou passez au compte Premium."
+                else:
+                    limit_text = "You have reached the daily question limit. Come back tomorrow or upgrade to Premium."
+                await self.send(text_data=json.dumps({'message': limit_text}))
+                return
 
             if "selectedpapers" in data:
                 selectedpapers=data["selectedpapers"]
                 print('selectedpapers',selectedpapers)
-            if "count" in data:
-                countpaperwithlicenses=data["count"]
 
-            print('receive',user)
-            #response = "reponse brah"#process_message(message)
-            print('avant chat bot')
-            #query = "Create a summary and tell me who the authors are?"
-            from langchain.memory import ConversationBufferMemory
+            #the multi-paper chat page sends the papers to discuss, a paper page discusses its own paper
+            if selectedpapers:
+                arxiv_ids = [str(p).replace('/', '--') for p in selectedpapers][:10]
+            else:
+                arxiv_ids = [self.arxiv_id]
 
-            memory = ConversationBufferMemory(memory_key="history",return_messages=True)
+            async def send_delta(delta):
+                await self.send(text_data=json.dumps({'type': 'chat_delta', 'delta': delta}))
 
-            print('PAIDDDD',paid)
+            try:
+                chatbot_text = await assistant.answer(
+                    arxiv_ids, self.language, message, paid, user=self.user, hashed_ip=self.hashed_ip,
+                    on_delta=send_delta, conversation_id=self.arxiv_id)
+            except Exception:
+                logger.exception('Assistant failed for %s', self.arxiv_id)
+                chatbot_text = None
 
-            c=asyncio.create_task(utils.chatbot(self.arxiv_id,self.language,message,settings.OPENAI_KEY,user=user,memory=memory,ip=ip,selectedpapers=selectedpapers,countpaperwithlicenses=countpaperwithlicenses,p=paid))
-            chatbot_text=await c
-
-            #chatbot_text=None
-            print('apres chat bot',chatbot_text)
-
-            #c=asyncio.create_task(utils.findclosestpapers(self.arxiv_id,self.language,settings.OPENAI_KEY))
-            #closest_papers = await c
-
-            #print('closest_papers',closest_papers)
-
-            #async for text_chunk in utils.chatbot(self.arxiv_id, self.language, message, settings.OPENAI_KEY):
-
-            #    await self.send(text_data=json.dumps({
-            #        'message': text_chunk
-            #    }))
-
-            if chatbot_text==None:
-                chatbot_text="Something went wrong... Contact the administrators if it keeps on happening."
-            # Send the response back to the client over the WebSocket connection
+            if not chatbot_text:
+                if self.language == 'fr':
+                    chatbot_text = "Une erreur s'est produite. Contactez-nous si le problème persiste."
+                else:
+                    chatbot_text = "Something went wrong... Contact the administrators if it keeps on happening."
 
             await self.send(text_data=json.dumps({
-                'message': chatbot_text.lstrip(": ")
+                'message': chatbot_text
             }))
-            print('send 2',chatbot_text)
 
 
     async def progress_text_update(self, event):
@@ -1064,6 +1066,15 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             'type': 'progress_update',
             'message': event['message']
         }))
+
+    async def consume_run(self, kind):
+        session = self.scope.get("session")
+        if session is None:
+            return False
+        allowed = await database_sync_to_async(access.consume_run)(session, self.arxiv_id, kind)
+        if allowed:
+            await database_sync_to_async(session.save)()
+        return allowed
 
     async def disconnect(self, close_code):
         print('closed')

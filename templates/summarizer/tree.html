@@ -25,124 +25,35 @@
     </script>
   
     <style>
-      .main-content2 {
-     padding: 16px;
-   }
-
-   .title {
-     font-size: 2xl;
-     font-weight: bold;
-     font-family: sans-serif;
-     margin-bottom: 12px;
-   }
-
-   .subtitle {
-     font-size: 1xl;
-     font-family: serif;
-     margin-bottom: 18px;
-   }
-
-   .info-block {
-     display: flex;
-     align-items: center;
-     margin-bottom: 6px;
-   }
-
-   .info-icon {
-     width: 16px;
-     height: 16px;
-     margin-right: 6px;
-   }
-
-   .info-text {
-     font-size: 14px;
-     font-weight: normal;
-     margin-right: 6px;
-     flex-grow: 1;
-     text-overflow: ellipsis;
-     overflow: hidden;
-   }
-
-   @media (min-width: 768px) {
-     .main-content2 {
-       padding: 16px 32px;
-     }
-
-     .title {
-       font-size: 4xl;
-     }
-     .message-tabs li {
-       font-size: 24px!important;
-     }
-   }
-   .message {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #555;
-      margin-bottom: 10px;
-      margin-top: 30px;
-      text-align: center;
-    }
-
-    .link {
-      color: #4285f4;
-      text-decoration: none;
-      transition: all 0.2s ease-in-out;
-    }
-
-    .link:hover {
-      text-decoration: underline;
-    }
-    .paper-resources {
-      font-family: Arial, sans-serif;
-      font-size: 16px;
-      color: #333;
-      background-color: #f8f9a0;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 5px;
-      display: inline-block;
-      }
-
-      .paper-resources a {
-          color: #007bff;
-          text-decoration: none;
-      }
-
-      .paper-resources a:hover {
-          text-decoration: underline;
-      }
-
-      input[type="submit"] {
-      background-color: #4CAF50;
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-      font-size: 18px;
-    }
-
-    input[type="submit"]:hover {
-      background-color: #3e8e41;
-    }
-
-    #popover2 {
-    display: none;
-    position: fixed;
-    background-color: black;
-    color: white;
-    padding: 10px;
-    z-index: 1;
-    right: 20px;
-  }
-  .center {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   height: 100%;
- }
+.main-content2 { max-width: 1000px; margin: 0 auto; padding: 40px 20px 0; }
+.title h1 { margin: 0 0 16px; font-size: clamp(26px, 3.6vw, 38px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+.subtitle p { margin: 0 0 14px; color: var(--text-muted); }
+.subtitle b { color: var(--text); font-weight: 600; }
+.info-block { display: flex; align-items: center; margin-bottom: 6px; }
+.info-text { font-size: 14px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+.info-text i { width: 16px; margin-right: 4px; color: #9a9aab; text-align: center; }
+.info-text a { text-decoration: none; font-weight: 500; }
+.paper-details p { margin: 16px 0 12px; font-size: 16px; line-height: 1.7; color: #33333f; }
+.paper-details strong { display: block; margin-bottom: 6px; color: var(--text); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.tree-intro { margin-top: 40px; padding: 24px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; }
+.tree-intro h2 { margin: 0 0 6px; font-size: 22px; }
+.tree-intro p { margin: 0; color: var(--text-muted); }
+.paper-resources { margin-top: 12px; color: var(--text-muted); font-size: 14px; }
+.paper-resources a { font-weight: 600; text-decoration: none; }
+.paper-resources a:hover { text-decoration: underline; }
+#graph { border: 1px solid var(--border) !important; border-radius: 0 0 var(--radius) var(--radius) !important; background: var(--surface); overflow: hidden; }
+.message { margin: 40px 0 0; padding: 24px; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--text-muted); text-align: center; }
+.link { font-weight: 600; text-decoration: none; }
+.link:hover { text-decoration: underline; }
+.center { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 24px; }
+.center form { display: flex; align-items: center; gap: 10px; }
+.center form p { margin: 0; }
+.main-content2 input[type="submit"] { padding: 9px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 600 14px var(--font); cursor: pointer; }
+.main-content2 input[type="submit"]:hover { background: var(--bg-soft); }
+.beta { padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 12px; font-weight: 600; }
+#popover2 { display: none; position: fixed; z-index: 60; max-width: 320px; padding: 14px 16px; border-radius: var(--radius-sm); background: #16161d; color: #e6e6ef; font-size: 14px; box-shadow: var(--shadow); }
+#popover2 p { margin: 0 0 6px; }
+#popover-link2 { color: #9a9aab; cursor: help; }
     </style>
 {% endblock %}
 
@@ -188,7 +99,7 @@
   {% endif %}
   <div class="paper-details">
   {% if paper.abstract %}
-    <p style="text-align: justify;"><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
+    <p><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
   {% endif %}
   </div>
   {% if paper.published_arxiv %}
@@ -199,35 +110,32 @@
 
   {% if  alpaper %}
 
-  <div style="text-align: center;margin-top: 40px;">
-  <div style="background-color: #f2f2f2; padding: 20px; border-radius: 10px;" id="closest">
-    <p style="font-size: 18px; font-weight: bold; margin-bottom: 10px;"><h2>{% trans 'Explore the paper tree' %}</h2></p>
-    <p style="font-size: 16px;">{% trans 'Click on the tree nodes to be redirected to a given paper and access their summaries and virtual assistant' %}</p>
+  <div class="tree-intro" id="closest">
+    <h2>{% trans 'Explore the paper tree' %}</h2>
+    <p>{% trans 'Click on the tree nodes to be redirected to a given paper and access their summaries and virtual assistant' %}</p>
       <div class="paper-resources">
         <div class="paper-resources-text">
-        <span style="float: left;">{% trans 'Also access our AI generated' %}
+        <span>{% trans 'Also access our AI generated' %}
         <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}#results">{% trans 'Summaries' %}</a>,
         {% trans ' or ask questions about this paper to our' %} <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}#assistant">{% trans 'AI assistant' %}</a></span>.
         </div>
         </div>
-    </div>
-  </div> 
-  <div id="graph" style="border: 1px solid #ccc; border-radius: 10px;"></div>
+  </div>
+  <div id="graph"></div>
   <div class="center" style="margin-bottom:20px;">
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
       <input type="hidden" name="tree" value="0">
-      <input type="submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button" style="background-color: #333;">
-      
-      <p style="text-align: center;">
-      <label style="color: orange;">(Beta)</label>
+      <input type="submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
+      <p>
+      <span class="beta">Beta</span>
       <span id="popover-link2">
         <i class="fas fa-question-circle"></i>
       </span></p>
     </form>
     <div id="popover2">
       <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
-      <p>{% trans 'By clicking on the button above, our algorithm will scan all papers in our database to find the closest based on the contents of the full papers and not just on metadata. Please note that it only works for papers that we have generated summaries for and you can rerun it from time to time to get a more accurate result while our database grows.' %}</p>
+      <p>{% trans 'By clicking on the button above, our algorithm compares the title and abstract of this paper with all the papers of the same arXiv category that we have summarized, and finds the closest ones. You can rerun it from time to time: the results improve as our database grows.' %}</p>
     </div>
   </div>
   {% else %}
@@ -289,7 +197,12 @@ var tooltip = d3.select("body")
     .style('left', xPos + 'px')
     .style('top', yPos + 'px')
     .style('background-color', 'white')
-    .html(`<div style="padding: 5px">
+    .style('border', '1px solid #e6e6ef')
+    .style('border-radius', '8px')
+    .style('box-shadow', '0 8px 24px rgba(16,16,29,.08)')
+    .style('max-width', '360px')
+    .style('font-size', '13px')
+    .html(`<div style="padding: 10px 12px; line-height: 1.5">
           <strong>{% trans 'Title:' %} </strong>${d.title}<br>
           <strong>{% trans 'Authors:' %} </strong>${d.authors}<br>
           <strong>{% trans 'Arxiv ID:' %} </strong>${d.arxiv_id}<br>
@@ -353,9 +266,9 @@ svg.selectAll('line')
 .attr('y1', d => yScale(d.y)-10)
 .attr('x2', d => xScale(data[0].x))
 .attr('y2', d => yScale(data[0].y)+10)
-.style('stroke', 'gray')
-.style('stroke-width', d => 5 )
-.style('opacity', d => 0.2 );
+.style('stroke', '#6366f1')
+.style('stroke-width', d => 2 )
+.style('opacity', d => 0.25 );
 
 // Add the circles for each paper
 const circles = svg.selectAll('g')
@@ -377,21 +290,23 @@ circles.append('text')
   })
   .attr('text-anchor', 'middle')
   .attr('alignment-baseline', 'middle')
-  .style('fill', '#000')
-  .style('font-size', '14px')
-  .style('font-family', 'Arial')
+  .style('fill', d => d.main ? '#4f46e5' : '#16161d')
+  .style('font-size', '13px')
+  .style('font-weight', d => d.main ? 700 : 600)
+  .style('font-family', "Inter, system-ui, sans-serif")
   .each(function(d) {
     // Get the bounding box of the text element
     const bbox = this.getBBox();
     // Add a rectangle behind the text to improve readability
     d3.select(this.parentNode)
       .insert('rect', ':first-child')
-      .attr('x', -bbox.width / 2 - 2)
-      .attr('y', -bbox.height / 2 - 2)
-      .attr('width', bbox.width + 4)
-      .attr('height', bbox.height + 4)
-      .style('fill', '#fff')
-      .style('stroke', d.main ? 'red' : '#000') // add red stroke if data.main is true
+      .attr('x', -bbox.width / 2 - 10)
+      .attr('y', -bbox.height / 2 - 6)
+      .attr('width', bbox.width + 20)
+      .attr('height', bbox.height + 12)
+      .attr('rx', 8)
+      .style('fill', d.main ? '#eef0ff' : '#fff')
+      .style('stroke', d.main ? '#4f46e5' : '#e6e6ef') // highlight the paper of this page
       .style('stroke-width', d.main ? '2px' : '1px');
       });
 

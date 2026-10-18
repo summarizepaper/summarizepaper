@@ -2,6 +2,7 @@ from ipaddress import ip_address
 import time
 import requests
 from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore, Author, PaperAuthor
+from . import keypoints
 from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
@@ -23,32 +24,12 @@ from django.conf import settings
 import ast
 import json
 from html.parser import HTMLParser
-from langchain import OpenAI, PromptTemplate, LLMChain
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import ElasticVectorSearch, Pinecone, Weaviate, FAISS, Chroma
-from langchain.chains.mapreduce import MapReduceChain
-from langchain.prompts import PromptTemplate
-from langchain.docstore.document import Document
-from langchain.chains.summarize import load_summarize_chain
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain
-from langchain.llms import OpenAI
-from langchain.callbacks import get_openai_callback
-from langchain import ConversationChain     
-from langchain.prompts import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    MessagesPlaceholder,
-    SystemMessagePromptTemplate,
-)
 import pickle
 from django.utils.translation import get_language_info
 import nltk
 from xml.etree import ElementTree
 import urllib, urllib.request
 import math
-from langchain.llms import OpenAIChat
 import aiohttp
 #from bs4 import BeautifulSoup
 
@@ -231,26 +212,62 @@ def nchars_leq_ntokens_approx(maxTokens):
     lin_margin = 1.010175047 #= e - 1.001 - sqrt(1 - sqrt_margin) #ensures return 1 when maxTokens=1
     return max( 0, int(maxTokens*math.exp(1) - lin_margin - math.sqrt(max(0,maxTokens - sqrt_margin) ) ))
 
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-    
-def dependable_faiss_import():# -> Any:
-    """Import faiss if available, otherwise raise error."""
-    try:
-        import faiss
-    except ImportError:
-        raise ValueError(
-            "Could not import faiss python package. "
-            "Please it install it with `pip install faiss` "
-            "or `pip install faiss-cpu` (depending on Python version)."
-        )
-    return faiss
+def clean_lay_summary(text):
+    """Plain-text layman summary: no markdown, a blank line before the definitions."""
+    text = text.replace('**', '').replace('__', '')
+    text = re.sub(r'^\s*#+\s*', '', text, flags=re.M)
+    text = re.sub(r'[ \t]+\n', '\n', text).strip()
+    match = re.search(r'^\s*(D[ée]finitions?)\s*:?', text, flags=re.M | re.I)
+    if match:
+        text = text[:match.start()].strip() + '\n\n' + text[match.start():].strip()
+    return re.sub(r'\n{3,}', '\n\n', text)
 
+BLOG_TAGS = {'h2', 'h3', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'br'}
+BLOG_BLOCKS = ('h2', 'h3', 'p', 'ul', 'ol')
+
+def clean_blog_html(text, truncated=False):
+    """Safe, complete blog HTML from the model output.
+
+    Only a few formatting tags survive (the blog is rendered with |safe), bare
+    paragraphs get <p> tags, and when the model hit its token limit the
+    unfinished last block is dropped.
+    """
+    from bs4 import BeautifulSoup
+    text = text.strip()
+    if text.startswith('```'):
+        text = re.sub(r'^```[a-z]*\s*|\s*```$', '', text)
+    blocks = []
+    for block in re.split(r'\n\s*\n', text):
+        block = block.strip()
+        if not block:
+            continue
+        if not re.match(r'<(%s)\b' % '|'.join(BLOG_BLOCKS), block, flags=re.I):
+            block = '<p>%s</p>' % block
+        blocks.append(block)
+    if truncated and len(blocks) > 1:
+        blocks = blocks[:-1]
+    soup = BeautifulSoup('\n'.join(blocks), 'html.parser')
+    for tag in soup.find_all(['script', 'style']):
+        tag.decompose()
+    for tag in soup.find_all(True):
+        if tag.name not in BLOG_TAGS:
+            tag.unwrap()
+        else:
+            tag.attrs = {}
+    html = str(soup).strip()
+    # a heading with nothing after it is a leftover of the cut
+    return re.sub(r'(\s*<h[23]>[^<]*</h[23]>)+\s*$', '', html)
+
+def ensure_nltk_punkt():
+    try:
+        nltk.data.find('tokenizers/punkt_tab')
+    except LookupError:
+        nltk.download('punkt_tab')
+
+def get_client_ip(request):
+    from .access import client_ip
+    return client_ip(request)
+    
 def readpaper(arxiv_id):
     paper=ArxivPaper.objects.prefetch_related('authors').filter(arxiv_id=arxiv_id)[0]
 
@@ -349,316 +366,32 @@ def getconversationmemory(arxiv_id,user,lang,ip,nb_mem):
 
     return conv
 
-def storeclosest(arxiv_id,ids_and_scores):
-    array_arxiv_ids,array_scores=ids_and_scores
-    # assume you have an array of scores and arxiv_ids
-    #scores_and_arxiv_ids = [(0.8, '1234.5678'), (0.6, '9012.3456'), (0.4, '7890.1234')]
-
-    scores_and_arxiv_ids = list(zip(array_scores, array_arxiv_ids))
-
-    # Paper with the given arxiv_id
-    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
-
-    #make other related papers inactive
-    oldpapers = PaperScore.objects.filter(from_paper=paper,active=True)
-    for oldpap in oldpapers:
-        #oldpap.active=False
-        #oldpap.save()
-        oldpap.delete()
-
-    # create PaperScore objects for each related paper with its associated score
-    for score, arxiv_id2 in scores_and_arxiv_ids:
-        related_paper, created = ArxivPaper.objects.get_or_create(arxiv_id=arxiv_id2)
-        PaperScore.objects.create(from_paper=paper, to_paper=related_paper, score=score)
-
-    return 0
-
-def storepickle(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer):
-
-    obj, created = PickledData.objects.update_or_create(
-        arxiv_id=arxiv_id,
-        defaults={
-            'docstore_pickle': docstore_pickle,
-            'index_to_docstore_id_pickle': index_to_docstore_id_pickle,
-            'buffer':buffer
-        }
-    )
-
-    return created
-
-def getstorepickle(arxiv_id):
-
-    if PickledData.objects.filter(arxiv_id=arxiv_id).exists():
-        print("Data found with arxiv_id =", arxiv_id)
-        pickledata=PickledData.objects.filter(arxiv_id=arxiv_id)[0]
-    else:
-        print("No data found with arxiv_id =", arxiv_id)
-        pickledata=''
-
-    return pickledata
-
-
-
-async def createindex(arxiv_id,book_text,api_key):
-
-    text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=800, chunk_overlap=200)#limit at 8096 tokens
-    texts = text_splitter.split_text(book_text)
-
-    '''
-    text_splitter = CharacterTextSplitter(
-    separator = "\n",
-    chunk_size = 1000,
-    chunk_overlap  = 200,
-    length_function = len,
-    )
-    texts = text_splitter.split_text(book_text)
-    '''
-    print('tttettxtxtxtxtxtxtxtttzetet',texts)
-
-    regex = r'<latexit.*?</latexit>'
-    texts = [re.sub(regex, '', text) for text in texts]
-    print('tttettxtxtxtxtxtxtxtttzetet222',texts)
-
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)#text-embedding-ada-002 used in background
-
-    new_docsearch=embeddings
-
-    #docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
-
-    metadatas = [
-        {"arxiv_id":arxiv_id, "source": f"from {texts[i][0:30]} --- to --- {texts[i][len(texts[i])-30:-1]}"}
-        for i in range(len(texts))
-    ]
-
-    # Print the metadata
-    #for metadata in metadatas:
-    #    print('met',metadata)
-
-    docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=metadatas)
-
-
-
-    #input('jkll')
-    #docsearch = Chroma.from_texts(texts, embeddings)
-    #tu=FAISS.save_local(docsearch,"savedocsearch")
-
-    print('docsearchhhhhhhhhhhhhhh index',docsearch.index)
-    print('docsearchhhhhhhhhhhhhhh doc',docsearch.docstore)
-    print('docsearchhhhhhhhhhhhhhh id',docsearch.index_to_docstore_id)
-    # save index separately since it is not picklable
-    faiss = dependable_faiss_import()
-    # serialize the index to a byte buffer
-    #buffer = bytearray()
-    #faiss.write_index(docsearch.index, buffer)
-    chunk = faiss.serialize_index(docsearch.index)
-    buffer_pickle = pickle.dumps(chunk)
-
-    # save docstore and index_to_docstore_id
-    docstore_pickle = pickle.dumps(docsearch.docstore)
-    index_to_docstore_id_pickle = pickle.dumps(docsearch.index_to_docstore_id)
-
-    # update or create a PickledData object with the given arxiv_id
-    c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
-    created = await c
-
-    print('ok created',created)
-    return created
-
-async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
-    print('findclosestpapers')
-    message={}
-    arxiv_group_name="ar_%s" % arxiv_id
-
-    li = get_language_info(language)
-    language2 = li['name']
-    print('language2',language2)
-
-    print('arxiv_id',arxiv_id)
-    c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
-    getstoredpickle = await c
-    print('here')
-
-    cat=''
-    c = asyncio.create_task(sync_to_async(getpaper)(arxiv_id))
-    mainpaper = await c
-    cat = mainpaper.category
-    print('cat',cat)
-
-    if but==True:
-        message["progress"] = 35
-        if language == 'fr':
-            message["loading_message"] = "Comparaison en cours..."
-        else:
-            message["loading_message"] = "Comparison in progress..."
-        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-        await c
-        #await asyncio.sleep(10)
-
-
-    if getstoredpickle != '':
-        # deserialize the index from a byte buffer
-        #index_buffer = faiss.read_index(storedpickle.buffer)
-        faiss = dependable_faiss_import()
-
-        index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
-
-        docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
-        index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-
-        docsearch = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
-        print('finished')
-
-    #Now run through all embeddings in database
-    c = asyncio.create_task(sync_to_async(getallpapers)(cat))
-    allpapers = await c
-
-    #print('allpapers',allpapers)
-    print('right')
-    db=''
-    async for paper in allpapers:
-        if paper != mainpaper and paper.arxiv_id.split("v")[0] != mainpaper.arxiv_id.split("v")[0]:
-            print('pap',paper)
-            c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
-
-            getstoredpickle2 = await c2
-
-            if getstoredpickle2 != '':
-                # deserialize the index from a byte buffer
-                #index_buffer = faiss.read_index(storedpickle.buffer)
-                #faiss = dependable_faiss_import()
-
-                index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
-
-                docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
-                index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
-
-                docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
-
-                if db == '':
-                    db = docsearch2
-                    #print('db.docstore._dict',db.docstore._dict)
-                else:
-                    db.merge_from(docsearch2)
-                    #print('db.docstore._dict',db.docstore._dict)
-
-    
-    #print('doc',docsearch.index)
-    indices = [k for k in docsearch.index_to_docstore_id.keys()]
-
-    #print('indices',indices)
-
-    if but==True:
-        message["progress"] = 50
-        
-        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-        await c
-        #await asyncio.sleep(5)
-
-    recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
-    #print('recembeddings',recembeddings)
-    #recembeddings = ','.join(map(str,recembeddings))
-    #print('recembeddings2',recembeddings)
-
-    #print('hhh',docsearch.index.reconstruct(0))
-
-
-    #print('index_to_docstore_id',docsearch.index_to_docstore_id)
-    #docs_and_scores = db.similarity_search_by_vector(docsearch.index.reconstruct(0),4)
-    #docs_and_scores = db.similarity_search_with_score_by_vector(docsearch.index.reconstruct(0),k)
-    
-    ''' this works but a bit lengthy
-    docs_and_scores=[]
-    for emb in recembeddings:
-        resultsimsearch=db.similarity_search_with_score_by_vector(emb,k)
-        docs_and_scores+=resultsimsearch
-    '''
-    import numpy as np
-    print('len(recembeddings)',len(recembeddings))
-    if len(recembeddings)>1:
-        recembeddings=np.mean(recembeddings, axis=0)
-    else:
-        recembeddings=docsearch.index.reconstruct(0)
-
-    '''doesn't work for now
-    import numpy as np
-
-    recembeddings = np.concatenate(recembeddings)
-    print('recembeddings2',recembeddings)
-    '''
-    
-    print('len(recembeddings)2',len(recembeddings))
-
-    docs_and_scores = db.similarity_search_with_score_by_vector(recembeddings,k)
-
-    #print('docs_and_scores',docs_and_scores)
-    array_arxiv_ids=[]
-    array_scores=[]
-
-    if but==True:
-        message["progress"] = 75
-        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-        await c
-        #await asyncio.sleep(5)
-
-    for document in docs_and_scores:
-        #source_value = document[0].metadata['source']
-        #print('ss',source_value)
-        metadata = document[0].metadata#['arxiv_id']
-        score_value = document[1]
-
-        pattern = r'v(\d+)$'
-
-        aid = metadata.get('arxiv_id')
-        if aid is not None:
-            match = re.search(pattern, aid)
-            print('match',match)
-            if match is None:
-                if aid not in array_arxiv_ids:
-                    print('1',aid)
-                    array_arxiv_ids.append(aid)
-                    array_scores.append(score_value)
-            else:
-                version = int(match.group(1))
-                print('version',version)
-                for existing_aid in array_arxiv_ids:
-                    print('2',existing_aid)
-                    existing_match = re.search(pattern, existing_aid)
-                    print('existing_match',existing_match)
-                    if existing_match is None:
-                        continue
-                    existing_version = int(existing_match.group(1))
-                    print('existing_version',existing_version)
-
-                    if existing_aid.startswith(aid[:-len(match.group())]):# and version <= existing_version:
-                        print('len(match.group()',len(match.group()))
-                        print('aid[:-len(match.group())]',aid[:-len(match.group())])
-                        break
-                else:
-                    if aid not in array_arxiv_ids:
-                        array_arxiv_ids.append(aid)
-                        array_scores.append(score_value)
-        else:
-            print("Arxiv_id is not present in metadata")
-
-        '''
-        aid = metadata.get('arxiv_id')
-        if aid is not None:
-            print(aid)
-            if aid not in array_arxiv_ids:
-                array_arxiv_ids.append(aid)
-                array_scores.append(score_value)
-        else:
-            print("Arxiv_id is not present in metadata")
-        '''
-        print('score',score_value)
-
-    print('array_arxiv_ids',array_arxiv_ids)
-    #docs = docsearch2.similarity_search(query,k=kvalue)
-    #print('docs:',docs)
-    #print('len docs:',len(docs))
-
-    return array_arxiv_ids,array_scores
+def has_paper_text(arxiv_id):
+    """Whether the paper was already read (text stored, or an index from before PaperText)."""
+    from .models import PaperText
+    return (PaperText.objects.filter(arxiv_id=arxiv_id).exists()
+            or PickledData.objects.filter(arxiv_id=arxiv_id).exists())
+
+
+async def read_paper(arxiv_id, pdf_url):
+    """Full text of an openly licensed paper: arXiv HTML when it exists, else the PDF."""
+    from .paper_source import fetch_arxiv_html
+    text = await asyncio.to_thread(fetch_arxiv_html, arxiv_id)
+    if text:
+        return text, 'html'
+    response = await asyncio.to_thread(requests.get, pdf_url, timeout=120)
+    text, _ = await extract_text_from_pdf(response.content)
+    return text, 'pdf'
+
+async def createindex(arxiv_id,book_text,api_key,source='pdf'):
+    """Keep the text that was read: the assistant answers from it (see paper_source.py).
+
+    Closest papers come from one embedding of the title and abstract (similar.py),
+    so no per-chunk FAISS index is built any more.
+    """
+    from .paper_source import store_text
+    await sync_to_async(store_text)(arxiv_id, book_text, source)
+    return True
 
 def construct_prompt(documents, question, language, mem,mul=None):
 
@@ -710,374 +443,6 @@ def construct_document_prompt(document,mul=None):
         return DOCUMENT_TEMPLATE.format(content=document.page_content)
 
     #return DOCUMENT_TEMPLATE.format(content=document.page_content, source=document.metadata["arxiv_id"])
-
-
-async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None,ip=None,selectedpapers=None,countpaperwithlicenses=None,p=None):
-    print('in chatbot')
-
-    if p:
-        print('gpt-4 chatbot')
-
-    li = get_language_info(language)
-    language2 = li['name']
-    print('language2',language2)
-
-    print('countpaperwithlicenses',countpaperwithlicenses)
-
-    #The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-
-    #SYSTEM_PROMPT = """
-    #You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
-    #(labeled with DOCUMENT) and a question.
-    #Answer the question using information from the knowledge base.
-    #If the answer is not available in the documents or there are no documents,
-    #still try to answer the question, but say that you used your general knowledge and not the documentation.
-    #"""
-
-    
-
-    '''
-    SYSTEM_PROMPT = """
-    The following is a friendly conversation between a human and an AI. The AI is talkative and provides
-    lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.
-    Answer the question using information from the knowledge base labeled with DOCUMENT.
-    If the answer is not available in the documents or there are no documents,
-    still try to answer the question, but say that you used your general knowledge and not the documentation.
-    """
-    '''
-    
-
-    SYSTEM_PROMPT_WITH_SOURCES = """
-    You are Knowledge bot. In each message you will be given the extracted parts of a knowledge base
-    (labeled with DOCUMENT and SOURCE) and a question.
-    Answer the question using information from the knowledge base, including references ("SOURCES").
-    If you don't know the answer, just say that you don't know. Don't try to make up an answer.
-    ALWAYS return a "SOURCES" part in your answer.
-    """
-
-    #if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
-    #    SYSTEM_PROMPT += """FINAL ANSWER IN """+language2
-    #    SYSTEM_PROMPT_WITH_SOURCES += """FINAL ANSWER IN """+language2
-
-    if sum==1:
-        #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
-        if p:
-            print('gpt-4 cb sum')
-            llm = OpenAIChat(model_name=MODEL_PAID,openai_api_key=api_key,**chat_params(MODEL_PAID,800))
-        else:
-            llm = OpenAIChat(model_name=MODEL_FREE,openai_api_key=api_key,**chat_params(MODEL_FREE,800))
-    else:
-        if p:
-            print('gpt-4 cb')
-            llm = OpenAIChat(model_name=MODEL_PAID,openai_api_key=api_key,**chat_params(MODEL_PAID,700))
-        else:
-            #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
-            llm = OpenAIChat(model_name=MODEL_FREE,openai_api_key=api_key,**chat_params(MODEL_FREE,700))
-
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-
-    if 1==1:
-        if selectedpapers:
-            SYSTEM_PROMPT = """
-            The following is a friendly conversation between a human and an AI. The AI is talkative and provides
-            lots of specific details from its context (multiple extracts of papers or articles). If the AI does not know the answer to a question, it truthfully says it does not know.
-            The question can specify to TRANSLATE the response in another language, which the AI should do.
-            If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining articles only. 
-            Return a "SOURCES" part in your answer if it is relevant.
-            """
-
-            if countpaperwithlicenses!=None:
-                if countpaperwithlicenses>0:
-                    SYSTEM_PROMPT += """
-                    The licenses of some of the selected papers do not allow us to read the papers so if you do not find an answer warn the reader that it may be due to that.
-                    """
-
-            print('sel',selectedpapers)
-            #allpapers = json.loads(selectedpapers)
-            #print('allpapers',allpapers)
-            db=''
-
-            #c = asyncio.create_task(sync_to_async(getallpapers)(cat))
-            #allpapers = await c
-            c = asyncio.create_task(sync_to_async(getpapersfromlist)(selectedpapers))
-            allpapers = await c
-
-            #print('allpapers',allpapers)
-
-            async for paper in allpapers:
-                print('paper',paper)
-                if 1==1:
-                    faiss = dependable_faiss_import()
-        
-                    print('pap',paper)
-                    c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
-
-                    getstoredpickle2 = await c2
-
-                    if getstoredpickle2 != '':
-                        # deserialize the index from a byte buffer
-                        #index_buffer = faiss.read_index(storedpickle.buffer)
-                        #faiss = dependable_faiss_import()
-
-                        index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
-
-                        docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
-                        index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
-
-                        docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
-
-                        if db == '':
-                            db = docsearch2
-                            #print('db.docstore._dict',db.docstore._dict)
-                        else:
-                            db.merge_from(docsearch2)
-                            #print('db.docstore._dict',db.docstore._dict)
-            
-            docsearch2=db
-        else:
-            SYSTEM_PROMPT = """
-            The following is a friendly conversation between a human and an AI. The AI is talkative and provides
-            lots of specific details from its context (an extract of a paper or article). If the AI does not know the answer to a question, it truthfully says it does not know.
-            The question can specify to TRANSLATE the response in another language, which the AI should do.
-            If the question is not related to the context warn the user that your are a knowledge bot dedicated to explaining one article. 
-            """
-            if countpaperwithlicenses!=None:
-                if countpaperwithlicenses>0:
-                    SYSTEM_PROMPT += """
-                    The license of the selected paper is not fully open source and does not allow us to read the paper so if you do not find an answer warn the reader that it may be due to that.
-                    """
-
-            c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
-
-            getstoredpickle = await c
-
-            if getstoredpickle != '':
-                # deserialize the index from a byte buffer
-                #index_buffer = faiss.read_index(storedpickle.buffer)
-                faiss = dependable_faiss_import()
-
-                index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
-
-                docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
-                index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
-
-        
-
-            #return cls(embeddings.embed_query, index, docstore, index_to_docstore_id)
-            docsearch2 = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
-
-        if sum == 1:
-            kvalue=3
-        else:
-            kvalue=3
-
-        docs = docsearch2.similarity_search(query,k=kvalue)
-        print('docs:',docs)
-        print('len docs:',len(docs))
-
-        #import tiktoken
-
-        #MAX_CHARS = 4200  # maximum number of characters to allow in the docs pages
-        MAX_TOKENS=1500#2200
-        MAX_CHARS=nchars_leq_ntokens_approx(MAX_TOKENS)
-        print('MAX_CHARS',MAX_CHARS)
-        num_chars = 0
-        for doc in docs:
-            #encoding = tiktoken.get_encoding("gpt3")
-            #input_ids = encoding.encode(text)
-            #print(input_ids)
-            if num_chars + len(doc.page_content) <= MAX_CHARS:
-                num_chars += len(doc.page_content)
-            else:
-                # suppress text to fit within MAX_CHARS
-                print('enter here',num_chars)
-                remaining_chars = MAX_CHARS - num_chars
-                suppressed_text = doc.page_content[:remaining_chars] + " ..."
-                doc.page_content = suppressed_text
-                num_chars = MAX_CHARS
-                #break
-
-        print('docs22222222222:',docs)
-        print('num_chars',num_chars)
-
-        if sum==1:
-            template = """We have an existing summary: {existing_answer}
-                We have the opportunity to expand and refine the existing summary
-                with some more context below.
-                ------------
-                {summaries}
-                ------------
-                Given the new context, create a refined detailed longer summary.
-                """
-        else:
-            template = """Given the following extracted parts of a long document and a question, create a final answer.
-            If you are not sure about the answer, just say that you are not sure before making up an answer.  
-
-            QUESTION: {question}
-            =========
-            {summaries}
-            =========
-
-            If the question IS NOT about the document, DO NOT say it is not related to document but rather just be a helpful assistant, FRIENDLY and conversational and ANSWER the question anyway.
-
-            """
-
-        #If the question IS NOT about the document, just be an helpful assistant and CHAT with the user.
-
-        #if language != 'en'
-        #    template += """FINAL ANSWER IN """+language2
-
-        print('tem',template)
-
-        if sum==1:
-            if language != 'en':
-                template += """FINAL ANSWER IN """+language2
-            print('wait here')
-            c = asyncio.create_task(sync_to_async(getpaperabstract)(arxiv_id))
-            print('wait...')
-            paperabstract=await c
-            print('wait2...')
-
-            PROMPT = PromptTemplate(template=template, input_variables=["summaries", "existing_answer"])
-        else:
-            if language != 'en' and not 'TRANSLATE' in query and not 'TRADUIRE' in query:
-                template += """FINAL ANSWER IN """+language2
-            PROMPT = PromptTemplate(template=template, input_variables=["summaries", "question"])
-
-            
-
-        print('wait3...')
-        chain = load_qa_with_sources_chain(llm, chain_type="stuff", prompt=PROMPT)
-        print('wait4...')
-
-        with get_openai_callback() as cb:
-
-            if sum==1:
-                print('wait5...')
-                #getresponse=chain({"input_documents": docs, "existing_answer": paperabstract}, return_only_outputs=False)
-                getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "existing_answer": paperabstract}, return_only_outputs=False)
-                print('wait6...')
-            else:
-                print('gkl')
-
-                docs = filter_documents(docs)
-                #from langchain.memory import ConversationBufferMemory
-
-                c = asyncio.create_task(sync_to_async(getuserinst)(user))
-                userinst = await c
-
-                if ip or userinst:
-                    NBMEM=5#remembers last five messages
-                    print('clientip.....',ip)
-                    # Check if this IP address has already voted on this post
-                    print('arx',arxiv_id)
-                    c = asyncio.create_task(sync_to_async(getconversationmemory)(arxiv_id,userinst,language,ip,NBMEM))
-                    memorystored = await c
-                    async for memstored in memorystored:
-                        memory.chat_memory.add_user_message(memstored.query)
-                        memory.chat_memory.add_ai_message(memstored.response)
-
-
-                #memory2 = ConversationBufferMemory(return_messages=True)
-                #memory.chat_memory.add_user_message(query)
-                #memory.chat_memory.add_ai_message(getresponse)
-
-                #print('memory',memory.load_memory_variables({}))
-                memory_dict = memory.load_memory_variables({})
-
-                history_value = memory_dict['history']
-                print('history_value',history_value)
-
-                chat_input = construct_prompt(docs, query, language, history_value)
-                system_prompt = SystemMessagePromptTemplate.from_template(SYSTEM_PROMPT)
-                print('system_prompt',system_prompt)
-
-                prompt = ChatPromptTemplate.from_messages(
-                    [
-                        system_prompt,
-                        MessagesPlaceholder(variable_name="history"),
-                        HumanMessagePromptTemplate.from_template("{input}"),
-                    ]
-                )
-
-                #conversation = ConversationChain(memory=memory, llm=llm, verbose=True)
-                conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm, verbose=False)
-
-                #response = conversation.predict(input=chat_input)
-                print('chatinput',chat_input)
-
-                #getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
-                
-                print('mememememme',memory)
-
-                try:
-                    import openai
-                    getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
-                except openai.error.InvalidRequestError as e:
-                    # Catch the error and extract the requested length from the error message
-                    #requested_length = int(str(e).split(" ")[-2])
-                    #print('requested_length',requested_length)
-                    # Reduce the input length by the excess amount
-                    #excess_length = requested_length - 4097
-                    #chat_input = chat_input[:-excess_length]
-                    
-                    print('clear memory')
-                    memory.clear()
-
-                    # Rerun the function with the reduced input
-                    conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm, verbose=False)
-
-                    getresponse = await asyncio.to_thread(conversation.predict, input=chat_input)
-
-
-                #if memory is not None:
-                    #memory.chat_memory.add_user_message(query)
-                    #memory.chat_memory.add_ai_message(getresponse)
-                    #memory2.save_context({"input": query}, {"ouput": getresponse})
-                    #print('memory',memory2.load_memory_variables({}))
-
-
-                #getresponse = await asyncio.to_thread(chain, {"input_documents": docs, "question": query}, return_only_outputs=False)
-
-            nbtokensused=cb.total_tokens
-            print('wait7...')
-
-        print('nbtokensusedchatbot',nbtokensused)
-        print('openai cost chatbot',nbtokensused*openaipricing("gpt-3.5-turbo-instruct"))#"text-davinci-003"))
-
-        #qa = ChatVectorDBChain.from_llm(llm, docs)
-        #chat_history = []
-        #getresponse = qa({"question": query, "chat_history": chat_history})
-
-
-        #chain = load_qa_chain(llm, chain_type="stuff")
-        #chain_type="map_reduce", return_map_steps=True)
-        #getresponse=chain({"input_documents": docs, "question": query}, return_only_outputs=True)
-
-        #getresponse=chain.run(input_documents=docs, question=query)
-        print('getresponse',getresponse)
-        #print('getresponse2',getresponse['output_text'])
-
-        if sum==1:
-            finalresp=getresponse['output_text'].replace(':\n', '').rstrip().lstrip()
-        else:
-            finalresp=getresponse.replace(':\n', '').replace('AI: ', '').rstrip().lstrip()
-
-        #store the query and answer
-        if sum != 1:
-            print('clientip22.....',ip)
-
-            if ip:
-                c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language,ip=ip))
-                await c
-            else:
-                print('elseip')
-                c = asyncio.create_task(sync_to_async(storeconversation)(arxiv_id,query,finalresp,userinst,language))
-                await c
-
-        return finalresp
-    #else:
-    #    return None
 
 
 class MLStripper(HTMLParser):
@@ -1366,7 +731,7 @@ def summary_pdf(arxiv_id,language):
             notestr=''
             if notesarr:
                 for note in notesarr:
-                    notestr+='-'+note+'\n'
+                    notestr+='- '+keypoints.clean_point(note)+'\n'
                     print('n',note)
 
             if sumpaper.notes:
@@ -1523,154 +888,28 @@ async def agen(it):
     except WrappedStopIteration:
         pass
 
-async def extract_text_from_pdf(pdf_filename):
-    # Open the PDF file
-    #need to check first if pdf file and otherwise return an error; to do later
-    print('in extract')
-    #import aiofiles
-    #import concurrent.futures
-    #from PyPDF2 import PdfFileReader
-    #from pdfminer.high_level import extract_pages
-    #from pdfminer.layout import LAParams, LTTextBoxHorizontal
-    #from pdfminer.high_level import extract_text_to_fp
-    #from io import BytesIO
-    #from pdfminer.high_level import extract_pages
-    
-    #from pdfminer.layout import LTTextContainer
+def _pdf_bytes_to_text(pdf_bytes):
+    #pdfminer is slow pure Python, keep it off the event loop (see extract_text_from_pdf)
+    from io import BytesIO
+    resource_manager = PDFResourceManager(caching=False)
+    text_io = StringIO()
+    text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
+    page_interpreter = PDFPageInterpreter(resource_manager, text_converter)
+    for page in PDFPage.get_pages(BytesIO(pdf_bytes)):
+        page_interpreter.process_page(page)
+    text = text_io.getvalue()
+    text_converter.close()
+    text_io.close()
 
-    '''
-    async with aiofiles.open(pdf_filename, mode='rb') as f:
-        content = await f.read()
-    with BytesIO(content) as file_like:
-        with pdfplumber.open(file_like) as pdf:
-            pages = pdf.pages
-            text = ''
-            for page in pages:
-                text += page.extract_text()
-    #return text
+    #drop references and acknowledgements
+    ends = [text.find(marker) for marker in ("References", "REFERENCES", "Acknowledgements", "ACKNOWLEDGEMENTS")]
+    ends = [e for e in ends if e > 0]
+    endf = min(ends) if ends else -1
+    return text[0:endf].strip()
 
-    return [text,text]
-
-    '''
-    #import aiofiles
-    ''' it works in async with pypdf and they opened a ticket to read greek letters and double ff+maths stuff but for now, not as good as pdfminer
-    import aiofiles
-    import pypdf
-    import io
-
-    async with aiofiles.open(pdf_filename, "rb") as f:
-        pdf_data = await f.read()
-        pdf_stream = io.BytesIO(pdf_data)
-        pdf_reader = pypdf.PdfReader(pdf_stream)
-        text = ""
-        for num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[num]
-            text += page.extract_text(0)
-
-    print('text',text)
-    input('ok')
-    '''
-    
-
-    with open(pdf_filename, 'rb') as file:
-    #async with open_pdf_file(pdf_filename) as f:
-    #async with aiofiles.open(pdf_filename, 'rb') as file:
-        if 1==0:
-            async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
-                texts = []
-                #for page_layout in pages:
-                for element in page_layout:
-                    if isinstance(element, LTTextContainer):
-                        texts.append(element.get_text())
-                        print('t',texts)
-            text = "".join(texts), texts
-            print('text',text)
-
-        
-        #f = await aiofiles.open('filename.txt', mode='w').__aenter__()
-
-        #async with aiofiles.open(pdf_filename, 'rb') as file:
-        #file = await aiofiles.open(pdf_filename, 'rb')
-        # Create a PDF resource manager object that stores shared resources
-        resource_manager = PDFResourceManager(caching=False)
-
-        # Create a string buffer object for text extraction
-        text_io = StringIO()
-
-        # Create a text converter object
-        #text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
-        text_converter = TextConverter(resource_manager, text_io, laparams=LAParams())
-
-        # Create a PDF page interpreter object
-        page_interpreter = PDFPageInterpreter(resource_manager, text_converter)
-
-        print('in extract 2')
-        # Process each page in the PDF file
-        #for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
-        #async for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
-        #for page in PDFPage.get_pages(file, maxpages=None, pagenos=[], caching=False):
-        #async for page in async_generator(extract_pages, file):
-        #async for page_layout in async_iter(extract_pages_async(pdf_filename)):        
-
-        async for page in extract_pages2(file):
-            page_interpreter.process_page(page)
-
-        #async for page in extract_pages(file):
-        #    page_interpreter.process_page(page)
-
-            #async for page in extract_pages(file, caching=True):
-            #for page in PDFPage.get_pages(file, caching=True):
-            #await asyncio.sleep(0)  # Allow other tasks to run while processing the page
-            #print('in extract3')
-
-            #page_interpreter.process_page(page)
-        text = text_io.getvalue()
-
-        #async for page in PDFPage.get_pages(file, caching=True, check_extractable=True):
-         #   page_interpreter.process_page(page)
-            #yield text_io.getvalue()
-            #text_io.truncate(0)
-            #text_io.seek(0)
-            #await asyncio.sleep(0)
-
-        # Get the extracted text from the TextConverter object
-        #text = text_converter.get_output()
-
-       
-
-        #text = text_io.getvalue()
-
-        end = text.find("References")
-        end2 = text.find("REFERENCES")
-        end3 = text.find("Acknowledgements")
-        end4 = text.find("ACKNOWLEDGEMENTS")
-
-        print('end,end2,end3,end4',end,end2,end3,end4)
-        numbers=[end,end2,end3,end4]
-        min_positive = float('inf')
-        for number in numbers:
-            if number > 0 and number < min_positive:
-                min_positive = number
-
-        if min_positive != float('inf'):
-            print("The smallest positive number is", min_positive)
-            endf=min_positive
-        else:
-            print("There are no positive numbers in the list")
-            endf=-1
-
-        print('abs:',text[0:endf].strip())
-        textlim=text[0:endf].strip()
-        # Close the text buffer and the text converter
-
-        text_io.close()
-        text_converter.close()
-        file.close()
-        # Put the extracted text into the text queue
-        #await text_queue.put(textlim)
-        # Return the extracted text
-        #return [textlim,text]
-        return [textlim,textlim]
+async def extract_text_from_pdf(pdf_bytes):
+    text = await asyncio.to_thread(_pdf_bytes_to_text, pdf_bytes)
+    return [text, text]
 
 async def send_message_now(arxiv_group_name,message):
     print('in sendmesnow')
@@ -1806,28 +1045,17 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
         final_summarized_text = summarized_text2#response2.json()["choices"][0]["text"]
         print('yoyo:\n',final_summarized_text)
 
-    elif method=='fromembeddings':
-        print('from embeddings')
-        query="Create a long detailed summary of the paper, preserve important details"
-
-        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,p=p))
-        #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
-        final_summarized_text =await c
-
-        print('apres final_summarized_text',final_summarized_text)
     elif method=='fromembeddingsandabstract':
         print('from embeddings2')
-        query="Create a long detailed summary of the paper"
-
-        c=asyncio.create_task(chatbot(arxiv_id,language,query,api_key,sum=1,p=p))
-        #c=asyncio.create_task(utils.chatbot("my_pdf.pdf"))
-        final_summarized_text = await c
+        #the whole paper text, not three retrieved chunks
+        from .assistant import detailed_summary
+        final_summarized_text = await detailed_summary(arxiv_id, language, p)
 
         print('before nltk final_summarized_text',final_summarized_text)
 
 
         # Download the nltk punkt tokenizer if necessary
-        nltk.download('punkt_tab')
+        await asyncio.to_thread(ensure_nltk_punkt)
 
 
         # Split the summary into individual sentences
@@ -1849,73 +1077,6 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
         #final_summarized_text=finalise_and_keywordsb
         print('apres final_summarized_text',final_summarized_text)
 
-    else:
-        #llm = OpenAI(temperature=0,openai_api_key=api_key)
-        modelforsummarizing="gpt-3.5-turbo-instruct"#"text-davinci-003"#"text-curie-001"
-        #text-davinci-003#4000 tokens#chunk_size=2000#max_tokens=1000
-        #text-curie-001#2048 tokens
-        #text-babbage-001#2048 tokens
-        #text-ada-001#2048 tokens
-        llm = OpenAI(model_name=modelforsummarizing,max_tokens=1000,best_of=1,n=1,temperature=0.3,openai_api_key=api_key)
-        #best_of=2,streaming=True
-        li = get_language_info(language)
-        language2 = li['name']
-        print('language2',language2)
-        #from transformers import GPT2TokenizerFast
-        #tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-
-        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=2000, chunk_overlap=0)
-        texts = text_splitter.split_text(book_text)
-
-        for text in texts:
-            print('text:------------------',text)
-
-        '''
-        text_splitter = CharacterTextSplitter(
-        separator = "\n",
-        chunk_size = 1000,
-        chunk_overlap  = 10,
-        length_function = len,
-        )
-        texts = text_splitter.split_text(book_text)
-        for text in texts:
-            print('text:------------------',text)
-        '''
-        print('tttettxtxtxtxtxtxtxtttzetet',texts)
-        #docs = [Document(page_content=t) for t in texts[:3]]
-        docs = [Document(page_content=t) for t in texts]
-
-        print('docs---------------',texts[:3])
-
-        prompt_template = """Create a long detailed summary of the following text:
-        {text}
-
-        LONG DETAILED SUMMARY:
-
-        """
-
-        if language != 'en':
-            prompt_template += """TRANSLATE THE ANSWER IN """+language2
-
-        print('prompt_template',prompt_template)
-
-        PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
-        #chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
-        chain = load_summarize_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, map_prompt=PROMPT, combine_prompt=PROMPT)
-
-        with get_openai_callback() as cb:
-
-            res=chain({"input_documents": docs}, return_only_outputs=True)
-            nbtokensused=cb.total_tokens
-
-        print('nbtokensused',nbtokensused)
-        print('openai cost',nbtokensused*openaipricing(modelforsummarizing))
-
-        #chain.run(docs)
-        print('res',res)
-        #input("Press Enter to continueb...")
-
-        final_summarized_text = res['output_text']
 
     return final_summarized_text
 
@@ -2088,7 +1249,9 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
     print('language2',language2)
 
     #Extract the most important key points from the following text
-    prompt3 = f"Extract the most important key points from the following text and use bullet points for each of them: {summary}"
+    prompt3 = ("Extract the most important key points from the following text. Write one key point per line, "
+               "each line starting with '- '. Plain text only: no markdown, no asterisks, no title. A point may "
+               "start with a short label followed by a colon. Text: " + summary)
     print('key sum',prompt3)
 
     """
@@ -2177,16 +1340,9 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
     if model in (MODEL_FREE, MODEL_PAID) or p:
-        print('icccciiiiii',response3["choices"][0]["message"]["content"])
-        key_points = response3["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
+        key_points = keypoints.clean_points(response3["choices"][0]["message"]["content"])
     else:
-        print('icccciiiiii',response3["choices"][0]["text"])
-        key_points = response3["choices"][0]["text"].rstrip().lstrip().strip().split("\n")
-
-    #remove if starts with 'Key points:', '',
-    if key_points[1] == "":
-        print('delllll',key_points)
-        del key_points[0:2]
+        key_points = keypoints.clean_points(response3["choices"][0]["text"])
 
     print('key_points',key_points)
 
@@ -2210,13 +1366,16 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
 
     prompt4 = """
         Summarize the following key points in five simple sentences for a six-year-old kid and provide definitions for the most important words in the created summary: {}
-
+        Use plain text only, no markdown, no asterisks, in exactly this layout:
         Summary:
-
+        1. ...
+        2. ...
+        3. ...
+        4. ...
+        5. ...
 
         Definitions:
-
-
+        - word: definition
     """.format(keyp)
 
 #Summarize important points  for a six-year-old in five simple sentences, defining key words. Use clear and concise language appropriate for a child's comprehension level.
@@ -2247,7 +1406,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
         else:
             model_take=model
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(model_take, 300)})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(model_take, 700)})
 
         '''
         async with aiohttp.ClientSession() as session:
@@ -2320,34 +1479,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
     #    print(s)
     simple_sum = ' '.join(simple_sum)
     '''
-    simple_sum = simple_sum.rstrip().lstrip()
-    print('simple_sum after',simple_sum)
-
-    # Define regular expressions to search for patterns that typically indicate the start of a definitions section
-    definition_regexes = [
-        r"\bDefinitions?\b", # matches "definition", "definitions", "définition", "définitions", etc.
-        r"\bDefinition\b", # matches "definieren" in German
-        r"\bDéfinitions\b",
-        r"\bDéfinition\b",
-        # add more regexes for other languages if needed
-    ]
-
-    # Search for the start of a definitions section using regular expressions
-    definitions_start = None
-    for regex in definition_regexes:
-        match = re.search(regex, simple_sum)
-        if match:
-            print('match',match)
-            definitions_start = match.start()
-            break
-
-    # Separate the summary and definitions if a definitions section was found
-    if definitions_start is not None:
-        print('not none definitions_start',definitions_start)
-        summary = simple_sum[:definitions_start].strip()
-        definitions = simple_sum[definitions_start:].strip()
-        # Add a few empty lines between the summary and the definitions
-        simple_sum = f"{summary}\n\n\n{definitions}"
+    simple_sum = clean_lay_summary(simple_sum)
 
     return simple_sum#.rstrip().lstrip()
 
@@ -2357,10 +1489,8 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     print('language2',language2)
 
     prompt5 = """
-         Create a detailed blog article about this research paper: {}
-
-         The article should be well-organized and easy to read with NO HTML EXCEPT for headings with <h2> tags and subheadings with <h3> tags.
-
+         Create a blog article of 600 to 900 words about this research paper: {}
+         The article should be well-organized and easy to read. Use HTML: <h2> for headings, <h3> for subheadings, <p> for every paragraph, and <ul>/<li> for lists. No other tags, no markdown, no LaTeX.
     """.format(summary)
 
     prompt5b = """
@@ -2403,7 +1533,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
-        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 1500)})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 2500)})
 
         
     else:
@@ -2425,6 +1555,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
             "error_message": str(e),
         }
     response5=response5.json()
+    blog_truncated = response5["choices"][0].get("finish_reason") == "length"
     print('resp5',response5)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
@@ -2438,7 +1569,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     print('ba',blog_article)
     blog_article = blog_article.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>').replace('</ h2 >','</h2>').replace('</ h2>','</h2>')
     blog_article = blog_article.replace('< /h3 >','</h3>').replace('< h3 >','<h3>').replace('< H3 >','<h3>').replace('< /H3 >','</h3>').replace('</ h3 >','</h3>').replace('</ h3>','</h3>')
-    blog_article = blog_article.rstrip().lstrip()
+    blog_article = clean_blog_html(blog_article, truncated=blog_truncated)
 
     return blog_article
 
@@ -2518,10 +1649,10 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
 
 def arxiv_search(query):
 
-    #url = 'http://export.arxiv.org/api/query?search_query=ti:'+query+'&start=0&max_results=1&sortBy=lastUpdatedDate&sortOrder=ascending'
+    #url = 'https://export.arxiv.org/api/query?search_query=ti:'+query+'&start=0&max_results=1&sortBy=lastUpdatedDate&sortOrder=ascending'
     query = urllib.parse.quote(query)
     # Define the API endpoint URL
-    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
+    url = f"https://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
 
     response = urllib.request.urlopen(url)
     data = response.read()
@@ -2620,6 +1751,10 @@ def arxiv_search(query):
 
     return papers
 
+# aiohttp waits up to 5 minutes by default; a page waiting on arXiv also holds a database connection
+ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=20)
+
+
 async def get_arxiv_metadata(arxiv_id):
     print('aaa',arxiv_id)
     if '--' in arxiv_id:
@@ -2628,9 +1763,9 @@ async def get_arxiv_metadata(arxiv_id):
         print('arxiv_id2',arxiv_id)
 
 
-    url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"
+    url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
         async with session.get(url) as response:
             try:
                 print('in try arxiv',response.status)
@@ -2647,9 +1782,9 @@ async def get_arxiv_metadata(arxiv_id):
 
     arxiv_id2= re.sub(r'v\d+$', '', arxiv_id)
     print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
-    url2=f"http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
+    url2=f"https://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
         async with session.get(url2) as response:
             try:
                 print('in try arxiv2',response.status)

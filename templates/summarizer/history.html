@@ -8,56 +8,19 @@
   <meta name="description" content="{% trans 'Our AI-powered paper summarization service provides fast, accurate, and easy-to-read summaries of research articles. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/history/" />
   <style>
-
-    .history {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .history-title {
-      font-size: 36px;
-      font-weight: bold;
-      text-align: center;
-      margin: 0;
-      margin-bottom:20px;
-      padding: 0;
-      color: #333;
-    }
-
-    .history-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .history-item {
-      margin-bottom: 20px;
-      padding: 10px 10px;
-      background-color: #f9f9f9;
-      border-radius: 5px;
-    }
-
-    .history-link {
-      color: #333;
+    .history-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .history-item a {
+      display: block;
+      padding: 18px 20px;
+      color: var(--text);
       text-decoration: none;
-      font-size: 18px;
-      font-weight: bold;
+      transition: border-color .15s, box-shadow .15s;
     }
-
-    .history-link:hover {
-      color: #009688;
-    }
-
-    .history-message {
-      font-size: 24px;
-      font-style: italic;
-      text-align: center;
-      margin: 50px 0;
-      padding: 0;
-      color: #666;
-    }
-
+    .history-item a:hover { border-color: #c7cbff; box-shadow: var(--shadow); }
+    .history-item .t { display: block; font-weight: 600; line-height: 1.4; }
+    .history-item .meta { display: block; margin-top: 6px; color: var(--text-muted); font-size: 14px; }
+    .history-item .meta code { font-family: ui-monospace, Menlo, monospace; }
+    .history-message { margin: 48px 0; color: var(--text-muted); text-align: center; font-size: 18px; }
   </style>
 {% endblock %}
 
@@ -65,17 +28,16 @@
 
 {% block content %}
 
+<div class="page">
 {% if auth %}
-<div class="history">
-    <h1 class="history-title">{% trans 'Your History' %} ({{ user.username }})</h1>
+  <header class="page-header"><h1>{% trans 'Your History' %}</h1><p class="lead">{{ user.username }}</p></header>
 {% if paper_history %}
 <ul class="history-list">
 {% for h in paper_history %}
-{% if h.title %}
-  <li class="history-item"><a href="/{{LANGUAGE_CODE}}/arxiv-id/{{ h.arxiv_id }}" class="history-link">{{ h.title }}</a> (arXiv Id: {{ h.arxiv_id }}, Date: {{ h.date|date:"j F Y" }})</li>
-{% else %}
-  <li class="history-item">arXiv Id: <a href="/{{LANGUAGE_CODE}}/arxiv-id/{{ h.arxiv_id }}" class="history-link">{{ h.arxiv_id }}</a> (Date: {{ h.date }})</li>
-{% endif %}
+  <li class="history-item"><a href="/{{LANGUAGE_CODE}}/arxiv-id/{{ h.arxiv_id }}" class="card">
+    <span class="t">{% if h.title %}{{ h.title }}{% else %}{{ h.arxiv_id }}{% endif %}</span>
+    <span class="meta"><code>{{ h.arxiv_id }}</code> · {{ h.date|date:"j F Y" }}</span>
+  </a></li>
 {% endfor %}
 </ul>
 {% else %}

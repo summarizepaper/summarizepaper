@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Daily arXiv digest by email' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Every morning, the new arXiv papers in your fields with a 2-sentence plain-language summary. Free.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/digest/" />
+<style>
+  .digest .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px 16px; }
+  .digest .cats label { position: relative; display: block; padding: 6px 8px 6px 34px; border-radius: 6px; font-weight: 400; line-height: 1.45; cursor: pointer; }
+  .digest .cats input { position: absolute; left: 8px; top: 9px; }
+  .digest .cats label:hover { background: var(--bg-soft); }
+  .digest .cats small { color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; }
+  .digest fieldset > p:last-child { margin-bottom: 0; }
+  .digest fieldset p label { display: block; margin-bottom: 8px; }
+  .digest .radios label { display: inline-flex; align-items: center; gap: 8px; margin-right: 20px; font-weight: 400; }
+  .digest .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page digest">
+  <header class="page-header">
+  <h1>{% trans 'Your daily arXiv digest' %}</h1>
+  <p class="lead">{% blocktrans %}Every morning, up to {{ papers_per_email }} new papers from the categories you follow, each with a 2-sentence summary anyone can understand, and a link to the full AI summary. Free.{% endblocktrans %}</p>
+  </header>
+
+  {% if not request.user.is_authenticated %}
+    <div class="cta-row">
+    <a class="btn btn-lg" href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a>
+    <span class="muted">{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/digest/">{% trans 'Log in' %}</a></span>
+    </div>
+  {% else %}
+    {% if saved %}<p class="notice">{% blocktrans with email=request.user.email %}Saved. Your next digest goes to {{ email }}.{% endblocktrans %}</p>{% endif %}
+    {% if subscription and not subscription.active %}<p class="notice">{% trans 'Your digest is paused. Save the form to resume it.' %}</p>{% endif %}
+    {% if error %}<p class="error">{% trans 'Choose at least one category.' %}</p>{% endif %}
+    <form method="post">{% csrf_token %}
+      <fieldset>
+        <legend>{% blocktrans %}Categories (up to {{ max_categories }}){% endblocktrans %}</legend>
+        <div class="cats">
+          {% for code, label in categories %}
+          <label><input type="checkbox" name="categories" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
+          {% endfor %}
+        </div>
+        <p><label for="other">{% trans 'Other arXiv categories, comma-separated (e.g.' %} <code>math.AP, nlin.CD</code>)</label>
+        <input type="text" id="other" name="other" value="{{ other }}"></p>
+      </fieldset>
+      <fieldset>
+        <legend>{% trans 'Keywords (optional)' %}</legend>
+        <p><label for="keywords">{% trans 'Only papers mentioning at least one of these words, comma-separated:' %}</label>
+        <input type="text" id="keywords" name="keywords" value="{{ subscription.keywords }}" placeholder="exoplanet, debris disk"></p>
+      </fieldset>
+      <fieldset>
+        <legend>{% trans 'Language of the summaries' %}</legend>
+        <div class="radios">
+        {% with current=subscription.lang|default:LANGUAGE_CODE %}
+        <label><input type="radio" name="lang" value="en" {% if current == 'en' %}checked{% endif %}> English</label>
+        <label><input type="radio" name="lang" value="fr" {% if current == 'fr' %}checked{% endif %}> Français</label>
+        {% endwith %}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>{% trans 'Delivery time' %}</legend>
+        <p><label for="send_hour">{% trans 'Send my digest every day at' %}</label>
+        <select id="send_hour" name="send_hour">
+          {% for h in hours %}<option value="{{ h }}" {% if h == send_hour %}selected{% endif %}>{{ h|stringformat:"02d" }}:00</option>{% endfor %}
+        </select></p>
+        <p><label for="timezone">{% trans 'Time zone' %}</label>
+        <select id="timezone" name="timezone">
+          {% for tz in timezones %}<option value="{{ tz }}" {% if tz == timezone %}selected{% endif %}>{{ tz }}</option>{% endfor %}
+        </select></p>
+        {% if not timezone %}
+        <script>
+          // first visit: preselect the time zone of this browser
+          (function () {
+            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            var select = document.getElementById('timezone');
+            if (tz && select.querySelector('option[value="' + tz + '"]')) { select.value = tz; }
+            else { select.value = 'Europe/Paris'; }
+          })();
+        </script>
+        {% endif %}
+      </fieldset>
+      <button type="submit" class="btn btn-lg">{% if subscription %}{% trans 'Save' %}{% else %}{% trans 'Start my digest' %}{% endif %}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

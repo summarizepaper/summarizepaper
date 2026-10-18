@@ -17,40 +17,25 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
-from django.contrib.sitemaps.views import sitemap
-from django.contrib.sitemaps import GenericSitemap
-from summarizer.sitemaps import StaticViewSitemap
-from summarizer.models import ArxivPaper
+from django.contrib.sitemaps import views as sitemap_views
+from summarizer.sitemaps import StaticViewSitemap, SummarizedPaperSitemap
+from summarizer import accounts, billing
+from summarizer.views import robots_txt
 
 app_name = 'summarizer'
 
 sitemaps = {
-    'static': StaticViewSitemap
-}
-
-def get_absolute_url2(obj):
-    return f"/test/{obj.slug}"
-
-
-sitemaps = {
-    'arxividpage': GenericSitemap({
-        'queryset': ArxivPaper.objects.filter(arxiv_id__isnull=False),
-        'date_field': 'updated',
-    }, priority=0.9,protocol = 'https'),
-    #'tree': GenericSitemap({
-    #    'queryset': ArxivPaper.objects.filter(arxiv_id__isnull=False),
-    #    'date_field': 'updated',
-        #'location': lambda obj: obj.get_absolute_url2(),
-    #    'location': get_absolute_url2,
-    #}, priority=0.8,protocol = 'https'),
-    # START
+    'papers': SummarizedPaperSitemap,
     'static': StaticViewSitemap,
-    # END
 }
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}),
+    path('robots.txt', robots_txt),
+    path('stripe/webhook/', billing.webhook, name='stripe_webhook'),
+    path('google/callback/', accounts.google_callback, name='google_callback'),
+    path('sitemap.xml', sitemap_views.index, {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap-section'}),
+    path('sitemap-<section>.xml', sitemap_views.sitemap, {'sitemaps': sitemaps}, name='sitemap-section'),
     path('', include('summarizer.urls')),
 ]
 

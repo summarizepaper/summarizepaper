@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Link expired' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="account-box">
+  <h1>{% trans 'Link expired' %}</h1>
+  <p>{% trans 'This link has already been used or is too old.' %}</p>
+  <p><a href="{% url 'email_login' %}">{% trans 'Get a new link' %}</a></p>
+</div>
+{% endblock %}

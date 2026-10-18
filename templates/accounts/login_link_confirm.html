@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Log in' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex" />
+  {% include 'accounts/_style.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="account-box">
+  <h1>{% if link_user.is_active %}{% trans 'Log in' %}{% else %}{% trans 'Activate your account' %}{% endif %}</h1>
+  <p>{% blocktrans with name=link_user.username %}Account: <strong>{{ name }}</strong>{% endblocktrans %}</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">{% if link_user.is_active %}{% trans 'Log me in' %}{% else %}{% trans 'Activate and log me in' %}{% endif %}</button>
+  </form>
+</div>
+{% endblock %}

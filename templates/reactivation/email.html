@@ -1,0 +1,16 @@
+<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#222;line-height:1.5;">
+<p>Hello {{ user.username }},</p>
+<p>On {{ user.date_joined|date:"F j, Y" }} you created an account on SummarizePaper.com, but the activation email never reached you. That was a problem on our side, sorry.</p>
+<p style="text-align:center;margin:28px 0;"><a href="{{ activate_url }}" style="background:#34a853;color:#fff;padding:12px 22px;text-decoration:none;border-radius:6px;font-size:16px;">Activate my account</a></p>
+<p style="color:#555;font-size:13px;text-align:center;">One click activates your account and logs you in. The link works for 30 days.</p>
+<p>The site has changed a lot since then:</p>
+<ul>
+<li>Summaries written from the full text of arXiv papers (key points, lay summary, blog-style article), in English and French</li>
+<li>An AI assistant that answers your questions about a paper, or about several papers at once</li>
+<li>A daily email digest of new arXiv papers in the categories you follow</li>
+<li>Related papers, BibTeX export and PDF export of summaries</li>
+</ul>
+<p>You can also log in with Google, or ask for a login link by email, so no password is needed.</p>
+<p style="color:#555;font-size:13px;">Did not create this account? Someone may have used your address. Ignore this email and we will not write again, or <a href="{{ delete_url }}" style="color:#555;">delete the account now</a>.</p>
+<p>The SummarizePaper team<br><a href="{{ base_url }}">summarizepaper.com</a></p>
+</div>

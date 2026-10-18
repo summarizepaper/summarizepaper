@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import views
+from . import views, billing, digest, accounts, reactivation
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -14,12 +14,14 @@ urlpatterns = [
     re_path(r"^arxiv-id/(?P<cat>[^\d]+)/(?P<arxiv_id>[a-zA-Z0-9]+)/$", views.arxividpage, name="arxividpage"),
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.arxividpage, name="arxividpage"),
     path("tree/<str:arxiv_id>/", views.tree, name="tree"),
+    path("bibtex/<str:arxiv_id>/", views.bibtex, name="bibtex"),
     #path("summary-pdf/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),
     path("search-results/", views.search_results, name="search_results"),
     path("create-embed/", views.create_embed, name="create_embed"),
     path("about/", views.about, name="about"),
     path("chat/", views.chat, name="chat"),
+    path("arxiv-api/", views.arxiv_api, name="arxiv_api"),
     path("faq/", views.faq, name="faq"),
     path("contact/", views.contact, name="contact"),
     path("history/", views.history, name="history"),
@@ -27,8 +29,17 @@ urlpatterns = [
     path("legal-notice/", views.legal, name="legal"),
     path("update-cache/", views.update_cache, name="update_cache"),
     path("vote/<str:paper_id>/", views.vote, name="vote"),
+    path("digest/", digest.digest_page, name="digest"),
+    path("digest/unsubscribe/<str:token>/", digest.unsubscribe, name="digest_unsubscribe"),
+    path("premium/", billing.premium, name="premium"),
+    path("premium/checkout/", billing.checkout, name="premium_checkout"),
+    path("premium/portal/", billing.portal, name="premium_portal"),
     #path('login/', auth_views.LoginView.as_view(), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
+    path('login/email/', accounts.email_login, name='email_login'),
+    path('login/google/', accounts.google_start, name='google_login'),
+    path('account/delete/<str:token>/', reactivation.delete_account, name='reactivation_delete'),
+    path('login/link/<str:token>/', accounts.login_link, name='login_link'),
     path('logout/', logout_view, name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
     path('password_reset/', auth_views.PasswordResetView.as_view(template_name='password_reset_form.html'), name='password_reset'),

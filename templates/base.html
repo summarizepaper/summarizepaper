@@ -23,268 +23,58 @@
 
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-
-  <style>
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 60px;
-      padding: 0 20px;
-      background-color: #333;
-      color: #fff;
-      box-shadow: 0px 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      text-decoration: none;
-      color: #fff;
-      display: flex;
-      align-items: center;
-    }
-
-    .logo span:nth-of-type(1) {
-      color: white; /* Blue */
-    }
-
-    .logo span:nth-of-type(2) {
-      color: #34a853; /* Green */
-    }
-
-    .nav-links {
-      display: flex;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .nav-links li {
-      margin: 0 20px;
-    }
-
-    .nav-links a {
-      font-size: 18px;
-      color: #fff;
-      text-decoration: none;
-    }
-
-    .nav-links a:hover {
-      color: #ddd;
-    }
-
-    .nav-toggle {
-      display: none;
-    }
-
-    @media screen and (max-width: 1050px) {
-      .nav-links {
-        display: none;
-      }
-
-      .nav-links.active {
-        display: flex;
-        background-color: rgba(0,0,0,0.9); /* transparent background color */
-      }
-
-      .nav-links li {
-          margin: 20px 0;
-        }
-
-      .nav-links {
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        position: absolute;
-        top: 40px;
-        right: 0px;
-        background-color: #333;
-        width: 20%;
-        height: 100%;
-        margin-top: 20px;
-        transition: all 0.5s ease-in-out;
-        min-width:200px;
-      }
-
-      .nav-toggle {
-        display: block;
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        cursor: pointer;
-      }
-      .dropdown {
-        margin-right:0px!important;
-      }
-    }
-
-    footer {
-      background-color: #333;
-      color: #fff;
-      padding: 1em;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    footer a {
-      color: #fff;
-      text-decoration: none;
-    }
-
-    footer nav {
-      display: inline-block;
-      margin-top: 1em;
-    }
-
-    footer ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-    }
-
-    footer li {
-      margin: 10px 1em;
-    }
-
-    @media (max-width: 600px) {
-      footer nav {
-        display: block;
-        margin-top: 1em;
-      }
-      footer ul {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-
-
-      body{
-        font-family: Arial, sans-serif;
-        margin:0;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
-
-      .main-content {
-        flex: 1;
-      }
-
-      .dropdown {
-        position: relative;
-        display: inline-block;
-        margin-right:20px;
-      }
-
-      .dropdown-item {
-        margin-top:20px;
-      }
-
-      .dropdown-menu {
-        display: none;
-        position: absolute;
-        z-index: 1;
-        padding: 16px 0px;
-        min-width: 7rem;
-        text-align: center;
-        left: -26px; /* adjust this value as needed */
-      }
-
-      .dropdown-menu a {
-        color: white;
-        text-decoration: none;
-        display: inline-block;
-        padding: 0;
-      }
-      .dropdown:hover .dropdown-menu {
-        background-color: #333;
-      }
-
-      .dropdown:hover .dropdown-content {
-        display: block;
-        background-color: black;
-        padding-top: 20px;
-      }
-
-      .dropdown-content a {
-        color: black;
-        padding: 12px 16px;
-        text-decoration: none;
-        display: block;
-        margin: 10px 0;
-      }
-      .dropdown-arrow {
-          margin-left: 0.25rem;
-          font-size: 0.75rem;
-      }
-      .logo-container {
-        display: flex;
-        align-items: center;
-      }
-
-      .logo-container img {
-        width: 50px;
-        height: 50px;
-        margin-right: 10px;
-      }
-
-</style>
+  <meta name="theme-color" content="#ffffff"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'summarizer/css/site.css' %}">
   {% block extrahead %}{% endblock %}
 
 </head>
 
 <body>
   <div class="main-content">
-  <nav class="navbar">
-    <!--<a href="/{{LANGUAGE_CODE}}" class="logo"><span>Summarize</span><span>Paper</span>.com</a>-->
-    <div class="logo-container">
-      <img src="{% static 'summarizer/images/logo.png' %}" alt="Summarize Paper logo">
-      <a href="/{{LANGUAGE_CODE}}" class="logo"><span>Summarize</span><span>Paper</span>.com</a>
+  <header class="site-header">
+    <div class="container">
+      <a href="/{{LANGUAGE_CODE}}" class="brand">
+        <img src="{% static 'summarizer/images/logo.png' %}" alt="Summarize Paper logo">
+        <span>Summarize<span class="brand-accent">Paper</span><span class="brand-tld">.com</span></span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="{% trans 'Menu' %}" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+      <ul class="nav-links">
+        <li><a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/digest/">{% trans 'Daily digest' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/premium/" class="nav-premium"><i class="fas fa-star" style="font-size:12px"></i> {% trans 'Premium' %}</a></li>
+        {% if request.user.is_authenticated %}
+        <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
+        {% endif %}
+        <li class="lang-switch">
+          <button type="button" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-globe"></i> {{ LANGUAGE_CODE|upper }} <i class="fas fa-chevron-down" style="font-size:10px"></i>
+          </button>
+          <div class="lang-menu">
+            {% get_available_languages as LANGUAGES %}
+            {% get_language_info_list for LANGUAGES as languages %}
+            {% for lang in languages %}
+              {% if '/fr/' in request.get_full_path or '/en/' in request.get_full_path %}
+                <a href="/{{ lang.code }}/{{request.get_full_path|slice:'4:'}}">{{ lang.name_local|title }}</a>
+              {% else %}
+                <a href="/{{ lang.code }}/{{request.get_full_path|slice:'1:'}}">{{ lang.name_local|title }}</a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </li>
+        {% if request.user.is_authenticated %}
+        <li><a href="/{{LANGUAGE_CODE}}/logout">{% trans 'Logout' %} <span class="nav-user">({{ request.user.username }})</span></a></li>
+        {% else %}
+        <li><a href="/{{LANGUAGE_CODE}}/login" class="btn nav-cta">{% trans 'Login' %}</a></li>
+        {% endif %}
+      </ul>
     </div>
-    <div class="nav-toggle">
-      <i class="fas fa-bars"></i>
-    </div>
-    <ul class="nav-links">
-      <li><a href="/{{LANGUAGE_CODE}}">{% trans 'Home' %}</a></li>
-      <li><a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a></li>
-      <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
-      <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
-      {% if request.user.is_authenticated %}
-      <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
-      <li style="height: 15px; display: flex; align-items: center;">
-        <div style="display: flex; flex-direction: column; align-items: center;height: 100%;">
-          <a href="/{{LANGUAGE_CODE}}/logout" style="color:#34a853">{% trans 'Logout' %}</a>
-          <span style="margin-left: 5px;"><small>({{ request.user.username }})</small></span>
-        </div>
-      </li>
-      {% else %}
-          <li><a href="/{{LANGUAGE_CODE}}/login" style="color:#34a853">{% trans 'Login' %}</a></li>
-      {% endif %}
-      <li>
-
-        <div class="dropdown">
-  <a class="dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    <small>{% trans 'Language' %}<span class="dropdown-arrow">&#9660;</span></small>
-  </a>
-  <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-    {% get_current_language as LANGUAGE_CODE %}
-    {% get_available_languages as LANGUAGES %}
-    {% get_language_info_list for LANGUAGES as languages %}
-    {% for lang in languages %}
-      {% if '/fr/' in request.get_full_path or '/en/' in request.get_full_path %}
-        <a class="dropdown-item" href="/{{ lang.code }}/{{request.get_full_path|slice:'4:'}}">{{ lang.name_local|title }}</a>
-      {% else %}
-        <a class="dropdown-item" href="/{{ lang.code }}/{{request.get_full_path|slice:'1:'}}">{{ lang.name_local|title }}</a>
-      {% endif %}
-    {% endfor %}
-  </div>
-</div>
-    </li>
-    </ul>
-  </nav>
+  </header>
 
 
   {% block content %}
@@ -294,17 +84,15 @@
   {% endblock %}
 
   </div>
-  <footer>
+  <footer class="site-footer">
     <div class="container">
-      <p>Copyright © 2023 Summarize<span style="color:#34a853">Paper</span></p>
-      <nav>
-        <ul>
-          <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
-          <li><a href="/{{LANGUAGE_CODE}}/contact">{% trans 'Contact' %}</a></li>
-          <li><a href="/{{LANGUAGE_CODE}}/privacy">{% trans 'Privacy Policy' %}</a></li>
-          <li><a href="/{{LANGUAGE_CODE}}/legal-notice">{% trans 'Legal Notice' %}</a></li>
-        </ul>
-      </nav>
+      <p>© {% now 'Y' %} Summarize<span style="color:var(--accent)">Paper</span> · {% trans 'Open source' %} on <a href="https://github.com/summarizepaper/summarizepaper">GitHub</a></p>
+      <ul>
+        <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/contact">{% trans 'Contact' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/privacy">{% trans 'Privacy Policy' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/legal-notice">{% trans 'Legal Notice' %}</a></li>
+      </ul>
     </div>
   </footer>
 
@@ -320,34 +108,31 @@
 {% endblock %}
 
 <script>
-  const navToggle = document.querySelector('.nav-toggle');
-  const navLinks = document.querySelector('.nav-links');
-  let menuOpen = false;
+  (function () {
+    var toggle = document.querySelector('.nav-toggle');
+    var links = document.querySelector('.nav-links');
+    toggle.addEventListener('click', function () {
+      var open = links.classList.toggle('active');
+      toggle.setAttribute('aria-expanded', open);
+      toggle.innerHTML = open ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+    });
 
-  navToggle.addEventListener('click', () => {
-  if (menuOpen === false) {
-    navToggle.innerHTML = '<i class="fas fa-times"></i>';
-    menuOpen = true;
-  } else {
-    navToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    menuOpen = false;
-  }
-  navLinks.classList.toggle('active');
-  });
-</script>
+    var lang = document.querySelector('.lang-switch');
+    var langBtn = lang.querySelector('button');
+    langBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      langBtn.setAttribute('aria-expanded', lang.classList.toggle('open'));
+    });
+    document.addEventListener('click', function () {
+      lang.classList.remove('open');
+      langBtn.setAttribute('aria-expanded', 'false');
+    });
 
-<script>
-  var dropdown = document.querySelector('.dropdown');
-
-  var dropdownContent = document.querySelector('.dropdown-menu');
-
-  dropdown.addEventListener('mouseover', function() {
-    dropdownContent.style.display = 'block';
-  });
-
-  dropdown.addEventListener('mouseout', function() {
-    dropdownContent.style.display = 'none';
-  });
+    var here = location.pathname.replace(/\/$/, '');
+    links.querySelectorAll('a[href]').forEach(function (a) {
+      if (a.getAttribute('href').replace(/\/$/, '') === here) a.classList.add('is-active');
+    });
+  })();
 </script>
 
 </body>

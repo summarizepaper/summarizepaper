@@ -3,14 +3,40 @@
 {% load i18n %}
 {% load index %}
 {% load dash_slash %}
+{% load seo %}
 
 {% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %} {% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }} {% endblock %}
+{% block title %}{% firstof paper.title details.title as paper_title %}{% if paper_title %}{{ paper_title|oneline|truncatechars:90 }} | {% trans 'AI summary' %}{% else %}{% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{% if details %}{{ details.title }}{% else %}{{ paper.title }}{% endif %}" />
+  {% firstof paper.title details.title as paper_title %}
+  {% firstof sumpaper.lay_summary sumpaper.summary paper.abstract details.abstract as page_excerpt %}
+  {% if page_excerpt %}
+  <meta name="description" content="{{ page_excerpt|plaintext|truncatechars:158 }}" />
+  {% else %}
+  <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{{ paper_title }}" />
+  {% endif %}
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
+  {% if sumpaper %}
+  <link rel="alternate" hreflang="{{ LANGUAGE_CODE }}" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/" />
+  {% for other_lang in sumlang %}
+  <link rel="alternate" hreflang="{{ other_lang }}" href="https://www.summarizepaper.com/{{ other_lang }}/arxiv-id/{{ arxiv_id }}/" />
+  {% endfor %}
+  {% else %}
+  {# no summary in this language yet: a bare "Run" page, keep it out of search results #}
+  <meta name="robots" content="noindex" />
+  {% endif %}
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="SummarizePaper" />
+  <meta property="og:title" content="{{ paper_title|default:arxiv_id|oneline }}" />
+  <meta property="og:description" content="{{ page_excerpt|plaintext|truncatechars:200 }}" />
+  <meta property="og:url" content="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
+  <meta property="og:image" content="https://www.summarizepaper.com{% static 'summarizer/images/logo.png' %}" />
+  <meta name="twitter:card" content="summary" />
+  {% if structured_data %}
+  <script type="application/ld+json">{{ structured_data }}</script>
+  {% endif %}
   <script>
     MathJax = {
       tex: {
@@ -26,760 +52,333 @@
     </script>
 
   <style>
+/* Class names below are also used by the page scripts (tabs, live run, chat): keep them. */
 
-.paper-container {
-  background-color: #f2f2f2;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px #ccc;
-  margin-bottom: 20px;
+.main-content2 { max-width: 920px; margin: 0 auto; padding: 40px 20px 0; }
+
+/* ---------- Paper header ---------- */
+.title h2 {
+  margin: 0 0 16px;
+  font-size: clamp(26px, 3.6vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
 }
-
-.paper-title {
-  text-align: center;
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-.paper-details p {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.paper-details strong {
-  font-weight: bold;
-}
-
-.paper-details a {
-  color: #337ab7;
-  text-decoration: none;
-}
-
-.paper-summary,
-.paper-notes,
-.paper-lay-summary {
-  padding: 20px;
-  border: 1px solid #e5e5e5;
-  margin-bottom: 20px;
-}
-
-.paper-summary h3,
-.paper-notes h3,
-.paper-lay-summary h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.paper-summary p,
-.paper-notes p,
-.paper-lay-summary p {
-  font-size: 16px;
-  line-height: 1.5;
-  color: #333;
-}
-
-/*new*/
-
-.main-content2 {
-     padding: 16px;
-   }
-
-   .title {
-     font-size: 2xl;
-     font-weight: bold;
-     font-family: sans-serif;
-     margin-bottom: 12px;
-   }
-
-   .subtitle {
-     font-size: 1xl;
-     font-family: serif;
-     margin-bottom: 18px;
-   }
-
-   .info-block {
-     display: flex;
-     align-items: center;
-     margin-bottom: 6px;
-   }
-
-   .info-icon {
-     width: 16px;
-     height: 16px;
-     margin-right: 6px;
-   }
-
-   .info-text {
-     font-size: 14px;
-     font-weight: normal;
-     margin-right: 6px;
-     flex-grow: 1;
-     text-overflow: ellipsis;
-     overflow: hidden;
-   }
-
-   @media (min-width: 768px) {
-     .main-content2 {
-       padding: 16px 32px;
-     }
-
-     .title {
-       font-size: 4xl;
-     }
-     .message-tabs li {
-       font-size: 24px!important;
-     }
-   }
-
-   .message-box {
-      background-color: #f2f2f2;
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 2px 2px 10px #ddd;
-      margin: 20px 20px;
-      text-align: left;
-    }
-
-    .message-title {
-      font-size: 24px;
-      font-weight: bold;
-      margin: 0 0 20px 0;
-    }
-
-    .message-box p {
-      font-size: 18px;
-      margin: 0;
-    }
-
-    .message-tabs {
-      display: flex;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .message-tabs li {
-      flex: 1;
-      text-align: center;
-      padding: 20px 0;
-      cursor: pointer;
-      font-size: 13px;
-    }
-
-    .message-tabs .active {
-      font-weight: bold;
-      border-bottom: 2px solid #333;
-    }
-
-    .message-header {
-      font-size: 36px;
-      font-weight: bold;
-      margin: 0 0 20px 0;
-      text-align: center;
-    }
-
-    .message-content {
-      margin-top: 20px;
-    }
-
-    .message-tab {
-      /*padding: 20px;*/
-      font-size:18px;
-      text-align: justify;
-    }
-
-    input[type="submit"] {
-      background-color: #4CAF50;
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    input[type="submit"]:hover {
-      background-color: #3e8e41;
-    }
-
-    input[type='submit'] {
-      padding: 10px 20px;
-      font-size: 18px;
-    }
-
-  #progress-bar {
-    max-width: 100%;
-    height: 50px;
-    border-radius: 25px;
-    background-color: lightgrey;
-    position: relative;
-    margin: 10px auto;
-  }
-
-  #progress {
-    height: 100%;
-    background-color: green;
-    border-radius: 25px;
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: width 0.5s ease-in-out;
-  }
-
-  #progress-text {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 20px;
-    font-weight: bold;
-    color: white;
-  }
-
-  #loading-message {
-    font-size: 20px;
-    font-weight: bold;
-    text-align: center;
-    color:red;
-    padding: 20px;
-  }
- 
-
- @media only screen and (max-width: 600px) {
-   #progress-bar {
-     height: 30px;
-   }
-   #progress-text {
-     font-size: 16px;
-   }
-   input[type='submit'] {
-      padding: 10px 20px;
-      font-size: 14px;
-    }
- }
-
- .center {
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   height: 100%;
- }
- @keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-
-  #popover {
-    display: none;
-    position: fixed;
-    background-color: black;
-    color: white;
-    padding: 10px;
-    z-index: 1;
-    right: 20px;
-  }
-  #popover2 {
-    display: none;
-    position: fixed;
-    background-color: black;
-    color: white;
-    padding: 10px;
-    z-index: 1;
-    right: 20px;
-  }
-  .small-button {
-    width: 150px;
-    height: 35px;
-    background-color:grey!important;
-    font-size: 14px!important; /* adjust the font size as needed */
-  }
-
-  .chatbot-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-bottom:10px;
-  margin-top:30px;
-  width: 100%;
-  height: 100%;
-}
-
-
-
-.chatbot-header {
-  background-color: #f7f7f7;
-  /*display: flex;*/
-  text-align:center;
-  /*justify-content: center;
-  align-items: center;*/
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-.chatbot-body {
-  width: 700px;
-  height: 400px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  font-family: sans-serif;
-}
-
-.chatbot-body .chatbot-messages {
-  height: 300px;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.chatbot-form {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-top: 1px solid #ccc;
-}
-
-.chatbot-form input[type="text"] {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-}
-
-.chatbot-form button {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #4CAF50;
-  color: #fff;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-
-.chatbot-body .chatbot-messages .chatbot-message {
-    font-weight: bold;
-    color: #000;
-    margin-bottom: 5px;
-    margin-top: 15px;
-    margin-right: 10px;
-    text-align: justify;
-}
-
-.chatbot-body .chatbot-messages .chatbot-response {
-    color: #555;
-    margin-left: 20px;
-    margin-right: 10px;
-    text-align: justify;
-}
-
-/* Small devices (phones, 576px and up) */
-@media (min-width: 300px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 300px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-/* Small devices (phones, 576px and up) */
-@media (min-width: 576px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 400px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 500px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-@media (min-width: 900px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 700px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-.chatbot-message {
-  position: relative;
-}
-
-
-.blinking-square {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1px solid black;
-  background-color: black; /* Add this line to set the background color to black */
-  /*position: absolute;*/
-  top: 5px; /* Position the square at the top of the chatbot-messages div */
-  /*right: 0;*/
-  margin-left:10px;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-#loading-spinner {
-  margin-left: 5px;
-}
-
-
-
-
-
-#chatbot-toggle {
-  display: block;
-  width: 200px;
-  margin: 0 auto;
-  text-align: center;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-weight: bold;
-  text-decoration: none;
-  color: #333;
-}
-
-#chatbot-toggle:hover {
-  background-color: #e8e8e8;
-}
-
-
-.chatbot-instructions p {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-
-
-.chatbot-instructions {
-  display: none;
-  margin: 20px auto;
-  width: 80%;
-  max-width: 600px;
-  padding: 20px;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.chatbot-instructions ol {
-    counter-reset: my-counter;
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.chatbot-instructions ol li {
-    counter-increment: my-counter;
-    margin-bottom: 10px;
-    position: relative;
-}
-
-.chatbot-instructions ol li:before {
-    content: counter(my-counter) ".";
-    background-color: #2196f3;
-    border-radius: 50%;
-    color: #fff;
-    display: inline-block;
-    font-size: 16px;
-    font-weight: bold;
-    height: 24px;
-    line-height: 24px;
-    margin-right: 10px;
-    text-align: center;
-    width: 24px;
-}
-
-.chatbot-instructions ol li:last-child {
-    margin-bottom: 0;
-}
-
-.chatbot-instructions ol li:last-child:before {
-    content: counter(my-counter) ".";
-    background-color: #2196f3;
-    border-radius: 50%;
-    color: #fff;
-    display: inline-block;
-    font-size: 16px;
-    font-weight: bold;
-    height: 24px;
-    line-height: 24px;
-    margin-right: 10px;
-    text-align: center;
-    width: 24px;
-}
-
-.label {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  font-weight: bold;
-  margin-right: 8px;
-}
-
-.keywords {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  max-width: 100%;
-}
-
-
+.subtitle p { margin: 0 0 14px; color: var(--text-muted); font-size: 16px; }
+.subtitle b { color: var(--text); font-weight: 600; }
+.paper-meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-bottom: 24px; }
+.info-block { display: flex; align-items: center; margin-bottom: 6px; }
+.paper-meta .info-block { margin: 0; }
+.info-text { font-size: 14px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+.info-text i { width: 16px; margin-right: 4px; color: #9a9aab; text-align: center; }
+.info-text a { text-decoration: none; font-weight: 500; }
+.info-text a:hover { text-decoration: underline; }
+.langs-available { padding: 12px 16px; border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 15px; }
+
+/* ---------- Keywords ---------- */
+.keywords { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 24px; }
+.label { display: contents; font-size: 13px; font-weight: 600; color: var(--text-muted); }
 .keyword {
   display: inline-block;
-  margin-right:8px;
-  margin-left:8px;
-  background-color: #f5f5f5;
-  color: #333;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-@media only screen and (max-width: 600px) {
-  .keyword {
-    font-size: 12px;
-    padding: 3px 6px;
-    margin: 5px;
-  }
-  .label {
-    display: inline-block;
-    align-items: center;
-    font-size: 14px;
-  }
-}
-
+/* ---------- Key points ---------- */
 .key-points-container {
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 10px;
-  margin: 20px 0;
+  margin: 0 0 24px;
+  padding: 28px 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
-
-.key-points-header {
-  background-color: #eee;
-  padding: 5px;
-  border-radius: 5px 5px 0 0;
-  text-align: center;
+.key-points-header h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 18px; }
+.key-points-header h3::before {
+  content: "\2726";
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 14px;
 }
-
-.key-points-header h3 {
-  margin: 0;
-}
-
-
-.key-points-body ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.key-points-body {
-  background-color: #f2f2f2;
-  border-radius: 5px;
-  padding: 20px;
-}
-
-.key-points-body li {
-  position: relative;
-  padding-left: 1.5em;
-  margin-bottom: 0.5em;
-  line-height: 1.5;
-  font-size: 18px;
-}
-
-.key-points-body li:before {
+.key-points-header p { color: var(--text-muted); }
+.key-points-body ul { list-style: none; margin: 0; padding: 0; }
+.key-points-body li { position: relative; padding-left: 22px; margin-bottom: 10px; line-height: 1.6; font-size: 16px; }
+.key-points-body li::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0.6em;
-  width: 8px;
-  height: 8px;
+  left: 2px;
+  top: .62em;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background-color: #3CB371;
+  background: var(--accent);
 }
-
 .paper-resources {
-      font-family: Arial, sans-serif;
-      font-size: 16px;
-      color: #333;
-      background-color: #f8f9a0;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 20px;
-      display: inline-block;
-  }
-
-  .paper-resources a {
-      color: #007bff;
-      text-decoration: none;
-  }
-
-  .paper-resources a:hover {
-      text-decoration: underline;
-  }
-
-  .disclaimer {
-  background-color: #f2f2f2;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 20px;
-  margin-bottom: 20px;
-  margin-left: 20px;
-  margin-right: 20px;
-
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 14px;
 }
+.paper-resources a { font-weight: 600; text-decoration: none; }
+.paper-resources a:hover { text-decoration: underline; }
 
-.disclaimer p {
-  font-size: 16px;
-  line-height: 1.5;
+/* ---------- Abstract ---------- */
+.paper-details p { margin: 0 0 12px; font-size: 16px; line-height: 1.7; color: #33333f; }
+.paper-details strong { display: block; margin-bottom: 6px; color: var(--text); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.paper-details a { color: var(--accent); text-decoration: none; }
+
+/* ---------- Results (tabs) ---------- */
+.message-box {
+  margin: 40px 0 0;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+.message-header { margin: 0 0 20px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+.message-header2 { color: var(--text-muted); }
+.message-box p { font-size: 16px; margin: 0; }
+.message-tabs {
+  display: flex;
+  gap: 4px;
   margin: 0;
-  color: #333;
+  padding: 4px;
+  list-style: none;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-
-.disclaimer strong {
-  font-weight: bold;
-  color: #0052cc;
+.message-tabs li {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 7px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s, background-color .15s;
 }
+.message-tabs li:hover { color: var(--text); }
+.message-tabs .active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+.message-content { margin-top: 20px; }
+.message-tab { font-size: 16px; line-height: 1.75; color: #33333f; }
+.message-tab ul li { margin-bottom: 8px; }
+.message-tab h1, .message-tab h2, .message-tab h3 { color: var(--text); }
+.results-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+.results-footer .info-block { margin: 0; }
+.results-footer form { margin: 0; }
 
-.latest-papers {
-     background-color: #f8f8f8;
-     padding: 20px;
-     text-align: center;
-   }
+/* ---------- Buttons ---------- */
+.main-content2 input[type="submit"] {
+  padding: 11px 20px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font: 600 15px var(--font);
+  cursor: pointer;
+  transition: background-color .15s;
+}
+.main-content2 input[type="submit"]:hover { background: var(--accent-hover); }
+.main-content2 input[type="submit"].small-button,
+.main-content2 input[type="submit"].ghost-submit {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  padding: 9px 16px;
+}
+.main-content2 input[type="submit"].small-button:hover,
+.main-content2 input[type="submit"].ghost-submit:hover { background: var(--bg-soft); }
 
-   .latest-papers h2 {
-     font-size: 24px;
-     font-weight: bold;
-     margin-bottom: 10px;
-   }
+.center { display: flex; justify-content: center; align-items: center; gap: 8px; text-align: center; }
 
-   .paper-list {
-     display: flex;
-     flex-wrap: wrap;
-     justify-content: center;
-   }
+/* ---------- Live run / progress ---------- */
+#progress-bar {
+  position: relative;
+  max-width: 100%;
+  height: 12px;
+  margin: 16px auto 32px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+#progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-gradient);
+  transition: width .5s ease-in-out;
+}
+#progress-text { display: none; }
+#loading-message, #progtextupdate { padding: 12px 0; text-align: center; color: var(--accent) !important; font-size: 16px !important; font-weight: 600; }
+.loading img { display: none !important; }
+.loading::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { 50% { opacity: .35; } }
+.run-intro h1 { font-size: clamp(26px, 3.6vw, 34px); letter-spacing: -0.03em; }
+.run-intro > p { color: var(--text-muted); }
+.run-intro hr { margin: 24px 0; border: 0; border-top: 1px solid var(--border); }
+.warn-text { color: #92400e !important; }
 
-   .paper {
-  background-color: #ffffff;
-  border: 1px solid #cccccc;
-  border-radius: 5px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  margin: 10px;
-  width: 120px;
-  height: auto;
+/* ---------- Tooltips ---------- */
+#popover, #popover2 {
+  display: none;
+  position: fixed;
+  z-index: 60;
+  max-width: 320px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: #16161d;
+  color: #e6e6ef;
+  font-size: 14px;
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+#popover p, #popover2 p { margin: 0 0 6px; }
+#popover-link, #popover-link2 { color: #9a9aab; cursor: help; }
+
+/* ---------- Votes ---------- */
+.vote-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-soft);
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.vote-bar p { margin: 0; }
+.vote-actions { display: flex; align-items: center; gap: 8px; }
+.vote-actions form { margin: 0; }
+.vote-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background-color .15s;
+}
+.vote-btn.up:hover { color: var(--success); border-color: #bbf7d0; background: #f0fdf4; }
+.vote-btn.down:hover { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
+.vote-score { min-width: 64px; text-align: center; font-weight: 600; color: var(--text); }
+.inline-error { margin: 12px 0 0; color: var(--danger); font-weight: 600; text-align: center; }
+
+.rerun { margin: 32px 0 0; padding: 20px 24px; border: 1px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-muted); }
+.rerun p { margin: 0 0 14px; }
+
+/* ---------- Similar papers ---------- */
+.latest-papers { margin-top: 56px; }
+.latest-papers h2 { margin: 0 0 20px; font-size: 22px; font-weight: 700; }
+.paper-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.paper {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.paper:hover { border-color: #c7cbff; box-shadow: var(--shadow); transform: translateY(-2px); }
+.paper a { color: var(--text); font-weight: 600; font-size: 15px; line-height: 1.4; text-decoration: none; }
+.paper a::after { content: ""; position: absolute; inset: 0; }
+.paper { position: relative; }
+.paper .category { margin-top: auto; color: var(--text-muted); font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.score {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 700;
+}
+.tree-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; color: var(--text-muted); }
+.tree-cta p { margin: 0; }
+.closest-search { margin-top: 24px; flex-direction: column; }
+.closest-search form { display: flex; align-items: center; gap: 10px; }
+.closest-search form p { margin: 0; }
+.beta { padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 12px; font-weight: 600; }
+
+/* ---------- Disclaimer & premium ---------- */
+.disclaimer {
+  display: flex;
+  gap: 12px;
+  margin: 40px 0 0;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #78350f;
+  font-size: 14px;
+}
+.disclaimer p { margin: 0; }
+.disclaimer::before { content: "\f071"; font: 900 14px "Font Awesome 5 Free"; color: #d97706; margin-top: 3px; }
+.paid-account-message {
+  display: inline-flex;
   align-items: center;
-  transition: all 0.2s ease-in-out;
-  height: 120px; /* set a fixed height */
-  justify-content: space-between;
-}
-
-.paper:hover {
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
-  transform: scale(1.1);
-}
-
-.paper a {
-  font-family: "Open Sans", sans-serif;
-  color: #000000;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
   font-size: 14px;
-  text-decoration: none;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
+.paid-account-message p { margin: 0; }
+.star-icon { color: #f59e0b; font-size: 16px; }
+.highlight { color: #b45309; font-weight: 700; }
+.warning-sign { margin-right: 4px; color: #d97706; }
 
-.paper a:hover {
-  color: #007bff;
+@media (max-width: 600px) {
+  .main-content2 { padding-top: 24px; }
+  .key-points-container, .message-box { padding: 20px; }
+  .chatbot-header { padding: 16px; }
+  .chatbot-body .chatbot-messages { padding: 12px 16px; }
+  .message-tabs li { flex: 0 0 auto; }
 }
-
-.paper .category {
-  font-size: 14px;
-  margin-top: 5px;
-  text-align: center;
-  font-family: "Open Sans", sans-serif;
-}
-
-   @media (min-width: 768px) {
-     .paper {
-       width: 150px;
-       height: 150px;
-     }
-
-     .paper a {
-       font-size: 16px;
-     }
-   }
-
-   .score {
-      font-size: 16px;
-      font-weight: bold;
-      text-align: center;
-      color: #fff;
-      background-color: #007bff;
-      border-radius: 4px;
-      padding: 4px 8px;
-      margin-top: 8px;
-    }
-
-    .paid-account-message {
-      border: 2px solid #4CAF50;
-      border-radius: 8px;
-      padding: 12px;
-      position: relative;
-      max-width: fit-content;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .paid-account-message p {
-      margin: 0;
-      font-family: Montserrat, sans-serif;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .star-icon {
-      color: #ff9307;
-      position: absolute;
-      top: -20px;
-      left: -10px;
-      font-size: 24px;
-    }
-
-    .highlight {
-      color: #ff9307;
-    }
-
 </style>
 {% endblock %}
 
@@ -789,9 +388,7 @@
 <div class="main-content2">
 
 {% if errormess %}
-<div style="text-align:center;color:red;">
-  <p><strong>{{ errormess }}</strong></p>
-</div>
+<p class="inline-error">{{ errormess }}</p>
 {% else %}
 
 
@@ -800,48 +397,6 @@
 
   {% if paper.title %}
     <div class="title"><h2>{{ paper.title }}</h2></div>
-  {% endif %}
-  {% if keywords %}
-    <div class="keywords">
-      <span class="label">{% trans 'AI-generated keywords:' %}
-      {% for kw in keywords %}
-        <span class="keyword">{{ kw }}</span>
-      {% endfor %}
-      </span>
-    </div>
-  {% endif %}
-  {% if notes %}
-  <div class="key-points-container">
-  <div class="key-points-header">
-    <h3>{% trans 'AI-generated Key Points' %}</h3>
-    {% if not public %}
-    <p style="display: inline-block; margin-top:10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the key points are generated using the paper metadata rather than the full article.' %}</small></p>
-    {% endif %}
-  </div>
-  <div class="key-points-body">
-    <ul>
-      {% for point in notes2 %}
-      <li>{{ point }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-  <div class="paper-resources">
-    {% trans 'Also access our AI generated:' %}
-      <a href="#results" onclick="switchTab(0)">{% trans 'Comprehensive summary' %}</a>,
-      <a href="#results" onclick="switchTab(2)">{% trans 'Lay summary' %}</a>,
-      <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a>;
-      {% trans ' or ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
-  </div>
-</div>
-  {% else %}
-    {% if sumlang %}
-    <div class="info-block" style="margin-top: 20px; border: 1px solid #ccc; padding: 10px; background-color: #f7f7f7;">
-        <span style="font-weight: bold;">{% trans 'Summaries already available in other languages:' %}</span>
-        {% for l in sumlang %}
-            <a href="/{{ l }}/arxiv-id/{{ arxiv_id }}" style="margin-left: 10px;">{{ l }}</a>{% if not forloop.last %}, {% endif %}
-        {% endfor %}
-    </div>
-  {% endif %}
   {% endif %}
     <div class="subtitle">
       {% if paper.authors.all %}
@@ -852,6 +407,7 @@
         </p>
       {% endif %}
     </div>
+    <div class="paper-meta">
     {% if paper.journal_ref %}
     <div class="info-block">
       <div class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</div>
@@ -874,9 +430,52 @@
       <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
     </div>
     {% endif %}
+    </div>
+  {% if keywords %}
+    <div class="keywords">
+      <span class="label">{% trans 'AI-generated keywords:' %}
+      {% for kw in keywords %}
+        <span class="keyword">{{ kw }}</span>
+      {% endfor %}
+      </span>
+    </div>
+  {% endif %}
+  {% if notes %}
+  <div class="key-points-container">
+  <div class="key-points-header">
+    <h3>{% trans 'AI-generated Key Points' %}</h3>
+    {% if not public %}
+    <p style="display: inline-block; margin-top:10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the key points are generated using the paper metadata rather than the full article.' %}</small></p>
+    {% endif %}
+  </div>
+  <div class="key-points-body">
+    <ul>
+      {% for point in notes2 %}
+      <li>{{ point|keypoint }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="paper-resources">
+    {% trans 'Also access our AI generated:' %}
+      <a href="#results" onclick="switchTab(0)">{% trans 'Comprehensive summary' %}</a>,
+      <a href="#results" onclick="switchTab(2)">{% trans 'Lay summary' %}</a>,
+      <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a>;
+      {% trans ' or ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
+  </div>
+</div>
+  {% else %}
+    {% if sumlang %}
+    <div class="info-block langs-available" style="margin-bottom:24px">
+        <span style="font-weight: bold;">{% trans 'Summaries already available in other languages:' %}</span>
+        {% for l in sumlang %}
+            <a href="/{{ l }}/arxiv-id/{{ arxiv_id }}" style="margin-left: 10px;">{{ l }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+  {% endif %}
+  {% endif %}
     <div class="paper-details">
     {% if paper.abstract %}
-      <p style="text-align: justify;"><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
+      <p><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
     {% endif %}
     </div>
     {% if paper.published_arxiv %}
@@ -884,27 +483,25 @@
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
-  </div>
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-quote-right"></i> <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow">{% trans 'Cite this paper (BibTeX)' %}</a></div>
+    </div>
 
   <div class="chatbot-container" id="assistant">
-    <div class="chatbot-body">
     <div class="chatbot-header">
       <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
-      <p style="margin-top:-10px;"><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>
+      <p><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>
       {% if not public %}
-      <p style="max-width: 400px;display: inline-block; margin-top:-10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
+      <p style="margin-top:6px"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
       {% endif %}
     </div>
-    </div>
     <div class="chatbot-body">
-      <div class="chatbot-messages">
-        {% if chathistory %}
+      <div class="chatbot-messages" data-empty="{% trans 'Ask anything about this paper.' %}">{% if chathistory %}
           {% for chat in chathistory %}
             <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
             <div class="chatbot-response">{% trans 'AI' %} - {{ chat.response }}</div>
           {% endfor %}
-        {% endif %}
-      </div>
+        {% endif %}</div>
       <form class="chatbot-form">
         <input type="text" placeholder="{% trans 'Type your question here' %}">
         <button type="submit" id="send-btn">{% trans 'Send' %}</button>
@@ -946,7 +543,7 @@
         {% if sumpaper.notes %}
         <ul style="list-style: none;padding-left: 20px; text-indent: -10px;">
         {% for note in notes %}
-          <li>{{ note }}</li>
+          <li>{{ note|keypoint }}</li>
         {% endfor %}
         </ul>
         {% else %}{% trans 'The key points are not ready yet' %}{% endif %}
@@ -955,24 +552,28 @@
       <div class="message-tab" style="display:none;">{% if sumpaper.blog %}{{ sumpaper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
     </div>
 
+    <div class="results-footer">
+    <div>
     {% if paper.updated %}
-    <div class="info-block" style="margin-top:20px;">
+    <div class="info-block">
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Created on' %} {{ paper.updated|date:"d M. Y" }}</div>
     </div>
     {% endif %}
     {% if sumlang %}
-    <div class="info-block" style="margin-top:20px;">
+    <div class="info-block" style="margin-top:4px;">
       <div class="info-text"> {% trans 'Available in other languages:' %}
           {% for l in sumlang %}<a href="/{{ l }}/arxiv-id/{{ arxiv_id }}">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
       </div>
     </div>
     {% endif %}
+    </div>
     <form id="download-form" action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
       <input type="hidden" name="local_date" id="localDateInput">
       <input type="submit" id="submitButton" value="{% trans 'Download as pdf' %}" name="download_pdf" class="small-button">
       <span id="spinner" class="fa fa-spinner fa-spin" style="display: none;"></span>
     </form>
+    </div>
   </div>
 
   <script>
@@ -1001,52 +602,35 @@ submitButton.addEventListener('click', () => {
 });
 </script>
 
-  <div style="text-align: center;">
-  <p>
-    <form action="{% url 'vote' paper.arxiv_id %}" method="post">
-      {% csrf_token %}
-      <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
-      <button type="submit" name="direction" value="up" style="cursor: pointer;">
-        <i class="fa fa-thumbs-up" style="font-size: 36px;color:blue;"></i>
-      </button>
-    </form>
-    
-    <!--<a href="{% url 'vote' paper.arxiv_id %}">
-      <i class="fa fa-thumbs-up" style="font-size: 36px;"></i>
-    </a>-->
-  </p>
-  <p id="totvote">{% trans 'Assess the quality of the AI-generated content by voting' %} 
-    <span id="popover-link">
-      <i class="fas fa-question-circle"></i>
-    </span>
-    <p>{% trans 'Score:' %} {{ total_votes }}</p>
-  </p>
-  <div id="popover">
-    <p><strong>{% trans 'Why do we need votes?' %}</strong></p>
-    <p>{% trans 'Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.' %}</p>
+  <div class="vote-bar">
+    <p id="totvote">{% trans 'Assess the quality of the AI-generated content by voting' %}
+      <span id="popover-link"><i class="fas fa-question-circle"></i></span>
+    </p>
+    <div class="vote-actions">
+      <form action="{% url 'vote' paper.arxiv_id %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
+        <button type="submit" name="direction" value="up" class="vote-btn up" aria-label="+1"><i class="fa fa-thumbs-up"></i></button>
+      </form>
+      <span class="vote-score">{% trans 'Score:' %} {{ total_votes }}</span>
+      <form action="{% url 'vote' paper.arxiv_id %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
+        <button type="submit" name="direction" value="down" class="vote-btn down" aria-label="-1"><i class="fa fa-thumbs-down"></i></button>
+      </form>
+    </div>
+    <div id="popover">
+      <p><strong>{% trans 'Why do we need votes?' %}</strong></p>
+      <p>{% trans 'Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.' %}</p>
+    </div>
   </div>
-  <p>
-    <form action="{% url 'vote' paper.arxiv_id %}" method="post">
-      {% csrf_token %}
-      <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
-      <button type="submit" name="direction" value="down" style="cursor: pointer;">
-        <i class="fa fa-thumbs-down" style="font-size: 36px; color:blue;"></i>
-      </button>
-    </form>
-
-    <!--<a href="{% url 'vote' paper.arxiv_id %}">
-      <i class="fa fa-thumbs-down" style="font-size: 36px;"></i>
-    </a>-->
-  </p>
   {% if error_message %}
-  <div style="text-align:center;color:red;">
-    <p><strong>{{ error_message }}</strong></p>
-  </div>
+  <p class="inline-error">{{ error_message }}</p>
   {% endif %}
-</div>
 
   {% if not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog or toolong or total_votes < -9 or user.is_staff %}
-  <div class="center" style="margin:10px;">
+  <div class="rerun">
+  <div>
     {% if toolong %}
     <p>{% trans 'The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.' %}</p>
     {% elif total_votes < -9 %}
@@ -1057,15 +641,14 @@ submitButton.addEventListener('click', () => {
     <p>{% trans 'Hi, because you are a staff member you can Run the AI tools!' %}</p>
     {% endif %}
     </div>
-    <div class="center" style="margin-bottom:20px;">
   <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
     {% csrf_token %}
     <input type="submit" value="{% trans 'Run' %}" name="run_button">
   </form>
-  </div>
   {% if not public %}
-  <p style="text-align: center; margin-top: 10px; color: red;max-width: 600px; width: 90%; margin-left: auto; margin-right: auto;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
+  <p class="warn-text" style="margin:14px auto 0;max-width:600px"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
   {% endif %}
+  </div>
   {% endif %}
   
   {% if relpapers %}
@@ -1080,34 +663,32 @@ submitButton.addEventListener('click', () => {
       </div>
       {% endfor %}
     </div>
-    <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-      <p style="display: inline-block;">{% trans 'Navigate through even more similar papers through a ' %}</p>
-      <a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}" style="display: inline-block; text-decoration: none; background-color: #007bff; color: #fff; padding: 5px 10px; border-radius: 5px;">{% trans 'tree representation' %}</a>
+    <div class="tree-cta">
+      <p>{% trans 'Navigate through even more similar papers through a ' %}</p>
+      <a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}" class="btn btn-ghost"><i class="fas fa-project-diagram"></i> {% trans 'tree representation' %}</a>
     </div>
       </section>
   {% endif %}
 
-  <div class="center" style="margin-bottom:20px;">
+  <div class="center closest-search">
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
-      
-      <input type="submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button" style="background-color: #333;">
-      
-      <p style="text-align: center;">
-      <label style="color: orange;">(Beta)</label>
+      <input type="submit" class="ghost-submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
+      <p>
+      <span class="beta">Beta</span>
       <span id="popover-link2">
         <i class="fas fa-question-circle"></i>
       </span></p>
     </form>
     <div id="popover2">
       <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
-      <p>{% trans 'By clicking on the button above, our algorithm will scan all papers in our database to find the closest based on the contents of the full papers and not just on metadata. Please note that it only works for papers that we have generated summaries for and you can rerun it from time to time to get a more accurate result while our database grows.' %}</p>
+      <p>{% trans 'By clicking on the button above, our algorithm compares the title and abstract of this paper with all the papers of the same arXiv category that we have summarized, and finds the closest ones. You can rerun it from time to time: the results improve as our database grows.' %}</p>
     </div>
   </div>
   <div class="disclaimer">
     <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
   </div>
- 
+</div>
 
 {% else %}
 
@@ -1115,10 +696,11 @@ submitButton.addEventListener('click', () => {
 <p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}. {% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% else %}
 
+<div class="run-intro">
 {% if paid %}
 <div class="paid-account-message">
   <span class="star-icon">&#9733;</span>
-  <p>{% blocktrans %} Congratulations, you have a paid account and can benefit from <span class="highlight">GPT-4</span> capabilities!{% endblocktrans %}</p>
+  <p>{% blocktrans %}Premium account: your summaries and answers use our <span class="highlight">most capable model</span>.{% endblocktrans %}</p>
 </div>
 {% endif %}
 
@@ -1128,21 +710,22 @@ submitButton.addEventListener('click', () => {
   <h1>{% trans 'Running summarizing tools on a new article' %}</h1>
   {% endif %}
   {% if run or run2 or close %}
-  <p style="font-size:20px;"><strong>{% trans 'We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.' %}</strong></p>
+  <p><strong>{% trans 'We are now running our AI tools on the requested article. This process may take a few minutes so please bear with us.' %}</strong></p>
   {% else %}
-  <p style="font-size:20px;"><strong>{% trans 'This is the first time this article is requested and our AI summarizing tools have never been run on it. We can run our tools now if you click on the button "Run" donw the page but first make sure that it is the right article.' %}</strong></p>
+  <p><strong>{% trans 'This is the first time this article is requested and our AI summarizing tools have never been run on it. We can run our tools now if you click on the button "Run" donw the page but first make sure that it is the right article.' %}</strong></p>
   {% endif %}
   <hr>
 
   {% if robot %}
-  <div style="text-align:center;color:red;">
+  <div class="inline-error">
     <p><strong>{% trans 'You are trying to run too many papers in too short a period of time. Are you a robot? If not, wait and retry!' %}</strong></p>
   </div>
   {% endif %}
 
   {% if toomany %}
-  <div style="text-align:center;color:red;">
+  <div class="inline-error">
     <p><strong>{% trans 'You are limited to running 10 papers in a period of 24 hours. Please come back tomorrow or contact us if you need to run more articles using our tools.' %}</strong></p>
+    <p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Premium accounts have no daily limit.' %}</a></p>
   </div>
   {% endif %}
 
@@ -1187,7 +770,7 @@ submitButton.addEventListener('click', () => {
     {% endif %}
     <div class="paper-details">
     {% if details.abstract %}
-      <p style="text-align: justify;"><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ details.abstract }}</span></p>
+      <p><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ details.abstract }}</span></p>
     {% endif %}
     </div>
     {% if details.published_arxiv %}
@@ -1203,10 +786,10 @@ submitButton.addEventListener('click', () => {
     </form>
     </div>
     {% if not public %}
-    <p style="text-align: center; margin-top: 10px; color: red;max-width: 600px; width: 90%; margin-left: auto; margin-right: auto;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
+    <p class="warn-text" style="text-align:center;margin:14px auto 0;max-width:600px"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
     {% endif %}
     {% endif %}
-
+</div>
 
 {% endif %}
 
@@ -1338,8 +921,7 @@ submitButton.addEventListener('click', () => {
       //console.log('jkkk');
       {% if run or run2 %}
       socketl.send(JSON.stringify({
-          'command': 'start_background_task',
-          'paid':{% if paid %}true{% else %}false{% endif %}
+          'command': 'start_background_task'
       }));
       {% elif close %}
       socketl.send(JSON.stringify({
@@ -1547,7 +1129,7 @@ submitButton.addEventListener('click', () => {
       var absContainer = document.getElementsByClassName("paper-details")[0];
       if (data.message.abstract){
         //alert(data.message.journal_ref)
-        var absHTML = '<p style="text-align: justify;"><strong>{% trans "Abstract:" %}</strong> <span class="math style="width: 1.796em; display: inline-block;">';
+        var absHTML = '<p><strong>{% trans "Abstract:" %}</strong> <span class="math style="width: 1.796em; display: inline-block;">';
         absHTML += data.message.abstract;
         absHTML += '</span></p>';
         absContainer.innerHTML = absHTML;
@@ -1605,9 +1187,10 @@ function updateCache(arxiv_id) {
 
 <script>
 
+let currentResponse = null;
 function addTheListeners() {
   //alert('ok');
-  if (socketl && socketl.readyState === WebSocket.OPEN) {
+  if (socketl && (socketl.readyState === WebSocket.OPEN || socketl.readyState === WebSocket.CONNECTING)) {
     //console.log('adding...')
     socketl.addEventListener("open", function(event) {
       //console.log("WebSocket connected");
@@ -1618,27 +1201,38 @@ function addTheListeners() {
     socketl.addEventListener("message", function(event) {
       //socketl.onmessage = function(event) {
       //console.log('Received message:', event);
-      const messageb = JSON.parse(event.data).message;
-      const chatbotResponse = document.createElement('div');
-      chatbotResponse.classList.add('chatbot-response');
-      chatbotResponse.innerText = "{% trans 'AI -' %} "+messageb;
-      chatbotMessages.appendChild(chatbotResponse);
+      const data = JSON.parse(event.data);
+      // the answer streams in as chat_delta pieces, then arrives whole as {message}
+      if (data.type === 'chat_delta') {
+        if (!currentResponse) {
+          currentResponse = document.createElement('div');
+          currentResponse.classList.add('chatbot-response');
+          currentResponse.innerText = "{% trans 'AI -' %} ";
+          chatbotMessages.appendChild(currentResponse);
+          var loadingSpinner = document.getElementById("loading-spinner");
+          loadingSpinner.style.display = "none";
+        }
+        currentResponse.innerText += data.delta;
+        scrollToBottom();
+        return;
+      }
+      if (data.message === undefined) {
+        return;
+      }
+      if (!currentResponse) {
+        currentResponse = document.createElement('div');
+        currentResponse.classList.add('chatbot-response');
+        chatbotMessages.appendChild(currentResponse);
+      }
+      currentResponse.innerText = "{% trans 'AI -' %} " + data.message;
+      currentResponse = null;
       var blinkingSquare = document.querySelector(".blinking-square");
-
-      blinkingSquare.remove();
-
+      if (blinkingSquare) {
+        blinkingSquare.remove();
+      }
       var loadingSpinner = document.getElementById("loading-spinner");
       loadingSpinner.style.display = "none";
-
-      /*var messagesContainer = document.querySelector(".chatbot-messages");
-
-      // Function to scroll the container to the bottom
-      function scrollToBottom() {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }*/
       MathJax.typeset();
-
-      // Scroll the container to the bottom
       scrollToBottom();
 
 
@@ -1674,9 +1268,6 @@ function addTheListeners() {
   const arxivRoomName = JSON.parse(document.getElementById('arxiv_id').textContent);
   const language = "{{ language }}"
   //console.log(language);
-  const user = "{{ request.user }}"
-  const ip = "{{ hashed_ip_address }}"
-  const paid = {% if paid %}true{% else %}false{% endif %}
 
   var count = 0
 
@@ -1763,7 +1354,7 @@ function addTheListeners() {
   // Scroll the container to the bottom
   scrollToBottom();
 
-  sendWebSocketMessage(messagec,user,ip,count,paid);
+  sendWebSocketMessage(messagec,count);
   //socketl.send(JSON.stringify({message: messagec}));
 
   if (!isListenerAdded) {
@@ -1776,14 +1367,14 @@ function addTheListeners() {
 
 <script>
 
-function sendWebSocketMessage(message2,user,ip,count,paid) {
+function sendWebSocketMessage(message2,count) {
   if (socketl && socketl.readyState === WebSocket.OPEN) {
     //console.log('sending...')
-    socketl.send(JSON.stringify({message: message2, user:user, ip:ip, count:count, paid:paid}));
+    socketl.send(JSON.stringify({message: message2, count:count}));
   } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
     //console.log("WebSocket connecting...");
     setTimeout(function() {
-      sendWebSocketMessage(message2,user,ip,count,paid);
+      sendWebSocketMessage(message2,count);
       //console.log("wait");
     }, 1000);
   } else {
@@ -1852,5 +1443,16 @@ function switchTab(tabIndex) {
 }
 </script>
 
+
+{% if request.GET.autorun == '1' and not sumpaper.summary and not run and not run2 %}
+<script>
+  // arriving from the daily digest: start the summary as if the visitor clicked Run
+  // (needs JavaScript, so mail scanners that prefetch links do not trigger it)
+  document.addEventListener('DOMContentLoaded', function () {
+    var run = document.querySelector('input[name="run_button"]');
+    if (run) { run.click(); }
+  });
+</script>
+{% endif %}
 
 {% endblock %}
