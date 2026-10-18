@@ -28,6 +28,9 @@ ATOM = '{http://www.w3.org/2005/Atom}'
 ARXIV_NS = '{http://arxiv.org/schemas/atom}'
 MAX_CATEGORIES = 5
 PAPERS_PER_EMAIL = 10
+# CloudMailin sends at most 20 emails/hour on our plan; keep room for account emails.
+# Subscribers left over are sent in the next hourly runs (see DigestSubscription.CATCH_UP_HOURS).
+MAX_EMAILS_PER_RUN = 15
 LOOKBACK_DAYS = 4  # arXiv announces papers 1-3 days after submission
 UNSUBSCRIBE_SALT = 'digest-unsubscribe'
 
@@ -226,6 +229,11 @@ def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None
         subscriptions = list(subscriptions.filter(user__username=only_user))
     else:
         subscriptions = [s for s in subscriptions if s.is_due(now)]
+        # longest-waiting first, and no more than the mail provider allows per hour
+        subscriptions.sort(key=lambda s: s.last_sent or s.created)
+        if len(subscriptions) > MAX_EMAILS_PER_RUN:
+            logger.warning('%d digests due, sending %d this hour', len(subscriptions), MAX_EMAILS_PER_RUN)
+            subscriptions = subscriptions[:MAX_EMAILS_PER_RUN]
     if not subscriptions:
         return 0
 

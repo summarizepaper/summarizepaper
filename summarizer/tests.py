@@ -543,3 +543,17 @@ class AutorunTests(TestCase):
         self.assertNotContains(Client().get('/en/arxiv-id/2101.00005v1/?autorun=1'), marker)
         # a summary in another language does not count
         self.assertContains(Client().get('/fr/arxiv-id/2101.00005v1/?autorun=1'), marker)
+
+
+class DigestRateLimitTests(TestCase):
+    def test_sends_at_most_the_hourly_cap(self):
+        papers = {p['arxiv_id']: p for p in digest.parse_feed(FEED)}
+        for i in range(digest.MAX_EMAILS_PER_RUN + 3):
+            u = User.objects.create_user('r%d' % i, email='r%d@example.com' % i, password='x')
+            DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7)
+        at = lambda h: datetime.datetime(2026, 10, 19, h, 0, tzinfo=datetime.timezone.utc)
+        with mock.patch('summarizer.digest.fetch_all', return_value=papers), \
+             mock.patch('summarizer.digest.write_blurbs', return_value={}):
+            self.assertEqual(digest.run(now=at(7)), digest.MAX_EMAILS_PER_RUN)
+            self.assertEqual(digest.run(now=at(8)), 3)  # the rest go out the next hour
+        self.assertEqual(len(mail.outbox), digest.MAX_EMAILS_PER_RUN + 3)
