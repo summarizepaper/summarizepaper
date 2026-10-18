@@ -42,7 +42,9 @@ def _stripe():
 
 
 def _absolute(request, name):
-    return request.build_absolute_uri('/%s%s' % (get_language(), reverse(name)))
+    #behind Cloudflare the request can look like plain http, so don't derive the scheme from it
+    base = settings.SITE_URL or request.build_absolute_uri('/').rstrip('/')
+    return '%s/%s%s' % (base, get_language(), reverse(name))
 
 
 def _latest_plan(user):

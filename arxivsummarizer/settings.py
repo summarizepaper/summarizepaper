@@ -41,6 +41,9 @@ STRIPE_PRICE_YEARLY = os.getenv('STRIPE_PRICE_YEARLY', '')
 
 LOGIN_URL = '/login/'
 
+#public address of the site, for links built outside a browser request (Stripe, emails)
+SITE_URL = os.getenv('SITE_URL', 'https://www.summarizepaper.com' if 'ON_HEROKU' in os.environ else '')
+
 EMAIL_HOST = 'smtp.cloudmta.net'
 EMAIL_HOST_USER = '19e06dea731b2f94'
 EMAIL_HOST_PASSWORD= SECRETCMTA
