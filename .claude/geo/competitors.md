@@ -31,5 +31,14 @@
 - À remplir par `comparison-page` (pages « best AI tools for research papers », « alternatives to Scholarcy »…).
 
 ## Concurrents découverts en cours de recherche
+- NotebookLM (Google, appelé « Gemini Notebook » dans l'aide Google en octobre 2026) : gratuit, 50 sources par notebook. Cité dans les comparatifs 2026.
+- SciSummary (scisummary.com) : essai 7 jours, Pro 48 $/an (vérifié le 2026-10-18).
+- Paperguide (paperguide.ai) : publie beaucoup de listicles « best AI tools for research papers » où il se classe premier.
+- Elicit : prix revérifiés le 2026-10-18, Basic gratuit, Pro 49 $/mois.
 
-- 
+## Pages concurrentes analysées (2026-10-18)
+
+- https://paperguide.ai/blog/ai-research-paper-summarizers/
+- https://scisummary.com/blog/107-ultimate-guide-the-best-ai-research-paper-summarization-tools-of-2026
+- https://ponder.ing/blog/scholarcy-alternatives
+- Aucun de ces comparatifs ne mentionne SummarizePaper, et aucun n'est centré sur arXiv : c'est l'angle de la page.

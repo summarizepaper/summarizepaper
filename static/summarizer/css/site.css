@@ -251,6 +251,10 @@ img { max-width: 100%; }
 .page p { margin: 0 0 16px; }
 .prose { color: #33333f; font-size: 17px; }
 .prose h2 { color: var(--text); }
+.prose table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0 0 24px; font-size: 15px; }
+.prose th, .prose td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; vertical-align: top; }
+.prose th { background: var(--bg-soft); font-weight: 600; }
+.prose h3 { font-size: 18px; margin: 28px 0 8px; }
 
 .page .notice, .page .status {
   padding: 14px 18px;

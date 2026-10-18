@@ -1018,6 +1018,11 @@ Read the **listings** <b>daily</b>.
         self.assertIn('"@type": "Article"', html)
         self.assertIn('https://arxiv.org/stats', html)
         self.assertNotIn('hreflang="fr"', html)
+        self.assertNotIn('SoftwareApplication', html)
+
+    def test_product_flag_adds_software_application(self):
+        self.write('en', 'vs', self.GUIDE.replace('date:', 'product: true\ndate:'))
+        self.assertIn('"@type": "SoftwareApplication"', self.client.get('/en/guides/vs/').content.decode())
 
     def test_missing_language_is_404(self):
         self.assertEqual(self.client.get('/fr/guides/keep-up/').status_code, 404)
@@ -1047,8 +1052,27 @@ Read the **listings** <b>daily</b>.
         self.assertIn('- [Keeping up with arXiv](https://www.summarizepaper.com/en/guides/keep-up/)',
                       self.client.get('/llms.txt').content.decode())
 
+    def test_broken_front_matter_is_skipped(self):
+        self.write('en', 'broken', '---\ntitle: a: b\n---\nText')
+        self.assertEqual(self.client.get('/en/guides/broken/').status_code, 404)
+        self.assertEqual(self.client.get('/sitemap-guides.xml').status_code, 200)
+
     def test_bad_slug_is_404(self):
         self.assertEqual(self.client.get('/en/guides/..%2Fsecret/').status_code, 404)
+
+
+class GuideFileTests(TestCase):
+    def test_every_guide_in_the_repo_parses(self):
+        from summarizer import guides
+        for lang in os.listdir(guides.CONTENT_DIR):
+            for name in os.listdir(os.path.join(guides.CONTENT_DIR, lang)):
+                if name.endswith('.md'):
+                    guides._parse.cache_clear()
+                    path = os.path.join(guides.CONTENT_DIR, lang, name)
+                    meta = guides._parse(path, 0)
+                    for key in ('title', 'description', 'date'):
+                        self.assertTrue(meta.get(key), '%s has no %s' % (path, key))
+                    self.assertLessEqual(len(meta['description']), 160, path)
 
 
 class AuthorPageTests(TestCase):

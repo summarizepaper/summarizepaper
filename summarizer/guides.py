@@ -9,6 +9,7 @@ front matter block:
     date: 2026-10-20
     updated: 2026-10-20          # optional
     draft: true                  # drafts are only shown to staff, never listed
+    product: true                # optional, adds SummarizePaper as SoftwareApplication (comparisons)
     faq:                         # optional, rendered and marked up as FAQPage
       - q: Question?
         a: Answer.
@@ -21,6 +22,7 @@ The same slug in another language directory is linked with hreflang.
 """
 import datetime
 import json
+import logging
 import os
 from functools import lru_cache
 
@@ -30,6 +32,8 @@ from django.conf import settings
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 
 SITE = 'https://www.summarizepaper.com'
 CONTENT_DIR = os.path.join(settings.BASE_DIR, 'content', 'guides')
@@ -59,7 +63,12 @@ def load(lang, slug):
     path = _path(lang, slug)
     if not os.path.isfile(path):
         return None
-    guide = dict(_parse(path, os.path.getmtime(path)))
+    try:
+        guide = dict(_parse(path, os.path.getmtime(path)))
+    except (ValueError, yaml.YAMLError):
+        # one broken file must not take down the sitemap and llms.txt
+        logger.exception('Could not parse guide %s', path)
+        return None
     guide.update(slug=slug, lang=lang, url='%s/%s/guides/%s/' % (SITE, lang, slug))
     guide.setdefault('updated', guide.get('date'))
     return guide
@@ -104,6 +113,20 @@ def _json_ld(guide):
             {'@type': 'ListItem', 'position': 3, 'name': guide.get('title'), 'item': guide['url']},
         ],
     }]
+    if guide.get('product'):
+        graph.append({
+            '@type': 'SoftwareApplication',
+            'name': 'SummarizePaper',
+            'url': SITE + '/',
+            'applicationCategory': 'EducationalApplication',
+            'operatingSystem': 'Web',
+            'publisher': {'@id': SITE + '/#organization'},
+            'offers': [
+                {'@type': 'Offer', 'name': 'Free', 'price': '0', 'priceCurrency': 'EUR'},
+                {'@type': 'Offer', 'name': 'Premium', 'price': '7.00', 'priceCurrency': 'EUR',
+                 'url': SITE + '/en/premium/'},
+            ],
+        })
     if guide.get('faq'):
         graph.append({
             '@type': 'FAQPage',

@@ -10,6 +10,8 @@ Aucune page éditoriale (pas de blog). Le contenu indexable existant est :
 | URL | Famille | Cluster / hub | Langue | Publié le | Mis à jour le | Liens entrants | Liens sortants | Fact-check |
 |---|---|---|---|---|---|---|---|---|
 | /<lang>/arxiv-id/<id>/ (10 037 pages au 2026-10-18) | pages article générées | — | en (9 696), fr (341) | depuis 2023 | continu | accueil, arbre, sitemap | arXiv, articles proches | résumés IA, avertissement sur /about/ |
+| /en/guides/best-ai-tools-to-summarize-arxiv-papers/ | BOFU | Outils de résumé (hub) | en | brouillon 2026-10-18 | — | /en/guides/ (à la publication) | accueil, chat, digest, faq, premium, page article | à faire (brief) |
+| /en/author/quentin-kral/ | page auteur | — | en, fr | 2026-10-18 | — | /about/, schema Organization | Wikipédia, ORCID | validé (Wikipédia) |
 | /en/faq/ | page produit | — | en, fr | — | 2026-10 | menu | pages du site | validé |
 | /en/about/ | page produit / auteur | — | en, fr | — | — | menu | — | à enrichir (E-E-A-T) |
 | /en/digest/ | page produit | Suivre arXiv | en, fr | 2026 | — | menu | — | — |
@@ -20,6 +22,7 @@ Aucune page éditoriale (pas de blog). Le contenu indexable existant est :
 
 | Hub | Cluster | Spokes rattachés | Spokes manquants |
 |---|---|---|---|
+| /en/guides/best-ai-tools-to-summarize-arxiv-papers/ | Outils de résumé | — | alphaxiv-vs, scholarcy-alternatives, chatpdf-vs |
 | /en/digest/ | Suivre arXiv | — | guide « keep up with arXiv » |
 | /en/chat/ | Chat avec un article | — | comparatif « chat with papers » |
 
