@@ -222,10 +222,29 @@ class DigestSubscription(models.Model):
     categories = models.CharField(max_length=500)  # comma-separated arXiv categories, e.g. "astro-ph.EP,cs.LG"
     keywords = models.CharField(max_length=500, blank=True, default='')  # comma-separated, optional filter
     lang = models.CharField(max_length=10, default='en')
+    send_hour = models.PositiveSmallIntegerField(default=7)  # local hour, 0-23
+    timezone = models.CharField(max_length=64, default='Europe/Paris')  # IANA name
     active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     last_sent = models.DateTimeField(blank=True, null=True)
+
+    CATCH_UP_HOURS = 3  # a missed hourly run is caught up, but never hours late at night
+
+    def is_due(self, now):
+        """True during the hours after the chosen local time, if this slot was not sent yet."""
+        import datetime
+        from zoneinfo import ZoneInfo
+        try:
+            tz = ZoneInfo(self.timezone)
+        except Exception:
+            tz = ZoneInfo('UTC')
+        local_now = now.astimezone(tz)
+        delay = (local_now.hour - self.send_hour) % 24
+        if delay >= self.CATCH_UP_HOURS:
+            return False
+        slot_start = (local_now - datetime.timedelta(hours=delay)).replace(minute=0, second=0, microsecond=0)
+        return self.last_sent is None or self.last_sent < slot_start
 
     def category_list(self):
         return [c for c in (x.strip() for x in self.categories.split(',')) if c]

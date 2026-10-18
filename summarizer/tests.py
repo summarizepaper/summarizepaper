@@ -232,6 +232,9 @@ FEED = '''<?xml version='1.0' encoding='UTF-8'?>
 </feed>'''
 
 
+import datetime
+
+
 class DigestTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('reader', email='r@example.com', password='x')
@@ -261,8 +264,9 @@ class DigestTests(TestCase):
         DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP,hep-th', lang='fr')
         with mock.patch('summarizer.digest.fetch_all', return_value=self.papers()), \
              mock.patch('summarizer.digest.write_blurbs', return_value={'2610.22354v1': 'Une comète active.'}):
-            self.assertEqual(digest.run(), 1)
-            self.assertEqual(digest.run(), 0)  # nothing new the second time
+            morning = datetime.datetime(2026, 10, 19, 6, 0, tzinfo=datetime.timezone.utc)  # 08:00 in Paris
+            self.assertEqual(digest.run(now=morning), 1)
+            self.assertEqual(digest.run(now=morning), 0)  # already sent today
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
         self.assertEqual(message.to, ['r@example.com'])
@@ -273,6 +277,29 @@ class DigestTests(TestCase):
         self.assertEqual(DigestDelivery.objects.count(), 2)
         self.assertEqual(DigestItem.objects.filter(lang='fr').count(), 2)
 
+    def test_schedule_follows_local_time(self):
+        utc = datetime.timezone.utc
+        at = lambda d, h: datetime.datetime(2026, 10, d, h, 0, tzinfo=utc)
+        sub = DigestSubscription(user=self.user, categories='cs.LG', send_hour=7, timezone='America/Los_Angeles')
+        self.assertFalse(sub.is_due(at(19, 6)))   # 23:00 in LA: too late, wait for tomorrow 07:00
+        self.assertTrue(sub.is_due(at(19, 14)))   # 07:00 in LA
+        self.assertTrue(sub.is_due(at(19, 16)))   # 09:00: a missed run is caught up
+        self.assertFalse(sub.is_due(at(19, 17)))  # 10:00: too late
+        sub.last_sent = at(19, 14)
+        self.assertFalse(sub.is_due(at(19, 15)))  # once per day
+        self.assertTrue(sub.is_due(at(20, 14)))   # next day
+        late = DigestSubscription(user=self.user, categories='cs.LG', send_hour=23, timezone='UTC', last_sent=at(19, 23))
+        self.assertFalse(late.is_due(at(20, 1)))  # 01:00 belongs to yesterday's 23:00 slot
+        self.assertTrue(late.is_due(at(20, 23)))
+        sub.timezone = 'Not/AZone'
+        self.assertTrue(sub.is_due(at(20, 8)))    # unknown zone falls back to UTC
+
+    def test_run_skips_subscribers_not_due(self):
+        DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP', send_hour=7, timezone='Asia/Tokyo')
+        with mock.patch('summarizer.digest.fetch_all') as fetch:
+            # 21:00 UTC is 06:00 in Tokyo: not yet, and no arXiv call when nobody is due
+            self.assertEqual(digest.run(now=datetime.datetime(2026, 10, 19, 21, 0, tzinfo=datetime.timezone.utc)), 0)
+        fetch.assert_not_called()
     def test_unsubscribe_link(self):
         sub = DigestSubscription.objects.create(user=self.user, categories='cs.LG')
         url = '/en/digest/unsubscribe/%s/' % digest.unsubscribe_token(sub)
@@ -285,10 +312,15 @@ class DigestTests(TestCase):
     def test_digest_page_saves_subscription(self):
         c = Client(); c.force_login(self.user)
         self.assertContains(c.get('/en/digest/'), 'Start my digest')
-        r = c.post('/en/digest/', {'categories': ['cs.LG', 'quant-ph'], 'other': 'math.AP', 'keywords': 'transformer ,  ', 'lang': 'fr'})
+        r = c.post('/en/digest/', {'categories': ['cs.LG', 'quant-ph'], 'other': 'math.AP', 'keywords': 'transformer ,  ', 'lang': 'fr',
+                                   'send_hour': '18', 'timezone': 'America/New_York'})
         self.assertEqual(r.status_code, 302)
         sub = DigestSubscription.objects.get(user=self.user)
         self.assertEqual((sub.categories, sub.keywords, sub.lang), ('cs.LG,quant-ph,math.AP', 'transformer', 'fr'))
+        self.assertEqual((sub.send_hour, sub.timezone), (18, 'America/New_York'))
+        c.post('/en/digest/', {'categories': ['cs.LG'], 'send_hour': '99', 'timezone': '<script>'})
+        sub.refresh_from_db()
+        self.assertEqual((sub.send_hour, sub.timezone), (23, 'America/New_York'))
         self.assertContains(c.post('/en/digest/', {'other': ''}), 'Choose at least one category.')
 
 
@@ -463,3 +495,36 @@ class BibtexTests(TestCase):
         self.assertIn('title={A Constraint on the Amount of Hydrogen},', body)
         self.assertIn('eprint={2303.11544},', body)
         self.assertIn('url={https://arxiv.org/abs/2303.11544}', body)
+
+
+from summarizer import utils as summarizer_utils
+
+
+class GeneratedTextCleanupTests(TestCase):
+    def test_lay_summary_markdown_from_production(self):
+        raw = ('**Summary:**\n1. Some giant planets are stretched.\n2. Measuring it helps.\n\n**\n\n\n'
+               'Definitions:**\n- **Giant planet:** A very large planet.')
+        self.assertEqual(summarizer_utils.clean_lay_summary(raw),
+                         'Summary:\n1. Some giant planets are stretched.\n2. Measuring it helps.\n\n'
+                         'Definitions:\n- Giant planet: A very large planet.')
+
+    def test_lay_summary_french(self):
+        out = summarizer_utils.clean_lay_summary('Résumé :\n1. Une planète.\nDéfinitions :\n- Planète : un astre.')
+        self.assertIn('Une planète.\n\nDéfinitions', out)
+
+    def test_blog_wraps_paragraphs_and_strips_unsafe_html(self):
+        raw = ('<h2>Title</h2>\n\nFirst paragraph.\n\n<ul>\n<li>One</li>\n</ul>\n\n'
+               '<p onclick="x()">Second <script>alert(1)</script><a href="javascript:1">link</a>.</p>')
+        html = summarizer_utils.clean_blog_html(raw)
+        self.assertIn('<h2>Title</h2>', html)
+        self.assertIn('<p>First paragraph.</p>', html)
+        self.assertIn('<li>One</li>', html)
+        self.assertNotIn('onclick', html)
+        self.assertNotIn('<script', html)
+        self.assertNotIn('alert', html)
+        self.assertNotIn('<a', html)
+
+    def test_truncated_blog_drops_unfinished_block(self):
+        raw = '<h2>A</h2>\n\nComplete paragraph.\n\n<h2>B</h2>\n\nThe target ranking offers a practical starting point'
+        html = summarizer_utils.clean_blog_html(raw, truncated=True)
+        self.assertTrue(html.endswith('<p>Complete paragraph.</p>'), html)

@@ -231,6 +231,52 @@ def nchars_leq_ntokens_approx(maxTokens):
     lin_margin = 1.010175047 #= e - 1.001 - sqrt(1 - sqrt_margin) #ensures return 1 when maxTokens=1
     return max( 0, int(maxTokens*math.exp(1) - lin_margin - math.sqrt(max(0,maxTokens - sqrt_margin) ) ))
 
+def clean_lay_summary(text):
+    """Plain-text layman summary: no markdown, a blank line before the definitions."""
+    text = text.replace('**', '').replace('__', '')
+    text = re.sub(r'^\s*#+\s*', '', text, flags=re.M)
+    text = re.sub(r'[ \t]+\n', '\n', text).strip()
+    match = re.search(r'^\s*(D[ée]finitions?)\s*:?', text, flags=re.M | re.I)
+    if match:
+        text = text[:match.start()].strip() + '\n\n' + text[match.start():].strip()
+    return re.sub(r'\n{3,}', '\n\n', text)
+
+BLOG_TAGS = {'h2', 'h3', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'br'}
+BLOG_BLOCKS = ('h2', 'h3', 'p', 'ul', 'ol')
+
+def clean_blog_html(text, truncated=False):
+    """Safe, complete blog HTML from the model output.
+
+    Only a few formatting tags survive (the blog is rendered with |safe), bare
+    paragraphs get <p> tags, and when the model hit its token limit the
+    unfinished last block is dropped.
+    """
+    from bs4 import BeautifulSoup
+    text = text.strip()
+    if text.startswith('```'):
+        text = re.sub(r'^```[a-z]*\s*|\s*```$', '', text)
+    blocks = []
+    for block in re.split(r'\n\s*\n', text):
+        block = block.strip()
+        if not block:
+            continue
+        if not re.match(r'<(%s)\b' % '|'.join(BLOG_BLOCKS), block, flags=re.I):
+            block = '<p>%s</p>' % block
+        blocks.append(block)
+    if truncated and len(blocks) > 1:
+        blocks = blocks[:-1]
+    soup = BeautifulSoup('\n'.join(blocks), 'html.parser')
+    for tag in soup.find_all(['script', 'style']):
+        tag.decompose()
+    for tag in soup.find_all(True):
+        if tag.name not in BLOG_TAGS:
+            tag.unwrap()
+        else:
+            tag.attrs = {}
+    html = str(soup).strip()
+    # a heading with nothing after it is a leftover of the cut
+    return re.sub(r'(\s*<h[23]>[^<]*</h[23]>)+\s*$', '', html)
+
 def ensure_nltk_punkt():
     try:
         nltk.data.find('tokenizers/punkt_tab')
@@ -1721,13 +1767,16 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
 
     prompt4 = """
         Summarize the following key points in five simple sentences for a six-year-old kid and provide definitions for the most important words in the created summary: {}
-
+        Use plain text only, no markdown, no asterisks, in exactly this layout:
         Summary:
-
+        1. ...
+        2. ...
+        3. ...
+        4. ...
+        5. ...
 
         Definitions:
-
-
+        - word: definition
     """.format(keyp)
 
 #Summarize important points  for a six-year-old in five simple sentences, defining key words. Use clear and concise language appropriate for a child's comprehension level.
@@ -1758,7 +1807,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
         else:
             model_take=model
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(model_take, 300)})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(model_take, 700)})
 
         '''
         async with aiohttp.ClientSession() as session:
@@ -1831,34 +1880,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
     #    print(s)
     simple_sum = ' '.join(simple_sum)
     '''
-    simple_sum = simple_sum.rstrip().lstrip()
-    print('simple_sum after',simple_sum)
-
-    # Define regular expressions to search for patterns that typically indicate the start of a definitions section
-    definition_regexes = [
-        r"\bDefinitions?\b", # matches "definition", "definitions", "définition", "définitions", etc.
-        r"\bDefinition\b", # matches "definieren" in German
-        r"\bDéfinitions\b",
-        r"\bDéfinition\b",
-        # add more regexes for other languages if needed
-    ]
-
-    # Search for the start of a definitions section using regular expressions
-    definitions_start = None
-    for regex in definition_regexes:
-        match = re.search(regex, simple_sum)
-        if match:
-            print('match',match)
-            definitions_start = match.start()
-            break
-
-    # Separate the summary and definitions if a definitions section was found
-    if definitions_start is not None:
-        print('not none definitions_start',definitions_start)
-        summary = simple_sum[:definitions_start].strip()
-        definitions = simple_sum[definitions_start:].strip()
-        # Add a few empty lines between the summary and the definitions
-        simple_sum = f"{summary}\n\n\n{definitions}"
+    simple_sum = clean_lay_summary(simple_sum)
 
     return simple_sum#.rstrip().lstrip()
 
@@ -1868,10 +1890,8 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     print('language2',language2)
 
     prompt5 = """
-         Create a detailed blog article about this research paper: {}
-
-         The article should be well-organized and easy to read with NO HTML EXCEPT for headings with <h2> tags and subheadings with <h3> tags.
-
+         Create a blog article of 600 to 900 words about this research paper: {}
+         The article should be well-organized and easy to read. Use HTML: <h2> for headings, <h3> for subheadings, <p> for every paragraph, and <ul>/<li> for lists. No other tags, no markdown, no LaTeX.
     """.format(summary)
 
     prompt5b = """
@@ -1914,7 +1934,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
-        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 1500)})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 2500)})
 
         
     else:
@@ -1936,6 +1956,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
             "error_message": str(e),
         }
     response5=response5.json()
+    blog_truncated = response5["choices"][0].get("finish_reason") == "length"
     print('resp5',response5)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
@@ -1949,7 +1970,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     print('ba',blog_article)
     blog_article = blog_article.replace('< /h2 >','</h2>').replace('< h2 >','<h2>').replace('< H2 >','<h2>').replace('< /H2 >','</h2>').replace('</ h2 >','</h2>').replace('</ h2>','</h2>')
     blog_article = blog_article.replace('< /h3 >','</h3>').replace('< h3 >','<h3>').replace('< H3 >','<h3>').replace('< /H3 >','</h3>').replace('</ h3 >','</h3>').replace('</ h3>','</h3>')
-    blog_article = blog_article.rstrip().lstrip()
+    blog_article = clean_blog_html(blog_article, truncated=blog_truncated)
 
     return blog_article
 

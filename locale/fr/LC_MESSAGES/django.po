@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 11:37+0000\n"
+"POT-Creation-Date: 2026-10-18 12:02+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1201,11 +1201,23 @@ msgstr ""
 msgid "Language of the summaries"
 msgstr "Langue des résumés"
 
-#: templates/summarizer/digest.html:59
+#: templates/summarizer/digest.html:60
+msgid "Delivery time"
+msgstr "Heure d'envoi"
+
+#: templates/summarizer/digest.html:61
+msgid "Send my digest every day at"
+msgstr "M'envoyer le digest chaque jour à"
+
+#: templates/summarizer/digest.html:65
+msgid "Time zone"
+msgstr "Fuseau horaire"
+
+#: templates/summarizer/digest.html:81
 msgid "Save"
 msgstr "Enregistrer"
 
-#: templates/summarizer/digest.html:59
+#: templates/summarizer/digest.html:81
 msgid "Start my digest"
 msgstr "Lancer mon digest"
 

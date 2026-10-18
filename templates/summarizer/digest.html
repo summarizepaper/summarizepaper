@@ -56,6 +56,28 @@
         <label><input type="radio" name="lang" value="fr" {% if current == 'fr' %}checked{% endif %}> Français</label>
         {% endwith %}
       </fieldset>
+      <fieldset>
+        <legend>{% trans 'Delivery time' %}</legend>
+        <p><label for="send_hour">{% trans 'Send my digest every day at' %}</label>
+        <select id="send_hour" name="send_hour">
+          {% for h in hours %}<option value="{{ h }}" {% if h == send_hour %}selected{% endif %}>{{ h|stringformat:"02d" }}:00</option>{% endfor %}
+        </select></p>
+        <p><label for="timezone">{% trans 'Time zone' %}</label>
+        <select id="timezone" name="timezone">
+          {% for tz in timezones %}<option value="{{ tz }}" {% if tz == timezone %}selected{% endif %}>{{ tz }}</option>{% endfor %}
+        </select></p>
+        {% if not timezone %}
+        <script>
+          // first visit: preselect the time zone of this browser
+          (function () {
+            var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            var select = document.getElementById('timezone');
+            if (tz && select.querySelector('option[value="' + tz + '"]')) { select.value = tz; }
+            else { select.value = 'Europe/Paris'; }
+          })();
+        </script>
+        {% endif %}
+      </fieldset>
       <button type="submit">{% if subscription %}{% trans 'Save' %}{% else %}{% trans 'Start my digest' %}{% endif %}</button>
     </form>
   {% endif %}

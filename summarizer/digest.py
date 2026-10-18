@@ -7,6 +7,7 @@ import logging
 import re
 import time
 import urllib.parse
+import zoneinfo
 from xml.etree import ElementTree
 
 import requests
@@ -63,6 +64,7 @@ CATEGORIES = [
     ('quant-ph', 'Quantum Physics'),
     ('stat.ML', 'Machine Learning (Statistics)'),
 ]
+TIMEZONES = {tz for tz in zoneinfo.available_timezones() if '/' in tz and not tz.startswith(('Etc/', 'SystemV/', 'US/'))} | {'UTC'}
 CATEGORY_RE = re.compile(r'^[a-z\-]+(\.[A-Za-z\-]+)?$')
 
 
@@ -216,11 +218,14 @@ def send_one(subscription, items, base_url):
     message.send()
 
 
-def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None, stdout=None):
+def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None, stdout=None, now=None):
+    """Send the digests that are due (meant to run every hour); --user ignores the schedule."""
+    now = now or timezone.now()
     subscriptions = DigestSubscription.objects.filter(active=True).select_related('user').exclude(user__email='')
     if only_user:
-        subscriptions = subscriptions.filter(user__username=only_user)
-    subscriptions = list(subscriptions)
+        subscriptions = list(subscriptions.filter(user__username=only_user))
+    else:
+        subscriptions = [s for s in subscriptions if s.is_due(now)]
     if not subscriptions:
         return 0
 
@@ -245,7 +250,7 @@ def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None
             continue
         DigestDelivery.objects.bulk_create(
             [DigestDelivery(subscription=subscription, arxiv_id=i.arxiv_id) for i in ordered], ignore_conflicts=True)
-        subscription.last_sent = timezone.now()
+        subscription.last_sent = now
         subscription.save(update_fields=['last_sent'])
         sent += 1
     return sent
@@ -271,6 +276,12 @@ def digest_page(request):
             subscription.categories = ','.join(categories)
             subscription.keywords = ', '.join(k.strip() for k in request.POST.get('keywords', '').split(',') if k.strip())[:500]
             subscription.lang = request.POST.get('lang') if request.POST.get('lang') in ('en', 'fr') else get_language()
+            try:
+                subscription.send_hour = min(23, max(0, int(request.POST.get('send_hour', 7))))
+            except ValueError:
+                subscription.send_hour = 7
+            if request.POST.get('timezone') in TIMEZONES:
+                subscription.timezone = request.POST['timezone']
             subscription.active = True
             subscription.save()
             return redirect('/%s/digest/?saved=1' % get_language())
@@ -288,6 +299,10 @@ def _digest_context(request, subscription, error=False):
         'max_categories': MAX_CATEGORIES,
         'papers_per_email': PAPERS_PER_EMAIL,
         'saved': request.GET.get('saved') == '1',
+        'hours': range(24),
+        'timezones': sorted(TIMEZONES),
+        'send_hour': subscription.send_hour if subscription else 7,
+        'timezone': subscription.timezone if subscription else '',
         'error': error,
     }
 

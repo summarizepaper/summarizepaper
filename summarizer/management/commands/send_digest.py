@@ -4,7 +4,7 @@ from summarizer import digest
 
 
 class Command(BaseCommand):
-    help = 'Email each digest subscriber the new arXiv papers in their categories (run daily).'
+    help = 'Email the digests that are due at this hour (run every hour). --user sends now, ignoring the schedule.'
 
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true', help='Select papers and write blurbs, send nothing.')
