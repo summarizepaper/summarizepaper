@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import views
+from . import views, billing
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -27,6 +27,9 @@ urlpatterns = [
     path("legal-notice/", views.legal, name="legal"),
     path("update-cache/", views.update_cache, name="update_cache"),
     path("vote/<str:paper_id>/", views.vote, name="vote"),
+    path("premium/", billing.premium, name="premium"),
+    path("premium/checkout/", billing.checkout, name="premium_checkout"),
+    path("premium/portal/", billing.portal, name="premium_portal"),
     #path('login/', auth_views.LoginView.as_view(), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', logout_view, name='logout'),

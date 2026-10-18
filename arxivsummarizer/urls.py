@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemap_views
 from summarizer.sitemaps import StaticViewSitemap, SummarizedPaperSitemap
+from summarizer import billing
 
 app_name = 'summarizer'
 
@@ -29,6 +30,7 @@ sitemaps = {
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('stripe/webhook/', billing.webhook, name='stripe_webhook'),
     path('sitemap.xml', sitemap_views.index, {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap-section'}),
     path('sitemap-<section>.xml', sitemap_views.sitemap, {'sitemaps': sitemaps}, name='sitemap-section'),
     path('', include('summarizer.urls')),

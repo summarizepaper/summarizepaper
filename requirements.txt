@@ -28,3 +28,4 @@ pylatexenc==2.11
 pdfkit==1.0.0
 beautifulsoup4==4.15.0
 html5lib==1.1
+stripe==11.6.0

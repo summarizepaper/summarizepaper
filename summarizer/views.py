@@ -110,6 +110,10 @@ class CustomLoginView(auth_views.LoginView):
         #return super().form_valid(form)
 
     def get_success_url(self):
+        #honour a safe ?next= (e.g. coming back to the Premium page)
+        next_url = self.get_redirect_url()
+        if next_url:
+            return next_url
         user = self.request.user
         if user.is_staff:
             return reverse_lazy('about')

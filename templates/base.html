@@ -252,6 +252,7 @@
       <li><a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a></li>
       <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
       <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
+      <li><a href="/{{LANGUAGE_CODE}}/premium/" style="color:#fbbc05">{% trans 'Premium' %}</a></li>
       {% if request.user.is_authenticated %}
       <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
       <li style="height: 15px; display: flex; align-items: center;">
@@ -296,7 +297,7 @@
   </div>
   <footer>
     <div class="container">
-      <p>Copyright © 2023 Summarize<span style="color:#34a853">Paper</span></p>
+      <p>Copyright © {% now 'Y' %} Summarize<span style="color:#34a853">Paper</span></p>
       <nav>
         <ul>
           <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>

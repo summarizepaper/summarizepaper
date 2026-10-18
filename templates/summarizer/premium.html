@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'SummarizePaper Premium' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Premium gives you our most capable AI model for arXiv summaries and answers, no daily summary limit and many more questions to the AI assistant.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/premium/" />
+<style>
+  .premium { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
+  .premium h1 { margin-bottom: 4px; }
+  .premium .lead { color: #555; margin-top: 0; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+  .plan { border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #fff; }
+  .plan.highlight { border: 2px solid #34a853; }
+  .plan h2 { margin-top: 0; font-size: 20px; }
+  .plan ul { padding-left: 18px; line-height: 1.7; }
+  .plan .price { font-size: 22px; font-weight: bold; margin: 8px 0 16px; }
+  .premium button, .premium .button { background: #34a853; color: #fff; border: 0; border-radius: 6px; padding: 10px 18px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; margin: 4px 0; }
+  .premium button.secondary { background: #555; }
+  .notice { background: #e8f5e9; border: 1px solid #34a853; border-radius: 6px; padding: 12px 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium">
+  <h1>{% trans 'SummarizePaper Premium' %}</h1>
+  <p class="lead">{% trans 'For researchers and students who read papers every day.' %}</p>
+
+  {% if success %}
+  <p class="notice">{% trans 'Thank you! Your Premium subscription is being activated, it can take a few seconds.' %}</p>
+  {% endif %}
+
+  <div class="plans">
+    <div class="plan">
+      <h2>{% trans 'Free' %}</h2>
+      <ul>
+        <li>{% blocktrans %}{{ runs_per_day }} new summaries per day{% endblocktrans %}</li>
+        <li>{% blocktrans %}{{ chat_free }} questions per day to the AI assistant{% endblocktrans %}</li>
+        <li>{% trans 'Standard AI model' %}</li>
+      </ul>
+    </div>
+    <div class="plan highlight">
+      <h2>{% trans 'Premium' %}</h2>
+      <ul>
+        <li>{% trans 'Our most capable AI model for summaries and answers' %}</li>
+        <li>{% trans 'No daily summary limit' %}</li>
+        <li>{% blocktrans %}{{ chat_paid }} questions per day to the AI assistant{% endblocktrans %}</li>
+        <li>{% trans 'Cancel anytime in one click' %}</li>
+      </ul>
+
+      {% if is_paid %}
+        <p><strong>{% trans 'You are Premium.' %}</strong></p>
+        {% if can_manage %}
+        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
+          <button type="submit" class="secondary">{% trans 'Manage my subscription' %}</button>
+        </form>
+        {% endif %}
+      {% elif not billing_enabled %}
+        <p>{% trans 'Subscriptions open soon.' %}</p>
+      {% elif not request.user.is_authenticated %}
+        {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
+        <a class="button" href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account to subscribe' %}</a>
+        <p><small>{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/premium/">{% trans 'Log in' %}</a></small></p>
+      {% else %}
+        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/checkout/">{% csrf_token %}
+          {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
+          <button type="submit" name="period" value="monthly">{% trans 'Subscribe monthly' %}</button>
+          {% if yearly_price %}
+          <div class="price">{{ yearly_price }}</div>
+          <button type="submit" name="period" value="yearly">{% trans 'Subscribe yearly' %}</button>
+          {% endif %}
+        </form>
+        {% if can_manage %}
+        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
+          <button type="submit" class="secondary">{% trans 'Manage my subscription' %}</button>
+        </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  <p><small>{% trans 'Payments are handled by Stripe. We never see your card details.' %}</small></p>
+</div>
+{% endblock %}

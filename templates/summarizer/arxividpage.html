@@ -1169,6 +1169,7 @@ submitButton.addEventListener('click', () => {
   {% if toomany %}
   <div style="text-align:center;color:red;">
     <p><strong>{% trans 'You are limited to running 10 papers in a period of 24 hours. Please come back tomorrow or contact us if you need to run more articles using our tools.' %}</strong></p>
+    <p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Premium accounts have no daily limit.' %}</a></p>
   </div>
   {% endif %}
 

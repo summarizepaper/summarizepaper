@@ -34,6 +34,14 @@ SECRETCMTA = os.getenv('SECRETCMTA')
 
 DEFAULT_FROM_EMAIL = 'contact@summarizepaper.com'
 
+#Premium subscriptions, see summarizer/billing.py
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRICE_MONTHLY = os.getenv('STRIPE_PRICE_MONTHLY', '')
+STRIPE_PRICE_YEARLY = os.getenv('STRIPE_PRICE_YEARLY', '')
+
+LOGIN_URL = '/login/'
+
 EMAIL_HOST = 'smtp.cloudmta.net'
 EMAIL_HOST_USER = '19e06dea731b2f94'
 EMAIL_HOST_PASSWORD= SECRETCMTA
