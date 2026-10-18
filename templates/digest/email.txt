@@ -1,0 +1,10 @@
+{% load i18n %}{% trans 'Your daily arXiv digest' %} - {{ date|date:"j F Y" }}
+
+{% for item in items %}{{ item.title }}
+{{ item.authors }}
+{{ item.blurb }}
+{% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/
+
+{% endfor %}--
+{% trans 'Change your categories:' %} {{ manage_url }}
+{% trans 'Unsubscribe:' %} {{ unsubscribe_url }}

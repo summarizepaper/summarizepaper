@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Unsubscribe from the daily digest' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px; margin: 0 auto; padding: 24px 16px 48px;">
+  {% if subscription is None %}
+    <p>{% trans 'This unsubscribe link is invalid.' %}</p>
+  {% elif done %}
+    <h1>{% trans 'You are unsubscribed' %}</h1>
+    <p>{% trans 'You will not receive the daily digest anymore.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Changed your mind?' %}</a></p>
+  {% else %}
+    <h1>{% trans 'Unsubscribe from the daily digest?' %}</h1>
+    <form method="post"><button type="submit" style="background:#d93025;color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:16px;cursor:pointer;">{% trans 'Unsubscribe' %}</button></form>
+  {% endif %}
+</div>
+{% endblock %}

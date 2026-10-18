@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Daily arXiv digest by email' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Every morning, the new arXiv papers in your fields with a 2-sentence plain-language summary. Free.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/digest/" />
+<style>
+  .digest { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
+  .digest .lead { color: #555; }
+  .digest fieldset { border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .digest .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 4px 16px; }
+  .digest label { display: block; line-height: 1.8; }
+  .digest input[type=text] { width: 100%; max-width: 520px; padding: 8px; font-size: 15px; box-sizing: border-box; }
+  .digest button, .digest .button { background: #34a853; color: #fff; border: 0; border-radius: 6px; padding: 10px 18px; font-size: 16px; cursor: pointer; text-decoration: none; display: inline-block; }
+  .digest .notice { background: #e8f5e9; border: 1px solid #34a853; border-radius: 6px; padding: 12px 16px; }
+  .digest .error { background: #fdecea; border: 1px solid #d93025; border-radius: 6px; padding: 12px 16px; }
+  .digest code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="digest">
+  <h1>{% trans 'Your daily arXiv digest' %}</h1>
+  <p class="lead">{% blocktrans %}Every morning, up to {{ papers_per_email }} new papers from the categories you follow, each with a 2-sentence summary anyone can understand, and a link to the full AI summary. Free.{% endblocktrans %}</p>
+
+  {% if not request.user.is_authenticated %}
+    <p><a class="button" href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a></p>
+    <p>{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/digest/">{% trans 'Log in' %}</a></p>
+  {% else %}
+    {% if saved %}<p class="notice">{% blocktrans with email=request.user.email %}Saved. Your next digest goes to {{ email }}.{% endblocktrans %}</p>{% endif %}
+    {% if subscription and not subscription.active %}<p class="notice">{% trans 'Your digest is paused. Save the form to resume it.' %}</p>{% endif %}
+    {% if error %}<p class="error">{% trans 'Choose at least one category.' %}</p>{% endif %}
+    <form method="post">{% csrf_token %}
+      <fieldset>
+        <legend>{% blocktrans %}Categories (up to {{ max_categories }}){% endblocktrans %}</legend>
+        <div class="cats">
+          {% for code, label in categories %}
+          <label><input type="checkbox" name="categories" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
+          {% endfor %}
+        </div>
+        <p><label for="other">{% trans 'Other arXiv categories, comma-separated (e.g.' %} <code>math.AP, nlin.CD</code>)</label>
+        <input type="text" id="other" name="other" value="{{ other }}"></p>
+      </fieldset>
+      <fieldset>
+        <legend>{% trans 'Keywords (optional)' %}</legend>
+        <p><label for="keywords">{% trans 'Only papers mentioning at least one of these words, comma-separated:' %}</label>
+        <input type="text" id="keywords" name="keywords" value="{{ subscription.keywords }}" placeholder="exoplanet, debris disk"></p>
+      </fieldset>
+      <fieldset>
+        <legend>{% trans 'Language of the summaries' %}</legend>
+        {% with current=subscription.lang|default:LANGUAGE_CODE %}
+        <label><input type="radio" name="lang" value="en" {% if current == 'en' %}checked{% endif %}> English</label>
+        <label><input type="radio" name="lang" value="fr" {% if current == 'fr' %}checked{% endif %}> Français</label>
+        {% endwith %}
+      </fieldset>
+      <button type="submit">{% if subscription %}{% trans 'Save' %}{% else %}{% trans 'Start my digest' %}{% endif %}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

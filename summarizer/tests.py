@@ -188,3 +188,87 @@ class BillingTests(TestCase):
         self.assertEqual(kwargs['client_reference_id'], str(self.user.id))
         self.assertEqual(kwargs['line_items'][0]['price'], 'price_m')
         self.assertTrue(kwargs['success_url'].endswith('/en/premium/?success=1'))
+
+
+from django.core import mail
+
+from summarizer import digest
+from summarizer.models import DigestDelivery, DigestItem, DigestSubscription
+
+FEED = '''<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <entry>
+    <id>http://arxiv.org/abs/2610.22354v1</id>
+    <title>LSST and Keck characterization of
+      outer Main Belt comet</title>
+    <summary>We characterize a comet with an exoplanet-free abstract.</summary>
+    <category term="astro-ph.EP"/><published>2026-10-15T17:58:04Z</published>
+    <author><name>Bryce Bolin</name></author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/hep-th/9901001v2</id>
+    <title>Old style id</title><summary>Strings.</summary>
+    <category term="hep-th"/><published>2026-10-16T10:00:00Z</published>
+    <author><name>A</name></author>
+  </entry>
+</feed>'''
+
+
+class DigestTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('reader', email='r@example.com', password='x')
+
+    def papers(self):
+        return {p['arxiv_id']: p for p in digest.parse_feed(FEED)}
+
+    def test_parse_feed(self):
+        papers = self.papers()
+        self.assertEqual(set(papers), {'2610.22354v1', 'hep-th--9901001v2'})
+        self.assertEqual(papers['2610.22354v1']['title'], 'LSST and Keck characterization of outer Main Belt comet')
+        self.assertEqual(papers['2610.22354v1']['categories'], ['astro-ph.EP'])
+
+    def test_clean_categories(self):
+        self.assertEqual(digest.clean_categories(['cs.LG', ' cs.LG', 'bad cat!', 'quant-ph', '']), ['cs.LG', 'quant-ph'])
+
+    def test_select_by_category_keywords_and_history(self):
+        sub = DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP')
+        self.assertEqual([p['arxiv_id'] for p in digest.select_papers(sub, self.papers(), set())], ['2610.22354v1'])
+        self.assertEqual(digest.select_papers(sub, self.papers(), {'2610.22354v1'}), [])
+        sub.keywords = 'black hole'
+        self.assertEqual(digest.select_papers(sub, self.papers(), set()), [])
+        sub.keywords = 'black hole, comet'
+        self.assertEqual(len(digest.select_papers(sub, self.papers(), set())), 1)
+
+    def test_run_sends_once_and_falls_back_to_abstract(self):
+        DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP,hep-th', lang='fr')
+        with mock.patch('summarizer.digest.fetch_all', return_value=self.papers()), \
+             mock.patch('summarizer.digest.write_blurbs', return_value={'2610.22354v1': 'Une comète active.'}):
+            self.assertEqual(digest.run(), 1)
+            self.assertEqual(digest.run(), 0)  # nothing new the second time
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, ['r@example.com'])
+        self.assertIn('Une comète active.', message.body)
+        self.assertIn('Strings.', message.body)  # blurb missing from the model answer -> abstract
+        self.assertIn('/fr/arxiv-id/hep-th--9901001v2/', message.alternatives[0][0])
+        self.assertIn('List-Unsubscribe', message.extra_headers)
+        self.assertEqual(DigestDelivery.objects.count(), 2)
+        self.assertEqual(DigestItem.objects.filter(lang='fr').count(), 2)
+
+    def test_unsubscribe_link(self):
+        sub = DigestSubscription.objects.create(user=self.user, categories='cs.LG')
+        url = '/en/digest/unsubscribe/%s/' % digest.unsubscribe_token(sub)
+        self.assertContains(Client().get(url), 'Unsubscribe from the daily digest?')
+        Client(enforce_csrf_checks=True).post(url)
+        sub.refresh_from_db()
+        self.assertFalse(sub.active)
+        self.assertContains(Client().get('/en/digest/unsubscribe/forged/'), 'invalid')
+
+    def test_digest_page_saves_subscription(self):
+        c = Client(); c.force_login(self.user)
+        self.assertContains(c.get('/en/digest/'), 'Start my digest')
+        r = c.post('/en/digest/', {'categories': ['cs.LG', 'quant-ph'], 'other': 'math.AP', 'keywords': 'transformer ,  ', 'lang': 'fr'})
+        self.assertEqual(r.status_code, 302)
+        sub = DigestSubscription.objects.get(user=self.user)
+        self.assertEqual((sub.categories, sub.keywords, sub.lang), ('cs.LG,quant-ph,math.AP', 'transformer', 'fr'))
+        self.assertContains(c.post('/en/digest/', {'other': ''}), 'Choose at least one category.')

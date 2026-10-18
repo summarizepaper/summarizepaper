@@ -2395,10 +2395,10 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
 
 def arxiv_search(query):
 
-    #url = 'http://export.arxiv.org/api/query?search_query=ti:'+query+'&start=0&max_results=1&sortBy=lastUpdatedDate&sortOrder=ascending'
+    #url = 'https://export.arxiv.org/api/query?search_query=ti:'+query+'&start=0&max_results=1&sortBy=lastUpdatedDate&sortOrder=ascending'
     query = urllib.parse.quote(query)
     # Define the API endpoint URL
-    url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
+    url = f"https://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
 
     response = urllib.request.urlopen(url)
     data = response.read()
@@ -2505,7 +2505,7 @@ async def get_arxiv_metadata(arxiv_id):
         print('arxiv_id2',arxiv_id)
 
 
-    url = f"http://export.arxiv.org/api/query?id_list={arxiv_id}"
+    url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -2524,7 +2524,7 @@ async def get_arxiv_metadata(arxiv_id):
 
     arxiv_id2= re.sub(r'v\d+$', '', arxiv_id)
     print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
-    url2=f"http://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
+    url2=f"https://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url2) as response:

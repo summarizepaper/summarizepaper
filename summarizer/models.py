@@ -212,3 +212,52 @@ class AIassistant(models.Model):
 
     def __str__(self):
         return self.arxiv_id+' '+self.query
+
+
+class DigestSubscription(models.Model):
+    """Daily email of new arXiv papers in the categories a user follows."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='digest')
+    categories = models.CharField(max_length=500)  # comma-separated arXiv categories, e.g. "astro-ph.EP,cs.LG"
+    keywords = models.CharField(max_length=500, blank=True, default='')  # comma-separated, optional filter
+    lang = models.CharField(max_length=10, default='en')
+    active = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    last_sent = models.DateTimeField(blank=True, null=True)
+
+    def category_list(self):
+        return [c for c in (x.strip() for x in self.categories.split(',')) if c]
+
+    def keyword_list(self):
+        return [k for k in (x.strip().lower() for x in self.keywords.split(',')) if k]
+
+    def __str__(self):
+        return '%s: %s' % (self.user.username, self.categories)
+
+
+class DigestItem(models.Model):
+    """A new paper with its short plain-language blurb, generated once per language."""
+    arxiv_id = models.CharField(max_length=40)
+    lang = models.CharField(max_length=10, default='en')
+    title = models.TextField()
+    authors = models.TextField(blank=True, default='')
+    categories = models.CharField(max_length=300, blank=True, default='')
+    published = models.DateTimeField(blank=True, null=True)
+    blurb = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('arxiv_id', 'lang')
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.lang)
+
+
+class DigestDelivery(models.Model):
+    """Which paper was already sent to which subscriber, so no paper is sent twice."""
+    subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='deliveries')
+    arxiv_id = models.CharField(max_length=40)
+    sent = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('subscription', 'arxiv_id')

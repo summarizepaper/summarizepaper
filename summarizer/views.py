@@ -309,10 +309,10 @@ def search_results(request):
 
     '''
     url = f'https://export.arxiv.org/api/query?search_query={query}&start=0&max_results={max_results}&sortBy=relevance&sortOrder=descending'
-    #url = f'http://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+    #url = f'https://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
 
     # Define the API endpoint URL
-    #url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
+    #url = f"https://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
 
     #response = urllib.request.urlopen(url)
     #data = response.read()
@@ -322,8 +322,8 @@ def search_results(request):
     ns = {'ns0': 'http://www.w3.org/2005/Atom','ns1':'http://a9.com/-/spec/opensearch/1.1/','ns2':'http://arxiv.org/schemas/atom'} # add more as needed
     #tit=root.find('ns0:title', ns).text
 
-    #url = 'http://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
-    #url = 'http://export.arxiv.org/api/query?search_query=all:"'+query1+'"&start=0&max_results='+str(max_results)+'&sortBy=submittedDate&sortOrder=descending'
+    #url = 'https://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
+    #url = 'https://export.arxiv.org/api/query?search_query=all:"'+query1+'"&start=0&max_results='+str(max_results)+'&sortBy=submittedDate&sortOrder=descending'
 
     print('url::',url)
     #input('jjk')

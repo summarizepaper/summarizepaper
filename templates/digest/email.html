@@ -1,0 +1,22 @@
+{% load i18n %}<!DOCTYPE html>
+<html lang="{{ subscription.lang }}">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 24px;color:#666;">{% trans 'Your daily arXiv digest' %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
+    {% for item in items %}
+    <div style="border-top:1px solid #eee;padding:16px 0;">
+      <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/" style="font-size:17px;font-weight:bold;color:#1a0dab;text-decoration:none;">{{ item.title }}</a>
+      <p style="margin:4px 0 8px;color:#666;font-size:13px;">{{ item.authors }}</p>
+      <p style="margin:0 0 8px;line-height:1.5;">{{ item.blurb }}</p>
+      <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/" style="color:#34a853;font-size:14px;">{% trans 'Full AI summary and questions' %} &rarr;</a>
+    </div>
+    {% endfor %}
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      <a href="{{ manage_url }}" style="color:#888;">{% trans 'Change your categories' %}</a> &middot;
+      <a href="{{ unsubscribe_url }}" style="color:#888;">{% trans 'Unsubscribe' %}</a>
+    </p>
+  </div>
+</body>
+</html>
