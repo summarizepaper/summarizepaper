@@ -7,30 +7,17 @@
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'We take your privacy seriously. Learn more about our privacy policy for our AI-powered arXiv paper summarization service. Discover how we protect your data, what information we collect, and how we use it to improve our service.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/privacy/" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    .container-pol {
-      max-width: 800px;
-      margin: 0 auto;
-      margin-bottom:30px;
-      text-align:justify;
-    }
-  </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
 
 {% block content %}
 
-<div class="container-pol">
+<div class="page prose">
+      <header class="page-header">
       <h1>{% trans "Privacy Policy" %}</h1>
-      <p><small>{% trans 'Last update:' %} 23/02/23</small></p>
+      <p class="lead"><small>{% trans 'Last update:' %} 23/02/23</small></p>
+      </header>
       <p>
         {% trans "Our website is committed to protecting the privacy of its users. This Privacy Policy outlines the types of information we collect, how we use it, and how we protect it. We are dedicated to following industry best practices and respecting the General Data Protection Regulation (GDPR) and other relevant privacy laws." %}
       </p>

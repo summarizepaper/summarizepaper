@@ -6,7 +6,6 @@
 {% block title %} {% trans 'AI-Powered arXiv Paper Summarization - Ask questions about a Paper' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our AI-powered arXiv paper summarization service provides fast, accurate, and easy-to-read summaries of scientific papers. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/" />
 
   <script>
@@ -23,241 +22,188 @@
       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
     </script>
   <style>
-      body {
-        background-color: #f2f2f2;
-      }
-      h1 {
-        font-weight: bold;
-        text-align: center;
-        margin-top: 50px;
-      }
-
-      form {
-        width: 500px;
-        margin: 0 auto;
-        text-align: center;
-        padding: 50px;
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 2px 2px 10px #ccc;
-      }
-      label {
-        font-weight: bold;
-        margin-right: 10px;
-        /*display: block;
-        margin-bottom: 10px;*/
-      }
-      input[type="text"] {
-        padding: 10px;
-        font-size: 16px;
-        width: 60%;
-        margin-bottom: 20px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      button[type="submit"] {
-        padding: 10px 20px;
-        background-color: #333;
-        color: white;
-        border-radius: 5px;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-      }
-      #submit-button img {
-       height: 40px;
-       width: 40px;
-       vertical-align: middle;
-     }
-      .loading {
-        display: none;
-      }
-      .welcome {
-        font-family: 'Open Sans', sans-serif;
-        font-size: 18px;
-        line-height: 1.5;
-        max-width: 800px;
-        text-align: center;
-        margin: 50px auto;
-        padding:20px;
-        text-align: justify; /* justify the text */
-        text-align-last: center; /* center the last line of text */
-      }
-
-      /* Media queries */
-      @media (max-width: 650px) {
-        form {
-          padding: 10px;
-          max-width:350px;
-        }
-        input[type="text"] {
-          font-size: 14px;
-        }
-      }
-
-      .search-helper {
-        font-size: 14px;
-        color: #666;
-        margin-top: 5px;
-      }
-      .toggle-button {
-      display: block;
-      margin: 0 auto;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      color: #444;
-      background-color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 0px;
-      box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.2);
-      /*box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.3);*/
-      transition: background-color 0.3s ease;
+    .hero {
+      position: relative;
+      padding: 80px 0 56px;
+      text-align: center;
+      overflow: hidden;
     }
-    .toggle-button:hover {
-      background-color: #d9d9d9;
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: -40% -10% auto;
+      height: 520px;
+      background:
+        radial-gradient(40% 50% at 25% 40%, rgba(249, 115, 22, .14), transparent 70%),
+        radial-gradient(40% 50% at 55% 30%, rgba(99, 102, 241, .18), transparent 70%),
+        radial-gradient(35% 45% at 80% 45%, rgba(16, 185, 129, .14), transparent 70%);
+      z-index: -1;
     }
-    .toggle-button:focus {
+    .hero h1 {
+      max-width: 820px;
+      margin: 0 auto 16px;
+      font-size: clamp(32px, 5.2vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+    }
+    .hero h1 .grad {
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .search-form {
+      max-width: 680px;
+      margin: 32px auto 0;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 6px 6px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow);
+    }
+    .search-box .fa-search { color: var(--text-muted); }
+    .search-box input {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 4px;
+      border: 0;
       outline: none;
-      box-shadow: 0px 0px 0px 3px rgba(0, 123, 255, 0.5);
+      background: transparent;
+      font: 16px var(--font);
+      color: var(--text);
+    }
+    .search-box .btn { padding: 12px 22px; border-radius: 10px; min-width: 104px; }
+    .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .is-loading .spinner { display: inline-block; }
+    .is-loading #sub-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .search-helper {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .search-error { margin-top: 12px; color: var(--danger); font-weight: 500; }
+    .toggle-button {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--accent);
+      font: 600 14px var(--font);
+      cursor: pointer;
+    }
+    .toggle-button:hover { background: var(--accent-soft); }
+    .search-syntax {
+      max-width: 680px;
+      margin: 12px auto 0;
+      padding: 20px 24px;
+      text-align: left;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .search-syntax p { margin-top: 0; color: var(--text); }
+    .search-syntax ul { margin: 0; padding-left: 18px; }
+    .search-syntax li + li { margin-top: 6px; }
+
+    .section { padding: 48px 0; }
+    .section-title {
+      margin: 0 0 24px;
+      font-size: 26px;
+      font-weight: 700;
     }
 
-   /* Search syntax styles */
-   .search-syntax {
-     margin: 10px 80px;
-     padding: 10px;
-     border: 1px solid #ccc;
-     background-color: #f5f5f5;
-   }
-   .latest-papers {
-     /*background-color: #f8f8f8;*/
-     padding: 20px;
-     text-align: center;
-   }
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 20px;
+    }
+    .intro-grid .card { padding: 32px; }
+    .welcome { margin: 0; font-size: 17px; color: var(--text-muted); }
+    .welcome .chat-link { font-weight: 600; text-decoration: none; }
+    .welcome .chat-link:hover { text-decoration: underline; }
+    .welcome span[style] { color: var(--accent) !important; }
+    .chat-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      background: linear-gradient(160deg, #eef0ff, #f5f3ff 60%, #ecfdf5) !important;
+      border-color: #e0e3ff !important;
+    }
+    .chat-card .icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 18px;
+    }
+    .chat-card h2 { margin: 0 0 10px; font-size: 22px; }
+    .chat-card p { margin: 0 0 24px; color: var(--text-muted); }
+    .chat-card .btn { margin-top: auto; }
 
-   .latest-papers h2 {
-     font-size: 24px;
-     font-weight: bold;
-     margin-bottom: 10px;
-   }
+    .paper-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .paper {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 20px;
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .paper:hover {
+      border-color: #c7cbff;
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+    .paper .title { font-weight: 600; line-height: 1.4; }
+    .paper .category {
+      align-self: flex-start;
+      margin-top: auto;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--bg-soft);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
 
-   .paper-list {
-     display: flex;
-     flex-wrap: wrap;
-     justify-content: center;
-   }
-
-   .paper {
-  background-color: #ffffff;
-  border: 1px solid #cccccc;
-  border-radius: 5px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  margin: 10px;
-  width: 120px;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.2s ease-in-out;
-}
-
-.paper:hover {
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
-  transform: scale(1.1);
-}
-
-.paper a {
-  font-family: "Open Sans", sans-serif;
-  color: #000000;
-  font-size: 14px;
-  text-decoration: none;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.paper a:hover {
-  color: #007bff;
-}
-
-.paper .category {
-  font-size: 14px;
-  margin-top: 5px;
-  text-align: center;
-  font-family: "Open Sans", sans-serif;
-}
-
-   @media (min-width: 768px) {
-     .paper {
-       width: 150px;
-       height: 150px;
-     }
-
-     .paper a {
-       font-size: 16px;
-     }
-   }
-
-   .arxiv-chat-section {
-  background-color: #f8f8f8;
-  padding: 50px 0;
-}
-
-.arxiv-chat-section .container {
-  max-width: 700px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.arxiv-chat-section h2 {
-  font-size: 2.2em;
-  margin-bottom: 20px;
-}
-
-.arxiv-chat-section p {
-  font-size: 1.2em;
-  line-height: 1.5;
-  margin-bottom: 30px;
-}
-
-.btn {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: #fff;
-  font-size: 1.2em;
-  text-decoration: none;
-  border-radius: 4px;
-}
-
-.btn:hover {
-  background-color: #0062cc;
-}
-
-.chat-link {
-  display: inline-block;
-  background-color: #008CBA;
-  color: white;
-  padding: 8px 14px;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 5px;
-  font-size: 14px;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16);
-  transition: all 0.3s ease;
-}
-
-.chat-link:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.24);
-}
-
-
-    </style>
+    @media (max-width: 800px) {
+      .hero { padding: 48px 0 32px; }
+      .intro-grid { grid-template-columns: 1fr; }
+      .intro-grid .card { padding: 24px; }
+      .search-box { padding-left: 14px; }
+      .search-box .btn { min-width: 0; padding: 12px 16px; }
+    }
+  </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
@@ -265,79 +211,80 @@
 {% block content %}
 
 {% if activated %}
-<p style="color: red;">{% trans 'Your account is now activated and you are logged in.' %}</p>
+<div class="alert">{% trans 'Your account is now activated and you are logged in.' %}</div>
 {% endif %}
 
-<h1>{% trans "Discover Key Insights from arXiv's Latest Articles" %}</h1>
-  <form method="post">
-    {% csrf_token %}
-    <label for="arxiv-id"></label>
-    <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Search for an article' %}">
-    <button type="submit" id="submit-button"><span id="sub-text">{% trans 'Search' %}</span><div class="loading"><img src="{% static "summarizer/images/snake.gif" %}" alt="{% trans 'Loading...' %}"></div></button>
-    <div class="search-helper">{% trans 'Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to search (use the language of papers you are interested in)' %}</div> <!-- Search form helper -->
-
-    {% if error %}
-        <div class="error" style="color: red; font-size: larger; margin-top:10px">{{ error }}</div>
-    {% endif %}
-  </form>
-  <button id="toggle-syntax" class="toggle-button">{% trans 'Refine your Search' %}</button>
-    <div class="search-syntax" style="display:none;">
-    <p><strong>{% trans 'Search Syntax:' %}</strong></p>
-    <ul>
-      <li>{% trans 'By default, the search engine looks for the query in all fields.' %}</li>
-      <li>{% trans 'Use the field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</li>
-      <li>{% trans 'Example for an author - au:John Doe; for a title - ti:The universe and beyond; for words contained in abstract - abs:covid; for an arXiv ID - id:2211.04191' %}</li>
-      <li>{% trans 'Mix several fields in a search request using the Boolean operators "AND", "OR", and "ANDNOT". For example, au:John Smith AND abs:search for life' %}</li>
-      <li>{% trans 'Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND (abs:renewable energy OR abs:solar)' %}</li>
-    </ul>
+<section class="hero">
+  <div class="container">
+    <h1>{% trans "Discover Key Insights from arXiv's Latest Articles" %}</h1>
+    <form method="post" class="search-form" id="search-form">
+      {% csrf_token %}
+      <label for="arxiv-id" style="position:absolute;left:-9999px">{% trans 'Search for an article' %}</label>
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Search for an article' %}">
+        <button type="submit" id="submit-button" class="btn"><span id="sub-text">{% trans 'Search' %}</span><span class="spinner" aria-label="{% trans 'Loading...' %}"></span></button>
+      </div>
+      <div class="search-helper">{% trans 'Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to search (use the language of papers you are interested in)' %}</div>
+      {% if error %}
+        <div class="search-error">{{ error }}</div>
+      {% endif %}
+    </form>
+    <button id="toggle-syntax" class="toggle-button" type="button" aria-expanded="false">{% trans 'Refine your Search' %} <i class="fas fa-chevron-down" style="font-size:11px"></i></button>
+    <div class="search-syntax card" hidden>
+      <p><strong>{% trans 'Search Syntax:' %}</strong></p>
+      <ul>
+        <li>{% trans 'By default, the search engine looks for the query in all fields.' %}</li>
+        <li>{% trans 'Use the field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</li>
+        <li>{% trans 'Example for an author - au:John Doe; for a title - ti:The universe and beyond; for words contained in abstract - abs:covid; for an arXiv ID - id:2211.04191' %}</li>
+        <li>{% trans 'Mix several fields in a search request using the Boolean operators "AND", "OR", and "ANDNOT". For example, au:John Smith AND abs:search for life' %}</li>
+        <li>{% trans 'Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND (abs:renewable energy OR abs:solar)' %}</li>
+      </ul>
+    </div>
   </div>
+</section>
 
-  
-  
-  <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries (key-points, layman's summary, ...) for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. In addition to our summary service, we offer an <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> to answer your questions about arXiv papers. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
-
-  <div class="arxiv-chat-section">
-    <div class="container">
+<section class="section" style="padding-top:16px">
+  <div class="container intro-grid">
+    <div class="card">
+      <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries (key-points, layman's summary, ...) for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. In addition to our summary service, we offer an <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> to answer your questions about arXiv papers. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
+    </div>
+    <div class="card chat-card">
+      <div class="icon"><i class="fas fa-comments"></i></div>
       <h2>{% trans 'Chat with arXiv Papers' %}</h2>
       <p>{% trans 'Did you know you can chat directly with one or several arXiv papers? Our chatbot allows you to have a conversation with any paper on arXiv, enabling you to get more insights and ask questions in a natural language way.' %}</p>
-      <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">{% trans 'Start Chatting' %}</a>
+      <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn">{% trans 'Start Chatting' %} <i class="fas fa-arrow-right" style="font-size:13px"></i></a>
     </div>
   </div>
-  
+</section>
 
-  <section class="latest-papers">
-    <h2>{% trans 'Latest Papers summarized with our AI tools' %}</h2>
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">{% trans 'Latest Papers summarized with our AI tools' %}</h2>
     <div class="paper-list">
       {% for paper in latestpapers %}
-        <div class="paper">
-          <a href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">{{ paper.paper.title|truncatechars:80 }}</a>
-          <div class="category">{{ paper.paper.category }}</div>
-      </div>
+        <a class="paper card" href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">
+          <span class="title">{{ paper.paper.title|truncatechars:90 }}</span>
+          <span class="category">{{ paper.paper.category }}</span>
+        </a>
       {% endfor %}
     </div>
-  </section>
+  </div>
+</section>
 {% endblock %}
 
 
 {% block scripts %}
-
   <script>
-    document.getElementById("submit-button").addEventListener("click", function() {
-      document.querySelector("#sub-text").innerHTML = "";
-      document.querySelector(".loading").style.display = "block";
+    document.getElementById('search-form').addEventListener('submit', function () {
+      document.getElementById('submit-button').classList.add('is-loading');
     });
-  </script>
 
-  <script>
-    const toggleButton = document.getElementById('toggle-syntax');
-    const searchSyntax = document.querySelector('.search-syntax');
-
-    toggleButton.addEventListener('click', () => {
-      if (searchSyntax.style.display === 'none') {
-        searchSyntax.style.display = 'block';
-      } else {
-        searchSyntax.style.display = 'none';
-      }
+    var toggleButton = document.getElementById('toggle-syntax');
+    var searchSyntax = document.querySelector('.search-syntax');
+    toggleButton.addEventListener('click', function () {
+      searchSyntax.hidden = !searchSyntax.hidden;
+      toggleButton.setAttribute('aria-expanded', !searchSyntax.hidden);
     });
   </script>
 {% endblock %}

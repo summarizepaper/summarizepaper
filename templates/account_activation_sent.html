@@ -6,37 +6,13 @@
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Activate your account for our AI-powered arXiv paper summarization service and start getting fast, accurate, and easy-to-read paper summaries. Our account activation process is quick and easy, and our cutting-edge technology will keep you up-to-date with the latest research.' %}" />
   <!--add text-->
-  <style>
-   body {
-     background-color: #F2F2F2;
-     font-family: Arial, sans-serif;
-     text-align: center;
-   }
-   /*.container {
-     background-color: white;
-     padding: 50px;
-     margin: 50px;
-     border-radius: 10px;
-     box-shadow: 0px 0px 10px #BBBBBB;
-   }*/
-   h2 {
-     font-size: 36px;
-     font-weight: bold;
-     color: #3399CC;
-     margin-bottom: 30px;
-   }
-   /*p {
-     font-size: 18px;
-     color: #555555;
-     margin-bottom: 30px;
-   }*/
- </style>
+
 {% endblock %}
 
 {% block header_class %}{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="account-box">
 <h2>{% trans 'Activation email sent' %}</h2>
   <p>{% trans 'We have sent you an email with an activation link. Click it to activate your account. It can take a few minutes; also look in your spam folder.' %}</p>
   <p><small>{% trans 'Nothing received?' %} <a href="{% url 'email_login' %}">{% trans 'Get a new link' %}</a></small></p>

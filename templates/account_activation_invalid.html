@@ -12,10 +12,10 @@
 {% block header_class %}{% endblock %}
 
 {% block content %}
-
+<div class="account-box">
 <h2>{% trans 'Invalid activation link' %}</h2>
     <p>{% trans 'The activation link is invalid or has already been used.' %} <a href="{% url 'email_login' %}">{% trans 'Get a new link' %}</a></p>
-
+</div>
 {% endblock %}
 
 {% block scripts %}

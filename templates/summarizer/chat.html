@@ -24,522 +24,139 @@
     </script>
 
   <style>
-    
-    .selected-papers-column {
-  width: 50%;
-  float: left;
-}
+/* Ids and classes are used by the page script (search, selection, assistant): keep them. */
+.chat-page { max-width: 1120px; margin: 0 auto; padding: 48px 20px 0; }
+.chat-page .page-header { margin-bottom: 28px; }
+.columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.separator { display: none; }
+.column-card { padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.column-title { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 17px; font-weight: 700; }
+.column-title .step { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; }
 
-#selected-papers {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.list-group-item {
-  border: none;
-  border-radius: 0;
-  padding: 10px 15px;
-  background-color: #f8f9fa;
-  margin-bottom: 10px;
-}
-
-.list-group-item:hover {
-  background-color: #e9ecef;
-}
-
-.list-group-item.active {
-  background-color: #70fbf0;
-  color: #fff;
-}
-
-.list-group-item strong {
-  font-size: 18px;
-}
-
-.list-group-item span {
-  font-size: 14px;
-  color: #6c757d;
-}
-
-    .paper-item {
-  display: block;
-  margin-right: 10px;
-  padding: 1.5rem 1.25rem;
-  margin-bottom: 0.5rem;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.125);
-  border-radius: 0.25rem;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.paper-item:hover {
-  cursor: pointer;
-  background-color: #f5f5f5;
-}
-
-.paper-item > strong {
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.paper-item > small {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.info-text > small {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.selected-paper {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  margin-bottom: 10px;
-  background-color: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.selected-paper:hover {
-  background-color: #f9f9f9;
-}
-
-.selected-paper-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 24px;
-  height: 24px;
-  margin-right: 10px;
-  font-size: 16px;
-  color: #fff;
-  background-color: #6c757d;
-  border-radius: 50%;
-}
-
-.selected-paper-title {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.search-results-column {
-  flex-basis: 50%;
-}
-
-
-.selected-papers-column {
-  flex-basis: 50%;
-}
-
-@media (max-width: 768px) {
-  .search-results-column {
-    width: 50%;
-    margin-bottom: 0;
-  }
-  .selected-papers-column {
-    width: 50%;
-    /*margin-right: 10px;*/
-  }
-  .columns-container {
-    width: 90%;
-    overflow-x: visible;
-  }
-}
-.separator {
-  border-left: 3px solid #ccc;
-  background-color: #ddd;
-  margin-left:10px;
-  margin-right:10px;
-}
-
-.columns-container {
-  margin-left: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  height: 100%;
-}
-.related-paper.selected {
-  background-color: #f5f5f5;
-}
-.remove-symbol {
-  float: right;
-  color: red;
-  font-size: 1.5em;
-  cursor: pointer;
-}
+.searchform { margin: 0; }
 .search-container {
-    display: flex;
-    align-items: center;
-    border: 2px solid #ccc;
-    border-radius: 25px;
-    padding: 10px;
-    margin-bottom: 20px;
-    width: 90%;
-    max-width: 90%;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .search-container label {
-    margin-right: 10px;
-  }
-
-  #search {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-size: 16px;
-  }
-
-  #spinner {
-    position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 10px;
-  }
-  h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.searchform form {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-hr {
-  border: none;
-  height: 1px;
-  margin: 1rem 0;
-  background-color: #eee;
-}
-
-#paper-id {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 100%;
-  max-width: 700px;
-}
-
-#add-paper {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  transition: background-color 0.3s ease;
-  margin-bottom:20px;
-}
-
-#add-paper:hover {
-  background-color: #0062cc;
-}
-
-
-.add-paper-container {
- width:40%;
- min-width: 200px;
-}
-
-/*.spinner {
-  float: right;
-  color: red;
-  font-size: 1.5em;
-}*/
-
-.remove-spinner-container {
   display: flex;
   align-items: center;
-  float: right;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color .15s, box-shadow .15s;
 }
+.search-container:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.search-container label { color: var(--text-muted); }
+#search { flex: 1; min-width: 0; padding: 12px 0; border: 0; outline: none; font: 15px var(--font); background: transparent; }
+#spinner { color: var(--text-muted); }
+#atleast p, #nonefound p { margin: 8px 0 0; }
+#atleast, #nonefound, #errID, #alID { color: var(--danger) !important; }
+#OKID { color: var(--success) !important; }
 
-.spinner-container {
-  margin-left: 5px; /* adjust as needed */
-}
-
-
-.green-symbol {
-  color: green!important;
-  margin-left: 5px;
-}
-
-.chatbot-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin-bottom:10px;
-  margin-top:30px;
-  width: 100%;
-  height: 100%;
-}
-
-
-
-.chatbot-header {
-  background-color: #f7f7f7;
-  /*display: flex;*/
-  text-align:center;
-  /*justify-content: center;
-  align-items: center;*/
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-}
-
-.chatbot-body {
-  width: 700px;
-  height: 400px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  font-family: sans-serif;
-}
-
-.chatbot-body .chatbot-messages {
-  height: 300px;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.chatbot-form {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-top: 1px solid #ccc;
-}
-
-.chatbot-form input[type="text"] {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-}
-
-.chatbot-form button {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #4CAF50;
-  color: #fff;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-
-.chatbot-body .chatbot-messages .chatbot-message {
-    font-weight: bold;
-    color: #000;
-    margin-bottom: 5px;
-    margin-top: 15px;
-    margin-right: 10px;
-    text-align: justify;
-}
-
-.chatbot-body .chatbot-messages .chatbot-response {
-    color: #555;
-    margin-left: 20px;
-    margin-right: 10px;
-    text-align: justify;
-}
-
-/* Small devices (phones, 576px and up) */
-@media (min-width: 300px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 300px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-/* Small devices (phones, 576px and up) */
-@media (min-width: 576px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 400px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-/* Medium devices (tablets, 768px and up) */
-@media (min-width: 768px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 500px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-@media (min-width: 900px) {
-  .chatbot-body {
-    width: 100%;
-    max-width: 700px;
-    height: 100%;
-    max-height: 400px;
-  }
-}
-
-.chatbot-message {
+#search-results { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 420px; overflow-y: auto; }
+#selected-papers { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.list-group-item, .paper-item {
   position: relative;
-}
-
-
-.blinking-square {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border: 1px solid black;
-  background-color: black; /* Add this line to set the background color to black */
-  /*position: absolute;*/
-  top: 5px; /* Position the square at the top of the chatbot-messages div */
-  /*right: 0;*/
-  margin-left:10px;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-#loading-spinner {
-  margin-left: 5px;
-}
-
-
-
-
-
-#chatbot-toggle {
   display: block;
-  width: 200px;
-  margin: 0 auto;
-  text-align: center;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-weight: bold;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
   text-decoration: none;
-  color: #333;
+  line-height: 1.45;
+  cursor: pointer;
+  transition: border-color .15s, background-color .15s;
 }
-
-#chatbot-toggle:hover {
-  background-color: #e8e8e8;
+.list-group-item:hover { border-color: #c7cbff; background: #fafaff; }
+.list-group-item.active { border-color: var(--accent); background: var(--accent-soft); }
+.list-group-item strong { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 600; }
+.list-group-item small { display: block; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.list-group-item br { display: none; }
+#selected-papers .list-group-item { padding-right: 72px; cursor: default; }
+/* the script sets an inline max-width and negative margin on this warning */
+#licencewarn { max-width: none !important; margin-top: 6px !important; }
+.remove-spinner-container { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: row-reverse; align-items: center; gap: 2px; white-space: nowrap; }
+.remove-symbol {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  filter: grayscale(1);
+  transition: background-color .15s, filter .15s;
 }
+.remove-symbol:hover { background: #fef2f2; filter: none; }
+.spinner-container { color: var(--text-muted); }
+.green-symbol { color: var(--success) !important; }
+.info-text { color: var(--text-muted); font-size: 12px; }
+#nopap { margin: 0; padding: 28px 16px; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-muted); text-align: center; font-size: 15px; line-height: 1.5; }
+#maxpapreached p { margin: 12px 0 0; color: var(--danger); }
 
-
-.chatbot-instructions p {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
+.add-paper-container { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.add-paper-container > p { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--text); }
+.add-paper-row { display: flex; gap: 8px; }
+.input-container { flex: 1; }
+#paper-id {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: 15px var(--font);
+  outline: none;
 }
-
-
-
-.chatbot-instructions {
-  display: none;
-  margin: 20px auto;
-  width: 80%;
-  max-width: 600px;
-  padding: 20px;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+#paper-id:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+#add-paper {
+  padding: 11px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 15px var(--font);
+  cursor: pointer;
 }
+#add-paper:hover { background: var(--bg-soft); }
+.add-paper-container #errID p, .add-paper-container #OKID p, .add-paper-container #alID p { margin: 8px 0 0; font-size: 14px; }
 
-.chatbot-instructions ol {
-    counter-reset: my-counter;
-    list-style-type: none;
-    padding-left: 0;
+#warnassistant {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  font-size: 15px;
+  font-weight: 500;
 }
+#warnassistant p { margin: 0; }
+.chat-page .chatbot-container { margin-top: 24px; }
+.chat-page #chatbot-toggle { margin-left: 4px; }
 
-.chatbot-instructions ol li {
-    counter-increment: my-counter;
-    margin-bottom: 10px;
-    position: relative;
+@media (max-width: 800px) {
+  .chat-page { padding-top: 28px; }
+  .columns-container { grid-template-columns: 1fr; }
+  .column-card { padding: 18px; }
 }
-
-.chatbot-instructions ol li:before {
-    content: counter(my-counter) ".";
-    background-color: #2196f3;
-    border-radius: 50%;
-    color: #fff;
-    display: inline-block;
-    font-size: 16px;
-    font-weight: bold;
-    height: 24px;
-    line-height: 24px;
-    margin-right: 10px;
-    text-align: center;
-    width: 24px;
-}
-
-.chatbot-instructions ol li:last-child {
-    margin-bottom: 0;
-}
-
-.chatbot-instructions ol li:last-child:before {
-    content: counter(my-counter) ".";
-    background-color: #2196f3;
-    border-radius: 50%;
-    color: #fff;
-    display: inline-block;
-    font-size: 16px;
-    font-weight: bold;
-    height: 24px;
-    line-height: 24px;
-    margin-right: 10px;
-    text-align: center;
-    width: 24px;
-}
-.input-container {
-  width: 80%;
-  max-width: 500px;
-  overflow: hidden;
-}
-.input-container input {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
   </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
 
 {% block content %}
+<div class="chat-page">
+<header class="page-header">
+  <h1>{% trans 'Chat with arXiv Papers' %}</h1>
+  <p class="lead">{% trans 'Did you know you can chat directly with one or several arXiv papers? Our chatbot allows you to have a conversation with any paper on arXiv, enabling you to get more insights and ask questions in a natural language way.' %}</p>
+</header>
 
-<div id="warnassistant" style="display:none; text-align: center; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px;">
-  <p style="color: #155724;  margin-left: 10px; margin-right: 10px; font-weight: bold;">
+<div id="warnassistant" style="display:none;">
+  <p>
     {% trans 'The AI assistant is now accessible below to start asking questions. You can keep on adding up to 10 papers to chat with.' %}
   </p>
 </div>
 <div class="columns-container">
-    <div class="search-results-column">
-      <div style="background-color: #f6f6f6; border: 1px solid #ddd; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 20px;margin-top: 10px;">
-        <h3 style="color: #333; text-align: center; font-weight: bold; margin-top: 0; margin-bottom: 0;">{% trans 'Select papers to chat with' %}</h3>
-      </div>      
+    <div class="search-results-column column-card">
+      <h2 class="column-title"><span class="step">1</span>{% trans 'Select papers to chat with' %}</h2>      
       <form class="searchform">
         <div class="search-container">
           <label for="search"><i class="fas fa-search"></i></label>
@@ -555,36 +172,35 @@ hr {
 
         </div>
         <div class="add-paper-container">
-          <p style="margin-bottom: 5px; font-weight: bold; font-size: 18px; color: #555;"><strong>{% trans 'Add a paper directly' %}</strong></p>
+          <p>{% trans 'Add a paper directly' %}</p>
+          <div class="add-paper-row">
           <div class="input-container">
             <input type="text" id="paper-id" placeholder="{% trans 'Arxiv ID (e.g. 2211.04191v1)' %}">
+          </div>
+          <button type="button" id="add-paper">{% trans 'Add' %}</button>
           </div>
           <div id="errID" style="display: none;color: red;"><p>{% trans 'This ID does not exist' %}</p></div>
           <div id="OKID" style="display: none;color: green;"><p>{% trans 'Paper added!' %}</p></div>
           <div id="alID" style="display: none;color: red;"><p>{% trans 'Paper already added!' %}</p></div>
-          <button type="button" id="add-paper">{% trans 'Add' %}</button>
         </div>
       </form>
     </div>
     <div class="separator"></div>
-    <div class="selected-papers-column">
-      <div style="background-color: #f6f6f6; border: 1px solid #ddd; box-shadow: 0px 2px 4px rgba(0,0,0,0.1); padding: 10px; margin-bottom: 20px;margin-top: 10px;margin-right: 10px;">
-        <h3 style="color: #333; text-align: center; font-weight: bold; margin-top: 0; margin-bottom: 0;">{% trans 'Selected Papers' %}</h3>
-      </div>    
+    <div class="selected-papers-column column-card">
+      <h2 class="column-title"><span class="step">2</span>{% trans 'Selected Papers' %}</h2>    
       <ul class="list-group" id="selected-papers">
-        <p id="nopap" style="margin-right: 20px; margin-bottom: 20px; font-size: 16px; line-height: 1.4em; text-align: justify; color: #555;">
+        <p id="nopap">
           {% trans 'No papers selected yet. Search for papers to chat with using the search field on the left or add a paper directly via its arXiv ID using the form and clicking the Add button.' %}
         </p>      
       </ul>
       <div id='maxpapreached' style="display: none;"><p style="color:red;"><span class='warning-sign'>&#9888;</span>{% trans 'You have reached the limit of' %} {{ max_nb_paper }} {% trans 'papers you can interact with and cannot add more.' %}</p></div>
     </div>
 </div>
-<div class="chatbot-container" id="assistant" style="display:none">
-  <div class="chatbot-body">
+<div id="assistant" style="display:none">
+<div class="chatbot-container">
   <div class="chatbot-header">
     <h3>{% trans 'Ask questions about selected papers to our AI assistant' %}</h3>
-    <p id="licencewarn" style="max-width: 400px;display: none; margin-top:-10px;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
-  </div>
+    <p id="licencewarn" style="display: none;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
   </div>
   <div class="chatbot-body">
     <div class="chatbot-messages">
@@ -603,6 +219,7 @@ hr {
     <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
   </div>
   </div>
+</div>
 <a id="chatbot-toggle" href="#">{% trans 'AI assistant instructions?' %}</a>
 <div class="chatbot-instructions" style="display: none;">
   <p>{% trans 'Welcome to our AI assistant! Here are some important things to keep in mind:' %}</p>
@@ -615,6 +232,7 @@ hr {
       <li>{% trans 'If you want to keep the history of your questions/answers you should create an account.' %}</li>
       {% endif %}
   </ol>
+</div>
 </div>
 </div>
 
@@ -778,8 +396,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   
   // Event listener for search input
+// arXiv asks for at most one request every 3 s: wait until typing pauses, and ignore stale answers
+var searchTimer = null;
+var searchSeq = 0;
 searchInput.addEventListener('keyup', function() {
-  var query = searchInput.value;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 400);
+});
+
+function runSearch() {
+  var query = searchInput.value.trim();
   errID.style.display = 'none';
   OKID.style.display = 'none';
   alID.style.display = 'none';
@@ -788,10 +414,11 @@ searchInput.addEventListener('keyup', function() {
   if (query.length >= 3) {
     atleast.style.display = "none";
     showSpinner();
+    var seq = ++searchSeq;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://export.arxiv.org/api/query?search_query=' + query + '&max_results=10');
-    //console.log('https://export.arxiv.org/api/query?search_query=' + query + '&max_results=10');
+    xhr.open('GET', '{% url "arxiv_api" %}?search_query=' + encodeURIComponent(query) + '&max_results=10');
     xhr.onload = function() {
+      if (seq !== searchSeq) return;
       if (xhr.status === 200) {
         var data = xhr.responseXML;
         var entries = data.getElementsByTagName('entry');
@@ -849,7 +476,7 @@ searchInput.addEventListener('keyup', function() {
 
     //console.log('aui');
   }
-});
+}
 
 selectedPapersList.addEventListener('click', function(event) {
   if (event.target.classList.contains('remove-symbol')) {
@@ -1024,7 +651,7 @@ searchResults.addEventListener('click', function(event) {
     if (id) {
       try {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'https://export.arxiv.org/api/query?id_list=' + id);
+      xhr.open('GET', '{% url "arxiv_api" %}?id_list=' + encodeURIComponent(id));
       xhr.onload = function() {
         if (xhr.status === 200) {
           //console.log('joe');

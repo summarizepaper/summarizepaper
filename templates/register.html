@@ -7,81 +7,20 @@
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Register for our AI-powered arXiv paper summarization service and get fast, accurate, and easy-to-read paper summaries. Our quick and easy registration process will keep you up-to-date with the latest research. Sign up today!' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/register/" />
-  <style>
-      form {
-          max-width: 500px;
-          box-sizing: border-box;
-          padding: 0 16px;
-          margin: 50px auto;
-          text-align: center;
-      }
 
-      form h2 {
-          margin-bottom: 40px;
-          font-size: 30px;
-          color: #333;
-      }
-
-      form .form-group {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          margin-bottom: 40px;
-      }
-
-      form label {
-          font-size: 20px;
-          color: #333;
-          margin-bottom: 10px;
-      }
-
-      form input[type="text"], form input[type="email"], form input[type="password"] {
-          width: 100%;
-          padding: 10px;
-          font-size: 18px;
-          border-radius: 5px;
-          border: none;
-          box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-      }
-
-      form button[type="submit"] {
-          width: 200px;
-          padding: 10px 20px;
-          background-color: blue;
-          color: white;
-          font-size: 18px;
-          border-radius: 5px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s;
-      }
-
-      form button[type="submit"]:hover {
-          background-color: lightblue;
-      }
-      #popover {
-        display: none;
-        position: fixed;
-        background-color: black;
-        color: white;
-        padding: 10px;
-        z-index: 1;
-        right: 20px;
-      }
-  </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
 
 {% block content %}
 
-
+<div class="account-box">
 <form method="post">
     {% csrf_token %}
     {% include 'accounts/_antibot.html' %}
-    <h2>{% trans 'Register' %}</h2>
+    <h1 style="text-align:center">{% trans 'Register' %}</h1>
     {% if email_taken %}
-    <p style="background:#fff8e1;border:1px solid #fbbc05;border-radius:6px;padding:12px;">
+    <p class="warn">
       {% trans 'An account already uses this email address.' %}
       <a href="{% url 'email_login' %}?email={{ email_taken|urlencode }}">{% trans 'Get a login link by email' %}</a>
     </p>
@@ -100,14 +39,14 @@
         <label for="{{ form.password1.id_for_label }}">{% trans 'Password' %}:</label>
         {{ form.password1 }}
     </div>
-    <div id="password_error" style="color: #555;margin:-30px 0 30px;"><small>{% trans 'At least 8 characters, not a common password and not only digits.' %}</small></div>
+    <div id="password_error" class="hint" style="margin:-8px 0 14px"><small>{% trans 'At least 8 characters, not a common password and not only digits.' %}</small></div>
     <div class="form-group">
         <label for="{{ form.password2.id_for_label }}">{% trans 'Confirm password' %}:</label>
         {{ form.password2 }}
     </div>
     <button type="submit">{% trans 'Sign up' %}</button>
     {% if form.errors %}
-        <div class="alert alert-danger" style="color:red;margin-top:30px;">
+        <div class="form-errors">
             {% trans 'Please fix the following errors:' %}
             <ul>
                 {% for field in form %}
@@ -122,6 +61,8 @@
         </div>
     {% endif %}
 </form>
+<div class="links"><p>{% trans 'Already registered?' %} <a href="{% url 'login' %}">{% trans 'Log in' %}</a></p></div>
+</div>
 
 {% endblock %}
 

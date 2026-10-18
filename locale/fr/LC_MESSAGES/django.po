@@ -2445,3 +2445,15 @@ msgstr "ID Arxiv :"
 
 #~ msgid "The 10-yrs old summary is not ready yet"
 #~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
+
+#: templates/base.html
+msgid "Menu"
+msgstr "Menu"
+
+#: templates/base.html
+msgid "Open source"
+msgstr "Open source"
+
+#: templates/summarizer/arxividpage.html
+msgid "Ask anything about this paper."
+msgstr "Posez n'importe quelle question sur cet article."

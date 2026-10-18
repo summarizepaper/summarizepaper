@@ -9,57 +9,10 @@
   <meta name="description" content="{% trans 'Have questions or feedback about our AI-powered arXiv paper summarization service? Contact us today to get in touch with our team and learn more.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/contact/" />
   <style>
-    /* Add your CSS styles here */
-    .container-contact {
-        width: 80%;
-        margin: 20px auto;
-        text-align: center;
-      }
-
-      form {
-        padding: 20px;
-        background-color: #f2f2f2;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-      }
-
-      input[type="text"],input[type="email"],
-        textarea {
-          width: 100%;
-          padding: 12px 20px;
-          border: none;
-          border-radius: 4px;
-          box-sizing: border-box;
-          margin-top: 6px;
-          margin-bottom: 16px;
-          resize: vertical;
-          font-size: 18px;
-          font-family: sans-serif;
-          background-color: #fff;
-        }
-
-        label {
-          font-size: 20px;
-          font-family: sans-serif;
-          color: #333;
-          margin-bottom: 10px;
-          display: block;
-        }
-
-        input[type="submit"] {
-          background-color: #4CAF50;
-          color: white;
-          padding: 12px 20px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 18px;
-          font-family: sans-serif;
-        }
-
-        input[type="submit"]:hover {
-          background-color: #45a049;
-        }
+    .contact-form { padding: 28px; }
+    .contact-form label { display: block; margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+    .contact-form input, .contact-form textarea { margin-bottom: 18px; }
+    .contact-form input[type=submit] { width: auto; margin: 0; }
   </style>
 {% endblock %}
 
@@ -67,15 +20,17 @@
 
 {% block content %}
 
-<div class="container-contact">
+<div class="page" style="max-width:640px">
+  <header class="page-header">
   <h1>{% trans 'Contact Us' %}</h1>
-  <p>
+  <p class="lead">
     {% blocktrans %} Have questions or concerns about our AI-powered paper summarization
     service? We're here to help! Fill out the form below and we'll get back
     to you as soon as possible. {% endblocktrans %}
   </p>
+  </header>
 
-  <form action="" method="post">
+  <form action="" method="post" class="card contact-form">
     {% csrf_token %}
     <label for="name">{% trans 'Name:' %}</label>
     <input type="text" id="name" name="name" required>
@@ -86,14 +41,14 @@
     <label for="message">{% trans 'Message:' %}</label>
     <textarea id="message" name="message" rows="5" required></textarea>
 
-    <input type="submit" value="Submit">
+    <input type="submit" value="Submit" class="btn btn-lg">
   </form>
   {% if sent == 1 %}
-  <div style="color:red;font-size:22px;margin-top:10px;margin-bottom:10px;">{% trans "The email was successfully sent. You'll hear back from us shortly." %}</div>
+  <div class="notice" style="margin-top:20px">{% trans "The email was successfully sent. You'll hear back from us shortly." %}</div>
   {% endif %}
 
   {% if sent == 0 %}
-  <div style="color:red;font-size:22px;margin-top:10px;margin-bottom:10px;">{% trans 'The email could not be sent. If it happens again, please contact us.' %}</div>
+  <div class="error" style="margin-top:20px">{% trans 'The email could not be sent. If it happens again, please contact us.' %}</div>
   {% endif %}
 
 </div>
