@@ -89,36 +89,26 @@
     {% include 'accounts/_google_button.html' %}
 
     <div class="form-group">
-        <label for="{{ form.username.id_for_label }}">Username:</label>
+        <label for="{{ form.username.id_for_label }}">{% trans 'Username' %}:</label>
         {{ form.username }}
     </div>
     <div class="form-group">
-        <label for="{{ form.email.id_for_label }}">Email:</label>
+        <label for="{{ form.email.id_for_label }}">{% trans 'Email address' %}:</label>
         {{ form.email }}
     </div>
-    <div id="popover">
-      <p>Your password must be at least 8 characters long and contain:<br>
-      - At least one number<br>
-      - At least one uppercase letter<br>
-      - At least one lowercase letter<br>
-      - At least one special character (!@#$%^&*)</p>
-    </div>
     <div class="form-group">
-        <label for="{{ form.password1.id_for_label }}">Password:
-          <span id="popover-link">
-          <i class="fas fa-question-circle"></i>
-        </span></label>
+        <label for="{{ form.password1.id_for_label }}">{% trans 'Password' %}:</label>
         {{ form.password1 }}
     </div>
-    <div id="password_error" style="color: red;margin-bottom:20px;"></div>
+    <div id="password_error" style="color: #555;margin:-30px 0 30px;"><small>{% trans 'At least 8 characters, not a common password and not only digits.' %}</small></div>
     <div class="form-group">
-        <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
+        <label for="{{ form.password2.id_for_label }}">{% trans 'Confirm password' %}:</label>
         {{ form.password2 }}
     </div>
-    <button type="submit">Sign up</button>
+    <button type="submit">{% trans 'Sign up' %}</button>
     {% if form.errors %}
         <div class="alert alert-danger" style="color:red;margin-top:30px;">
-            <strong>Oops!</strong> Please fix the following errors:
+            {% trans 'Please fix the following errors:' %}
             <ul>
                 {% for field in form %}
                     {% for error in field.errors %}
@@ -136,53 +126,4 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  const passwordInput = document.querySelector('input[name="password1"]');
-  const passwordError = document.querySelector('#password_error');
-
-  passwordInput.addEventListener('input', function() {
-    const password = passwordInput.value;
-
-    if (password.length < 8) {
-      passwordError.innerHTML = 'Password must be at least 8 characters.';
-      return;
-    }
-
-    if (!/\d/.test(password)) {
-      passwordError.innerHTML = 'Password must contain at least one number.';
-      return;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      passwordError.innerHTML = 'Password must contain at least one uppercase letter.';
-      return;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      passwordError.innerHTML = 'Password must contain at least one lowercase letter.';
-      return;
-    }
-
-    if (!/[!@#$%^&*()]/.test(password)) {
-      passwordError.innerHTML = 'Password must contain at least one special character.';
-      return;
-    }
-
-    passwordError.innerHTML = '';
-  });
-</script>
-
-<script>
-document.getElementById("popover-link").addEventListener("mouseover", function(event) {
-  var popover = document.getElementById("popover");
-  popover.style.display = "block";
-  popover.style.left = event.clientX + "px";
-  popover.style.top = (event.clientY + 20) + "px";
-});
-
-document.getElementById("popover-link").addEventListener("mouseout", function() {
-  var popover = document.getElementById("popover");
-  popover.style.display = "none";
-});
-</script>
 {% endblock %}

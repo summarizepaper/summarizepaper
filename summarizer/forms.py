@@ -15,7 +15,7 @@ class RegistrationForm(UserCreationForm):
         widget=forms.PasswordInput,
         label="Password",
         strip=False,
-        help_text="Your password must be at least 8 characters and cannot be entirely numeric.",
+        help_text="At least 8 characters, not a common password and not only digits.",
     )
     password2 = forms.CharField(
         widget=forms.PasswordInput,
@@ -27,25 +27,3 @@ class RegistrationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
-
-    def clean_password1(self):
-        password1 = self.cleaned_data.get("password1")
-        if len(password1) < 8:
-            raise forms.ValidationError("Password must be at least 8 characters.")
-
-        if password1.isdigit():
-            raise forms.ValidationError("Password cannot be entirely numeric.")
-
-        if not any(char.isdigit() for char in password1):
-            raise forms.ValidationError("Password must contain at least one number.")
-
-        if not any(char.isupper() for char in password1):
-            raise forms.ValidationError("Password must contain at least one uppercase letter.")
-
-        if not any(char.islower() for char in password1):
-            raise forms.ValidationError("Password must contain at least one lowercase letter.")
-
-        if not any(char in "!@#$%^&*()" for char in password1):
-            raise forms.ValidationError("Password must contain at least one special character.")
-
-        return password1

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 13:20+0000\n"
+"POT-Creation-Date: 2026-10-18 13:37+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -128,7 +128,7 @@ msgstr ""
 msgid "Enter a valid email address."
 msgstr "Saisissez une adresse email valide."
 
-#: templates/accounts/email_login.html:21
+#: templates/accounts/email_login.html:21 templates/register.html:96
 msgid "Email address"
 msgstr "Adresse email"
 
@@ -485,6 +485,32 @@ msgstr "Un compte utilise déjà cette adresse email."
 msgid "Get a login link by email"
 msgstr "Recevoir un lien de connexion par email"
 
+#: templates/register.html:92
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+#: templates/register.html:100 templates/registration/login.html:93
+msgid "Password"
+msgstr "Mot de Passe"
+
+#: templates/register.html:103
+msgid "At least 8 characters, not a common password and not only digits."
+msgstr ""
+"Au moins 8 caractères, pas un mot de passe courant et pas uniquement des "
+"chiffres."
+
+#: templates/register.html:105
+msgid "Confirm password"
+msgstr "Confirmer le mot de passe"
+
+#: templates/register.html:108
+msgid "Sign up"
+msgstr "S'inscrire"
+
+#: templates/register.html:111
+msgid "Please fix the following errors:"
+msgstr "Veuillez corriger les erreurs suivantes :"
+
 #: templates/registration/login.html:6
 msgid "Login - Secure Access to AI-Powered arXiv Paper Summaries"
 msgstr "Connexion - Accès sécurisé aux Résumés arXiv alimentés par l'IA"
@@ -520,10 +546,6 @@ msgstr "Nom d'utilisateur ou mot de passe incorrect."
 #: templates/registration/login.html:91
 msgid "Username or email"
 msgstr "Nom d'utilisateur ou email"
-
-#: templates/registration/login.html:93
-msgid "Password"
-msgstr "Mot de Passe"
 
 #: templates/registration/login.html:99
 msgid "Log in with an email link (no password)"
@@ -998,19 +1020,15 @@ msgstr "Recherchez des articles similaires (en version bêta)"
 #: templates/summarizer/arxividpage.html:1133
 #: templates/summarizer/tree.html:230
 msgid ""
-"By clicking on the button above, our algorithm will scan all papers in our "
-"database to find the closest based on the contents of the full papers and "
-"not just on metadata. Please note that it only works for papers that we have"
-" generated summaries for and you can rerun it from time to time to get a "
-"more accurate result while our database grows."
+"By clicking on the button above, our algorithm compares the title and "
+"abstract of this paper with all the papers of the same arXiv category that "
+"we have summarized, and finds the closest ones. You can rerun it from time "
+"to time: the results improve as our database grows."
 msgstr ""
-"En cliquant sur le bouton ci-dessus, notre algorithme analysera tous les "
-"articles de notre base de données pour trouver le plus proche en fonction du"
-" contenu des articles complets et pas seulement des métadonnées. Veuillez "
-"noter que cela ne fonctionne que pour les articles pour lesquels nous avons "
-"généré des résumés et que vous pouvez le réexécuter de temps en temps pour "
-"obtenir un résultat plus précis pendant que notre base de données "
-"s'agrandit."
+"En cliquant sur le bouton ci-dessus, notre algorithme compare le titre et le"
+" résumé de cet article à tous les articles de la même catégorie arXiv que "
+"nous avons résumés, et trouve les plus proches. Vous pouvez le relancer de "
+"temps en temps : les résultats s'améliorent à mesure que notre base grandit."
 
 #: templates/summarizer/arxividpage.html:1144
 #: templates/summarizer/tree.html:237

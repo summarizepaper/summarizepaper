@@ -746,3 +746,62 @@ class GoogleLoginTests(TestCase):
         self.assertContains(Client().get('/en/login/'), 'Continue with Google')
         with override_settings(GOOGLE_CLIENT_ID=''):
             self.assertNotContains(Client().get('/en/login/'), 'Continue with Google')
+
+
+class PasswordRuleTests(TestCase):
+    stamp = AccountTests.stamp
+    register = AccountTests.register
+
+    def test_simple_long_password_is_enough(self):
+        self.register(password1='blue sky river', password2='blue sky river')
+        self.assertTrue(User.objects.filter(username='newbie').exists())
+
+    def test_common_password_is_refused(self):
+        r = self.register(password1='password123', password2='password123')
+        self.assertFalse(User.objects.exists())
+        self.assertContains(r, 'too common')
+
+
+class SimilarPapersTests(TestCase):
+    def fake_embed(self, texts):
+        import numpy as np
+        # direction picked by keywords so that similarity is predictable
+        axes = ['galaxy', 'planet', 'language']
+        vectors = np.array([[t.count(a) + 0.01 for a in axes] for t in texts], dtype=np.float32)
+        return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
+
+    def paper(self, arxiv_id, title, category='astro-ph.GA'):
+        return ArxivPaper.objects.create(arxiv_id=arxiv_id, title=title, abstract=title, category=category)
+
+    def test_closest_same_category_one_version_and_scores(self):
+        from summarizer import similar
+        from summarizer.models import PaperScore
+        main = self.paper('2401.00001v1', 'galaxy galaxy')
+        self.paper('2401.00001v2', 'galaxy galaxy')          # another version of the same paper
+        self.paper('2401.00002v1', 'galaxy planet')
+        self.paper('2401.00002v2', 'galaxy planet')          # only one version may be listed
+        self.paper('2401.00003v1', 'planet planet')
+        self.paper('2401.00004v1', 'galaxy galaxy', category='cs.CL')  # other category
+        with mock.patch('summarizer.similar.embed', side_effect=self.fake_embed) as embed:
+            similar.store(list(ArxivPaper.objects.exclude(arxiv_id=main.arxiv_id)))
+            found = similar.find_and_store(main.arxiv_id)
+        self.assertEqual([aid[:10] for aid, _ in found], ['2401.00002', '2401.00003'])
+        self.assertLess(found[0][1], found[1][1])
+        self.assertEqual(embed.call_count, 2)  # the main paper was embedded on demand
+        scores = list(PaperScore.objects.filter(from_paper=main).order_by('score'))
+        self.assertEqual(len(scores), 2)
+        self.assertEqual(similar.percent(0.25), '75.0')
+
+    def test_embed_papers_command(self):
+        from io import StringIO
+        from django.core.management import call_command
+        from summarizer.models import PaperEmbedding, PaperScore
+        for i, title in enumerate(['galaxy', 'galaxy planet', 'planet']):
+            p = self.paper('2402.0000%dv1' % i, title)
+            SummaryPaper.objects.create(paper=p, lang='en', summary='s')
+        out = StringIO()
+        with mock.patch('summarizer.similar.embed', side_effect=self.fake_embed):
+            call_command('embed_papers', '--rescore', stdout=out)
+        self.assertEqual(PaperEmbedding.objects.count(), 3)
+        self.assertEqual(PaperScore.objects.count(), 6)
+        self.assertIn('3 papers to embed', out.getvalue())

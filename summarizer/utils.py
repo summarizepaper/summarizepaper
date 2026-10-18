@@ -24,32 +24,12 @@ from django.conf import settings
 import ast
 import json
 from html.parser import HTMLParser
-from langchain import OpenAI, PromptTemplate, LLMChain
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import ElasticVectorSearch, Pinecone, Weaviate, FAISS, Chroma
-from langchain.chains.mapreduce import MapReduceChain
-from langchain.prompts import PromptTemplate
-from langchain.docstore.document import Document
-from langchain.chains.summarize import load_summarize_chain
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chains.qa_with_sources import load_qa_with_sources_chain
-from langchain.llms import OpenAI
-from langchain.callbacks import get_openai_callback
-from langchain import ConversationChain     
-from langchain.prompts import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    MessagesPlaceholder,
-    SystemMessagePromptTemplate,
-)
 import pickle
 from django.utils.translation import get_language_info
 import nltk
 from xml.etree import ElementTree
 import urllib, urllib.request
 import math
-from langchain.llms import OpenAIChat
 import aiohttp
 #from bs4 import BeautifulSoup
 
@@ -288,18 +268,6 @@ def get_client_ip(request):
     from .access import client_ip
     return client_ip(request)
     
-def dependable_faiss_import():# -> Any:
-    """Import faiss if available, otherwise raise error."""
-    try:
-        import faiss
-    except ImportError:
-        raise ValueError(
-            "Could not import faiss python package. "
-            "Please it install it with `pip install faiss` "
-            "or `pip install faiss-cpu` (depending on Python version)."
-        )
-    return faiss
-
 def readpaper(arxiv_id):
     paper=ArxivPaper.objects.prefetch_related('authors').filter(arxiv_id=arxiv_id)[0]
 
@@ -398,54 +366,11 @@ def getconversationmemory(arxiv_id,user,lang,ip,nb_mem):
 
     return conv
 
-def storeclosest(arxiv_id,ids_and_scores):
-    array_arxiv_ids,array_scores=ids_and_scores
-    # assume you have an array of scores and arxiv_ids
-    #scores_and_arxiv_ids = [(0.8, '1234.5678'), (0.6, '9012.3456'), (0.4, '7890.1234')]
-
-    scores_and_arxiv_ids = list(zip(array_scores, array_arxiv_ids))
-
-    # Paper with the given arxiv_id
-    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
-
-    #make other related papers inactive
-    oldpapers = PaperScore.objects.filter(from_paper=paper,active=True)
-    for oldpap in oldpapers:
-        #oldpap.active=False
-        #oldpap.save()
-        oldpap.delete()
-
-    # create PaperScore objects for each related paper with its associated score
-    for score, arxiv_id2 in scores_and_arxiv_ids:
-        related_paper, created = ArxivPaper.objects.get_or_create(arxiv_id=arxiv_id2)
-        PaperScore.objects.create(from_paper=paper, to_paper=related_paper, score=score)
-
-    return 0
-
-def storepickle(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer):
-
-    obj, created = PickledData.objects.update_or_create(
-        arxiv_id=arxiv_id,
-        defaults={
-            'docstore_pickle': docstore_pickle,
-            'index_to_docstore_id_pickle': index_to_docstore_id_pickle,
-            'buffer':buffer
-        }
-    )
-
-    return created
-
-def getstorepickle(arxiv_id):
-
-    if PickledData.objects.filter(arxiv_id=arxiv_id).exists():
-        print("Data found with arxiv_id =", arxiv_id)
-        pickledata=PickledData.objects.filter(arxiv_id=arxiv_id)[0]
-    else:
-        print("No data found with arxiv_id =", arxiv_id)
-        pickledata=''
-
-    return pickledata
-
+def has_paper_text(arxiv_id):
+    """Whether the paper was already read (text stored, or an index from before PaperText)."""
+    from .models import PaperText
+    return (PaperText.objects.filter(arxiv_id=arxiv_id).exists()
+            or PickledData.objects.filter(arxiv_id=arxiv_id).exists())
 
 
 async def read_paper(arxiv_id, pdf_url):
@@ -459,269 +384,14 @@ async def read_paper(arxiv_id, pdf_url):
     return text, 'pdf'
 
 async def createindex(arxiv_id,book_text,api_key,source='pdf'):
-    #keep the text that was read: the assistant answers from it (see paper_source.py)
+    """Keep the text that was read: the assistant answers from it (see paper_source.py).
+
+    Closest papers come from one embedding of the title and abstract (similar.py),
+    so no per-chunk FAISS index is built any more.
+    """
     from .paper_source import store_text
     await sync_to_async(store_text)(arxiv_id, book_text, source)
-
-    text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=800, chunk_overlap=200)#limit at 8096 tokens
-    texts = text_splitter.split_text(book_text)
-
-    '''
-    text_splitter = CharacterTextSplitter(
-    separator = "\n",
-    chunk_size = 1000,
-    chunk_overlap  = 200,
-    length_function = len,
-    )
-    texts = text_splitter.split_text(book_text)
-    '''
-    print('tttettxtxtxtxtxtxtxtttzetet',texts)
-
-    regex = r'<latexit.*?</latexit>'
-    texts = [re.sub(regex, '', text) for text in texts]
-    print('tttettxtxtxtxtxtxtxtttzetet222',texts)
-
-    embeddings = OpenAIEmbeddings(openai_api_key=api_key)#text-embedding-ada-002 used in background
-
-    new_docsearch=embeddings
-
-    #docsearch = FAISS.from_texts(texts, new_docsearch,metadatas=[{"source": str(i)} for i in range(len(texts))])
-
-    metadatas = [
-        {"arxiv_id":arxiv_id, "source": f"from {texts[i][0:30]} --- to --- {texts[i][len(texts[i])-30:-1]}"}
-        for i in range(len(texts))
-    ]
-
-    # Print the metadata
-    #for metadata in metadatas:
-    #    print('met',metadata)
-
-    #embeds every chunk through the OpenAI API: run in a thread so the event loop keeps serving pages
-    docsearch = await asyncio.to_thread(FAISS.from_texts, texts, new_docsearch, metadatas=metadatas)
-
-
-
-    #input('jkll')
-    #docsearch = Chroma.from_texts(texts, embeddings)
-    #tu=FAISS.save_local(docsearch,"savedocsearch")
-
-    print('docsearchhhhhhhhhhhhhhh index',docsearch.index)
-    print('docsearchhhhhhhhhhhhhhh doc',docsearch.docstore)
-    print('docsearchhhhhhhhhhhhhhh id',docsearch.index_to_docstore_id)
-    # save index separately since it is not picklable
-    faiss = dependable_faiss_import()
-    # serialize the index to a byte buffer
-    #buffer = bytearray()
-    #faiss.write_index(docsearch.index, buffer)
-    chunk = faiss.serialize_index(docsearch.index)
-    buffer_pickle = pickle.dumps(chunk)
-
-    # save docstore and index_to_docstore_id
-    docstore_pickle = pickle.dumps(docsearch.docstore)
-    index_to_docstore_id_pickle = pickle.dumps(docsearch.index_to_docstore_id)
-
-    # update or create a PickledData object with the given arxiv_id
-    c = asyncio.create_task(sync_to_async(storepickle)(arxiv_id,docstore_pickle,index_to_docstore_id_pickle,buffer_pickle))
-    created = await c
-
-    print('ok created',created)
-    return created
-
-async def findclosestpapers(arxiv_id,language,k,api_key,but=False):
-    print('findclosestpapers')
-    message={}
-    arxiv_group_name="ar_%s" % arxiv_id
-
-    li = get_language_info(language)
-    language2 = li['name']
-    print('language2',language2)
-
-    print('arxiv_id',arxiv_id)
-    c = asyncio.create_task(sync_to_async(getstorepickle)(arxiv_id))
-    getstoredpickle = await c
-    print('here')
-
-    cat=''
-    c = asyncio.create_task(sync_to_async(getpaper)(arxiv_id))
-    mainpaper = await c
-    cat = mainpaper.category
-    print('cat',cat)
-
-    if but==True:
-        message["progress"] = 35
-        if language == 'fr':
-            message["loading_message"] = "Comparaison en cours..."
-        else:
-            message["loading_message"] = "Comparison in progress..."
-        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-        await c
-        #await asyncio.sleep(10)
-
-
-    if getstoredpickle != '':
-        # deserialize the index from a byte buffer
-        #index_buffer = faiss.read_index(storedpickle.buffer)
-        faiss = dependable_faiss_import()
-
-        index_buffer = faiss.deserialize_index(pickle.loads(getstoredpickle.buffer))   # identical to index
-
-        docstore_pickle=pickle.loads(getstoredpickle.docstore_pickle)
-        index_to_docstore_id_pickle=pickle.loads(getstoredpickle.index_to_docstore_id_pickle)
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
-
-        docsearch = FAISS(embeddings.embed_query, index_buffer, docstore_pickle, index_to_docstore_id_pickle)
-        print('finished')
-
-    #Now run through all embeddings in database
-    c = asyncio.create_task(sync_to_async(getallpapers)(cat))
-    allpapers = await c
-
-    #print('allpapers',allpapers)
-    print('right')
-    db=''
-    async for paper in allpapers:
-        if paper != mainpaper and paper.arxiv_id.split("v")[0] != mainpaper.arxiv_id.split("v")[0]:
-            print('pap',paper)
-            c2 = asyncio.create_task(sync_to_async(getstorepickle)(paper.arxiv_id))
-
-            getstoredpickle2 = await c2
-
-            if getstoredpickle2 != '':
-                # deserialize the index from a byte buffer
-                #index_buffer = faiss.read_index(storedpickle.buffer)
-                #faiss = dependable_faiss_import()
-
-                index_buffer2 = faiss.deserialize_index(pickle.loads(getstoredpickle2.buffer))   # identical to index
-
-                docstore_pickle2=pickle.loads(getstoredpickle2.docstore_pickle)
-                index_to_docstore_id_pickle2=pickle.loads(getstoredpickle2.index_to_docstore_id_pickle)
-
-                docsearch2 = FAISS(embeddings.embed_query, index_buffer2, docstore_pickle2, index_to_docstore_id_pickle2)
-
-                if db == '':
-                    db = docsearch2
-                    #print('db.docstore._dict',db.docstore._dict)
-                else:
-                    db.merge_from(docsearch2)
-                    #print('db.docstore._dict',db.docstore._dict)
-
-    
-    #print('doc',docsearch.index)
-    indices = [k for k in docsearch.index_to_docstore_id.keys()]
-
-    #print('indices',indices)
-
-    if but==True:
-        message["progress"] = 50
-        
-        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-        await c
-        #await asyncio.sleep(5)
-
-    recembeddings = [docsearch.index.reconstruct(int(i)) for i in indices if i != -1]
-    #print('recembeddings',recembeddings)
-    #recembeddings = ','.join(map(str,recembeddings))
-    #print('recembeddings2',recembeddings)
-
-    #print('hhh',docsearch.index.reconstruct(0))
-
-
-    #print('index_to_docstore_id',docsearch.index_to_docstore_id)
-    #docs_and_scores = db.similarity_search_by_vector(docsearch.index.reconstruct(0),4)
-    #docs_and_scores = db.similarity_search_with_score_by_vector(docsearch.index.reconstruct(0),k)
-    
-    ''' this works but a bit lengthy
-    docs_and_scores=[]
-    for emb in recembeddings:
-        resultsimsearch=db.similarity_search_with_score_by_vector(emb,k)
-        docs_and_scores+=resultsimsearch
-    '''
-    import numpy as np
-    print('len(recembeddings)',len(recembeddings))
-    if len(recembeddings)>1:
-        recembeddings=np.mean(recembeddings, axis=0)
-    else:
-        recembeddings=docsearch.index.reconstruct(0)
-
-    '''doesn't work for now
-    import numpy as np
-
-    recembeddings = np.concatenate(recembeddings)
-    print('recembeddings2',recembeddings)
-    '''
-    
-    print('len(recembeddings)2',len(recembeddings))
-
-    docs_and_scores = db.similarity_search_with_score_by_vector(recembeddings,k)
-
-    #print('docs_and_scores',docs_and_scores)
-    array_arxiv_ids=[]
-    array_scores=[]
-
-    if but==True:
-        message["progress"] = 75
-        c=asyncio.create_task(send_message_now(arxiv_group_name,message))
-        await c
-        #await asyncio.sleep(5)
-
-    for document in docs_and_scores:
-        #source_value = document[0].metadata['source']
-        #print('ss',source_value)
-        metadata = document[0].metadata#['arxiv_id']
-        score_value = document[1]
-
-        pattern = r'v(\d+)$'
-
-        aid = metadata.get('arxiv_id')
-        if aid is not None:
-            match = re.search(pattern, aid)
-            print('match',match)
-            if match is None:
-                if aid not in array_arxiv_ids:
-                    print('1',aid)
-                    array_arxiv_ids.append(aid)
-                    array_scores.append(score_value)
-            else:
-                version = int(match.group(1))
-                print('version',version)
-                for existing_aid in array_arxiv_ids:
-                    print('2',existing_aid)
-                    existing_match = re.search(pattern, existing_aid)
-                    print('existing_match',existing_match)
-                    if existing_match is None:
-                        continue
-                    existing_version = int(existing_match.group(1))
-                    print('existing_version',existing_version)
-
-                    if existing_aid.startswith(aid[:-len(match.group())]):# and version <= existing_version:
-                        print('len(match.group()',len(match.group()))
-                        print('aid[:-len(match.group())]',aid[:-len(match.group())])
-                        break
-                else:
-                    if aid not in array_arxiv_ids:
-                        array_arxiv_ids.append(aid)
-                        array_scores.append(score_value)
-        else:
-            print("Arxiv_id is not present in metadata")
-
-        '''
-        aid = metadata.get('arxiv_id')
-        if aid is not None:
-            print(aid)
-            if aid not in array_arxiv_ids:
-                array_arxiv_ids.append(aid)
-                array_scores.append(score_value)
-        else:
-            print("Arxiv_id is not present in metadata")
-        '''
-        print('score',score_value)
-
-    print('array_arxiv_ids',array_arxiv_ids)
-    #docs = docsearch2.similarity_search(query,k=kvalue)
-    #print('docs:',docs)
-    #print('len docs:',len(docs))
-
-    return array_arxiv_ids,array_scores
+    return True
 
 def construct_prompt(documents, question, language, mem,mul=None):
 
@@ -1407,73 +1077,6 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
         #final_summarized_text=finalise_and_keywordsb
         print('apres final_summarized_text',final_summarized_text)
 
-    else:
-        #llm = OpenAI(temperature=0,openai_api_key=api_key)
-        modelforsummarizing="gpt-3.5-turbo-instruct"#"text-davinci-003"#"text-curie-001"
-        #text-davinci-003#4000 tokens#chunk_size=2000#max_tokens=1000
-        #text-curie-001#2048 tokens
-        #text-babbage-001#2048 tokens
-        #text-ada-001#2048 tokens
-        llm = OpenAI(model_name=modelforsummarizing,max_tokens=1000,best_of=1,n=1,temperature=0.3,openai_api_key=api_key)
-        #best_of=2,streaming=True
-        li = get_language_info(language)
-        language2 = li['name']
-        print('language2',language2)
-        #from transformers import GPT2TokenizerFast
-        #tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
-
-        text_splitter = CharacterTextSplitter.from_tiktoken_encoder(separator = "\n\n", chunk_size=2000, chunk_overlap=0)
-        texts = text_splitter.split_text(book_text)
-
-        for text in texts:
-            print('text:------------------',text)
-
-        '''
-        text_splitter = CharacterTextSplitter(
-        separator = "\n",
-        chunk_size = 1000,
-        chunk_overlap  = 10,
-        length_function = len,
-        )
-        texts = text_splitter.split_text(book_text)
-        for text in texts:
-            print('text:------------------',text)
-        '''
-        print('tttettxtxtxtxtxtxtxtttzetet',texts)
-        #docs = [Document(page_content=t) for t in texts[:3]]
-        docs = [Document(page_content=t) for t in texts]
-
-        print('docs---------------',texts[:3])
-
-        prompt_template = """Create a long detailed summary of the following text:
-        {text}
-
-        LONG DETAILED SUMMARY:
-
-        """
-
-        if language != 'en':
-            prompt_template += """TRANSLATE THE ANSWER IN """+language2
-
-        print('prompt_template',prompt_template)
-
-        PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
-        #chain = load_summarize_chain(llm, chain_type="stuff", prompt=PROMPT)
-        chain = load_summarize_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, map_prompt=PROMPT, combine_prompt=PROMPT)
-
-        with get_openai_callback() as cb:
-
-            res=chain({"input_documents": docs}, return_only_outputs=True)
-            nbtokensused=cb.total_tokens
-
-        print('nbtokensused',nbtokensused)
-        print('openai cost',nbtokensused*openaipricing(modelforsummarizing))
-
-        #chain.run(docs)
-        print('res',res)
-        #input("Press Enter to continueb...")
-
-        final_summarized_text = res['output_text']
 
     return final_summarized_text
 

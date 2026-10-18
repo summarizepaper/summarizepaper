@@ -11,7 +11,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts
+from summarizer import access, accounts, similar
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -577,7 +577,7 @@ def tree(request, arxiv_id):
         scores=[]
         max_score=0
         if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-            relpapers = PaperScore.objects.filter(from_paper=paper,active=True)
+            relpapers = PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')
             relpapersData = []
             import numpy as np
             import random
@@ -634,11 +634,10 @@ def tree(request, arxiv_id):
                     if i==10000:
                         break
 
-                print('x,y,score',x,y,(0.5-relpaper.score)*200,distance,relpaper.score)
                 relpapersData.append({
                     'arxiv_id': relpaper.to_paper.arxiv_id,
                     'title': relpaper.to_paper.title,
-                    'score': (0.5-relpaper.score)*200,
+                    'score': 100 * (1 - relpaper.score),
                     'lang':lang,
                     'distance':distance,
                     'x': x,
@@ -674,9 +673,7 @@ def tree(request, arxiv_id):
             #for rel in relpapers:
             #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
             for pap in relpapers:
-                newscore = (0.5-pap.score)*200
-                newscore = "{:.1f}".format(newscore)
-                scores.append(newscore)
+                scores.append(similar.percent(pap.score))
             stuff_for_frontend.update({
                 'relpapers':relpapers,
                 'max_score':str(max_score*10),
@@ -1146,14 +1143,12 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             max_score=0
             MAX_REL_PAPERS=7
             if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-                relpapers = PaperScore.objects.filter(from_paper=paper,active=True)[:MAX_REL_PAPERS]
+                relpapers = PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')[:MAX_REL_PAPERS]
                 max_score = min(rel.score for rel in relpapers)
                 #for rel in relpapers:
                 #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
                 for pap in relpapers:
-                    newscore = (0.5-pap.score)*200
-                    newscore = "{:.1f}".format(newscore)
-                    scores.append(newscore)
+                    scores.append(similar.percent(pap.score))
 
             stuff_for_frontend.update({
                 'paper':paper,

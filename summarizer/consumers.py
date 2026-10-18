@@ -3,7 +3,7 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, keypoints
+from summarizer import access, assistant, keypoints, similar
 import logging
 
 logger = logging.getLogger(__name__)
@@ -70,10 +70,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
         # Here you can put the code to create embeddings for the given paper ID
         # First check if embeddings already there
 
-        c = asyncio.create_task(sync_to_async(utils.getstorepickle)(paper_id))
-        pickledata = await c
-
-        if pickledata=='':
+        if not await sync_to_async(utils.has_paper_text)(paper_id):
 
             print(f"Creating embeddings for paper {paper_id}...")
             #time.sleep(1)
@@ -381,11 +378,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             await c
 
 
-            c = asyncio.create_task(sync_to_async(utils.getstorepickle)(arxiv_id))
-            pickledata = await c
-
             #print('dattaaaaaaaaaaaa',data)
-            if pickledata=='':
+            if not await sync_to_async(utils.has_paper_text)(arxiv_id):
                 if public==1:
                     book_text2=data+'    '+full_text
                 else:
@@ -627,13 +621,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await c
 
         print('clossseeee')
-        c=asyncio.create_task(utils.findclosestpapers(v,l,15,settings.OPENAI_KEY,but=True))
-        closest_papers = await c
-
-        print('closest_papers',closest_papers)
-        #store results in db
-        c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
-        storeclosest = await c
+        message["progress"] = 50
+        await self.send_message_now(message)
+        await asyncio.to_thread(similar.find_and_store, v)
 
         #await asyncio.sleep(10.)
         
@@ -688,7 +678,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         if l == 'fr':
             message["loading_message"] = "Chargement des informations du papier arXiv..."
         else:
-            message["loading_message"] = "Loading the arXiv paper informartion..."
+            message["loading_message"] = "Loading the arXiv paper information..."
 
         c=asyncio.create_task(self.send_message_now(message))
         await c
@@ -886,13 +876,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
-        c=asyncio.create_task(utils.findclosestpapers(v,l,15,settings.OPENAI_KEY))
-        closest_papers = await c
-
-        #print('closest_papers',closest_papers)
-        #store results in db
-        c = asyncio.create_task(sync_to_async(utils.storeclosest)(v,closest_papers))
-        storeclosest = await c
+        await asyncio.to_thread(similar.find_and_store, v)
 
         message["progress"] = 100
         if l == 'fr':

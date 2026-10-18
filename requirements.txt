@@ -18,7 +18,6 @@ psycopg[binary,pool]==3.3.6
 tiktoken==0.5.2
 langchain==0.0.124
 openai==0.27.0
-faiss-cpu==1.15.1
 fpdf2==2.8.9
 pylatexenc==2.11
 pdfkit==1.0.0

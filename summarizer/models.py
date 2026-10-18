@@ -294,3 +294,15 @@ class PaperText(models.Model):
 
     def __str__(self):
         return '%s (%s)' % (self.arxiv_id, self.source)
+
+
+class PaperEmbedding(models.Model):
+    """One vector per paper, from its title and abstract (see similar.py)."""
+    arxiv_id = models.CharField(max_length=40, unique=True)
+    category = models.CharField(max_length=40, blank=True, db_index=True)
+    model = models.CharField(max_length=60)
+    vector = models.BinaryField()
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.model)

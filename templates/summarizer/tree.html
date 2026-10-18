@@ -227,7 +227,7 @@
     </form>
     <div id="popover2">
       <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
-      <p>{% trans 'By clicking on the button above, our algorithm will scan all papers in our database to find the closest based on the contents of the full papers and not just on metadata. Please note that it only works for papers that we have generated summaries for and you can rerun it from time to time to get a more accurate result while our database grows.' %}</p>
+      <p>{% trans 'By clicking on the button above, our algorithm compares the title and abstract of this paper with all the papers of the same arXiv category that we have summarized, and finds the closest ones. You can rerun it from time to time: the results improve as our database grows.' %}</p>
     </div>
   </div>
   {% else %}
