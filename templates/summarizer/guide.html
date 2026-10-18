@@ -13,30 +13,34 @@
 {% endblock %}
 
 {% block content %}
-<article class="page prose">
+<article class="page prose guide">
   <header class="page-header">
-    <p class="muted"><a href="/{{ LANGUAGE_CODE }}/guides/">{% trans 'Guides' %}</a></p>
+    <p class="crumb"><a href="/{{ LANGUAGE_CODE }}/guides/">{% trans 'Guides' %}</a></p>
     <h1>{{ guide.title }}</h1>
-    <p class="lead"><small>
-      {% trans 'By' %} <a href="/{{ LANGUAGE_CODE }}/author/quentin-kral/">Quentin Kral</a>
-      · {% trans 'Updated' %} <time datetime="{{ guide.updated|date:'Y-m-d' }}">{{ guide.updated|date:'Y-m-d' }}</time>
-      {% if guide.draft %}· <strong>{% trans 'Draft' %}</strong>{% endif %}
-    </small></p>
+    <p class="byline">
+      <span>{% trans 'By' %} <a href="/{{ LANGUAGE_CODE }}/author/quentin-kral/">Quentin Kral</a></span>
+      <span>{% trans 'Updated' %} <time datetime="{{ guide.updated|date:'Y-m-d' }}">{{ guide.updated|date:'j F Y' }}</time></span>
+      {% if guide.draft %}<span class="badge-draft">{% trans 'Draft' %}</span>{% endif %}
+    </p>
   </header>
 
   {{ guide.html|safe }}
 
   {% if guide.faq %}
   <h2>{% trans 'FAQ' %}</h2>
+  <div class="accordion">
   {% for item in guide.faq %}
-    <h3>{{ item.q }}</h3>
-    <p>{{ item.a }}</p>
+    <details{% if forloop.first %} open{% endif %}>
+      <summary>{{ item.q }}</summary>
+      <div class="answer">{{ item.a }}</div>
+    </details>
   {% endfor %}
+  </div>
   {% endif %}
 
   {% if guide.sources %}
   <h2>{% trans 'Sources' %}</h2>
-  <ul>
+  <ul class="sources">
     {% for source in guide.sources %}<li><a href="{{ source.url }}">{{ source.label }}</a></li>
     {% endfor %}
   </ul>

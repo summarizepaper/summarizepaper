@@ -1,10 +1,10 @@
 # Brief de relecture : Best AI tools to summarize arXiv papers (2026)
 
-- Fichier : `content/guides/en/best-ai-tools-to-summarize-arxiv-papers.md` (`draft: true`)
+- Fichier : `content/guides/en/best-ai-tools-to-summarize-arxiv-papers.md` (publié)
 - URL après publication : https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/
 - Famille : BOFU listicle → `comparison-page`. Cluster : Outils de résumé (cette page est le hub).
 - Requête visée : « best AI tool to summarize research papers », « summarize arXiv paper AI ».
-- Pour publier : relire, traiter les points ci-dessous, retirer `draft: true`, déployer.
+- Publié le 2026-10-18 à la demande du membre, avant traitement des points ci-dessous : les traiter à la prochaine mise à jour.
 
 ## Vérifié le 2026-10-18
 

@@ -2,7 +2,6 @@
 title: "Best AI tools to summarize arXiv papers (2026)"
 description: "Nine AI tools to summarize arXiv papers compared on what they do best, free plans and prices, with a verdict for researchers who read arXiv every week."
 date: 2026-10-18
-draft: true
 product: true
 faq:
   - q: "What is the best free AI tool to summarize an arXiv paper?"
@@ -32,14 +31,18 @@ sources:
     url: "https://www.summarizepaper.com/en/premium/"
 ---
 
-**Key takeaways**
+<div class="takeaways" markdown="1">
+
+Key takeaways
 
 - **To triage one arXiv paper fast**, use a tool that works from the arXiv ID: [SummarizePaper](https://www.summarizepaper.com/en/) (a full summary page, in English or French) or [alphaXiv](https://www.alphaxiv.org/) (discussion and chat on top of the paper). Both work without uploading anything.
 - **For questions across your own set of papers**, NotebookLM answers only from the sources you add, with citations.
 - **For a systematic literature review**, Elicit and SciSpace search and extract across millions of papers; they are overkill for one paper.
 - **No AI summary replaces the paper.** Use summaries to decide what to read, then check claims at the source.
 
-Disclosure: this guide is written by the creator of SummarizePaper, one of the tools compared. Prices were checked on each tool's own site on 18 October 2026 where the site shows them.
+</div>
+
+<p class="note">Disclosure: this guide is written by the creator of SummarizePaper, one of the tools compared. Prices were checked on each tool's own site on 18 October 2026 where the site shows them.</p>
 
 ## Which tool should you pick?
 
@@ -57,7 +60,7 @@ The right tool depends on the job, not on a ranking:
 
 ## Comparison table
 
-| Tool | Best for | Works from an arXiv ID | Free plan | Paid plans |
+| Tool | Best for | From an arXiv ID | Free plan | Paid plans |
 |---|---|---|---|---|
 | SummarizePaper | Full summary page per arXiv paper, English or French | Yes | Unlimited reading, 10 new summaries a day | Premium €7/month |
 | alphaXiv | Discussion, AI chat and overviews on arXiv papers | Yes | Sign up to use | No pricing listed |
@@ -131,4 +134,8 @@ Pick another tool if you need to summarize PDFs that are not on arXiv, if you ru
 2. Check one number from the summary against the paper's results section.
 3. Look at the limitations or caveats the authors state; summaries tend to drop them.
 
-[Look up an arXiv paper on SummarizePaper](https://www.summarizepaper.com/en/) or [get the daily digest](https://www.summarizepaper.com/en/digest/).
+<div class="cta-box">
+<p>Understand your next arXiv paper in a minute.</p>
+<a class="btn btn-lg" href="https://www.summarizepaper.com/en/">Look up an arXiv paper</a>
+<a class="btn btn-lg btn-ghost" href="https://www.summarizepaper.com/en/digest/">Get the daily digest</a>
+</div>

@@ -52,7 +52,9 @@ def _parse(path, mtime):
     if text.startswith('---'):
         _, front, text = text.split('---', 2)
         meta = yaml.safe_load(front) or {}
-    meta['html'] = markdown.markdown(text, extensions=['extra', 'sane_lists', 'toc'])
+    html = markdown.markdown(text, extensions=['extra', 'sane_lists', 'toc'])
+    # a wrapper lets wide tables scroll on phones instead of widening the page
+    meta['html'] = html.replace('<table>', '<div class="table-wrap"><table>').replace('</table>', '</table></div>')
     return meta
 
 
