@@ -2,7 +2,6 @@
 title: "Scholarcy alternatives for summarizing research papers (2026)"
 description: "Seven Scholarcy alternatives compared: which to pick for arXiv papers, any PDF, literature reviews or questions across your own papers, with free plans."
 date: 2026-10-18
-draft: true
 product: true
 faq:
   - q: "Is there a free alternative to Scholarcy?"
@@ -72,6 +71,8 @@ Key takeaways
 - **Better than Scholarcy for:** seeing what other researchers say about a paper.
 - **Worse for:** papers outside arXiv.
 
+In detail: [alphaXiv vs SummarizePaper](https://www.summarizepaper.com/en/guides/alphaxiv-vs-summarizepaper/).
+
 ### Elicit
 
 [Elicit](https://elicit.com/) searches more than 138 million papers and extracts findings into tables. The free Basic plan includes unlimited summaries and chat with papers; Pro costs $49 per month.
@@ -92,6 +93,8 @@ Google's [NotebookLM](https://notebooklm.google/) answers only from the sources 
 
 - **Better than Scholarcy for:** any PDF, quick questions.
 - **Worse for:** a structured summary you can keep; the answer lives in a chat.
+
+In detail: [ChatPDF vs SummarizePaper](https://www.summarizepaper.com/en/guides/chatpdf-vs-summarizepaper/).
 
 ### SciSummary
 

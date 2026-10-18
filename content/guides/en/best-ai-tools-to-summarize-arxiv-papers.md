@@ -90,6 +90,8 @@ The right tool depends on the job, not on a ranking:
 - **Limits:** the overview is a starting point rather than a structured summary with lay version and BibTeX.
 - **Price:** no paid plan listed on its site in October 2026.
 
+In detail: [alphaXiv vs SummarizePaper](https://www.summarizepaper.com/en/guides/alphaxiv-vs-summarizepaper/).
+
 ### NotebookLM
 
 Google's [NotebookLM](https://notebooklm.google/) answers questions only from the sources you add to a notebook, and cites them. The free plan allows 50 sources per notebook and 100 notebooks; paid Google plans raise these limits.
@@ -112,6 +114,8 @@ Google's [NotebookLM](https://notebooklm.google/) answers questions only from th
 
 [Scholarcy](https://www.scholarcy.com/) turns articles into flashcard-style summaries with background, methods and findings. Its free summarizer is limited to 10 summaries. The monthly plan, €8.99 per month after a one-week trial, adds unlimited summaries, enhanced summaries, flashcard collections, a literature matrix to compare papers and one-click bibliographies.
 
+Looking elsewhere? See [Scholarcy alternatives](https://www.summarizepaper.com/en/guides/scholarcy-alternatives/).
+
 ### SciSummary
 
 [SciSummary](https://scisummary.com/) summarizes papers you upload and analyzes their figures. It offers a 7-day free trial, then a Pro plan at $48 per year.
@@ -126,7 +130,7 @@ General assistants summarize any PDF you upload and answer follow-up questions w
 
 ## Who SummarizePaper is not for
 
-Pick another tool if you need to summarize PDFs that are not on arXiv, if you run a systematic review over hundreds of papers, or if you want a discussion with other readers. SummarizePaper is built for one job: understanding arXiv papers quickly, in English or French, and following new ones in your field.
+Pick another tool if you need to summarize PDFs that are not on arXiv (see [ChatPDF vs SummarizePaper](https://www.summarizepaper.com/en/guides/chatpdf-vs-summarizepaper/)), if you run a systematic review over hundreds of papers, or if you want a discussion with other readers. SummarizePaper is built for one job: understanding arXiv papers quickly, in English or French, and following new ones in your field.
 
 ## How to check an AI summary in two minutes
 

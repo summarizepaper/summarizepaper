@@ -2,7 +2,6 @@
 title: "ChatPDF vs SummarizePaper for research papers (2026)"
 description: "ChatPDF chats with any PDF; SummarizePaper writes a full summary page for each arXiv paper. Which to use for research papers, with free limits compared."
 date: 2026-10-18
-draft: true
 product: true
 faq:
   - q: "Is ChatPDF free?"
@@ -77,7 +76,7 @@ Key takeaways
 
 If most of what you read is not on arXiv, ChatPDF or another PDF tool will serve you better: SummarizePaper cannot read files you upload.
 
-For other options, see [Best AI tools to summarize arXiv papers](https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/).
+For other options, see [Best AI tools to summarize arXiv papers](https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/). If you are leaving Scholarcy, see [Scholarcy alternatives](https://www.summarizepaper.com/en/guides/scholarcy-alternatives/).
 
 <div class="cta-box">
 <p>Reading an arXiv paper? Skip the upload.</p>

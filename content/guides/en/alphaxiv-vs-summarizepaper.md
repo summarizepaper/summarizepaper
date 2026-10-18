@@ -2,7 +2,6 @@
 title: "alphaXiv vs SummarizePaper: which to use for arXiv papers (2026)"
 description: "alphaXiv and SummarizePaper both work from an arXiv ID. What each does best, side by side, and when to use one, the other or both."
 date: 2026-10-18
-draft: true
 product: true
 faq:
   - q: "Is alphaXiv free?"
@@ -79,7 +78,7 @@ Key takeaways
 
 If what you value is the conversation around a paper, or a social feed of trending work, alphaXiv is the better home. SummarizePaper has no comments and no social features: it is built for reading and understanding papers fast.
 
-For a wider comparison, including NotebookLM, Elicit and SciSpace, see [Best AI tools to summarize arXiv papers](https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/).
+For a wider comparison, including NotebookLM, Elicit and SciSpace, see [Best AI tools to summarize arXiv papers](https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/). If you are leaving Scholarcy, see [Scholarcy alternatives](https://www.summarizepaper.com/en/guides/scholarcy-alternatives/).
 
 <div class="cta-box">
 <p>Try it on the paper you are reading now.</p>
