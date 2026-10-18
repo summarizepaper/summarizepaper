@@ -10,7 +10,7 @@ import logging
 import re
 import secrets
 import time
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 import requests
 
@@ -209,6 +209,11 @@ def _google_redirect_uri(request):
 def google_start(request):
     if not auth_context()['google_login']:
         return redirect('login')
+    # The callback lands on SITE_URL's host: start there, or the session holding the
+    # state is on another host (summarizepaper.com vs www.) and the callback can't see it.
+    site = settings.SITE_URL.rstrip('/')
+    if site and request.get_host() != urlsplit(site).netloc:
+        return redirect(site + request.get_full_path())
     state = secrets.token_urlsafe(24)
     request.session[GOOGLE_SESSION_KEY] = {
         'state': state, 'lang': get_language(),
