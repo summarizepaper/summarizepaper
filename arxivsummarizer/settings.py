@@ -241,7 +241,7 @@ else:
 if os.environ.get("REDISCLOUD_URL"):
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'BACKEND': 'summarizer.cache.SharedPoolRedisCache',
             'LOCATION': os.environ["REDISCLOUD_URL"],
             'TIMEOUT': 60 * 10,
         }
