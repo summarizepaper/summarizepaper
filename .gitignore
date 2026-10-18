@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# macOS / local data
+.DS_Store
+dump.rdb
