@@ -18,6 +18,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
+from . import mailcheck
 from .models import DigestDelivery, DigestItem, DigestSubscription
 from .utils import MODEL_FREE, chat_params
 
@@ -228,7 +229,8 @@ def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None
     if only_user:
         subscriptions = list(subscriptions.filter(user__username=only_user))
     else:
-        subscriptions = [s for s in subscriptions if s.is_due(now)]
+        suppressed = mailcheck.suppressed()
+        subscriptions = [s for s in subscriptions if s.is_due(now) and s.user.email.strip().lower() not in suppressed]
         # longest-waiting first, and no more than the mail provider allows per hour
         subscriptions.sort(key=lambda s: s.last_sent or s.created)
         if len(subscriptions) > MAX_EMAILS_PER_RUN:

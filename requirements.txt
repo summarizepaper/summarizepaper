@@ -27,3 +27,4 @@ stripe==11.6.0
 sentry-sdk==2.72.0
 Markdown==3.8.2
 PyYAML==6.0.3
+dnspython==2.9.0

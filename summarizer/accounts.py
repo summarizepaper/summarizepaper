@@ -28,7 +28,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import translation
 from django.utils.translation import get_language
 
-from . import access
+from . import access, mailcheck
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +126,10 @@ def _safe_next(request, next_url):
 
 def send_login_link(request, user, next_url=''):
     lang = get_language()
+    reason = mailcheck.undeliverable_reason(user.email)
+    if reason:
+        logger.info('Login link to user %s not sent: %s', user.pk, reason)
+        return False
     link = '%s%s' % (_base_url(request), reverse('login_link', args=[make_link_token(user)]))
     if next_url:
         link += '?next=' + next_url

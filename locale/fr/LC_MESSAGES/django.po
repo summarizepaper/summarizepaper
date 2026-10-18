@@ -2731,3 +2731,6 @@ msgid "%(minutes)s min read"
 msgid_plural "%(minutes)s min read"
 msgstr[0] "%(minutes)s min de lecture"
 msgstr[1] "%(minutes)s min de lecture"
+
+msgid "This address cannot receive our emails. Please check it or use another one."
+msgstr "Cette adresse ne peut pas recevoir nos e-mails. Vérifiez-la ou utilisez-en une autre."

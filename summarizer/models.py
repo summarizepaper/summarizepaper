@@ -318,3 +318,13 @@ class ReactivationEmail(models.Model):
 
     def __str__(self):
         return '%s (%s)' % (self.email, self.sent)
+
+
+class SuppressedEmail(models.Model):
+    """Address we never write to again: hard bounce or complaint (see mailcheck.py)."""
+    email = models.EmailField(unique=True)
+    reason = models.CharField(max_length=200, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.email, self.reason)

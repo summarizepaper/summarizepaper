@@ -11,7 +11,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, digest, similar
+from summarizer import access, accounts, digest, mailcheck, similar
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -173,6 +173,9 @@ class RegisterView(View):
             if User.objects.filter(email__iexact=email).exists():
                 context['email_taken'] = email
                 return render(request, 'register.html', context)
+            if mailcheck.undeliverable_reason(email):
+                form.add_error('email', _('This address cannot receive our emails. Please check it or use another one.'))
+                return render(request, 'register.html', context)
 
             password1 = form.cleaned_data.get('password1')
             user = User.objects.create_user(username=username, email=email, password=password1)
@@ -191,8 +194,16 @@ def logout_view(request):
     return redirect('login')
 
 def search_results(request):
-    query = request.GET.get('q')
+    query = (request.GET.get('q') or '').strip()
     page_num = request.GET.get('page', 1)
+    try:
+        page_num = int(page_num)
+    except (TypeError, ValueError):
+        page_num = 1
+
+    if not query:
+        # arXiv answers 400 to an empty search_query: show the empty search page instead.
+        return render(request, 'summarizer/search_results.html', {'query': '', 'search': [], 'page_obj': None})
 
     # perform search and pagination logic here
     search_results = []
@@ -302,12 +313,16 @@ def search_results(request):
     url = urllib.parse.quote(url, safe=':/=&?+')
     print('url::2',url)
 
-    data = urllib.request.urlopen(url).read().decode('utf-8')
-    print('data',data)
+    try:
+        data = urllib.request.urlopen(url, timeout=20).read().decode('utf-8')
+        root = ElementTree.fromstring(data)
+        entries = root.findall("ns0:entry",ns)
+    except (urllib.error.URLError, ElementTree.ParseError, TimeoutError) as e:
+        # Malformed query (arXiv 400) or arXiv unavailable: no results rather than a 500.
+        print('arXiv search failed', query, e)
+        entries = []
 
-    root = ElementTree.fromstring(data)
-
-    for entry in root.findall("ns0:entry",ns):
+    for entry in entries:
         if entry.find("ns0:title",ns) is not None:
             authors = []
             affiliation = []
@@ -367,7 +382,7 @@ def search_results(request):
     context = {'query': query, 'search': search_results,'page_obj': page_obj}
 
     print('page_num',page_num)
-    if int(page_num)==1:
+    if page_num==1:
         if request.user.is_authenticated:
             #if User.objects.filter(username=user).exists():
             userinst = request.user#User.objects.get(username=user)

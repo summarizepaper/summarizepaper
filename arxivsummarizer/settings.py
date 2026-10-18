@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import sys
 from urllib.parse import urlparse
 import dj_database_url
 
@@ -32,6 +33,8 @@ SECRETSG = os.getenv('SECRETSG')
 SECRETCMTA = os.getenv('SECRETCMTA')
 
 DEFAULT_FROM_EMAIL = 'contact@summarizepaper.com'
+# MX lookups before emailing an address (summarizer/mailcheck.py); tests turn them off
+MAILCHECK_DNS = sys.argv[1:2] != ['test']
 
 #Premium subscriptions, see summarizer/billing.py
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')

@@ -25,7 +25,7 @@ from django.urls import reverse
 from django.utils import translation
 from django.views.decorators.csrf import csrf_exempt
 
-from . import accounts
+from . import accounts, mailcheck
 from .models import ReactivationEmail
 
 logger = logging.getLogger(__name__)
@@ -54,12 +54,16 @@ def candidates():
     """Inactive, never used accounts worth one email, newest signup first, one per address."""
     taken = {e.lower() for e in User.objects.filter(is_active=True).values_list('email', flat=True)}
     already = {e.lower() for e in ReactivationEmail.objects.values_list('email', flat=True)}
+    suppressed = mailcheck.suppressed()
     seen, chosen = set(), []
     for user in User.objects.filter(is_active=False, last_login__isnull=True, date_joined__lt=CUTOFF).exclude(email='').order_by('-date_joined'):
         email = user.email.strip().lower()
         if email in seen or email in taken or email in already or looks_random(user.username, user.email):
             continue
         seen.add(email)
+        # bounces hurt the sender score of every email we send (CloudMailin alert, 2026-10-18)
+        if mailcheck.undeliverable_reason(email, suppressed):
+            continue
         chosen.append(user)
     return chosen
 

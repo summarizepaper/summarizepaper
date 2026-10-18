@@ -1095,3 +1095,53 @@ class AuthorPageTests(TestCase):
         self.assertIn('orcid.org/0000-0001-6527-4684', en.content.decode())
         fr = self.client.get('/fr/author/quentin-kral/')
         self.assertIn('Observatoire de Paris depuis 2018', fr.content.decode())
+
+
+class MailcheckTests(TestCase):
+    def test_reasons(self):
+        from summarizer import mailcheck
+        mailcheck.suppress('Bounced@Example.org', 'bounce')
+        self.assertEqual(mailcheck.undeliverable_reason('bounced@example.org'), 'suppressed')
+        self.assertEqual(mailcheck.undeliverable_reason('not an address'), 'invalid')
+        self.assertEqual(mailcheck.undeliverable_reason('kebagiy835@ixunbo.com'), 'disposable')
+        self.assertEqual(mailcheck.undeliverable_reason('o.k.or.ol.a.d.ed.ep21@gmail.com'), 'gmail dots')
+        self.assertEqual(mailcheck.undeliverable_reason('jane.m.doe@gmail.com'), '')
+        with override_settings(MAILCHECK_DNS=True), \
+             mock.patch('summarizer.mailcheck.domain_accepts_mail', return_value=False):
+            self.assertEqual(mailcheck.undeliverable_reason('someone@gone.example'), 'no mail server')
+
+    def test_null_mx_and_missing_domain(self):
+        import dns.resolver
+        from summarizer import mailcheck
+        mailcheck.domain_accepts_mail.cache_clear()
+        null_mx = [mock.Mock(exchange='.')]
+        with mock.patch('dns.resolver.Resolver.resolve', return_value=null_mx):
+            self.assertFalse(mailcheck.domain_accepts_mail('nullmx.example'))
+        with mock.patch('dns.resolver.Resolver.resolve', side_effect=dns.resolver.NXDOMAIN):
+            self.assertFalse(mailcheck.domain_accepts_mail('nxdomain.example'))
+        with mock.patch('dns.resolver.Resolver.resolve', return_value=[mock.Mock(exchange='mx.ok.example.')]):
+            self.assertTrue(mailcheck.domain_accepts_mail('ok.example'))
+        mailcheck.domain_accepts_mail.cache_clear()
+
+    def test_suppressed_addresses_get_nothing(self):
+        from summarizer import mailcheck, reactivation
+        user = User.objects.create_user('janedoe', 'jane@example.org', 'x')
+        user.is_active = False
+        user.date_joined = reactivation.CUTOFF - timezone.timedelta(days=30)
+        user.save()
+        self.assertEqual(reactivation.candidates(), [user])
+        mailcheck.suppress('jane@example.org', 'bounce')
+        self.assertEqual(reactivation.candidates(), [])
+        request = RequestFactory().get('/')
+        from summarizer import accounts
+        self.assertFalse(accounts.send_login_link(request, user))
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_signup_refuses_throwaway_address(self):
+        cache.clear()
+        with mock.patch('summarizer.accounts.looks_like_bot', return_value=False):
+            response = self.client.post('/en/register/', {'username': 'quirky', 'email': 'quirky@typingsquirrel.com',
+                                                          'password1': 'a long enough passphrase', 'password2': 'a long enough passphrase'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username='quirky').exists())
+        self.assertEqual(len(mail.outbox), 0)
