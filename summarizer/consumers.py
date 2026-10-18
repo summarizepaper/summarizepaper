@@ -447,7 +447,12 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
                 c=asyncio.create_task(utils.finalise_and_keywords(arxiv_id, language, sum, p, settings.OPENAI_KEY))
-                sum, kw = await c
+                res = await c
+                if 'error_message' in res:
+                    print("Received error message finalise:", res)
+                    sum, kw = 'Error: needs to be re-run', ''
+                else:
+                    sum, kw = res
 
 
 

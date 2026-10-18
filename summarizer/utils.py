@@ -53,8 +53,16 @@ import aiohttp
 #from bs4 import BeautifulSoup
 
 channel_layer = get_channel_layer()
-model="gpt-3.5-turbo"#"text-davinci-003"#"text-davinci-002."
+MODEL_FREE="gpt-6-luna"#was gpt-3.5-turbo / gpt-3.5-turbo-instruct (shut down 2026)
+MODEL_PAID="gpt-6.1-sol"#was gpt-4 (shut down 2026-10-23)
+model=MODEL_FREE
 temp=0.3
+
+def chat_params(model_name, max_tokens):
+    #reasoning models: no temperature/penalties, max_completion_tokens includes reasoning tokens
+    if model_name==MODEL_PAID:
+        return {"max_completion_tokens": max_tokens+2000, "reasoning_effort": "low"}
+    return {"max_completion_tokens": max_tokens, "reasoning_effort": "none"}
 method="fromembeddingsandabstract"#"fromembeddings"#"langchain"#quentin
 
 import pdfkit
@@ -755,16 +763,16 @@ async def chatbot(arxiv_id,language,query,api_key,sum=None,user=None,memory=None
         #llm = OpenAI(temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
         if p:
             print('gpt-4 cb sum')
-            llm = OpenAIChat(model_name="gpt-4",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+            llm = OpenAIChat(model_name=MODEL_PAID,openai_api_key=api_key,**chat_params(MODEL_PAID,800))
         else:
-            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=800,frequency_penalty=0.6, presence_penalty=0.6,openai_api_key=api_key)
+            llm = OpenAIChat(model_name=MODEL_FREE,openai_api_key=api_key,**chat_params(MODEL_FREE,800))
     else:
         if p:
             print('gpt-4 cb')
-            llm = OpenAIChat(model_name="gpt-4",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            llm = OpenAIChat(model_name=MODEL_PAID,openai_api_key=api_key,**chat_params(MODEL_PAID,700))
         else:
             #llm = OpenAI(temperature=0.3,max_tokens=700,openai_api_key=api_key)
-            llm = OpenAIChat(model_name="gpt-3.5-turbo",temperature=0.3,max_tokens=700,openai_api_key=api_key)
+            llm = OpenAIChat(model_name=MODEL_FREE,openai_api_key=api_key,**chat_params(MODEL_FREE,700))
 
     embeddings = OpenAIEmbeddings(openai_api_key=api_key)
 
@@ -1674,7 +1682,7 @@ async def send_message_now(arxiv_group_name,message):
 
 
 async def summarize_book(arxiv_id, language, book_text, p, api_key):
-    endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+    endpoint = "https://api.openai.com/v1/completions"
 
     message={}
     arxiv_group_name="ar_%s" % arxiv_id
@@ -1694,7 +1702,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {api_key}"
             }
-            response = requests.post(endpoint, headers=headers, json={"prompt": prompt, "max_tokens": 400, "temperature": temp, "n":1, "stop":None})
+            response = requests.post(endpoint, headers=headers, json={"model": model, "prompt": prompt, "max_tokens": 400, "temperature": temp, "n":1, "stop":None})
 
             try:
                 print('in try1')
@@ -1940,12 +1948,12 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
     }
 
     if p:
-        model_forced="gpt-4"#=model
+        model_forced=MODEL_PAID#=model
         print('gpt-4 1')
     else:
-        model_forced="gpt-3.5-turbo-instruct"#"text-davinci-003"#=model
+        model_forced=MODEL_FREE#"text-davinci-003"#=model
 
-    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":#force davinci
+    if model_forced in (MODEL_FREE, MODEL_PAID):#force davinci
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         mes = [
@@ -1956,10 +1964,10 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
         print('gpt45')
         
         #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
-        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 800)})
         '''
         async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
+            async with session.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 800)}) as response:
                 try:
                     print('in try2b',response)
                     if response.status != 200:
@@ -1974,13 +1982,13 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
                 response3b = await response.json()
         '''
     else:
-        endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
+        endpoint = "https://api.openai.com/v1/completions"
 
         print('he')
         '''
         async with aiohttp.ClientSession() as session:
             print('hea')
-            async with session.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
+            async with session.post(endpoint, headers=headers3b, json={"model": model_forced, "prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}) as response:
                 print('heb')
                 try:
                     print('in try2b',response)
@@ -1999,8 +2007,8 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
 
         print('he2',response3b)
         '''
-        #response3b = requests.post(endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
-        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try2b',response3b)
@@ -2017,8 +2025,8 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
-    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
-        if model_forced=="gpt-4":
+    if model_forced in (MODEL_FREE, MODEL_PAID):
+        if model_forced==MODEL_PAID:
             print('gpt-4 2')
         #print('icccciiiiiib',response3b["choices"][0]["message"]["content"])
 
@@ -2095,7 +2103,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
     if language != 'en':
         prompt3 += "TRANSLATE THE ANSWER IN "+language2
 
-    if model=="gpt-3.5-turbo" or p:
+    if model in (MODEL_FREE, MODEL_PAID) or p:
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         mes = [
@@ -2104,18 +2112,18 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
         ]
 
         if p:
-            model_take="gpt-4"
+            model_take=MODEL_PAID
             print('gpt-4 3')
         else:
             model_take=model
 
 
         #response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model_take, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model_take, "messages": mes, **chat_params(model_take, 500)})
 
         '''
         async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+            async with session.post(endpoint, headers=headers3, json={"model": model, "messages": mes, **chat_params(model, 500)}) as response:
                 try:
                     print('in try2',response)
                     if response.status != 200:
@@ -2131,12 +2139,12 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
         '''
 
     else:
-        endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
-        #response3 = requests.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        endpoint = "https://api.openai.com/v1/completions"
+        #response3 = requests.post(endpoint, headers=headers3, json={"model": model, "prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
         '''
         async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+            async with session.post(endpoint, headers=headers3, json={"model": model, "prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
                     print('in try2',response)
                     if response.status != 200:
@@ -2151,7 +2159,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
                 response3 = await response.json()
 
         '''
-        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model, "prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try3',response3)
@@ -2168,7 +2176,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
-    if model=="gpt-3.5-turbo" or p:
+    if model in (MODEL_FREE, MODEL_PAID) or p:
         print('icccciiiiii',response3["choices"][0]["message"]["content"])
         key_points = response3["choices"][0]["message"]["content"].rstrip().lstrip().strip().split("\n")
     else:
@@ -2225,7 +2233,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
     }
 
 
-    if model=="gpt-3.5-turbo" or p:
+    if model in (MODEL_FREE, MODEL_PAID) or p:
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         mes = [
@@ -2234,16 +2242,16 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
         ]
 
         if p:
-            model_take="gpt-4"
+            model_take=MODEL_PAID
             print('gpt-4 4')
         else:
             model_take=model
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(model_take, 300)})
 
         '''
         async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+            async with session.post(endpoint, headers=headers4, json={"model": model, "messages": mes, **chat_params(model, 300)}) as response:
                 try:
                     print('in try4',response)
                     if response.status != 200:
@@ -2258,11 +2266,11 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
                 response4 = await response.json()
         '''
     else:
-        endpoint = "https://api.openai.com/v1/engines/"+model+"/completions"
+        endpoint = "https://api.openai.com/v1/completions"
 
         '''
         async with aiohttp.ClientSession() as session:
-            async with session.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
+            async with session.post(endpoint, headers=headers4, json={"model": model, "prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}) as response:
                 try:
                     print('in try4',response)
                     if response.status != 200:
@@ -2275,9 +2283,9 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
                         "error_message": str(e),
                     }
                 response4 = await response.json()
-        #response4 = requests.post(endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
         '''
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model, "prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try4',response4)
@@ -2294,7 +2302,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
 
-    if model=="gpt-3.5-turbo" or p:
+    if model in (MODEL_FREE, MODEL_PAID) or p:
         simple_sum = response4["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
         simple_sum = response4["choices"][0]["text"]#.strip().split("\n")
@@ -2378,12 +2386,12 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     }
 
     if p:
-        model_forced="gpt-4"#=model
+        model_forced=MODEL_PAID#=model
         print('gpt-4 5')
     else:
-        model_forced="gpt-3.5-turbo-instruct"#"text-davinci-003"#=model
+        model_forced=MODEL_FREE#"text-davinci-003"#=model
 
-    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
+    if model_forced in (MODEL_FREE, MODEL_PAID):
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         print('prompt5555555',prompt5)
@@ -2395,15 +2403,15 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
-        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 1500)})
 
         
     else:
-        endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
+        endpoint = "https://api.openai.com/v1/completions"
 
        
-        #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try5',response5)
@@ -2420,7 +2428,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
     print('resp5',response5)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
-    if model_forced=="gpt-3.5-turbo" or model_forced=="gpt-4":
+    if model_forced in (MODEL_FREE, MODEL_PAID):
         blog_article = response5["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
         blog_article = response5["choices"][0]["text"]#.strip().split("\n")
@@ -2454,9 +2462,9 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
         "Authorization": f"Bearer {api_key}"
     }
 
-    model_forced="gpt-3.5-turbo-instruct"#"text-davinci-003"#=model
+    model_forced=MODEL_FREE#"text-davinci-003"#=model
 
-    if model_forced=="gpt-3.5-turbo":
+    if model_forced in (MODEL_FREE, MODEL_PAID):
         endpoint = "https://api.openai.com/v1/chat/completions"
 
         print('prompt5555555',prompt6)
@@ -2468,16 +2476,16 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
-        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "messages": mes, **chat_params(model_forced, 1500)})
 
         
     else:
-        endpoint = "https://api.openai.com/v1/engines/"+model_forced+"/completions"
+        endpoint = "https://api.openai.com/v1/completions"
 
         print('aqui')
-        #response5 = requests.post(endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        #response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        #response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
 
     try:
         print('in try6',response6)
@@ -2495,7 +2503,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
     print('resp6',response6)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
-    if model_forced=="gpt-3.5-turbo":
+    if model_forced in (MODEL_FREE, MODEL_PAID):
         blog_article2 = response6["choices"][0]["message"]["content"]#.strip().split("\n")
     else:
         blog_article2 = response6["choices"][0]["text"]#.strip().split("\n")
