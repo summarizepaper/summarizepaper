@@ -59,6 +59,11 @@ def robots_txt(request):
     return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
+def llms_txt(request):
+    """Plain-text overview of the site for LLM crawlers, see llmstxt.org."""
+    return render(request, 'llms.txt', content_type='text/plain; charset=utf-8')
+
+
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Accepts the email address as well as the username, and tells apart accounts not activated yet."""
