@@ -10,7 +10,7 @@ faq:
   - q: "What is the best Scholarcy alternative for arXiv papers?"
     a: "SummarizePaper, because it works straight from the arXiv ID and publishes the summary as a page you can come back to and share. alphaXiv is the alternative if you also want discussion around the paper."
   - q: "What is the best Scholarcy alternative for a literature review?"
-    a: "Elicit. It searches more than 138 million papers and extracts findings into tables, which Scholarcy's per-paper summaries do not do."
+    a: "Elicit. It searches more than 138 million papers and extracts findings into tables. Scholarcy's paid plan has a literature matrix to compare papers you import, but it does not search the literature for you."
   - q: "Which alternative works with any PDF, not only arXiv?"
     a: "ChatPDF, SciSummary and NotebookLM all work with PDFs you upload. SummarizePaper and alphaXiv only cover arXiv papers."
 sources:
@@ -22,7 +22,7 @@ sources:
     url: "https://scisummary.com/"
   - label: "NotebookLM usage limits, Google support (checked 2026-10-18)"
     url: "https://support.google.com/notebooklm/answer/16213268"
-  - label: "Scholarcy pricing page"
+  - label: "Scholarcy pricing page (checked 2026-10-18)"
     url: "https://www.scholarcy.com/pricing"
 ---
 
@@ -42,7 +42,7 @@ Key takeaways
 
 ## Why look for a Scholarcy alternative?
 
-[Scholarcy](https://www.scholarcy.com/) turns an article into flashcard-style summaries with background, methods and findings. People usually look elsewhere for one of four reasons: the free summarizer stops after 10 summaries, they mostly read arXiv preprints, they need to work across many papers at once, or they want to ask questions rather than read a fixed summary.
+[Scholarcy](https://www.scholarcy.com/) turns an article into flashcard-style summaries with background, methods and findings. The free summarizer stops after 10 summaries, and the monthly plan costs €8.99 per month after a one-week trial; it adds unlimited and enhanced summaries, flashcard collections, a literature matrix and one-click bibliographies. People usually look elsewhere for one of four reasons: the free limit, they mostly read arXiv preprints, they need a tool that finds papers, not only summarizes them, or they want to ask questions rather than read a fixed summary.
 
 ## Scholarcy alternatives at a glance
 
@@ -76,7 +76,7 @@ Key takeaways
 
 [Elicit](https://elicit.com/) searches more than 138 million papers and extracts findings into tables. The free Basic plan includes unlimited summaries and chat with papers; Pro costs $49 per month.
 
-- **Better than Scholarcy for:** systematic reviews and comparing many papers side by side.
+- **Better than Scholarcy for:** systematic reviews, because it finds the papers for you; Scholarcy's literature matrix only compares papers you import.
 - **Worse for:** a quick read of a single paper.
 
 ### NotebookLM
@@ -97,7 +97,7 @@ Google's [NotebookLM](https://notebooklm.google/) answers only from the sources 
 
 [SciSummary](https://scisummary.com/) summarizes uploaded papers and analyzes their figures. After a 7-day trial, the Pro plan costs $48 per year.
 
-- **Better than Scholarcy for:** price if you summarize papers all year.
+- **Better than Scholarcy for:** price if you summarize papers all year ($48 a year against €8.99 a month).
 
 ### SciSpace
 

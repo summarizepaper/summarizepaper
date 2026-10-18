@@ -23,7 +23,7 @@ sources:
     url: "https://support.google.com/notebooklm/answer/16213268"
   - label: "alphaXiv"
     url: "https://www.alphaxiv.org/"
-  - label: "Scholarcy pricing page"
+  - label: "Scholarcy pricing page (checked 2026-10-18)"
     url: "https://www.scholarcy.com/pricing"
   - label: "SciSpace pricing page"
     url: "https://scispace.com/pricing"
@@ -67,7 +67,7 @@ The right tool depends on the job, not on a ranking:
 | NotebookLM (Google) | Q&A across sources you upload | No (upload the PDF) | Yes, 50 sources per notebook | Higher limits with Google's paid AI plans |
 | Elicit | Literature reviews and data extraction | No (search or upload) | Basic plan, unlimited summaries | Pro $49/month |
 | SciSpace | Reading copilot and literature search | No (search or upload) | See its pricing page | See its pricing page |
-| Scholarcy | Flashcards and structured notes | No (upload or link) | 10 summaries | Paid plan with a 1-week trial |
+| Scholarcy | Flashcards and structured notes | No (upload or link) | 10 summaries | €8.99/month, 1-week trial |
 | SciSummary | Summaries of uploaded papers | No (upload) | 7-day trial | Pro $48/year |
 | ChatGPT, Claude | One-off questions on a PDF | No (upload) | Yes, with limits | Monthly subscriptions |
 | Semantic Scholar | One-sentence TLDRs while searching | Yes (search) | Free | None |
@@ -110,7 +110,7 @@ Google's [NotebookLM](https://notebooklm.google/) answers questions only from th
 
 ### Scholarcy
 
-[Scholarcy](https://www.scholarcy.com/) turns articles into flashcard-style summaries with background, methods and findings. Its free summarizer is limited to 10 summaries; the paid plan offers unlimited summaries with a one-week trial.
+[Scholarcy](https://www.scholarcy.com/) turns articles into flashcard-style summaries with background, methods and findings. Its free summarizer is limited to 10 summaries. The monthly plan, €8.99 per month after a one-week trial, adds unlimited summaries, enhanced summaries, flashcard collections, a literature matrix to compare papers and one-click bibliographies.
 
 ### SciSummary
 

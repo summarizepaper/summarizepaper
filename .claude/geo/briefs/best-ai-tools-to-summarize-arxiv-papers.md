@@ -21,7 +21,7 @@
 1. **NotebookLM** : la page d'aide Google appelle désormais le produit « Gemini Notebook ». Vérifier le nom à utiliser et mettre à jour le titre de section si besoin.
 2. **SciSpace** : la page de prix est rendue en JavaScript et n'a pas pu être lue. Les sites tiers donnent Premium à 20 $/mois ou 12 $/mois à l'année, et se contredisent sur l'existence d'un plan gratuit. Le texte renvoie seulement vers la page de prix ; ajouter le prix si tu le vérifies toi-même.
 3. **SciSpace** : « explications de passages surlignés » vient de comparatifs tiers, pas du site officiel.
-4. **Scholarcy** : site inaccessible (403). La limite gratuite de 10 résumés, l'essai d'une semaine et les résumés illimités payants viennent d'un résumé de recherche de la page officielle ; le prix n'y est pas affiché. Les sites tiers donnent 9,99 $/mois.
+4. ~~**Scholarcy**~~ : réglé le 2026-10-18. Page de prix collée par le membre : gratuit limité à 10 résumés ; plan mensuel 8,99 €/mois après 1 semaine d'essai (résumés illimités et enrichis, collections de flashcards, Literature Matrix, bibliographies en un clic). Prix affiché en euros pour un visiteur français : il peut différer en dollars.
 5. **alphaXiv** : commentaires, chat IA sur l'article, articles de blog IA en plusieurs langues et l'astuce `arxiv` → `alphaxiv` viennent du changelog et de fiches tierces (G2, App Store) ; le changelog officiel renvoyait 404 au moment de la vérification. Vérifier que c'est toujours exact et gratuit.
 6. **Semantic Scholar** : les TLDR d'une phrase sont une fonctionnalité connue, pas revérifiée aujourd'hui.
 7. **ChatGPT / Claude** : formulations volontairement générales (« free plans are limited »), sans prix.
