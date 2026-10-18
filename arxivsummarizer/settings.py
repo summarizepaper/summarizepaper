@@ -275,3 +275,14 @@ if 'ON_HEROKU' in os.environ:
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+
+#error alerts: active only when the SENTRY_DSN config var is set
+if os.getenv('SENTRY_DSN'):
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=os.environ['SENTRY_DSN'],
+        environment='production' if 'ON_HEROKU' in os.environ else 'development',
+        send_default_pii=False,
+        traces_sample_rate=0.0,
+    )

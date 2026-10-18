@@ -3,7 +3,7 @@
 {% for item in items %}{{ item.title }}
 {{ item.authors }}
 {{ item.blurb }}
-{% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/
+{% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1
 
 {% endfor %}--
 {% trans 'Change your categories:' %} {{ manage_url }}

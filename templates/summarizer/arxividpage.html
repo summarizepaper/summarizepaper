@@ -1891,4 +1891,15 @@ function switchTab(tabIndex) {
 </script>
 
 
+{% if request.GET.autorun == '1' and not sumpaper.summary and not run and not run2 %}
+<script>
+  // arriving from the daily digest: start the summary as if the visitor clicked Run
+  // (needs JavaScript, so mail scanners that prefetch links do not trigger it)
+  document.addEventListener('DOMContentLoaded', function () {
+    var run = document.querySelector('input[name="run_button"]');
+    if (run) { run.click(); }
+  });
+</script>
+{% endif %}
+
 {% endblock %}

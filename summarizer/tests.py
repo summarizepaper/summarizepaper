@@ -272,7 +272,7 @@ class DigestTests(TestCase):
         self.assertEqual(message.to, ['r@example.com'])
         self.assertIn('Une comète active.', message.body)
         self.assertIn('Strings.', message.body)  # blurb missing from the model answer -> abstract
-        self.assertIn('/fr/arxiv-id/hep-th--9901001v2/', message.alternatives[0][0])
+        self.assertIn('/fr/arxiv-id/hep-th--9901001v2/?autorun=1', message.alternatives[0][0])
         self.assertIn('List-Unsubscribe', message.extra_headers)
         self.assertEqual(DigestDelivery.objects.count(), 2)
         self.assertEqual(DigestItem.objects.filter(lang='fr').count(), 2)
@@ -325,7 +325,7 @@ class DigestTests(TestCase):
 
 
 from summarizer import assistant, paper_source
-from summarizer.models import ArxivPaper, PaperText
+from summarizer.models import ArxivPaper, PaperText, SummaryPaper
 
 
 class FakeStreamResponse:
@@ -528,3 +528,18 @@ class GeneratedTextCleanupTests(TestCase):
         raw = '<h2>A</h2>\n\nComplete paragraph.\n\n<h2>B</h2>\n\nThe target ranking offers a practical starting point'
         html = summarizer_utils.clean_blog_html(raw, truncated=True)
         self.assertTrue(html.endswith('<p>Complete paragraph.</p>'), html)
+
+
+class AutorunTests(TestCase):
+    def setUp(self):
+        self.paper = ArxivPaper.objects.create(arxiv_id='2101.00005v1', title='T', abstract='A',
+                                               license='http://creativecommons.org/licenses/by/4.0/')
+
+    def test_autorun_script_only_without_summary(self):
+        marker = 'arriving from the daily digest'
+        self.assertContains(Client().get('/en/arxiv-id/2101.00005v1/?autorun=1'), marker)
+        self.assertNotContains(Client().get('/en/arxiv-id/2101.00005v1/'), marker)
+        SummaryPaper.objects.create(paper=self.paper, lang='en', summary='Done.')
+        self.assertNotContains(Client().get('/en/arxiv-id/2101.00005v1/?autorun=1'), marker)
+        # a summary in another language does not count
+        self.assertContains(Client().get('/fr/arxiv-id/2101.00005v1/?autorun=1'), marker)
