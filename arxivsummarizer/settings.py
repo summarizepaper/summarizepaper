@@ -201,7 +201,8 @@ if 'ON_HEROKU' in os.environ:
         "default": {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                "hosts": [(BROKER_URL)],
+                #redis-py 8 defaults socket_timeout to 5s = channels_redis blocking read -> TimeoutError / ws 1011
+                "hosts": [{"address": BROKER_URL, "socket_timeout": None, "socket_keepalive": True, "health_check_interval": 30}],
             },
         },
     }
