@@ -704,6 +704,10 @@ class AccountTests(TestCase):
 
 @override_settings(GOOGLE_CLIENT_ID='cid', GOOGLE_CLIENT_SECRET='secret', SITE_URL='https://www.summarizepaper.com')
 class GoogleLoginTests(TestCase):
+    def client_on_site(self):
+        # sign-in starts on SITE_URL's host, as a visitor of www.summarizepaper.com does
+        return Client(HTTP_HOST='www.summarizepaper.com')
+
     def start(self, client, next_url=''):
         from urllib.parse import parse_qs, urlparse
         r = client.get('/fr/login/google/' + ('?next=' + next_url if next_url else ''))
@@ -717,7 +721,7 @@ class GoogleLoginTests(TestCase):
             return client.get('/google/callback/', {'state': state, 'code': 'c'})
 
     def test_new_google_user_gets_an_active_account(self):
-        client = Client()
+        client = self.client_on_site()
         r = self.callback(client, self.start(client), {'email': 'Jane.Doe@gmail.com', 'email_verified': True})
         self.assertContains(r, 'content="0;url=/fr/?activated=True"')
         user = User.objects.get(email='jane.doe@gmail.com')
@@ -727,7 +731,7 @@ class GoogleLoginTests(TestCase):
 
     def test_existing_inactive_account_is_activated_and_next_followed(self):
         old = User.objects.create_user('jane', 'jane@gmail.com', 'pw', is_active=False)
-        client = Client()
+        client = self.client_on_site()
         r = self.callback(client, self.start(client, '/fr/premium/'), {'email': 'jane@gmail.com', 'email_verified': True})
         self.assertContains(r, 'window.location.replace("/fr/premium/")')
         old.refresh_from_db()
@@ -735,7 +739,7 @@ class GoogleLoginTests(TestCase):
         self.assertEqual(User.objects.count(), 1)
 
     def test_bad_state_or_unverified_email_is_refused(self):
-        client = Client()
+        client = self.client_on_site()
         self.start(client)
         self.assertEqual(self.callback(client, 'forged', {'email': 'a@b.c', 'email_verified': True}).status_code, 400)
         r = self.callback(client, self.start(client), {'email': 'a@b.c', 'email_verified': False})
@@ -743,16 +747,20 @@ class GoogleLoginTests(TestCase):
         self.assertFalse(User.objects.exists())
 
     def test_next_cannot_break_out_of_the_script(self):
-        client = Client()
+        client = self.client_on_site()
         r = self.callback(client, self.start(client, '/fr/%3C/script%3E%3Cscript%3Ealert(1)'),
                           {'email': 'jane@gmail.com', 'email_verified': True})
         self.assertNotContains(r, '</script><script>')
 
     def test_username_collision(self):
         User.objects.create_user('jane', 'other@example.org', 'pw')
-        client = Client()
+        client = self.client_on_site()
         self.callback(client, self.start(client), {'email': 'jane@gmail.com', 'email_verified': True})
         self.assertTrue(User.objects.filter(username='jane2', email='jane@gmail.com').exists())
+
+    def test_other_host_is_sent_to_site_url_first(self):
+        r = Client(HTTP_HOST='summarizepaper.com').get('/fr/login/google/?next=/fr/premium/')
+        self.assertEqual(r['Location'], 'https://www.summarizepaper.com/fr/login/google/?next=/fr/premium/')
 
     def test_button_only_when_configured(self):
         self.assertContains(Client().get('/en/login/'), 'Continue with Google')
@@ -917,3 +925,4 @@ class ArxivApiRelayTests(TestCase):
         import requests
         with mock.patch('summarizer.views.requests.get', side_effect=requests.ConnectionError()):
             self.assertEqual(Client().get('/en/arxiv-api/', {'id_list': '2304.01202v1'}).status_code, 502)
+
