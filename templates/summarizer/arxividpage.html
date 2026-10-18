@@ -910,6 +910,9 @@
       <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-quote-right"></i> <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow">{% trans 'Cite this paper (BibTeX)' %}</a></div>
+    </div>
   </div>
 
   <div class="chatbot-container" id="assistant">

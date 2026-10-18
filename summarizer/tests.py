@@ -429,3 +429,19 @@ class ConsumerFailureTests(TransactionTestCase):
         self.assertIn('Something went wrong', last)
         self.assertFalse(cache.get('ar_2101.00009v1'))
         await comm.disconnect()
+
+
+class BibtexTests(TestCase):
+    def test_bibtex_entry(self):
+        from summarizer.models import Author, PaperAuthor
+        import datetime
+        paper = ArxivPaper.objects.create(arxiv_id='2303.11544v1', title='A Constraint on the\n Amount of Hydrogen',
+                                          category='astro-ph.EP', published_arxiv=datetime.date(2023, 3, 21))
+        for i, name in enumerate(['Kazunari Iwasaki', 'Hiroshi Kobayashi']):
+            PaperAuthor.objects.create(paper=paper, author=Author.objects.create(name=name, affiliation=''), author_order=i)
+        body = Client().get('/en/bibtex/2303.11544v1/').content.decode()
+        self.assertIn('@misc{iwasaki2023constraint,', body)
+        self.assertIn('author={Kazunari Iwasaki and Hiroshi Kobayashi},', body)
+        self.assertIn('title={A Constraint on the Amount of Hydrogen},', body)
+        self.assertIn('eprint={2303.11544},', body)
+        self.assertIn('url={https://arxiv.org/abs/2303.11544}', body)

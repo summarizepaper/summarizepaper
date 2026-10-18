@@ -1357,3 +1357,31 @@ def update_cache(request):
     arxiv_group_name = "ar_%s" % arxiv_id
     cache.set(arxiv_group_name, False)
     return HttpResponse("Cache updated")
+
+
+def bibtex(request, arxiv_id):
+    """BibTeX entry of a paper in the format arXiv itself suggests."""
+    paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
+    ref = paper.arxiv_id.replace('--', '/')
+    bare = re.sub(r'v\d+$', '', ref)
+    authors = [a.name for a in paper.authors.all()]
+    year = paper.published_arxiv.year if paper.published_arxiv else ''
+    first_word = next((w for w in re.findall(r'[A-Za-z]+', paper.title or '') if len(w) > 3), 'paper')
+    last_name = re.sub(r'[^A-Za-z]', '', authors[0].split()[-1]) if authors else 'arxiv'
+    lines = [
+        '@misc{%s%s%s,' % (last_name.lower(), year, first_word.lower()),
+        '  title={%s},' % ' '.join((paper.title or '').split()),
+        '  author={%s},' % ' and '.join(authors),
+        '  year={%s},' % year,
+        '  eprint={%s},' % bare,
+        '  archivePrefix={arXiv},',
+    ]
+    if paper.category:
+        lines.append('  primaryClass={%s},' % paper.category)
+    if paper.link_doi and 'doi.org' in paper.link_doi:
+        lines.append('  doi={%s},' % paper.link_doi.split('doi.org/')[-1])
+    lines.append('  url={https://arxiv.org/abs/%s}' % bare)
+    lines.append('}')
+    response = HttpResponse('\n'.join(lines) + '\n', content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = 'inline; filename="%s.bib"' % bare.replace('/', '_')
+    return response
