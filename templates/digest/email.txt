@@ -1,24 +1,27 @@
-{% load i18n %}{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
+{% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
 
 {% for synthesis in syntheses %}{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}
 {% for trend in synthesis.trends %}* {{ trend.title }}. {{ trend.text }}
 {% endfor %}{% if synthesis.notable %}{% trans 'Papers to watch:' %}
-{% for paper in synthesis.notable %}- {{ paper.title }}: {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ paper.arxiv_id }}/?autorun=1
+{% for paper in synthesis.notable %}- {{ paper.title }}: {{ paper.url }}
 {% endfor %}{% endif %}
 {% endfor %}{% if from_authors %}{% trans 'From the authors you follow' %}
 
 {% for item in from_authors %}{{ item.title }}
-{{ item.authors }}
+{{ item.authors }}{% if item.via %} ({% blocktrans with names=item.via %}you follow {{ names }}{% endblocktrans %}){% endif %}
 {{ item.blurb }}
-{% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1
+{% trans 'Read the summary:' %} {{ item.url }}
 
 {% endfor %}{% if items %}{% trans 'In your categories' %}
 
 {% endif %}{% endif %}{% for item in items %}{{ item.title }}
 {{ item.authors }}
 {{ item.blurb }}
-{% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1
+{% trans 'Read the summary:' %} {{ item.url }}
 
-{% endfor %}--
+{% endfor %}{% if teaser is not None %}{% if teaser.title %}{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: {{ title }}. Premium digests open with the trends of the week in your fields.{% endblocktrans %}{% else %}{% trans 'Premium digests rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}{% endif %}
+{% trans 'Discover Premium' %}: {{ premium_url }}
+
+{% endif %}--
 {% trans 'Change your categories:' %} {{ manage_url }}
-{% trans 'Unsubscribe:' %} {{ unsubscribe_url }}
+{% trans 'Unsubscribe:' %} {{ unsubscribe_url }}{% endautoescape %}

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 13:52+0000\n"
+"POT-Creation-Date: 2026-10-19 14:32+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -393,24 +393,60 @@ msgstr "Des auteurs que vous suivez"
 msgid "In your categories"
 msgstr "Dans vos catégories"
 
-#: templates/digest/email.html:29
+#: templates/digest/email.html:30
+#, python-format
+msgid ""
+"This week in %(category)s: <strong>%(title)s</strong>. Premium digests open "
+"with the trends of the week in your fields."
+msgstr ""
+"Cette semaine en %(category)s : <strong>%(title)s</strong>. Les digests "
+"Premium s'ouvrent sur les tendances de la semaine dans vos domaines."
+
+#: templates/digest/email.html:31 templates/digest/email.txt:22
+msgid ""
+"Premium digests rank papers by closeness to your research, follow the "
+"authors you choose and open with the trends of the week in your fields."
+msgstr ""
+"Les digests Premium classent les articles selon leur proximité avec vos "
+"recherches, suivent les auteurs de votre choix et s'ouvrent sur les "
+"tendances de la semaine dans vos domaines."
+
+#: templates/digest/email.html:32 templates/digest/email.txt:23
+msgid "Discover Premium"
+msgstr "Découvrir Premium"
+
+#: templates/digest/email.html:36
 msgid "Change your categories"
 msgstr "Modifier vos catégories"
 
-#: templates/digest/email.html:30
+#: templates/digest/email.html:37
 #: templates/summarizer/digest_unsubscribe.html:18
 msgid "Unsubscribe"
 msgstr "Se désinscrire"
+
+#: templates/digest/email.txt:11 templates/digest/item.html:3
+#, python-format
+msgid "you follow %(names)s"
+msgstr "vous suivez %(names)s"
 
 #: templates/digest/email.txt:13 templates/digest/email.txt:20
 msgid "Read the summary:"
 msgstr "Lire le résumé :"
 
-#: templates/digest/email.txt:23
+#: templates/digest/email.txt:22
+#, python-format
+msgid ""
+"This week in %(category)s: %(title)s. Premium digests open with the trends "
+"of the week in your fields."
+msgstr ""
+"Cette semaine en %(category)s : %(title)s. Les digests Premium s'ouvrent sur"
+" les tendances de la semaine dans vos domaines."
+
+#: templates/digest/email.txt:26
 msgid "Change your categories:"
 msgstr "Modifier vos catégories :"
 
-#: templates/digest/email.txt:24
+#: templates/digest/email.txt:27
 msgid "Unsubscribe:"
 msgstr "Se désinscrire :"
 
@@ -421,6 +457,14 @@ msgstr "Résumé IA complet prêt"
 #: templates/digest/item.html:5
 msgid "Full AI summary and questions"
 msgstr "Résumé IA complet et questions"
+
+#: templates/digest/item.html:6
+msgid "More like this"
+msgstr "Plus comme ça"
+
+#: templates/digest/item.html:6
+msgid "Less like this"
+msgstr "Moins comme ça"
 
 #: templates/digest/subject.txt:1
 #, python-format
@@ -1788,6 +1832,39 @@ msgstr "Supprimer ce digest ?"
 #: templates/summarizer/digest.html:131
 msgid "Delete this digest"
 msgstr "Supprimer ce digest"
+
+#: templates/summarizer/digest_feedback.html:6
+msgid "Your digest"
+msgstr "Votre digest"
+
+#: templates/summarizer/digest_feedback.html:12
+msgid "This link is invalid."
+msgstr "Ce lien n'est pas valide."
+
+#: templates/summarizer/digest_feedback.html:14
+msgid "Thank you"
+msgstr "Merci"
+
+#: templates/summarizer/digest_feedback.html:15
+msgid "Your next digests will put papers like this one first:"
+msgstr ""
+"Vos prochains digests mettront en avant les articles proches de celui-ci :"
+
+#: templates/summarizer/digest_feedback.html:15
+msgid "Your next digests will show fewer papers like this one:"
+msgstr "Vos prochains digests montreront moins d'articles comme celui-ci :"
+
+#: templates/summarizer/digest_feedback.html:17
+msgid "Your digest settings"
+msgstr "Réglages de votre digest"
+
+#: templates/summarizer/digest_feedback.html:21
+msgid "More papers like this"
+msgstr "Plus d'articles comme celui-ci"
+
+#: templates/summarizer/digest_feedback.html:21
+msgid "Fewer papers like this"
+msgstr "Moins d'articles comme celui-ci"
 
 #: templates/summarizer/digest_unsubscribe.html:6
 msgid "Unsubscribe from the daily digest"

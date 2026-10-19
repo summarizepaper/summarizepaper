@@ -34,6 +34,7 @@ urlpatterns = [
     path("vote/<str:paper_id>/", views.vote, name="vote"),
     path("digest/", digest.digest_page, name="digest"),
     path("digest/unsubscribe/<str:token>/", digest.unsubscribe, name="digest_unsubscribe"),
+    path("digest/feedback/<str:token>/", digest.feedback, name="digest_feedback"),
     path("premium/", billing.premium, name="premium"),
     path("premium/checkout/", billing.checkout, name="premium_checkout"),
     path("premium/portal/", billing.portal, name="premium_portal"),

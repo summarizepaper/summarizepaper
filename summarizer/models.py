@@ -314,6 +314,29 @@ class DigestVector(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
+class DigestFetch(models.Model):
+    """Papers returned by one arXiv query, kept until arXiv announces new papers (see digest.fetch_recent)."""
+    query = models.CharField(max_length=500, unique=True)
+    since = models.DateTimeField()  # oldest submission date covered
+    fetched = models.DateTimeField()
+    papers = models.TextField()  # JSON list of papers
+
+    def __str__(self):
+        return self.query
+
+
+class DigestFeedback(models.Model):
+    """"More like this" (+1) or "less like this" (-1) on a paper of a Premium digest, steering its ranking."""
+    subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='feedback')
+    arxiv_id = models.CharField(max_length=40)
+    value = models.SmallIntegerField()
+    vector = models.BinaryField(blank=True, null=True)  # the paper's embedding, kept after DigestVector is cleaned up
+    created = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('subscription', 'arxiv_id')
+
+
 class CategorySynthesis(models.Model):
     """What happened in one arXiv category over the last 7 days, written once and shared by every digest."""
     category = models.CharField(max_length=40)

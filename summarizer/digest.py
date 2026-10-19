@@ -21,13 +21,15 @@ import numpy as np
 import requests
 from django.conf import settings
 from django.core import signing
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
 from . import access, mailcheck, similar
-from .models import CategorySynthesis, DigestDelivery, DigestItem, DigestSubscription, DigestVector, SummaryPaper
+from .models import (CategorySynthesis, DigestDelivery, DigestFeedback, DigestFetch, DigestItem, DigestSubscription,
+                     DigestVector, SummaryPaper)
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -56,10 +58,18 @@ WEEKLY_LOOKBACK_DAYS = 8
 PAGE_SIZE = 500
 MAX_PAGES = 12  # a category with more papers than this in the window loses its oldest ones
 MAX_AUTHOR_PAGES = 3
+AUTHORS_PER_QUERY = 10  # followed authors are searched together: au:"a" OR au:"b" ...
 SECONDS_BETWEEN_CALLS = 3  # arXiv API terms: at most one request every 3 seconds
 RETRY_WAITS = (10, 30, 90)  # arXiv answers 429 "Rate exceeded" when busy
 EMBED_BATCH = 256
 UNSUBSCRIBE_SALT = 'digest-unsubscribe'
+FEEDBACK_SALT = 'digest-feedback'
+FEEDBACK_WEIGHTS = (0.5, 0.3)  # pull of liked papers, push of disliked ones, on the profile vector
+LOCK_KEY = 'digest-run-lock'
+LOCK_SECONDS = 2 * 3600
+# arXiv announces new papers Sunday to Thursday at 20:00 in New York; the API has them a little later
+ANNOUNCE_TZ = zoneinfo.ZoneInfo('America/New_York')
+ANNOUNCE_DELAY = datetime.timedelta(hours=1)
 
 # Categories offered in the form; any valid arXiv category code is accepted too.
 CATEGORIES = [
@@ -135,12 +145,20 @@ def clean_authors(text):
 
 
 def name_key(name):
-    """'Yann LeCun', 'Y. LeCun' and 'Y LeCún' -> ('lecun', 'y'): last name and first initial."""
+    """'Yann LeCun' -> ('lecun', 'yann'), 'Y. LeCún' -> ('lecun', 'y'): last name and first name or initial."""
     plain = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode().lower()
     parts = re.findall(r'[a-z]+', plain)
     if len(parts) < 2:
         return None
-    return parts[-1], parts[0][0]
+    return parts[-1], parts[0]
+
+
+def same_author(key, name):
+    """Same last name, and same first name, or same initial when one of them is only an initial."""
+    other = name_key(name)
+    if not other or key[0] != other[0] or key[1][0] != other[1][0]:
+        return False
+    return len(key[1]) == 1 or len(other[1]) == 1 or key[1] == other[1]
 
 
 def site_id(arxiv_abs_id):
@@ -190,16 +208,45 @@ def arxiv_get(params):
     raise ArxivUnavailable(error)
 
 
-def fetch_recent(query, since, max_pages=MAX_PAGES):
-    """Papers matching an arXiv query, submitted since `since`, newest first, page after page."""
+def last_announcement(now):
+    """When the papers arXiv's API serves last changed: the latest announcement, plus some delay."""
+    local = (now - ANNOUNCE_DELAY).astimezone(ANNOUNCE_TZ)
+    day = local.replace(hour=20, minute=0, second=0, microsecond=0)
+    if local < day:
+        day -= datetime.timedelta(days=1)
+    while day.weekday() in (4, 5):  # no announcement on Friday and Saturday evenings
+        day -= datetime.timedelta(days=1)
+    return day + ANNOUNCE_DELAY
+
+
+def _dump(papers):
+    return json.dumps([dict(p, published=p['published'].isoformat()) for p in papers])
+
+
+def _load(text):
+    return [dict(p, published=parse_datetime(p['published'])) for p in json.loads(text)]
+
+
+def fetch_recent(query, since, max_pages=MAX_PAGES, now=None):
+    """Papers matching an arXiv query, submitted since `since`, newest first.
+
+    arXiv only changes once a day, so what was fetched since the last announcement is
+    read from the database instead of asking arXiv again every hour.
+    """
+    now = now or timezone.now()
+    kept = DigestFetch.objects.filter(query=query, since__lte=since, fetched__gte=last_announcement(now)).first()
+    if kept:
+        return [p for p in _load(kept.papers) if p['published'] >= since]
     papers = []
     for page in range(max_pages):
         batch = arxiv_get({'search_query': query, 'sortBy': 'submittedDate', 'sortOrder': 'descending',
                            'start': page * PAGE_SIZE, 'max_results': PAGE_SIZE})
         papers += [p for p in batch if p['published'] and p['published'] >= since]
         if len(batch) < PAGE_SIZE or any(p['published'] and p['published'] < since for p in batch):
-            return papers
-    logger.warning('%s: more than %d papers since %s, the oldest are left out', query, len(papers), since)
+            break
+    else:
+        logger.warning('%s: more than %d papers since %s, the oldest are left out', query, len(papers), since)
+    DigestFetch.objects.update_or_create(query=query, defaults={'since': since, 'fetched': now, 'papers': _dump(papers)})
     return papers
 
 
@@ -217,15 +264,22 @@ def fetch_all(windows):
 
 
 def fetch_authors(windows):
-    """{name_key: (name, since)} -> {name_key: [paper]}, recent papers by each followed author."""
+    """{name_key: (name, since)} -> {name_key: [paper]}, recent papers by each followed author.
+
+    Authors are searched AUTHORS_PER_QUERY at a time, by last name, then matched on the full name.
+    """
     found = {}
-    for key, (name, since) in sorted(windows.items()):
+    keys = sorted(windows)
+    for start in range(0, len(keys), AUTHORS_PER_QUERY):
+        group = keys[start:start + AUTHORS_PER_QUERY]
+        query = ' OR '.join('au:"%s"' % key[0] for key in group)
         try:
-            papers = fetch_recent('au:"%s"' % key[0], since, max_pages=MAX_AUTHOR_PAGES)
+            papers = fetch_recent(query, min(windows[k][1] for k in group), max_pages=MAX_AUTHOR_PAGES)
         except ArxivUnavailable:
-            logger.exception('arXiv fetch failed for author %s', name)
+            logger.exception('arXiv fetch failed for authors %s', query)
             continue
-        found[key] = [p for p in papers if key in {name_key(a) for a in p['authors']}]
+        for key in group:
+            found[key] = [p for p in papers if any(same_author(key, a) for a in p['authors'])]
     return found
 
 
@@ -285,6 +339,23 @@ def profile_vector(subscription):
     return vector
 
 
+def ranking_vector(subscription):
+    """The profile vector moved toward the papers marked "more like this" and away from "less like this"."""
+    base = profile_vector(subscription)
+    liked, disliked = [], []
+    for value, vector in subscription.feedback.exclude(vector=None).values_list('value', 'vector'):
+        (liked if value > 0 else disliked).append(np.frombuffer(bytes(vector), dtype=np.float32))
+    if base is None and not liked:
+        return None
+    vector = base.copy() if base is not None else np.zeros_like(liked[0])
+    if liked:
+        vector = vector + FEEDBACK_WEIGHTS[0] * np.mean(liked, axis=0) if base is not None else np.mean(liked, axis=0)
+    if disliked:
+        vector = vector - FEEDBACK_WEIGHTS[1] * np.mean(disliked, axis=0)
+    norm = np.linalg.norm(vector)
+    return (vector / norm).astype(np.float32) if norm else None
+
+
 def candidates(subscription, papers, already_sent, since=None, categories=None, exclude=()):
     wanted = set(categories or subscription.category_list())
     return [p for p in papers.values()
@@ -314,13 +385,14 @@ def select_papers(subscription, papers, already_sent, since=None, limit=PAPERS_P
 
 
 def author_papers(subscription, by_author, already_sent, since):
-    keys = {name_key(a) for a in subscription.author_list()[:MAX_AUTHORS]}
-    found = {}
-    for key in keys:
-        for paper in by_author.get(key, []):
+    """(papers by the followed authors, newest first; {arxiv_id: [followed names on it]})."""
+    found, via = {}, {}
+    for name in subscription.author_list()[:MAX_AUTHORS]:
+        for paper in by_author.get(name_key(name), []):
             if paper['arxiv_id'] not in already_sent and paper['published'] >= since:
                 found.setdefault(paper['arxiv_id'], paper)
-    return sorted(found.values(), key=lambda p: p['published'], reverse=True)
+                via.setdefault(paper['arxiv_id'], []).append(name)
+    return sorted(found.values(), key=lambda p: p['published'], reverse=True), via
 
 
 # --- shared content ------------------------------------------------------------
@@ -453,22 +525,50 @@ def subscription_from_token(token):
     return DigestSubscription.objects.filter(pk=pk).first()
 
 
-def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready=(), now=None):
-    unsubscribe_url = '%s/%s/digest/unsubscribe/%s/' % (base_url, subscription.lang, unsubscribe_token(subscription))
+def feedback_token(subscription, arxiv_id, value):
+    return signing.dumps([subscription.pk, arxiv_id, value], salt=FEEDBACK_SALT, compress=True)
+
+
+def tracked(url, campaign, content):
+    """Link with the UTM tags Umami reports on, to see which parts of the digest get clicked."""
+    return '%s%sutm_source=digest&utm_medium=email&utm_campaign=%s&utm_content=%s' % (
+        url, '&' if '?' in url else '?', campaign, content)
+
+
+def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready=(), now=None, paid=False, via=None,
+             teaser=None):
+    lang = subscription.lang
+    campaign = 'weekly' if subscription.frequency == 'weekly' else 'daily'
+    unsubscribe_url = '%s/%s/digest/unsubscribe/%s/' % (base_url, lang, unsubscribe_token(subscription))
+    ready = set(ready)
+    for section, group in (('author', from_authors), ('paper', items)):
+        for item in group:
+            item.url = tracked('%s/%s/arxiv-id/%s/?autorun=1' % (base_url, lang, item.arxiv_id), campaign,
+                               'ready' if item.arxiv_id in ready else section)
+            item.ready = item.arxiv_id in ready
+            item.via = ', '.join((via or {}).get(item.arxiv_id, []))
+            if paid:
+                item.more_url, item.less_url = ('%s/%s/digest/feedback/%s/' % (base_url, lang, feedback_token(subscription, item.arxiv_id, v))
+                                                for v in (1, -1))
+    syntheses = [dict(synthesis, notable=[dict(paper, url=tracked('%s/%s/arxiv-id/%s/?autorun=1' % (base_url, lang, paper['arxiv_id']),
+                                                                  campaign, 'synthesis')) for paper in synthesis['notable']])
+                 for synthesis in syntheses]
     context = {
         'subscription': subscription,
         'items': items,
         'from_authors': from_authors,
         'count': len(items) + len(from_authors),
         'syntheses': syntheses,
-        'ready': set(ready),
-        'weekly': subscription.frequency == 'weekly',
+        'paid': paid,
+        'teaser': teaser,
+        'premium_url': tracked('%s/%s/premium/' % (base_url, lang), campaign, 'premium-teaser'),
+        'weekly': campaign == 'weekly',
         'base_url': base_url,
-        'manage_url': '%s/%s/digest/?d=%s' % (base_url, subscription.lang, subscription.pk),
+        'manage_url': '%s/%s/digest/?d=%s' % (base_url, lang, subscription.pk),
         'unsubscribe_url': unsubscribe_url,
         'date': now or timezone.now(),
     }
-    with translation.override(subscription.lang):
+    with translation.override(lang):
         subject = render_to_string('digest/subject.txt', context).strip()
         text = render_to_string('digest/email.txt', context)
         html = render_to_string('digest/email.html', context)
@@ -477,6 +577,15 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
                                               'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'})
     message.attach_alternative(html, 'text/html')
     message.send()
+
+
+def premium_teaser(plan, now):
+    """For a free digest: the first trend of the week in one of its categories, if a Premium digest already paid for it."""
+    for synthesis in CategorySynthesis.objects.filter(category__in=plan.categories, lang=plan.subscription.lang, day=now.date()):
+        trends = json.loads(synthesis.content).get('trends')
+        if trends:
+            return {'category': synthesis.category, 'title': trends[0]['title']}
+    return {}
 
 
 class Plan:
@@ -495,9 +604,10 @@ class Plan:
             local = now
         # Premium: what happened this week, in the weekly digest or in Monday's daily digest
         self.synthesis = paid and (weekly or local.weekday() == 0)
+        self.teaser = not paid and (weekly or local.weekday() == 0)
         self.window = now - timezone.timedelta(days=WEEKLY_LOOKBACK_DAYS) if self.synthesis else self.since
         self.authors = subscription.author_list()[:MAX_AUTHORS] if paid else []
-        self.ranked = paid and bool(subscription.profile.strip() or subscription.reference_papers.strip())
+        self.ranked = paid  # by profile, reference papers and "more/less like this" feedback, when there are any
 
 
 def due_plans(now, only_user=None):
@@ -523,23 +633,59 @@ def due_plans(now, only_user=None):
     return plans
 
 
+def upcoming_plans(now, current):
+    """Premium digests due next hour, whose top papers can be summarized before their email."""
+    later = now + datetime.timedelta(hours=1)
+    current = {plan.subscription.pk for plan in current}
+    return [plan for plan in due_plans(later)
+            if plan.paid and plan.subscription.pk not in current and not plan.subscription.is_due(now)]
+
+
+def choose(plan, papers, by_author):
+    """(papers by followed authors, other papers, {arxiv_id: followed names}) for one digest."""
+    subscription = plan.subscription
+    already = set(DigestDelivery.objects.filter(subscription=subscription).values_list('arxiv_id', flat=True))
+    from_authors, via = author_papers(subscription, by_author, already, plan.since) if plan.authors else ([], {})
+    from_authors = from_authors[:plan.limits['papers']]
+    profile = vectors = None
+    if plan.ranked:
+        profile = ranking_vector(subscription)
+        if profile is not None:
+            vectors = ensure_vectors(candidates(subscription, papers, already, plan.since, plan.categories))
+    chosen = select_papers(subscription, papers, already, plan.since, plan.limits['papers'] - len(from_authors),
+                           plan.categories, profile, vectors, exclude={p['arxiv_id'] for p in from_authors})
+    return from_authors, chosen, via
+
+
 def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None, stdout=None, now=None):
     """Send the digests that are due (meant to run every hour); --user ignores the schedule."""
     now = now or timezone.now()
+    if only_user:
+        return _run(base_url, dry_run, only_user, stdout, now)
+    # a run slowed down by arXiv must not overlap the next one, or the same digests would go out twice
+    if not cache.add(LOCK_KEY, now.isoformat(), LOCK_SECONDS):
+        logger.warning('The previous digest run is still going, skipping this one')
+        return 0
+    try:
+        return _run(base_url, dry_run, only_user, stdout, now)
+    finally:
+        cache.delete(LOCK_KEY)
+
+
+def _run(base_url, dry_run, only_user, stdout, now):
     plans = due_plans(now, only_user)
-    if not plans:
+    upcoming = [] if (only_user or dry_run) else upcoming_plans(now, plans)
+    if not plans and not upcoming:
         return 0
 
-    windows = {}
-    for plan in plans:
+    windows, author_windows = {}, {}
+    for plan in plans + upcoming:
         for category in plan.categories:
             windows[category] = min(windows.get(category, plan.window), plan.window)
-    papers, failed = fetch_all(windows)
-    author_windows = {}
-    for plan in plans:
         for name in plan.authors:
             key = name_key(name)
             author_windows[key] = (name, min(author_windows.get(key, (name, plan.since))[1], plan.since))
+    papers, failed = fetch_all(windows)
     by_author = fetch_authors(author_windows) if author_windows else {}
 
     budget = [MAX_PRESUMMARIES_PER_RUN]
@@ -549,15 +695,7 @@ def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None
         if failed.intersection(plan.categories):
             logger.warning('Digest %s postponed: arXiv did not answer for %s', subscription.pk, failed)
             continue
-        already = set(DigestDelivery.objects.filter(subscription=subscription).values_list('arxiv_id', flat=True))
-        from_authors = author_papers(subscription, by_author, already, plan.since)[:plan.limits['papers']] if plan.authors else []
-        profile = vectors = None
-        if plan.ranked:
-            profile = profile_vector(subscription)
-            if profile is not None:
-                vectors = ensure_vectors(candidates(subscription, papers, already, plan.since, plan.categories))
-        chosen = select_papers(subscription, papers, already, plan.since, plan.limits['papers'] - len(from_authors),
-                               plan.categories, profile, vectors, exclude={p['arxiv_id'] for p in from_authors})
+        from_authors, chosen, via = choose(plan, papers, by_author)
         if not chosen and not from_authors:
             continue
         items = ensure_items(from_authors + chosen, subscription.lang)
@@ -578,7 +716,8 @@ def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None
         if plan.paid:
             presummarize(all_ids[:PRESUMMARIZED], subscription.lang, budget)
         try:
-            send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now)
+            send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
+                     paid=plan.paid, via=via, teaser=premium_teaser(plan, now) if plan.teaser else None)
         except Exception:
             logger.exception('Digest email to %s failed', subscription.user.username)
             continue
@@ -587,11 +726,21 @@ def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None
         subscription.last_sent = now
         subscription.save(update_fields=['last_sent'])
         sent += 1
+
+    # with what is left of the budget, get next hour's Premium emails ready
+    for plan in upcoming:
+        if budget[0] <= 0:
+            break
+        if failed.intersection(plan.categories):
+            continue
+        from_authors, chosen, _ = choose(plan, papers, by_author)
+        presummarize([p['arxiv_id'] for p in from_authors + chosen][:PRESUMMARIZED], plan.subscription.lang, budget)
     return sent
 
 
 def cleanup(days=30):
-    """Forget the embeddings of papers too old to appear in a digest again."""
+    """Forget the embeddings of papers too old to appear in a digest again, and old arXiv answers."""
+    DigestFetch.objects.filter(fetched__lt=timezone.now() - timezone.timedelta(days=3)).delete()
     return DigestVector.objects.filter(created__lt=timezone.now() - timezone.timedelta(days=days)).delete()[0]
 
 
@@ -691,6 +840,42 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'timezone': subscription.timezone if subscription else '',
         'error': error,
     }
+
+
+def paper_vector(arxiv_id):
+    row = DigestVector.objects.filter(arxiv_id=arxiv_id).values_list('vector', flat=True).first()
+    if row is not None:
+        return bytes(row)
+    item = DigestItem.objects.filter(arxiv_id=arxiv_id).first()
+    if item is None:
+        return None
+    try:
+        return similar.embed(['%s\n\n%s' % (item.title, item.blurb)])[0].tobytes()
+    except (requests.RequestException, KeyError, ValueError):
+        logger.exception('Embedding for feedback on %s failed', arxiv_id)
+        return None
+
+
+@csrf_exempt  # the link comes from an email; the signed token is the authorization
+def feedback(request, token):
+    """"More like this" / "less like this" from a Premium email.
+
+    The link opens a page that records the choice with a POST sent by the page itself,
+    so the link checkers of mail providers, which only follow GET links, do not vote.
+    """
+    try:
+        pk, arxiv_id, value = signing.loads(token, salt=FEEDBACK_SALT)
+    except (signing.BadSignature, ValueError, TypeError):
+        pk = arxiv_id = value = None
+    subscription = DigestSubscription.objects.filter(pk=pk).first() if pk else None
+    item = DigestItem.objects.filter(arxiv_id=arxiv_id).first() if subscription else None
+    done = False
+    if subscription is not None and request.method == 'POST' and value in (1, -1):
+        DigestFeedback.objects.update_or_create(subscription=subscription, arxiv_id=arxiv_id,
+                                                defaults={'value': value, 'vector': paper_vector(arxiv_id)})
+        done = True
+    return render(request, 'summarizer/digest_feedback.html', {
+        'subscription': subscription, 'item': item, 'value': value, 'done': done})
 
 
 @csrf_exempt  # mail clients send the one-click unsubscribe POST without a CSRF token

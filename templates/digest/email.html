@@ -14,7 +14,7 @@
       {% if synthesis.notable %}
       <p style="margin:10px 0 4px;color:#666;font-size:13px;">{% trans 'Papers to watch:' %}</p>
       {% for paper in synthesis.notable %}
-      <p style="margin:0 0 4px;font-size:14px;">&bull; <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ paper.arxiv_id }}/?autorun=1" style="color:#1a0dab;">{{ paper.title }}</a></p>
+      <p style="margin:0 0 4px;font-size:14px;">&bull; <a href="{{ paper.url }}" style="color:#1a0dab;">{{ paper.title }}</a></p>
       {% endfor %}
       {% endif %}
     </div>
@@ -25,6 +25,13 @@
     {% if items %}<p style="margin:16px 0 0;font-size:16px;font-weight:bold;">{% trans 'In your categories' %}</p>{% endif %}
     {% endif %}
     {% for item in items %}{% include 'digest/item.html' %}{% endfor %}
+    {% if teaser is not None %}
+    <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-top:8px;">
+      {% if teaser.title %}<p style="margin:0 0 8px;">{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: <strong>{{ title }}</strong>. Premium digests open with the trends of the week in your fields.{% endblocktrans %}</p>
+      {% else %}<p style="margin:0 0 8px;">{% trans 'Premium digests rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}</p>{% endif %}
+      <a href="{{ premium_url }}" style="color:#34a853;font-weight:bold;">{% trans 'Discover Premium' %} &rarr;</a>
+    </div>
+    {% endif %}
     <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
       <a href="{{ manage_url }}" style="color:#888;">{% trans 'Change your categories' %}</a> &middot;
       <a href="{{ unsubscribe_url }}" style="color:#888;">{% trans 'Unsubscribe' %}</a>
