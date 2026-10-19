@@ -602,7 +602,8 @@ def category_synthesis(category, lang, day, papers):
         'Here are the %d papers announced on arXiv in the category %s over the last 7 days (ID | title, '
         'and a short summary for some of them). '
         'In %s, write for a researcher of this field: the 3 to 5 main trends or topics of the week, each with a '
-        'short title and 2 sentences, and the IDs of the 3 papers most likely to matter. Be concrete, no hype, no LaTeX. '
+        'short title and 2 sentences, and the IDs of the 3 papers most likely to matter. Be concrete, no hype, no LaTeX, '
+        'and never write paper IDs in the trend texts: they are read by people. '
         'Answer with a JSON object {"trends": [{"title": "...", "text": "..."}], "notable": ["ID", ...]}.\n\n%s'
         % (len(week), category, language, '\n'.join(
             '%s | %s%s' % (p['arxiv_id'], p['title'], ' | ' + blurbs[p['arxiv_id']] if p['arxiv_id'] in blurbs else '')
