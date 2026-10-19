@@ -1085,3 +1085,34 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             'message': 'Disconnected'
         }))
         await self.channel_layer.group_discard(self.arxiv_group_name, self.channel_name)
+
+
+class HeadlessSummary(LoadingConsumer):
+    """The paper page pipeline without a browser: progress messages go nowhere."""
+
+    def __init__(self, arxiv_id):
+        super().__init__()
+        self.arxiv_group_name = "ar_%s" % arxiv_id
+
+    async def send_message_now(self, message):
+        pass
+
+    async def send_message_arxiv(self, arxiv_dict):
+        pass
+
+    async def send_message_sum(self, sum):
+        pass
+
+    async def send_message_notes(self, notes):
+        pass
+
+    async def send_message_laysum(self, laysum):
+        pass
+
+    async def send_message_blog(self, blog):
+        pass
+
+
+def summarize_now(arxiv_id, language, paid=True):
+    """Summarize a paper from sync code (the digest), as if a visitor had opened its page."""
+    async_to_sync(HeadlessSummary(arxiv_id).sendmessages)(arxiv_id, language, {}, paid)

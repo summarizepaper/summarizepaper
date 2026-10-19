@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktrans count counter=items|length %}{{ counter }} new paper for you on arXiv{% plural %}{{ counter }} new papers for you on arXiv{% endblocktrans %}
+{% load i18n %}{% with counter=count %}{% if weekly %}{% blocktrans count counter=counter %}Your week on arXiv: {{ counter }} paper for you{% plural %}Your week on arXiv: {{ counter }} papers for you{% endblocktrans %}{% else %}{% blocktrans count counter=counter %}{{ counter }} new paper for you on arXiv{% plural %}{{ counter }} new papers for you on arXiv{% endblocktrans %}{% endif %}{% endwith %}

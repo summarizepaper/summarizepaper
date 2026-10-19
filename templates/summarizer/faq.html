@@ -62,7 +62,8 @@
       <details>
         <summary>{% trans "How does the daily digest work?" %}</summary>
         <div class="answer">
-          {% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to {{ papers_per_email }} new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. Every email has a link to unsubscribe in one click.{% endblocktrans %}
+          {% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to {{ papers_per_email }} new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}
+          {% blocktrans %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the digest ranks papers by closeness to a description of your research or to papers you choose, follows authors across all categories, adds a synthesis of the week in your fields, and has the full summary of your best papers ready before you open the email. You can have up to 5 digests, with 15 categories and 25 papers each.{% endblocktrans %}
         </div>
       </details>
       <details>

@@ -4,15 +4,27 @@
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
-    <p style="margin:0 0 24px;color:#666;">{% trans 'Your daily arXiv digest' %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
-    {% for item in items %}
-    <div style="border-top:1px solid #eee;padding:16px 0;">
-      <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1" style="font-size:17px;font-weight:bold;color:#1a0dab;text-decoration:none;">{{ item.title }}</a>
-      <p style="margin:4px 0 8px;color:#666;font-size:13px;">{{ item.authors }}</p>
-      <p style="margin:0 0 8px;line-height:1.5;">{{ item.blurb }}</p>
-      <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1" style="color:#34a853;font-size:14px;">{% trans 'Full AI summary and questions' %} &rarr;</a>
+    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
+    {% for synthesis in syntheses %}
+    <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-bottom:16px;">
+      <p style="margin:0 0 10px;font-size:16px;font-weight:bold;">{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}</p>
+      {% for trend in synthesis.trends %}
+      <p style="margin:0 0 8px;line-height:1.5;"><strong>{{ trend.title }}.</strong> {{ trend.text }}</p>
+      {% endfor %}
+      {% if synthesis.notable %}
+      <p style="margin:10px 0 4px;color:#666;font-size:13px;">{% trans 'Papers to watch:' %}</p>
+      {% for paper in synthesis.notable %}
+      <p style="margin:0 0 4px;font-size:14px;">&bull; <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ paper.arxiv_id }}/?autorun=1" style="color:#1a0dab;">{{ paper.title }}</a></p>
+      {% endfor %}
+      {% endif %}
     </div>
     {% endfor %}
+    {% if from_authors %}
+    <p style="margin:16px 0 0;font-size:16px;font-weight:bold;">{% trans 'From the authors you follow' %}</p>
+    {% for item in from_authors %}{% include 'digest/item.html' %}{% endfor %}
+    {% if items %}<p style="margin:16px 0 0;font-size:16px;font-weight:bold;">{% trans 'In your categories' %}</p>{% endif %}
+    {% endif %}
+    {% for item in items %}{% include 'digest/item.html' %}{% endfor %}
     <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
       <a href="{{ manage_url }}" style="color:#888;">{% trans 'Change your categories' %}</a> &middot;
       <a href="{{ unsubscribe_url }}" style="color:#888;">{% trans 'Unsubscribe' %}</a>

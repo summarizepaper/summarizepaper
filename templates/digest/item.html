@@ -1,0 +1,6 @@
+{% load i18n %}<div style="border-top:1px solid #eee;padding:16px 0;">
+      <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1" style="font-size:17px;font-weight:bold;color:#1a0dab;text-decoration:none;">{{ item.title }}</a>
+      <p style="margin:4px 0 8px;color:#666;font-size:13px;">{{ item.authors }}</p>
+      <p style="margin:0 0 8px;line-height:1.5;">{{ item.blurb }}</p>
+      <a href="{{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1" style="color:#34a853;font-size:14px;">{% if item.arxiv_id in ready %}{% trans 'Full AI summary ready' %}{% else %}{% trans 'Full AI summary and questions' %}{% endif %} &rarr;</a>
+    </div>

@@ -1,6 +1,20 @@
-{% load i18n %}{% trans 'Your daily arXiv digest' %} - {{ date|date:"j F Y" }}
+{% load i18n %}{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
 
-{% for item in items %}{{ item.title }}
+{% for synthesis in syntheses %}{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}
+{% for trend in synthesis.trends %}* {{ trend.title }}. {{ trend.text }}
+{% endfor %}{% if synthesis.notable %}{% trans 'Papers to watch:' %}
+{% for paper in synthesis.notable %}- {{ paper.title }}: {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ paper.arxiv_id }}/?autorun=1
+{% endfor %}{% endif %}
+{% endfor %}{% if from_authors %}{% trans 'From the authors you follow' %}
+
+{% for item in from_authors %}{{ item.title }}
+{{ item.authors }}
+{{ item.blurb }}
+{% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1
+
+{% endfor %}{% if items %}{% trans 'In your categories' %}
+
+{% endif %}{% endif %}{% for item in items %}{{ item.title }}
 {{ item.authors }}
 {{ item.blurb }}
 {% trans 'Read the summary:' %} {{ base_url }}/{{ subscription.lang }}/arxiv-id/{{ item.arxiv_id }}/?autorun=1

@@ -18,7 +18,7 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 from unfold.widgets import UnfoldAdminTextareaWidget
 
 from . import guides
-from .models import (AIassistant, ArxivPaper, Author, DigestSubscription, Guide, PaperAuthor, PaperHistory,
+from .models import (AIassistant, ArxivPaper, Author, CategorySynthesis, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, UserPlan, Vote)
 
@@ -147,7 +147,8 @@ class UserPlanInline(StackedInline):
 class DigestInline(StackedInline):
     model = DigestSubscription
     extra = 0
-    fields = ('categories', 'keywords', 'lang', 'send_hour', 'timezone', 'active', 'last_sent')
+    fields = ('name', 'categories', 'keywords', 'profile', 'reference_papers', 'authors', 'lang', 'frequency', 'weekday',
+              'send_hour', 'timezone', 'active', 'last_sent')
     readonly_fields = ('last_sent',)
 
 
@@ -302,10 +303,18 @@ class ArxivPaperAdmin(ModelAdmin):
 
 @admin.register(DigestSubscription)
 class DigestSubscriptionAdmin(ModelAdmin):
-    list_display = ('user', 'categories', 'lang', 'active', 'last_sent')
-    list_filter = ('active', 'lang')
-    search_fields = ('user__username', 'user__email', 'categories')
+    list_display = ('user', 'name', 'categories', 'frequency', 'lang', 'active', 'last_sent')
+    list_filter = ('active', 'frequency', 'lang')
+    search_fields = ('user__username', 'user__email', 'categories', 'name')
     raw_id_fields = ('user',)
+    exclude = ('profile_vector', 'profile_key')
+
+
+@admin.register(CategorySynthesis)
+class CategorySynthesisAdmin(ModelAdmin):
+    list_display = ('category', 'lang', 'day', 'papers', 'created')
+    list_filter = ('lang', 'day')
+    search_fields = ('category',)
 
 
 @admin.register(SuppressedEmail)

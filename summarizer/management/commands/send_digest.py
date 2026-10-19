@@ -15,3 +15,5 @@ class Command(BaseCommand):
         sent = digest.run(base_url=options['base_url'], dry_run=options['dry_run'],
                           only_user=options['user'], stdout=self.stdout)
         self.stdout.write(self.style.SUCCESS('%d digest(s) sent' % sent))
+        if not options['user'] and not options['dry_run']:
+            digest.cleanup()
