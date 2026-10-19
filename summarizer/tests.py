@@ -34,6 +34,20 @@ class ClientIpTests(TestCase):
         self.assertEqual(access.client_ip_from_scope(scope), '81.0.0.9')
 
 
+class AnalyticsTests(TestCase):
+    def website_id(self, xff):
+        from summarizer.context_processors import analytics
+        request = RequestFactory().get('/', REMOTE_ADDR='10.0.0.1', HTTP_X_FORWARDED_FOR=xff)
+        with self.settings(UMAMI_WEBSITE_ID='site'):
+            return analytics(request)['UMAMI_WEBSITE_ID']
+
+    def test_regular_visitor_is_tracked(self):
+        self.assertEqual(self.website_id('81.0.0.9'), 'site')
+
+    def test_huawei_cloud_crawler_is_not_tracked(self):
+        self.assertEqual(self.website_id('114.119.137.28'), '')
+
+
 class PaidTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('u', password='x')
