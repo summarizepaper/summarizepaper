@@ -2,6 +2,10 @@
 
 Run every hour (Heroku Scheduler): python manage.py send_digest
 
+arXiv announces its new papers once a day. Once per announcement, the RSS feed of
+every archive is read and the whole batch is stored (AnnouncedPaper); a digest then
+gets the best papers of the batches announced since its previous email.
+
 Whatever costs a model call is done once and shared by every subscriber: the
 2-sentence blurb (per paper and language), the embedding (per paper), the full
 summary (per paper and language) and the weekly synthesis (per category,
@@ -28,8 +32,8 @@ from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
 from . import access, mailcheck, similar
-from .models import (CategorySynthesis, DigestDelivery, DigestFeedback, DigestFetch, DigestItem, DigestSubscription,
-                     DigestVector, SummaryPaper)
+from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestFeedback, DigestItem,
+                     DigestSubscription, DigestVector, SummaryPaper)
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -37,6 +41,7 @@ logger = logging.getLogger(__name__)
 ARXIV_API = 'https://export.arxiv.org/api/query'
 ATOM = '{http://www.w3.org/2005/Atom}'
 ARXIV_NS = '{http://arxiv.org/schemas/atom}'
+DC = '{http://purl.org/dc/elements/1.1/}'
 
 FREE = {'categories': 5, 'papers': 10, 'digests': 1}
 PREMIUM = {'categories': 15, 'papers': 25, 'digests': 5}
@@ -53,12 +58,12 @@ SYNTHESIS_MAX_PAPERS = 600
 # CloudMailin sends at most 20 emails/hour on our plan; keep room for account emails.
 # Subscribers left over are sent in the next hourly runs (see DigestSubscription.CATCH_UP_HOURS).
 MAX_EMAILS_PER_RUN = 15
-LOOKBACK_DAYS = 4  # arXiv announces papers 1-3 days after submission
-WEEKLY_LOOKBACK_DAYS = 8
-PAGE_SIZE = 500
-MAX_PAGES = 12  # a category with more papers than this in the window loses its oldest ones
-MAX_AUTHOR_PAGES = 3
-AUTHORS_PER_QUERY = 10  # followed authors are searched together: au:"a" OR au:"b" ...
+WEEK = datetime.timedelta(days=7)
+KEEP_DAYS = 10  # announced papers kept for weekly digests and syntheses
+RSS = 'https://rss.arxiv.org/atom/'
+ARCHIVES = ['astro-ph', 'cond-mat', 'cs', 'econ', 'eess', 'gr-qc', 'hep-ex', 'hep-lat', 'hep-ph', 'hep-th', 'math',
+            'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'q-bio', 'q-fin', 'quant-ph', 'stat']
+RSS_MAX_ENTRIES = 2000  # a longer feed is cut by arXiv; its followed categories are then read one by one
 SECONDS_BETWEEN_CALLS = 3  # arXiv API terms: at most one request every 3 seconds
 RETRY_WAITS = (10, 30, 90)  # arXiv answers 429 "Rate exceeded" when busy
 EMBED_BATCH = 256
@@ -67,9 +72,9 @@ FEEDBACK_SALT = 'digest-feedback'
 FEEDBACK_WEIGHTS = (0.5, 0.3)  # pull of liked papers, push of disliked ones, on the profile vector
 LOCK_KEY = 'digest-run-lock'
 LOCK_SECONDS = 2 * 3600
-# arXiv announces new papers Sunday to Thursday at 20:00 in New York; the API has them a little later
+# arXiv's RSS feeds switch to the next announcement around 00:05 in New York, Monday to Friday
 ANNOUNCE_TZ = zoneinfo.ZoneInfo('America/New_York')
-ANNOUNCE_DELAY = datetime.timedelta(hours=1)
+RSS_DELAY = datetime.timedelta(minutes=30)
 
 # Categories offered in the form; any valid arXiv category code is accepted too.
 CATEGORIES = [
@@ -208,79 +213,137 @@ def arxiv_get(params):
     raise ArxivUnavailable(error)
 
 
-def last_announcement(now):
-    """When the papers arXiv's API serves last changed: the latest announcement, plus some delay."""
-    local = (now - ANNOUNCE_DELAY).astimezone(ANNOUNCE_TZ)
-    day = local.replace(hour=20, minute=0, second=0, microsecond=0)
-    if local < day:
+def expected_batch(now):
+    """Day of the latest arXiv announcement that should be in the RSS feeds at `now`."""
+    day = (now - RSS_DELAY).astimezone(ANNOUNCE_TZ).date()
+    while day.weekday() >= 5:
         day -= datetime.timedelta(days=1)
-    while day.weekday() in (4, 5):  # no announcement on Friday and Saturday evenings
-        day -= datetime.timedelta(days=1)
-    return day + ANNOUNCE_DELAY
+    return day
 
 
-def _dump(papers):
-    return json.dumps([dict(p, published=p['published'].isoformat()) for p in papers])
+def latex_to_text(text):
+    """'Osnabr\\"uck' -> 'Osnabrück'-ish ascii: accents written in LaTeX are dropped, the letter kept."""
+    text = re.sub(r'\\[\'"`^~=.uvHckrb]\{?([A-Za-z])\}?', r'\1', text)
+    return text.replace('{', '').replace('}', '').replace('\\', '')
 
 
-def _load(text):
-    return [dict(p, published=parse_datetime(p['published'])) for p in json.loads(text)]
+def split_authors(creators):
+    """'A. One (Univ X, Lab), B. Two and C. Three' -> ['A. One', 'B. Two', 'C. Three']."""
+    text = latex_to_text(creators)
+    while re.search(r'\([^()]*\)', text):
+        text = re.sub(r'\([^()]*\)', '', text)
+    names = re.split(r',|\band\b', text)
+    return [re.sub(r'\s+', ' ', n).strip() for n in names if n.strip()]
 
 
-def fetch_recent(query, since, max_pages=MAX_PAGES, now=None):
-    """Papers matching an arXiv query, submitted since `since`, newest first.
+def parse_rss(xml_text):
+    """(announcement day, [paper]) of an arXiv RSS feed, new and cross-listed papers only."""
+    root = ElementTree.fromstring(xml_text)
+    day, papers = None, []
+    for entry in root.findall(ATOM + 'entry'):
+        if entry.findtext(ARXIV_NS + 'announce_type', '') not in ('new', 'cross'):
+            continue  # replacements are new versions of papers already announced
+        published = parse_datetime(entry.findtext(ATOM + 'published', ''))
+        if published is None:
+            continue
+        day = published.date()
+        summary = entry.findtext(ATOM + 'summary', '')
+        papers.append({
+            'arxiv_id': site_id(entry.findtext(ATOM + 'id', '').split(':')[-1]),
+            'title': re.sub(r'\s+', ' ', entry.findtext(ATOM + 'title', '')).strip(),
+            'abstract': re.sub(r'\s+', ' ', summary.split('Abstract:', 1)[-1]).strip(),
+            'authors': split_authors(entry.findtext(DC + 'creator', '')),
+            'categories': [c.get('term') for c in entry.findall(ATOM + 'category')],
+            'published': published,
+            'announced': day,
+        })
+    return day, papers
 
-    arXiv only changes once a day, so what was fetched since the last announcement is
-    read from the database instead of asking arXiv again every hour.
-    """
-    now = now or timezone.now()
-    kept = DigestFetch.objects.filter(query=query, since__lte=since, fetched__gte=last_announcement(now)).first()
-    if kept:
-        return [p for p in _load(kept.papers) if p['published'] >= since]
-    papers = []
-    for page in range(max_pages):
-        batch = arxiv_get({'search_query': query, 'sortBy': 'submittedDate', 'sortOrder': 'descending',
-                           'start': page * PAGE_SIZE, 'max_results': PAGE_SIZE})
-        papers += [p for p in batch if p['published'] and p['published'] >= since]
-        if len(batch) < PAGE_SIZE or any(p['published'] and p['published'] < since for p in batch):
-            break
-    else:
-        logger.warning('%s: more than %d papers since %s, the oldest are left out', query, len(papers), since)
-    DigestFetch.objects.update_or_create(query=query, defaults={'since': since, 'fetched': now, 'papers': _dump(papers)})
+
+def read_feed(name):
+    """(day, papers, entries in the feed) of one arXiv RSS feed, retried like the API."""
+    error = None
+    for wait in RETRY_WAITS + (None,):
+        try:
+            response = requests.get(RSS + name, timeout=120)
+            if response.status_code == 200:
+                day, papers = parse_rss(response.text)
+                return day, papers, response.text.count('<entry>')
+            error = 'HTTP %s' % response.status_code
+        except (requests.RequestException, ElementTree.ParseError) as e:
+            error = repr(e)
+        if wait is not None:
+            logger.info('arXiv RSS %s failed (%s), retrying in %ds', name, error, wait)
+            time.sleep(wait)
+    raise ArxivUnavailable('%s: %s' % (name, error))
+
+
+def ensure_batch(now, categories=()):
+    """Store today's arXiv announcement if it is out and not stored yet; return the stored days."""
+    expected = expected_batch(now)
+    if not ArxivBatch.objects.filter(day=expected).exists():
+        fetch_batch(expected, categories)
+    return list(ArxivBatch.objects.filter(day__gte=expected - datetime.timedelta(days=KEEP_DAYS))
+                .order_by('day').values_list('day', flat=True))
+
+
+def fetch_batch(expected, categories=()):
+    """Read every archive feed; the batch counts only once all of them were read for the expected day."""
+    found, complete = {}, True
+    for archive in ARCHIVES:
+        names = [archive]
+        try:
+            day, papers, entries = read_feed(archive)
+            if entries >= RSS_MAX_ENTRIES:
+                names = [c for c in categories if archive_of(c) == archive]
+                logger.warning('arXiv RSS %s has %d entries, reading %s one by one', archive, entries, names)
+                for name in names:
+                    papers += read_feed(name)[1]
+        except ArxivUnavailable:
+            logger.exception('arXiv RSS %s could not be read', archive)
+            complete = False
+            continue
+        if day is not None and day != expected:
+            logger.info('arXiv RSS %s is still on %s, waiting for %s', archive, day, expected)
+            complete = False
+        for paper in papers:
+            if paper['announced'] == expected:
+                found.setdefault(paper['arxiv_id'], paper)
+    AnnouncedPaper.objects.bulk_create([AnnouncedPaper(
+        arxiv_id=p['arxiv_id'], announced=p['announced'], title=p['title'], abstract=p['abstract'],
+        authors=json.dumps(p['authors']), categories=','.join(p['categories'])) for p in found.values()],
+        ignore_conflicts=True, batch_size=500)
+    if complete and found:
+        ArxivBatch.objects.get_or_create(day=expected, defaults={'papers': len(found)})
+    return complete
+
+
+def archive_of(category):
+    return category.split('.')[0]
+
+
+def load_papers(days):
+    """{arxiv_id: paper} announced on these days."""
+    papers = {}
+    for row in AnnouncedPaper.objects.filter(announced__in=days).iterator():
+        papers[row.arxiv_id] = {
+            'arxiv_id': row.arxiv_id, 'title': row.title, 'abstract': row.abstract,
+            'authors': json.loads(row.authors or '[]'), 'categories': row.categories.split(','),
+            'announced': row.announced,
+            'published': datetime.datetime.combine(row.announced, datetime.time(), tzinfo=ANNOUNCE_TZ),
+        }
     return papers
 
 
-def fetch_all(windows):
-    """{category: since} -> ({arxiv_id: paper}, categories that could not be fetched)."""
-    papers, failed = {}, set()
-    for category in sorted(windows):
-        try:
-            for paper in fetch_recent('cat:' + category, windows[category]):
-                papers.setdefault(paper['arxiv_id'], paper)
-        except ArxivUnavailable:
-            logger.exception('arXiv fetch failed for %s', category)
-            failed.add(category)
-    return papers, failed
-
-
-def fetch_authors(windows):
-    """{name_key: (name, since)} -> {name_key: [paper]}, recent papers by each followed author.
-
-    Authors are searched AUTHORS_PER_QUERY at a time, by last name, then matched on the full name.
-    """
-    found = {}
-    keys = sorted(windows)
-    for start in range(0, len(keys), AUTHORS_PER_QUERY):
-        group = keys[start:start + AUTHORS_PER_QUERY]
-        query = ' OR '.join('au:"%s"' % key[0] for key in group)
-        try:
-            papers = fetch_recent(query, min(windows[k][1] for k in group), max_pages=MAX_AUTHOR_PAGES)
-        except ArxivUnavailable:
-            logger.exception('arXiv fetch failed for authors %s', query)
-            continue
-        for key in group:
-            found[key] = [p for p in papers if any(same_author(key, a) for a in p['authors'])]
-    return found
+def author_index(papers):
+    """{last name: [(paper, author name)]}, to find the followed authors in a batch quickly."""
+    index = {}
+    for paper in papers.values():
+        for name in paper['authors']:
+            key = name_key(name)
+            if key:
+                index.setdefault(key[0], []).append((paper, name))
+    return index
 
 
 def fetch_ids(ids):
@@ -356,19 +419,19 @@ def ranking_vector(subscription):
     return (vector / norm).astype(np.float32) if norm else None
 
 
-def candidates(subscription, papers, already_sent, since=None, categories=None, exclude=()):
+def candidates(subscription, papers, already_sent, days=None, categories=None, exclude=()):
     wanted = set(categories or subscription.category_list())
     return [p for p in papers.values()
             if p['arxiv_id'] not in already_sent and p['arxiv_id'] not in exclude
-            and wanted.intersection(p['categories']) and (since is None or p['published'] >= since)]
+            and wanted.intersection(p['categories']) and (days is None or p['announced'] in days)]
 
 
-def select_papers(subscription, papers, already_sent, since=None, limit=PAPERS_PER_EMAIL, categories=None,
+def select_papers(subscription, papers, already_sent, days=None, limit=PAPERS_PER_EMAIL, categories=None,
                   profile=None, vectors=None, exclude=()):
     """The best new papers for this digest: keyword matches, ranked by closeness to the profile if there is one."""
     keywords = subscription.keyword_list()
     scored = []
-    for paper in candidates(subscription, papers, already_sent, since, categories, exclude):
+    for paper in candidates(subscription, papers, already_sent, days, categories, exclude):
         score = 0
         if keywords:
             text = (paper['title'] + ' ' + paper['abstract']).lower()
@@ -384,14 +447,16 @@ def select_papers(subscription, papers, already_sent, since=None, limit=PAPERS_P
     return [paper for *_, paper in scored[:limit]]
 
 
-def author_papers(subscription, by_author, already_sent, since):
-    """(papers by the followed authors, newest first; {arxiv_id: [followed names on it]})."""
+def author_papers(subscription, index, already_sent, days):
+    """(papers by the followed authors, in any category, newest first; {arxiv_id: [followed names on it]})."""
     found, via = {}, {}
     for name in subscription.author_list()[:MAX_AUTHORS]:
-        for paper in by_author.get(name_key(name), []):
-            if paper['arxiv_id'] not in already_sent and paper['published'] >= since:
+        key = name_key(name)
+        for paper, author in index.get(key[0], []) if key else []:
+            if paper['arxiv_id'] not in already_sent and paper['announced'] in days and same_author(key, author):
                 found.setdefault(paper['arxiv_id'], paper)
-                via.setdefault(paper['arxiv_id'], []).append(name)
+                if name not in via.setdefault(paper['arxiv_id'], []):
+                    via[paper['arxiv_id']].append(name)
     return sorted(found.values(), key=lambda p: p['published'], reverse=True), via
 
 
@@ -479,15 +544,14 @@ def category_synthesis(category, lang, day, papers):
     existing = CategorySynthesis.objects.filter(category=category, lang=lang, day=day).first()
     if existing:
         return json.loads(existing.content)
-    start = datetime.datetime.combine(day, datetime.time(), tzinfo=datetime.timezone.utc) - datetime.timedelta(days=7)
-    week = sorted((p for p in papers.values() if category in p['categories'] and p['published'] >= start),
+    week = sorted((p for p in papers.values() if category in p['categories'] and p['announced'] > day - WEEK),
                   key=lambda p: p['published'], reverse=True)[:SYNTHESIS_MAX_PAPERS]
     if len(week) < SYNTHESIS_MIN_PAPERS:
         return None
     by_id = {p['arxiv_id']: p for p in week}
     language = 'French' if lang == 'fr' else 'English'
     prompt = (
-        'Here are the titles of the %d papers posted on arXiv in the category %s over the last 7 days. '
+        'Here are the titles of the %d papers announced on arXiv in the category %s over the last 7 days. '
         'In %s, write for a researcher of this field: the 3 to 5 main trends or topics of the week, each with a '
         'short title and 2 sentences, and the IDs of the 3 papers most likely to matter. Be concrete, no hype, no LaTeX. '
         'Answer with a JSON object {"trends": [{"title": "...", "text": "..."}], "notable": ["ID", ...]}.\n\n%s'
@@ -579,9 +643,9 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
     message.send()
 
 
-def premium_teaser(plan, now):
+def premium_teaser(plan):
     """For a free digest: the first trend of the week in one of its categories, if a Premium digest already paid for it."""
-    for synthesis in CategorySynthesis.objects.filter(category__in=plan.categories, lang=plan.subscription.lang, day=now.date()):
+    for synthesis in CategorySynthesis.objects.filter(category__in=plan.categories, lang=plan.subscription.lang, day=plan.today):
         trends = json.loads(synthesis.content).get('trends')
         if trends:
             return {'category': synthesis.category, 'title': trends[0]['title']}
@@ -589,25 +653,33 @@ def premium_teaser(plan, now):
 
 
 class Plan:
-    """What one due digest needs: its time window, its limits and its Premium extras."""
+    """What one due digest needs: its limits, its Premium extras, and which arXiv announcements it covers."""
 
     def __init__(self, subscription, paid, now):
         self.subscription = subscription
         self.paid = paid
         self.limits = limits(paid)
         self.categories = subscription.category_list()[:self.limits['categories']]
-        weekly = subscription.frequency == 'weekly'
-        self.since = now - timezone.timedelta(days=WEEKLY_LOOKBACK_DAYS if weekly else LOOKBACK_DAYS)
+        self.weekly = subscription.frequency == 'weekly'
         try:
             local = now.astimezone(zoneinfo.ZoneInfo(subscription.timezone))
         except Exception:
             local = now
+        self.today = expected_batch(now)
         # Premium: what happened this week, in the weekly digest or in Monday's daily digest
-        self.synthesis = paid and (weekly or local.weekday() == 0)
-        self.teaser = not paid and (weekly or local.weekday() == 0)
-        self.window = now - timezone.timedelta(days=WEEKLY_LOOKBACK_DAYS) if self.synthesis else self.since
+        self.synthesis = paid and (self.weekly or local.weekday() == 0)
+        self.teaser = not paid and (self.weekly or local.weekday() == 0)
         self.authors = subscription.author_list()[:MAX_AUTHORS] if paid else []
         self.ranked = paid  # by profile, reference papers and "more/less like this" feedback, when there are any
+
+    def batches(self, days):
+        """The stored announcements not sent yet: the last one for a daily digest, the week's for a weekly one."""
+        recent = [d for d in days if d > self.today - WEEK]
+        last = self.subscription.last_batch
+        new = [d for d in recent if last is None or d > last]
+        if last is None and not self.weekly:
+            new = new[-1:]
+        return set(new)
 
 
 def due_plans(now, only_user=None):
@@ -641,18 +713,18 @@ def upcoming_plans(now, current):
             if plan.paid and plan.subscription.pk not in current and not plan.subscription.is_due(now)]
 
 
-def choose(plan, papers, by_author):
+def choose(plan, days, papers, index):
     """(papers by followed authors, other papers, {arxiv_id: followed names}) for one digest."""
     subscription = plan.subscription
     already = set(DigestDelivery.objects.filter(subscription=subscription).values_list('arxiv_id', flat=True))
-    from_authors, via = author_papers(subscription, by_author, already, plan.since) if plan.authors else ([], {})
+    from_authors, via = author_papers(subscription, index, already, days) if plan.authors else ([], {})
     from_authors = from_authors[:plan.limits['papers']]
     profile = vectors = None
     if plan.ranked:
         profile = ranking_vector(subscription)
         if profile is not None:
-            vectors = ensure_vectors(candidates(subscription, papers, already, plan.since, plan.categories))
-    chosen = select_papers(subscription, papers, already, plan.since, plan.limits['papers'] - len(from_authors),
+            vectors = ensure_vectors(candidates(subscription, papers, already, days, plan.categories))
+    chosen = select_papers(subscription, papers, already, days, plan.limits['papers'] - len(from_authors),
                            plan.categories, profile, vectors, exclude={p['arxiv_id'] for p in from_authors})
     return from_authors, chosen, via
 
@@ -678,38 +750,33 @@ def _run(base_url, dry_run, only_user, stdout, now):
     if not plans and not upcoming:
         return 0
 
-    windows, author_windows = {}, {}
-    for plan in plans + upcoming:
-        for category in plan.categories:
-            windows[category] = min(windows.get(category, plan.window), plan.window)
-        for name in plan.authors:
-            key = name_key(name)
-            author_windows[key] = (name, min(author_windows.get(key, (name, plan.since))[1], plan.since))
-    papers, failed = fetch_all(windows)
-    by_author = fetch_authors(author_windows) if author_windows else {}
+    days = ensure_batch(now, {c for plan in plans + upcoming for c in plan.categories})
+    papers = load_papers(days)
+    index = author_index(papers) if any(plan.authors for plan in plans + upcoming) else {}
 
     budget = [MAX_PRESUMMARIES_PER_RUN]
     sent = 0
     for plan in plans:
         subscription = plan.subscription
-        if failed.intersection(plan.categories):
-            logger.warning('Digest %s postponed: arXiv did not answer for %s', subscription.pk, failed)
-            continue
-        from_authors, chosen, via = choose(plan, papers, by_author)
+        batches = plan.batches(days)
+        if not batches:
+            continue  # no new announcement yet: tried again next hour
+        from_authors, chosen, via = choose(plan, batches, papers, index)
         if not chosen and not from_authors:
             continue
         items = ensure_items(from_authors + chosen, subscription.lang)
         author_items = [items[p['arxiv_id']] for p in from_authors]
         ordered = [items[p['arxiv_id']] for p in chosen]
         if stdout:
-            stdout.write('%s: %d papers%s' % (subscription.user.username, len(author_items) + len(ordered),
-                                               ' (Premium)' if plan.paid else ''))
+            stdout.write('%s: %d papers from %s%s' % (subscription.user.username, len(author_items) + len(ordered),
+                                                       ', '.join(str(d) for d in sorted(batches)),
+                                                       ' (Premium)' if plan.paid else ''))
         if dry_run:
             continue
         syntheses = []
         if plan.synthesis:
             for category in plan.categories[:MAX_SYNTHESES_PER_EMAIL]:
-                content = category_synthesis(category, subscription.lang, now.date(), papers)
+                content = category_synthesis(category, subscription.lang, plan.today, papers)
                 if content:
                     syntheses.append(content)
         all_ids = [i.arxiv_id for i in author_items + ordered]
@@ -717,30 +784,31 @@ def _run(base_url, dry_run, only_user, stdout, now):
             presummarize(all_ids[:PRESUMMARIZED], subscription.lang, budget)
         try:
             send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
-                     paid=plan.paid, via=via, teaser=premium_teaser(plan, now) if plan.teaser else None)
+                     paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None)
         except Exception:
             logger.exception('Digest email to %s failed', subscription.user.username)
             continue
         DigestDelivery.objects.bulk_create(
             [DigestDelivery(subscription=subscription, arxiv_id=aid) for aid in all_ids], ignore_conflicts=True)
         subscription.last_sent = now
-        subscription.save(update_fields=['last_sent'])
+        subscription.last_batch = max(batches)
+        subscription.save(update_fields=['last_sent', 'last_batch'])
         sent += 1
 
     # with what is left of the budget, get next hour's Premium emails ready
     for plan in upcoming:
         if budget[0] <= 0:
             break
-        if failed.intersection(plan.categories):
-            continue
-        from_authors, chosen, _ = choose(plan, papers, by_author)
-        presummarize([p['arxiv_id'] for p in from_authors + chosen][:PRESUMMARIZED], plan.subscription.lang, budget)
+        batches = plan.batches(days)
+        if batches:
+            from_authors, chosen, _ = choose(plan, batches, papers, index)
+            presummarize([p['arxiv_id'] for p in from_authors + chosen][:PRESUMMARIZED], plan.subscription.lang, budget)
     return sent
 
 
 def cleanup(days=30):
-    """Forget the embeddings of papers too old to appear in a digest again, and old arXiv answers."""
-    DigestFetch.objects.filter(fetched__lt=timezone.now() - timezone.timedelta(days=3)).delete()
+    """Forget the papers and embeddings too old to appear in a digest again."""
+    AnnouncedPaper.objects.filter(announced__lt=timezone.now().date() - datetime.timedelta(days=KEEP_DAYS)).delete()
     return DigestVector.objects.filter(created__lt=timezone.now() - timezone.timedelta(days=days)).delete()[0]
 
 

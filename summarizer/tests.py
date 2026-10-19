@@ -247,9 +247,21 @@ FEED = '''<?xml version='1.0' encoding='UTF-8'?>
 </feed>'''
 
 
+import contextlib
 import datetime
 
 import requests
+
+
+@contextlib.contextmanager
+def announced(papers, day=datetime.date(2026, 10, 19)):
+    """A run that finds these papers in the stored arXiv announcements (by default Monday 19 October)."""
+    for paper in papers.values():
+        paper.setdefault('announced', day)
+    days = sorted({p['announced'] for p in papers.values()}) or [day]
+    with mock.patch('summarizer.digest.ensure_batch', return_value=days) as ensure, \
+         mock.patch('summarizer.digest.load_papers', return_value=papers):
+        yield ensure
 
 
 class DigestTests(TestCase):
@@ -279,7 +291,7 @@ class DigestTests(TestCase):
 
     def test_run_sends_once_and_falls_back_to_abstract(self):
         DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP,hep-th', lang='fr')
-        with mock.patch('summarizer.digest.fetch_all', return_value=(self.papers(), set())), \
+        with announced(self.papers()), \
              mock.patch('summarizer.digest.write_blurbs', return_value={'2610.22354v1': 'Une comète active.'}):
             morning = datetime.datetime(2026, 10, 19, 6, 0, tzinfo=datetime.timezone.utc)  # 08:00 in Paris
             self.assertEqual(digest.run(now=morning), 1)
@@ -326,7 +338,7 @@ class DigestTests(TestCase):
 
     def test_run_skips_subscribers_not_due(self):
         DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP', send_hour=7, timezone='Asia/Tokyo')
-        with mock.patch('summarizer.digest.fetch_all') as fetch:
+        with mock.patch('summarizer.digest.ensure_batch') as fetch:
             # 21:00 UTC is 06:00 in Tokyo: not yet, and no arXiv call when nobody is due
             self.assertEqual(digest.run(now=datetime.datetime(2026, 10, 19, 21, 0, tzinfo=datetime.timezone.utc)), 0)
         fetch.assert_not_called()
@@ -585,7 +597,7 @@ class DigestSharedWorkTests(TestCase):
         for i in range(10):
             u = User.objects.create_user('s%d' % i, email='s%d@example.com' % i, password='x')
             DigestSubscription.objects.create(user=u, categories='astro-ph.EP,hep-th', timezone='UTC', send_hour=7)
-        with mock.patch('summarizer.digest.fetch_all', return_value=(papers, set())) as fetch, \
+        with announced(papers) as fetch, \
              mock.patch('summarizer.digest.write_blurbs', side_effect=lambda batch, lang: {p['arxiv_id']: 'Blurb.' for p in batch}) as blurbs:
             self.assertEqual(digest.run(now=datetime.datetime(2026, 10, 19, 7, 0, tzinfo=datetime.timezone.utc)), 10)
         self.assertEqual(fetch.call_count, 1)
@@ -605,7 +617,7 @@ class DigestSharedWorkTests(TestCase):
             if isinstance(answer, Exception):
                 raise answer
             return answer
-        with mock.patch('summarizer.digest.fetch_all', return_value=(papers, set())), \
+        with announced(papers), \
              mock.patch('summarizer.digest.write_blurbs', side_effect=flaky):
             self.assertEqual(digest.run(now=datetime.datetime(2026, 10, 19, 7, 0, tzinfo=datetime.timezone.utc)), 2)
         self.assertIn('Strings.', mail.outbox[0].body)
@@ -620,7 +632,7 @@ class DigestRateLimitTests(TestCase):
             u = User.objects.create_user('r%d' % i, email='r%d@example.com' % i, password='x')
             DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7)
         at = lambda h: datetime.datetime(2026, 10, 19, h, 0, tzinfo=datetime.timezone.utc)
-        with mock.patch('summarizer.digest.fetch_all', return_value=(papers, set())), \
+        with announced(papers), \
              mock.patch('summarizer.digest.write_blurbs', return_value={}):
             self.assertEqual(digest.run(now=at(7)), digest.MAX_EMAILS_PER_RUN)
             self.assertEqual(digest.run(now=at(8)), 3)  # the rest go out the next hour
@@ -1307,14 +1319,17 @@ import numpy as np
 
 import re
 
-from summarizer.models import CategorySynthesis, DigestFeedback, DigestVector
+from summarizer.models import AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestFeedback, DigestVector
 
 MONDAY = datetime.datetime(2026, 10, 19, 7, 0, tzinfo=datetime.timezone.utc)
 
 
-def fake_paper(aid, category, title, authors=('Ann Lee',), days_ago=1):
+def fake_paper(aid, category, title, authors=('Ann Lee',), day=0):
+    """A paper announced `day` days after Monday 19 October."""
+    when = MONDAY.date() + datetime.timedelta(days=day)
     return {'arxiv_id': aid, 'title': title, 'abstract': title + ' abstract.', 'authors': list(authors),
-            'categories': [category], 'published': MONDAY - datetime.timedelta(days=days_ago)}
+            'categories': [category], 'announced': when,
+            'published': datetime.datetime.combine(when, datetime.time(), tzinfo=digest.ANNOUNCE_TZ)}
 
 
 def fake_embed(texts):
@@ -1345,31 +1360,87 @@ class ArxivFetchTests(TestCase):
         self.assertEqual([p['arxiv_id'] for p in papers], ['2610.00001v1'])
         self.assertEqual(get.call_count, 3)
 
-    def test_gives_up_after_the_retries(self):
-        with mock.patch('summarizer.digest.requests.get', return_value=self.response(429)), \
-             mock.patch('summarizer.digest.time.sleep'):
-            papers, failed = digest.fetch_all({'cs.LG': MONDAY - datetime.timedelta(days=4)})
-        self.assertEqual((papers, failed), ({}, {'cs.LG'}))
+    def test_parse_rss(self):
+        day, papers = digest.parse_rss(RSS_FEED)
+        self.assertEqual(day, datetime.date(2026, 10, 19))
+        self.assertEqual([p['arxiv_id'] for p in papers], ['2610.22487v1', '2610.11111v1'])  # the replacement is left out
+        new = papers[0]
+        self.assertEqual(new['abstract'], 'Phenomena requiring close proximity.')
+        self.assertEqual(new['authors'], ['Oliver Busemann', 'Torben Toniges', 'Ann Lee'])
+        self.assertEqual(new['categories'], ['astro-ph.EP', 'astro-ph.HE'])
 
-    def test_pages_until_the_window_is_covered(self):
-        pages = [
-            self.response(200, [('2610.00004v1', '2026-10-18T10:00:00Z'), ('2610.00003v1', '2026-10-17T10:00:00Z')]),
-            self.response(200, [('2610.00002v1', '2026-10-16T10:00:00Z'), ('2610.00001v1', '2026-10-10T10:00:00Z')]),
-        ]
-        with mock.patch('summarizer.digest.PAGE_SIZE', 2), mock.patch('summarizer.digest.time.sleep'), \
-             mock.patch('summarizer.digest.requests.get', side_effect=pages) as get:
-            papers = digest.fetch_recent('cat:cs.LG', MONDAY - datetime.timedelta(days=4))
-        self.assertEqual([p['arxiv_id'] for p in papers], ['2610.00004v1', '2610.00003v1', '2610.00002v1'])
-        self.assertEqual(get.call_args_list[1].kwargs['params']['start'], 2)
+    def feeds(self, day=datetime.date(2026, 10, 19), failing=(), entries=10):
+        def read(name):
+            if name in failing:
+                raise digest.ArxivUnavailable(name)
+            category = name if '.' in name else name + '.XX'
+            return day, [dict(fake_paper('%s-%s' % (name, day), category, name), announced=day)], entries
+        return read
 
-    def test_postpones_a_digest_whose_category_failed(self):
+    def test_batch_is_stored_once_every_archive_was_read(self):
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(failing={'cs'})):
+            self.assertEqual(digest.ensure_batch(MONDAY), [])
+        self.assertFalse(ArxivBatch.objects.exists())
+        self.assertEqual(AnnouncedPaper.objects.count(), len(digest.ARCHIVES) - 1)  # kept for the next try
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds()) as read:
+            self.assertEqual(digest.ensure_batch(MONDAY + datetime.timedelta(hours=1)), [datetime.date(2026, 10, 19)])
+        self.assertEqual(read.call_count, len(digest.ARCHIVES))
+        self.assertEqual(ArxivBatch.objects.get().papers, len(digest.ARCHIVES))
+        with mock.patch('summarizer.digest.read_feed') as read:
+            digest.ensure_batch(MONDAY + datetime.timedelta(hours=5))
+        read.assert_not_called()  # arXiv is read once per announcement
+
+    def test_waits_while_the_feed_is_on_the_previous_announcement(self):
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(day=datetime.date(2026, 10, 16))):
+            self.assertEqual(digest.ensure_batch(MONDAY), [])
+        self.assertFalse(ArxivBatch.objects.exists())
+
+    def test_a_cut_feed_is_completed_by_its_followed_categories(self):
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(entries=2000)) as read:
+            digest.ensure_batch(MONDAY, categories={'cs.LG', 'astro-ph.EP'})
+        names = [c.args[0] for c in read.call_args_list]
+        self.assertIn('cs.LG', names)
+        self.assertIn('astro-ph.EP', names)
+        self.assertTrue(AnnouncedPaper.objects.filter(arxiv_id='cs.LG-2026-10-19').exists())
+
+    def test_postpones_digests_until_the_announcement_is_stored(self):
         u = User.objects.create_user('p', email='p@example.com', password='x')
         sub = DigestSubscription.objects.create(user=u, categories='cs.LG', timezone='UTC', send_hour=7)
-        with mock.patch('summarizer.digest.fetch_all', return_value=({}, {'cs.LG'})):
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(failing={'cs'})):
             self.assertEqual(digest.run(now=MONDAY), 0)
         sub.refresh_from_db()
         self.assertIsNone(sub.last_sent)
         self.assertTrue(sub.is_due(MONDAY + datetime.timedelta(hours=1)))
+
+
+RSS_FEED = """<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>oai:arXiv.org:2610.22487v1</id>
+    <title>Four Which I Knew Not</title>
+    <summary>arXiv:2610.22487v1 Announce Type: new
+Abstract: Phenomena requiring
+ close proximity.</summary>
+    <category term="astro-ph.EP"/><category term="astro-ph.HE"/>
+    <published>2026-10-19T00:00:00-04:00</published>
+    <arxiv:announce_type>new</arxiv:announce_type>
+    <dc:creator>Oliver Busemann (Osnabr\\"uck University, CLAAS E-Systems GmbH), Torben T\\"oniges (CLAAS), Ann Lee</dc:creator>
+  </entry>
+  <entry>
+    <id>oai:arXiv.org:2610.11111v1</id><title>Cross</title>
+    <summary>arXiv:2610.11111v1 Announce Type: cross
+Abstract: X.</summary>
+    <category term="cs.LG"/><published>2026-10-19T00:00:00-04:00</published>
+    <arxiv:announce_type>cross</arxiv:announce_type><dc:creator>A. B and C. D</dc:creator>
+  </entry>
+  <entry>
+    <id>oai:arXiv.org:2601.00001v2</id><title>Old</title>
+    <summary>arXiv:2601.00001v2 Announce Type: replace
+Abstract: Y.</summary>
+    <category term="cs.LG"/><published>2026-10-19T00:00:00-04:00</published>
+    <arxiv:announce_type>replace</arxiv:announce_type><dc:creator>E. F</dc:creator>
+  </entry>
+</feed>"""
 
 
 FEED_HEAD = '<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">'
@@ -1390,9 +1461,8 @@ class DigestPremiumTests(TestCase):
             UserPlan.objects.create(user=u, paid=True)
         return u
 
-    def run_digest(self, now=MONDAY, by_author=None, **patches):
-        with mock.patch('summarizer.digest.fetch_all', return_value=(self.papers, set())) as fetch, \
-             mock.patch('summarizer.digest.fetch_authors', return_value=by_author or {}) as authors, \
+    def run_digest(self, now=MONDAY):
+        with announced(self.papers) as fetch, \
              mock.patch('summarizer.digest.write_blurbs', side_effect=blurbs), \
              mock.patch('summarizer.similar.embed', side_effect=fake_embed) as embed, \
              mock.patch('summarizer.digest.fetch_ids', return_value=[]), \
@@ -1400,7 +1470,7 @@ class DigestPremiumTests(TestCase):
              mock.patch('summarizer.digest._chat', return_value=json.dumps({
                  'trends': [{'title': 'Hot planets', 'text': 'Many cloud studies.'}], 'notable': ['2610.00001v1', 'bogus']})) as chat:
             sent = digest.run(now=now)
-        return sent, {'fetch': fetch, 'authors': authors, 'embed': embed, 'summarize': summarize, 'chat': chat}
+        return sent, {'fetch': fetch, 'embed': embed, 'summarize': summarize, 'chat': chat}
 
     def test_helpers(self):
         self.assertTrue(digest.same_author(digest.name_key('Yann LeCun'), 'Y. LeCún'))
@@ -1425,7 +1495,7 @@ class DigestPremiumTests(TestCase):
         sub.refresh_from_db()
         self.assertTrue(sub.profile_key)
         # next day: profile and paper vectors come from the database
-        self.papers['2610.00005v1'] = fake_paper('2610.00005v1', 'astro-ph.EP', 'Another galaxy', days_ago=0)
+        self.papers['2610.00005v1'] = fake_paper('2610.00005v1', 'astro-ph.EP', 'Another galaxy', day=1)
         sent, mocks = self.run_digest(now=MONDAY + datetime.timedelta(days=1))
         self.assertEqual(mocks['embed'].call_count, 1)
         self.assertEqual(mocks['embed'].call_args.args[0], ['Another galaxy\n\nAnother galaxy abstract.'])
@@ -1437,7 +1507,7 @@ class DigestPremiumTests(TestCase):
         sent, mocks = self.run_digest()
         self.assertEqual(sent, 1)
         mocks['embed'].assert_not_called()
-        mocks['authors'].assert_not_called()
+        self.assertNotIn('you follow', mail.outbox[0].body)
         mocks['summarize'].assert_not_called()
         mocks['chat'].assert_not_called()  # no weekly synthesis without Premium
         self.assertNotIn('This week in', mail.outbox[0].body)
@@ -1445,9 +1515,7 @@ class DigestPremiumTests(TestCase):
     def test_followed_authors_come_first_from_any_category(self):
         u = self.user('fan', True)
         DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7, authors='Yann LeCun')
-        key = digest.name_key('Yann LeCun')
-        sent, mocks = self.run_digest(by_author={key: [self.papers['2610.00004v1']]})
-        self.assertEqual(list(mocks['authors'].call_args.args[0]), [key])
+        sent, mocks = self.run_digest()
         body = mail.outbox[0].body
         self.assertLess(body.index('From the authors you follow'), body.index('Learning with Yann'))
         self.assertLess(body.index('Learning with Yann'), body.index('In your categories'))
@@ -1474,7 +1542,7 @@ class DigestPremiumTests(TestCase):
         DigestSubscription.objects.create(user=self.user('a', True), categories='astro-ph.EP', timezone='UTC', send_hour=7)
         for aid in ('2610.00001v1', '2610.00002v1'):
             SummaryPaper.objects.create(paper=ArxivPaper.objects.create(arxiv_id=aid), lang='en', summary='Done.')
-        sent, mocks = self.run_digest(now=MONDAY + datetime.timedelta(days=1))
+        sent, mocks = self.run_digest()
         self.assertEqual([c.args[0] for c in mocks['summarize'].call_args_list], ['2610.00003v1'])
         self.assertEqual(mail.outbox[0].alternatives[0][0].count('Full AI summary ready'), 2)
 
@@ -1484,10 +1552,10 @@ class DigestPremiumTests(TestCase):
                                                 frequency='weekly', weekday=2)
         self.assertFalse(sub.is_due(MONDAY))
         self.assertTrue(sub.is_due(MONDAY + datetime.timedelta(days=2)))
-        self.papers['2610.00009v1'] = fake_paper('2610.00009v1', 'astro-ph.EP', 'Five days old', days_ago=5)
+        self.papers['2610.00009v1'] = fake_paper('2610.00009v1', 'astro-ph.EP', 'Last Thursday', day=-4)
         sent, _ = self.run_digest(now=MONDAY + datetime.timedelta(days=2))
         self.assertEqual(sent, 1)
-        self.assertIn('Five days old', mail.outbox[0].body)
+        self.assertIn('Last Thursday', mail.outbox[0].body)
         self.assertIn('Your week on arXiv', mail.outbox[0].subject)
 
     def test_only_the_first_digest_without_premium(self):
@@ -1497,7 +1565,8 @@ class DigestPremiumTests(TestCase):
         sent, _ = self.run_digest()
         self.assertEqual(sent, 1)
         UserPlan.objects.create(user=u, paid=True)
-        self.papers['2610.00008v1'] = fake_paper('2610.00008v1', 'astro-ph.EP', 'Fresh', days_ago=0)
+        self.papers['2610.00008v1'] = fake_paper('2610.00008v1', 'astro-ph.EP', 'Fresh', day=1)
+        self.papers['2610.00010v1'] = fake_paper('2610.00010v1', 'cs.LG', 'Fresh learning', day=1)
         sent, _ = self.run_digest(now=MONDAY + datetime.timedelta(days=1))
         self.assertEqual(sent, 2)
 
@@ -1558,49 +1627,49 @@ class DigestPageTests(TestCase):
 
 
 class DigestRobustnessTests(TestCase):
-    def test_last_announcement(self):
+    def test_expected_batch(self):
         at = lambda *a: datetime.datetime(*a, tzinfo=datetime.timezone.utc)
-        # Monday 07:00 UTC: Sunday 20:00 in New York (00:00 UTC Monday), plus the delay
-        self.assertEqual(digest.last_announcement(at(2026, 10, 19, 7)), at(2026, 10, 19, 1))
-        # Saturday: still Thursday's announcement
-        self.assertEqual(digest.last_announcement(at(2026, 10, 24, 12)), at(2026, 10, 23, 1))
+        self.assertEqual(digest.expected_batch(at(2026, 10, 19, 7)), datetime.date(2026, 10, 19))   # Monday 03:00 in New York
+        self.assertEqual(digest.expected_batch(at(2026, 10, 19, 4, 10)), datetime.date(2026, 10, 16))  # feeds not switched yet
+        self.assertEqual(digest.expected_batch(at(2026, 10, 24, 12)), datetime.date(2026, 10, 23))  # Saturday: Friday's
+        self.assertEqual(digest.expected_batch(at(2026, 10, 20, 5)), datetime.date(2026, 10, 20))
 
-    def test_arxiv_is_asked_once_per_announcement(self):
-        since = MONDAY - datetime.timedelta(days=4)
-        papers = [fake_paper('2610.00001v1', 'cs.LG', 'A')]
-        with mock.patch('summarizer.digest.arxiv_get', return_value=papers) as get:
-            digest.fetch_recent('cat:cs.LG', since, now=MONDAY)
-            again = digest.fetch_recent('cat:cs.LG', since + datetime.timedelta(hours=1), now=MONDAY + datetime.timedelta(hours=1))
-            self.assertEqual(get.call_count, 1)
-            self.assertEqual([p['arxiv_id'] for p in again], ['2610.00001v1'])
-            self.assertEqual(again[0]['published'], papers[0]['published'])
-            digest.fetch_recent('cat:cs.LG', since - datetime.timedelta(days=4), now=MONDAY)  # wider window: ask again
-            self.assertEqual(get.call_count, 2)
-            digest.fetch_recent('cat:cs.LG', since, now=MONDAY + datetime.timedelta(days=1))  # after the next announcement
-            self.assertEqual(get.call_count, 3)
+    def test_which_announcements_a_digest_gets(self):
+        u = User.objects.create_user('b', email='b@example.com')
+        mon, tue, wed = (datetime.date(2026, 10, 19) + datetime.timedelta(days=i) for i in range(3))
+        days = [datetime.date(2026, 10, 15), datetime.date(2026, 10, 16), mon, tue, wed]
+        wednesday = MONDAY + datetime.timedelta(days=2)
+        daily = DigestSubscription(user=u, categories='cs.LG')
+        self.assertEqual(digest.Plan(daily, False, wednesday).batches(days), {wed})  # a new digest starts with the day's batch
+        daily.last_batch = mon
+        self.assertEqual(digest.Plan(daily, False, wednesday).batches(days), {tue, wed})  # missed days are caught up
+        weekly = DigestSubscription(user=u, categories='cs.LG', frequency='weekly')
+        self.assertEqual(digest.Plan(weekly, False, wednesday).batches(days), set(days))
+        weekly.last_batch = wed
+        self.assertEqual(digest.Plan(weekly, False, wednesday).batches(days), set())
 
-    def test_authors_are_searched_ten_at_a_time(self):
-        names = ['Ann Author%s' % chr(97 + i) for i in range(12)]
-        windows = {digest.name_key(n): (n, MONDAY - datetime.timedelta(days=4)) for n in names}
-        paper = fake_paper('2610.00001v1', 'cs.LG', 'A', authors=('A. Authora', 'Bob Authorb'))
-        with mock.patch('summarizer.digest.fetch_recent', return_value=[paper]) as fetch:
-            found = digest.fetch_authors(windows)
-        self.assertEqual(fetch.call_count, 2)
-        self.assertEqual(fetch.call_args_list[0].args[0].count(' OR '), 9)
-        self.assertEqual(found[digest.name_key('Ann Authora')], [paper])
-        self.assertEqual(found[digest.name_key('Ann Authorb')], [])  # Bob, not Ann
+    def test_followed_authors_are_found_in_every_category(self):
+        papers = {p['arxiv_id']: p for p in [
+            fake_paper('2610.00001v1', 'math.PR', 'A', authors=('J. Wang', 'Luca Matrà')),
+            fake_paper('2610.00002v1', 'cs.LG', 'B', authors=('Jun Wang',)),
+            fake_paper('2610.00003v1', 'cs.LG', 'C', authors=('Luca Matra',), day=-7)]}
+        sub = DigestSubscription(categories='astro-ph.EP', authors='Jing Wang, Luca Matra')
+        found, via = digest.author_papers(sub, digest.author_index(papers), set(), {MONDAY.date()})
+        self.assertEqual([p['arxiv_id'] for p in found], ['2610.00001v1'])
+        self.assertEqual(via, {'2610.00001v1': ['Jing Wang', 'Luca Matra']})
+        self.assertEqual(digest.split_authors('A. One (Univ X (Lab Y), Z), B. Two and C. Three'), ['A. One', 'B. Two', 'C. Three'])
 
     def test_overlapping_runs_are_skipped(self):
         DigestSubscription.objects.create(user=User.objects.create_user('u', email='u@example.com'), categories='cs.LG',
                                           timezone='UTC', send_hour=7)
         cache.add(digest.LOCK_KEY, 'busy', 60)
         try:
-            with mock.patch('summarizer.digest.fetch_all') as fetch:
+            with mock.patch('summarizer.digest.ensure_batch') as fetch:
                 self.assertEqual(digest.run(now=MONDAY), 0)
             fetch.assert_not_called()
         finally:
             cache.delete(digest.LOCK_KEY)
-        with mock.patch('summarizer.digest.fetch_all', return_value=({}, set())):
+        with announced({}):
             digest.run(now=MONDAY)
         self.assertIsNone(cache.get(digest.LOCK_KEY))  # released after the run
 
@@ -1609,7 +1678,7 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
     def test_next_hour_premium_digests_are_summarized_in_advance(self):
         DigestSubscription.objects.create(user=self.user('early', True), categories='astro-ph.EP', timezone='UTC', send_hour=8)
         DigestSubscription.objects.create(user=self.user('free8', False), categories='astro-ph.EP', timezone='UTC', send_hour=8)
-        sent, mocks = self.run_digest(now=MONDAY + datetime.timedelta(days=1))
+        sent, mocks = self.run_digest()
         self.assertEqual(sent, 0)
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(mocks['summarize'].call_count, 3)
@@ -1617,7 +1686,7 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
     def test_feedback_moves_the_ranking(self):
         u = self.user('fb', True)
         sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7)
-        sent, _ = self.run_digest(now=MONDAY + datetime.timedelta(days=1))
+        sent, _ = self.run_digest()
         html = mail.outbox[0].alternatives[0][0]
         self.assertIn('utm_source=digest&amp;utm_medium=email&amp;utm_campaign=daily&amp;utm_content=paper', html)
         links = re.findall(r'href="https://www.summarizepaper.com(/en/digest/feedback/[^/]+/)"', html)
@@ -1631,9 +1700,9 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         self.assertEqual(DigestFeedback.objects.get().value, 1)
         self.assertContains(Client().post('/en/digest/feedback/forged/'), 'This link is invalid.')
         self.papers.update({p['arxiv_id']: p for p in [
-            fake_paper('2610.00006v1', 'astro-ph.EP', 'Hot planet winds', days_ago=0),
-            fake_paper('2610.00007v1', 'astro-ph.EP', 'Galaxy cluster lensing', days_ago=0)]})
-        self.run_digest(now=MONDAY + datetime.timedelta(days=2))
+            fake_paper('2610.00006v1', 'astro-ph.EP', 'Hot planet winds', day=1),
+            fake_paper('2610.00007v1', 'astro-ph.EP', 'Galaxy cluster lensing', day=1)]})
+        self.run_digest(now=MONDAY + datetime.timedelta(days=1))
         body = mail.outbox[1].body
         self.assertLess(body.index('Galaxy cluster lensing'), body.index('Hot planet winds'))
 
@@ -1646,7 +1715,7 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         self.assertIn('This week in astro-ph.EP: Rings everywhere.', body)
         self.assertIn('/en/premium/?utm_source=digest&utm_medium=email&utm_campaign=daily&utm_content=premium-teaser', body)
         self.assertNotIn('More like this', body + mail.outbox[0].alternatives[0][0])
-        self.papers['2610.00008v1'] = fake_paper('2610.00008v1', 'astro-ph.EP', 'Fresh', days_ago=0)
+        self.papers['2610.00008v1'] = fake_paper('2610.00008v1', 'astro-ph.EP', 'Fresh', day=1)
         self.run_digest(now=MONDAY + datetime.timedelta(days=1))
         self.assertNotIn('Premium', mail.outbox[1].body)  # not every day
 

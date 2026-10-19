@@ -238,6 +238,7 @@ class DigestSubscription(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     last_sent = models.DateTimeField(blank=True, null=True)
+    last_batch = models.DateField(blank=True, null=True)  # day of the latest arXiv announcement already sent
 
     CATCH_UP_HOURS = 3  # a missed hourly run is caught up, but never hours late at night
 
@@ -314,15 +315,27 @@ class DigestVector(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
-class DigestFetch(models.Model):
-    """Papers returned by one arXiv query, kept until arXiv announces new papers (see digest.fetch_recent)."""
-    query = models.CharField(max_length=500, unique=True)
-    since = models.DateTimeField()  # oldest submission date covered
-    fetched = models.DateTimeField()
-    papers = models.TextField()  # JSON list of papers
+class ArxivBatch(models.Model):
+    """One daily arXiv announcement, stored once every archive feed of that day was read."""
+    day = models.DateField(unique=True)  # the date arXiv gives the announcement (New York time)
+    papers = models.PositiveIntegerField(default=0)
+    fetched = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.query
+        return '%s (%d papers)' % (self.day, self.papers)
+
+
+class AnnouncedPaper(models.Model):
+    """A new or cross-listed paper of a daily arXiv announcement, from its RSS feeds."""
+    arxiv_id = models.CharField(max_length=40, unique=True)
+    announced = models.DateField(db_index=True)
+    title = models.TextField()
+    abstract = models.TextField(blank=True, default='')
+    authors = models.TextField(blank=True, default='')  # JSON list of names
+    categories = models.CharField(max_length=300, blank=True, default='')  # comma-separated
+
+    def __str__(self):
+        return '%s (%s)' % (self.arxiv_id, self.announced)
 
 
 class DigestFeedback(models.Model):
