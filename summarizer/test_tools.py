@@ -82,6 +82,14 @@ class GeneratedTests(ToolsTestCase):
         self.assertEqual(self.client_for(owner).get('/en/ai/%d/' % row.pk).status_code, 200)
 
 
+class StaticVersionTests(TestCase):
+    def test_scripts_and_styles_change_url_when_their_content_changes(self):
+        import re
+        page = Client().get('/en/trends/').content.decode()
+        self.assertRegex(page, r'/static/summarizer/js/tools\.js\?v=[0-9a-f]{10}')
+        self.assertRegex(page, r'/static/summarizer/css/site\.css\?v=[0-9a-f]{10}')
+
+
 class ProgressTests(ToolsTestCase):
     def test_steps_are_reported_and_shown_while_waiting(self):
         user = self.user(paid=True)
