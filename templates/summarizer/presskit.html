@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Press kit' %} | {{ paper.title|truncatechars:70 }}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <span class="eyebrow">{% trans 'Press kit' %} · Premium</span>
+    <h1>{{ paper.title }}</h1>
+    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %} · arXiv:{{ arxiv_id|dash_slash }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
+  </header>
+
+  {% if not paid %}
+  <div class="upsell">
+    <p><strong>{% trans 'A press kit for every arXiv paper.' %}</strong> {% trans 'What is really new, a hype check (peer review, sample size, claims that go beyond the results), key sentences quoted word for word, questions to ask the authors, researchers who work on the same topic but did not sign the paper, and a glossary.' %}</p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
+  </div>
+  {% elif kit %}
+    {% if kit.abstract_only %}<p class="error">{% trans "This paper's license only lets us read its abstract: the kit is based on the abstract alone. Read the full paper before writing." %}</p>{% endif %}
+
+    <section class="card section-card">
+      <h2>{{ kit.headline }}</h2>
+      <p>{{ kit.plain_explanation }}</p>
+      <h3>{% trans "What's new" %}</h3>
+      <p>{{ kit.whats_new }}</p>
+    </section>
+
+    <section class="card section-card">
+      <h2>{% trans 'Hype check' %}</h2>
+      <p><strong>{{ kit.verdict }}</strong></p>
+      <ul class="hype-list">
+        {% for h in kit.hype_check %}
+        <li class="{{ h.level }}"><strong>{% if h.level == 'ok' %}✓{% elif h.level == 'warning' %}⚠{% else %}•{% endif %} {{ h.signal }}</strong>{{ h.detail }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% if kit.key_sentences %}
+    <section class="card section-card">
+      <h2>{% trans 'Key sentences from the paper' %}</h2>
+      <p class="muted">{% trans 'Copied word for word from the paper (checked against its text). Quote the paper, not us.' %}</p>
+      {% for sentence in kit.key_sentences %}<blockquote class="key-sentence">{{ sentence }}</blockquote>{% endfor %}
+    </section>
+    {% endif %}
+
+    <section class="card section-card">
+      <h2>{% trans 'Questions to ask the authors' %}</h2>
+      <ol>{% for q in kit.questions_for_authors %}<li>{{ q }}</li>{% endfor %}</ol>
+    </section>
+
+    <section class="card section-card">
+      <h2>{% trans 'Independent researchers on the same topic' %}</h2>
+      {% if kit.experts %}
+      <p class="muted">{% trans 'Authors of the closest papers we know who did not sign this one. Check their work and possible links with the authors before contacting them.' %}</p>
+      <ul>
+        {% for e in kit.experts %}
+        <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}){% endif %} — <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ e.arxiv_id }}/">{{ e.title }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">{% trans 'We do not know enough papers close to this one yet.' %}</p>
+      {% endif %}
+    </section>
+
+    {% if kit.glossary %}
+    <section class="card section-card">
+      <h2>{% trans 'Glossary' %}</h2>
+      <dl>{% for g in kit.glossary %}<dt><strong>{{ g.term }}</strong></dt><dd>{{ g.definition }}</dd>{% endfor %}</dl>
+    </section>
+    {% endif %}
+    <p class="muted"><small>{% blocktrans with date=row.updated|date:"j F Y" %}Written by AI on {{ date }} from the paper. Check every fact against the paper before publishing.{% endblocktrans %}</small></p>
+  {% else %}
+    <div class="card section-card" id="kit-start">
+      <p>{% trans 'The press kit is written from the full paper. It takes about a minute.' %}</p>
+      <button type="button" class="btn" id="kit-go">{% trans 'Write the press kit' %}</button>
+      <p class="tool-status" id="kit-status"></p>
+    </div>
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      var status = document.getElementById('kit-status');
+      var button = document.getElementById('kit-go');
+      function start() {
+        button.disabled = true;
+        status.textContent = '{% filter escapejs %}{% trans 'Writing… the page reloads by itself when the kit is ready.' %}{% endfilter %}';
+        SP.post('/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id|escapejs }}/start/', {}).then(function (json) {
+          if (!json.id) { button.disabled = false; status.textContent = '{% filter escapejs %}{% trans 'Something went wrong. Please try again.' %}{% endfilter %}'; return; }
+          SP.wait(json.id, function () { location.reload(); }, function () {
+            button.disabled = false;
+            status.textContent = '{% filter escapejs %}{% trans 'Something went wrong. Please try again.' %}{% endfilter %}';
+          });
+        });
+      }
+      button.addEventListener('click', start);
+      {% if row and row.status == 'pending' %}start();{% endif %}
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

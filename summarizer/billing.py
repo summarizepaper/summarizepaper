@@ -26,7 +26,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from . import access
-from .models import UserPlan
+from .models import SiteSettings, UserPlan
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +81,7 @@ def premium(request):
         'runs_per_day': access.runs_per_day(),
         'chat_free': access.chat_messages_per_day()['user'],
         'chat_paid': access.chat_messages_per_day()['paid'],
+        'readings_free': SiteSettings.current().free_readings_per_day,
         'success': request.GET.get('success') == '1',
     })
 

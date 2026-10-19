@@ -30,7 +30,7 @@
   <header class="page-header">
     <span class="eyebrow"><i class="fas fa-star"></i> Premium</span>
     <h1 style="margin-top:14px">{% trans 'SummarizePaper Premium' %}</h1>
-    <p class="lead">{% trans 'For researchers and students who read papers every day.' %}</p>
+    <p class="lead">{% trans 'For researchers, students, journalists and curious readers who follow research closely.' %}</p>
   </header>
 
   {% if is_paid %}
@@ -56,6 +56,9 @@
         <li>{% blocktrans %}{{ chat_free }} questions per day to the AI assistant{% endblocktrans %}</li>
         <li>{% trans 'Standard AI model' %}</li>
         <li>{% trans 'One arXiv digest, daily or weekly' %}</li>
+        <li>{% blocktrans %}{{ readings_free }} rewrites per day of a summary for another reader or in another language{% endblocktrans %}</li>
+        <li>{% trans '3 collections of 20 papers, chat with a collection, BibTeX, RIS and Markdown exports' %}</li>
+        <li>{% trans 'Weekly letters and the top rising topics on the web' %}</li>
       </ul>
     </div>
     <div class="plan card highlight">
@@ -65,6 +68,13 @@
         <li>{% trans 'No daily summary limit' %}</li>
         <li>{% blocktrans %}{{ chat_paid }} questions per day to the AI assistant{% endblocktrans %}</li>
         <li>{% trans 'A smarter arXiv digest: papers ranked by closeness to your research, authors you follow, a weekly synthesis of your fields, full summaries ready in advance, up to 5 digests' %}</li>
+        <li>{% trans 'Your digest read aloud, to listen on the go' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/collections/">{% trans 'Comparison tables of your collections' %}</a>: {% trans 'question, method, data, results and limitations of each paper, where they agree and disagree, what is missing' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>: {% trans 'the arXiv papers close to your draft that it does not cite' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/citations/">{% trans 'Citation alerts' %}</a>: {% trans 'who cites your papers, and what they say about them' %}</li>
+        <li>{% trans 'Press kit for journalists: hype check, key sentences quoted word for word, questions for the authors, independent researchers to call' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/trends/">{% trans 'All the rising topics' %}</a>, {% trans 'field by field, and the weekly letters by email' %}</li>
+        <li>{% trans 'Unlimited rewrites, 100 collections of 200 papers, papers sent to Zotero with their summaries' %}</li>
         <li>{% trans 'Cancel anytime in one click' %}</li>
       </ul>
 

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Listen to your digest' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'Listen to your digest' %}</h1>
+    <p class="lead">{% blocktrans count n=tracks|length %}{{ n }} paper, read aloud{% plural %}{{ n }} papers, read aloud{% endblocktrans %}</p>
+  </header>
+  {% if tracks %}
+  <audio controls preload="none" src="/{{ LANGUAGE_CODE }}/digest/listen/{{ token }}/episode.mp3" style="width:100%"></audio>
+  <p><a href="/{{ LANGUAGE_CODE }}/digest/listen/{{ token }}/episode.mp3" download>{% trans 'Download the MP3' %}</a></p>
+  <ol>
+    {% for item in tracks %}
+    <li><a href="/{{ lang }}/arxiv-id/{{ item.arxiv_id }}/">{{ item.title }}</a></li>
+    {% endfor %}
+  </ol>
+  <p class="muted"><small>{% trans 'Read by a synthetic AI voice.' %}</small></p>
+  {% else %}
+  <p class="muted">{% trans 'This audio is no longer available.' %}</p>
+  {% endif %}
+</div>
+{% endblock %}

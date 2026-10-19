@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}

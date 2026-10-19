@@ -29,6 +29,8 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'#'same-origin'
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 OPENAI_KEY = os.getenv('OPENAI_KEY')
+# optional: a Semantic Scholar API key raises the rate limit of the citation alerts
+S2_API_KEY = os.getenv('S2_API_KEY', '')
 SECRETSG = os.getenv('SECRETSG')
 SECRETCMTA = os.getenv('SECRETCMTA')
 

@@ -35,3 +35,18 @@ def point_html(point):
     if match:
         return '<strong>%s</strong> %s' % (escape(match.group(1)), escape(match.group(2)))
     return escape(point)
+
+
+def stored_points(notes):
+    """The key points of a SummaryPaper: stored as the repr of a Python list, or as plain lines."""
+    import ast
+    if not notes or notes.startswith('Error'):
+        return []
+    try:
+        value = ast.literal_eval(notes)
+    except (ValueError, SyntaxError):
+        return clean_points(notes)
+    if isinstance(value, str):
+        return clean_points(value)
+    points = [clean_point(str(p)) for p in value] if isinstance(value, (list, tuple)) else []
+    return [p for p in points if p and not is_heading(p)]

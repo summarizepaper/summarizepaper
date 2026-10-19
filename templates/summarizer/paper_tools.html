@@ -1,0 +1,163 @@
+{% load i18n %}
+<section class="card tools-card" id="tools">
+  <h3>{% trans 'Tools for this paper' %}</h3>
+
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Explain it differently' %}</span>
+    <select id="reading-level" aria-label="{% trans 'Level' %}">{% for code, label in reading_levels %}<option value="{{ code }}">{{ label }}</option>{% endfor %}</select>
+    <select id="reading-lang" aria-label="{% trans 'Language' %}">{% for code, label in reading_langs %}<option value="{{ code }}"{% if code == LANGUAGE_CODE %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <button type="button" class="btn btn-sm" id="reading-go">{% trans 'Rewrite' %}</button>
+    <span class="tool-status" id="reading-status">{% if reading_left is not None %}{% blocktrans count left=reading_left %}{{ left }} free rewrite left today{% plural %}{{ left }} free rewrites left today{% endblocktrans %}{% endif %}</span>
+    <div class="tool-output" id="reading-output"></div>
+  </div>
+
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Save to a collection' %}</span>
+    {% if request.user.is_authenticated %}
+      <select id="collection-pick" aria-label="{% trans 'Collection' %}">
+        {% for c in my_collections %}<option value="{{ c.pk }}">{{ c.name }}{% if c.has %} ✓{% endif %}</option>{% endfor %}
+        <option value="new">{% trans 'New collection…' %}</option>
+      </select>
+      <input type="text" id="collection-name" maxlength="120" placeholder="{% trans 'Name of the new collection' %}"{% if my_collections %} hidden{% endif %}>
+      <button type="button" class="btn btn-sm" id="collection-go">{% trans 'Add' %}</button>
+      <span class="tool-status" id="collection-status"></span>
+    {% else %}
+      <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}">{% trans 'Log in to save papers in collections' %}</a>
+    {% endif %}
+  </div>
+
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Export' %}</span>
+    <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow">BibTeX</a> ·
+    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/ris/" rel="nofollow">RIS (Zotero, Mendeley, EndNote)</a> ·
+    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow">Markdown (Notion, Obsidian)</a> ·
+    <button type="button" class="link-button" id="zotero-go">{% trans 'Send to Zotero with its summary' %}</button>
+    <span class="badge-premium">Premium</span>
+    <span class="tool-status" id="zotero-status"></span>
+  </div>
+
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Citation alerts' %}</span>
+    <button type="button" class="btn btn-sm btn-ghost" id="follow-go" data-following="{{ following|yesno:'1,0' }}">{% if following %}{% trans 'Stop following its citations' %}{% else %}{% trans 'Tell me who cites it' %}{% endif %}</button>
+    <span class="badge-premium">Premium</span>
+    <span class="tool-status" id="follow-status"></span>
+  </div>
+
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'For journalists' %}</span>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id }}/" rel="nofollow">{% trans 'Press kit and hype check' %}</a>
+    <span class="badge-premium">Premium</span>
+  </div>
+
+  <div id="tools-text" hidden
+       data-premium="{% trans 'This is a Premium feature.' %}"
+       data-premium-link="{% trans 'Discover Premium' %}"
+       data-login="{% trans 'Log in first.' %}"
+       data-working="{% trans 'Writing… this takes about 20 seconds.' %}"
+       data-failed="{% trans 'Something went wrong. Please try again.' %}"
+       data-quota="{% trans 'No free rewrites left today. Premium has no limit.' %}"
+       data-added="{% trans 'Added to' %}"
+       data-already="{% trans 'Already in this collection.' %}"
+       data-full="{% trans 'This collection is full.' %}"
+       data-too-many="{% trans 'You have reached the number of collections of your plan.' %}"
+       data-open="{% trans 'Open' %}"
+       data-sending="{% trans 'Sending…' %}"
+       data-sent="{% trans 'Saved in your Zotero library.' %}"
+       data-setup="{% trans 'Connect your Zotero library first.' %}"
+       data-following="{% trans 'You will get an email when new papers cite it.' %}"
+       data-unfollowed="{% trans 'You no longer follow its citations.' %}"
+       data-follow="{% trans 'Tell me who cites it' %}"
+       data-unfollow="{% trans 'Stop following its citations' %}"></div>
+</section>
+<script>
+(function () {
+  var arxivId = '{{ arxiv_id|escapejs }}';
+  var base = '/{{ LANGUAGE_CODE }}';
+  var t = document.getElementById('tools-text').dataset;
+
+  function show(el, message, link) {
+    el.textContent = message + (link ? ' ' : '');
+    if (link) {
+      var a = document.createElement('a');
+      a.href = link.href;
+      a.textContent = link.text;
+      el.appendChild(a);
+    }
+  }
+  function refused(el, json) {
+    if (json.status === 'premium') return show(el, t.premium, {href: base + '/premium/', text: t.premiumLink}), true;
+    if (json.status === 'login') return show(el, t.login, {href: base + '/login/?next=' + encodeURIComponent(location.pathname), text: '→'}), true;
+    return false;
+  }
+
+  // reading levels
+  var readingStatus = document.getElementById('reading-status');
+  var readingOutput = document.getElementById('reading-output');
+  function renderReading(data) {
+    readingOutput.innerHTML = '';
+    var box = SP.text('div', '', 'reading-output');
+    if (data.title) box.appendChild(SP.text('h4', data.title));
+    data.paragraphs.forEach(function (p) { box.appendChild(SP.text('p', p)); });
+    readingOutput.appendChild(box);
+    readingStatus.textContent = '';
+  }
+  document.getElementById('reading-go').addEventListener('click', function () {
+    show(readingStatus, t.working);
+    SP.post(base + '/reading/' + arxivId + '/', {
+      level: document.getElementById('reading-level').value,
+      lang: document.getElementById('reading-lang').value
+    }).then(function (json) {
+      if (json.status === 'quota') return show(readingStatus, t.quota, {href: base + '/premium/', text: t.premiumLink});
+      if (json.status === 'done') return renderReading(json.data);
+      if (!json.id) return show(readingStatus, t.failed);
+      SP.wait(json.id, renderReading, function () { show(readingStatus, t.failed); });
+    });
+  });
+
+  // collections
+  var pick = document.getElementById('collection-pick');
+  if (pick) {
+    var nameInput = document.getElementById('collection-name');
+    var collectionStatus = document.getElementById('collection-status');
+    pick.addEventListener('change', function () { nameInput.hidden = pick.value !== 'new'; });
+    document.getElementById('collection-go').addEventListener('click', function () {
+      SP.post(base + '/collections/add/', {arxiv_id: arxivId, collection: pick.value, name: nameInput.value})
+        .then(function (json) {
+          if (refused(collectionStatus, json)) return;
+          if (json.status === 'added') return show(collectionStatus, t.added + ' « ' + json.name + ' ».', {href: json.url, text: t.open});
+          if (json.status === 'already') return show(collectionStatus, t.already, {href: json.url, text: t.open});
+          if (json.status === 'full') return show(collectionStatus, t.full);
+          if (json.status === 'too_many') return show(collectionStatus, t.tooMany, {href: base + '/premium/', text: t.premiumLink});
+          show(collectionStatus, t.failed);
+        });
+    });
+  }
+
+  // Zotero
+  var zoteroStatus = document.getElementById('zotero-status');
+  document.getElementById('zotero-go').addEventListener('click', function () {
+    show(zoteroStatus, t.sending);
+    SP.post(base + '/zotero/send/', {arxiv_id: arxivId}).then(function (json) {
+      if (refused(zoteroStatus, json)) return;
+      if (json.status === 'setup') return show(zoteroStatus, t.setup, {href: json.url, text: '→'});
+      if (!json.id) return show(zoteroStatus, t.failed);
+      SP.wait(json.id, function () { show(zoteroStatus, t.sent); }, function () { show(zoteroStatus, t.failed); });
+    });
+  });
+
+  // citation alerts
+  var followBtn = document.getElementById('follow-go');
+  var followStatus = document.getElementById('follow-status');
+  followBtn.addEventListener('click', function () {
+    var following = followBtn.dataset.following === '1';
+    SP.post(base + '/citations/follow/', {arxiv_id: arxivId, action: following ? 'unfollow' : 'follow'}).then(function (json) {
+      if (refused(followStatus, json)) return;
+      if (json.status === 'too_many') return show(followStatus, t.full);
+      following = json.status === 'following';
+      followBtn.dataset.following = following ? '1' : '0';
+      followBtn.textContent = following ? t.unfollow : t.follow;
+      show(followStatus, following ? t.following : t.unfollowed, following ? {href: base + '/citations/', text: '→'} : null);
+    });
+  });
+})();
+</script>

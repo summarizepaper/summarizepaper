@@ -5,6 +5,18 @@
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
     <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
+    {% if listen_url %}
+    <p style="margin:0 0 16px;"><a href="{{ listen_url }}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">&#127911; {% trans 'Listen to this digest' %}</a></p>
+    {% endif %}
+    {% if rising %}
+    <div style="background:#f5f3ff;border-radius:8px;padding:16px;margin-bottom:16px;">
+      <p style="margin:0 0 10px;font-size:16px;font-weight:bold;">{% trans 'Rising in your fields this week' %}</p>
+      {% for topic in rising %}
+      <p style="margin:0 0 8px;line-height:1.5;"><strong>{{ topic.title }}</strong> <span style="color:#16a34a;font-size:13px;">(×{{ topic.growth }}, {{ topic.archive }})</span>. {{ topic.text }}</p>
+      {% endfor %}
+      <a href="{{ trends_url }}" style="color:#4f46e5;font-size:14px;">{% trans 'All the rising topics' %} &rarr;</a>
+    </div>
+    {% endif %}
     {% for synthesis in syntheses %}
     <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-bottom:16px;">
       <p style="margin:0 0 10px;font-size:16px;font-weight:bold;">{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}</p>

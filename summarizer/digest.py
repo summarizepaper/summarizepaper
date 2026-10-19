@@ -31,9 +31,9 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
-from . import access, mailcheck, similar
+from . import access, audio, mailcheck, similar
 from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestFeedback, DigestItem,
-                     DigestSubscription, DigestVector, SummaryPaper)
+                     DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -652,7 +652,7 @@ def tracked(url, campaign, content):
 
 
 def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready=(), now=None, paid=False, via=None,
-             teaser=None):
+             teaser=None, listen_url=None, rising=()):
     lang = subscription.lang
     campaign = 'weekly' if subscription.frequency == 'weekly' else 'daily'
     unsubscribe_url = '%s/%s/digest/unsubscribe/%s/' % (base_url, lang, unsubscribe_token(subscription))
@@ -677,6 +677,9 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
         'syntheses': syntheses,
         'paid': paid,
         'teaser': teaser,
+        'listen_url': listen_url,
+        'rising': rising,
+        'trends_url': tracked('%s/%s/trends/' % (base_url, lang), campaign, 'rising'),
         'premium_url': tracked('%s/%s/premium/' % (base_url, lang), campaign, 'premium-teaser'),
         'weekly': campaign == 'weekly',
         'base_url': base_url,
@@ -829,6 +832,7 @@ def _run(base_url, dry_run, only_user, stdout, now):
     incomplete = {b.day: set(b.missing_list()) for b in ArxivBatch.objects.filter(day__in=days).exclude(missing='')}
 
     budget = [MAX_PRESUMMARIES_PER_RUN]
+    audio_budget = [audio.MAX_NEW_PER_RUN]
     sent = 0
     for plan in plans:
         batches = plan.batches(days)
@@ -836,7 +840,8 @@ def _run(base_url, dry_run, only_user, stdout, now):
             continue  # no new announcement yet: tried again next hour
         if incomplete.get(max(batches), set()).intersection(archive_of(c) for c in plan.categories):
             continue  # today's batch still lacks one of its archives: tried again next hour
-        sent += deliver(plan, batches, papers, index, base_url, now, budget, stdout=stdout, dry_run=dry_run)
+        sent += deliver(plan, batches, papers, index, base_url, now, budget, stdout=stdout, dry_run=dry_run,
+                        audio_budget=audio_budget)
 
     # with what is left of the budget, get next hour's Premium emails ready
     for plan in upcoming:
@@ -849,7 +854,8 @@ def _run(base_url, dry_run, only_user, stdout, now):
     return sent
 
 
-def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dry_run=False, new_syntheses=True):
+def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dry_run=False, new_syntheses=True,
+            audio_budget=None):
     """Choose, write and send one digest from these announcements; True if it was sent."""
     subscription = plan.subscription
     if not cache.add(SENDING_KEY % subscription.pk, True, 600):
@@ -878,11 +884,17 @@ def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dr
                 if content:
                     syntheses.append(content)
         all_ids = [i.arxiv_id for i in author_items + ordered]
+        listen_url, rising = None, []
         if plan.paid:
             presummarize(all_ids[:PRESUMMARIZED], subscription.lang, budget)
+            listen_url = listen_link(subscription, author_items + ordered, base_url, audio_budget or [0])
+            if plan.synthesis:
+                from . import trends  # trends reads the archive list of this module
+                rising = trends.for_digest(plan.categories, subscription.lang, plan.today)
         try:
             send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
-                     paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None)
+                     paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None,
+                     listen_url=listen_url, rising=rising)
         except Exception:
             logger.exception('Digest email to %s failed', subscription.user.username)
             return False
@@ -894,6 +906,21 @@ def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dr
         return True
     finally:
         cache.delete(SENDING_KEY % subscription.pk)
+
+
+def listen_link(subscription, items, base_url, audio_budget):
+    """Link to this digest read aloud, once its clips exist (new clips are made within audio_budget)."""
+    try:
+        audio.ensure(items, subscription.lang, audio_budget)
+    except Exception:
+        logger.exception('Audio of the digest failed')
+    ids = [i.arxiv_id for i in items[:audio.MAX_CLIPS]]
+    have = set(PaperAudio.objects.filter(arxiv_id__in=ids, lang=subscription.lang).values_list('arxiv_id', flat=True))
+    ids = [a for a in ids if a in have]
+    if not ids:
+        return None
+    return tracked('%s/%s/digest/listen/%s/' % (base_url, subscription.lang, audio.token(subscription, ids)),
+                   'weekly' if subscription.frequency == 'weekly' else 'daily', 'listen')
 
 
 def preview(subscription, base_url=BASE_URL):

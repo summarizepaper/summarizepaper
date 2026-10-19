@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ letter.title }} | {% blocktrans with name=topic_name %}{{ name }} this week{% endblocktrans %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{{ letter.dek|truncatechars:158 }}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/" />
+  {% if other_lang %}
+  <link rel="alternate" hreflang="{{ LANGUAGE_CODE }}" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/" />
+  <link rel="alternate" hreflang="{{ other_lang }}" href="https://www.summarizepaper.com/{{ other_lang }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/" />
+  {% endif %}
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="{{ letter.title }}" />
+  <meta property="og:description" content="{{ letter.dek }}" />
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "{{ letter.title|escapejs }}", "description": "{{ letter.dek|escapejs }}", "datePublished": "{{ letter.created|date:'c' }}", "inLanguage": "{{ LANGUAGE_CODE }}", "publisher": {"@id": "https://www.summarizepaper.com/#organization"}, "author": {"@type": "Organization", "name": "SummarizePaper"}}</script>
+{% endblock %}
+
+{% block content %}
+<article class="page letter">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/">← {% blocktrans with name=topic_name %}{{ name }} this week{% endblocktrans %}</a> · {{ letter.day|date:"j F Y" }}</p>
+    <h1>{{ letter.title }}</h1>
+    <p class="dek">{{ letter.dek }}</p>
+  </header>
+  <div class="prose">
+  {% for section in sections %}
+    <h2>{{ section.heading }}</h2>
+    {{ section.text|linebreaks }}
+    {% if section.links %}<p class="sources">{% trans 'Read:' %} {% for p in section.links %}<a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+  {% endfor %}
+  {% if closing %}<hr>{{ closing|linebreaks }}{% endif %}
+  </div>
+  <p class="muted"><small>{% blocktrans count n=count %}Written by AI from {{ n }} paper announced on arXiv this week. These are preprints: most have not been peer reviewed yet.{% plural %}Written by AI from the {{ n }} papers announced on arXiv this week in this field. These are preprints: most have not been peer reviewed yet.{% endblocktrans %}</small></p>
+  <div class="upsell"><p>{% if paid %}<a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Get this letter by email every week' %}</a>{% else %}{% trans 'Get this letter by email every week with Premium.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a>{% endif %}</p></div>
+</article>
+{% endblock %}

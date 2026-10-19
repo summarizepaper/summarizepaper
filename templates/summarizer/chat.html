@@ -739,6 +739,17 @@ searchResults.addEventListener('click', function(event) {
     }
 
   });
+
+  // /chat/?ids=a,b,c (from a collection): add those papers one by one, spaced for arXiv
+  var preset = (new URLSearchParams(location.search).get('ids') || '').split(',').filter(Boolean).slice(0, maxNumberPapers);
+  function addNext() {
+    if (!preset.length) return;
+    if (socket.readyState !== WebSocket.OPEN) return setTimeout(addNext, 500);
+    paperIdInput.value = preset.shift();
+    addPaperButton.click();
+    setTimeout(addNext, 3500);
+  }
+  addNext();
 });
 </script>
 

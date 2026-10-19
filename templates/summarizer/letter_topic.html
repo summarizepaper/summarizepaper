@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% blocktrans %}{{ name }} this week{% endblocktrans %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% blocktrans %}The weekly letter on {{ name }}: what is new in research, from the latest arXiv papers.{% endblocktrans %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{{ topic }}/" />
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/letters/">← {% trans 'Weekly letters' %}</a></p>
+    <h1>{% blocktrans %}{{ name }} this week{% endblocktrans %}</h1>
+  </header>
+  <ul class="item-list">
+    {% for letter in letters %}
+    <li class="card"><a href="/{{ LANGUAGE_CODE }}/letters/{{ topic }}/{{ letter.day|date:'Y-m-d' }}/"><strong>{{ letter.title }}</strong></a>
+      <div class="meta">{{ letter.day|date:"j F Y" }}</div><p class="muted" style="margin:6px 0 0">{{ letter.dek }}</p></li>
+    {% empty %}
+    <li class="muted">{% trans 'The first letter comes out next week.' %}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

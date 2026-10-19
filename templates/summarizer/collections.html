@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'My collections' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'My collections' %}</h1>
+    <p class="lead">{% trans 'Group papers by project to compare them in one table, chat with all of them at once, and export them to your reference manager.' %}</p>
+  </header>
+
+  {% if collections %}
+  <ul class="item-list">
+    {% for c in collections %}
+    <li class="card">
+      <a href="/{{ LANGUAGE_CODE }}/collections/{{ c.pk }}/"><strong>{{ c.name }}</strong></a>
+      <div class="meta">{% blocktrans count n=c.papers.all|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% trans 'updated' %} {{ c.updated|date:"j F Y" }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{% trans 'No collection yet. Create one here, or from any paper page with "Save to a collection".' %}</p>
+  {% endif %}
+
+  {% if can_create %}
+  <h2>{% trans 'New collection' %}</h2>
+  <form method="post" class="tool-row" style="border:0">
+    {% csrf_token %}
+    <input type="text" name="name" maxlength="120" required placeholder="{% trans 'e.g. Thesis chapter 2, Article on fusion' %}" style="flex:1;min-width:220px">
+    <button class="btn" type="submit">{% trans 'Create' %}</button>
+  </form>
+  {% else %}
+  <div class="upsell"><p>{% blocktrans with n=limits.collections %}You have {{ n }} collections, the most of your plan.{% endblocktrans %} {% if not paid %}<a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Premium has up to 100 collections of 200 papers.' %}</a>{% endif %}</p></div>
+  {% endif %}
+
+  {% if not paid %}
+  <div class="upsell" style="margin-top:24px">
+    <p><strong>{% trans 'With Premium' %}</strong>: {% trans 'a comparison table of each collection (question, method, data, results, limitations), with where the papers agree, disagree, and what none of them has done yet; up to 100 collections of 200 papers; and the whole collection sent to Zotero with its summaries.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

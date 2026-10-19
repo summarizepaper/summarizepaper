@@ -1,5 +1,6 @@
 from django.urls import path, re_path
-from . import views, billing, digest, accounts, reactivation, guides
+from . import (views, billing, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+               library, missed, presskit, reading, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -35,6 +36,29 @@ urlpatterns = [
     path("digest/", digest.digest_page, name="digest"),
     path("digest/unsubscribe/<str:token>/", digest.unsubscribe, name="digest_unsubscribe"),
     path("digest/feedback/<str:token>/", digest.feedback, name="digest_feedback"),
+    path("digest/listen/<str:token_value>/", audio.listen_page, name="digest_listen"),
+    path("digest/listen/<str:token_value>/episode.mp3", audio.episode_mp3, name="digest_episode"),
+    path("ai/<int:pk>/", generated.status_view, name="generated_status"),
+    path("reading/<str:arxiv_id>/", reading.reading_view, name="reading"),
+    path("press-kit/<str:arxiv_id>/", presskit.presskit_page, name="presskit"),
+    path("press-kit/<str:arxiv_id>/start/", presskit.presskit_start, name="presskit_start"),
+    path("collections/", library.collections_page, name="collections"),
+    path("collections/add/", library.add_to_collection, name="collection_add"),
+    path("collections/<int:pk>/", library.collection_page, name="collection"),
+    path("collections/<int:pk>/compare/", library.compare_start, name="collection_compare"),
+    path("collections/<int:pk>/export/<str:fmt>/", library.collection_export, name="collection_export"),
+    path("export/<str:arxiv_id>/<str:fmt>/", exports.export_paper, name="export_paper"),
+    path("integrations/", exports.zotero_settings, name="integrations"),
+    path("zotero/send/", exports.zotero_send, name="zotero_send"),
+    path("missed/", missed.missed_page, name="missed"),
+    path("missed/<str:key>/", missed.missed_result, name="missed_result"),
+    path("citations/", citations.citations_page, name="citations"),
+    path("citations/follow/", citations.follow_view, name="citations_follow"),
+    path("trends/", trends.trends_page, name="trends"),
+    path("letters/", letters.letters_page, name="letters"),
+    path("letters/unsubscribe/<str:token>/", letters.unsubscribe, name="letters_unsubscribe"),
+    path("letters/<slug:topic>/", letters.topic_page, name="letter_topic"),
+    path("letters/<slug:topic>/<str:day>/", letters.letter_page, name="letter"),
     path("premium/", billing.premium, name="premium"),
     path("premium/checkout/", billing.checkout, name="premium_checkout"),
     path("premium/portal/", billing.portal, name="premium_portal"),

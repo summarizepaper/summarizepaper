@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}{{ letter.title }}
+{{ letter.dek }}
+{% for section in sections %}
+{{ section.heading }}
+
+{{ section.text }}
+{% for p in section.links %}- {{ p.title }}: {{ base_url }}/{{ letter.lang }}/arxiv-id/{{ p.arxiv_id }}/
+{% endfor %}{% endfor %}
+{{ closing }}
+
+{% trans 'Read it on the web:' %} {{ url }}
+{% trans 'Unsubscribe:' %} {{ unsubscribe_url }}
+{% endautoescape %}

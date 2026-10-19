@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'What did I miss?' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <span class="eyebrow">Premium</span>
+    <h1>{% trans 'What did I miss?' %}</h1>
+    <p class="lead">{% trans 'Give us your draft: we search arXiv for the papers closest to it that it does not cite, and say for each how it relates to your work and how to position yourself against it.' %}</p>
+  </header>
+
+  {% if not paid %}
+    <div class="upsell"><p>{% trans 'Before you submit, make sure no close paper is missing from your references.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% else %}
+    {% if error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
+    {% elif error == 'empty' %}<p class="error">{% trans 'Send a PDF, or paste at least the title, abstract and references of your draft.' %}</p>
+    {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
+    <form method="post" enctype="multipart/form-data" class="card section-card">
+      {% csrf_token %}
+      <p><label>{% trans 'Your draft (PDF)' %}<br><input type="file" name="draft" accept="application/pdf,.pdf"></label></p>
+      <p class="muted">{% trans 'or paste its text (title, abstract, introduction and references are enough):' %}</p>
+      <p><textarea name="text"></textarea></p>
+      <p><button class="btn" type="submit">{% trans 'Find what I missed' %}</button></p>
+      <p class="muted"><small>{% trans 'Your draft is read once to search arXiv and is not stored. Only the list of papers found is kept, in your account.' %}</small></p>
+    </form>
+
+    {% if searches %}
+    <h2>{% trans 'Your searches' %}</h2>
+    <ul class="item-list">
+      {% for s in searches %}
+      <li class="card"><a href="/{{ LANGUAGE_CODE }}/missed/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.title|default:_('Draft') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ s.created|date:"j F Y H:i" }}</div></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

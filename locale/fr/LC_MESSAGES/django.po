@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 17:12+0000\n"
+"POT-Creation-Date: 2026-10-19 18:04+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,18 +19,82 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.9.8\n"
 
-#: arxivsummarizer/settings.py:237
+#: arxivsummarizer/settings.py:239
 msgid "French"
 msgstr "Français"
 
-#: arxivsummarizer/settings.py:238
+#: arxivsummarizer/settings.py:240
 msgid "English"
 msgstr "Anglais"
 
-#: summarizer/guides.py:140 templates/base.html:107
+#: summarizer/audio.py:56
+msgid "Here are the new papers of your SummarizePaper digest."
+msgstr "Voici les nouveaux articles de votre digest SummarizePaper."
+
+#: summarizer/guides.py:140 templates/base.html:119
 #: templates/summarizer/guide.html:18 templates/summarizer/guides.html:15
 msgid "Guides"
 msgstr "Guides"
+
+#: summarizer/letters.py:31
+msgid "Artificial intelligence"
+msgstr "Intelligence artificielle"
+
+#: summarizer/letters.py:32
+msgid "Astronomy and space"
+msgstr "Astronomie et espace"
+
+#: summarizer/letters.py:33
+msgid "Quantum physics"
+msgstr "Physique quantique"
+
+#: summarizer/letters.py:34
+msgid "Biology and medicine"
+msgstr "Biologie et médecine"
+
+#: summarizer/letters.py:35
+msgid "Climate and Earth"
+msgstr "Climat et Terre"
+
+#: summarizer/letters.py:36
+msgid "Economics and finance"
+msgstr "Économie et finance"
+
+#: summarizer/library.py:31
+msgid "Question"
+msgstr "Question"
+
+#: summarizer/library.py:32
+msgid "Method"
+msgstr "Méthode"
+
+#: summarizer/library.py:33
+msgid "Data"
+msgstr "Données"
+
+#: summarizer/library.py:34
+msgid "Main results"
+msgstr "Résultats principaux"
+
+#: summarizer/library.py:35
+msgid "Limitations"
+msgstr "Limites"
+
+#: summarizer/reading.py:20
+msgid "For a 12-year-old"
+msgstr "Pour un enfant de 12 ans"
+
+#: summarizer/reading.py:21
+msgid "High school"
+msgstr "Lycée"
+
+#: summarizer/reading.py:22
+msgid "Undergraduate"
+msgstr "Licence"
+
+#: summarizer/reading.py:23
+msgid "Expert (dense, technical)"
+msgstr "Expert (dense, technique)"
 
 #: summarizer/views.py:178
 msgid ""
@@ -39,11 +103,11 @@ msgstr ""
 "Cette adresse ne peut pas recevoir nos e-mails. Vérifiez-la ou utilisez-en "
 "une autre."
 
-#: summarizer/views.py:980 summarizer/views.py:1332
+#: summarizer/views.py:996 summarizer/views.py:1354
 msgid "You have already voted"
 msgstr "Vous avez déjà voté"
 
-#: summarizer/views.py:1332
+#: summarizer/views.py:1354
 msgid "Thank you for your vote"
 msgstr "Merci pour votre vote"
 
@@ -209,14 +273,14 @@ msgstr ""
 "Nous n'avons pas pu vous connecter avec Google. Réessayez, ou connectez-vous"
 " avec un lien par email."
 
-#: templates/accounts/google_error.html:14 templates/base.html:89
+#: templates/accounts/google_error.html:14 templates/base.html:101
 #: templates/registration/login.html:20 templates/registration/login.html:45
 msgid "Login"
 msgstr "Se connecter"
 
 #: templates/accounts/login_link_confirm.html:4
 #: templates/accounts/login_link_confirm.html:12 templates/register.html:64
-#: templates/summarizer/digest.html:45 templates/summarizer/premium.html:82
+#: templates/summarizer/digest.html:45 templates/summarizer/premium.html:92
 msgid "Log in"
 msgstr "Se connecter"
 
@@ -319,53 +383,136 @@ msgstr ""
 "rapide de sujets de recherche complexes grâce à nos résumés alimentés par "
 "l'intelligence artificielle. Essayez-le dès aujourd'hui !"
 
-#: templates/base.html:59
+#: templates/base.html:60
 msgid "Menu"
 msgstr "Menu"
 
-#: templates/base.html:63
+#: templates/base.html:65
+msgid "Tools"
+msgstr "Outils"
+
+#: templates/base.html:67
 msgid "Chat with Papers"
 msgstr "Conversation"
 
-#: templates/base.html:64
+#: templates/base.html:68
 msgid "Daily digest"
 msgstr "Digest quotidien"
 
-#: templates/base.html:65 templates/summarizer/guide.html:30
+#: templates/base.html:69 templates/summarizer/letter_topic.html:14
+#: templates/summarizer/letters.html:14
+msgid "Weekly letters"
+msgstr "Lettres hebdomadaires"
+
+#: templates/base.html:70
+msgid "Rising topics"
+msgstr "Sujets qui montent"
+
+#: templates/base.html:71 templates/summarizer/collection.html:6
+#: templates/summarizer/collection.html:12
+#: templates/summarizer/collections.html:5
+#: templates/summarizer/collections.html:11
+msgid "My collections"
+msgstr "Mes collections"
+
+#: templates/base.html:72 templates/summarizer/missed.html:5
+#: templates/summarizer/missed.html:12
+#: templates/summarizer/missed_result.html:6
+#: templates/summarizer/missed_result.html:12
+#: templates/summarizer/premium.html:73
+msgid "What did I miss?"
+msgstr "Qu'est-ce que j'ai raté ?"
+
+#: templates/base.html:73 templates/summarizer/citations.html:5
+#: templates/summarizer/citations.html:12
+#: templates/summarizer/paper_tools.html:40
+#: templates/summarizer/premium.html:74
+msgid "Citation alerts"
+msgstr "Alertes de citation"
+
+#: templates/base.html:74 templates/summarizer/integrations.html:5
+#: templates/summarizer/integrations.html:11
+msgid "Zotero, Notion, Obsidian"
+msgstr "Zotero, Notion, Obsidian"
+
+#: templates/base.html:77 templates/summarizer/guide.html:30
 msgid "FAQ"
 msgstr "FAQ"
 
-#: templates/base.html:66 templates/summarizer/premium.html:62
+#: templates/base.html:78 templates/summarizer/premium.html:65
 msgid "Premium"
 msgstr "Premium"
 
-#: templates/base.html:68
+#: templates/base.html:80
 msgid "My history"
 msgstr "Mon historique"
 
-#: templates/base.html:87
+#: templates/base.html:99
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: templates/base.html:105
+#: templates/base.html:117
 msgid "Open source"
 msgstr "Open source"
 
-#: templates/base.html:108
+#: templates/base.html:120
 msgid "About"
 msgstr "A propos"
 
-#: templates/base.html:109
+#: templates/base.html:121
 msgid "Contact"
 msgstr "Contactez Nous"
 
-#: templates/base.html:110 templates/summarizer/privacy.html:18
+#: templates/base.html:122 templates/summarizer/privacy.html:18
 msgid "Privacy Policy"
 msgstr "Confidentialité"
 
-#: templates/base.html:111
+#: templates/base.html:123
 msgid "Legal Notice"
 msgstr "Mentions Légales"
+
+#: templates/citations/email.html:6 templates/citations/email.txt:1
+#: templates/citations/subject.txt:1
+#, python-format
+msgid "%(n)s new citation of the papers you follow"
+msgid_plural "%(n)s new citations of the papers you follow"
+msgstr[0] "%(n)s nouvelle citation des articles que vous suivez"
+msgstr[1] "%(n)s nouvelles citations des articles que vous suivez"
+
+#: templates/citations/email.html:12
+msgid "builds on it"
+msgstr "s'appuie dessus"
+
+#: templates/citations/email.html:12
+msgid "supports it"
+msgstr "le confirme"
+
+#: templates/citations/email.html:12
+msgid "questions it"
+msgstr "le remet en question"
+
+#: templates/citations/email.html:12
+msgid "mentions it"
+msgstr "le mentionne"
+
+#: templates/citations/email.html:16 templates/citations/email.txt:8
+#, python-format
+msgid "and %(n)s more"
+msgid_plural "and %(n)s more"
+msgstr[0] "et %(n)s autre"
+msgstr[1] "et %(n)s autres"
+
+#: templates/citations/email.html:19
+msgid "Citations from Semantic Scholar."
+msgstr "Citations fournies par Semantic Scholar."
+
+#: templates/citations/email.html:19
+msgid "Manage the papers you follow"
+msgstr "Gérer les articles que vous suivez"
+
+#: templates/citations/email.txt:10
+msgid "Manage the papers you follow:"
+msgstr "Gérer les articles que vous suivez :"
 
 #: templates/digest/email.html:7 templates/digest/email.txt:1
 msgid "Your weekly arXiv digest"
@@ -376,24 +523,37 @@ msgstr "Votre digest arXiv de la semaine"
 msgid "Your daily arXiv digest"
 msgstr "Votre digest arXiv quotidien"
 
-#: templates/digest/email.html:10 templates/digest/email.txt:3
+#: templates/digest/email.html:9 templates/digest/email.txt:3
+msgid "Listen to this digest"
+msgstr "Écouter ce digest"
+
+#: templates/digest/email.html:13 templates/digest/email.txt:5
+msgid "Rising in your fields this week"
+msgstr "Ce qui monte dans vos domaines cette semaine"
+
+#: templates/digest/email.html:17 templates/digest/email.txt:7
+#: templates/summarizer/premium.html:76
+msgid "All the rising topics"
+msgstr "Tous les sujets qui montent"
+
+#: templates/digest/email.html:22 templates/digest/email.txt:9
 #, python-format
 msgid "This week in %(category)s"
 msgstr "Cette semaine en %(category)s"
 
-#: templates/digest/email.html:15 templates/digest/email.txt:5
+#: templates/digest/email.html:27 templates/digest/email.txt:11
 msgid "Papers to watch:"
 msgstr "Articles à suivre :"
 
-#: templates/digest/email.html:23 templates/digest/email.txt:8
+#: templates/digest/email.html:35 templates/digest/email.txt:14
 msgid "From the authors you follow"
 msgstr "Des auteurs que vous suivez"
 
-#: templates/digest/email.html:25 templates/digest/email.txt:15
+#: templates/digest/email.html:37 templates/digest/email.txt:21
 msgid "In your categories"
 msgstr "Dans vos catégories"
 
-#: templates/digest/email.html:30
+#: templates/digest/email.html:42
 #, python-format
 msgid ""
 "This week in %(category)s: <strong>%(title)s</strong>. Premium digests open "
@@ -402,7 +562,7 @@ msgstr ""
 "Cette semaine en %(category)s : <strong>%(title)s</strong>. Les digests "
 "Premium s'ouvrent sur les tendances de la semaine dans vos domaines."
 
-#: templates/digest/email.html:31 templates/digest/email.txt:22
+#: templates/digest/email.html:43 templates/digest/email.txt:28
 msgid ""
 "Premium digests rank papers by closeness to your research, follow the "
 "authors you choose and open with the trends of the week in your fields."
@@ -411,29 +571,40 @@ msgstr ""
 "recherches, suivent les auteurs de votre choix et s'ouvrent sur les "
 "tendances de la semaine dans vos domaines."
 
-#: templates/digest/email.html:32 templates/digest/email.txt:23
+#: templates/digest/email.html:44 templates/digest/email.txt:29
+#: templates/summarizer/citations.html:17
+#: templates/summarizer/collection.html:35
+#: templates/summarizer/collections.html:41
+#: templates/summarizer/integrations.html:25
+#: templates/summarizer/letter.html:35 templates/summarizer/letters.html:45
+#: templates/summarizer/letters.html:47 templates/summarizer/missed.html:17
+#: templates/summarizer/paper_tools.html:54
+#: templates/summarizer/presskit.html:20 templates/summarizer/trends.html:42
 msgid "Discover Premium"
 msgstr "Découvrir Premium"
 
-#: templates/digest/email.html:36
+#: templates/digest/email.html:48
 msgid "Change your categories"
 msgstr "Modifier vos catégories"
 
-#: templates/digest/email.html:37
+#: templates/digest/email.html:49 templates/letters/email.html:16
 #: templates/summarizer/digest_unsubscribe.html:18
+#: templates/summarizer/letter_unsubscribe.html:3
+#: templates/summarizer/letter_unsubscribe.html:13
+#: templates/summarizer/letter_unsubscribe.html:16
 msgid "Unsubscribe"
 msgstr "Se désinscrire"
 
-#: templates/digest/email.txt:11 templates/digest/item.html:3
+#: templates/digest/email.txt:17 templates/digest/item.html:3
 #, python-format
 msgid "you follow %(names)s"
 msgstr "vous suivez %(names)s"
 
-#: templates/digest/email.txt:13 templates/digest/email.txt:20
+#: templates/digest/email.txt:19 templates/digest/email.txt:26
 msgid "Read the summary:"
 msgstr "Lire le résumé :"
 
-#: templates/digest/email.txt:22
+#: templates/digest/email.txt:28
 #, python-format
 msgid ""
 "This week in %(category)s: %(title)s. Premium digests open with the trends "
@@ -442,11 +613,11 @@ msgstr ""
 "Cette semaine en %(category)s : %(title)s. Les digests Premium s'ouvrent sur"
 " les tendances de la semaine dans vos domaines."
 
-#: templates/digest/email.txt:26
+#: templates/digest/email.txt:32
 msgid "Change your categories:"
 msgstr "Modifier vos catégories :"
 
-#: templates/digest/email.txt:27
+#: templates/digest/email.txt:33 templates/letters/email.txt:12
 msgid "Unsubscribe:"
 msgstr "Se désinscrire :"
 
@@ -479,6 +650,22 @@ msgid "%(counter)s new paper for you on arXiv"
 msgid_plural "%(counter)s new papers for you on arXiv"
 msgstr[0] "%(counter)s nouvel article pour vous sur arXiv"
 msgstr[1] "%(counter)s nouveaux articles pour vous sur arXiv"
+
+#: templates/letters/email.html:5 templates/summarizer/letter.html:5
+#: templates/summarizer/letter.html:22
+#: templates/summarizer/letter_topic.html:5
+#: templates/summarizer/letter_topic.html:15
+#, python-format
+msgid "%(name)s this week"
+msgstr "%(name)s cette semaine"
+
+#: templates/letters/email.html:15
+msgid "Read it on the web"
+msgstr "Lire sur le web"
+
+#: templates/letters/email.txt:11
+msgid "Read it on the web:"
+msgstr "Lire sur le web :"
 
 #: templates/password_reset_complete.html:5
 msgid ""
@@ -651,7 +838,7 @@ msgid "Please fix the following errors:"
 msgstr "Veuillez corriger les erreurs suivantes :"
 
 #: templates/register.html:64 templates/summarizer/digest.html:45
-#: templates/summarizer/premium.html:82
+#: templates/summarizer/premium.html:92
 msgid "Already registered?"
 msgstr "Déjà inscrit ?"
 
@@ -786,12 +973,12 @@ msgid "More about the author"
 msgstr "En savoir plus sur l'auteur"
 
 #: templates/summarizer/about.html:34
-#: templates/summarizer/arxividpage.html:721
+#: templates/summarizer/arxividpage.html:725
 msgid "Disclaimer:"
 msgstr "Avertissement :"
 
 #: templates/summarizer/about.html:34
-#: templates/summarizer/arxividpage.html:721
+#: templates/summarizer/arxividpage.html:725
 msgid ""
 "The AI-based summarization tool and virtual assistant provided on this "
 "website may not always provide accurate and complete summaries or responses."
@@ -820,32 +1007,32 @@ msgstr "Résumé facile à lire du document arXiv"
 msgid "entitled "
 msgstr "intitulé "
 
-#: templates/summarizer/arxividpage.html:409 templates/summarizer/tree.html:71
+#: templates/summarizer/arxividpage.html:412 templates/summarizer/tree.html:71
 #: templates/summarizer/tree.html:207
 msgid "Authors:"
 msgstr "Auteurs :"
 
-#: templates/summarizer/arxividpage.html:432
-#: templates/summarizer/arxividpage.html:436
-#: templates/summarizer/arxividpage.html:806
+#: templates/summarizer/arxividpage.html:435
+#: templates/summarizer/arxividpage.html:439
 #: templates/summarizer/arxividpage.html:810
-#: templates/summarizer/arxividpage.html:1163
+#: templates/summarizer/arxividpage.html:814
+#: templates/summarizer/arxividpage.html:1167
 #: templates/summarizer/chat.html:289 templates/summarizer/chat.html:294
 #: templates/summarizer/tree.html:93 templates/summarizer/tree.html:97
 msgid "License:"
 msgstr "Licence :"
 
-#: templates/summarizer/arxividpage.html:442
+#: templates/summarizer/arxividpage.html:445
 #: templates/summarizer/templatepdf.html:126
 msgid "AI-generated keywords:"
 msgstr "Mots clés générés par l'IA :"
 
-#: templates/summarizer/arxividpage.html:452
+#: templates/summarizer/arxividpage.html:455
 #: templates/summarizer/templatepdf.html:139
 msgid "AI-generated Key Points"
 msgstr "Points clés générés par l'IA"
 
-#: templates/summarizer/arxividpage.html:454
+#: templates/summarizer/arxividpage.html:457
 msgid ""
 "The license of the paper does not allow us to build upon its content and the"
 " key points are generated using the paper metadata rather than the full "
@@ -855,59 +1042,59 @@ msgstr ""
 "et les points clés sont générés à l'aide des métadonnées de l'article plutôt"
 " que de l'article complet."
 
-#: templates/summarizer/arxividpage.html:465
+#: templates/summarizer/arxividpage.html:468
 msgid "Also access our AI generated:"
 msgstr "Accédez également à nos autres résultats générés par IA :"
 
-#: templates/summarizer/arxividpage.html:466
+#: templates/summarizer/arxividpage.html:469
 msgid "Comprehensive summary"
 msgstr "Résumé complet"
 
-#: templates/summarizer/arxividpage.html:467
+#: templates/summarizer/arxividpage.html:470
 msgid "Lay summary"
 msgstr "Résumé vulgarisé"
 
-#: templates/summarizer/arxividpage.html:468
+#: templates/summarizer/arxividpage.html:471
 msgid "Blog-like article"
 msgstr "Article de type blog"
 
-#: templates/summarizer/arxividpage.html:469
+#: templates/summarizer/arxividpage.html:472
 #: templates/summarizer/tree.html:120
 msgid " or ask questions about this paper to our"
 msgstr " ou posez des questions sur cet article à notre"
 
-#: templates/summarizer/arxividpage.html:469
+#: templates/summarizer/arxividpage.html:472
 #: templates/summarizer/tree.html:120
 msgid "AI assistant"
 msgstr "Assistant IA"
 
-#: templates/summarizer/arxividpage.html:475
+#: templates/summarizer/arxividpage.html:478
 msgid "Summaries already available in other languages:"
 msgstr "Résumés déjà disponibles dans d'autres langues :"
 
-#: templates/summarizer/arxividpage.html:484
-#: templates/summarizer/arxividpage.html:815
-#: templates/summarizer/arxividpage.html:1174
+#: templates/summarizer/arxividpage.html:487
+#: templates/summarizer/arxividpage.html:819
+#: templates/summarizer/arxividpage.html:1178
 #: templates/summarizer/tree.html:102
 msgid "Abstract:"
 msgstr "Résumé :"
 
-#: templates/summarizer/arxividpage.html:489
-#: templates/summarizer/arxividpage.html:820
-#: templates/summarizer/arxividpage.html:1185
+#: templates/summarizer/arxividpage.html:492
+#: templates/summarizer/arxividpage.html:824
+#: templates/summarizer/arxividpage.html:1189
 #: templates/summarizer/tree.html:107
 msgid "Submitted to arXiv on"
 msgstr "Soumis à arXiv le"
 
-#: templates/summarizer/arxividpage.html:493
+#: templates/summarizer/arxividpage.html:496
 msgid "Cite this paper (BibTeX)"
 msgstr "Citer cet article (BibTeX)"
 
-#: templates/summarizer/arxividpage.html:498
+#: templates/summarizer/arxividpage.html:502
 msgid "Ask questions about this paper to our AI assistant"
 msgstr "Posez des questions sur cet article à notre assistant IA"
 
-#: templates/summarizer/arxividpage.html:499
+#: templates/summarizer/arxividpage.html:503
 #, python-format
 msgid ""
 "You can also <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"btn btn-"
@@ -916,7 +1103,7 @@ msgstr ""
 "Vous pouvez aussi <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"btn btn-"
 "primary\">discutez avec plusieurs papiers à la fois ici</a>."
 
-#: templates/summarizer/arxividpage.html:501
+#: templates/summarizer/arxividpage.html:505
 #: templates/summarizer/chat.html:203
 msgid ""
 "The license of the paper does not allow us to build upon its content and the"
@@ -927,42 +1114,42 @@ msgstr ""
 "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
 "que de l'article complet."
 
-#: templates/summarizer/arxividpage.html:505
+#: templates/summarizer/arxividpage.html:509
 msgid "Ask anything about this paper."
 msgstr "Posez n'importe quelle question sur cet article."
 
-#: templates/summarizer/arxividpage.html:508
+#: templates/summarizer/arxividpage.html:512
 #: templates/summarizer/chat.html:210
 msgid "AI"
 msgstr "IA"
 
-#: templates/summarizer/arxividpage.html:512
+#: templates/summarizer/arxividpage.html:516
 #: templates/summarizer/chat.html:215
 msgid "Type your question here"
 msgstr "Saisissez votre question ici"
 
-#: templates/summarizer/arxividpage.html:513
+#: templates/summarizer/arxividpage.html:517
 #: templates/summarizer/chat.html:216
 msgid "Send"
 msgstr "Envoyer"
 
-#: templates/summarizer/arxividpage.html:516
-#: templates/summarizer/arxividpage.html:843
-#: templates/summarizer/arxividpage.html:861
-#: templates/summarizer/arxividpage.html:911
-#: templates/summarizer/arxividpage.html:914
-#: templates/summarizer/arxividpage.html:917
-#: templates/summarizer/arxividpage.html:920
+#: templates/summarizer/arxividpage.html:520
+#: templates/summarizer/arxividpage.html:847
+#: templates/summarizer/arxividpage.html:865
+#: templates/summarizer/arxividpage.html:915
+#: templates/summarizer/arxividpage.html:918
+#: templates/summarizer/arxividpage.html:921
+#: templates/summarizer/arxividpage.html:924
 #: templates/summarizer/chat.html:219 templates/summarizer/home.html:226
 msgid "Loading..."
 msgstr "Chargement..."
 
-#: templates/summarizer/arxividpage.html:520
+#: templates/summarizer/arxividpage.html:524
 #: templates/summarizer/chat.html:223
 msgid "AI assistant instructions?"
 msgstr "Instructions pour utiliser l'assistant IA ?"
 
-#: templates/summarizer/arxividpage.html:522
+#: templates/summarizer/arxividpage.html:526
 #: templates/summarizer/chat.html:225
 msgid ""
 "Welcome to our AI assistant! Here are some important things to keep in mind:"
@@ -970,18 +1157,18 @@ msgstr ""
 "Bienvenue dans notre assistant IA ! Voici quelques points importants à "
 "garder à l'esprit :"
 
-#: templates/summarizer/arxividpage.html:524
+#: templates/summarizer/arxividpage.html:528
 msgid ""
 "The assistant will only answer questions related to this specific paper."
 msgstr ""
 "L'assistant ne répondra qu'aux questions liées à ce document spécifique."
 
-#: templates/summarizer/arxividpage.html:525
+#: templates/summarizer/arxividpage.html:529
 #: templates/summarizer/chat.html:228
 msgid "Please note that this is not a bot for casual chatting."
 msgstr "Veuillez noter qu'il ne s'agit pas d'un bot de conversation."
 
-#: templates/summarizer/arxividpage.html:526
+#: templates/summarizer/arxividpage.html:530
 #: templates/summarizer/chat.html:229
 msgid ""
 "If you want the answer in a language other than the language you chose for "
@@ -992,7 +1179,7 @@ msgstr ""
 "choisie pour naviguer sur le site, ajoutez simplement \"TRADUIRE EN L\" à la"
 " fin de votre requête (remplacez \"L\" par la langue de votre choix)."
 
-#: templates/summarizer/arxividpage.html:527
+#: templates/summarizer/arxividpage.html:531
 msgid ""
 "For example, you could ask \"Can you extract the most important aspect of "
 "the paper? TRANSLATE IN SPANISH\"."
@@ -1000,7 +1187,7 @@ msgstr ""
 "Par exemple, vous pourriez demander \"Pouvez-vous extraire l'aspect le plus "
 "important du document ? TRADUIRE EN ESPAGNOL\"."
 
-#: templates/summarizer/arxividpage.html:529
+#: templates/summarizer/arxividpage.html:533
 #: templates/summarizer/chat.html:232
 msgid ""
 "If you want to keep the history of your questions/answers you should create "
@@ -1009,11 +1196,11 @@ msgstr ""
 "Si vous souhaitez conserver l'historique de vos questions/réponses, vous "
 "devez créer un compte."
 
-#: templates/summarizer/arxividpage.html:536
+#: templates/summarizer/arxividpage.html:540
 msgid "Results of the summarizing process for the arXiv paper:"
 msgstr "Résultats du processus de synthèse de l'article arXiv :"
 
-#: templates/summarizer/arxividpage.html:538
+#: templates/summarizer/arxividpage.html:542
 msgid ""
 "This paper's license doesn't allow us to build upon its content and the "
 "summarizing process is here made with the paper's metadata rather than the "
@@ -1023,68 +1210,68 @@ msgstr ""
 " et le processus de synthèse est ici effectué avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
-#: templates/summarizer/arxividpage.html:541
-#: templates/summarizer/arxividpage.html:904
+#: templates/summarizer/arxividpage.html:545
+#: templates/summarizer/arxividpage.html:908
 msgid "Comprehensive Summary"
 msgstr "Résumé Complet"
 
-#: templates/summarizer/arxividpage.html:542
-#: templates/summarizer/arxividpage.html:905
+#: templates/summarizer/arxividpage.html:546
+#: templates/summarizer/arxividpage.html:909
 msgid "Key points"
 msgstr "Points clés"
 
-#: templates/summarizer/arxividpage.html:543
-#: templates/summarizer/arxividpage.html:906
+#: templates/summarizer/arxividpage.html:547
+#: templates/summarizer/arxividpage.html:910
 msgid "Layman's Summary"
 msgstr "Résumé vulgarisé"
 
-#: templates/summarizer/arxividpage.html:544
-#: templates/summarizer/arxividpage.html:907
+#: templates/summarizer/arxividpage.html:548
+#: templates/summarizer/arxividpage.html:911
 msgid "Blog article"
 msgstr "Article de blog"
 
-#: templates/summarizer/arxividpage.html:547
+#: templates/summarizer/arxividpage.html:551
 msgid "The summary is not ready yet"
 msgstr "Le résumé n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:555
+#: templates/summarizer/arxividpage.html:559
 msgid "The key points are not ready yet"
 msgstr "Les points clés ne sont pas encore prêts"
 
-#: templates/summarizer/arxividpage.html:557
+#: templates/summarizer/arxividpage.html:561
 msgid "The Layman's summary is not ready yet"
 msgstr "Le résumé vulgarisé n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:558
+#: templates/summarizer/arxividpage.html:562
 msgid "The blog article is not ready yet"
 msgstr "L'article de blog n'est pas encore prêt"
 
-#: templates/summarizer/arxividpage.html:565
+#: templates/summarizer/arxividpage.html:569
 msgid "Created on"
 msgstr "Créé le"
 
-#: templates/summarizer/arxividpage.html:570
+#: templates/summarizer/arxividpage.html:574
 msgid "Available in other languages:"
 msgstr "Disponible dans d'autres langues :"
 
-#: templates/summarizer/arxividpage.html:579
+#: templates/summarizer/arxividpage.html:583
 msgid "Download as pdf"
 msgstr "Télécharger en pdf"
 
-#: templates/summarizer/arxividpage.html:612
+#: templates/summarizer/arxividpage.html:616
 msgid "Assess the quality of the AI-generated content by voting"
 msgstr "Évaluez la qualité du contenu généré par l'IA en votant"
 
-#: templates/summarizer/arxividpage.html:621
+#: templates/summarizer/arxividpage.html:625
 #: templates/summarizer/tree.html:209
 msgid "Score:"
 msgstr "Note :"
 
-#: templates/summarizer/arxividpage.html:629
+#: templates/summarizer/arxividpage.html:633
 msgid "Why do we need votes?"
 msgstr "Pourquoi avons-nous besoin de votes ?"
 
-#: templates/summarizer/arxividpage.html:630
+#: templates/summarizer/arxividpage.html:634
 msgid ""
 "Votes are used to determine whether we need to re-run our summarizing tools."
 " If the count reaches -10, our tools can be restarted."
@@ -1092,7 +1279,7 @@ msgstr ""
 "Les votes sont utilisés pour déterminer si nous devons réexécuter nos outils"
 " de synthèse. Si le compte atteint -10, nos outils peuvent être redémarrés."
 
-#: templates/summarizer/arxividpage.html:667
+#: templates/summarizer/arxividpage.html:671
 msgid ""
 "The previous summary was created more than a year ago and can be re-run (if "
 "necessary) by clicking on the Run button below."
@@ -1100,7 +1287,7 @@ msgstr ""
 "Le résumé précédent a été créé il y a plus d'un an et peut être réexécuté "
 "(si nécessaire) en cliquant sur le bouton Exécuter ci-dessous."
 
-#: templates/summarizer/arxividpage.html:669
+#: templates/summarizer/arxividpage.html:673
 msgid ""
 "The summaries have many downvotes and can be re-run with our tools if "
 "necessary by clicking on the Run button below."
@@ -1108,7 +1295,7 @@ msgstr ""
 "Nos résumés ont de nombreux votes négatifs et peuvent être réexécutés avec "
 "nos outils si nécessaire en cliquant sur le bouton Exécuter ci-dessous."
 
-#: templates/summarizer/arxividpage.html:671
+#: templates/summarizer/arxividpage.html:675
 msgid ""
 "Some bits of the article are not summarized yet, you can re-run the "
 "summarizing process by clicking on the Run button below."
@@ -1117,19 +1304,19 @@ msgstr ""
 "relancer le processus de synthèse en cliquant sur le bouton Exécuter ci-"
 "dessous."
 
-#: templates/summarizer/arxividpage.html:673
+#: templates/summarizer/arxividpage.html:677
 msgid "Hi, because you are a staff member you can Run the AI tools!"
 msgstr ""
 "Bonjour, parce que vous êtes un membre du personnel, vous pouvez exécuter "
 "les outils d'IA !"
 
-#: templates/summarizer/arxividpage.html:678
-#: templates/summarizer/arxividpage.html:827
+#: templates/summarizer/arxividpage.html:682
+#: templates/summarizer/arxividpage.html:831
 msgid "Run"
 msgstr "Exécuter"
 
-#: templates/summarizer/arxividpage.html:681
-#: templates/summarizer/arxividpage.html:831
+#: templates/summarizer/arxividpage.html:685
+#: templates/summarizer/arxividpage.html:835
 msgid ""
 "The license of this specific paper does not allow us to build upon its "
 "content and the summarizing tools will be run using the paper metadata "
@@ -1142,34 +1329,34 @@ msgstr ""
 "produira quand même un bon résultat, et vous pouvez également essayer nos "
 "outils sur des papiers avec des licences plus ouvertes."
 
-#: templates/summarizer/arxividpage.html:688
+#: templates/summarizer/arxividpage.html:692
 msgid "Similar papers summarized with our AI tools"
 msgstr "Articles similaires résumés avec nos outils d'IA"
 
-#: templates/summarizer/arxividpage.html:699
+#: templates/summarizer/arxividpage.html:703
 msgid "Navigate through even more similar papers through a "
 msgstr "Naviguez à travers encore plus d'articles similaires en utilisant une"
 
-#: templates/summarizer/arxividpage.html:700
+#: templates/summarizer/arxividpage.html:704
 msgid "tree representation"
 msgstr "représentation arborescente"
 
-#: templates/summarizer/arxividpage.html:708
+#: templates/summarizer/arxividpage.html:712
 #: templates/summarizer/tree.html:129
 msgid "Search again for closest papers"
 msgstr "Rechercher à nouveau les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:708
+#: templates/summarizer/arxividpage.html:712
 #: templates/summarizer/tree.html:129
 msgid "Search for closest papers"
 msgstr "Rechercher les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:716
+#: templates/summarizer/arxividpage.html:720
 #: templates/summarizer/tree.html:137
 msgid "Look for similar papers (in beta version)"
 msgstr "Recherchez des articles similaires (en version bêta)"
 
-#: templates/summarizer/arxividpage.html:717
+#: templates/summarizer/arxividpage.html:721
 #: templates/summarizer/tree.html:138
 msgid ""
 "By clicking on the button above, our algorithm compares the title and "
@@ -1182,12 +1369,12 @@ msgstr ""
 "nous avons résumés, et trouve les plus proches. Vous pouvez le relancer de "
 "temps en temps : les résultats s'améliorent à mesure que notre base grandit."
 
-#: templates/summarizer/arxividpage.html:728
+#: templates/summarizer/arxividpage.html:732
 #: templates/summarizer/tree.html:145
 msgid "There is no existing article with the given arXiv ID:"
 msgstr "Il n'y a aucun article existant avec l'identifiant arXiv donné :"
 
-#: templates/summarizer/arxividpage.html:728
+#: templates/summarizer/arxividpage.html:732
 #: templates/summarizer/tree.html:145
 #, python-format
 msgid ""
@@ -1197,7 +1384,7 @@ msgstr ""
 "Réessayez votre <a href=\"/%(LANGUAGE_CODE)s/\">recherche</a> avec un nouvel"
 " identifiant arXiv."
 
-#: templates/summarizer/arxividpage.html:735
+#: templates/summarizer/arxividpage.html:739
 msgid ""
 "Premium account: your summaries and answers use our <span "
 "class=\"highlight\">most capable model</span>."
@@ -1205,15 +1392,15 @@ msgstr ""
 "Compte Premium : vos résumés et réponses utilisent notre <span "
 "class=\"highlight\">modèle le plus performant</span>."
 
-#: templates/summarizer/arxividpage.html:740
+#: templates/summarizer/arxividpage.html:744
 msgid "Running our tool to find closest papers"
 msgstr "Exécution de notre outil pour trouver les papiers les plus proches"
 
-#: templates/summarizer/arxividpage.html:742
+#: templates/summarizer/arxividpage.html:746
 msgid "Running summarizing tools on a new article"
 msgstr "Exécution de notre outil de synthèse sur un nouvel article"
 
-#: templates/summarizer/arxividpage.html:745
+#: templates/summarizer/arxividpage.html:749
 msgid ""
 "We are now running our AI tools on the requested article. This process may "
 "take a few minutes so please bear with us."
@@ -1221,7 +1408,7 @@ msgstr ""
 "Nous exécutons maintenant nos outils d'IA sur l'article demandé. Ce "
 "processus peut prendre quelques minutes..."
 
-#: templates/summarizer/arxividpage.html:747
+#: templates/summarizer/arxividpage.html:751
 msgid ""
 "This is the first time this article is requested and our AI summarizing "
 "tools have never been run on it. We can run our tools now if you click on "
@@ -1233,7 +1420,7 @@ msgstr ""
 "maintenant si vous cliquez sur le bouton \"Exécuter\" sur la page mais "
 "assurez-vous d'abord que c'est le bon article."
 
-#: templates/summarizer/arxividpage.html:753
+#: templates/summarizer/arxividpage.html:757
 msgid ""
 "You are trying to run too many papers in too short a period of time. Are you"
 " a robot? If not, wait and retry!"
@@ -1241,7 +1428,7 @@ msgstr ""
 "Vous essayez de faire tourner trop d'articles en trop peu de temps. Êtes-"
 "vous un robot? Sinon, attendez et réessayez!"
 
-#: templates/summarizer/arxividpage.html:759
+#: templates/summarizer/arxividpage.html:763
 msgid ""
 "You are limited to running 10 papers in a period of 24 hours. Please come "
 "back tomorrow or contact us if you need to run more articles using our "
@@ -1251,39 +1438,39 @@ msgstr ""
 "ou contactez-nous si vous avez besoin d'exécuter plus d'articles en "
 "utilisant nos outils."
 
-#: templates/summarizer/arxividpage.html:760
+#: templates/summarizer/arxividpage.html:764
 msgid "Premium accounts have no daily limit."
 msgstr "Les comptes Premium n'ont pas de limite quotidienne."
 
-#: templates/summarizer/arxividpage.html:774
+#: templates/summarizer/arxividpage.html:778
 msgid "We are analysing the following arXiv article:"
 msgstr "Nous analysons l'article suivant d'arXiv :"
 
-#: templates/summarizer/arxividpage.html:777
+#: templates/summarizer/arxividpage.html:781
 msgid ""
 "The summary is usually ready in 1 to 2 minutes. This page updates by itself."
 msgstr ""
 "Le résumé est généralement prêt en 1 à 2 minutes. Cette page se met à jour "
 "toute seule."
 
-#: templates/summarizer/arxividpage.html:1038
+#: templates/summarizer/arxividpage.html:1042
 msgid "Results of the summarizing process for the arXiv paper (1/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (1/4) :"
 
-#: templates/summarizer/arxividpage.html:1046
+#: templates/summarizer/arxividpage.html:1050
 msgid "Results of the summarizing process for the arXiv paper (2/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (2/4) :"
 
-#: templates/summarizer/arxividpage.html:1060
+#: templates/summarizer/arxividpage.html:1064
 msgid "Results of the summarizing process for the arXiv paper (3/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (3/4) :"
 
-#: templates/summarizer/arxividpage.html:1068
+#: templates/summarizer/arxividpage.html:1072
 msgid "Results of the summarizing process for the arXiv paper (4/4):"
 msgstr "Résultats du processus de synthèse de l'article arXiv (4/4) :"
 
-#: templates/summarizer/arxividpage.html:1156
-#: templates/summarizer/arxividpage.html:1168
+#: templates/summarizer/arxividpage.html:1160
+#: templates/summarizer/arxividpage.html:1172
 msgid ""
 "The license of the paper does not allow us to build upon its content and the"
 " summarizing process is here made with the paper metadata rather than the "
@@ -1293,24 +1480,24 @@ msgstr ""
 "et le processus de synthèse est ici réalisé avec les métadonnées de "
 "l'article plutôt qu'avec l'article en tant que tel."
 
-#: templates/summarizer/arxividpage.html:1252
-#: templates/summarizer/arxividpage.html:1269
-#: templates/summarizer/chat.html:767 templates/summarizer/chat.html:784
+#: templates/summarizer/arxividpage.html:1256
+#: templates/summarizer/arxividpage.html:1273
+#: templates/summarizer/chat.html:778 templates/summarizer/chat.html:795
 msgid "AI -"
 msgstr "IA -"
 
-#: templates/summarizer/arxividpage.html:1287
-#: templates/summarizer/chat.html:802
+#: templates/summarizer/arxividpage.html:1291
+#: templates/summarizer/chat.html:813
 msgid "Error: WebSocket connection closed (reload the page)."
 msgstr "Erreur: connexion au WebSocket fermée (rechargez la page)."
 
-#: templates/summarizer/arxividpage.html:1368
-#: templates/summarizer/chat.html:883
+#: templates/summarizer/arxividpage.html:1372
+#: templates/summarizer/chat.html:894
 msgid "Error: WebSocket connection closed. Reload the page."
 msgstr "Erreur : connexion au WebSocket fermée. Rechargez la page."
 
-#: templates/summarizer/arxividpage.html:1381
-#: templates/summarizer/chat.html:896
+#: templates/summarizer/arxividpage.html:1385
+#: templates/summarizer/chat.html:907
 msgid "You -"
 msgstr "Vous -"
 
@@ -1465,7 +1652,8 @@ msgstr "Ajouter un papier directement"
 msgid "Arxiv ID (e.g. 2211.04191v1)"
 msgstr "ID Arxiv (e.g. 2211.04191v1)"
 
-#: templates/summarizer/chat.html:180
+#: templates/summarizer/chat.html:180 templates/summarizer/collection.html:89
+#: templates/summarizer/paper_tools.html:22
 msgid "Add"
 msgstr "Ajouter"
 
@@ -1559,6 +1747,299 @@ msgstr ""
 "ne nous permettent pas de nous appuyer sur leurs contenus et l'assistant IA "
 "ne connaît que les métadonnées des articles plutôt que les articles "
 "complets."
+
+#: templates/summarizer/citations.html:13
+msgid ""
+"Follow your papers, or any paper: once a week, we email you the new papers "
+"that cite them, and what they say about them (building on it, supporting it,"
+" questioning it, or a simple mention)."
+msgstr ""
+"Suivez vos articles, ou n'importe quel article : une fois par semaine, nous "
+"vous envoyons par email les nouveaux articles qui les citent, et ce qu'ils "
+"en disent (ils s'appuient dessus, le confirment, le remettent en question, "
+"ou le mentionnent simplement)."
+
+#: templates/summarizer/citations.html:19
+#, python-format
+msgid "You can follow %(n)s papers at most."
+msgstr "Vous pouvez suivre %(n)s articles au maximum."
+
+#: templates/summarizer/citations.html:22
+msgid "Papers to follow"
+msgstr "Articles à suivre"
+
+#: templates/summarizer/citations.html:23
+#: templates/summarizer/collection.html:88
+msgid "arXiv identifiers or links, separated by spaces or new lines"
+msgstr ""
+"Identifiants ou liens arXiv, séparés par des espaces ou des retours à la "
+"ligne"
+
+#: templates/summarizer/citations.html:24
+msgid "Follow"
+msgstr "Suivre"
+
+#: templates/summarizer/citations.html:25
+msgid ""
+"Citations come from Semantic Scholar and are checked once a day. The "
+"citations a paper already has when you follow it are not reported."
+msgstr ""
+"Les citations viennent de Semantic Scholar et sont vérifiées une fois par "
+"jour. Les citations qu'un article a déjà quand vous commencez à le suivre ne"
+" sont pas signalées."
+
+#: templates/summarizer/citations.html:28
+#, python-format
+msgid "%(n)s paper followed"
+msgid_plural "%(n)s papers followed"
+msgstr[0] "%(n)s article suivi"
+msgstr[1] "%(n)s articles suivis"
+
+#: templates/summarizer/citations.html:34
+msgid "first check in progress"
+msgstr "première vérification en cours"
+
+#: templates/summarizer/citations.html:34
+#, python-format
+msgid "%(n)s citation"
+msgid_plural "%(n)s citations"
+msgstr[0] "%(n)s citation"
+msgstr[1] "%(n)s citations"
+
+#: templates/summarizer/citations.html:35
+#, python-format
+msgid "%(n)s new in your next email"
+msgid_plural "%(n)s new in your next email"
+msgstr[0] "%(n)s nouvelle dans votre prochain email"
+msgstr[1] "%(n)s nouvelles dans votre prochain email"
+
+#: templates/summarizer/citations.html:37
+msgid "Stop following"
+msgstr "Ne plus suivre"
+
+#: templates/summarizer/citations.html:40
+msgid "You follow no paper yet."
+msgstr "Vous ne suivez encore aucun article."
+
+#: templates/summarizer/collection.html:14
+#: templates/summarizer/collections.html:20
+#, python-format
+msgid "%(n)s paper"
+msgid_plural "%(n)s papers"
+msgstr[0] "%(n)s article"
+msgstr[1] "%(n)s articles"
+
+#: templates/summarizer/collection.html:17
+msgid "Added."
+msgstr "Ajouté."
+
+#: templates/summarizer/collection.html:18
+#, python-format
+msgid "A collection holds %(n)s papers at most on your plan."
+msgstr "Une collection contient au plus %(n)s articles avec votre formule."
+
+#: templates/summarizer/collection.html:19
+msgid "arXiv does not know this identifier."
+msgstr "arXiv ne connaît pas cet identifiant."
+
+#: templates/summarizer/collection.html:23
+msgid "Chat with these papers"
+msgstr "Discuter avec ces articles"
+
+#: templates/summarizer/collection.html:27
+msgid "Send to Zotero"
+msgstr "Envoyer vers Zotero"
+
+#: templates/summarizer/collection.html:31
+#, python-format
+msgid "The chat takes the first %(n)s papers."
+msgstr "La discussion prend les %(n)s premiers articles."
+
+#: templates/summarizer/collection.html:33
+msgid "Comparison table"
+msgstr "Tableau comparatif"
+
+#: templates/summarizer/collection.html:35
+msgid ""
+"Premium fills the same columns for every paper of the collection (question, "
+"method, data, main results, limitations), then says where they agree, where "
+"they disagree, and what none of them addresses. Exported as a spreadsheet."
+msgstr ""
+"Premium remplit les mêmes colonnes pour chaque article de la collection "
+"(question, méthode, données, résultats principaux, limites), puis indique où"
+" ils s'accordent, où ils divergent, et ce qu'aucun d'eux n'aborde. "
+"Exportable en tableur."
+
+#: templates/summarizer/collection.html:37
+msgid "Add at least two papers to compare them."
+msgstr "Ajoutez au moins deux articles pour les comparer."
+
+#: templates/summarizer/collection.html:42
+msgid "Paper"
+msgstr "Article"
+
+#: templates/summarizer/collection.html:51
+msgid "Where they agree"
+msgstr "Où ils s'accordent"
+
+#: templates/summarizer/collection.html:52
+msgid "Where they disagree"
+msgstr "Où ils divergent"
+
+#: templates/summarizer/collection.html:53
+msgid "What none of them addresses"
+msgstr "Ce qu'aucun n'aborde"
+
+#: templates/summarizer/collection.html:55
+msgid "Download as a spreadsheet (CSV)"
+msgstr "Télécharger en tableur (CSV)"
+
+#: templates/summarizer/collection.html:56
+msgid "Write it again"
+msgstr "Le réécrire"
+
+#: templates/summarizer/collection.html:59
+#, python-format
+msgid ""
+"The table reads the abstract and our summary of each paper (the first %(n)s "
+"papers). It takes about a minute."
+msgstr ""
+"Le tableau lit le résumé des auteurs et notre résumé de chaque article (les "
+"%(n)s premiers). Cela prend environ une minute."
+
+#: templates/summarizer/collection.html:60
+msgid "Compare these papers"
+msgstr "Comparer ces articles"
+
+#: templates/summarizer/collection.html:65
+msgid "Papers"
+msgstr "Articles"
+
+#: templates/summarizer/collection.html:74
+msgid "Your note"
+msgstr "Votre note"
+
+#: templates/summarizer/collection.html:75
+msgid "Save note"
+msgstr "Enregistrer la note"
+
+#: templates/summarizer/collection.html:76
+msgid "Remove"
+msgstr "Retirer"
+
+#: templates/summarizer/collection.html:80
+msgid "No paper yet."
+msgstr "Aucun article pour l'instant."
+
+#: templates/summarizer/collection.html:84
+msgid "Add papers"
+msgstr "Ajouter des articles"
+
+#: templates/summarizer/collection.html:92
+msgid "Settings"
+msgstr "Réglages"
+
+#: templates/summarizer/collection.html:96
+msgid "Rename"
+msgstr "Renommer"
+
+#: templates/summarizer/collection.html:97
+msgid "Delete this collection?"
+msgstr "Supprimer cette collection ?"
+
+#: templates/summarizer/collection.html:97
+msgid "Delete"
+msgstr "Supprimer"
+
+#: templates/summarizer/collection.html:101
+msgid "Comparing… the page reloads by itself when the table is ready."
+msgstr ""
+"Comparaison en cours… la page se recharge toute seule quand le tableau est "
+"prêt."
+
+#: templates/summarizer/collection.html:102
+#: templates/summarizer/paper_tools.html:57
+#: templates/summarizer/presskit.html:90 templates/summarizer/presskit.html:93
+msgid "Something went wrong. Please try again."
+msgstr "Une erreur s'est produite. Veuillez réessayer."
+
+#: templates/summarizer/collection.html:103
+#: templates/summarizer/paper_tools.html:53
+msgid "This is a Premium feature."
+msgstr "Cette fonction est réservée à Premium."
+
+#: templates/summarizer/collection.html:104
+#: templates/summarizer/paper_tools.html:64
+msgid "Sending…"
+msgstr "Envoi…"
+
+#: templates/summarizer/collection.html:105
+#: templates/summarizer/paper_tools.html:65
+msgid "Saved in your Zotero library."
+msgstr "Enregistré dans votre bibliothèque Zotero."
+
+#: templates/summarizer/collection.html:106
+#: templates/summarizer/paper_tools.html:66
+msgid "Connect your Zotero library first."
+msgstr "Connectez d'abord votre bibliothèque Zotero."
+
+#: templates/summarizer/collections.html:12
+msgid ""
+"Group papers by project to compare them in one table, chat with all of them "
+"at once, and export them to your reference manager."
+msgstr ""
+"Regroupez vos articles par projet pour les comparer dans un tableau, "
+"discuter avec tous à la fois et les exporter vers votre gestionnaire de "
+"références."
+
+#: templates/summarizer/collections.html:20
+msgid "updated"
+msgstr "mise à jour le"
+
+#: templates/summarizer/collections.html:25
+msgid ""
+"No collection yet. Create one here, or from any paper page with \"Save to a "
+"collection\"."
+msgstr ""
+"Aucune collection pour l'instant. Créez-en une ici, ou depuis la page de "
+"n'importe quel article avec « Enregistrer dans une collection »."
+
+#: templates/summarizer/collections.html:29
+msgid "New collection"
+msgstr "Nouvelle collection"
+
+#: templates/summarizer/collections.html:32
+msgid "e.g. Thesis chapter 2, Article on fusion"
+msgstr "par ex. Thèse chapitre 2, Article sur la fusion"
+
+#: templates/summarizer/collections.html:33
+msgid "Create"
+msgstr "Créer"
+
+#: templates/summarizer/collections.html:36
+#, python-format
+msgid "You have %(n)s collections, the most of your plan."
+msgstr "Vous avez %(n)s collections, le maximum de votre formule."
+
+#: templates/summarizer/collections.html:36
+msgid "Premium has up to 100 collections of 200 papers."
+msgstr "Premium permet jusqu'à 100 collections de 200 articles."
+
+#: templates/summarizer/collections.html:41
+msgid "With Premium"
+msgstr "Avec Premium"
+
+#: templates/summarizer/collections.html:41
+msgid ""
+"a comparison table of each collection (question, method, data, results, "
+"limitations), with where the papers agree, disagree, and what none of them "
+"has done yet; up to 100 collections of 200 papers; and the whole collection "
+"sent to Zotero with its summaries."
+msgstr ""
+"un tableau comparatif de chaque collection (question, méthode, données, "
+"résultats, limites), avec les points d'accord, les désaccords et ce qu'aucun"
+" article n'a encore fait ; jusqu'à 100 collections de 200 articles ; et "
+"toute la collection envoyée vers Zotero avec ses résumés."
 
 #: templates/summarizer/contact.html:7
 msgid "Contact Us - Get in Touch with our arXiv Summarization Service"
@@ -1661,7 +2142,7 @@ msgstr ""
 msgid "See Premium"
 msgstr "Découvrir Premium"
 
-#: templates/summarizer/digest.html:44
+#: templates/summarizer/digest.html:44 templates/summarizer/letters.html:47
 msgid "Create a free account"
 msgstr "Créer un compte gratuit"
 
@@ -1849,7 +2330,7 @@ msgstr "M'envoyer le digest à"
 msgid "Time zone"
 msgstr "Fuseau horaire"
 
-#: templates/summarizer/digest.html:133
+#: templates/summarizer/digest.html:133 templates/summarizer/letters.html:41
 msgid "Save"
 msgstr "Enregistrer"
 
@@ -1874,6 +2355,7 @@ msgid "Your digest"
 msgstr "Votre digest"
 
 #: templates/summarizer/digest_feedback.html:12
+#: templates/summarizer/letter_unsubscribe.html:8
 msgid "This link is invalid."
 msgstr "Ce lien n'est pas valide."
 
@@ -2212,6 +2694,7 @@ msgid "Updated"
 msgstr "Mis à jour le"
 
 #: templates/summarizer/guide.html:23 templates/summarizer/guides.html:26
+#: templates/summarizer/missed.html:35
 msgid "Draft"
 msgstr "Brouillon"
 
@@ -2405,6 +2888,104 @@ msgstr "Commencez à Discuter"
 msgid "Latest Papers summarized with our AI tools"
 msgstr "Derniers articles résumés avec nos outils d'IA"
 
+#: templates/summarizer/integrations.html:12
+msgid ""
+"Send the papers you read here, with their summaries, to the tools where you "
+"keep your references and notes."
+msgstr ""
+"Envoyez les articles que vous lisez ici, avec leurs résumés, vers les outils"
+" où vous gardez vos références et vos notes."
+
+#: templates/summarizer/integrations.html:15
+msgid "Free, on every paper page"
+msgstr "Gratuit, sur la page de chaque article"
+
+#: templates/summarizer/integrations.html:17
+msgid ""
+"their browser button recognises our paper pages and saves the paper with its"
+" metadata. You can also download the RIS file."
+msgstr ""
+"leur bouton de navigateur reconnaît nos pages d'articles et enregistre "
+"l'article avec ses métadonnées. Vous pouvez aussi télécharger le fichier "
+"RIS."
+
+#: templates/summarizer/integrations.html:18
+msgid "the BibTeX entry of each paper, or of a whole collection."
+msgstr "l'entrée BibTeX de chaque article, ou d'une collection entière."
+
+#: templates/summarizer/integrations.html:19
+msgid ""
+"the Markdown file holds the paper, its key points and its summary: import it"
+" in Notion, or drop it in your Obsidian vault."
+msgstr ""
+"le fichier Markdown contient l'article, ses points clés et son résumé : "
+"importez-le dans Notion, ou déposez-le dans votre coffre Obsidian."
+
+#: templates/summarizer/integrations.html:22
+msgid "Send to Zotero with the summary"
+msgstr "Envoyer vers Zotero avec le résumé"
+
+#: templates/summarizer/integrations.html:23
+msgid ""
+"One click on a paper or a collection writes the papers into your Zotero "
+"library, each with a note holding its key points and summary, tagged "
+"SummarizePaper."
+msgstr ""
+"Un clic sur un article ou une collection écrit les articles dans votre "
+"bibliothèque Zotero, chacun avec une note contenant ses points clés et son "
+"résumé, avec l'étiquette SummarizePaper."
+
+#: templates/summarizer/integrations.html:27
+msgid "Your Zotero library is connected."
+msgstr "Votre bibliothèque Zotero est connectée."
+
+#: templates/summarizer/integrations.html:28
+#, python-format
+msgid "Connected to the Zotero library %(id)s."
+msgstr "Connecté à la bibliothèque Zotero %(id)s."
+
+#: templates/summarizer/integrations.html:29
+msgid "Disconnect"
+msgstr "Déconnecter"
+
+#: templates/summarizer/integrations.html:31
+msgid ""
+"Zotero did not accept this key: check the user ID, and that the key may "
+"write to your library."
+msgstr ""
+"Zotero n'a pas accepté cette clé : vérifiez l'identifiant utilisateur, et "
+"que la clé a le droit d'écrire dans votre bibliothèque."
+
+#: templates/summarizer/integrations.html:33
+msgid ""
+"Open <a href=\"https://www.zotero.org/settings/keys\" target=\"_blank\" "
+"rel=\"noopener\">zotero.org/settings/keys</a> and copy <em>Your userID for "
+"use in API calls</em>."
+msgstr ""
+"Ouvrez <a href=\"https://www.zotero.org/settings/keys\" target=\"_blank\" "
+"rel=\"noopener\">zotero.org/settings/keys</a> et copiez <em>Your userID for "
+"use in API calls</em>."
+
+#: templates/summarizer/integrations.html:34
+msgid ""
+"Click \"Create new private key\", tick \"Allow library access\" and \"Allow "
+"write access\", save, and copy the key."
+msgstr ""
+"Cliquez sur « Create new private key », cochez « Allow library access » et «"
+" Allow write access », enregistrez, puis copiez la clé."
+
+#: templates/summarizer/integrations.html:38
+msgid "Zotero user ID"
+msgstr "Identifiant utilisateur Zotero"
+
+#: templates/summarizer/integrations.html:39
+msgid "API key"
+msgstr "Clé d'API"
+
+#: templates/summarizer/integrations.html:40
+msgid "Connect"
+msgstr "Connecter"
+
 #: templates/summarizer/legal-notice.html:6
 msgid "Legal Notice - AI-Powered arXiv Paper Summarization Service"
 msgstr ""
@@ -2417,6 +2998,363 @@ msgid ""
 msgstr ""
 "En savoir plus sur nos mentions légales pour notre service de résumés de pdf"
 " arXiv alimenté par l'IA."
+
+#: templates/summarizer/letter.html:30
+msgid "Read:"
+msgstr "À lire :"
+
+#: templates/summarizer/letter.html:34
+#, python-format
+msgid ""
+"Written by AI from %(n)s paper announced on arXiv this week. These are "
+"preprints: most have not been peer reviewed yet."
+msgid_plural ""
+"Written by AI from the %(n)s papers announced on arXiv this week in this "
+"field. These are preprints: most have not been peer reviewed yet."
+msgstr[0] ""
+"Écrit par une IA à partir de %(n)s article annoncé sur arXiv cette semaine. "
+"Ce sont des prépublications : la plupart n'ont pas encore été relues par des"
+" pairs."
+msgstr[1] ""
+"Écrit par une IA à partir des %(n)s articles annoncés sur arXiv cette "
+"semaine dans ce domaine. Ce sont des prépublications : la plupart n'ont pas "
+"encore été relues par des pairs."
+
+#: templates/summarizer/letter.html:35
+msgid "Get this letter by email every week"
+msgstr "Recevoir cette lettre par email chaque semaine"
+
+#: templates/summarizer/letter.html:35
+msgid "Get this letter by email every week with Premium."
+msgstr "Recevez cette lettre par email chaque semaine avec Premium."
+
+#: templates/summarizer/letter_topic.html:7
+#, python-format
+msgid ""
+"The weekly letter on %(name)s: what is new in research, from the latest "
+"arXiv papers."
+msgstr ""
+"La lettre hebdomadaire %(name)s : les nouveautés de la recherche, à partir "
+"des derniers articles arXiv."
+
+#: templates/summarizer/letter_topic.html:22
+#: templates/summarizer/letters.html:28
+msgid "The first letter comes out next week."
+msgstr "La première lettre paraît la semaine prochaine."
+
+#: templates/summarizer/letter_unsubscribe.html:10
+msgid "Done"
+msgstr "C'est fait"
+
+#: templates/summarizer/letter_unsubscribe.html:11
+#, python-format
+msgid "You will no longer receive the letter \"%(name)s\"."
+msgstr "Vous ne recevrez plus la lettre « %(name)s »."
+
+#: templates/summarizer/letter_unsubscribe.html:15
+#, python-format
+msgid "Stop receiving the letter \"%(name)s\"?"
+msgstr "Ne plus recevoir la lettre « %(name)s » ?"
+
+#: templates/summarizer/letters.html:5
+msgid "Weekly science letters from arXiv"
+msgstr "Lettres scientifiques hebdomadaires tirées d'arXiv"
+
+#: templates/summarizer/letters.html:7
+msgid ""
+"Every week, the new research in AI, space, quantum physics, biology, climate"
+" and economics, told like a magazine article from the latest arXiv papers."
+msgstr ""
+"Chaque semaine, les nouveautés de la recherche en IA, espace, physique "
+"quantique, biologie, climat et économie, racontées comme un article de "
+"magazine à partir des derniers articles arXiv."
+
+#: templates/summarizer/letters.html:15
+msgid ""
+"Every week, what is new in research, told like a magazine article from the "
+"latest arXiv papers, for curious readers."
+msgstr ""
+"Chaque semaine, les nouveautés de la recherche, racontées comme un article "
+"de magazine à partir des derniers articles arXiv, pour les lecteurs curieux."
+
+#: templates/summarizer/letters.html:17
+msgid "Your choices are saved."
+msgstr "Vos choix sont enregistrés."
+
+#: templates/summarizer/letters.html:26
+msgid "All the letters"
+msgstr "Toutes les lettres"
+
+#: templates/summarizer/letters.html:34
+msgid "Get them by email"
+msgstr "Les recevoir par email"
+
+#: templates/summarizer/letters.html:42
+msgid "The letters are sent in the language of this page, once a week."
+msgstr ""
+"Les lettres sont envoyées dans la langue de cette page, une fois par "
+"semaine."
+
+#: templates/summarizer/letters.html:45 templates/summarizer/letters.html:47
+msgid "Premium sends you the letters of your choice by email every week."
+msgstr ""
+"Premium vous envoie les lettres de votre choix par email chaque semaine."
+
+#: templates/summarizer/listen.html:5 templates/summarizer/listen.html:11
+msgid "Listen to your digest"
+msgstr "Écouter votre digest"
+
+#: templates/summarizer/listen.html:12
+#, python-format
+msgid "%(n)s paper, read aloud"
+msgid_plural "%(n)s papers, read aloud"
+msgstr[0] "%(n)s article, lu à voix haute"
+msgstr[1] "%(n)s articles, lus à voix haute"
+
+#: templates/summarizer/listen.html:16
+msgid "Download the MP3"
+msgstr "Télécharger le MP3"
+
+#: templates/summarizer/listen.html:22
+msgid "Read by a synthetic AI voice."
+msgstr "Lu par une voix de synthèse (IA)."
+
+#: templates/summarizer/listen.html:24
+msgid "This audio is no longer available."
+msgstr "Cet audio n'est plus disponible."
+
+#: templates/summarizer/missed.html:13
+msgid ""
+"Give us your draft: we search arXiv for the papers closest to it that it "
+"does not cite, and say for each how it relates to your work and how to "
+"position yourself against it."
+msgstr ""
+"Donnez-nous votre brouillon : nous cherchons sur arXiv les articles les plus"
+" proches qu'il ne cite pas, et indiquons pour chacun son lien avec votre "
+"travail et comment vous situer par rapport à lui."
+
+#: templates/summarizer/missed.html:17
+msgid ""
+"Before you submit, make sure no close paper is missing from your references."
+msgstr ""
+"Avant de soumettre, vérifiez qu'aucun article proche ne manque à vos "
+"références."
+
+#: templates/summarizer/missed.html:19
+msgid "Send a PDF of 20 MB at most."
+msgstr "Envoyez un PDF de 20 Mo au maximum."
+
+#: templates/summarizer/missed.html:20
+msgid ""
+"Send a PDF, or paste at least the title, abstract and references of your "
+"draft."
+msgstr ""
+"Envoyez un PDF, ou collez au moins le titre, le résumé et les références de "
+"votre brouillon."
+
+#: templates/summarizer/missed.html:21
+#, python-format
+msgid "You can run %(per_day)s searches a day. Come back tomorrow."
+msgstr "Vous pouvez lancer %(per_day)s recherches par jour. Revenez demain."
+
+#: templates/summarizer/missed.html:24
+msgid "Your draft (PDF)"
+msgstr "Votre brouillon (PDF)"
+
+#: templates/summarizer/missed.html:25
+msgid ""
+"or paste its text (title, abstract, introduction and references are enough):"
+msgstr ""
+"ou collez son texte (titre, résumé, introduction et références suffisent) :"
+
+#: templates/summarizer/missed.html:27
+msgid "Find what I missed"
+msgstr "Trouver ce que j'ai raté"
+
+#: templates/summarizer/missed.html:28
+msgid ""
+"Your draft is read once to search arXiv and is not stored. Only the list of "
+"papers found is kept, in your account."
+msgstr ""
+"Votre brouillon est lu une fois pour chercher sur arXiv et n'est pas "
+"conservé. Seule la liste des articles trouvés est gardée, dans votre compte."
+
+#: templates/summarizer/missed.html:32
+msgid "Your searches"
+msgstr "Vos recherches"
+
+#: templates/summarizer/missed.html:35
+msgid "In progress…"
+msgstr "En cours…"
+
+#: templates/summarizer/missed.html:35
+msgid "Failed"
+msgstr "Échec"
+
+#: templates/summarizer/missed_result.html:13
+msgid "Your draft"
+msgstr "Votre brouillon"
+
+#: templates/summarizer/missed_result.html:17
+#, python-format
+msgid ""
+"%(searched)s arXiv papers found by our searches; %(cited)s of them are "
+"already cited by your draft."
+msgstr ""
+"%(searched)s articles arXiv trouvés par nos recherches ; %(cited)s sont déjà"
+" cités par votre brouillon."
+
+#: templates/summarizer/missed_result.html:22
+msgid "Should be cited"
+msgstr "À citer"
+
+#: templates/summarizer/missed_result.html:22
+msgid "Worth a look"
+msgstr "À regarder"
+
+#: templates/summarizer/missed_result.html:22
+msgid "Related"
+msgstr "Proche"
+
+#: templates/summarizer/missed_result.html:24
+#, python-format
+msgid "%(s)s%% similar"
+msgstr "similaire à %(s)s %%"
+
+#: templates/summarizer/missed_result.html:30
+msgid "Your draft already cites every close paper our searches found."
+msgstr ""
+"Votre brouillon cite déjà tous les articles proches trouvés par nos "
+"recherches."
+
+#: templates/summarizer/missed_result.html:33
+msgid ""
+"The search failed. If you sent a PDF, check that it holds text (not only "
+"scanned images), and try again."
+msgstr ""
+"La recherche a échoué. Si vous avez envoyé un PDF, vérifiez qu'il contient "
+"du texte (et pas seulement des images scannées), puis réessayez."
+
+#: templates/summarizer/missed_result.html:35
+msgid ""
+"Searching arXiv and reading the closest papers… this takes one to three "
+"minutes. The page updates by itself."
+msgstr ""
+"Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
+" à trois minutes. La page se met à jour toute seule."
+
+#: templates/summarizer/paper_tools.html:3
+msgid "Tools for this paper"
+msgstr "Outils pour cet article"
+
+#: templates/summarizer/paper_tools.html:6
+msgid "Explain it differently"
+msgstr "Expliquer autrement"
+
+#: templates/summarizer/paper_tools.html:7
+msgid "Level"
+msgstr "Niveau"
+
+#: templates/summarizer/paper_tools.html:8
+msgid "Language"
+msgstr "Langue"
+
+#: templates/summarizer/paper_tools.html:9
+msgid "Rewrite"
+msgstr "Réécrire"
+
+#: templates/summarizer/paper_tools.html:10
+#, python-format
+msgid "%(left)s free rewrite left today"
+msgid_plural "%(left)s free rewrites left today"
+msgstr[0] "%(left)s réécriture gratuite restante aujourd'hui"
+msgstr[1] "%(left)s réécritures gratuites restantes aujourd'hui"
+
+#: templates/summarizer/paper_tools.html:15
+msgid "Save to a collection"
+msgstr "Enregistrer dans une collection"
+
+#: templates/summarizer/paper_tools.html:17
+msgid "Collection"
+msgstr "Collection"
+
+#: templates/summarizer/paper_tools.html:19
+msgid "New collection…"
+msgstr "Nouvelle collection…"
+
+#: templates/summarizer/paper_tools.html:21
+msgid "Name of the new collection"
+msgstr "Nom de la nouvelle collection"
+
+#: templates/summarizer/paper_tools.html:25
+msgid "Log in to save papers in collections"
+msgstr "Connectez-vous pour enregistrer des articles dans des collections"
+
+#: templates/summarizer/paper_tools.html:30
+msgid "Export"
+msgstr "Exporter"
+
+#: templates/summarizer/paper_tools.html:34
+msgid "Send to Zotero with its summary"
+msgstr "Envoyer vers Zotero avec son résumé"
+
+#: templates/summarizer/paper_tools.html:41
+#: templates/summarizer/paper_tools.html:70
+msgid "Stop following its citations"
+msgstr "Ne plus suivre ses citations"
+
+#: templates/summarizer/paper_tools.html:41
+#: templates/summarizer/paper_tools.html:69
+msgid "Tell me who cites it"
+msgstr "Me dire qui le cite"
+
+#: templates/summarizer/paper_tools.html:47
+msgid "For journalists"
+msgstr "Pour les journalistes"
+
+#: templates/summarizer/paper_tools.html:48
+msgid "Press kit and hype check"
+msgstr "Kit presse et détecteur de hype"
+
+#: templates/summarizer/paper_tools.html:55
+msgid "Log in first."
+msgstr "Connectez-vous d'abord."
+
+#: templates/summarizer/paper_tools.html:56
+msgid "Writing… this takes about 20 seconds."
+msgstr "Rédaction… cela prend environ 20 secondes."
+
+#: templates/summarizer/paper_tools.html:58
+msgid "No free rewrites left today. Premium has no limit."
+msgstr "Plus de réécriture gratuite aujourd'hui. Premium n'a pas de limite."
+
+#: templates/summarizer/paper_tools.html:59
+msgid "Added to"
+msgstr "Ajouté à"
+
+#: templates/summarizer/paper_tools.html:60
+msgid "Already in this collection."
+msgstr "Déjà dans cette collection."
+
+#: templates/summarizer/paper_tools.html:61
+msgid "This collection is full."
+msgstr "Cette collection est pleine."
+
+#: templates/summarizer/paper_tools.html:62
+msgid "You have reached the number of collections of your plan."
+msgstr "Vous avez atteint le nombre de collections de votre formule."
+
+#: templates/summarizer/paper_tools.html:63
+msgid "Open"
+msgstr "Ouvrir"
+
+#: templates/summarizer/paper_tools.html:67
+msgid "You will get an email when new papers cite it."
+msgstr "Vous recevrez un email quand de nouveaux articles le citeront."
+
+#: templates/summarizer/paper_tools.html:68
+msgid "You no longer follow its citations."
+msgstr "Vous ne suivez plus ses citations."
 
 #: templates/summarizer/premium.html:6 templates/summarizer/premium.html:32
 msgid "SummarizePaper Premium"
@@ -2432,9 +3370,12 @@ msgstr ""
 "questions à l'assistant IA."
 
 #: templates/summarizer/premium.html:33
-msgid "For researchers and students who read papers every day."
+msgid ""
+"For researchers, students, journalists and curious readers who follow "
+"research closely."
 msgstr ""
-"Pour les chercheurs et étudiants qui lisent des articles tous les jours."
+"Pour les chercheurs, les étudiants, les journalistes et les curieux qui "
+"suivent la recherche de près."
 
 #: templates/summarizer/premium.html:38
 msgid "You are Premium."
@@ -2480,20 +3421,42 @@ msgstr "Modèle d'IA standard"
 msgid "One arXiv digest, daily or weekly"
 msgstr "Un digest arXiv, quotidien ou hebdomadaire"
 
-#: templates/summarizer/premium.html:64
+#: templates/summarizer/premium.html:59
+#, python-format
+msgid ""
+"%(readings_free)s rewrites per day of a summary for another reader or in "
+"another language"
+msgstr ""
+"%(readings_free)s réécritures par jour d'un résumé pour un autre public ou "
+"dans une autre langue"
+
+#: templates/summarizer/premium.html:60
+msgid ""
+"3 collections of 20 papers, chat with a collection, BibTeX, RIS and Markdown"
+" exports"
+msgstr ""
+"3 collections de 20 articles, discussion avec une collection, exports "
+"BibTeX, RIS et Markdown"
+
+#: templates/summarizer/premium.html:61
+msgid "Weekly letters and the top rising topics on the web"
+msgstr ""
+"Les lettres hebdomadaires et les principaux sujets qui montent, sur le web"
+
+#: templates/summarizer/premium.html:67
 msgid "Our most capable AI model for summaries and answers"
 msgstr "Notre modèle d'IA le plus performant pour les résumés et les réponses"
 
-#: templates/summarizer/premium.html:65
+#: templates/summarizer/premium.html:68
 msgid "No daily summary limit"
 msgstr "Aucune limite quotidienne de résumés"
 
-#: templates/summarizer/premium.html:66
+#: templates/summarizer/premium.html:69
 #, python-format
 msgid "%(chat_paid)s questions per day to the AI assistant"
 msgstr "%(chat_paid)s questions par jour à l'assistant IA"
 
-#: templates/summarizer/premium.html:67
+#: templates/summarizer/premium.html:70
 msgid ""
 "A smarter arXiv digest: papers ranked by closeness to your research, authors"
 " you follow, a weekly synthesis of your fields, full summaries ready in "
@@ -2503,35 +3466,180 @@ msgstr ""
 "auteurs suivis, synthèse hebdomadaire de vos domaines, résumés complets "
 "prêts à l'avance, jusqu'à 5 digests"
 
-#: templates/summarizer/premium.html:68
+#: templates/summarizer/premium.html:71
+msgid "Your digest read aloud, to listen on the go"
+msgstr "Votre digest lu à voix haute, à écouter en déplacement"
+
+#: templates/summarizer/premium.html:72
+msgid "Comparison tables of your collections"
+msgstr "Tableaux comparatifs de vos collections"
+
+#: templates/summarizer/premium.html:72
+msgid ""
+"question, method, data, results and limitations of each paper, where they "
+"agree and disagree, what is missing"
+msgstr ""
+"question, méthode, données, résultats et limites de chaque article, points "
+"d'accord et de désaccord, ce qui manque"
+
+#: templates/summarizer/premium.html:73
+msgid "the arXiv papers close to your draft that it does not cite"
+msgstr "les articles arXiv proches de votre brouillon qu'il ne cite pas"
+
+#: templates/summarizer/premium.html:74
+msgid "who cites your papers, and what they say about them"
+msgstr "qui cite vos articles, et ce qu'ils en disent"
+
+#: templates/summarizer/premium.html:75
+msgid ""
+"Press kit for journalists: hype check, key sentences quoted word for word, "
+"questions for the authors, independent researchers to call"
+msgstr ""
+"Kit presse pour les journalistes : détecteur de hype, phrases clés citées "
+"mot pour mot, questions aux auteurs, chercheurs indépendants à contacter"
+
+#: templates/summarizer/premium.html:76
+msgid "field by field, and the weekly letters by email"
+msgstr "domaine par domaine, et les lettres hebdomadaires par email"
+
+#: templates/summarizer/premium.html:77
+msgid ""
+"Unlimited rewrites, 100 collections of 200 papers, papers sent to Zotero "
+"with their summaries"
+msgstr ""
+"Réécritures illimitées, 100 collections de 200 articles, articles envoyés "
+"vers Zotero avec leurs résumés"
+
+#: templates/summarizer/premium.html:78
 msgid "Cancel anytime in one click"
 msgstr "Résiliable à tout moment en un clic"
 
-#: templates/summarizer/premium.html:74 templates/summarizer/premium.html:94
+#: templates/summarizer/premium.html:84 templates/summarizer/premium.html:104
 msgid "Manage my subscription"
 msgstr "Gérer mon abonnement"
 
-#: templates/summarizer/premium.html:78
+#: templates/summarizer/premium.html:88
 msgid "Subscriptions open soon."
 msgstr "Les abonnements ouvrent bientôt."
 
-#: templates/summarizer/premium.html:81
+#: templates/summarizer/premium.html:91
 msgid "Create a free account to subscribe"
 msgstr "Créez un compte gratuit pour vous abonner"
 
-#: templates/summarizer/premium.html:86
+#: templates/summarizer/premium.html:96
 msgid "Subscribe monthly"
 msgstr "S'abonner au mois"
 
-#: templates/summarizer/premium.html:89
+#: templates/summarizer/premium.html:99
 msgid "Subscribe yearly"
 msgstr "S'abonner à l'année"
 
-#: templates/summarizer/premium.html:101
+#: templates/summarizer/premium.html:111
 msgid "Payments are handled by Stripe. We never see your card details."
 msgstr ""
 "Les paiements sont gérés par Stripe. Nous ne voyons jamais vos données de "
 "carte."
+
+#: templates/summarizer/presskit.html:6 templates/summarizer/presskit.html:12
+msgid "Press kit"
+msgstr "Kit presse"
+
+#: templates/summarizer/presskit.html:14
+msgid "Summary page"
+msgstr "Page du résumé"
+
+#: templates/summarizer/presskit.html:19
+msgid "A press kit for every arXiv paper."
+msgstr "Un kit presse pour chaque article arXiv."
+
+#: templates/summarizer/presskit.html:19
+msgid ""
+"What is really new, a hype check (peer review, sample size, claims that go "
+"beyond the results), key sentences quoted word for word, questions to ask "
+"the authors, researchers who work on the same topic but did not sign the "
+"paper, and a glossary."
+msgstr ""
+"Ce qui est vraiment nouveau, un détecteur de hype (relecture par les pairs, "
+"taille de l'échantillon, affirmations qui dépassent les résultats), des "
+"phrases clés citées mot pour mot, des questions à poser aux auteurs, des "
+"chercheurs qui travaillent sur le même sujet sans avoir signé l'article, et "
+"un glossaire."
+
+#: templates/summarizer/presskit.html:23
+msgid ""
+"This paper's license only lets us read its abstract: the kit is based on the"
+" abstract alone. Read the full paper before writing."
+msgstr ""
+"La licence de cet article ne nous permet de lire que son résumé : le kit "
+"repose sur le résumé seul. Lisez l'article complet avant d'écrire."
+
+#: templates/summarizer/presskit.html:28
+msgid "What's new"
+msgstr "Ce qui est nouveau"
+
+#: templates/summarizer/presskit.html:33
+msgid "Hype check"
+msgstr "Détecteur de hype"
+
+#: templates/summarizer/presskit.html:44
+msgid "Key sentences from the paper"
+msgstr "Phrases clés de l'article"
+
+#: templates/summarizer/presskit.html:45
+msgid ""
+"Copied word for word from the paper (checked against its text). Quote the "
+"paper, not us."
+msgstr ""
+"Copiées mot pour mot de l'article (vérifiées dans son texte). Citez "
+"l'article, pas nous."
+
+#: templates/summarizer/presskit.html:51
+msgid "Questions to ask the authors"
+msgstr "Questions à poser aux auteurs"
+
+#: templates/summarizer/presskit.html:56
+msgid "Independent researchers on the same topic"
+msgstr "Chercheurs indépendants sur le même sujet"
+
+#: templates/summarizer/presskit.html:58
+msgid ""
+"Authors of the closest papers we know who did not sign this one. Check their"
+" work and possible links with the authors before contacting them."
+msgstr ""
+"Auteurs des articles les plus proches que nous connaissons, qui n'ont pas "
+"signé celui-ci. Vérifiez leurs travaux et leurs liens éventuels avec les "
+"auteurs avant de les contacter."
+
+#: templates/summarizer/presskit.html:65
+msgid "We do not know enough papers close to this one yet."
+msgstr "Nous ne connaissons pas encore assez d'articles proches de celui-ci."
+
+#: templates/summarizer/presskit.html:71
+msgid "Glossary"
+msgstr "Glossaire"
+
+#: templates/summarizer/presskit.html:75
+#, python-format
+msgid ""
+"Written by AI on %(date)s from the paper. Check every fact against the paper"
+" before publishing."
+msgstr ""
+"Écrit par une IA le %(date)s à partir de l'article. Vérifiez chaque fait "
+"dans l'article avant de publier."
+
+#: templates/summarizer/presskit.html:78
+msgid "The press kit is written from the full paper. It takes about a minute."
+msgstr ""
+"Le kit presse est écrit à partir de l'article complet. Cela prend environ "
+"une minute."
+
+#: templates/summarizer/presskit.html:79
+msgid "Write the press kit"
+msgstr "Écrire le kit presse"
+
+#: templates/summarizer/presskit.html:88
+msgid "Writing… the page reloads by itself when the kit is ready."
+msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
 
 #: templates/summarizer/privacy.html:6
 msgid "Our Privacy Policy - AI-Powered arXiv Paper Summarization Service"
@@ -2884,11 +3992,105 @@ msgstr "Titre :"
 msgid "Arxiv ID:"
 msgstr "ID Arxiv :"
 
+#: templates/summarizer/trends.html:5
+msgid "Rising topics on arXiv this week"
+msgstr "Les sujets qui montent sur arXiv cette semaine"
+
+#: templates/summarizer/trends.html:7
+msgid ""
+"The research topics with a sudden rise in new arXiv papers this week, "
+"explained in plain language, with example papers."
+msgstr ""
+"Les sujets de recherche dont le nombre de nouveaux articles arXiv bondit "
+"cette semaine, expliqués simplement, avec des exemples d'articles."
+
+#: templates/summarizer/trends.html:15
+msgid "Rising topics on arXiv"
+msgstr "Les sujets qui montent sur arXiv"
+
+#: templates/summarizer/trends.html:16
+msgid ""
+"The terms that appear in many more new papers this week than in the four "
+"weeks before, grouped into topics and explained in plain language."
+msgstr ""
+"Les termes présents dans beaucoup plus de nouveaux articles cette semaine "
+"que pendant les quatre semaines précédentes, regroupés en sujets et "
+"expliqués simplement."
+
+#: templates/summarizer/trends.html:21
+msgid "All of arXiv"
+msgstr "Tout arXiv"
+
+#: templates/summarizer/trends.html:27
+#, python-format
+msgid "Week ending with the arXiv announcement of %(date)s."
+msgstr "Semaine terminée par l'annonce arXiv du %(date)s."
+
+#: templates/summarizer/trends.html:32
+#, python-format
+msgid "×%(g)s compared with usual · %(n)s papers this week"
+msgstr "×%(g)s par rapport à d'habitude · %(n)s articles cette semaine"
+
+#: templates/summarizer/trends.html:42
+#, python-format
+msgid "%(n)s more rising topic this week."
+msgid_plural "%(n)s more rising topics this week."
+msgstr[0] "%(n)s autre sujet monte cette semaine."
+msgstr[1] "%(n)s autres sujets montent cette semaine."
+
+#: templates/summarizer/trends.html:42
+msgid ""
+"Premium shows them all, the rising topics of each field (cs, astro-ph, "
+"quant-ph...), and puts those of your fields in your Monday digest."
+msgstr ""
+"Premium les montre tous, ainsi que les sujets qui montent dans chaque "
+"domaine (cs, astro-ph, quant-ph...), et met ceux de vos domaines dans votre "
+"digest du lundi."
+
+#: templates/summarizer/trends.html:45
+#, python-format
+msgid ""
+"We have been counting the terms of every arXiv announcement since %(since)s."
+" A rise only means something against several weeks of history: the first "
+"topics come out around %(ready)s."
+msgstr ""
+"Nous comptons les termes de chaque annonce arXiv depuis le %(since)s. Une "
+"hausse n'a de sens que comparée à plusieurs semaines d'historique : les "
+"premiers sujets paraissent vers le %(ready)s."
+
+#: templates/summarizer/trends.html:45
+msgid ""
+"The first rising topics come out once we have read a few weeks of arXiv "
+"announcements."
+msgstr ""
+"Les premiers sujets qui montent paraissent une fois que nous avons lu "
+"quelques semaines d'annonces arXiv."
+
+#: templates/summarizer/trends.html:48
+msgid "How it works"
+msgstr "Comment ça marche"
+
+#: templates/summarizer/trends.html:49
+msgid ""
+"Every day, we count how many new papers use each term of one to three words "
+"in their title and abstract. A term rises when this week its share of papers"
+" is at least twice its share over the previous four weeks. An AI then groups"
+" the rising terms into topics and names them; it never decides what rises: "
+"the counts do."
+msgstr ""
+"Chaque jour, nous comptons combien de nouveaux articles utilisent chaque "
+"terme d'un à trois mots dans leur titre et leur résumé. Un terme monte "
+"quand, cette semaine, sa part des articles est au moins deux fois sa part "
+"des quatre semaines précédentes. Une IA regroupe ensuite les termes qui "
+"montent en sujets et les nomme ; elle ne décide jamais ce qui monte : ce "
+"sont les chiffres."
+
+#~ msgid "For researchers and students who read papers every day."
+#~ msgstr ""
+#~ "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
+
 #~ msgid "Home"
 #~ msgstr "Accueil"
-
-#~ msgid "Language"
-#~ msgstr "Langue"
 
 #~ msgid ""
 #~ "Find answers to commonly asked questions about our AI-powered arXiv paper "
@@ -3005,9 +4207,6 @@ msgstr "ID Arxiv :"
 #~ msgid "Ourh with our cutting-edge technology."
 #~ msgstr "Ourh avec notre technologie de pointe."
 
-#~ msgid "Tree graph for this paper"
-#~ msgstr "Arbre de similarité pour cet article"
-
 #~ msgid "The paper with an ID"
 #~ msgstr "Le papier avec l'ID"
 
@@ -3016,9 +4215,6 @@ msgstr "ID Arxiv :"
 
 #~ msgid "Total number of votes:"
 #~ msgstr "Nombre total de votes :"
-
-#~ msgid "How Search works?"
-#~ msgstr "Comment écrire vos requêtes ?"
 
 #~ msgid ""
 #~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "

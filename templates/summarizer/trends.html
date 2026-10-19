@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Rising topics on arXiv this week' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'The research topics with a sudden rise in new arXiv papers this week, explained in plain language, with example papers.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/trends/" />
+  {% if scope != '*' %}<meta name="robots" content="noindex" />{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'Rising topics on arXiv' %}</h1>
+    <p class="lead">{% trans 'The terms that appear in many more new papers this week than in the four weeks before, grouped into topics and explained in plain language.' %}</p>
+  </header>
+
+  {% if paid and scopes %}
+  <nav class="scope-links">
+    <a href="?scope=*" class="{% if scope == '*' %}is-active{% endif %}">{% trans 'All of arXiv' %}</a>
+    {% for s in scopes %}<a href="?scope={{ s }}" class="{% if scope == s %}is-active{% endif %}">{{ s }}</a>{% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if topics %}
+    <p class="muted">{% blocktrans with date=day|date:"j F Y" %}Week ending with the arXiv announcement of {{ date }}.{% endblocktrans %}</p>
+    <div class="item-list">
+    {% for topic in topics %}
+      <article class="card topic-card">
+        <h2>{{ topic.title }}</h2>
+        <p class="growth">{% blocktrans with g=topic.growth n=topic.count %}×{{ g }} compared with usual · {{ n }} papers this week{% endblocktrans %}</p>
+        <p>{{ topic.text }}</p>
+        <div class="terms">{% for term in topic.terms %}<span>{{ term }}</span>{% endfor %}</div>
+        {% if topic.papers %}
+        <ul>{% for p in topic.papers %}<li><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
+        {% endif %}
+      </article>
+    {% endfor %}
+    </div>
+    {% if hidden %}
+    <div class="upsell" style="margin-top:20px"><p>{% blocktrans count n=hidden %}{{ n }} more rising topic this week.{% plural %}{{ n }} more rising topics this week.{% endblocktrans %} {% trans 'Premium shows them all, the rising topics of each field (cs, astro-ph, quant-ph...), and puts those of your fields in your Monday digest.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    {% endif %}
+  {% else %}
+    <p class="notice">{% if ready_on %}{% blocktrans with since=since|date:"j F Y" ready=ready_on|date:"j F Y" %}We have been counting the terms of every arXiv announcement since {{ since }}. A rise only means something against several weeks of history: the first topics come out around {{ ready }}.{% endblocktrans %}{% else %}{% trans 'The first rising topics come out once we have read a few weeks of arXiv announcements.' %}{% endif %}</p>
+  {% endif %}
+
+  <h2>{% trans 'How it works' %}</h2>
+  <p class="muted">{% trans 'Every day, we count how many new papers use each term of one to three words in their title and abstract. A term rises when this week its share of papers is at least twice its share over the previous four weeks. An AI then groups the rising terms into topics and names them; it never decides what rises: the counts do.' %}</p>
+</div>
+{% endblock %}

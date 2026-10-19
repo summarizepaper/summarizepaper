@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.shortcuts import reverse
 
 from . import guides
-from .models import SummaryPaper
+from .models import Letter, SummaryPaper
 
 
 class StaticViewSitemap(Sitemap):
@@ -13,7 +13,7 @@ class StaticViewSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        items = ['summarize','about','author','faq','contact','privacy','legal','digest','premium']
+        items = ['summarize','about','author','faq','contact','privacy','legal','digest','premium','letters','trends']
         if guides.published('en'):
             items.append('guides')
         return items
@@ -59,3 +59,18 @@ class GuideSitemap(Sitemap):
 
     def lastmod(self, item):
         return item.get('updated')
+
+
+class LetterSitemap(Sitemap):
+    """The weekly letters, every language."""
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        return Letter.objects.only('topic', 'lang', 'day', 'created').order_by('-day')
+
+    def location(self, item):
+        return '/%s/letters/%s/%s/' % (item.lang, item.topic, item.day.isoformat())
+
+    def lastmod(self, item):
+        return item.created

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'What did I miss?' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/missed/">← {% trans 'What did I miss?' %}</a></p>
+    <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Your draft' %}{% endif %}</h1>
+  </header>
+
+  {% if result %}
+    <p class="muted">{% blocktrans with searched=result.searched cited=result.cited %}{{ searched }} arXiv papers found by our searches; {{ cited }} of them are already cited by your draft.{% endblocktrans %}</p>
+    {% if result.items %}
+    <ul class="item-list">
+      {% for item in result.items %}
+      <li class="card">
+        <span class="importance {{ item.importance }}">{% if item.importance == 'high' %}{% trans 'Should be cited' %}{% elif item.importance == 'medium' %}{% trans 'Worth a look' %}{% else %}{% trans 'Related' %}{% endif %}</span>
+        <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ item.arxiv_id }}/"><strong>{{ item.title }}</strong></a></p>
+        <div class="meta">{{ item.authors }}{% if item.year %} · {{ item.year }}{% endif %} · arXiv:{{ item.arxiv_id|dash_slash }} · {% blocktrans with s=item.similarity %}{{ s }}% similar{% endblocktrans %}</div>
+        {% if item.relation %}<p style="margin:8px 0 0">{{ item.relation }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="notice">{% trans 'Your draft already cites every close paper our searches found.' %}</p>
+    {% endif %}
+  {% elif row.status == 'failed' %}
+    <p class="error">{% trans 'The search failed. If you sent a PDF, check that it holds text (not only scanned images), and try again.' %}</p>
+  {% else %}
+    <p id="missed-status">{% trans 'Searching arXiv and reading the closest papers… this takes one to three minutes. The page updates by itself.' %}</p>
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      SP.wait({{ row.pk }}, function () { location.reload(); }, function () { location.reload(); });
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

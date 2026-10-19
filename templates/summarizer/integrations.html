@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Zotero, Notion, Obsidian' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'Zotero, Notion, Obsidian' %}</h1>
+    <p class="lead">{% trans 'Send the papers you read here, with their summaries, to the tools where you keep your references and notes.' %}</p>
+  </header>
+
+  <h2>{% trans 'Free, on every paper page' %}</h2>
+  <ul>
+    <li><strong>Zotero, Mendeley, Paperpile</strong>: {% trans 'their browser button recognises our paper pages and saves the paper with its metadata. You can also download the RIS file.' %}</li>
+    <li><strong>LaTeX</strong>: {% trans 'the BibTeX entry of each paper, or of a whole collection.' %}</li>
+    <li><strong>Notion, Obsidian</strong>: {% trans 'the Markdown file holds the paper, its key points and its summary: import it in Notion, or drop it in your Obsidian vault.' %}</li>
+  </ul>
+
+  <h2>{% trans 'Send to Zotero with the summary' %} <span class="badge-premium">Premium</span></h2>
+  <p>{% trans 'One click on a paper or a collection writes the papers into your Zotero library, each with a note holding its key points and summary, tagged SummarizePaper.' %}</p>
+  {% if not paid %}
+    <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% elif account %}
+    {% if saved %}<p class="notice">{% trans 'Your Zotero library is connected.' %}</p>{% endif %}
+    <p>{% blocktrans with id=account.library_id %}Connected to the Zotero library {{ id }}.{% endblocktrans %}</p>
+    <form method="post">{% csrf_token %}<button class="btn btn-ghost" name="action" value="disconnect">{% trans 'Disconnect' %}</button></form>
+  {% else %}
+    {% if error %}<p class="error">{% trans 'Zotero did not accept this key: check the user ID, and that the key may write to your library.' %}</p>{% endif %}
+    <ol>
+      <li>{% blocktrans %}Open <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener">zotero.org/settings/keys</a> and copy <em>Your userID for use in API calls</em>.{% endblocktrans %}</li>
+      <li>{% trans 'Click "Create new private key", tick "Allow library access" and "Allow write access", save, and copy the key.' %}</li>
+    </ol>
+    <form method="post">
+      {% csrf_token %}
+      <p><label>{% trans 'Zotero user ID' %}<br><input type="text" name="library_id" inputmode="numeric" required></label></p>
+      <p><label>{% trans 'API key' %}<br><input type="text" name="api_key" autocomplete="off" required></label></p>
+      <p><button class="btn" type="submit">{% trans 'Connect' %}</button></p>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

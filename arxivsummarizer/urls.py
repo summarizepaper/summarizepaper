@@ -18,7 +18,7 @@ from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemap_views
-from summarizer.sitemaps import GuideSitemap, StaticViewSitemap, SummarizedPaperSitemap
+from summarizer.sitemaps import GuideSitemap, LetterSitemap, StaticViewSitemap, SummarizedPaperSitemap
 from summarizer import accounts, billing
 from summarizer.views import llms_txt, robots_txt
 
@@ -27,6 +27,7 @@ app_name = 'summarizer'
 sitemaps = {
     'papers': SummarizedPaperSitemap,
     'guides': GuideSitemap,
+    'letters': LetterSitemap,
     'static': StaticViewSitemap,
 }
 

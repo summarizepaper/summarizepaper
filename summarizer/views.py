@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, digest, mailcheck, similar
+from summarizer import access, accounts, citations, digest, library, mailcheck, reading, similar, exports
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -876,6 +876,22 @@ def paper_structured_data(paper, sumpaper, lang):
     escaped = json.dumps(data).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
     return mark_safe(escaped)
 
+def citation_meta(paper):
+    """Highwire Press tags, read by the Zotero, Mendeley and Paperpile browser buttons."""
+    ref = re.sub(r'v\d+$', '', paper.arxiv_id.replace('--', '/'))
+    tags = [('citation_title', ' '.join((paper.title or '').split()))]
+    tags += [('citation_author', a.name) for a in paper.authors.all()[:100]]
+    if paper.published_arxiv:
+        tags.append(('citation_publication_date', paper.published_arxiv.strftime('%Y/%m/%d')))
+    tags += [('citation_arxiv_id', ref), ('citation_publisher', 'arXiv'),
+             ('citation_pdf_url', 'https://arxiv.org/pdf/%s' % ref)]
+    if paper.abstract:
+        tags.append(('citation_abstract', ' '.join(paper.abstract.split())))
+    if paper.link_doi and 'doi.org' in paper.link_doi:
+        tags.append(('citation_doi', paper.link_doi.split('doi.org/')[-1]))
+    return tags
+
+
 def waiting_details(arxiv_id):
     """Title, authors and abstract shown while a summary is being written, when we already know them."""
     announced = AnnouncedPaper.objects.filter(arxiv_id=arxiv_id).first()
@@ -1244,7 +1260,13 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                 'toolong':toolong,
                 'public':public,
                 'total_votes':total_votes,
-                'chathistory':chathistory
+                'chathistory':chathistory,
+                'my_collections':library.paper_collections(request.user, arxiv_id),
+                'following':citations.is_following(request.user, arxiv_id),
+                'reading_levels':reading.LEVELS,
+                'reading_langs':reading.OUTPUT_LANGUAGES,
+                'reading_left':reading.quota_left(request),
+                'citation_meta':citation_meta(paper),
             })
         else:
             print('nope')
@@ -1377,27 +1399,8 @@ def update_cache(request):
 
 def bibtex(request, arxiv_id):
     """BibTeX entry of a paper in the format arXiv itself suggests."""
-    paper = get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
-    ref = paper.arxiv_id.replace('--', '/')
-    bare = re.sub(r'v\d+$', '', ref)
-    authors = [a.name for a in paper.authors.all()]
-    year = paper.published_arxiv.year if paper.published_arxiv else ''
-    first_word = next((w for w in re.findall(r'[A-Za-z]+', paper.title or '') if len(w) > 3), 'paper')
-    last_name = re.sub(r'[^A-Za-z]', '', authors[0].split()[-1]) if authors else 'arxiv'
-    lines = [
-        '@misc{%s%s%s,' % (last_name.lower(), year, first_word.lower()),
-        '  title={%s},' % ' '.join((paper.title or '').split()),
-        '  author={%s},' % ' and '.join(authors),
-        '  year={%s},' % year,
-        '  eprint={%s},' % bare,
-        '  archivePrefix={arXiv},',
-    ]
-    if paper.category:
-        lines.append('  primaryClass={%s},' % paper.category)
-    if paper.link_doi and 'doi.org' in paper.link_doi:
-        lines.append('  doi={%s},' % paper.link_doi.split('doi.org/')[-1])
-    lines.append('  url={https://arxiv.org/abs/%s}' % bare)
-    lines.append('}')
-    response = HttpResponse('\n'.join(lines) + '\n', content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = 'inline; filename="%s.bib"' % bare.replace('/', '_')
+    get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
+    meta = exports.paper_meta(arxiv_id)
+    response = HttpResponse(exports.bibtex_entry(meta), content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = 'inline; filename="%s.bib"' % exports.bare_ref(arxiv_id).replace('/', '_')
     return response

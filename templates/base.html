@@ -45,6 +45,7 @@
   ]}
   </script>
   {% block extrahead %}{% endblock %}
+  <script defer src="{% static 'summarizer/js/tools.js' %}"></script>
 
 </head>
 
@@ -60,8 +61,19 @@
         <i class="fas fa-bars"></i>
       </button>
       <ul class="nav-links">
-        <li><a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a></li>
-        <li><a href="/{{LANGUAGE_CODE}}/digest/">{% trans 'Daily digest' %}</a></li>
+        <li class="nav-dropdown">
+          <button type="button" aria-haspopup="true" aria-expanded="false">{% trans 'Tools' %} <i class="fas fa-chevron-down" style="font-size:10px"></i></button>
+          <div class="nav-menu">
+            <a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/digest/">{% trans 'Daily digest' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/letters/">{% trans 'Weekly letters' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/trends/">{% trans 'Rising topics' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/collections/">{% trans 'My collections' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/missed/">{% trans 'What did I miss?' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/citations/">{% trans 'Citation alerts' %}</a>
+            <a href="/{{LANGUAGE_CODE}}/integrations/">{% trans 'Zotero, Notion, Obsidian' %}</a>
+          </div>
+        </li>
         <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
         <li><a href="/{{LANGUAGE_CODE}}/premium/" class="nav-premium"><i class="fas fa-star" style="font-size:12px"></i> {% trans 'Premium' %}</a></li>
         {% if request.user.is_authenticated %}
@@ -134,15 +146,22 @@
       toggle.innerHTML = open ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
     });
 
-    var lang = document.querySelector('.lang-switch');
-    var langBtn = lang.querySelector('button');
-    langBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      langBtn.setAttribute('aria-expanded', lang.classList.toggle('open'));
+    var menus = document.querySelectorAll('.lang-switch, .nav-dropdown');
+    menus.forEach(function (menu) {
+      var btn = menu.querySelector('button');
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        menus.forEach(function (other) {
+          if (other !== menu) { other.classList.remove('open'); other.querySelector('button').setAttribute('aria-expanded', 'false'); }
+        });
+        btn.setAttribute('aria-expanded', menu.classList.toggle('open'));
+      });
     });
     document.addEventListener('click', function () {
-      lang.classList.remove('open');
-      langBtn.setAttribute('aria-expanded', 'false');
+      menus.forEach(function (menu) {
+        menu.classList.remove('open');
+        menu.querySelector('button').setAttribute('aria-expanded', 'false');
+      });
     });
 
     var here = location.pathname.replace(/\/$/, '');

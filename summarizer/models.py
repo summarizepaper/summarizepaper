@@ -426,6 +426,11 @@ class SiteSettings(models.Model):
         help_text='Résumés, assistant et digest des comptes gratuits. Identifiant exact de l’API OpenAI.')
     model_paid = models.CharField('modèle IA Premium', max_length=100, default='gpt-6.1-sol',
         help_text='Résumés et assistant des comptes Premium. Identifiant exact de l’API OpenAI.')
+    model_tts = models.CharField('modèle de synthèse vocale', max_length=100, default='gpt-4o-mini-tts',
+        help_text='Digest audio Premium. Identifiant exact de l’API OpenAI (audio/speech).')
+    tts_voice = models.CharField('voix', max_length=40, default='alloy')
+    free_readings_per_day = models.PositiveIntegerField('niveaux de lecture par jour (gratuit)', default=3,
+        help_text='Nouvelles versions « expliqué simplement / traduit » par jour sans Premium. Premium : illimité.')
     updated = models.DateTimeField(auto_now=True)
 
     _cached = None
@@ -497,3 +502,167 @@ class Guide(models.Model):
             self.extra_meta()
         except Exception as e:
             raise ValidationError({'extra': 'YAML invalide : %s' % e})
+
+
+class Generated(models.Model):
+    """A model-written result made in the background (see generated.py): press kit, reading level, comparison...
+
+    One row per kind, key and language, shared by every reader unless `user` is set (private results).
+    """
+    STATUSES = [('pending', 'En cours'), ('done', 'Prêt'), ('failed', 'Échec')]
+    kind = models.CharField(max_length=20)
+    key = models.CharField(max_length=200)
+    lang = models.CharField(max_length=10, default='en')
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUSES, default='pending')
+    content = models.TextField(blank=True, default='')  # JSON
+    error = models.TextField(blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('kind', 'key', 'lang')
+        indexes = [models.Index(fields=['kind', 'user', '-created'])]
+
+    def data(self):
+        import json
+        return json.loads(self.content) if self.content else {}
+
+    def __str__(self):
+        return '%s %s (%s, %s)' % (self.kind, self.key, self.lang, self.status)
+
+
+class Collection(models.Model):
+    """A user's folder of papers, to compare them, chat with them and export them."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='paper_collections')
+    name = models.CharField(max_length=120)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-updated',)
+
+    def __str__(self):
+        return '%s: %s' % (self.user.username, self.name)
+
+
+class CollectionPaper(models.Model):
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='papers')
+    arxiv_id = models.CharField(max_length=40)
+    title = models.TextField(blank=True, default='')
+    authors = models.TextField(blank=True, default='')
+    note = models.TextField(blank=True, default='')
+    added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('collection', 'arxiv_id')
+        ordering = ('added', 'pk')
+
+    def __str__(self):
+        return '%s in %s' % (self.arxiv_id, self.collection.name)
+
+
+class FollowedPaper(models.Model):
+    """A paper whose new citations a Premium user is told about (see citations.py)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_papers')
+    arxiv_id = models.CharField(max_length=40)  # without version, arXiv form ('2101.00001', 'hep-th/9901001')
+    title = models.TextField(blank=True, default='')
+    known = models.TextField(blank=True, default='')  # JSON list of the citing papers already reported
+    pending = models.TextField(blank=True, default='')  # JSON list of citing papers not emailed yet
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'arxiv_id')
+        ordering = ('-created',)
+
+    def __str__(self):
+        return '%s follows %s' % (self.user.username, self.arxiv_id)
+
+
+class CitationCache(models.Model):
+    """The citing papers of an arXiv paper, from Semantic Scholar, refreshed once a day at most."""
+    arxiv_id = models.CharField(max_length=40, unique=True)
+    citing = models.TextField(blank=True, default='')  # JSON {paperId: {title, arxiv_id, date, authors, contexts, intents}}
+    total = models.PositiveIntegerField(default=0)
+    checked = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return '%s (%d citations)' % (self.arxiv_id, self.total)
+
+
+class CitationAlertLog(models.Model):
+    """When a user was last emailed about new citations."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    sent = models.DateTimeField()
+
+
+class PaperAudio(models.Model):
+    """A paper's title and blurb read aloud, shared by every Premium digest that lists it (see audio.py)."""
+    arxiv_id = models.CharField(max_length=40)
+    lang = models.CharField(max_length=10)
+    mp3 = models.BinaryField()
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        unique_together = ('arxiv_id', 'lang')
+
+
+class ZoteroAccount(models.Model):
+    """Where 'Send to Zotero' writes, for a Premium user (see exports.py)."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='zotero')
+    library_id = models.CharField(max_length=40)  # the numeric userID shown on zotero.org/settings/keys
+    api_key = models.CharField(max_length=100)
+    created = models.DateTimeField(auto_now_add=True)
+
+
+class TermDay(models.Model):
+    """How many papers of one arXiv announcement used each term, for one archive or '*' (see trends.py)."""
+    day = models.DateField()
+    scope = models.CharField(max_length=20)
+    papers = models.PositiveIntegerField(default=0)
+    counts = models.TextField()  # JSON {term: papers}
+
+    class Meta:
+        unique_together = ('day', 'scope')
+
+
+class RisingTopics(models.Model):
+    """The topics rising in one archive (or '*') over the week before `day`, in plain language."""
+    scope = models.CharField(max_length=20)
+    lang = models.CharField(max_length=10)
+    day = models.DateField()
+    content = models.TextField()  # JSON {"topics": [{"title", "text", "terms", "growth", "papers": [{arxiv_id, title}]}]}
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('scope', 'lang', 'day')
+
+
+class Letter(models.Model):
+    """A weekly article on one theme ('AI this week'), written from the week's arXiv papers (see letters.py)."""
+    topic = models.CharField(max_length=20)
+    lang = models.CharField(max_length=10)
+    day = models.DateField()  # the Monday announcement it was written after
+    title = models.CharField(max_length=300)
+    dek = models.TextField(blank=True, default='')
+    content = models.TextField()  # JSON {"sections": [{"heading", "text", "papers": [arxiv_id]}], "closing", "papers": {id: title}}
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('topic', 'lang', 'day')
+        ordering = ('-day',)
+
+    def __str__(self):
+        return '%s %s (%s)' % (self.topic, self.day, self.lang)
+
+
+class LetterSubscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_subscriptions')
+    topic = models.CharField(max_length=20)
+    lang = models.CharField(max_length=10, default='en')
+    active = models.BooleanField(default=True)
+    last_letter = models.DateField(blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'topic')

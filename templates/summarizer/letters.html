@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Weekly science letters from arXiv' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Every week, the new research in AI, space, quantum physics, biology, climate and economics, told like a magazine article from the latest arXiv papers.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/" />
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'Weekly letters' %}</h1>
+    <p class="lead">{% trans 'Every week, what is new in research, told like a magazine article from the latest arXiv papers, for curious readers.' %}</p>
+  </header>
+  {% if saved %}<p class="notice">{% trans 'Your choices are saved.' %}</p>{% endif %}
+
+  <div class="item-list">
+    {% for t in topics %}
+    <article class="card topic-card">
+      <h2>{{ t.name }}</h2>
+      {% if t.letter %}
+      <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/{{ t.letter.day|date:'Y-m-d' }}/"><strong>{{ t.letter.title }}</strong></a></p>
+      <p class="muted">{{ t.letter.dek }}</p>
+      <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/">{% trans 'All the letters' %}</a></p>
+      {% else %}
+      <p class="muted">{% trans 'The first letter comes out next week.' %}</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+
+  <h2>{% trans 'Get them by email' %} <span class="badge-premium">Premium</span></h2>
+  {% if paid %}
+  <form method="post" class="card section-card">
+    {% csrf_token %}
+    {% for t in topics %}
+    <p><label><input type="checkbox" name="topics" value="{{ t.slug }}"{% if t.subscribed %} checked{% endif %}> {{ t.name }}</label></p>
+    {% endfor %}
+    <p><button class="btn" type="submit">{% trans 'Save' %}</button></p>
+    <p class="muted"><small>{% trans 'The letters are sent in the language of this page, once a week.' %}</small></p>
+  </form>
+  {% elif request.user.is_authenticated %}
+  <div class="upsell"><p>{% trans 'Premium sends you the letters of your choice by email every week.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% else %}
+  <div class="upsell"><p>{% trans 'Premium sends you the letters of your choice by email every week.' %} <a href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a> · <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% endif %}
+</div>
+{% endblock %}

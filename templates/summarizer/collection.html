@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ collection.name }} | {% trans 'My collections' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page" style="max-width:1100px">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/collections/">← {% trans 'My collections' %}</a></p>
+    <h1>{{ collection.name }}</h1>
+    <p class="lead">{% blocktrans count n=papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</p>
+  </header>
+
+  {% if message == 'added' %}<p class="notice">{% trans 'Added.' %}</p>
+  {% elif message == 'full' %}<p class="error">{% blocktrans with n=limits.papers %}A collection holds {{ n }} papers at most on your plan.{% endblocktrans %}</p>
+  {% elif message == 'unknown' %}<p class="error">{% trans 'arXiv does not know this identifier.' %}</p>{% endif %}
+
+  <div class="item-actions" style="margin-bottom:24px">
+    {% if papers %}
+    <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ chat_ids }}">{% trans 'Chat with these papers' %}</a>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/bib/">BibTeX</a>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/ris/">RIS</a>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/md/">Markdown</a>
+    <button type="button" class="btn btn-sm btn-ghost" id="zotero-go">{% trans 'Send to Zotero' %} <span class="badge-premium">Premium</span></button>
+    <span class="tool-status" id="zotero-status"></span>
+    {% endif %}
+  </div>
+  {% if papers|length > chat_max %}<p class="muted"><small>{% blocktrans with n=chat_max %}The chat takes the first {{ n }} papers.{% endblocktrans %}</small></p>{% endif %}
+
+  <h2>{% trans 'Comparison table' %} <span class="badge-premium">Premium</span></h2>
+  {% if not paid %}
+    <div class="upsell"><p>{% trans 'Premium fills the same columns for every paper of the collection (question, method, data, main results, limitations), then says where they agree, where they disagree, and what none of them addresses. Exported as a spreadsheet.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% elif papers|length < 2 %}
+    <p class="muted">{% trans 'Add at least two papers to compare them.' %}</p>
+  {% else %}
+    {% if table %}
+    <div class="compare-wrap">
+      <table class="compare-table">
+        <thead><tr><th>{% trans 'Paper' %}</th>{% for code, label in columns %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for row in table.rows %}
+          <tr><td><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ row.arxiv_id }}/">{{ row.title }}</a></td>
+            <td>{{ row.question }}</td><td>{{ row.method }}</td><td>{{ row.data }}</td><td>{{ row.results }}</td><td>{{ row.limitations }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if table.agreements %}<h3>{% trans 'Where they agree' %}</h3><ul>{% for x in table.agreements %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    {% if table.disagreements %}<h3>{% trans 'Where they disagree' %}</h3><ul>{% for x in table.disagreements %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    {% if table.gaps %}<h3>{% trans 'What none of them addresses' %}</h3><ul>{% for x in table.gaps %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    <div class="item-actions">
+      <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/csv/">{% trans 'Download as a spreadsheet (CSV)' %}</a>
+      <button type="button" class="btn btn-sm btn-ghost" id="compare-again">{% trans 'Write it again' %}</button>
+    </div>
+    {% else %}
+    <p>{% blocktrans with n=compare_max %}The table reads the abstract and our summary of each paper (the first {{ n }} papers). It takes about a minute.{% endblocktrans %}</p>
+    <button type="button" class="btn" id="compare-go">{% trans 'Compare these papers' %}</button>
+    {% endif %}
+    <p class="tool-status" id="compare-status"></p>
+  {% endif %}
+
+  <h2>{% trans 'Papers' %}</h2>
+  <ul class="item-list">
+    {% for p in papers %}
+    <li class="card">
+      <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/"><strong>{{ p.title|default:p.arxiv_id }}</strong></a>
+      <div class="meta">{{ p.authors }} · arXiv:{{ p.arxiv_id|dash_slash }}</div>
+      <form method="post" class="item-actions">
+        {% csrf_token %}
+        <input type="hidden" name="arxiv_id" value="{{ p.arxiv_id }}">
+        <input type="text" name="note" value="{{ p.note }}" maxlength="2000" placeholder="{% trans 'Your note' %}" style="flex:1;min-width:200px">
+        <button class="btn btn-sm btn-ghost" name="action" value="note">{% trans 'Save note' %}</button>
+        <button class="btn btn-sm btn-ghost" name="action" value="remove">{% trans 'Remove' %}</button>
+      </form>
+    </li>
+    {% empty %}
+    <li class="muted">{% trans 'No paper yet.' %}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>{% trans 'Add papers' %}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <textarea name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea>
+    <p><button class="btn" type="submit">{% trans 'Add' %}</button></p>
+  </form>
+
+  <h2>{% trans 'Settings' %}</h2>
+  <form method="post" class="tool-row" style="border:0">
+    {% csrf_token %}
+    <input type="text" name="name" value="{{ collection.name }}" maxlength="120" style="flex:1;min-width:200px">
+    <button class="btn btn-sm btn-ghost" name="action" value="rename">{% trans 'Rename' %}</button>
+    <button class="btn btn-sm btn-danger" name="action" value="delete" onclick="return confirm('{% filter escapejs %}{% trans 'Delete this collection?' %}{% endfilter %}')">{% trans 'Delete' %}</button>
+  </form>
+</div>
+<div id="collection-text" hidden
+     data-working="{% trans 'Comparing… the page reloads by itself when the table is ready.' %}"
+     data-failed="{% trans 'Something went wrong. Please try again.' %}"
+     data-premium="{% trans 'This is a Premium feature.' %}"
+     data-sending="{% trans 'Sending…' %}"
+     data-sent="{% trans 'Saved in your Zotero library.' %}"
+     data-setup="{% trans 'Connect your Zotero library first.' %}"></div>
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  var t = document.getElementById('collection-text').dataset;
+  var base = '/{{ LANGUAGE_CODE }}';
+  var status = document.getElementById('compare-status');
+  function compare(again) {
+    status.textContent = t.working;
+    SP.post(base + '/collections/{{ collection.pk }}/compare/', {again: again ? '1' : '0'}).then(function (json) {
+      if (json.status === 'premium') return status.textContent = t.premium;
+      if (!json.id) return status.textContent = t.failed;
+      SP.wait(json.id, function () { location.reload(); }, function () { status.textContent = t.failed; });
+    });
+  }
+  var go = document.getElementById('compare-go');
+  if (go) go.addEventListener('click', function () { go.disabled = true; compare(false); });
+  var again = document.getElementById('compare-again');
+  if (again) again.addEventListener('click', function () { again.disabled = true; compare(true); });
+  {% if comparison and comparison.status == 'pending' %}compare(false);{% endif %}
+
+  var zotero = document.getElementById('zotero-go');
+  if (zotero) zotero.addEventListener('click', function () {
+    var zs = document.getElementById('zotero-status');
+    zs.textContent = t.sending;
+    SP.post(base + '/zotero/send/', {collection: '{{ collection.pk }}'}).then(function (json) {
+      if (json.status === 'premium') return zs.textContent = t.premium;
+      if (json.status === 'setup') { zs.textContent = t.setup + ' '; var a = document.createElement('a'); a.href = json.url; a.textContent = '→'; zs.appendChild(a); return; }
+      if (!json.id) return zs.textContent = t.failed;
+      SP.wait(json.id, function () { zs.textContent = t.sent; }, function () { zs.textContent = t.failed; });
+    });
+  });
+});
+</script>
+{% endblock %}

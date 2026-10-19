@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Unsubscribe' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block content %}
+<div class="page" style="max-width:640px">
+  {% if subscription is None %}
+    <p>{% trans 'This link is invalid.' %}</p>
+  {% elif done %}
+    <h1>{% trans 'Done' %}</h1>
+    <p>{% blocktrans %}You will no longer receive the letter "{{ name }}".{% endblocktrans %}</p>
+  {% else %}
+    <h1>{% trans 'Unsubscribe' %}</h1>
+    <form method="post">{% csrf_token %}
+      <p>{% blocktrans %}Stop receiving the letter "{{ name }}"?{% endblocktrans %}</p>
+      <button class="btn" type="submit">{% trans 'Unsubscribe' %}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

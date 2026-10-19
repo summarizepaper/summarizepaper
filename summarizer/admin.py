@@ -73,7 +73,7 @@ class SiteSettingsForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        for field in ('model_free', 'model_paid'):
+        for field in ('model_free', 'model_paid', 'model_tts'):
             name = (data.get(field) or '').strip()
             data[field] = name
             if name and field in self.changed_data:
@@ -88,9 +88,9 @@ class SiteSettingsAdmin(ModelAdmin):
     form = SiteSettingsForm
     readonly_fields = ('last_change',)
     fieldsets = (
-        ('Résumés', {'fields': ('free_runs_per_day',)}),
+        ('Résumés', {'fields': ('free_runs_per_day', 'free_readings_per_day')}),
         ('Questions à l’assistant', {'fields': ('chat_anonymous_per_day', 'chat_user_per_day', 'chat_paid_per_day')}),
-        ('Modèles IA', {'fields': ('model_free', 'model_paid'),
+        ('Modèles IA', {'fields': ('model_free', 'model_paid', 'model_tts', 'tts_voice'),
                         'description': 'Les changements s’appliquent en moins de 30 secondes sur tous les serveurs.'}),
         (None, {'fields': ('last_change',)}),
     )

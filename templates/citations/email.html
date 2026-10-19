@@ -1,0 +1,23 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 24px;color:#666;">{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}</p>
+    {% for paper in papers %}
+    <p style="margin:20px 0 8px;font-size:16px;font-weight:bold;">{{ paper.followed.title|default:paper.followed.arxiv_id }}</p>
+    {% for c in paper.items %}
+    <div style="border-left:3px solid {% if c.stance == 'questions' %}#dc2626{% elif c.stance == 'supports' %}#16a34a{% elif c.stance == 'builds_on' %}#4f46e5{% else %}#ddd{% endif %};padding:4px 0 4px 12px;margin:0 0 12px;">
+      <a href="{{ c.url }}" style="color:#1a0dab;font-weight:bold;text-decoration:none;">{{ c.title }}</a>
+      <div style="color:#666;font-size:13px;">{{ c.authors|join:", " }}{% if c.date %} · {{ c.date }}{% endif %}{% if c.stance %} · {% if c.stance == 'builds_on' %}{% trans 'builds on it' %}{% elif c.stance == 'supports' %}{% trans 'supports it' %}{% elif c.stance == 'questions' %}{% trans 'questions it' %}{% else %}{% trans 'mentions it' %}{% endif %}{% endif %}</div>
+      {% if c.note %}<div style="font-size:14px;line-height:1.5;margin-top:4px;">{{ c.note }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    {% if paper.more %}<p style="color:#666;font-size:13px;">{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}</p>{% endif %}
+    {% endfor %}
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      {% trans 'Citations from Semantic Scholar.' %} <a href="{{ manage_url }}" style="color:#888;">{% trans 'Manage the papers you follow' %}</a>
+    </p>
+  </div>
+</body>
+</html>

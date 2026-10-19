@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}
+{% for paper in papers %}
+== {{ paper.followed.title|default:paper.followed.arxiv_id }} ==
+{% for c in paper.items %}
+- {{ c.title }}{% if c.authors %} ({{ c.authors|join:", " }}){% endif %}{% if c.date %}, {{ c.date }}{% endif %}
+  {% if c.note %}{{ c.note }}
+  {% endif %}{{ c.url }}
+{% endfor %}{% if paper.more %}{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}
+{% endif %}{% endfor %}
+{% trans 'Manage the papers you follow:' %} {{ manage_url }}
+{% endautoescape %}
