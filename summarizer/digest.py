@@ -658,6 +658,13 @@ def _int(value, default, low, high):
         return default
 
 
+def hour_label(hour):
+    """'7:00 AM' in English, '07:00' in French."""
+    if get_language() == 'fr':
+        return '%02d:00' % hour
+    return '%d:00 %s' % (hour % 12 or 12, 'AM' if hour < 12 else 'PM')
+
+
 def _digest_context(request, subscription, digests, paid, error=False):
     lim = limits(paid)
     chosen = subscription.category_list() if subscription else []
@@ -677,7 +684,7 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'max_authors': MAX_AUTHORS,
         'max_references': MAX_REFERENCES,
         'saved': request.GET.get('saved') == '1',
-        'hours': range(24),
+        'hours': [(h, hour_label(h)) for h in range(24)],
         'weekdays': range(5),
         'timezones': sorted(TIMEZONES),
         'send_hour': subscription.send_hour if subscription else 7,

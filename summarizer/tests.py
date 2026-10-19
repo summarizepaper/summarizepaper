@@ -1521,6 +1521,12 @@ class DigestPageTests(TestCase):
         self.assertEqual(DigestSubscription.objects.count(), 1)
         self.assertContains(self.client.get('/en/digest/'), 'See Premium')
 
+    def test_hours_are_12h_in_english_and_24h_in_french(self):
+        self.assertContains(self.client.get('/en/digest/'), '>12:00 AM</option>')
+        self.assertContains(self.client.get('/en/digest/'), 'selected>7:00 AM</option>')
+        self.assertContains(self.client.get('/en/digest/'), '>1:00 PM</option>')
+        self.assertContains(self.client.get('/fr/digest/'), '>13:00</option>')
+
     def test_premium_account_manages_several_digests(self):
         UserPlan.objects.create(user=self.user, paid=True)
         cats = ['cs.LG', 'cs.AI', 'cs.CL', 'cs.CV', 'cs.RO', 'quant-ph', 'hep-th']

@@ -108,7 +108,7 @@
         </select></p>
         <p><label for="send_hour">{% trans 'Send my digest at' %}</label>
         <select id="send_hour" name="send_hour">
-          {% for h in hours %}<option value="{{ h }}" {% if h == send_hour %}selected{% endif %}>{{ h|stringformat:"02d" }}:00</option>{% endfor %}
+          {% for h, label in hours %}<option value="{{ h }}" {% if h == send_hour %}selected{% endif %}>{{ label }}</option>{% endfor %}
         </select></p>
         <p><label for="timezone">{% trans 'Time zone' %}</label>
         <select id="timezone" name="timezone">
