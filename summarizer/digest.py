@@ -76,6 +76,7 @@ FEEDBACK_SALT = 'digest-feedback'
 FEEDBACK_WEIGHTS = (0.5, 0.3)  # pull of liked papers, push of disliked ones, on the profile vector
 LOCK_KEY = 'digest-run-lock'
 SENDING_KEY = 'digest-sending:%s'
+HEALTH_KEY = 'digest-health:%s:%s'  # one alert per problem and day
 PREVIEW_KEY = 'digest-preview:%s:%s'  # one preview per digest and day
 PREVIEWS_PER_HOUR = 5  # previews share the mail provider's hourly limit with the scheduled digests
 BASE_URL = 'https://www.summarizepaper.com'
@@ -789,6 +790,30 @@ def run(base_url=BASE_URL, dry_run=False, only_user=None, stdout=None, now=None)
         return _run(base_url, dry_run, only_user, stdout, now)
     finally:
         cache.delete(LOCK_KEY)
+        if not dry_run:
+            check_health(now)
+
+
+def check_health(now):
+    """Log an error (an alert in Sentry), once a day, when the digests have silently stopped."""
+    local = now.astimezone(ANNOUNCE_TZ)
+    if local.weekday() >= 5:
+        return []
+    problems = []
+    expected = expected_batch(now)
+    stored = ArxivBatch.objects.filter(day=expected).exists()
+    if expected == local.date() and local.hour >= 6 and not stored and not cache.get(QUIET_KEY % expected):
+        problems.append(('batch', 'The arXiv announcement of %s is still not stored at %s in New York'
+                         % (expected, local.strftime('%H:%M'))))
+    old_enough = DigestSubscription.objects.filter(active=True, created__lt=now - datetime.timedelta(days=2))
+    if stored and local.weekday() in (1, 2, 3, 4) and now.hour >= 12 and old_enough.exists():
+        last = DigestSubscription.objects.exclude(last_sent=None).order_by('-last_sent').values_list('last_sent', flat=True).first()
+        if last is None or last < now - datetime.timedelta(hours=30):
+            problems.append(('sent', 'No digest was sent since %s' % last))
+    for name, message in problems:
+        if cache.add(HEALTH_KEY % (name, now.date()), True, 86400):
+            logger.error('Digest health: %s', message)
+    return [message for _, message in problems]
 
 
 def _run(base_url, dry_run, only_user, stdout, now):

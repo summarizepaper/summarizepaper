@@ -1819,3 +1819,24 @@ class PartialBatchTests(TestCase):
         self.assertEqual(read.call_count, calls)
         self.assertFalse(ArxivBatch.objects.exists())
         cache.delete(digest.QUIET_KEY % MONDAY.date())
+
+
+class DigestHealthTests(TestCase):
+    def test_alerts_once_when_the_announcement_or_the_emails_are_missing(self):
+        at = lambda d, h: datetime.datetime(2026, 10, d, h, 0, tzinfo=datetime.timezone.utc)
+        self.assertEqual(digest.check_health(at(20, 9)), [])  # 05:00 in New York: too early to worry
+        with self.assertLogs('summarizer.digest', 'ERROR') as logs:
+            problems = digest.check_health(at(20, 11))  # 07:00 in New York, Tuesday
+            digest.check_health(at(20, 12))
+        self.assertEqual(problems, ['The arXiv announcement of 2026-10-20 is still not stored at 07:00 in New York'])
+        self.assertEqual(len(logs.records), 1)  # once a day
+        ArxivBatch.objects.create(day=datetime.date(2026, 10, 20))
+        u = User.objects.create_user('h', email='h@example.com')
+        sub = DigestSubscription.objects.create(user=u, categories='cs.LG', last_sent=at(19, 7))
+        DigestSubscription.objects.filter(pk=sub.pk).update(created=at(10, 7))
+        self.assertEqual(digest.check_health(at(20, 15)), ['No digest was sent since 2026-10-19 07:00:00+00:00'])
+        sub.last_sent = at(20, 7)
+        sub.save()
+        self.assertEqual(digest.check_health(at(20, 15)), [])
+        self.assertEqual(digest.check_health(at(24, 15)), [])  # Saturday
+        cache.clear()
