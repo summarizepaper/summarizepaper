@@ -78,9 +78,9 @@ def premium(request):
         'is_paid': access.is_paid(request.user),
         'plan': plan,
         'can_manage': bool(plan and plan.stripe_customer_id),
-        'runs_per_day': access.RUNS_PER_DAY,
-        'chat_free': access.CHAT_MESSAGES_PER_DAY['user'],
-        'chat_paid': access.CHAT_MESSAGES_PER_DAY['paid'],
+        'runs_per_day': access.runs_per_day(),
+        'chat_free': access.chat_messages_per_day()['user'],
+        'chat_paid': access.chat_messages_per_day()['paid'],
         'success': request.GET.get('success') == '1',
     })
 

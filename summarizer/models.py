@@ -328,3 +328,87 @@ class SuppressedEmail(models.Model):
 
     def __str__(self):
         return '%s (%s)' % (self.email, self.reason)
+
+
+class SiteSettings(models.Model):
+    """Quotas and AI models, edited in the admin. A single row; read it with SiteSettings.current()."""
+    free_runs_per_day = models.PositiveIntegerField('résumés par jour (gratuit)', default=10,
+        help_text='Nouveaux résumés par jour et par IP sans Premium. Premium : illimité.')
+    chat_anonymous_per_day = models.PositiveIntegerField('questions par jour (sans compte)', default=30)
+    chat_user_per_day = models.PositiveIntegerField('questions par jour (compte gratuit)', default=100)
+    chat_paid_per_day = models.PositiveIntegerField('questions par jour (Premium)', default=500)
+    model_free = models.CharField('modèle IA gratuit', max_length=100, default='gpt-6-luna',
+        help_text='Résumés, assistant et digest des comptes gratuits. Identifiant exact de l’API OpenAI.')
+    model_paid = models.CharField('modèle IA Premium', max_length=100, default='gpt-6.1-sol',
+        help_text='Résumés et assistant des comptes Premium. Identifiant exact de l’API OpenAI.')
+    updated = models.DateTimeField(auto_now=True)
+
+    _cached = None
+    _cached_at = 0.0
+    CACHE_SECONDS = 30
+
+    class Meta:
+        verbose_name = 'réglages du site'
+        verbose_name_plural = 'réglages du site'
+
+    def __str__(self):
+        return 'Réglages du site'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+        SiteSettings.clear_cache()
+
+    @classmethod
+    def clear_cache(cls):
+        cls._cached = None
+
+    @classmethod
+    def current(cls):
+        """The settings row, cached per process for CACHE_SECONDS so other dynos follow quickly."""
+        import time
+        now = time.monotonic()
+        if cls._cached is None or now - cls._cached_at > cls.CACHE_SECONDS:
+            cls._cached = cls.objects.get_or_create(pk=1)[0]
+            cls._cached_at = now
+        return cls._cached
+
+
+class Guide(models.Model):
+    """A guide edited in the admin. It replaces content/guides/<lang>/<slug>.md when both exist (see guides.py)."""
+    lang = models.CharField('langue', max_length=10, choices=[('en', 'English'), ('fr', 'Français')], default='en')
+    slug = models.SlugField(max_length=200)
+    title = models.CharField('titre', max_length=300)
+    description = models.CharField(max_length=300, help_text='Une phrase, 160 caractères au plus (meta description).')
+    body = models.TextField('contenu', help_text='Markdown.')
+    date = models.DateField('publié le')
+    updated = models.DateField('mis à jour le', blank=True, null=True)
+    draft = models.BooleanField('brouillon', default=True, help_text='Les brouillons ne sont visibles que par le staff.')
+    product = models.BooleanField('page comparatif', default=False,
+        help_text='Ajoute SummarizePaper en SoftwareApplication dans le balisage (comparatifs).')
+    extra = models.TextField('front matter avancé', blank=True,
+        help_text='YAML optionnel pour faq, sources et dataset, comme dans les fichiers Markdown.')
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('lang', 'slug')
+        ordering = ('-date',)
+        verbose_name = 'article de blog'
+        verbose_name_plural = 'articles de blog'
+
+    def __str__(self):
+        return '%s (%s)' % (self.title, self.lang)
+
+    def extra_meta(self):
+        import yaml
+        meta = yaml.safe_load(self.extra) if self.extra.strip() else {}
+        if not isinstance(meta, dict):
+            raise ValueError('the advanced front matter must be a YAML mapping')
+        return meta
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        try:
+            self.extra_meta()
+        except Exception as e:
+            raise ValidationError({'extra': 'YAML invalide : %s' % e})

@@ -5,7 +5,7 @@ from django.test import TestCase, RequestFactory
 from django.utils import timezone
 
 from summarizer import access
-from summarizer.models import AIassistant, PaperHistory, UserPlan
+from summarizer.models import AIassistant, PaperHistory, SiteSettings, UserPlan
 
 
 class ClientIpTests(TestCase):
@@ -58,7 +58,7 @@ class QuotaTests(TestCase):
         PaperHistory.objects.create(arxiv_id='2101.00001v1', ip_address=ip)
         self.assertEqual(access.run_quota(None, ip), (False, 'robot'))
         PaperHistory.objects.filter(ip_address=ip).update(created=timezone.now() - timezone.timedelta(minutes=5))
-        for i in range(access.RUNS_PER_DAY - 1):
+        for i in range(access.runs_per_day() - 1):
             PaperHistory.objects.create(arxiv_id='x', ip_address=ip)
         PaperHistory.objects.filter(ip_address=ip).update(created=timezone.now() - timezone.timedelta(minutes=5))
         self.assertEqual(access.run_quota(None, ip), (False, 'toomany'))
@@ -110,7 +110,7 @@ class ConsumerTests(TransactionTestCase):
 
     async def test_chat_over_quota_is_refused(self):
         ip = access.hash_ip('81.0.0.9')
-        for i in range(access.CHAT_MESSAGES_PER_DAY['anonymous']):
+        for i in range(access.chat_messages_per_day()['anonymous']):
             await sync_to_async(AIassistant.objects.create)(arxiv_id='a', query='q', ip_address=ip)
         comm = await self.connect(SessionStore())
         await comm.send_json_to({'message': 'hello', 'user': 'admin', 'ip': 'x', 'paid': True})
@@ -437,7 +437,7 @@ class AssistantTests(TransactionTestCase):
             asyncio.run(assistant.answer(['2101.00001v1'], 'en', 'And then?', True, hashed_ip='h'))
         messages = FakeSession.last_payload['messages']
         self.assertEqual([m['role'] for m in messages], ['system', 'user', 'assistant', 'user'])
-        self.assertEqual(FakeSession.last_payload['model'], assistant.MODEL_PAID)
+        self.assertEqual(FakeSession.last_payload['model'], SiteSettings.current().model_paid)
         self.assertTrue(FakeSession.last_payload['stream'])
 
 
@@ -1154,3 +1154,82 @@ class MailcheckTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='quirky').exists())
         self.assertEqual(len(mail.outbox), 0)
+
+
+class AdminTests(TestCase):
+    def setUp(self):
+        self.addCleanup(SiteSettings.clear_cache)
+        SiteSettings.clear_cache()
+        self.admin = User.objects.create_superuser('boss', 'boss@example.org', 'x')
+
+    def test_quotas_follow_site_settings(self):
+        self.assertEqual(access.runs_per_day(), 10)
+        cfg = SiteSettings.current()
+        cfg.free_runs_per_day = 2
+        cfg.chat_anonymous_per_day = 1
+        cfg.save()
+        ip = access.hash_ip('9.9.9.9')
+        PaperHistory.objects.create(arxiv_id='1', ip_address=ip, created=timezone.now())
+        PaperHistory.objects.filter(arxiv_id='1').update(created=timezone.now() - timezone.timedelta(minutes=5))
+        self.assertEqual(access.run_quota(None, ip), (True, None))
+        PaperHistory.objects.create(arxiv_id='2', ip_address=ip)
+        PaperHistory.objects.filter(arxiv_id='2').update(created=timezone.now() - timezone.timedelta(minutes=5))
+        self.assertEqual(access.run_quota(None, ip), (False, 'toomany'))
+        self.assertEqual(access.chat_quota_left(None, ip), 1)
+
+    def test_models_follow_site_settings(self):
+        from summarizer import utils
+        cfg = SiteSettings.current()
+        cfg.model_free, cfg.model_paid = 'model-a', 'model-b'
+        cfg.save()
+        self.assertEqual(utils.ai_models(), ('model-a', 'model-b'))
+
+    def test_admin_pages_load(self):
+        self.client.force_login(self.admin)
+        PaperHistory.objects.create(arxiv_id='1', user=self.admin, ip_address='h')
+        UserPlan.objects.create(user=self.admin, paid=True)
+        r = self.client.get('/admin/auth/user/?premium=yes')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'boss@example.org')
+        r = self.client.get('/admin/summarizer/sitesettings/')
+        self.assertRedirects(r, '/admin/summarizer/sitesettings/1/change/')
+        self.assertEqual(self.client.get('/admin/summarizer/sitesettings/1/change/').status_code, 200)
+        self.assertEqual(self.client.get('/admin/summarizer/guide/add/').status_code, 200)
+        self.assertEqual(self.client.get('/admin/auth/user/%d/change/' % self.admin.pk).status_code, 200)
+
+
+class DatabaseGuideTests(TestCase):
+    def setUp(self):
+        import tempfile
+        from summarizer import guides
+        self.dir = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.dir, 'en'))
+        with open(os.path.join(self.dir, 'en', 'from-file.md'), 'w') as f:
+            f.write('---\ntitle: File version\ndescription: d\ndate: 2026-10-01\n---\nFile body.\n')
+        patcher = mock.patch.object(guides, 'CONTENT_DIR', self.dir)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_database_guide_is_published_and_replaces_the_file(self):
+        from summarizer.models import Guide
+        import datetime
+        Guide.objects.create(lang='en', slug='from-file', title='Admin version', description='d',
+                             body='Edited **here**.', date=datetime.date(2026, 10, 2), draft=False,
+                             extra='faq:\n  - q: Why?\n    a: Because.\n')
+        Guide.objects.create(lang='en', slug='wip', title='Draft', description='d', body='x',
+                             date=datetime.date(2026, 10, 3))
+        html = self.client.get('/en/guides/from-file/').content.decode()
+        self.assertIn('Edited <strong>here</strong>', html)
+        self.assertIn('"@type": "FAQPage"', html)
+        self.assertNotIn('File body', html)
+        self.assertEqual(self.client.get('/en/guides/wip/').status_code, 404)
+        self.assertNotIn('/en/guides/wip/', self.client.get('/sitemap-guides.xml').content.decode())
+
+    def test_import_command_copies_files(self):
+        from django.core.management import call_command
+        from summarizer.models import Guide
+        call_command('import_guides', stdout=open(os.devnull, 'w'))
+        guide = Guide.objects.get(lang='en', slug='from-file')
+        self.assertEqual(guide.title, 'File version')
+        self.assertEqual(guide.body, 'File body.\n')
+        self.assertFalse(guide.draft)

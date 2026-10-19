@@ -15,7 +15,7 @@ from django.utils.translation import get_language_info
 
 from .models import AIassistant, ArxivPaper, SummaryPaper
 from .paper_source import arxiv_ref, paper_text
-from .utils import MODEL_FREE, MODEL_PAID, chat_params
+from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +82,8 @@ def conversation_history(arxiv_id, lang, user, hashed_ip):
 
 async def complete(messages, paid, max_tokens, on_delta=None):
     """Run a chat completion, streaming text pieces to on_delta; return the full text."""
-    model = MODEL_PAID if paid else MODEL_FREE
-    payload = {'model': model, 'messages': messages, 'stream': True, **chat_params(model, max_tokens)}
+    model_free, model_paid = await sync_to_async(ai_models)()
+    payload = {'model': model_paid if paid else model_free, 'messages': messages, 'stream': True, **chat_params(paid, max_tokens)}
     headers = {'Authorization': 'Bearer %s' % settings.OPENAI_KEY}
     parts = []
     timeout = aiohttp.ClientTimeout(total=300)

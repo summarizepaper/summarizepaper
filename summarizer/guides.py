@@ -23,6 +23,9 @@ front matter block:
     ---
 
 The same slug in another language directory is linked with hreflang.
+
+Guides can also be written in the admin (models.Guide): a row replaces the file
+with the same language and slug, since files cannot be written on Heroku.
 """
 import datetime
 import json
@@ -37,6 +40,8 @@ from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import gettext as _
 
+from .models import Guide
+
 logger = logging.getLogger(__name__)
 
 SITE = 'https://www.summarizepaper.com'
@@ -49,6 +54,14 @@ def _path(lang, slug):
 
 
 @lru_cache(maxsize=256)
+def _render(text):
+    html = markdown.markdown(text, extensions=['extra', 'sane_lists', 'toc'])
+    # a wrapper lets wide tables scroll on phones instead of widening the page
+    html = html.replace('<table>', '<div class="table-wrap"><table>').replace('</table>', '</table></div>')
+    return {'minutes': max(1, round(len(text.split()) / 220)), 'html': html}
+
+
+@lru_cache(maxsize=256)
 def _parse(path, mtime):
     with open(path, encoding='utf-8') as f:
         text = f.read()
@@ -56,25 +69,34 @@ def _parse(path, mtime):
     if text.startswith('---'):
         _, front, text = text.split('---', 2)
         meta = yaml.safe_load(front) or {}
-    meta['minutes'] = max(1, round(len(text.split()) / 220))
-    html = markdown.markdown(text, extensions=['extra', 'sane_lists', 'toc'])
-    # a wrapper lets wide tables scroll on phones instead of widening the page
-    meta['html'] = html.replace('<table>', '<div class="table-wrap"><table>').replace('</table>', '</table></div>')
+    meta.update(_render(text))
+    return meta
+
+
+def _from_row(row):
+    meta = row.extra_meta()
+    meta.update(title=row.title, description=row.description, date=row.date, draft=row.draft)
+    if row.updated:
+        meta['updated'] = row.updated
+    if row.product:
+        meta['product'] = True
+    meta.update(_render(row.body))
     return meta
 
 
 def load(lang, slug):
-    """The guide as a dict, or None when that language has no such file."""
+    """The guide as a dict, or None when that language has no such guide."""
     if not slug.replace('-', '').isalnum():
         return None
+    row = Guide.objects.filter(lang=lang, slug=slug).first()
     path = _path(lang, slug)
-    if not os.path.isfile(path):
+    if row is None and not os.path.isfile(path):
         return None
     try:
-        guide = dict(_parse(path, os.path.getmtime(path)))
+        guide = _from_row(row) if row else dict(_parse(path, os.path.getmtime(path)))
     except (ValueError, yaml.YAMLError):
-        # one broken file must not take down the sitemap and llms.txt
-        logger.exception('Could not parse guide %s', path)
+        # one broken guide must not take down the sitemap and llms.txt
+        logger.exception('Could not parse guide %s/%s', lang, slug)
         return None
     guide.update(slug=slug, lang=lang, url='%s/%s/guides/%s/' % (SITE, lang, slug))
     guide.setdefault('updated', guide.get('date'))
@@ -87,13 +109,12 @@ def published(lang=None, include_drafts=False):
     guides = []
     for l in langs:
         folder = os.path.join(CONTENT_DIR, l)
-        if not os.path.isdir(folder):
-            continue
-        for name in os.listdir(folder):
-            if name.endswith('.md'):
-                guide = load(l, name[:-3])
-                if guide and (include_drafts or not guide.get('draft')):
-                    guides.append(guide)
+        slugs = {name[:-3] for name in os.listdir(folder) if name.endswith('.md')} if os.path.isdir(folder) else set()
+        slugs.update(Guide.objects.filter(lang=l).values_list('slug', flat=True))
+        for slug in slugs:
+            guide = load(l, slug)
+            if guide and (include_drafts or not guide.get('draft')):
+                guides.append(guide)
     return sorted(guides, key=lambda g: str(g.get('date') or ''), reverse=True)
 
 

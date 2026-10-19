@@ -10,7 +10,7 @@ import ipaddress
 
 from django.utils import timezone
 
-from .models import AIassistant, PaperHistory, UserPlan
+from .models import AIassistant, PaperHistory, SiteSettings, UserPlan
 
 # https://www.cloudflare.com/ips/ - requests coming from these addresses are
 # Cloudflare edges, so their CF-Connecting-IP header is trustworthy.
@@ -23,9 +23,7 @@ CLOUDFLARE_NETWORKS = [ipaddress.ip_network(n) for n in (
     "2405:8100::/32", "2a06:98c0::/29", "2c0f:f248::/32",
 )]
 
-RUNS_PER_DAY = 10
 RUN_MIN_INTERVAL_SECONDS = 10
-CHAT_MESSAGES_PER_DAY = {"anonymous": 30, "user": 100, "paid": 500}
 RUN_TOKENS_SESSION_KEY = "allowed_runs"
 
 
@@ -73,6 +71,17 @@ def hash_ip(ip):
     return hashlib.sha256((ip or "").encode("utf-8")).hexdigest()
 
 
+def runs_per_day():
+    """New summaries per day without Premium (set in the admin)."""
+    return SiteSettings.current().free_runs_per_day
+
+
+def chat_messages_per_day():
+    """Questions per day to the assistant, by tier (set in the admin)."""
+    cfg = SiteSettings.current()
+    return {"anonymous": cfg.chat_anonymous_per_day, "user": cfg.chat_user_per_day, "paid": cfg.chat_paid_per_day}
+
+
 def is_paid(user):
     if user is None or not user.is_authenticated:
         return False
@@ -98,7 +107,7 @@ def run_quota(user, hashed_ip):
     runs_today = PaperHistory.objects.filter(
         ip_address=hashed_ip, created__gte=now - timezone.timedelta(days=1)
     ).count()
-    if runs_today >= RUNS_PER_DAY and not is_paid(user):
+    if runs_today >= runs_per_day() and not is_paid(user):
         return False, "toomany"
     return True, None
 
@@ -113,7 +122,7 @@ def chat_quota_left(user, hashed_ip):
     else:
         tier = "anonymous"
         used = AIassistant.objects.filter(user=None, ip_address=hashed_ip, created__gte=since).count()
-    return CHAT_MESSAGES_PER_DAY[tier] - used
+    return chat_messages_per_day()[tier] - used
 
 
 def grant_run(session, arxiv_id, kind):

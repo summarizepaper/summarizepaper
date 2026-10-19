@@ -20,7 +20,7 @@ from django.utils.dateparse import parse_datetime
 
 from . import mailcheck
 from .models import DigestDelivery, DigestItem, DigestSubscription
-from .utils import MODEL_FREE, chat_params
+from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
 
@@ -158,8 +158,8 @@ def write_blurbs(papers, lang):
     response = requests.post(
         'https://api.openai.com/v1/chat/completions',
         headers={'Authorization': 'Bearer %s' % settings.OPENAI_KEY},
-        json={'model': MODEL_FREE, 'messages': [{'role': 'user', 'content': prompt}],
-              'response_format': {'type': 'json_object'}, **chat_params(MODEL_FREE, 2500)},
+        json={'model': ai_models()[0], 'messages': [{'role': 'user', 'content': prompt}],
+              'response_format': {'type': 'json_object'}, **chat_params(False, 2500)},
         timeout=180,
     )
     response.raise_for_status()
