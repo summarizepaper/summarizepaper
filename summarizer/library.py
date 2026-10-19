@@ -140,8 +140,9 @@ def _mine(request, pk):
     return get_object_or_404(Collection, pk=pk, user=request.user)
 
 
-@login_required
 def collections_page(request):
+    if not request.user.is_authenticated:
+        return render(request, 'summarizer/collections.html', {'anonymous': True, 'limits': FREE, 'premium': PREMIUM})
     paid = access.is_paid(request.user)
     collections = list(Collection.objects.filter(user=request.user).prefetch_related('papers'))
     can_create = len(collections) < limits(paid)['collections']
@@ -151,7 +152,7 @@ def collections_page(request):
             collection = Collection.objects.create(user=request.user, name=name)
             return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
     return render(request, 'summarizer/collections.html', {
-        'collections': collections, 'paid': paid, 'can_create': can_create, 'limits': limits(paid)})
+        'collections': collections, 'paid': paid, 'can_create': can_create, 'limits': limits(paid), 'premium': PREMIUM})
 
 
 @login_required

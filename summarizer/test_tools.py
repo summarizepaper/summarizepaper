@@ -532,7 +532,12 @@ class PageTests(ToolsTestCase):
         for url in ('/en/collections/', '/fr/collections/', '/en/integrations/', '/en/missed/', '/en/citations/',
                     '/en/trends/', '/fr/letters/', '/en/letters/ai/', '/en/premium/'):
             self.assertEqual(client.get(url).status_code, 200, url)
-        for url in ('/en/collections/', '/en/missed/', '/en/citations/', '/en/integrations/'):
-            self.assertEqual(Client().get(url).status_code, 302, url)
+        for url, text in (('/en/collections/', 'Chat with all the papers of a collection'),
+                          ('/en/missed/', 'We remove the papers your draft already cites'),
+                          ('/fr/citations/', 'Créer un compte gratuit'),
+                          ('/en/integrations/', 'See what Premium includes')):
+            self.assertContains(Client().get(url), text, msg_prefix=url)
+        self.assertContains(self.client_for(self.user('free')).get('/en/citations/'), 'Discover Premium')
+        self.assertEqual(Client().get('/en/missed/abc/').status_code, 302)
         self.assertContains(Client().get('/en/premium/'), 'What did I miss?')
         self.assertEqual(Client().get('/en/letters/nope/').status_code, 404)

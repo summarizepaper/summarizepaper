@@ -2,16 +2,31 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'My collections' %}{% endblock %}
-{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block title %}{% if anonymous %}{% trans 'Collections of arXiv papers' %}{% else %}{% trans 'My collections' %}{% endif %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Group arXiv papers by project, compare them in one table, chat with all of them at once and export them to Zotero, LaTeX, Notion or Obsidian.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/collections/" />
+{% endblock %}
 
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <h1>{% trans 'My collections' %}</h1>
+    <h1>{% if anonymous %}{% trans 'Collections of arXiv papers' %}{% else %}{% trans 'My collections' %}{% endif %}</h1>
     <p class="lead">{% trans 'Group papers by project to compare them in one table, chat with all of them at once, and export them to your reference manager.' %}</p>
   </header>
 
+  {% if anonymous %}
+  <h2>{% trans 'What you can do' %}</h2>
+  <ul class="tool-features">
+    <li>{% trans 'Save any paper in a collection from its page, in one click, or add papers by their arXiv identifier or link.' %}</li>
+    <li>{% trans 'Chat with all the papers of a collection at once: ask what they have in common, which method works best, what they disagree on.' %}</li>
+    <li>{% trans 'Keep a note on each paper.' %}</li>
+    <li>{% trans 'Export a whole collection to BibTeX for LaTeX, to RIS for Zotero, Mendeley or EndNote, or to Markdown for Notion and Obsidian.' %}</li>
+    <li><strong>Premium</strong> : {% trans 'a comparison table of the collection, with the question, method, data, main results and limitations of each paper, then where they agree, where they disagree and what none of them addresses, downloadable as a spreadsheet. Ideal to start a literature review.' %}</li>
+  </ul>
+  <p class="muted">{% blocktrans with n=limits.collections p=limits.papers pn=premium.collections pp=premium.papers %}Free: {{ n }} collections of {{ p }} papers. Premium: {{ pn }} collections of {{ pp }} papers.{% endblocktrans %}</p>
+  {% include 'summarizer/tool_signup.html' %}
+  {% else %}
   {% if collections %}
   <ul class="item-list">
     {% for c in collections %}
@@ -40,6 +55,7 @@
   <div class="upsell" style="margin-top:24px">
     <p><strong>{% trans 'With Premium' %}</strong>: {% trans 'a comparison table of each collection (question, method, data, results, limitations), with where the papers agree, disagree, and what none of them has done yet; up to 100 collections of 200 papers; and the whole collection sent to Zotero with its summaries.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>
+  {% endif %}
   {% endif %}
 </div>
 {% endblock %}

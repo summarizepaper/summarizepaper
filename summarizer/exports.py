@@ -9,7 +9,6 @@ import json
 import re
 
 import requests
-from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.html import escape
@@ -213,8 +212,9 @@ def check_zotero(library_id, api_key):
     return str(info.get('userID')) == str(library_id) and bool(info.get('access', {}).get('user', {}).get('write'))
 
 
-@login_required
 def zotero_settings(request):
+    if not request.user.is_authenticated:
+        return render(request, 'summarizer/integrations.html', {'anonymous': True})
     paid = access.is_paid(request.user)
     account = ZoteroAccount.objects.filter(user=request.user).first()
     error = False

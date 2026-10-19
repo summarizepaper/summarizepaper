@@ -147,8 +147,9 @@ def _spend(user):
     return cache.incr(key) <= PER_DAY
 
 
-@login_required
 def missed_page(request):
+    if not request.user.is_authenticated:
+        return render(request, 'summarizer/missed.html', {'anonymous': True, 'per_day': PER_DAY})
     paid = access.is_paid(request.user)
     error = None
     if request.method == 'POST' and paid:

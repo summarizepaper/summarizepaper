@@ -3,7 +3,10 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Citation alerts' %}{% endblock %}
-{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Get an email when new papers cite your arXiv papers, with what they say about them: building on them, confirming them or questioning them.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/citations/" />
+{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -13,8 +16,20 @@
     <p class="lead">{% trans 'Follow your papers, or any paper: once a week, we email you the new papers that cite them, and what they say about them (building on it, supporting it, questioning it, or a simple mention).' %}</p>
   </header>
 
-  {% if not paid %}
-    <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% if anonymous or not paid %}
+    <h2>{% trans 'What you can do' %}</h2>
+    <ul class="tool-features">
+      <li>{% trans 'Follow your own papers, those of your team, or any paper you care about: paste their arXiv identifiers, or click "Tell me who cites it" on a paper page.' %}</li>
+      <li>{% trans 'Once a week, one email lists the new papers that cite them, with their authors, date and link.' %}</li>
+      <li>{% trans 'For each citation, an AI reads the sentences around it and tells you whether the new paper builds on yours, confirms it, questions it, or only mentions it.' %}</li>
+      <li>{% blocktrans with n=max_followed %}Up to {{ n }} papers followed.{% endblocktrans %}</li>
+    </ul>
+    <p class="muted">{% trans 'Useful to see who uses your results, spot a criticism early, or follow how a key paper of your field is received.' %}</p>
+    {% if anonymous %}
+      {% include 'summarizer/tool_signup.html' with premium_tool=True %}
+    {% else %}
+      <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    {% endif %}
   {% else %}
     {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_followed %}You can follow {{ n }} papers at most.{% endblocktrans %}</p>{% endif %}
     <form method="post" class="card section-card">

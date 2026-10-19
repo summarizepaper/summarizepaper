@@ -3,7 +3,10 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'What did I miss?' %}{% endblock %}
-{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Upload your draft and find the arXiv papers close to it that it does not cite, with how each one relates to your work. Check your references before you submit.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/missed/" />
+{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -13,8 +16,25 @@
     <p class="lead">{% trans 'Give us your draft: we search arXiv for the papers closest to it that it does not cite, and say for each how it relates to your work and how to position yourself against it.' %}</p>
   </header>
 
-  {% if not paid %}
-    <div class="upsell"><p>{% trans 'Before you submit, make sure no close paper is missing from your references.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% if anonymous or not paid %}
+    <h2>{% trans 'How it works' %}</h2>
+    <ol class="tool-steps">
+      <li>{% trans 'Upload the PDF of your draft, or paste its title, abstract, introduction and references.' %}</li>
+      <li>{% trans 'We write several arXiv searches from your draft and gather the papers they find.' %}</li>
+      <li>{% trans 'We remove the papers your draft already cites, found by their arXiv identifier or their title in your references.' %}</li>
+      <li>{% trans 'We rank the others by closeness to your draft, and an AI reads the closest ones.' %}</li>
+      <li>{% trans 'You get the list, from "should be cited" to "related", with for each paper how it relates to your work (same problem, competing method, earlier result, data set to use) and how to position yourself against it.' %}</li>
+    </ol>
+    <ul class="tool-features">
+      <li>{% trans 'Before submitting a paper or a thesis chapter, so a reviewer does not find the missing reference for you.' %}</li>
+      <li>{% trans 'When starting on a new topic, to find the closest work quickly.' %}</li>
+      <li>{% trans 'Your draft is read once and is not stored.' %}</li>
+    </ul>
+    {% if anonymous %}
+      {% include 'summarizer/tool_signup.html' with premium_tool=True %}
+    {% else %}
+      <div class="upsell"><p>{% trans 'Before you submit, make sure no close paper is missing from your references.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    {% endif %}
   {% else %}
     {% if error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
     {% elif error == 'empty' %}<p class="error">{% trans 'Send a PDF, or paste at least the title, abstract and references of your draft.' %}</p>

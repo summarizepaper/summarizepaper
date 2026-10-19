@@ -19,7 +19,6 @@ import time
 
 import requests
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse
@@ -242,8 +241,9 @@ def run(now, budget):
 
 # --- views -------------------------------------------------------------------
 
-@login_required
 def citations_page(request):
+    if not request.user.is_authenticated:
+        return render(request, 'summarizer/citations.html', {'anonymous': True, 'max_followed': MAX_FOLLOWED})
     paid = access.is_paid(request.user)
     error = None
     if request.method == 'POST' and paid:

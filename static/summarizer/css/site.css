@@ -794,3 +794,8 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
   .tool-row .tool-label { min-width: 0; flex-basis: 100%; }
   .section-card { padding: 18px 16px; }
 }
+.tool-features { margin: 0 0 24px; padding-left: 20px; }
+.tool-features li { margin-bottom: 8px; }
+.tool-steps { counter-reset: step; list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 10px; }
+.tool-steps li { counter-increment: step; position: relative; padding-left: 40px; }
+.tool-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; }
