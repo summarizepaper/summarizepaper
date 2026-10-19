@@ -1,4 +1,5 @@
 from channels.generic.websocket import AsyncWebsocketConsumer,WebsocketConsumer
+from channels.layers import get_channel_layer
 import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
@@ -897,7 +898,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('self.arxiv_id',self.arxiv_id)
         print('self.language',self.language)
 
-        self.arxiv_group_name = "ar_%s" % self.arxiv_id
+        self.arxiv_group_name = utils.run_group(self.arxiv_id, self.language)
         print('self.arxiv_group_name',self.arxiv_group_name)
 
         #identity and paid status come from the session cookie, never from the client messages
@@ -1088,31 +1089,18 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
 class HeadlessSummary(LoadingConsumer):
-    """The paper page pipeline without a browser: progress messages go nowhere."""
+    """The paper page pipeline without a browser (digest emails).
 
-    def __init__(self, arxiv_id):
+    Progress still goes to the paper's group, so a reader who opens the page meanwhile
+    sees the bar move and gets the summary when it is done.
+    """
+
+    def __init__(self, arxiv_id, language):
         super().__init__()
-        self.arxiv_group_name = "ar_%s" % arxiv_id
-
-    async def send_message_now(self, message):
-        pass
-
-    async def send_message_arxiv(self, arxiv_dict):
-        pass
-
-    async def send_message_sum(self, sum):
-        pass
-
-    async def send_message_notes(self, notes):
-        pass
-
-    async def send_message_laysum(self, laysum):
-        pass
-
-    async def send_message_blog(self, blog):
-        pass
+        self.arxiv_group_name = utils.run_group(arxiv_id, language)
+        self.channel_layer = get_channel_layer()
 
 
 def summarize_now(arxiv_id, language, paid=True):
     """Summarize a paper from sync code (the digest), as if a visitor had opened its page."""
-    async_to_sync(HeadlessSummary(arxiv_id).sendmessages)(arxiv_id, language, {}, paid)
+    async_to_sync(HeadlessSummary(arxiv_id, language).sendmessages)(arxiv_id, language, {}, paid)

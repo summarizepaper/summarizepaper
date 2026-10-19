@@ -36,6 +36,11 @@ import aiohttp
 channel_layer = get_channel_layer()
 temp=0.3
 
+def run_group(arxiv_id, language):
+    """Channel group and cache lock of a running summary: one per paper and language,
+    so a summary being written in English never holds back a reader asking for French."""
+    return "ar_%s_%s" % (arxiv_id, language)
+
 def ai_models():
     """(free model, paid model), set in the admin (SiteSettings)."""
     cfg = SiteSettings.current()
@@ -926,7 +931,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
     endpoint = "https://api.openai.com/v1/completions"
 
     message={}
-    arxiv_group_name="ar_%s" % arxiv_id
+    arxiv_group_name=run_group(arxiv_id, language)
     # Split the book into chunks of at most 4096 tokens
     print("len(book_text)",len(book_text))
 

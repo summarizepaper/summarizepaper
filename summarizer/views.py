@@ -6,7 +6,8 @@ import requests
 import time
 import re
 import hashlib
-from .models import ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search, PaperScore, UserPlan
+from .models import (AnnouncedPaper, ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search,
+                     PaperScore, UserPlan)
 from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
@@ -875,6 +876,19 @@ def paper_structured_data(paper, sumpaper, lang):
     escaped = json.dumps(data).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
     return mark_safe(escaped)
 
+def waiting_details(arxiv_id):
+    """Title, authors and abstract shown while a summary is being written, when we already know them."""
+    announced = AnnouncedPaper.objects.filter(arxiv_id=arxiv_id).first()
+    if announced:
+        authors = json.loads(announced.authors or '[]')
+        return {'title': announced.title, 'abstract': announced.abstract,
+                'authors': ', '.join(authors[:8]) + (' et al.' if len(authors) > 8 else '')}
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    if paper and paper.title:
+        return {'title': paper.title, 'abstract': paper.abstract or '', 'authors': ''}
+    return None
+
+
 def arxividpage(request, arxiv_id, error_message=None, cat=None):
     arxiv_id = arxiv_id.strip()
     
@@ -945,13 +959,14 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         })
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
-    page_running = cache.get("ar_"+arxiv_id)
+    page_running = cache.get(utils.run_group(arxiv_id, lang))
     print('page_running',page_running)
     if page_running:
         print('in page_running')
         # Page is already running, do not start it again
         stuff_for_frontend.update({
             'run2':True,
+            'waiting':waiting_details(arxiv_id),
         })
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
 
@@ -1355,8 +1370,8 @@ def update_cache(request):
     if not request.user.is_staff:
         raise PermissionDenied
     arxiv_id = request.GET.get('arxiv_id')
-    arxiv_group_name = "ar_%s" % arxiv_id
-    cache.set(arxiv_group_name, False)
+    for language in ('en', 'fr'):
+        cache.set(utils.run_group(arxiv_id, language), False)
     return HttpResponse("Cache updated")
 
 

@@ -115,11 +115,11 @@ class ConsumerTests(TransactionTestCase):
         return comm
 
     async def test_forged_start_does_nothing(self):
-        cache.delete('ar_2101.00001v1')
+        cache.delete('ar_2101.00001v1_en')
         comm = await self.connect(SessionStore())
         await comm.send_json_to({'command': 'start_background_task', 'paid': True})
         self.assertTrue(await comm.receive_nothing(timeout=0.3))
-        self.assertFalse(cache.get('ar_2101.00001v1'))
+        self.assertFalse(cache.get('ar_2101.00001v1_en'))
         await comm.disconnect()
 
     async def test_chat_over_quota_is_refused(self):
@@ -523,7 +523,7 @@ class ConsumerFailureTests(TransactionTestCase):
                 if 'Something went wrong' in last:
                     break
         self.assertIn('Something went wrong', last)
-        self.assertFalse(cache.get('ar_2101.00009v1'))
+        self.assertFalse(cache.get('ar_2101.00009v1_en'))
         await comm.disconnect()
 
 
@@ -1840,3 +1840,25 @@ class DigestHealthTests(TestCase):
         self.assertEqual(digest.check_health(at(20, 15)), [])
         self.assertEqual(digest.check_health(at(24, 15)), [])  # Saturday
         cache.clear()
+
+
+class RunLockPerLanguageTests(TestCase):
+    def test_a_summary_running_in_english_does_not_block_french_readers(self):
+        AnnouncedPaper.objects.create(arxiv_id='2610.22462v1', announced=MONDAY.date(), title='The environments forming stars',
+                                      abstract='Stars form in clusters.', authors=json.dumps(['Ann Lee', 'Bob Ray']))
+        cache.set('ar_2610.22462v1_en', True)
+        try:
+            page = Client().get('/fr/arxiv-id/2610.22462v1/?autorun=1')
+            self.assertContains(page, 'arriving from the daily digest')  # free to start the French summary
+            waiting = Client().get('/en/arxiv-id/2610.22462v1/?autorun=1')
+            self.assertContains(waiting, 'The environments forming stars')  # waiting page shows the paper
+            self.assertContains(waiting, 'Ann Lee, Bob Ray')
+            self.assertContains(waiting, 'usually ready in 1 to 2 minutes')
+        finally:
+            cache.delete('ar_2610.22462v1_en')
+
+    def test_headless_summary_reports_progress_to_the_page(self):
+        from summarizer.consumers import HeadlessSummary
+        run = HeadlessSummary('2610.22462v1', 'fr')
+        self.assertEqual(run.arxiv_group_name, 'ar_2610.22462v1_fr')
+        self.assertIsNotNone(run.channel_layer)

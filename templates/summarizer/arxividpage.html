@@ -230,6 +230,11 @@
   transition: width .5s ease-in-out;
 }
 #progress-text { display: none; }
+.waiting-paper { margin: 8px 0 4px; }
+.waiting-paper h2 { font-size: 1.25rem; line-height: 1.35; margin: 0 0 6px; }
+.waiting-authors, .waiting-meta { color: var(--text-muted); font-size: 14px; margin: 0 0 6px; }
+.waiting-abstract { line-height: 1.6; margin: 10px 0 0; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.waiting-time { color: var(--text-muted); font-size: 14px; margin: 12px 0 0; }
 #loading-message, #progtextupdate { padding: 12px 0; text-align: center; color: var(--accent) !important; font-size: 16px !important; font-weight: 600; }
 .loading img { display: none !important; }
 .loading::before {
@@ -757,9 +762,19 @@ submitButton.addEventListener('click', () => {
   {% endif %}
 
   {% if run or run2 or close %}
+    {% if waiting %}
+    <div class="waiting-paper">
+      <h2>{{ waiting.title }}</h2>
+      {% if waiting.authors %}<p class="waiting-authors">{{ waiting.authors }}</p>{% endif %}
+      <p class="waiting-meta">arXiv: {{ arxiv_id|dash_slash }}</p>
+      {% if waiting.abstract %}<p class="waiting-abstract">{{ waiting.abstract }}</p>{% endif %}
+    </div>
+    {% else %}
     <div class="info-block">
       <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id|dash_slash }}</p>
     </div>
+    {% endif %}
+    {% if not close %}<p class="waiting-time">{% trans 'The summary is usually ready in 1 to 2 minutes. This page updates by itself.' %}</p>{% endif %}
   {% else %}
     <div class="title"><h2>{{ details.title }}</h2></div>
     <div class="subtitle">
@@ -831,7 +846,7 @@ submitButton.addEventListener('click', () => {
 
   <div id="loading-message"></div>
   <div id="progress-bar">
-    <div id="progress" style="width: 0%">
+    <div id="progress" style="width: 4%">
       <div id="progress-text"></div>
     </div>
   </div>
@@ -849,7 +864,7 @@ submitButton.addEventListener('click', () => {
 
   <div id="loading-message"></div>
   <div id="progress-bar">
-    <div id="progress" style="width: 0%">
+    <div id="progress" style="width: 4%">
       <div id="progress-text"></div>
     </div>
   </div>
@@ -867,7 +882,7 @@ submitButton.addEventListener('click', () => {
 
 <div id="loading-message"></div>
 <div id="progress-bar">
-  <div id="progress" style="width: 0%">
+  <div id="progress" style="width: 4%">
     <div id="progress-text"></div>
   </div>
 </div>
