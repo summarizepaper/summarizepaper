@@ -34,8 +34,10 @@
     {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_followed %}You can follow {{ n }} papers at most.{% endblocktrans %}</p>{% endif %}
     <form method="post" class="card section-card">
       {% csrf_token %}
-      <p><label>{% trans 'Papers to follow' %}<br>
-        <textarea name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea></label></p>
+      <p><strong>{% trans 'Papers to follow' %}</strong></p>
+      {% include 'summarizer/arxiv_picker.html' with target='follow-ids' %}
+      <p><label>{% trans 'Or paste their arXiv identifiers or links:' %}<br>
+        <textarea id="follow-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea></label></p>
       <p><button class="btn" type="submit">{% trans 'Follow' %}</button></p>
       <p class="muted"><small>{% trans 'Citations come from Semantic Scholar and are checked once a day. The citations a paper already has when you follow it are not reported.' %}</small></p>
     </form>

@@ -92,5 +92,110 @@
     tick();
   }
 
+  // Paper search next to a field that takes arXiv ids (templates/summarizer/arxiv_picker.html):
+  // typing searches arXiv through our relay, clicking a result adds its id to the field.
+  var ARXIV_ID = /^(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?\/\d{7})(v\d+)?$/i;
+
+  function picker(box) {
+    var field = document.getElementById(box.dataset.target);
+    var input = box.querySelector('.arxiv-picker-input');
+    var status = box.querySelector('.arxiv-picker-status');
+    var list = box.querySelector('.arxiv-picker-results');
+    var comma = box.dataset.separator === 'comma';
+    var timer = null, seq = 0;
+    if (!field || !input) return;
+
+    function ids() {
+      return field.value.split(/[\s,]+/).map(function (s) {
+        var m = s.match(/(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?\/\d{7})/i);
+        return m ? m[1].replace(/v\d+$/, '') : '';
+      }).filter(Boolean);
+    }
+
+    function add(id) {
+      if (ids().indexOf(id) >= 0) return;
+      var value = field.value.replace(/[\s,]+$/, '');
+      field.value = value ? value + (comma ? ', ' : '\n') + id : id;
+      field.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+
+    function say(message) {
+      status.textContent = message || '';
+      status.hidden = !message;
+    }
+
+    // arXiv's own syntax (au:, ti:, AND...) is passed as is; plain words must all appear.
+    function query(q) {
+      if (ARXIV_ID.test(q)) return {id_list: q};
+      if (/\b(all|ti|au|abs|cat|id):/.test(q)) return {search_query: q};
+      return {search_query: q.split(/\s+/).map(function (w) { return 'all:' + w.replace(/[():"]/g, ''); })
+        .filter(function (w) { return w !== 'all:'; }).join(' AND ')};
+    }
+
+    function show(xml) {
+      list.innerHTML = '';
+      var entries = Array.prototype.slice.call(xml.getElementsByTagName('entry')).filter(function (e) {
+        return e.getElementsByTagName('title').length && e.getElementsByTagName('id')[0].textContent.indexOf('/abs/') > 0;
+      });
+      if (!entries.length) { list.hidden = true; return say(box.dataset.none); }
+      say('');
+      entries.forEach(function (entry) {
+        var id = entry.getElementsByTagName('id')[0].textContent.split('/abs/')[1].replace(/v\d+$/, '');
+        var authors = Array.prototype.map.call(entry.getElementsByTagName('author'), function (a) {
+          return a.getElementsByTagName('name')[0].textContent;
+        });
+        var published = entry.getElementsByTagName('published')[0];
+        var li = text('li');
+        var info = text('div', '', 'arxiv-picker-info');
+        info.appendChild(text('strong', entry.getElementsByTagName('title')[0].textContent.replace(/\s+/g, ' ').trim()));
+        info.appendChild(text('div', [
+          authors.slice(0, 3).join(', ') + (authors.length > 3 ? ' et al.' : ''),
+          published ? published.textContent.slice(0, 4) : '',
+          'arXiv:' + id
+        ].filter(Boolean).join(' · '), 'meta'));
+        var button = text('button', '', 'btn btn-sm btn-ghost');
+        button.type = 'button';
+        function mark() {
+          var added = ids().indexOf(id) >= 0;
+          button.textContent = added ? '✓ ' + box.dataset.added : '+ ' + box.dataset.add;
+          button.disabled = added;
+        }
+        mark();
+        button.addEventListener('click', function () { add(id); mark(); });
+        li.appendChild(info);
+        li.appendChild(button);
+        list.appendChild(li);
+      });
+      list.hidden = false;
+    }
+
+    function run() {
+      var q = input.value.trim();
+      var mine = ++seq;
+      if (q.length < 3) { list.hidden = true; return say(''); }
+      var params = new URLSearchParams(query(q));
+      params.append('max_results', '8');
+      box.classList.add('is-loading');
+      fetch(box.dataset.url + '?' + params, {credentials: 'same-origin'})
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (body) {
+          if (mine !== seq) return;
+          show(new DOMParser().parseFromString(body, 'application/xml'));
+        })
+        .catch(function () { if (mine === seq) { list.hidden = true; say(box.dataset.error); } })
+        .then(function () { if (mine === seq) box.classList.remove('is-loading'); });
+    }
+
+    // arXiv asks for at most one request every 3 s: wait until typing pauses
+    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 600); });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(timer); run(); }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    Array.prototype.forEach.call(document.querySelectorAll('.arxiv-picker'), picker);
+  });
+
   window.SP = {lang: lang, post: post, wait: wait, text: text, track: track};
 })();

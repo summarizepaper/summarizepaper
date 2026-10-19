@@ -559,6 +559,10 @@ class PageTests(ToolsTestCase):
                           ('/fr/citations/', 'Créer un compte gratuit'),
                           ('/en/integrations/', 'See what Premium includes')):
             self.assertContains(Client().get(url), text, msg_prefix=url)
+        # fields that take arXiv ids come with a paper search
+        self.assertContains(client.get('/en/citations/'), 'data-target="follow-ids"')
+        self.assertContains(client.get('/fr/citations/'), 'Chercher sur arXiv')
+        self.assertContains(client.get('/en/digest/'), 'data-target="reference_papers"')
         self.assertContains(self.client_for(self.user('free')).get('/en/citations/'), 'Discover Premium')
         self.assertEqual(Client().get('/en/missed/abc/').status_code, 302)
         self.assertContains(Client().get('/en/premium/'), 'What did I miss?')

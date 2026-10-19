@@ -84,8 +84,9 @@
         {% if not paid %}<p class="muted">{% blocktrans %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, describe your research and the digest puts the closest papers first, instead of the newest.{% endblocktrans %}</p>{% endif %}
         <p><label for="profile">{% trans 'Describe your research in a few sentences. Papers are ranked by how close they are to it.' %}</label>
         <textarea id="profile" name="profile" maxlength="2000" placeholder="{% trans 'e.g. I study the atmospheres of hot Jupiters with JWST transmission spectra, especially clouds and hazes.' %}">{{ subscription.profile }}</textarea></p>
-        <p><label for="reference_papers">{% blocktrans %}Or give up to {{ max_references }} papers close to your work (arXiv ids or links, comma-separated):{% endblocktrans %}</label>
-        <input type="text" id="reference_papers" name="reference_papers" value="{{ subscription.reference_papers }}" placeholder="2310.01234, https://arxiv.org/abs/2401.04567"></p>
+        <p><label for="reference_papers">{% blocktrans %}Or give up to {{ max_references }} papers close to your work (arXiv ids or links, comma-separated):{% endblocktrans %}</label></p>
+        {% include 'summarizer/arxiv_picker.html' with target='reference_papers' separator='comma' %}
+        <p><input type="text" id="reference_papers" name="reference_papers" value="{{ subscription.reference_papers }}" placeholder="2310.01234, https://arxiv.org/abs/2401.04567"></p>
         <p><label for="authors">{% blocktrans %}Authors to follow, in any category (up to {{ max_authors }}, comma-separated):{% endblocktrans %}</label>
         <input type="text" id="authors" name="authors" value="{{ subscription.authors }}" placeholder="Sara Seager, Yann LeCun"></p>
         <p class="muted">{% trans 'You also get a synthesis of the week in your categories (in the weekly digest, or on Mondays), and the full AI summary of your 3 best papers is ready before you open the email.' %}</p>

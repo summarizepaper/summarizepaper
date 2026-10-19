@@ -4581,3 +4581,23 @@ msgstr ""
 
 #~ msgid "The 10-yrs old summary is not ready yet"
 #~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
+
+#: templates/summarizer/arxiv_picker.html
+msgid "Added"
+msgstr "Ajouté"
+
+#: templates/summarizer/arxiv_picker.html
+msgid "No paper found."
+msgstr "Aucun article trouvé."
+
+#: templates/summarizer/arxiv_picker.html
+msgid "Search arXiv: title, keywords or author"
+msgstr "Chercher sur arXiv : titre, mots-clés ou auteur"
+
+#: templates/summarizer/arxiv_picker.html
+msgid "arXiv is not reachable right now. Try again in a moment."
+msgstr "arXiv ne répond pas pour le moment. Réessayez dans un instant."
+
+#: templates/summarizer/citations.html
+msgid "Or paste their arXiv identifiers or links:"
+msgstr "Ou collez leurs identifiants ou liens arXiv :"

@@ -748,6 +748,16 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .item-list .meta { color: var(--text-muted); font-size: 14px; }
 .item-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .inline-form { display: inline; margin: 0; }
+.arxiv-picker { margin-bottom: 12px; }
+.arxiv-picker.is-loading .arxiv-picker-input { background-image: linear-gradient(90deg, var(--accent-soft), var(--surface), var(--accent-soft)); background-size: 200% 100%; animation: picker-loading 1.2s linear infinite; }
+@keyframes picker-loading { to { background-position: -200% 0; } }
+.arxiv-picker-status { margin: 8px 0 0; font-size: 14px; }
+.arxiv-picker-results { list-style: none; margin: 8px 0 0; padding: 0; max-height: 360px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.arxiv-picker-results li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.arxiv-picker-results li:last-child { border-bottom: 0; }
+.arxiv-picker-info { flex: 1; min-width: 0; font-size: 14px; }
+.arxiv-picker-info .meta { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+.arxiv-picker-results button { flex: none; }
 .link-button { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
 .importance { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
 .importance.high { background: #fee2e2; color: #991b1b; }

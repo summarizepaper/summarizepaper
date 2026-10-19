@@ -88,7 +88,8 @@
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="action" value="add">
-    <textarea name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea>
+    {% include 'summarizer/arxiv_picker.html' with target='add-ids' %}
+    <textarea id="add-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea>
     <p><button class="btn" type="submit">{% trans 'Add' %}</button></p>
   </form>
 
