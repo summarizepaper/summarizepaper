@@ -28,6 +28,10 @@ COMPARE_MAX = 25  # papers read by one comparison
 CHAT_MAX = 10  # papers the chat page takes at once
 MAX_ADD = 50  # ids added at once (one arXiv query)
 SUMMARY_CHARS = 4000
+COMPARE_STEPS = [
+    ('read', _('Reading the papers and our summaries')),
+    ('compare', _('Filling the table and comparing the results')),
+]
 COLUMNS = [
     ('question', _('Question')),
     ('method', _('Method')),
@@ -108,10 +112,11 @@ def paper_block(row):
 
 def write_comparison(collection_pk, lang):
     def work(pk):
+        generated.progress(pk, 'read')
         rows = list(CollectionPaper.objects.filter(collection__pk=collection_pk)[:COMPARE_MAX])
         blocks = '\n\n'.join(paper_block(r) for r in rows)
         titles = {r.arxiv_id: r.title for r in rows}
-        generated.release_connection()
+        generated.progress(pk, 'compare')
         answer = generated.chat_json(
             'Compare the %d papers above for a researcher writing a literature review. Write in %s. For every paper, '
             'fill each column in one or two short sentences, with key numbers when the paper gives them; write '
@@ -190,7 +195,7 @@ def collection_page(request, pk):
     return render(request, 'summarizer/collection.html', {
         'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid),
         'comparison': comparison, 'table': comparison.data() if comparison and comparison.status == 'done' else None,
-        'columns': COLUMNS, 'compare_max': COMPARE_MAX, 'message': request.GET.get('m'),
+        'columns': COLUMNS, 'compare_max': COMPARE_MAX, 'compare_steps': COMPARE_STEPS, 'message': request.GET.get('m'),
         'chat_ids': ','.join(p.arxiv_id for p in papers[:CHAT_MAX]), 'chat_max': CHAT_MAX,
     })
 

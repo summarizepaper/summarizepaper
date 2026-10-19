@@ -1,0 +1,18 @@
+{% load i18n %}
+{# A waiting panel followed by SP.track(). Pass: working_id, working_title, working_steps [(code, label)], working_time. #}
+<div class="card working" id="{{ working_id }}"{% if not working_visible %} hidden{% endif %}{% if working_started %} data-started="{{ working_started|date:'c' }}"{% endif %} aria-live="polite">
+  <div class="working-head">
+    <span class="spinner" aria-hidden="true"></span>
+    <div>
+      <strong>{{ working_title }}</strong>
+      <div class="muted working-meta">{% trans 'Elapsed time' %} <span class="working-elapsed">0:00</span> · {{ working_time }}</div>
+    </div>
+  </div>
+  {% if working_steps %}
+  <ol class="working-steps">
+    {% for code, label in working_steps %}<li data-step="{{ code }}">{{ label }}</li>{% endfor %}
+  </ol>
+  {% endif %}
+  <p class="muted working-note">{% trans 'You can leave this page: the work goes on, and the result will be here when you come back.' %}</p>
+  <p class="error working-error">{% trans 'Something went wrong. Please try again.' %}</p>
+</div>

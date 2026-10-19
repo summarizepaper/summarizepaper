@@ -84,6 +84,11 @@
       el.appendChild(a);
     }
   }
+  function busy(el, message) {
+    el.textContent = '';
+    el.appendChild(SP.text('span', '', 'spinner spinner-sm'));
+    el.appendChild(document.createTextNode(message));
+  }
   function refused(el, json) {
     if (json.status === 'premium') return show(el, t.premium, {href: base + '/premium/', text: t.premiumLink}), true;
     if (json.status === 'login') return show(el, t.login, {href: base + '/login/?next=' + encodeURIComponent(location.pathname), text: '→'}), true;
@@ -101,17 +106,21 @@
     readingOutput.appendChild(box);
     readingStatus.textContent = '';
   }
-  document.getElementById('reading-go').addEventListener('click', function () {
-    show(readingStatus, t.working);
+  var readingGo = document.getElementById('reading-go');
+  readingGo.addEventListener('click', function () {
+    readingGo.disabled = true;
+    busy(readingStatus, t.working);
+    function finish(fn) { return function (x) { readingGo.disabled = false; return fn(x); }; }
     SP.post(base + '/reading/' + arxivId + '/', {
       level: document.getElementById('reading-level').value,
       lang: document.getElementById('reading-lang').value
-    }).then(function (json) {
+    }).then(finish(function (json) {
       if (json.status === 'quota') return show(readingStatus, t.quota, {href: base + '/premium/', text: t.premiumLink});
       if (json.status === 'done') return renderReading(json.data);
       if (!json.id) return show(readingStatus, t.failed);
-      SP.wait(json.id, renderReading, function () { show(readingStatus, t.failed); });
-    });
+      readingGo.disabled = true;
+      SP.wait(json.id, finish(renderReading), finish(function () { show(readingStatus, t.failed); }));
+    }));
   });
 
   // collections
@@ -136,7 +145,7 @@
   // Zotero
   var zoteroStatus = document.getElementById('zotero-status');
   document.getElementById('zotero-go').addEventListener('click', function () {
-    show(zoteroStatus, t.sending);
+    busy(zoteroStatus, t.sending);
     SP.post(base + '/zotero/send/', {arxiv_id: arxivId}).then(function (json) {
       if (refused(zoteroStatus, json)) return;
       if (json.status === 'setup') return show(zoteroStatus, t.setup, {href: json.url, text: '→'});

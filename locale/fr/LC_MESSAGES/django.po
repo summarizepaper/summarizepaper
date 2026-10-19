@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 20:14+0000\n"
+"POT-Creation-Date: 2026-10-19 20:26+0000\n"
 "PO-Revision-Date: 2023-04-23 20:21+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -61,24 +61,60 @@ msgid "Economics and finance"
 msgstr "Économie et finance"
 
 #: summarizer/library.py:32
+msgid "Reading the papers and our summaries"
+msgstr "Lecture des articles et de nos résumés"
+
+#: summarizer/library.py:33
+msgid "Filling the table and comparing the results"
+msgstr "Remplissage du tableau et comparaison des résultats"
+
+#: summarizer/library.py:36
 msgid "Question"
 msgstr "Question"
 
-#: summarizer/library.py:33
+#: summarizer/library.py:37
 msgid "Method"
 msgstr "Méthode"
 
-#: summarizer/library.py:34
+#: summarizer/library.py:38
 msgid "Data"
 msgstr "Données"
 
-#: summarizer/library.py:35
+#: summarizer/library.py:39
 msgid "Main results"
 msgstr "Résultats principaux"
 
-#: summarizer/library.py:36
+#: summarizer/library.py:40
 msgid "Limitations"
 msgstr "Limites"
+
+#: summarizer/missed.py:37
+msgid "Reading your draft"
+msgstr "Lecture de votre brouillon"
+
+#: summarizer/missed.py:38
+msgid "Searching arXiv for close papers"
+msgstr "Recherche des articles proches sur arXiv"
+
+#: summarizer/missed.py:39
+msgid "Ranking them and removing the papers you already cite"
+msgstr "Classement et retrait des articles que vous citez déjà"
+
+#: summarizer/missed.py:40
+msgid "An AI reads the closest papers and explains each one"
+msgstr "Une IA lit les plus proches et explique chacun"
+
+#: summarizer/presskit.py:28
+msgid "Reading the full paper"
+msgstr "Lecture de l'article complet"
+
+#: summarizer/presskit.py:29
+msgid "Finding independent researchers on the same topic"
+msgstr "Recherche de chercheurs indépendants sur le même sujet"
+
+#: summarizer/presskit.py:30
+msgid "Writing the kit and checking the quotes against the paper"
+msgstr "Rédaction du kit et vérification des citations dans l'article"
 
 #: summarizer/reading.py:20
 msgid "For a 12-year-old"
@@ -1653,7 +1689,7 @@ msgstr "Ajouter un papier directement"
 msgid "Arxiv ID (e.g. 2211.04191v1)"
 msgstr "ID Arxiv (e.g. 2211.04191v1)"
 
-#: templates/summarizer/chat.html:180 templates/summarizer/collection.html:89
+#: templates/summarizer/chat.html:180 templates/summarizer/collection.html:92
 #: templates/summarizer/paper_tools.html:22
 msgid "Add"
 msgstr "Ajouter"
@@ -1825,7 +1861,7 @@ msgid "Papers to follow"
 msgstr "Articles à suivre"
 
 #: templates/summarizer/citations.html:38
-#: templates/summarizer/collection.html:88
+#: templates/summarizer/collection.html:91
 msgid "arXiv identifiers or links, separated by spaces or new lines"
 msgstr ""
 "Identifiants ou liens arXiv, séparés par des espaces ou des retours à la "
@@ -1967,74 +2003,83 @@ msgstr ""
 msgid "Compare these papers"
 msgstr "Comparer ces articles"
 
-#: templates/summarizer/collection.html:65
+#: templates/summarizer/collection.html:62
+msgid "Comparing the papers of this collection"
+msgstr "Comparaison des articles de cette collection"
+
+#: templates/summarizer/collection.html:63
+#: templates/summarizer/presskit.html:83
+msgid "usually about a minute"
+msgstr "en général une minute environ"
+
+#: templates/summarizer/collection.html:68
 msgid "Papers"
 msgstr "Articles"
 
-#: templates/summarizer/collection.html:74
+#: templates/summarizer/collection.html:77
 msgid "Your note"
 msgstr "Votre note"
 
-#: templates/summarizer/collection.html:75
+#: templates/summarizer/collection.html:78
 msgid "Save note"
 msgstr "Enregistrer la note"
 
-#: templates/summarizer/collection.html:76
+#: templates/summarizer/collection.html:79
 msgid "Remove"
 msgstr "Retirer"
 
-#: templates/summarizer/collection.html:80
+#: templates/summarizer/collection.html:83
 msgid "No paper yet."
 msgstr "Aucun article pour l'instant."
 
-#: templates/summarizer/collection.html:84
+#: templates/summarizer/collection.html:87
 msgid "Add papers"
 msgstr "Ajouter des articles"
 
-#: templates/summarizer/collection.html:92
+#: templates/summarizer/collection.html:95
 msgid "Settings"
 msgstr "Réglages"
 
-#: templates/summarizer/collection.html:96
+#: templates/summarizer/collection.html:99
 msgid "Rename"
 msgstr "Renommer"
 
-#: templates/summarizer/collection.html:97
+#: templates/summarizer/collection.html:100
 msgid "Delete this collection?"
 msgstr "Supprimer cette collection ?"
 
-#: templates/summarizer/collection.html:97
+#: templates/summarizer/collection.html:100
 msgid "Delete"
 msgstr "Supprimer"
 
-#: templates/summarizer/collection.html:101
+#: templates/summarizer/collection.html:104
 msgid "Comparing… the page reloads by itself when the table is ready."
 msgstr ""
 "Comparaison en cours… la page se recharge toute seule quand le tableau est "
 "prêt."
 
-#: templates/summarizer/collection.html:102
+#: templates/summarizer/collection.html:105
 #: templates/summarizer/paper_tools.html:57
-#: templates/summarizer/presskit.html:90 templates/summarizer/presskit.html:93
+#: templates/summarizer/presskit.html:80 templates/summarizer/working.html:17
 msgid "Something went wrong. Please try again."
 msgstr "Une erreur s'est produite. Veuillez réessayer."
 
-#: templates/summarizer/collection.html:103
+#: templates/summarizer/collection.html:106
 #: templates/summarizer/paper_tools.html:53
 msgid "This is a Premium feature."
 msgstr "Cette fonction est réservée à Premium."
 
-#: templates/summarizer/collection.html:104
+#: templates/summarizer/collection.html:107
 #: templates/summarizer/paper_tools.html:64
 msgid "Sending…"
 msgstr "Envoi…"
 
-#: templates/summarizer/collection.html:105
+#: templates/summarizer/collection.html:108
 #: templates/summarizer/paper_tools.html:65
 msgid "Saved in your Zotero library."
 msgstr "Enregistré dans votre bibliothèque Zotero."
 
-#: templates/summarizer/collection.html:106
+#: templates/summarizer/collection.html:109
 #: templates/summarizer/paper_tools.html:66
 msgid "Connect your Zotero library first."
 msgstr "Connectez d'abord votre bibliothèque Zotero."
@@ -3440,12 +3485,12 @@ msgstr ""
 "du texte (et pas seulement des images scannées), puis réessayez."
 
 #: templates/summarizer/missed_result.html:35
-msgid ""
-"Searching arXiv and reading the closest papers… this takes one to three "
-"minutes. The page updates by itself."
-msgstr ""
-"Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
-" à trois minutes. La page se met à jour toute seule."
+msgid "Looking for the papers your draft does not cite"
+msgstr "Recherche des articles que votre brouillon ne cite pas"
+
+#: templates/summarizer/missed_result.html:36
+msgid "usually 1 to 3 minutes"
+msgstr "en général 1 à 3 minutes"
 
 #: templates/summarizer/paper_tools.html:3
 msgid "Tools for this paper"
@@ -3841,9 +3886,9 @@ msgstr ""
 msgid "Write the press kit"
 msgstr "Écrire le kit presse"
 
-#: templates/summarizer/presskit.html:88
-msgid "Writing… the page reloads by itself when the kit is ready."
-msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
+#: templates/summarizer/presskit.html:82
+msgid "Writing the press kit"
+msgstr "Rédaction du kit presse"
 
 #: templates/summarizer/privacy.html:6
 msgid "Our Privacy Policy - AI-Powered arXiv Paper Summarization Service"
@@ -4308,6 +4353,28 @@ msgstr ""
 "des quatre semaines précédentes. Une IA regroupe ensuite les termes qui "
 "montent en sujets et les nomme ; elle ne décide jamais ce qui monte : ce "
 "sont les chiffres."
+
+#: templates/summarizer/working.html:8
+msgid "Elapsed time"
+msgstr "Temps écoulé"
+
+#: templates/summarizer/working.html:16
+msgid ""
+"You can leave this page: the work goes on, and the result will be here when "
+"you come back."
+msgstr ""
+"Vous pouvez quitter cette page : le travail continue, et le résultat sera là"
+" à votre retour."
+
+#~ msgid ""
+#~ "Searching arXiv and reading the closest papers… this takes one to three "
+#~ "minutes. The page updates by itself."
+#~ msgstr ""
+#~ "Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
+#~ " à trois minutes. La page se met à jour toute seule."
+
+#~ msgid "Writing… the page reloads by itself when the kit is ready."
+#~ msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
 
 #~ msgid "For researchers and students who read papers every day."
 #~ msgstr ""

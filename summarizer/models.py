@@ -515,6 +515,7 @@ class Generated(models.Model):
     lang = models.CharField(max_length=10, default='en')
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, choices=STATUSES, default='pending')
+    step = models.CharField(max_length=40, blank=True, default='')  # what the background work is doing now
     content = models.TextField(blank=True, default='')  # JSON
     error = models.TextField(blank=True, default='')
     created = models.DateTimeField(auto_now_add=True)

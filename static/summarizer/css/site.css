@@ -799,3 +799,34 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .tool-steps { counter-reset: step; list-style: none; padding: 0; margin: 0 0 24px; display: grid; gap: 10px; }
 .tool-steps li { counter-increment: step; position: relative; padding-left: 40px; }
 .tool-steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; }
+
+/* ---------- Waiting panel (working.html) ---------- */
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block; flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid var(--accent-soft); border-top-color: var(--accent);
+  animation: sp-spin .8s linear infinite;
+}
+.spinner-sm { width: 14px; height: 14px; border-width: 2px; vertical-align: -2px; margin-right: 6px; }
+.working { padding: 22px 24px; margin: 8px 0 20px; }
+.working-head { display: flex; align-items: center; gap: 14px; }
+.working-meta { font-size: 14px; }
+.working-steps { list-style: none; margin: 18px 0 8px; padding: 0; display: grid; gap: 10px; }
+.working-steps li { position: relative; padding-left: 32px; color: var(--text-muted); }
+.working-steps li::before {
+  content: ""; position: absolute; left: 4px; top: 4px;
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border);
+}
+.working-steps li.is-current { color: var(--text); font-weight: 600; }
+.working-steps li.is-current::before { border-color: var(--accent-soft); border-top-color: var(--accent); animation: sp-spin .8s linear infinite; }
+.working-steps li.is-done { color: var(--text); }
+.working-steps li.is-done::before {
+  content: "✓"; border-color: var(--success); background: var(--success); color: #fff;
+  font-size: 10px; line-height: 14px; text-align: center; font-weight: 700;
+}
+.working-note { font-size: 14px; margin: 12px 0 0; }
+.working .working-error { display: none; margin: 12px 0 0; }
+.working.is-failed .working-error { display: block; }
+.working.is-failed .spinner, .working.is-failed .working-steps li.is-current::before { animation: none; border-top-color: var(--border); }
+@media (prefers-reduced-motion: reduce) { .spinner, .working-steps li.is-current::before { animation-duration: 2.4s; } }

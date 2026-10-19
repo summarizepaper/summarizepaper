@@ -32,10 +32,12 @@
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The search failed. If you sent a PDF, check that it holds text (not only scanned images), and try again.' %}</p>
   {% else %}
-    <p id="missed-status">{% trans 'Searching arXiv and reading the closest papers… this takes one to three minutes. The page updates by itself.' %}</p>
+    {% trans 'Looking for the papers your draft does not cite' as working_title %}
+    {% trans 'usually 1 to 3 minutes' as working_time %}
+    {% include 'summarizer/working.html' with working_id='missed-working' working_steps=steps working_visible=True working_started=row.created %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {
-      SP.wait({{ row.pk }}, function () { location.reload(); }, function () { location.reload(); });
+      SP.track(document.getElementById('missed-working'), {{ row.pk }}, function () { location.reload(); });
     });
     </script>
   {% endif %}

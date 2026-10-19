@@ -47,5 +47,50 @@
     return el;
   }
 
-  window.SP = {lang: lang, post: post, wait: wait, text: text};
+  // A waiting panel (templates/summarizer/working.html): spinner, the work's real steps, elapsed time.
+  // Shows the panel and follows result `id`; calls done(data) or shows the failure message.
+  function track(panel, id, done) {
+    panel.hidden = false;
+    panel.classList.remove('is-failed');
+    var tracking = Date.now();
+    // the work may have started before this page was opened
+    var started = panel.dataset.started ? Math.min(Date.parse(panel.dataset.started), tracking) : tracking;
+    var elapsed = panel.querySelector('.working-elapsed');
+    var steps = Array.prototype.slice.call(panel.querySelectorAll('[data-step]'));
+    var timer = setInterval(function () {
+      var s = Math.floor((Date.now() - started) / 1000);
+      if (elapsed) elapsed.textContent = Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2);
+    }, 1000);
+    function mark(step) {
+      var index = steps.findIndex(function (li) { return li.dataset.step === step; });
+      if (index < 0) return;
+      steps.forEach(function (li, i) {
+        li.classList.toggle('is-done', i < index);
+        li.classList.toggle('is-current', i === index);
+      });
+    }
+    if (steps.length) mark(steps[0].dataset.step);
+    function tick() {
+      fetch('/' + lang + '/ai/' + id + '/', {credentials: 'same-origin'})
+        .then(function (r) { return r.ok ? r.json() : {status: 'failed'}; })
+        .then(function (json) {
+          if (json.step) mark(json.step);
+          if (json.status === 'done') {
+            clearInterval(timer);
+            steps.forEach(function (li) { li.classList.remove('is-current'); li.classList.add('is-done'); });
+            return done(json.data);
+          }
+          if (json.status === 'failed' || Date.now() - tracking > 600000) {
+            clearInterval(timer);
+            panel.classList.add('is-failed');
+            return;
+          }
+          setTimeout(tick, 2500);
+        })
+        .catch(function () { setTimeout(tick, 5000); });
+    }
+    tick();
+  }
+
+  window.SP = {lang: lang, post: post, wait: wait, text: text, track: track};
 })();

@@ -81,6 +81,12 @@ def release_connection():
     connections.close_all()
 
 
+def progress(pk, step):
+    """Tell the waiting page what the work is doing now (and that it is still alive)."""
+    Generated.objects.filter(pk=pk).update(step=step, updated=timezone.now())
+    release_connection()
+
+
 def start(kind, key, lang, work, user=None, force=False):
     """The Generated row for (kind, key, lang), with work(row_pk) started in the background unless it is
     already done or already running. work returns the content (a dict) or raises."""
@@ -96,8 +102,8 @@ def start(kind, key, lang, work, user=None, force=False):
         except IntegrityError:  # started by another request in the meantime
             return Generated.objects.get(kind=kind, key=key, lang=lang)
     else:
-        row.status, row.error = 'pending', ''
-        row.save(update_fields=['status', 'error', 'updated'])
+        row.status, row.error, row.step = 'pending', '', ''
+        row.save(update_fields=['status', 'error', 'step', 'updated'])
     background(_run, row.pk, work)
     return row
 
@@ -131,4 +137,5 @@ def status_view(request, pk):
         raise Http404
     if row.status == 'pending' and row.updated < timezone.now() - STALE:
         row.status = 'failed'
-    return JsonResponse({'status': row.status, 'data': row.data() if row.status == 'done' else None})
+    return JsonResponse({'status': row.status, 'step': row.step,
+                         'data': row.data() if row.status == 'done' else None})

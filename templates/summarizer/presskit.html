@@ -74,28 +74,29 @@
     {% endif %}
     <p class="muted"><small>{% blocktrans with date=row.updated|date:"j F Y" %}Written by AI on {{ date }} from the paper. Check every fact against the paper before publishing.{% endblocktrans %}</small></p>
   {% else %}
-    <div class="card section-card" id="kit-start">
+    <div class="card section-card" id="kit-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
       <p>{% trans 'The press kit is written from the full paper. It takes about a minute.' %}</p>
       <button type="button" class="btn" id="kit-go">{% trans 'Write the press kit' %}</button>
-      <p class="tool-status" id="kit-status"></p>
+      {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
     </div>
+    {% trans 'Writing the press kit' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='kit-working' working_steps=steps working_started=row.updated %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {
-      var status = document.getElementById('kit-status');
-      var button = document.getElementById('kit-go');
-      function start() {
-        button.disabled = true;
-        status.textContent = '{% filter escapejs %}{% trans 'Writing… the page reloads by itself when the kit is ready.' %}{% endfilter %}';
-        SP.post('/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id|escapejs }}/start/', {}).then(function (json) {
-          if (!json.id) { button.disabled = false; status.textContent = '{% filter escapejs %}{% trans 'Something went wrong. Please try again.' %}{% endfilter %}'; return; }
-          SP.wait(json.id, function () { location.reload(); }, function () {
-            button.disabled = false;
-            status.textContent = '{% filter escapejs %}{% trans 'Something went wrong. Please try again.' %}{% endfilter %}';
-          });
-        });
+      var start = document.getElementById('kit-start');
+      var panel = document.getElementById('kit-working');
+      function follow(id) {
+        start.hidden = true;
+        SP.track(panel, id, function () { location.reload(); });
       }
-      button.addEventListener('click', start);
-      {% if row and row.status == 'pending' %}start();{% endif %}
+      document.getElementById('kit-go').addEventListener('click', function () {
+        panel.dataset.started = '';
+        SP.post('/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id|escapejs }}/start/', {}).then(function (json) {
+          if (json.id) follow(json.id);
+        });
+      });
+      {% if row and row.status == 'pending' %}follow({{ row.pk }});{% endif %}
     });
     </script>
   {% endif %}

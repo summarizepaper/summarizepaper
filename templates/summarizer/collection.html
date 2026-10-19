@@ -59,6 +59,9 @@
     <p>{% blocktrans with n=compare_max %}The table reads the abstract and our summary of each paper (the first {{ n }} papers). It takes about a minute.{% endblocktrans %}</p>
     <button type="button" class="btn" id="compare-go">{% trans 'Compare these papers' %}</button>
     {% endif %}
+    {% trans 'Comparing the papers of this collection' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='compare-working' working_steps=compare_steps working_started=comparison.updated %}
     <p class="tool-status" id="compare-status"></p>
   {% endif %}
 
@@ -109,18 +112,20 @@ window.addEventListener('DOMContentLoaded', function () {
   var t = document.getElementById('collection-text').dataset;
   var base = '/{{ LANGUAGE_CODE }}';
   var status = document.getElementById('compare-status');
+  var panel = document.getElementById('compare-working');
   function compare(again) {
-    status.textContent = t.working;
+    status.textContent = '';
     SP.post(base + '/collections/{{ collection.pk }}/compare/', {again: again ? '1' : '0'}).then(function (json) {
       if (json.status === 'premium') return status.textContent = t.premium;
       if (!json.id) return status.textContent = t.failed;
-      SP.wait(json.id, function () { location.reload(); }, function () { status.textContent = t.failed; });
+      if (go) go.hidden = true;
+      SP.track(panel, json.id, function () { location.reload(); });
     });
   }
   var go = document.getElementById('compare-go');
-  if (go) go.addEventListener('click', function () { go.disabled = true; compare(false); });
+  if (go) go.addEventListener('click', function () { go.disabled = true; panel.dataset.started = ''; compare(false); });
   var again = document.getElementById('compare-again');
-  if (again) again.addEventListener('click', function () { again.disabled = true; compare(true); });
+  if (again) again.addEventListener('click', function () { again.disabled = true; panel.dataset.started = ''; compare(true); });
   {% if comparison and comparison.status == 'pending' %}compare(false);{% endif %}
 
   var zotero = document.getElementById('zotero-go');

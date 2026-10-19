@@ -19,6 +19,7 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.translation import get_language
+from django.utils.translation import gettext_lazy as _
 
 from . import access, digest, generated, similar
 from .models import Generated
@@ -32,6 +33,12 @@ RESULTS_PER_QUERY = 30
 SHOWN = 15
 PER_DAY = 10
 QUOTA_KEY = 'missed-quota:%s:%s'
+STEPS = [
+    ('read', _('Reading your draft')),
+    ('search', _('Searching arXiv for close papers')),
+    ('rank', _('Ranking them and removing the papers you already cite')),
+    ('review', _('An AI reads the closest papers and explains each one')),
+]
 
 
 def pdf_text(data):
@@ -81,8 +88,8 @@ def search(queries):
     return list(found.values())
 
 
-def find(text, lang):
-    """The result shown on the page, from the draft's text."""
+def find(text, lang, step=lambda name: None):
+    """The result shown on the page, from the draft's text; step(name) reports progress."""
     text = text[:MAX_TEXT_CHARS]
     head = text[:12000]
     plan = generated.chat_json(
@@ -91,7 +98,9 @@ def find(text, lang):
         '2 to 5 keywords each, in English, covering its topic, its method and its closest problems"]}.' % QUERIES,
         paid=False, max_tokens=800, system='<draft>\n%s\n</draft>' % head)
     queries = [str(q) for q in plan.get('queries', []) if str(q).strip()]
+    step('search')
     candidates = search(queries)
+    step('rank')
     draft_ids = {m.replace('--', '/') for m in digest.ARXIV_ID_RE.findall(text)}
     draft_ids |= {re.sub(r'v\d+$', '', m) for m in draft_ids}
     draft_words = normalized(text)
@@ -105,6 +114,7 @@ def find(text, lang):
     closest = [dict(fresh[i], similarity=float(scores[i])) for i in order]
     listing = '\n\n'.join('<paper id="%s">\nTitle: %s\nAbstract: %s\n</paper>' % (c['arxiv_id'], c['title'], c['abstract'])
                           for c in closest)
+    step('review')
     notes = generated.chat_json(
         'The draft is summarized here: %s\n\nThe arXiv papers above are close to it and the draft does not cite them. '
         'In %s, for each paper, say in one or two sentences how it relates to the draft (same problem, competing '
@@ -133,11 +143,11 @@ def find(text, lang):
 
 def write(data, text, lang):
     def work(pk):
-        generated.release_connection()
+        generated.progress(pk, 'read')
         draft = pdf_text(data) if data is not None else text
         if len(draft.strip()) < 200:
             raise generated.GenerationError('no text found in the draft')
-        return find(draft, lang)
+        return find(draft, lang, lambda name: generated.progress(pk, name))
     return work
 
 
@@ -179,4 +189,5 @@ def missed_result(request, key):
     if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
         row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/missed_result.html', {
-        'row': row, 'result': row.data() if row.status == 'done' else None, 'paid': access.is_paid(request.user)})
+        'row': row, 'result': row.data() if row.status == 'done' else None, 'paid': access.is_paid(request.user),
+        'steps': STEPS})

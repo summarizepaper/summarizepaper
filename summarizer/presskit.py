@@ -21,7 +21,14 @@ from .assistant import build_context
 from .digest import name_key
 from .models import ArxivPaper, Generated, PaperScore
 
+from django.utils.translation import gettext_lazy as _
+
 EXPERTS = 6
+STEPS = [
+    ('read', _('Reading the full paper')),
+    ('experts', _('Finding independent researchers on the same topic')),
+    ('write', _('Writing the kit and checking the quotes against the paper')),
+]
 LEVELS = ('ok', 'caution', 'warning')
 
 PROMPT = """You prepare a press kit for a science journalist about the paper above. Write in {language}.
@@ -82,10 +89,12 @@ def experts(paper):
 
 def write(arxiv_id, lang):
     def work(pk):
+        generated.progress(pk, 'read')
         paper = ArxivPaper.objects.get(arxiv_id=arxiv_id)
         context = build_context([arxiv_id])
+        generated.progress(pk, 'experts')
         people = experts(paper)
-        generated.release_connection()
+        generated.progress(pk, 'write')
         answer = generated.chat_json(PROMPT.format(language=generated.language_name(lang)), paid=True,
                                      max_tokens=4000, system=context)
         return {
@@ -115,7 +124,7 @@ def presskit_page(request, arxiv_id):
     row = Generated.objects.filter(kind='presskit', key=arxiv_id, lang=lang).first() if paid else None
     return render(request, 'summarizer/presskit.html', {
         'paper': paper, 'arxiv_id': arxiv_id, 'paid': paid, 'row': row,
-        'kit': row.data() if row is not None and row.status == 'done' else None,
+        'kit': row.data() if row is not None and row.status == 'done' else None, 'steps': STEPS,
     })
 
 

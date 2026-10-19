@@ -82,6 +82,20 @@ class GeneratedTests(ToolsTestCase):
         self.assertEqual(self.client_for(owner).get('/en/ai/%d/' % row.pk).status_code, 200)
 
 
+class ProgressTests(ToolsTestCase):
+    def test_steps_are_reported_and_shown_while_waiting(self):
+        user = self.user(paid=True)
+        row = Generated.objects.create(kind='missed', key='k1', lang='en', user=user)
+        generated.progress(row.pk, 'search')
+        client = self.client_for(user)
+        self.assertEqual(client.get('/en/ai/%d/' % row.pk).json()['step'], 'search')
+        page = client.get('/en/missed/k1/')
+        self.assertContains(page, 'class="spinner"')
+        self.assertContains(page, 'data-step="review"')
+        self.assertContains(page, 'Searching arXiv for close papers')
+        self.assertContains(page, 'data-started=')
+
+
 class ReadingTests(ToolsTestCase):
     def test_rewrite_is_shared_and_free_visitors_have_a_quota(self):
         self.paper()
