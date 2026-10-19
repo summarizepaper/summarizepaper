@@ -401,6 +401,10 @@ class PaperSourceTests(TestCase):
         paper_source.store_text('1', '<?xml version="1.0"?><feed>x</feed>    Real text', 'pdf')
         self.assertEqual(PaperText.objects.get(arxiv_id='1').text, 'Real text')
 
+    def test_store_text_drops_nul_bytes(self):
+        paper_source.store_text('2', 'Real\x00 text', 'index')
+        self.assertEqual(PaperText.objects.get(arxiv_id='2').text, 'Real text')
+
 
 class AssistantTests(TransactionTestCase):
     def setUp(self):
@@ -952,6 +956,11 @@ class ArxivTimeoutTests(TestCase):
         import asyncio
         with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError()):
             self.assertEqual(Client().get('/en/arxiv-id/2401.99999v1/').status_code, 503)
+            self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
+
+    def test_non_xml_arxiv_answer_gives_503(self):
+        from xml.etree import ElementTree
+        with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=ElementTree.ParseError('syntax error: line 1, column 0')):
             self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
 
 

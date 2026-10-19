@@ -576,7 +576,8 @@ def escape_latex(abstract):
 def arxiv_metadata_or_none(arxiv_id):
     try:
         return asyncio.run(utils.get_arxiv_metadata(arxiv_id))
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    # arXiv sometimes answers with an empty or non-XML body when it is rate limiting
+    except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError):
         return None
 
 

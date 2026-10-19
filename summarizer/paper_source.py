@@ -74,7 +74,9 @@ def strip_api_answer(text):
 
 
 def store_text(arxiv_id, text, source):
-    PaperText.objects.update_or_create(arxiv_id=arxiv_id, defaults={'text': strip_api_answer(text), 'source': source})
+    # PDF extraction can leave NUL bytes, which PostgreSQL refuses in text fields
+    text = strip_api_answer(text).replace('\x00', '')
+    PaperText.objects.update_or_create(arxiv_id=arxiv_id, defaults={'text': text, 'source': source})
 
 
 def _merge_chunks(chunks):
