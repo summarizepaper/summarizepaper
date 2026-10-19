@@ -54,6 +54,7 @@ MAX_PRESUMMARIES_PER_RUN = 9  # each takes about a minute
 MAX_SYNTHESES_PER_EMAIL = 5
 SYNTHESIS_MIN_PAPERS = 5
 SYNTHESIS_MAX_PAPERS = 600
+SYNTHESIS_MAX_BLURBS = 150
 
 # CloudMailin sends at most 20 emails/hour on our plan; keep room for account emails.
 # Subscribers left over are sent in the next hourly runs (see DigestSubscription.CATCH_UP_HOURS).
@@ -64,6 +65,9 @@ RSS = 'https://rss.arxiv.org/atom/'
 ARCHIVES = ['astro-ph', 'cond-mat', 'cs', 'econ', 'eess', 'gr-qc', 'hep-ex', 'hep-lat', 'hep-ph', 'hep-th', 'math',
             'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'q-bio', 'q-fin', 'quant-ph', 'stat']
 RSS_MAX_ENTRIES = 2000  # a longer feed is cut by arXiv; its followed categories are then read one by one
+PARTIAL_AFTER = datetime.timedelta(hours=3)  # then a batch is accepted without the archives that still fail
+QUIET_KEY = 'arxiv-rss-quiet:%s'  # set when no archive has the expected day hours after it was due (arXiv holiday)
+QUIET_SECONDS = 3 * 3600
 SECONDS_BETWEEN_CALLS = 3  # arXiv API terms: at most one request every 3 seconds
 RETRY_WAITS = (10, 30, 90)  # arXiv answers 429 "Rate exceeded" when busy
 EMBED_BATCH = 256
@@ -71,6 +75,10 @@ UNSUBSCRIBE_SALT = 'digest-unsubscribe'
 FEEDBACK_SALT = 'digest-feedback'
 FEEDBACK_WEIGHTS = (0.5, 0.3)  # pull of liked papers, push of disliked ones, on the profile vector
 LOCK_KEY = 'digest-run-lock'
+SENDING_KEY = 'digest-sending:%s'
+PREVIEW_KEY = 'digest-preview:%s:%s'  # one preview per digest and day
+PREVIEWS_PER_HOUR = 5  # previews share the mail provider's hourly limit with the scheduled digests
+BASE_URL = 'https://www.summarizepaper.com'
 LOCK_SECONDS = 2 * 3600
 # arXiv's RSS feeds switch to the next announcement around 00:05 in New York, Monday to Friday
 ANNOUNCE_TZ = zoneinfo.ZoneInfo('America/New_York')
@@ -279,19 +287,24 @@ def read_feed(name):
 
 
 def ensure_batch(now, categories=()):
-    """Store today's arXiv announcement if it is out and not stored yet; return the stored days."""
+    """Store the latest arXiv announcement if it is out and not complete yet; return the stored days."""
     expected = expected_batch(now)
-    if not ArxivBatch.objects.filter(day=expected).exists():
-        fetch_batch(expected, categories)
+    batch = ArxivBatch.objects.filter(day=expected).first()
+    if (batch is None or batch.missing) and not cache.get(QUIET_KEY % expected):
+        fetch_batch(expected, now, categories, batch)
     return list(ArxivBatch.objects.filter(day__gte=expected - datetime.timedelta(days=KEEP_DAYS))
                 .order_by('day').values_list('day', flat=True))
 
 
-def fetch_batch(expected, categories=()):
-    """Read every archive feed; the batch counts only once all of them were read for the expected day."""
-    found, complete = {}, True
-    for archive in ARCHIVES:
-        names = [archive]
+def fetch_batch(expected, now, categories=(), batch=None):
+    """Read the archive feeds (only the missing ones of a partial batch) and store the papers of `expected`.
+
+    The batch is stored once every archive was read for that day, or after PARTIAL_AFTER without the
+    archives that still fail; those are read again at each run until they answer.
+    """
+    archives = batch.missing_list() if batch else ARCHIVES
+    found, missing, on_time, stale = {}, [], 0, 0
+    for archive in archives:
         try:
             day, papers, entries = read_feed(archive)
             if entries >= RSS_MAX_ENTRIES:
@@ -301,11 +314,14 @@ def fetch_batch(expected, categories=()):
                     papers += read_feed(name)[1]
         except ArxivUnavailable:
             logger.exception('arXiv RSS %s could not be read', archive)
-            complete = False
+            missing.append(archive)
             continue
         if day is not None and day != expected:
             logger.info('arXiv RSS %s is still on %s, waiting for %s', archive, day, expected)
-            complete = False
+            missing.append(archive)
+            stale += 1
+            continue
+        on_time += day is not None
         for paper in papers:
             if paper['announced'] == expected:
                 found.setdefault(paper['arxiv_id'], paper)
@@ -313,9 +329,22 @@ def fetch_batch(expected, categories=()):
         arxiv_id=p['arxiv_id'], announced=p['announced'], title=p['title'], abstract=p['abstract'],
         authors=json.dumps(p['authors']), categories=','.join(p['categories'])) for p in found.values()],
         ignore_conflicts=True, batch_size=500)
-    if complete and found:
-        ArxivBatch.objects.get_or_create(day=expected, defaults={'papers': len(found)})
-    return complete
+    if batch is not None:
+        batch.missing = ','.join(missing)
+        batch.papers = AnnouncedPaper.objects.filter(announced=expected).count()
+        batch.save(update_fields=['missing', 'papers'])
+    elif stale and not on_time:
+        if now >= announcement_time(expected) + PARTIAL_AFTER:
+            cache.set(QUIET_KEY % expected, True, QUIET_SECONDS)  # feeds still on an older day: arXiv holiday
+    elif not missing or now >= announcement_time(expected) + PARTIAL_AFTER:
+        if missing:
+            logger.warning('arXiv batch %s accepted without %s', expected, missing)
+        ArxivBatch.objects.get_or_create(day=expected, defaults={
+            'papers': AnnouncedPaper.objects.filter(announced=expected).count(), 'missing': ','.join(missing)})
+
+
+def announcement_time(day):
+    return datetime.datetime.combine(day, datetime.time(), tzinfo=ANNOUNCE_TZ) + RSS_DELAY
 
 
 def archive_of(category):
@@ -428,22 +457,37 @@ def candidates(subscription, papers, already_sent, days=None, categories=None, e
 
 def select_papers(subscription, papers, already_sent, days=None, limit=PAPERS_PER_EMAIL, categories=None,
                   profile=None, vectors=None, exclude=()):
-    """The best new papers for this digest: keyword matches, ranked by closeness to the profile if there is one."""
+    """The best new papers for this digest.
+
+    Keywords filter. With a research profile, papers are ranked by closeness to it; without one,
+    papers whose primary category is followed come before cross-lists, and the most central papers
+    of the batch (closest to the average of all of them) first.
+    """
     keywords = subscription.keyword_list()
+    wanted = set(categories or subscription.category_list())
+    found = candidates(subscription, papers, already_sent, days, categories, exclude)
+    vectors = vectors or {}
+    reference = profile
+    if reference is None and vectors:
+        known = [vectors[p['arxiv_id']] for p in found if p['arxiv_id'] in vectors]
+        if known:
+            centroid = np.mean(known, axis=0)
+            reference = centroid / (np.linalg.norm(centroid) or 1)
     scored = []
-    for paper in candidates(subscription, papers, already_sent, days, categories, exclude):
+    for paper in found:
         score = 0
         if keywords:
             text = (paper['title'] + ' ' + paper['abstract']).lower()
             score = sum(text.count(k) for k in keywords) + 3 * sum(k in paper['title'].lower() for k in keywords)
             if score == 0:
                 continue
-        closeness = 0.0
-        if profile is not None:
-            vector = (vectors or {}).get(paper['arxiv_id'])
-            closeness = float(vector @ profile) if vector is not None else -1.0
-        scored.append((closeness, score, paper['published'], paper))
-    scored.sort(key=lambda s: s[:3], reverse=True)
+        closeness = -1.0
+        if reference is not None and paper['arxiv_id'] in vectors:
+            closeness = float(vectors[paper['arxiv_id']] @ reference)
+        primary = bool(paper['categories']) and paper['categories'][0] in wanted
+        key = (closeness, primary, score) if profile is not None else (score, primary, closeness)
+        scored.append((key, paper['arxiv_id'], paper))
+    scored.sort(key=lambda s: s[:2], reverse=True)
     return [paper for *_, paper in scored[:limit]]
 
 
@@ -549,13 +593,19 @@ def category_synthesis(category, lang, day, papers):
     if len(week) < SYNTHESIS_MIN_PAPERS:
         return None
     by_id = {p['arxiv_id']: p for p in week}
+    # the 2-sentence summaries already written for subscribers say more than titles
+    blurbs = dict(DigestItem.objects.filter(arxiv_id__in=list(by_id), lang=lang)
+                  .values_list('arxiv_id', 'blurb')[:SYNTHESIS_MAX_BLURBS])
     language = 'French' if lang == 'fr' else 'English'
     prompt = (
-        'Here are the titles of the %d papers announced on arXiv in the category %s over the last 7 days. '
+        'Here are the %d papers announced on arXiv in the category %s over the last 7 days (ID | title, '
+        'and a short summary for some of them). '
         'In %s, write for a researcher of this field: the 3 to 5 main trends or topics of the week, each with a '
         'short title and 2 sentences, and the IDs of the 3 papers most likely to matter. Be concrete, no hype, no LaTeX. '
         'Answer with a JSON object {"trends": [{"title": "...", "text": "..."}], "notable": ["ID", ...]}.\n\n%s'
-        % (len(week), category, language, '\n'.join('%s | %s' % (p['arxiv_id'], p['title']) for p in week)))
+        % (len(week), category, language, '\n'.join(
+            '%s | %s%s' % (p['arxiv_id'], p['title'], ' | ' + blurbs[p['arxiv_id']] if p['arxiv_id'] in blurbs else '')
+            for p in week)))
     try:
         answer = json.loads(_chat(prompt, ai_models()[1], True, 3000))
         content = {
@@ -719,17 +769,14 @@ def choose(plan, days, papers, index):
     already = set(DigestDelivery.objects.filter(subscription=subscription).values_list('arxiv_id', flat=True))
     from_authors, via = author_papers(subscription, index, already, days) if plan.authors else ([], {})
     from_authors = from_authors[:plan.limits['papers']]
-    profile = vectors = None
-    if plan.ranked:
-        profile = ranking_vector(subscription)
-        if profile is not None:
-            vectors = ensure_vectors(candidates(subscription, papers, already, days, plan.categories))
+    profile = ranking_vector(subscription) if plan.ranked else None
+    vectors = ensure_vectors(candidates(subscription, papers, already, days, plan.categories))
     chosen = select_papers(subscription, papers, already, days, plan.limits['papers'] - len(from_authors),
                            plan.categories, profile, vectors, exclude={p['arxiv_id'] for p in from_authors})
     return from_authors, chosen, via
 
 
-def run(base_url='https://www.summarizepaper.com', dry_run=False, only_user=None, stdout=None, now=None):
+def run(base_url=BASE_URL, dry_run=False, only_user=None, stdout=None, now=None):
     """Send the digests that are due (meant to run every hour); --user ignores the schedule."""
     now = now or timezone.now()
     if only_user:
@@ -753,47 +800,17 @@ def _run(base_url, dry_run, only_user, stdout, now):
     days = ensure_batch(now, {c for plan in plans + upcoming for c in plan.categories})
     papers = load_papers(days)
     index = author_index(papers) if any(plan.authors for plan in plans + upcoming) else {}
+    incomplete = {b.day: set(b.missing_list()) for b in ArxivBatch.objects.filter(day__in=days).exclude(missing='')}
 
     budget = [MAX_PRESUMMARIES_PER_RUN]
     sent = 0
     for plan in plans:
-        subscription = plan.subscription
         batches = plan.batches(days)
         if not batches:
             continue  # no new announcement yet: tried again next hour
-        from_authors, chosen, via = choose(plan, batches, papers, index)
-        if not chosen and not from_authors:
-            continue
-        items = ensure_items(from_authors + chosen, subscription.lang)
-        author_items = [items[p['arxiv_id']] for p in from_authors]
-        ordered = [items[p['arxiv_id']] for p in chosen]
-        if stdout:
-            stdout.write('%s: %d papers from %s%s' % (subscription.user.username, len(author_items) + len(ordered),
-                                                       ', '.join(str(d) for d in sorted(batches)),
-                                                       ' (Premium)' if plan.paid else ''))
-        if dry_run:
-            continue
-        syntheses = []
-        if plan.synthesis:
-            for category in plan.categories[:MAX_SYNTHESES_PER_EMAIL]:
-                content = category_synthesis(category, subscription.lang, plan.today, papers)
-                if content:
-                    syntheses.append(content)
-        all_ids = [i.arxiv_id for i in author_items + ordered]
-        if plan.paid:
-            presummarize(all_ids[:PRESUMMARIZED], subscription.lang, budget)
-        try:
-            send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
-                     paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None)
-        except Exception:
-            logger.exception('Digest email to %s failed', subscription.user.username)
-            continue
-        DigestDelivery.objects.bulk_create(
-            [DigestDelivery(subscription=subscription, arxiv_id=aid) for aid in all_ids], ignore_conflicts=True)
-        subscription.last_sent = now
-        subscription.last_batch = max(batches)
-        subscription.save(update_fields=['last_sent', 'last_batch'])
-        sent += 1
+        if incomplete.get(max(batches), set()).intersection(archive_of(c) for c in plan.categories):
+            continue  # today's batch still lacks one of its archives: tried again next hour
+        sent += deliver(plan, batches, papers, index, base_url, now, budget, stdout=stdout, dry_run=dry_run)
 
     # with what is left of the budget, get next hour's Premium emails ready
     for plan in upcoming:
@@ -804,6 +821,83 @@ def _run(base_url, dry_run, only_user, stdout, now):
             from_authors, chosen, _ = choose(plan, batches, papers, index)
             presummarize([p['arxiv_id'] for p in from_authors + chosen][:PRESUMMARIZED], plan.subscription.lang, budget)
     return sent
+
+
+def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dry_run=False, new_syntheses=True):
+    """Choose, write and send one digest from these announcements; True if it was sent."""
+    subscription = plan.subscription
+    if not cache.add(SENDING_KEY % subscription.pk, True, 600):
+        return False  # the same digest is being sent by a preview or another run
+    try:
+        from_authors, chosen, via = choose(plan, batches, papers, index)
+        if not chosen and not from_authors:
+            return False
+        items = ensure_items(from_authors + chosen, subscription.lang)
+        author_items = [items[p['arxiv_id']] for p in from_authors]
+        ordered = [items[p['arxiv_id']] for p in chosen]
+        if stdout:
+            stdout.write('%s: %d papers from %s%s' % (subscription.user.username, len(author_items) + len(ordered),
+                                                       ', '.join(str(d) for d in sorted(batches)),
+                                                       ' (Premium)' if plan.paid else ''))
+        if dry_run:
+            return False
+        syntheses = []
+        if plan.synthesis:
+            for category in plan.categories[:MAX_SYNTHESES_PER_EMAIL]:
+                if new_syntheses:
+                    content = category_synthesis(category, subscription.lang, plan.today, papers)
+                else:
+                    row = CategorySynthesis.objects.filter(category=category, lang=subscription.lang, day=plan.today).first()
+                    content = json.loads(row.content) if row else None
+                if content:
+                    syntheses.append(content)
+        all_ids = [i.arxiv_id for i in author_items + ordered]
+        if plan.paid:
+            presummarize(all_ids[:PRESUMMARIZED], subscription.lang, budget)
+        try:
+            send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
+                     paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None)
+        except Exception:
+            logger.exception('Digest email to %s failed', subscription.user.username)
+            return False
+        DigestDelivery.objects.bulk_create(
+            [DigestDelivery(subscription=subscription, arxiv_id=aid) for aid in all_ids], ignore_conflicts=True)
+        subscription.last_sent = now
+        subscription.last_batch = max([max(batches)] + ([subscription.last_batch] if subscription.last_batch else []))
+        subscription.save(update_fields=['last_sent', 'last_batch'])
+        return True
+    finally:
+        cache.delete(SENDING_KEY % subscription.pk)
+
+
+def preview(subscription, base_url=BASE_URL):
+    """Send a digest right away with the latest stored announcement, from the digest page.
+
+    Nothing slow happens here: no arXiv call, no full summary, no new synthesis.
+    """
+    days = list(ArxivBatch.objects.order_by('-day').values_list('day', flat=True)[:1])
+    if not days:
+        return False
+    plan = Plan(subscription, access.is_paid(subscription.user), timezone.now())
+    papers = load_papers(days)
+    index = author_index(papers) if plan.authors else {}
+    return deliver(plan, set(days), papers, index, base_url, timezone.now(), [0], new_syntheses=False)
+
+
+def start_preview(subscription_pk):
+    """Run preview() in a thread, so the page answers at once (blurbs take a few seconds to write)."""
+    import threading
+    from django.db import connections
+
+    def work():
+        try:
+            subscription = DigestSubscription.objects.select_related('user').get(pk=subscription_pk)
+            preview(subscription)
+        except Exception:
+            logger.exception('Digest preview %s failed', subscription_pk)
+        finally:
+            connections.close_all()
+    threading.Thread(target=work, daemon=True).start()
 
 
 def cleanup(days=30):
@@ -843,6 +937,18 @@ def digest_page(request):
         if request.POST.get('action') == 'delete' and subscription is not None:
             subscription.delete()
             return redirect('/%s/digest/' % get_language())
+        if request.POST.get('action') == 'preview' and subscription is not None and subscription.active:
+            hour = 'digest-previews:%s' % timezone.now().strftime('%Y%m%d%H')
+            cache.add(hour, 0, 3600)
+            if not cache.add(PREVIEW_KEY % (subscription.pk, timezone.now().date()), True, 86400):
+                state = 'again'
+            elif cache.incr(hour) > PREVIEWS_PER_HOUR:
+                cache.delete(PREVIEW_KEY % (subscription.pk, timezone.now().date()))
+                state = 'busy'
+            else:
+                start_preview(subscription.pk)
+                state = 'sent'
+            return redirect('/%s/digest/?d=%s&preview=%s' % (get_language(), subscription.pk, state))
         categories = clean_categories(request.POST.getlist('categories') + request.POST.get('other', '').split(','),
                                       lim['categories'])
         if not categories:
@@ -901,6 +1007,7 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'max_authors': MAX_AUTHORS,
         'max_references': MAX_REFERENCES,
         'saved': request.GET.get('saved') == '1',
+        'preview': request.GET.get('preview'),
         'hours': [(h, hour_label(h)) for h in range(24)],
         'weekdays': range(5),
         'timezones': sorted(TIMEZONES),

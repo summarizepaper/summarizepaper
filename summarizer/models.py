@@ -316,10 +316,15 @@ class DigestVector(models.Model):
 
 
 class ArxivBatch(models.Model):
-    """One daily arXiv announcement, stored once every archive feed of that day was read."""
+    """One daily arXiv announcement, stored once every archive feed of that day was read (or, late, most of them)."""
     day = models.DateField(unique=True)  # the date arXiv gives the announcement (New York time)
     papers = models.PositiveIntegerField(default=0)
+    # archives still unread when the batch was accepted without them (see digest.PARTIAL_AFTER)
+    missing = models.CharField(max_length=300, blank=True, default='')
     fetched = models.DateTimeField(auto_now_add=True)
+
+    def missing_list(self):
+        return [a for a in self.missing.split(',') if a]
 
     def __str__(self):
         return '%s (%d papers)' % (self.day, self.papers)

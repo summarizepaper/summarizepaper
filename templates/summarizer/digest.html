@@ -45,7 +45,10 @@
     <span class="muted">{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/digest/">{% trans 'Log in' %}</a></span>
     </div>
   {% else %}
-    {% if saved %}<p class="notice">{% blocktrans with email=request.user.email %}Saved. Your next digest goes to {{ email }}.{% endblocktrans %}</p>{% endif %}
+    {% if saved %}<p class="notice">{% blocktrans with email=request.user.email %}Saved. Your next digest goes to {{ email }}.{% endblocktrans %}{% if subscription.active and not subscription.last_sent %} {% trans 'Want to see it now? Use the "Send me a preview now" button below.' %}{% endif %}</p>{% endif %}
+    {% if preview == 'sent' %}<p class="notice">{% blocktrans with email=request.user.email %}Your digest is on its way to {{ email }}, with the latest arXiv announcement. It takes about a minute.{% endblocktrans %}</p>
+    {% elif preview == 'again' %}<p class="notice">{% trans 'A preview of this digest was already sent today.' %}</p>
+    {% elif preview == 'busy' %}<p class="notice">{% trans 'Many previews were asked for this hour. Please try again a bit later.' %}</p>{% endif %}
     {% if digests|length > 1 or paid and digests %}
     <nav class="tabs">
       {% for d in digests %}<a href="?d={{ d.pk }}" {% if d == subscription %}class="current"{% endif %}>{{ d.name|default:d.categories|truncatechars:40 }}</a>{% endfor %}
@@ -128,6 +131,7 @@
       </fieldset>
       <div class="form-actions">
       <button type="submit" class="btn btn-lg">{% if subscription %}{% trans 'Save' %}{% else %}{% trans 'Start my digest' %}{% endif %}</button>
+      {% if subscription and subscription.active %}<button type="submit" class="btn btn-ghost" name="action" value="preview" formnovalidate>{% trans 'Send me a preview now' %}</button>{% endif %}
       {% if subscription and digests|length > 1 %}<button type="submit" class="btn btn-ghost" name="action" value="delete" formnovalidate onclick="return confirm('{% trans 'Delete this digest?' %}')">{% trans 'Delete this digest' %}</button>{% endif %}
       </div>
     </form>

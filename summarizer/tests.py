@@ -1502,11 +1502,12 @@ class DigestPremiumTests(TestCase):
 
     def test_free_digest_ignores_premium_settings(self):
         u = self.user('free', False)
-        DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7,
-                                          profile='I study galaxy mergers.', authors='Yann LeCun')
+        sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7,
+                                                profile='I study galaxy mergers.', authors='Yann LeCun')
         sent, mocks = self.run_digest()
         self.assertEqual(sent, 1)
-        mocks['embed'].assert_not_called()
+        sub.refresh_from_db()
+        self.assertEqual(sub.profile_key, '')  # the profile is not used
         self.assertNotIn('you follow', mail.outbox[0].body)
         mocks['summarize'].assert_not_called()
         mocks['chat'].assert_not_called()  # no weekly synthesis without Premium
@@ -1695,7 +1696,6 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         url = '/en/digest/feedback/%s/' % token
         self.assertContains(Client().get(url), 'More papers like this')
         self.assertFalse(DigestFeedback.objects.exists())  # a link checker following the link does not vote
-        DigestVector.objects.create(arxiv_id='2610.00002v1', vector=fake_embed(['galaxy'])[0].tobytes())
         self.assertContains(Client().post(url), 'Thank you')
         self.assertEqual(DigestFeedback.objects.get().value, 1)
         self.assertContains(Client().post('/en/digest/feedback/forged/'), 'This link is invalid.')
@@ -1727,3 +1727,95 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         self.assertIn('Dust & gas <in> discs', message.body)
         self.assertIn('?autorun=1&utm_source=digest', message.body)
         self.assertIn('Dust &amp; gas &lt;in&gt; discs', message.alternatives[0][0])
+
+
+class DigestBatchQualityTests(DigestPremiumTests):
+    def test_free_ranking_puts_primary_papers_and_the_heart_of_the_batch_first(self):
+        self.papers = {p['arxiv_id']: p for p in [
+            fake_paper('2610.00011v1', 'astro-ph.GA', 'Galaxy cross-list'),
+            fake_paper('2610.00012v1', 'astro-ph.EP', 'Galaxy dynamics'),
+            fake_paper('2610.00013v1', 'astro-ph.EP', 'Galaxy disks'),
+            fake_paper('2610.00014v1', 'astro-ph.EP', 'Planet rings'),
+        ]}
+        self.papers['2610.00011v1']['categories'] = ['astro-ph.GA', 'astro-ph.EP']
+        DigestSubscription.objects.create(user=self.user('free', False), categories='astro-ph.EP', timezone='UTC', send_hour=7)
+        with mock.patch('summarizer.digest.PAPERS_PER_EMAIL', 3), mock.patch.dict(digest.FREE, papers=3):
+            self.run_digest()
+        body = mail.outbox[0].body
+        self.assertNotIn('Galaxy cross-list', body)  # a cross-list comes after the papers of the category
+        self.assertLess(body.index('Galaxy d'), body.index('Planet rings'))  # the batch is mostly about galaxies
+
+    def test_synthesis_reads_the_summaries_already_written(self):
+        DigestItem.objects.create(arxiv_id='2610.00001v1', lang='en', title='t', blurb='Clouds seen by JWST.')
+        with mock.patch('summarizer.digest.SYNTHESIS_MIN_PAPERS', 1), \
+             mock.patch('summarizer.digest._chat', return_value=json.dumps({'trends': [{'title': 'T', 'text': 'X'}]})) as chat:
+            digest.category_synthesis('astro-ph.EP', 'en', MONDAY.date(), self.papers)
+        self.assertIn('2610.00001v1 | Clouds on a hot planet | Clouds seen by JWST.', chat.call_args.args[0])
+
+    def test_preview_sends_the_latest_announcement_now(self):
+        sub = DigestSubscription.objects.create(user=self.user('new', False), categories='astro-ph.EP', timezone='UTC', send_hour=7)
+        ArxivBatch.objects.create(day=MONDAY.date(), papers=3)
+        with mock.patch('summarizer.digest.load_papers', return_value=self.papers), \
+             mock.patch('summarizer.digest.write_blurbs', side_effect=blurbs), \
+             mock.patch('summarizer.similar.embed', side_effect=fake_embed), \
+             mock.patch('summarizer.digest.read_feed') as read:
+            self.assertTrue(digest.preview(sub))
+        read.assert_not_called()  # no arXiv call from the web page
+        sub.refresh_from_db()
+        self.assertEqual(sub.last_batch, MONDAY.date())
+        self.assertIn('Clouds on a hot planet', mail.outbox[0].body)
+
+    def test_preview_button_once_a_day(self):
+        u = self.user('btn', False)
+        sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP')
+        c = Client(); c.force_login(u)
+        with mock.patch('summarizer.digest.start_preview') as start:
+            r = c.post('/en/digest/', {'digest': str(sub.pk), 'action': 'preview'})
+            self.assertRedirects(r, '/en/digest/?d=%d&preview=sent' % sub.pk, fetch_redirect_response=False)
+            r = c.post('/en/digest/', {'digest': str(sub.pk), 'action': 'preview'})
+            self.assertRedirects(r, '/en/digest/?d=%d&preview=again' % sub.pk, fetch_redirect_response=False)
+        start.assert_called_once_with(sub.pk)
+        self.assertContains(c.get('/en/digest/?d=%d&preview=sent' % sub.pk), 'Your digest is on its way')
+        self.assertContains(c.get('/en/digest/?d=%d' % sub.pk), 'Send me a preview now')
+
+
+class PartialBatchTests(TestCase):
+    def feeds(self, failing=(), day=datetime.date(2026, 10, 19)):
+        def read(name):
+            if name in failing:
+                raise digest.ArxivUnavailable(name)
+            return day, [dict(fake_paper('%s-p' % name, name + '.XX', name))], 10
+        return read
+
+    def test_a_failing_archive_blocks_only_its_digests_after_three_hours(self):
+        late = MONDAY + datetime.timedelta(hours=1)  # 04:00 in New York, 3h30 after the feeds switch
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(failing={'cs'})):
+            self.assertEqual(digest.ensure_batch(MONDAY - datetime.timedelta(hours=2)), [])  # 01:00 New York: wait
+            self.assertEqual(digest.ensure_batch(late), [MONDAY.date()])
+        self.assertEqual(ArxivBatch.objects.get().missing_list(), ['cs'])
+        astro = DigestSubscription.objects.create(user=User.objects.create_user('a', email='a@example.com'),
+                                                  categories='astro-ph.XX', timezone='UTC', send_hour=8)
+        cs = DigestSubscription.objects.create(user=User.objects.create_user('c', email='c@example.com'),
+                                               categories='cs.XX', timezone='UTC', send_hour=8)
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(failing={'cs'})), \
+             mock.patch('summarizer.digest.write_blurbs', side_effect=blurbs), \
+             mock.patch('summarizer.similar.embed', side_effect=fake_embed):
+            self.assertEqual(digest.run(now=MONDAY + datetime.timedelta(hours=1)), 1)
+        self.assertEqual(mail.outbox[0].to, ['a@example.com'])
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds()), \
+             mock.patch('summarizer.digest.write_blurbs', side_effect=blurbs), \
+             mock.patch('summarizer.similar.embed', side_effect=fake_embed):
+            self.assertEqual(digest.run(now=MONDAY + datetime.timedelta(hours=2)), 1)  # cs answered: its digest goes
+        self.assertEqual(ArxivBatch.objects.get().missing, '')
+        self.assertEqual(mail.outbox[1].to, ['c@example.com'])
+
+    def test_no_announcement_today_pauses_the_reading(self):
+        friday = datetime.date(2026, 10, 16)
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(day=friday)) as read:
+            digest.ensure_batch(MONDAY - datetime.timedelta(hours=2))
+            digest.ensure_batch(MONDAY + datetime.timedelta(hours=3))  # 06:00 in New York, still Friday's: arXiv holiday
+            calls = read.call_count
+            digest.ensure_batch(MONDAY + datetime.timedelta(hours=4))
+        self.assertEqual(read.call_count, calls)
+        self.assertFalse(ArxivBatch.objects.exists())
+        cache.delete(digest.QUIET_KEY % MONDAY.date())

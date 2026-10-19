@@ -18,7 +18,8 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 from unfold.widgets import UnfoldAdminTextareaWidget
 
 from . import guides
-from .models import (AIassistant, ArxivPaper, Author, CategorySynthesis, DigestSubscription, Guide, PaperAuthor, PaperHistory,
+from .models import (AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestFeedback,
+                     DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, UserPlan, Vote)
 
@@ -308,6 +309,34 @@ class DigestSubscriptionAdmin(ModelAdmin):
     search_fields = ('user__username', 'user__email', 'categories', 'name')
     raw_id_fields = ('user',)
     exclude = ('profile_vector', 'profile_key')
+
+
+@admin.register(ArxivBatch)
+class ArxivBatchAdmin(ModelAdmin):
+    list_display = ('day', 'papers', 'missing', 'fetched')
+    ordering = ('-day',)
+
+
+@admin.register(AnnouncedPaper)
+class AnnouncedPaperAdmin(ModelAdmin):
+    list_display = ('arxiv_id', 'title', 'announced', 'categories')
+    list_filter = ('announced',)
+    search_fields = ('arxiv_id', 'title', 'authors')
+
+
+@admin.register(DigestFeedback)
+class DigestFeedbackAdmin(ModelAdmin):
+    list_display = ('subscription', 'arxiv_id', 'value', 'created')
+    list_filter = ('value',)
+    search_fields = ('arxiv_id', 'subscription__user__username')
+    exclude = ('vector',)
+
+
+@admin.register(DigestItem)
+class DigestItemAdmin(ModelAdmin):
+    list_display = ('arxiv_id', 'lang', 'title', 'created')
+    list_filter = ('lang',)
+    search_fields = ('arxiv_id', 'title')
 
 
 @admin.register(CategorySynthesis)

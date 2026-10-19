@@ -138,6 +138,9 @@ UNFOLD = {
                 {"title": "Abonnements", "icon": "workspace_premium",
                  "link": reverse_lazy("admin:summarizer_userplan_changelist")},
                 {"title": "Digests", "icon": "mail", "link": reverse_lazy("admin:summarizer_digestsubscription_changelist")},
+                {"title": "Lots arXiv du jour", "icon": "inventory_2", "link": reverse_lazy("admin:summarizer_arxivbatch_changelist")},
+                {"title": "Synthèses de la semaine", "icon": "insights", "link": reverse_lazy("admin:summarizer_categorysynthesis_changelist")},
+                {"title": "Retours plus/moins", "icon": "thumbs_up_down", "link": reverse_lazy("admin:summarizer_digestfeedback_changelist")},
                 {"title": "Emails bloqués", "icon": "block", "link": reverse_lazy("admin:summarizer_suppressedemail_changelist")},
             ]},
             {"title": "Activité", "items": [
