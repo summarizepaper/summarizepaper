@@ -1,6 +1,7 @@
 asgiref==3.12.1
 channels==4.3.2
 django==5.2.18
+django-unfold==0.91.0
 pdfminer==20191125
 requests[security]==2.34.2
 six==1.10.0

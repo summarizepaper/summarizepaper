@@ -1,0 +1,47 @@
+{% extends 'admin/base.html' %}
+{% load i18n unfold %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {% for label, value, hint, href in kpis %}
+            {% component "unfold/components/card.html" with href=href %}
+                <p class="text-subtle">{{ label }}</p>
+                <p class="font-semibold text-3xl text-important mt-1">{{ value }}</p>
+                <p class="text-subtle mt-1">{{ hint }}</p>
+            {% endcomponent %}
+        {% endfor %}
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        {% url 'admin:summarizer_sitesettings_changelist' as settings_url %}
+        {% component "unfold/components/card.html" with title="Quotas et modèles IA" href=settings_url %}
+            <dl class="flex flex-col gap-2">
+                <div class="flex justify-between gap-4"><dt class="text-subtle">Résumés / jour (gratuit)</dt><dd class="font-semibold text-important">{{ site_settings.free_runs_per_day }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-subtle">Questions / jour sans compte</dt><dd class="font-semibold text-important">{{ site_settings.chat_anonymous_per_day }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-subtle">Questions / jour gratuit</dt><dd class="font-semibold text-important">{{ site_settings.chat_user_per_day }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-subtle">Questions / jour Premium</dt><dd class="font-semibold text-important">{{ site_settings.chat_paid_per_day }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-subtle">Modèle gratuit</dt><dd class="font-semibold text-important">{{ site_settings.model_free }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-subtle">Modèle Premium</dt><dd class="font-semibold text-important">{{ site_settings.model_paid }}</dd></div>
+            </dl>
+        {% endcomponent %}
+
+        <div class="lg:col-span-2">
+            {% component "unfold/components/card.html" with title="Dernières inscriptions" %}
+                <ul class="flex flex-col gap-2">
+                    {% for u in recent_users %}
+                        <li class="flex justify-between gap-4">
+                            <a class="text-primary-600 dark:text-primary-500 truncate" href="{% url 'admin:auth_user_change' u.pk %}">{{ u.email|default:u.username }}</a>
+                            <span class="text-subtle whitespace-nowrap">{{ u.date_joined|date:"d/m/Y H:i" }}{% if not u.is_active %} · non activé{% endif %}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endcomponent %}
+        </div>
+    </div>
+{% endblock %}

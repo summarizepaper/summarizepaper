@@ -194,3 +194,32 @@ def guide_detail(request, slug):
         'alternates': alternates if len(alternates) > 1 else [],
         'json_ld': _json_ld(guide),
     })
+
+
+IMPORTED_FIELDS = ('title', 'description', 'date', 'updated', 'draft', 'product')
+
+
+def repository_guides():
+    """Every Markdown guide in the repository as (lang, slug), sorted."""
+    found = []
+    for lang in sorted(os.listdir(CONTENT_DIR)):
+        folder = os.path.join(CONTENT_DIR, lang)
+        if os.path.isdir(folder):
+            found += [(lang, name[:-3]) for name in sorted(os.listdir(folder)) if name.endswith('.md')]
+    return found
+
+
+def import_file(lang, slug):
+    """Copy content/guides/<lang>/<slug>.md into the database (it then wins over the file); return the row."""
+    with open(_path(lang, slug), encoding='utf-8') as f:
+        text = f.read()
+    meta = {}
+    if text.startswith('---'):
+        _, front, text = text.split('---', 2)
+        meta = yaml.safe_load(front) or {}
+    values = {k: meta.pop(k) for k in IMPORTED_FIELDS if k in meta}
+    values['draft'] = bool(values.get('draft'))
+    values['product'] = bool(values.get('product'))
+    values['body'] = text.strip() + '\n'
+    values['extra'] = yaml.safe_dump(meta, allow_unicode=True, sort_keys=False) if meta else ''
+    return Guide.objects.update_or_create(lang=lang, slug=slug, defaults=values)[0]

@@ -87,6 +87,7 @@ BROKER_TRANSPORT_OPTIONS = {
 
 INSTALLED_APPS = [
     'daphne',
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -100,6 +101,54 @@ INSTALLED_APPS = [
 ]
 
 
+
+from django.urls import reverse_lazy
+
+# admin theme (django-unfold): sidebar, brand colour and the dashboard numbers
+UNFOLD = {
+    "SITE_TITLE": "SummarizePaper admin",
+    "SITE_HEADER": "SummarizePaper",
+    "SITE_SUBHEADER": "Administration",
+    "SITE_SYMBOL": "summarize",
+    "SITE_URL": "/",
+    "DASHBOARD_CALLBACK": "summarizer.admin.dashboard_callback",
+    "COLORS": {
+        # Tailwind indigo, the site's accent (#4f46e5 is 600)
+        "primary": {
+            "50": "oklch(96.2% .018 272.314)", "100": "oklch(93% .034 272.788)",
+            "200": "oklch(87% .065 274.039)", "300": "oklch(78.5% .115 274.713)",
+            "400": "oklch(67.3% .182 276.935)", "500": "oklch(58.5% .233 277.117)",
+            "600": "oklch(51.1% .262 276.966)", "700": "oklch(45.7% .24 277.023)",
+            "800": "oklch(39.8% .195 277.366)", "900": "oklch(35.9% .144 278.697)",
+            "950": "oklch(25.7% .09 281.288)",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {"title": "Pilotage", "items": [
+                {"title": "Tableau de bord", "icon": "dashboard", "link": reverse_lazy("admin:index")},
+                {"title": "Quotas et modèles IA", "icon": "tune",
+                 "link": reverse_lazy("admin:summarizer_sitesettings_changelist")},
+                {"title": "Articles de blog", "icon": "article", "link": reverse_lazy("admin:summarizer_guide_changelist")},
+            ]},
+            {"title": "Utilisateurs", "items": [
+                {"title": "Utilisateurs", "icon": "person", "link": reverse_lazy("admin:auth_user_changelist")},
+                {"title": "Abonnements", "icon": "workspace_premium",
+                 "link": reverse_lazy("admin:summarizer_userplan_changelist")},
+                {"title": "Digests", "icon": "mail", "link": reverse_lazy("admin:summarizer_digestsubscription_changelist")},
+                {"title": "Emails bloqués", "icon": "block", "link": reverse_lazy("admin:summarizer_suppressedemail_changelist")},
+            ]},
+            {"title": "Activité", "items": [
+                {"title": "Résumés demandés", "icon": "history", "link": reverse_lazy("admin:summarizer_paperhistory_changelist")},
+                {"title": "Questions à l’assistant", "icon": "forum", "link": reverse_lazy("admin:summarizer_aiassistant_changelist")},
+                {"title": "Résumés générés", "icon": "description", "link": reverse_lazy("admin:summarizer_summarypaper_changelist")},
+                {"title": "Articles arXiv", "icon": "library_books", "link": reverse_lazy("admin:summarizer_arxivpaper_changelist")},
+            ]},
+        ],
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

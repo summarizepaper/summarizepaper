@@ -1,24 +1,51 @@
 import requests
 from django import forms
 from django.conf import settings
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+from django.contrib import admin, messages
+from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group, User
 from django.db import models
 from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
 from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.views.decorators.http import require_POST
+from unfold.admin import ModelAdmin, StackedInline
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from unfold.widgets import UnfoldAdminTextareaWidget
 
+from . import guides
 from .models import (AIassistant, ArxivPaper, Author, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, UserPlan, Vote)
 
-admin.site.site_header = 'SummarizePaper admin'
-admin.site.site_title = 'SummarizePaper admin'
-admin.site.index_title = 'Administration'
+admin.site.index_title = 'Tableau de bord'
+
+
+def dashboard_callback(request, context):
+    """Numbers shown on the admin home page (UNFOLD["DASHBOARD_CALLBACK"])."""
+    now = timezone.now()
+    day, week = now - timezone.timedelta(days=1), now - timezone.timedelta(days=7)
+    premium = (UserPlan.objects.filter(paid=True).filter(Q(expires__isnull=True) | Q(expires__gte=now))
+               .values('user').distinct().count())
+    cfg = SiteSettings.current()
+    context['kpis'] = [
+        ('Utilisateurs', User.objects.count(), '+%d cette semaine' % User.objects.filter(date_joined__gte=week).count(),
+         reverse('admin:auth_user_changelist')),
+        ('Premium', premium, 'abonnements actifs', reverse('admin:auth_user_changelist') + '?premium=yes'),
+        ('Résumés (24 h)', PaperHistory.objects.filter(created__gte=day).count(),
+         '%d sur 7 jours' % PaperHistory.objects.filter(created__gte=week).count(),
+         reverse('admin:summarizer_paperhistory_changelist')),
+        ('Questions (24 h)', AIassistant.objects.filter(created__gte=day).count(),
+         '%d sur 7 jours' % AIassistant.objects.filter(created__gte=week).count(),
+         reverse('admin:summarizer_aiassistant_changelist')),
+    ]
+    context['site_settings'] = cfg
+    context['recent_users'] = User.objects.order_by('-date_joined')[:8]
+    return context
 
 
 # --- site settings: quotas and AI models ---------------------------------
@@ -56,16 +83,20 @@ class SiteSettingsForm(forms.ModelForm):
 
 
 @admin.register(SiteSettings)
-class SiteSettingsAdmin(admin.ModelAdmin):
+class SiteSettingsAdmin(ModelAdmin):
     form = SiteSettingsForm
-    readonly_fields = ('updated',)
+    readonly_fields = ('last_change',)
     fieldsets = (
         ('Résumés', {'fields': ('free_runs_per_day',)}),
         ('Questions à l’assistant', {'fields': ('chat_anonymous_per_day', 'chat_user_per_day', 'chat_paid_per_day')}),
         ('Modèles IA', {'fields': ('model_free', 'model_paid'),
                         'description': 'Les changements s’appliquent en moins de 30 secondes sur tous les serveurs.'}),
-        (None, {'fields': ('updated',)}),
+        (None, {'fields': ('last_change',)}),
     )
+
+    @admin.display(description='dernière modification')
+    def last_change(self, cfg):
+        return cfg.updated
 
     def has_add_permission(self, request):
         return False
@@ -104,7 +135,7 @@ class PremiumFilter(admin.SimpleListFilter):
         return queryset
 
 
-class UserPlanInline(admin.StackedInline):
+class UserPlanInline(StackedInline):
     model = UserPlan
     extra = 0
     fields = ('payment_plan', 'paid', 'expires', 'canceling', 'stripe_customer_id', 'stripe_subscription_id', 'created')
@@ -113,7 +144,7 @@ class UserPlanInline(admin.StackedInline):
     verbose_name_plural = 'abonnements (le plus récent compte ; sans date de fin = Premium offert à vie)'
 
 
-class DigestInline(admin.StackedInline):
+class DigestInline(StackedInline):
     model = DigestSubscription
     extra = 0
     fields = ('categories', 'keywords', 'lang', 'send_hour', 'timezone', 'active', 'last_sent')
@@ -121,10 +152,19 @@ class DigestInline(admin.StackedInline):
 
 
 admin.site.unregister(User)
+admin.site.unregister(Group)
+
+
+@admin.register(Group)
+class GroupAdmin(BaseGroupAdmin, ModelAdmin):
+    pass
 
 
 @admin.register(User)
-class SiteUserAdmin(UserAdmin):
+class SiteUserAdmin(BaseUserAdmin, ModelAdmin):
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
     list_display = ('username', 'email', 'date_joined', 'last_login', 'is_active', 'premium', 'summaries', 'questions')
     list_filter = (PremiumFilter, 'is_active', 'is_staff', 'date_joined')
     search_fields = ('username', 'email', 'first_name', 'last_name')
@@ -160,16 +200,15 @@ class GuideForm(forms.ModelForm):
         model = Guide
         fields = '__all__'
         widgets = {
-            'body': forms.Textarea(attrs={'rows': 40, 'style': 'width: 100%; font-family: monospace'}),
-            'extra': forms.Textarea(attrs={'rows': 10, 'style': 'width: 100%; font-family: monospace'}),
-            'description': forms.TextInput(attrs={'size': 120, 'maxlength': 300}),
-            'title': forms.TextInput(attrs={'size': 120}),
+            'body': UnfoldAdminTextareaWidget(attrs={'rows': 40, 'style': 'font-family: ui-monospace, monospace'}),
+            'extra': UnfoldAdminTextareaWidget(attrs={'rows': 10, 'style': 'font-family: ui-monospace, monospace'}),
         }
 
 
 @admin.register(Guide)
-class GuideAdmin(admin.ModelAdmin):
+class GuideAdmin(ModelAdmin):
     form = GuideForm
+    list_after_template = 'admin/summarizer/guide/repository_guides.html'
     list_display = ('title', 'lang', 'slug', 'date', 'updated', 'draft', 'view_link')
     list_filter = ('lang', 'draft')
     search_fields = ('title', 'slug', 'description', 'body')
@@ -185,6 +224,30 @@ class GuideAdmin(admin.ModelAdmin):
     def view_link(self, guide):
         return format_html('<a href="/{}/guides/{}/" target="_blank">voir</a>', guide.lang, guide.slug)
 
+    def get_urls(self):
+        view = self.admin_site.admin_view(require_POST(self.import_view))
+        return [path('import/<str:lang>/<slug:slug>/', view, name='summarizer_guide_import')] + super().get_urls()
+
+    def import_view(self, request, lang, slug):
+        if (lang, slug) not in guides.repository_guides():
+            messages.error(request, 'Aucun fichier content/guides/%s/%s.md.' % (lang, slug))
+            return redirect('admin:summarizer_guide_changelist')
+        guide = guides.import_file(lang, slug)
+        messages.success(request, '« %s » est maintenant géré ici : le fichier du dépôt est ignoré pour cet article.'
+                         % guide.title)
+        return redirect('admin:summarizer_guide_change', guide.pk)
+
+    def changelist_view(self, request, extra_context=None):
+        in_db = set(Guide.objects.values_list('lang', 'slug'))
+        repo = []
+        for lang, slug in guides.repository_guides():
+            if (lang, slug) not in in_db:
+                guide = guides.load(lang, slug)
+                if guide:
+                    repo.append(guide)
+        extra_context = dict(extra_context or {}, repository_guides=repo)
+        return super().changelist_view(request, extra_context)
+
     @admin.action(description='Publier les articles sélectionnés')
     def publish(self, request, queryset):
         queryset.update(draft=False)
@@ -197,14 +260,14 @@ class GuideAdmin(admin.ModelAdmin):
 # --- everything else ------------------------------------------------------
 
 @admin.register(UserPlan)
-class UserPlanAdmin(admin.ModelAdmin):
+class UserPlanAdmin(ModelAdmin):
     list_display = ('user', 'payment_plan', 'paid', 'expires', 'canceling', 'created')
     list_filter = ('paid', 'canceling')
     search_fields = ('user__username', 'user__email', 'stripe_customer_id', 'stripe_subscription_id')
     raw_id_fields = ('user',)
 
 
-class HistoryAdmin(admin.ModelAdmin):
+class HistoryAdmin(ModelAdmin):
     list_display = ('arxiv_id', 'user', 'lang', 'created')
     list_filter = ('lang',)
     search_fields = ('arxiv_id', 'user__username', 'user__email')
@@ -216,7 +279,7 @@ admin.site.register(PDFHistory, HistoryAdmin)
 
 
 @admin.register(AIassistant)
-class AIassistantAdmin(admin.ModelAdmin):
+class AIassistantAdmin(ModelAdmin):
     list_display = ('arxiv_id', 'user', 'query', 'lang', 'created')
     list_filter = ('lang',)
     search_fields = ('arxiv_id', 'query', 'user__username', 'user__email')
@@ -224,7 +287,7 @@ class AIassistantAdmin(admin.ModelAdmin):
 
 
 @admin.register(SummaryPaper)
-class SummaryPaperAdmin(admin.ModelAdmin):
+class SummaryPaperAdmin(ModelAdmin):
     list_display = ('paper', 'lang', 'created', 'updated')
     list_filter = ('lang',)
     search_fields = ('paper__arxiv_id', 'paper__title')
@@ -232,13 +295,13 @@ class SummaryPaperAdmin(admin.ModelAdmin):
 
 
 @admin.register(ArxivPaper)
-class ArxivPaperAdmin(admin.ModelAdmin):
+class ArxivPaperAdmin(ModelAdmin):
     list_display = ('arxiv_id', 'title', 'category', 'published_arxiv', 'created')
     search_fields = ('arxiv_id', 'title')
 
 
 @admin.register(DigestSubscription)
-class DigestSubscriptionAdmin(admin.ModelAdmin):
+class DigestSubscriptionAdmin(ModelAdmin):
     list_display = ('user', 'categories', 'lang', 'active', 'last_sent')
     list_filter = ('active', 'lang')
     search_fields = ('user__username', 'user__email', 'categories')
@@ -246,20 +309,20 @@ class DigestSubscriptionAdmin(admin.ModelAdmin):
 
 
 @admin.register(SuppressedEmail)
-class SuppressedEmailAdmin(admin.ModelAdmin):
+class SuppressedEmailAdmin(ModelAdmin):
     list_display = ('email', 'reason', 'created')
     search_fields = ('email',)
 
 
-admin.site.register(Author)
-admin.site.register(Vote)
-admin.site.register(PaperAuthor)
-admin.site.register(Search)
-admin.site.register(PaperScore)
-admin.site.register(PaymentPlan)
+admin.site.register(Author, ModelAdmin)
+admin.site.register(Vote, ModelAdmin)
+admin.site.register(PaperAuthor, ModelAdmin)
+admin.site.register(Search, ModelAdmin)
+admin.site.register(PaperScore, ModelAdmin)
+admin.site.register(PaymentPlan, ModelAdmin)
 
 
-class PickledDataAdmin(admin.ModelAdmin):
+class PickledDataAdmin(ModelAdmin):
     formfield_overrides = {
         models.BinaryField: {'widget': forms.Textarea(attrs=dict(readonly=True))},
     }

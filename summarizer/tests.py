@@ -1196,6 +1196,9 @@ class AdminTests(TestCase):
         self.assertEqual(self.client.get('/admin/summarizer/sitesettings/1/change/').status_code, 200)
         self.assertEqual(self.client.get('/admin/summarizer/guide/add/').status_code, 200)
         self.assertEqual(self.client.get('/admin/auth/user/%d/change/' % self.admin.pk).status_code, 200)
+        r = self.client.get('/admin/')
+        self.assertContains(r, 'Dernières inscriptions')
+        self.assertContains(r, 'gpt-6-luna')
 
 
 class DatabaseGuideTests(TestCase):
@@ -1224,6 +1227,18 @@ class DatabaseGuideTests(TestCase):
         self.assertNotIn('File body', html)
         self.assertEqual(self.client.get('/en/guides/wip/').status_code, 404)
         self.assertNotIn('/en/guides/wip/', self.client.get('/sitemap-guides.xml').content.decode())
+
+    def test_admin_lists_repository_guides_and_imports_one(self):
+        from summarizer.models import Guide
+        self.client.force_login(User.objects.create_superuser('boss', 'boss@example.org', 'x'))
+        r = self.client.get('/admin/summarizer/guide/')
+        self.assertContains(r, 'File version')
+        r = self.client.post('/admin/summarizer/guide/import/en/from-file/')
+        guide = Guide.objects.get(lang='en', slug='from-file')
+        self.assertRedirects(r, '/admin/summarizer/guide/%d/change/' % guide.pk)
+        self.assertNotContains(self.client.get('/admin/summarizer/guide/'), 'Guides du dépôt')
+        self.assertEqual(self.client.post('/admin/summarizer/guide/import/en/missing/').status_code, 302)
+        self.assertFalse(Guide.objects.filter(slug='missing').exists())
 
     def test_import_command_copies_files(self):
         from django.core.management import call_command

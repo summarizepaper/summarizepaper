@@ -1,0 +1,38 @@
+{% load unfold %}
+{% if repository_guides %}
+<div class="mt-8">
+    {% component "unfold/components/card.html" with title="Guides du dépôt" description="Écrits en Markdown dans content/guides et publiés par git (agent SEO). « Modifier ici » copie l’article dans l’admin : le fichier est alors ignoré pour cet article." %}
+        <div class="-m-6 overflow-x-auto">
+            <table class="border-separate border-spacing-none w-full">
+                <thead class="text-important">
+                    <tr class="bg-base-50 dark:bg-base-900">
+                        <th class="border-b border-base-200 dark:border-base-800 font-semibold px-3 py-2 text-left first:pl-6">Titre</th>
+                        <th class="border-b border-base-200 dark:border-base-800 font-semibold px-3 py-2 text-left">Langue</th>
+                        <th class="border-b border-base-200 dark:border-base-800 font-semibold px-3 py-2 text-left">Date</th>
+                        <th class="border-b border-base-200 dark:border-base-800 font-semibold px-3 py-2 text-left">Statut</th>
+                        <th class="border-b border-base-200 dark:border-base-800 font-semibold px-3 py-2 text-left last:pr-6"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for guide in repository_guides %}
+                    <tr>
+                        <td class="border-b border-base-200 dark:border-base-800 px-3 py-2 first:pl-6">
+                            <a class="text-primary-600 dark:text-primary-500" href="/{{ guide.lang }}/guides/{{ guide.slug }}/" target="_blank">{{ guide.title }}</a>
+                        </td>
+                        <td class="border-b border-base-200 dark:border-base-800 px-3 py-2">{{ guide.lang }}</td>
+                        <td class="border-b border-base-200 dark:border-base-800 px-3 py-2 whitespace-nowrap">{{ guide.date }}</td>
+                        <td class="border-b border-base-200 dark:border-base-800 px-3 py-2">{% if guide.draft %}brouillon{% else %}publié{% endif %}</td>
+                        <td class="border-b border-base-200 dark:border-base-800 px-3 py-2 text-right last:pr-6">
+                            <form method="post" action="{% url 'admin:summarizer_guide_import' guide.lang guide.slug %}">
+                                {% csrf_token %}
+                                {% component "unfold/components/button.html" with submit=1 variant="default" size="sm" %}Modifier ici{% endcomponent %}
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endcomponent %}
+</div>
+{% endif %}
