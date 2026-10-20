@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Who works on it?' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/teams/">← {% trans 'Who works on it?' %}</a></p>
+    <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Who works on it?' %}{% endif %}</h1>
+  </header>
+
+  {% if result %}
+    {% if result.groups %}
+    <p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). An author is counted at their first affiliation.{% endblocktrans %}</p>
+    {% if result.landscape %}<section class="card section-card"><p style="margin:0">{{ result.landscape }}</p></section>{% endif %}
+    <ul class="item-list">
+      {% for g in result.groups %}
+      <li class="card">
+        <p style="margin:0 0 4px"><strong>{{ g.institution }}</strong>{% if g.country %} · {{ g.country }}{% endif %}</p>
+        <div class="meta">{% blocktrans count n=g.papers %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% blocktrans count n=g.citations %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}</div>
+        {% if g.focus %}<p style="margin:8px 0 0"><strong>{% trans 'Focus:' %}</strong> {{ g.focus }}</p>{% endif %}
+        {% if g.approach %}<p style="margin:4px 0 0"><strong>{% trans 'Approach:' %}</strong> {{ g.approach }}</p>{% endif %}
+        <p style="margin:8px 0 0"><strong>{% trans 'People:' %}</strong>
+          {% for p in g.people %}{{ p.name }} ({{ p.papers }}{% if p.last %}, {% blocktrans count n=p.last %}last author {{ n }} time{% plural %}last author {{ n }} times{% endblocktrans %}{% endif %}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        <details style="margin-top:6px"><summary>{% trans 'Their most cited papers on it' %}</summary>
+          <ul>{% for t in g.titles %}<li>{% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.year %} ({{ t.year }}){% endif %}</li>{% endfor %}</ul>
+        </details>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="muted"><small>{% trans 'From the paper metadata of OpenAlex, which can be incomplete (affiliations, homonyms). Check before contacting anyone.' %}</small></p>
+    {% else %}
+    <p class="notice">{% trans 'We found no recent paper on this topic. Try other words.' %}</p>
+    {% endif %}
+  {% elif row.status == 'failed' %}
+    <p class="error">{% trans 'The search failed. Please try again.' %}</p>
+  {% else %}
+    {% trans 'Finding the groups that work on this topic' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='teams-working' working_steps=steps working_visible=True working_started=row.created %}
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      SP.track(document.getElementById('teams-working'), {{ row.pk }}, function () { location.reload(); });
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

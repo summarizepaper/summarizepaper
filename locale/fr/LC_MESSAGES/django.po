@@ -5512,3 +5512,151 @@ msgstr ""
 "Quand un article que vous suivez a une nouvelle version sur arXiv, un email "
 "vous dit ce qui a changé : résultats, conclusions, méthode, données ou "
 "erreurs corrigées."
+
+msgid "Who works on it?"
+msgstr "Qui travaille dessus ?"
+
+msgid ""
+"Describe a research topic: we find the groups that published the most on it "
+"in the last two years, their lead researchers, their key papers and their "
+"approach. To find a postdoc, collaborators, competitors or referees."
+msgstr ""
+"Décrivez un sujet de recherche : nous trouvons les groupes qui ont le plus "
+"publié dessus ces deux dernières années, leurs chercheurs principaux, leurs "
+"articles clés et leur approche. Pour trouver un postdoc, des collaborateurs,"
+" des concurrents ou des referees."
+
+msgid ""
+"Describe a research topic: we find the groups that published the most on it "
+"in the last two years, in journals and on preprint servers, with their lead "
+"researchers, their key papers and their approach."
+msgstr ""
+"Décrivez un sujet de recherche : nous trouvons les groupes qui ont le plus "
+"publié dessus ces deux dernières années, dans les journaux et sur les "
+"serveurs de preprints, avec leurs chercheurs principaux, leurs articles clés"
+" et leur approche."
+
+msgid ""
+"We write several searches from your topic and run them on OpenAlex, which "
+"knows the papers of journals and preprint servers with the institutions of "
+"their authors."
+msgstr ""
+"Nous écrivons plusieurs recherches à partir de votre sujet et les lançons "
+"sur OpenAlex, qui connaît les articles des journaux et des serveurs de "
+"preprints avec les institutions de leurs auteurs."
+
+msgid ""
+"We keep the papers really about your topic, and group them by institution."
+msgstr ""
+"Nous gardons les articles qui portent vraiment sur votre sujet, et les "
+"regroupons par institution."
+
+msgid ""
+"For each group: its number of papers and citations, the people who sign them"
+" (and how often they sign last, often the head of the group), and its most "
+"cited papers."
+msgstr ""
+"Pour chaque groupe : son nombre d'articles et de citations, les personnes "
+"qui les signent (et combien de fois elles signent en dernier, souvent le "
+"chef du groupe), et ses articles les plus cités."
+
+msgid ""
+"An AI says what each group focuses on and how, and sums up the landscape."
+msgstr ""
+"Une IA dit sur quoi chaque groupe se concentre et comment, et résume le "
+"paysage."
+
+msgid ""
+"To find a postdoc or a lab for a PhD, collaborators, the competing teams, or"
+" referees to suggest to a journal."
+msgstr ""
+"Pour trouver un postdoc ou un labo de thèse, des collaborateurs, les équipes"
+" concurrentes, ou des referees à suggérer à un journal."
+
+msgid "You can start from a project of your scoop watch."
+msgstr "Vous pouvez partir d'un projet de votre veille anti-scoop."
+
+msgid "Know who matters on your topic, in a minute."
+msgstr "Sachez en une minute qui compte sur votre sujet."
+
+msgid "Describe the topic in a few words at least."
+msgstr "Décrivez le sujet en quelques mots au moins."
+
+msgid "The topic: a few keywords or a few sentences"
+msgstr "Le sujet : quelques mots-clés ou quelques phrases"
+
+msgid "e.g. detection of exomoons by astrometry"
+msgstr "par ex. détection d'exolunes par astrométrie"
+
+msgid "or a project of your scoop watch"
+msgstr "ou un projet de votre veille anti-scoop"
+
+msgid "Find the groups"
+msgstr "Trouver les groupes"
+
+msgid "Topic"
+msgstr "Sujet"
+
+msgid "Focus:"
+msgstr "Sujet principal :"
+
+msgid "Approach:"
+msgstr "Approche :"
+
+msgid "People:"
+msgstr "Personnes :"
+
+msgid "Their most cited papers on it"
+msgstr "Leurs articles les plus cités sur le sujet"
+
+msgid ""
+"From the paper metadata of OpenAlex, which can be incomplete (affiliations, "
+"homonyms). Check before contacting anyone."
+msgstr ""
+"D'après les métadonnées des articles dans OpenAlex, qui peuvent être "
+"incomplètes (affiliations, homonymes). Vérifiez avant de contacter qui que "
+"ce soit."
+
+msgid "We found no recent paper on this topic. Try other words."
+msgstr ""
+"Nous n'avons trouvé aucun article récent sur ce sujet. Essayez d'autres "
+"mots."
+
+msgid "The search failed. Please try again."
+msgstr "La recherche a échoué. Veuillez réessayer."
+
+msgid "Finding the groups that work on this topic"
+msgstr "Recherche des groupes qui travaillent sur ce sujet"
+
+#, python-format
+msgid ""
+"From %(n)s papers on this topic published since %(year)s (OpenAlex). An "
+"author is counted at their first affiliation."
+msgstr ""
+"D'après %(n)s articles sur ce sujet publiés depuis %(year)s (OpenAlex). "
+"Chaque auteur est compté à sa première affiliation."
+
+#, python-format
+msgid "last author %(n)s time"
+msgid_plural "last author %(n)s times"
+msgstr[0] "dernier auteur %(n)s fois"
+msgstr[1] "dernier auteur %(n)s fois"
+
+msgid "Writing the searches"
+msgstr "Écriture des recherches"
+
+msgid "Searching the papers of the last two years on OpenAlex"
+msgstr "Recherche des articles des deux dernières années sur OpenAlex"
+
+msgid "Grouping the papers by institution"
+msgstr "Regroupement des articles par institution"
+
+msgid "An AI describes what each group does"
+msgstr "Une IA décrit ce que fait chaque groupe"
+
+msgid ""
+"the groups that publish the most on a topic, their lead researchers and "
+"their approach"
+msgstr ""
+"les groupes qui publient le plus sur un sujet, leurs chercheurs principaux "
+"et leur approche"

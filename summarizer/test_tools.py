@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, changes, citations, digest, generated, letters, library, missed, presskit, refcheck, scoops, trends
+from summarizer import audio, changes, citations, digest, generated, letters, library, missed, presskit, refcheck, scoops, teams, trends
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
@@ -645,6 +645,54 @@ class ChangesTests(ToolsTestCase):
             self.assertContains(client.get('/en/changes/2101.00001v1/'), 'Same main results')
         with mock.patch('summarizer.changes.latest_version', return_value=1):
             self.assertContains(client.get('/en/changes/2101.00001v1/'), 'only one version')
+
+
+class TeamsTests(ToolsTestCase):
+    def work(self, n, title, authors, cited=0):
+        return {'id': 'W%d' % n, 'doi': 'https://doi.org/10.1/w%d' % n, 'display_name': title, 'cited_by_count': cited,
+                'publication_date': '2026-01-01', 'authorships': [
+                    {'author': {'display_name': name}, 'author_position': position,
+                     'institutions': [{'id': 'I-' + inst, 'display_name': inst, 'country_code': 'FR'}]}
+                    for name, inst, position in authors]}
+
+    def test_groups_by_institution_and_describes_them(self):
+        found = [self.work(1, 'Exomoons by astrometry', [('Ann Lee', 'Paris', 'first'), ('Bob Ray', 'Paris', 'last')], 10),
+                 self.work(2, 'Exomoon transits', [('Lee, Ann', 'Paris', 'first'), ('Zoe Q', 'Leiden', 'last')], 3),
+                 self.work(3, 'Protein folding', [('Max P', 'Basel', 'first')], 99),
+                 self.work(4, 'Huge review of exomoons', [('Big %d' % i, 'Inst%d' % i, 'middle') for i in range(30)] +
+                           [('Zoe Q', 'Leiden', 'last')])]
+        plan = {'title': 'Exomoons', 'queries': ['exomoon astrometry', 'exomoon transits']}
+        notes = {'groups': [{'id': 0, 'focus': 'Exomoon searches.', 'approach': 'Astrometry.'}], 'landscape': 'Two groups.'}
+
+        def embed(texts):
+            return np.array([[1.0, 0.0]] + [[0.0, 1.0] if 'Protein' in t else [1.0, 0.0] for t in texts[1:]], dtype=np.float32)
+        with mock.patch('summarizer.teams.works', return_value=found) as works, \
+             mock.patch('summarizer.teams.MIN_CLOSE', 1), \
+             mock.patch('summarizer.similar.embed', side_effect=embed), \
+             mock.patch('summarizer.generated.chat_json', side_effect=[plan, notes]):
+            result = teams.find('exomoons', 'en')
+        self.assertEqual(works.call_count, 2)
+        self.assertEqual(result['papers'], 3)  # protein folding is about something else
+        self.assertEqual([g['institution'] for g in result['groups']], ['Paris', 'Leiden'])
+        paris = result['groups'][0]
+        self.assertEqual(paris['papers'], 2)
+        self.assertEqual(paris['citations'], 13)
+        self.assertEqual(paris['people'][0], {'name': 'Ann Lee', 'papers': 2, 'last': 0})  # 'Lee, Ann' is the same person
+        self.assertEqual(paris['focus'], 'Exomoon searches.')
+        self.assertEqual(result['landscape'], 'Two groups.')
+        self.assertNotIn('Inst3', [g['institution'] for g in result['groups']])  # middle authors of a huge paper
+
+    def test_page_is_premium_and_starts_from_a_project(self):
+        self.assertContains(self.client_for(self.user()).get('/en/teams/'), 'Discover Premium')
+        user = self.user('pro', paid=True)
+        project = WatchedProject.objects.create(user=user, title='Moons', description='x' * 300, search_text='Exomoons by astrometry.')
+        client = self.client_for(user)
+        self.assertContains(client.post('/en/teams/', {'topic': 'short'}), 'a few words at least')
+        with mock.patch('summarizer.teams.find', return_value={'title': 'Moons', 'groups': [], 'papers': 0, 'landscape': ''}) as find:
+            r = client.post('/en/teams/', {'topic': '', 'project': project.pk})
+        self.assertEqual(find.call_args[0][0], 'Moons\n\nExomoons by astrometry.')
+        self.assertContains(client.get(r['Location']), 'no recent paper')
+        self.assertEqual(self.client_for(self.user('other', paid=True)).get(r['Location']).status_code, 404)
 
 
 class AudioTests(ToolsTestCase):
