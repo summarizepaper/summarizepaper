@@ -7,7 +7,9 @@ tried first and the PDF is the fallback.
 
 PaperText stores the text that was read, so answering a question never
 needs the FAISS index. Papers summarized before PaperText existed get their
-text rebuilt once from the chunks stored in their FAISS docstore.
+text rebuilt once from the chunks stored in their FAISS docstore. Those indexes
+often kept only the start of the paper: an openly licensed paper whose index
+text is short is read again from arXiv instead.
 """
 import logging
 import pickle
@@ -21,6 +23,8 @@ from .models import ArxivPaper, PaperText, PickledData
 logger = logging.getLogger(__name__)
 
 ARXIV_HTML = 'https://arxiv.org/html/%s'
+ARXIV_PDF = 'https://arxiv.org/pdf/%s'
+SHORT_INDEX = 20000  # characters; a whole paper is longer, so a shorter index text lost most of it
 
 
 def arxiv_ref(arxiv_id):
@@ -110,12 +114,32 @@ def text_from_index(arxiv_id):
     return strip_api_answer(_merge_chunks(chunks))
 
 
+def read_again(arxiv_id):
+    """(text, source) of an openly licensed arXiv paper read from arXiv: its HTML, else its PDF. ('', '') otherwise."""
+    from . import sources
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    if paper is None or sources.is_external(arxiv_id) or not sources.is_open_license(paper.license):
+        return '', ''
+    text = fetch_arxiv_html(arxiv_id)
+    if text:
+        return text, 'html'
+    text = sources._pdf_text(sources._download(ARXIV_PDF % arxiv_ref(arxiv_id)))
+    return (text, 'pdf') if len(text) > SHORT_INDEX else ('', '')
+
+
 def paper_text(arxiv_id):
     """Best available text of a paper: stored text, rebuilt index text, or the abstract."""
     row = PaperText.objects.filter(arxiv_id=arxiv_id).first()
-    if row is not None:
+    if row is not None and not (row.source == 'index' and len(row.text) < SHORT_INDEX):
         return row.text
-    text = text_from_index(arxiv_id)
+    text = row.text if row is not None else text_from_index(arxiv_id)
+    if text and len(text) < SHORT_INDEX:
+        fresh, source = read_again(arxiv_id)
+        if fresh:
+            store_text(arxiv_id, fresh, source)
+            return fresh
+        store_text(arxiv_id, text, 'index_kept')  # not read again at each question
+        return text
     if text:
         store_text(arxiv_id, text, 'index')
         return text

@@ -374,7 +374,8 @@ class CategorySynthesis(models.Model):
 class PaperText(models.Model):
     """Text of a paper as given to the language model (see paper_source.py)."""
     SOURCES = [('html', 'arXiv HTML'), ('xml', 'Publisher XML (JATS or TEI)'), ('pdf', 'PDF'),
-               ('abstract', 'Metadata and abstract only'), ('index', 'Rebuilt from FAISS index')]
+               ('abstract', 'Metadata and abstract only'), ('index', 'Rebuilt from FAISS index'),
+               ('index_kept', 'Short FAISS index text, the paper could not be read again')]
     arxiv_id = models.CharField(max_length=100, unique=True)
     text = models.TextField()
     source = models.CharField(max_length=10, choices=SOURCES)

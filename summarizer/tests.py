@@ -434,6 +434,22 @@ class PaperSourceTests(TestCase):
         paper_source.store_text('2', 'Real\x00 text', 'index')
         self.assertEqual(PaperText.objects.get(arxiv_id='2').text, 'Real text')
 
+    def test_short_index_text_of_an_open_paper_is_read_again(self):
+        ArxivPaper.objects.create(arxiv_id='2101.00003v1', title='Open', abstract='A.',
+                                  license='http://creativecommons.org/licenses/by/4.0/')
+        ArxivPaper.objects.create(arxiv_id='2101.00004v1', title='Closed', abstract='A.',
+                                  license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
+        PaperText.objects.create(arxiv_id='2101.00003v1', text='Start of the paper only.', source='index')
+        PaperText.objects.create(arxiv_id='2101.00004v1', text='Abstract only, as the license wants.', source='index')
+        with mock.patch('summarizer.paper_source.fetch_arxiv_html', return_value='The whole paper. ' * 2000) as html:
+            self.assertTrue(paper_source.paper_text('2101.00003v1').startswith('The whole paper.'))
+            self.assertEqual(paper_source.paper_text('2101.00004v1'), 'Abstract only, as the license wants.')
+            paper_source.paper_text('2101.00003v1')
+            paper_source.paper_text('2101.00004v1')
+        html.assert_called_once_with('2101.00003v1')  # once, and never for the closed paper
+        self.assertEqual(dict(PaperText.objects.values_list('arxiv_id', 'source')),
+                         {'2101.00003v1': 'html', '2101.00004v1': 'index_kept'})
+
 
 class AssistantTests(TransactionTestCase):
     def setUp(self):
