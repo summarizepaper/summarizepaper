@@ -464,9 +464,11 @@ class ScoopTests(ToolsTestCase):
         today = timezone.now().date()
         self.announce(today - datetime.timedelta(days=1), '2610.0000')
         client = self.client_for(self.user(paid=True))
-        with mock.patch('summarizer.similar.embed', return_value=np.array([[1.0, 0.0]], dtype=np.float32)), \
-             mock.patch('summarizer.generated.chat_json', return_value=self.verdict('2610.00001', 'high')) as chat:
+        abstract = {'abstract': 'Transmission spectra of hot Jupiters observed with JWST are analysed.'}
+        with mock.patch('summarizer.similar.embed', return_value=np.array([[1.0, 0.0]], dtype=np.float32)) as embed, \
+             mock.patch('summarizer.generated.chat_json', side_effect=[abstract, self.verdict('2610.00001', 'high')]) as chat:
             r = client.post('/en/scoops/', {'title': 'Hot clouds', 'description': self.DESCRIPTION, 'author_name': 'Ann Lee'})
+        self.assertEqual(embed.call_args[0][0], ['Hot clouds\n\n' + abstract['abstract']])  # the abstract, not the description
         self.assertEqual(r['Location'], '/en/scoops/#project-%d' % WatchedProject.objects.get().pk)
         listing = chat.call_args[1]['system']
         self.assertIn('2610.00001', listing)

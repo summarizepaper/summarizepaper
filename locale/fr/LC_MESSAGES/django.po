@@ -5133,3 +5133,6 @@ msgstr "Encore {n} caractères (au moins %(n)s)"
 
 msgid "Long enough"
 msgstr "Longueur suffisante"
+
+msgid "Compared with the new papers as:"
+msgstr "Comparé aux nouveaux articles sous cette forme :"

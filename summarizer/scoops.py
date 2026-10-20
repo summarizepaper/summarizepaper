@@ -49,15 +49,28 @@ def project_text(project):
     return '%s\n\n%s' % (project.title, project.description)
 
 
+def search_abstract(project):
+    """The description rewritten in English as a paper's abstract. Papers are compared through their abstracts,
+    and a description in another language, or informal, is much farther from them than the same project told as
+    an abstract (on an exomoon project in French, close papers went from 0.48 to 0.68 cosine)."""
+    answer = generated.chat_json(
+        'Above is the description of a research project, written by its author, possibly informally or in another '
+        'language. Rewrite it in English as the abstract of a paper on this research would read: the question, the '
+        'method, the data, and the other approaches to the same question it mentions. Describe the research itself, '
+        'not the author\'s wishes or worries. 100 to 200 words, no first person. Answer with a JSON object '
+        '{"abstract": "..."}.', paid=False, max_tokens=600, system=project_text(project)[:MAX_CHARS])
+    return str(answer.get('abstract', '')).strip()
+
+
 def project_vector(project):
-    """Embedding of the title and description, recomputed only when they change."""
-    text = project_text(project)[:similar.MAX_INPUT_CHARS]
-    key = hashlib.sha256(json.dumps([similar.MODEL, text]).encode()).hexdigest()
+    """Embedding of the title and of the description told as an abstract, recomputed only when they change."""
+    key = hashlib.sha256(json.dumps([similar.MODEL, 'abstract-1', project_text(project)]).encode()).hexdigest()
     if project.vector_key == key and project.vector:
         return np.frombuffer(bytes(project.vector), dtype=np.float32)
-    vector = similar.embed([text])[0]
+    project.search_text = search_abstract(project) or project.description
+    vector = similar.embed([('%s\n\n%s' % (project.title, project.search_text))[:similar.MAX_INPUT_CHARS]])[0]
     project.vector, project.vector_key = vector.tobytes(), key
-    project.save(update_fields=['vector', 'vector_key'])
+    project.save(update_fields=['search_text', 'vector', 'vector_key'])
     return vector
 
 

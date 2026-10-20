@@ -67,7 +67,8 @@
         {% elif not project.last_day %}<span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'First check in progress (the papers of the last ten days)…' %}
         {% else %}{% blocktrans with day=project.last_day|date:"j F Y" %}Compared with the papers announced up to {{ day }}.{% endblocktrans %}{% endif %}
       </div>
-      {% if project.description %}<details style="margin:8px 0"><summary>{% trans 'Description' %}</summary><p>{{ project.description|linebreaksbr }}</p></details>{% endif %}
+      {% if project.description %}<details style="margin:8px 0"><summary>{% trans 'Description' %}</summary><p>{{ project.description|linebreaksbr }}</p>
+        {% if project.search_text and project.search_text != project.description %}<p class="muted"><small><strong>{% trans 'Compared with the new papers as:' %}</strong> {{ project.search_text }}</small></p>{% endif %}</details>{% endif %}
       {% if project.shown %}
       <ul class="item-list" style="margin-top:12px">
         {% for m in project.shown %}

@@ -690,6 +690,7 @@ class WatchedProject(models.Model):
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True, default='')  # written by the user, or by the model from their draft
     author_name = models.CharField(max_length=200, blank=True, default='')  # papers signed by it are the user's own
+    search_text = models.TextField(blank=True, default='')  # the description told as an English abstract, embedded
     lang = models.CharField(max_length=10, default='en')
     vector = models.BinaryField(blank=True, null=True)
     vector_key = models.CharField(max_length=64, blank=True, default='')
