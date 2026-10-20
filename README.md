@@ -18,7 +18,7 @@ A web application that uses AI to summarize academic papers from arXiv, journals
 
 ## Stack
 
-Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL on Heroku. Python 3.11 (see `.python-version`).
+Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL on Heroku. Python 3.12 (see `.python-version`).
 
 | Module | Role |
 | --- | --- |
@@ -48,7 +48,7 @@ Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL o
 ## Local setup :floppy_disk:
 
 ```bash
-python3.11 -m venv venv
+python3.12 -m venv venv
 venv/bin/pip install -r requirements.txt
 export SECRET_KEY=dev OPENAI_KEY=sk-...
 venv/bin/python manage.py migrate

@@ -1802,7 +1802,7 @@ async def get_arxiv_metadata(arxiv_id):
 
     arxiv_id2= re.sub(r'v\d+$', '', arxiv_id)
     print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
-    url2=f"https://export.arxiv.org/oai2?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
+    url2=f"https://oaipmh.arxiv.org/oai?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
 
     async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
         async with session.get(url2) as response:
