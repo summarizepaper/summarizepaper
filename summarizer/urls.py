@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, billing, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               changes, library, missed, presskit, reading, refcheck, scoops, teams, trends)
+               changes, library, missed, presskit, reading, refcheck, scoops, slides, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -42,6 +42,8 @@ urlpatterns = [
     path("reading/<str:arxiv_id>/", reading.reading_view, name="reading"),
     path("press-kit/<str:arxiv_id>/", presskit.presskit_page, name="presskit"),
     path("changes/<str:arxiv_id>/", changes.changes_page, name="changes"),
+    path("journal-club/<str:arxiv_id>/", slides.slides_page, name="slides"),
+    path("journal-club/<str:arxiv_id>/start/", slides.slides_start, name="slides_start"),
     path("changes/<str:arxiv_id>/start/", changes.changes_start, name="changes_start"),
     path("press-kit/<str:arxiv_id>/start/", presskit.presskit_start, name="presskit_start"),
     path("collections/", library.collections_page, name="collections"),

@@ -5660,3 +5660,87 @@ msgid ""
 msgstr ""
 "les groupes qui publient le plus sur un sujet, leurs chercheurs principaux "
 "et leur approche"
+
+msgid "Journal club"
+msgstr "Journal club"
+
+msgid "Your journal club presentation, ready in a minute."
+msgstr "Votre présentation de journal club, prête en une minute."
+
+msgid ""
+"About ten slides with the figures of the paper when its license allows it, "
+"what to say on each one, the strengths and limits of the paper, and "
+"questions to start the discussion. Present it full screen or save it as PDF."
+msgstr ""
+"Une dizaine de slides avec les figures de l'article quand sa licence le "
+"permet, ce qu'il faut dire sur chacune, les points forts et les limites de "
+"l'article, et des questions pour lancer la discussion. Présentez-la en plein"
+" écran ou enregistrez-la en PDF."
+
+msgid "Present full screen"
+msgstr "Présenter en plein écran"
+
+msgid "Save as PDF"
+msgstr "Enregistrer en PDF"
+
+msgid "Show the notes"
+msgstr "Afficher les notes"
+
+msgid "Strengths and limits"
+msgstr "Points forts et limites"
+
+msgid "Strengths"
+msgstr "Points forts"
+
+msgid "Limits"
+msgstr "Limites"
+
+msgid "For the discussion"
+msgstr "Pour la discussion"
+
+msgid "The slides are written from the paper. It takes about a minute."
+msgstr ""
+"Les slides sont écrites à partir de l'article. Cela prend environ une "
+"minute."
+
+msgid "Write the slides"
+msgstr "Écrire les slides"
+
+msgid "Writing the slides"
+msgstr "Écriture des slides"
+
+msgid ""
+"This paper's license only lets us read its abstract: the slides are based on"
+" the abstract alone."
+msgstr ""
+"La licence de cet article ne nous permet de lire que son résumé : les slides"
+" reposent sur le résumé seul."
+
+#, python-format
+msgid "Figure %(n)s of the paper (arXiv, %(license)s)"
+msgstr "Figure %(n)s de l'article (arXiv, %(license)s)"
+
+#, python-format
+msgid ""
+"Written by AI on %(date)s from the paper. Check the numbers against the "
+"paper before presenting."
+msgstr ""
+"Écrit par une IA le %(date)s à partir de l'article. Vérifiez les chiffres "
+"dans l'article avant de présenter."
+
+msgid "Reading the paper and its figures"
+msgstr "Lecture de l'article et de ses figures"
+
+msgid "Writing the slides, the strengths and limits, and the questions"
+msgstr "Écriture des slides, des points forts et limites, et des questions"
+
+msgid "Slides to present it"
+msgstr "Des slides pour le présenter"
+
+msgid ""
+"Journal club slides of any paper, with its figures when its license allows "
+"it, its strengths and limits, and questions for the discussion"
+msgstr ""
+"Des slides de journal club pour tout article, avec ses figures quand sa "
+"licence le permet, ses points forts et limites, et des questions pour la "
+"discussion"

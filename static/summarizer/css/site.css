@@ -847,3 +847,38 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .working.is-failed .working-error { display: block; }
 .working.is-failed .spinner, .working.is-failed .working-steps li.is-current::before { animation: none; border-top-color: var(--border); }
 @media (prefers-reduced-motion: reduce) { .spinner, .working-steps li.is-current::before { animation-duration: 2.4s; } }
+
+/* ---------- Journal club slides (slides.html) ---------- */
+.deck { display: grid; gap: 20px; }
+.slide { aspect-ratio: 16 / 9; padding: 32px 40px; background: var(--bg, #fff); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
+.slide h2 { margin: 0 0 16px; font-size: 26px; }
+.slide-body { flex: 1; min-height: 0; font-size: 19px; line-height: 1.45; }
+.slide-body.with-figure { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+.slide-body.two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.slide-body h3 { margin: 0 0 8px; font-size: 18px; }
+.slide figure { margin: 0; text-align: center; min-height: 0; }
+.slide figure img { max-width: 100%; max-height: 220px; object-fit: contain; background: #fff; }
+.slide figcaption { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.slide-title { justify-content: center; text-align: center; }
+.slide-title h2 { font-size: 32px; }
+.slide-notes { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 14px; color: var(--text-muted); }
+.deck.hide-notes .slide-notes { display: none; }
+.deck.presenting { display: block; background: #fff; }
+.deck.presenting .slide { display: none; width: 100vw; height: 100vh; aspect-ratio: auto; border: 0; border-radius: 0; padding: 5vh 6vw; }
+.deck.presenting .slide.is-current { display: flex; }
+.deck.presenting .slide h2 { font-size: 4.2vh; }
+.deck.presenting .slide-body { font-size: 3vh; }
+.deck.presenting .slide figure img { max-height: 65vh; }
+.deck.presenting .slide-notes { display: none; }
+@media (max-width: 700px) {
+  .slide { aspect-ratio: auto; padding: 20px; }
+  .slide-body { font-size: 16px; }
+  .slide-body.with-figure, .slide-body.two-columns { grid-template-columns: 1fr; }
+}
+@media print {
+  .site-header, .site-footer, .no-print { display: none !important; }
+  .deck-page { padding: 0; max-width: none; }
+  .deck { display: block; }
+  .slide { break-after: page; border: 0; border-radius: 0; height: 100vh; aspect-ratio: auto; }
+  .deck.hide-notes .slide-notes { display: none; }
+}

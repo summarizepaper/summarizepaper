@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Journal club' %} | {{ paper.title|truncatechars:70 }}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page deck-page">
+  <header class="page-header no-print">
+    <span class="eyebrow">{% trans 'Journal club' %} · Premium</span>
+    <h1>{{ paper.title }}</h1>
+    <p class="lead">{{ authors }} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
+  </header>
+
+  {% if not paid %}
+  <div class="upsell">
+    <p><strong>{% trans 'Your journal club presentation, ready in a minute.' %}</strong> {% trans 'About ten slides with the figures of the paper when its license allows it, what to say on each one, the strengths and limits of the paper, and questions to start the discussion. Present it full screen or save it as PDF.' %}</p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
+  </div>
+  {% elif deck %}
+    <div class="item-actions no-print" style="margin-bottom:16px">
+      <button type="button" class="btn" id="deck-present">{% trans 'Present full screen' %}</button>
+      <button type="button" class="btn btn-ghost" onclick="window.print()">{% trans 'Save as PDF' %}</button>
+      <label class="muted"><input type="checkbox" id="deck-notes" checked> {% trans 'Show the notes' %}</label>
+    </div>
+    {% if deck.abstract_only %}<p class="error no-print">{% trans "This paper's license only lets us read its abstract: the slides are based on the abstract alone." %}</p>{% endif %}
+    <div class="deck" id="deck">
+      <section class="slide slide-title">
+        <h2>{{ paper.title }}</h2>
+        <p>{{ authors }}</p>
+        <p class="muted">{{ arxiv_id|paper_ref }}</p>
+      </section>
+      {% for s in deck.slides %}
+      <section class="slide">
+        <h2>{{ s.title }}</h2>
+        <div class="slide-body{% if s.figure %} with-figure{% endif %}">
+          <ul>{% for b in s.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+          {% if s.figure %}<figure><img src="{{ s.figure.url }}" alt="" loading="lazy"><figcaption>{% blocktrans with n=s.figure.number license=deck.license %}Figure {{ n }} of the paper (arXiv, {{ license }}){% endblocktrans %}</figcaption></figure>{% endif %}
+        </div>
+        {% if s.notes %}<p class="slide-notes">{{ s.notes }}</p>{% endif %}
+      </section>
+      {% endfor %}
+      <section class="slide">
+        <h2>{% trans 'Strengths and limits' %}</h2>
+        <div class="slide-body two-columns">
+          <div><h3>{% trans 'Strengths' %}</h3><ul>{% for x in deck.strengths %}<li>{{ x }}</li>{% endfor %}</ul></div>
+          <div><h3>{% trans 'Limits' %}</h3><ul>{% for x in deck.limitations %}<li>{{ x }}</li>{% endfor %}</ul></div>
+        </div>
+      </section>
+      <section class="slide">
+        <h2>{% trans 'For the discussion' %}</h2>
+        <div class="slide-body"><ol>{% for q in deck.questions %}<li>{{ q }}</li>{% endfor %}</ol></div>
+      </section>
+    </div>
+    <p class="muted no-print"><small>{% blocktrans with date=row.updated|date:"j F Y" %}Written by AI on {{ date }} from the paper. Check the numbers against the paper before presenting.{% endblocktrans %}</small></p>
+    <script>
+    (function () {
+      var deck = document.getElementById('deck');
+      var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
+      var current = 0;
+      document.getElementById('deck-notes').addEventListener('change', function (e) {
+        deck.classList.toggle('hide-notes', !e.target.checked);
+      });
+      function show(i) {
+        current = Math.max(0, Math.min(slides.length - 1, i));
+        slides.forEach(function (s, j) { s.classList.toggle('is-current', j === current); });
+      }
+      document.getElementById('deck-present').addEventListener('click', function () {
+        deck.classList.add('presenting');
+        show(0);
+        if (deck.requestFullscreen) deck.requestFullscreen().catch(function () {});
+      });
+      document.addEventListener('fullscreenchange', function () {
+        if (!document.fullscreenElement) deck.classList.remove('presenting');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (!deck.classList.contains('presenting')) return;
+        if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(current + 1); }
+        if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(current - 1); }
+        if (e.key === 'Escape') deck.classList.remove('presenting');
+      });
+      deck.addEventListener('click', function (e) {
+        if (deck.classList.contains('presenting')) show(current + (e.clientX > window.innerWidth / 3 ? 1 : -1));
+      });
+    })();
+    </script>
+  {% else %}
+    <div class="card section-card" id="deck-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
+      <p>{% trans 'The slides are written from the paper. It takes about a minute.' %}</p>
+      <button type="button" class="btn" id="deck-go">{% trans 'Write the slides' %}</button>
+      {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
+    </div>
+    {% trans 'Writing the slides' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='deck-working' working_steps=steps working_started=row.updated %}
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      var start = document.getElementById('deck-start');
+      var panel = document.getElementById('deck-working');
+      function follow(id) {
+        start.hidden = true;
+        SP.track(panel, id, function () { location.reload(); });
+      }
+      document.getElementById('deck-go').addEventListener('click', function () {
+        panel.dataset.started = '';
+        SP.post('/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id|escapejs }}/start/', {}).then(function (json) {
+          if (json.id) follow(json.id);
+        });
+      });
+      {% if row and row.status == 'pending' %}follow({{ row.pk }});{% endif %}
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

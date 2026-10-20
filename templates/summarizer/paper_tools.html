@@ -43,6 +43,12 @@
     <span class="tool-status" id="follow-status"></span>
   </div>
 
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Journal club' %}</span>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id }}/" rel="nofollow">{% trans 'Slides to present it' %}</a>
+    <span class="badge-premium">Premium</span>
+  </div>
+
   {% if not arxiv_id|is_external %}
   <div class="tool-row">
     <span class="tool-label">{% trans 'Versions' %}</span>
