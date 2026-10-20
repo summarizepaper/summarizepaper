@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.core import mail
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, scoops, trends
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
@@ -493,6 +493,9 @@ class ScoopTests(ToolsTestCase):
         self.assertContains(Client().get('/en/scoops/'), 'Create a free account')
         client = self.client_for(self.user('pro', paid=True))
         self.assertContains(client.post('/en/scoops/', {'title': 'T', 'description': 'too short'}), 'at least 300')
+        self.assertContains(client.get('/en/scoops/'), 'data-min-chars="300"')
+        with translation.override('fr'):
+            self.assertContains(client.get('/fr/scoops/'), 'Encore {n} caractères (au moins 300)')
         self.assertFalse(WatchedProject.objects.exists())
 
     def test_projects_of_lapsed_subscribers_are_not_checked(self):

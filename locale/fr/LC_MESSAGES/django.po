@@ -5126,3 +5126,10 @@ msgid "and %(n)s more on the page"
 msgid_plural "and %(n)s more on the page"
 msgstr[0] "et %(n)s autre sur la page"
 msgstr[1] "et %(n)s autres sur la page"
+
+#, python-format
+msgid "{n} more characters needed (at least %(n)s)"
+msgstr "Encore {n} caractères (au moins %(n)s)"
+
+msgid "Long enough"
+msgstr "Longueur suffisante"

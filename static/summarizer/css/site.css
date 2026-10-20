@@ -230,6 +230,8 @@ img { max-width: 100%; }
   font-weight: 600;
 }
 .muted { color: var(--text-muted); }
+.char-count { display: block; margin-top: 4px; color: var(--text-muted); }
+.char-count.enough { color: #15803d; }
 .alert {
   max-width: var(--container);
   margin: 16px auto 0;

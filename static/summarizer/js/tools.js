@@ -202,8 +202,24 @@
     });
   }
 
+  // A textarea with data-min-chars says, under it, how many characters are still missing (counted as the server does)
+  function minChars(area) {
+    var min = parseInt(area.dataset.minChars, 10);
+    var counter = document.createElement('small');
+    counter.className = 'char-count';
+    area.insertAdjacentElement('afterend', counter);
+    function update() {
+      var missing = min - area.value.trim().length;
+      counter.textContent = missing > 0 ? area.dataset.missing.replace('{n}', missing) : area.dataset.enough;
+      counter.classList.toggle('enough', missing <= 0);
+    }
+    area.addEventListener('input', update);
+    update();
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('.arxiv-picker'), picker);
+    Array.prototype.forEach.call(document.querySelectorAll('textarea[data-min-chars]'), minChars);
   });
 
   window.SP = {lang: lang, post: post, wait: wait, text: text, track: track};

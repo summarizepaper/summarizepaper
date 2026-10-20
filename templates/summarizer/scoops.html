@@ -47,7 +47,9 @@
       <p><strong>{% trans 'Watch a project' %}</strong></p>
       <p><label>{% trans 'Title' %}<br><input type="text" name="title" maxlength="300" value="{{ form.title }}"></label></p>
       <p><label>{% trans 'What it does: the question, the method, the data, the results you expect' %}<br>
-        <textarea name="description" style="min-height:140px">{{ form.description }}</textarea></label></p>
+        <textarea name="description" style="min-height:140px" data-min-chars="{{ min_chars }}"
+          data-missing="{% blocktrans with n=min_chars %}{n} more characters needed (at least {{ n }}){% endblocktrans %}"
+          data-enough="{% trans 'Long enough' %}">{{ form.description }}</textarea></label></p>
       <p><label>{% trans 'or the PDF of your draft' %}<br><input type="file" name="draft" accept="application/pdf,.pdf"></label></p>
       <p><label>{% trans 'Your name as it appears on your papers (optional: your own papers are then never reported)' %}<br>
         <input type="text" name="author_name" maxlength="200" value="{{ form.author_name|default:author_name }}"></label></p>
