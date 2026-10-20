@@ -1,0 +1,12 @@
+{% load i18n %}{% autoescape off %}{% blocktrans count n=count %}A new paper is close to your project{% plural %}{{ n }} new papers are close to your projects{% endblocktrans %}
+{% for project, matches in projects %}
+== {{ project.title }} ==
+{% for m in matches %}
+- [{% if m.overlap == 'high' %}{% trans 'Strong overlap' %}{% else %}{% trans 'Partial overlap' %}{% endif %}] {{ m.title }} ({{ m.author_list|join:", " }})
+  {% if m.shared %}{% trans 'In common:' %} {{ m.shared }}
+  {% endif %}{% if m.original %}{% trans 'What stays yours:' %} {{ m.original }}
+  {% endif %}{{ m.url }}
+{% endfor %}{% endfor %}{% if more %}{% blocktrans count n=more %}and {{ n }} more on the page{% plural %}and {{ n }} more on the page{% endblocktrans %}
+{% endif %}
+{% trans 'Your projects:' %} {{ manage_url }}
+{% endautoescape %}

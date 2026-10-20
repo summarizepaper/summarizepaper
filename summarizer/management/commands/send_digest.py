@@ -3,13 +3,13 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, citations, digest, letters, trends
+from summarizer import audio, citations, digest, letters, scoops, trends
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = ('Email the digests that are due at this hour (run every hour), then the citation alerts and letters '
+    help = ('Email the digests that are due at this hour (run every hour), then the scoop and citation alerts and letters '
             'within what is left of the hourly email budget. --user sends now, ignoring the schedule.')
 
     def add_arguments(self, parser):
@@ -30,6 +30,7 @@ class Command(BaseCommand):
         # each step is independent: one failing must not stop the others
         for name, step in (('trends', lambda: trends.update(now)),
                            ('letters', lambda: letters.update(now)),
+                           ('scoop alerts', lambda: scoops.run(now, budget)),
                            ('citation alerts', lambda: citations.run(now, budget)),
                            ('letter emails', lambda: letters.send(now, budget))):
             try:
@@ -37,6 +38,6 @@ class Command(BaseCommand):
             except Exception:
                 logger.exception('Hourly step %s failed', name)
                 continue
-            if name in ('citation alerts', 'letter emails'):
+            if name in ('scoop alerts', 'citation alerts', 'letter emails'):
                 budget -= done
             self.stdout.write('%s: %s' % (name, done))

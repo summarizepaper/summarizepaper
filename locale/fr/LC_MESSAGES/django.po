@@ -4920,3 +4920,209 @@ msgid "%(counter)s new paper for you today"
 msgid_plural "%(counter)s new papers for you today"
 msgstr[0] "%(counter)s nouvel article pour vous aujourd’hui"
 msgstr[1] "%(counter)s nouveaux articles pour vous aujourd’hui"
+
+#, python-format
+msgid "Compared with the papers announced up to %(day)s."
+msgstr "Comparé aux articles annoncés jusqu'au %(day)s."
+
+msgid ""
+"Describe the project you are working on, before it is published: every day, "
+"we compare it with the new papers of arXiv, bioRxiv and medRxiv, and email "
+"you as soon as one comes close."
+msgstr ""
+"Décrivez le projet sur lequel vous travaillez, avant sa publication : chaque "
+"jour, nous le comparons aux nouveaux articles d'arXiv, bioRxiv et medRxiv, et"
+" vous écrivons dès que l'un d'eux s'en approche."
+
+msgid ""
+"Describe the project you are working on: every day, we compare it with the "
+"new papers on arXiv, bioRxiv and medRxiv, and email you when one comes close,"
+" with what it shares with your project and what stays yours."
+msgstr ""
+"Décrivez le projet sur lequel vous travaillez : chaque jour, nous le "
+"comparons aux nouveaux articles d'arXiv, bioRxiv et medRxiv, et vous écrivons"
+" quand l'un d'eux s'en approche, avec ce qu'il partage avec votre projet et "
+"ce qui reste à vous."
+
+msgid ""
+"Describe your project in a few paragraphs (question, method, data, expected "
+"results), or upload the PDF of your draft: an AI writes the description from "
+"it."
+msgstr ""
+"Décrivez votre projet en quelques paragraphes (question, méthode, données, "
+"résultats attendus), ou envoyez le PDF de votre brouillon : une IA en écrit "
+"la description."
+
+msgid "Description"
+msgstr "Description"
+
+msgid ""
+"Every day, the new papers of the announcement are ranked by closeness to your"
+" project, and an AI reads the abstracts of the closest ones."
+msgstr ""
+"Chaque jour, les nouveaux articles de l'annonce sont classés par proximité "
+"avec votre projet, et une IA lit les résumés des plus proches."
+
+msgid "First check in progress (the papers of the last ten days)…"
+msgstr "Première vérification en cours (les articles des dix derniers jours)…"
+
+msgid ""
+"For each paper, the AI says what it shares with your project, and what stays "
+"original in yours and how to set it apart."
+msgstr ""
+"Pour chaque article, l'IA dit ce qu'il partage avec votre projet, ce qui "
+"reste original dans le vôtre et comment vous en démarquer."
+
+#, python-format
+msgid ""
+"Give a title and a description of at least %(n)s characters, or a PDF of your"
+" draft."
+msgstr ""
+"Donnez un titre et une description d'au moins %(n)s caractères, ou le PDF de "
+"votre brouillon."
+
+msgid "In common:"
+msgstr "En commun :"
+
+msgid ""
+"Judged from the abstracts by an AI: read the paper before drawing "
+"conclusions."
+msgstr ""
+"Jugé par une IA à partir des résumés : lisez l'article avant de conclure."
+
+msgid "Know the day a close paper comes out, not the day a reviewer tells you."
+msgstr ""
+"Sachez qu'un article proche est sorti le jour même, pas le jour où un referee"
+" vous le signale."
+
+msgid "Manage your projects"
+msgstr "Gérer vos projets"
+
+msgid "No close paper so far."
+msgstr "Aucun article proche pour l'instant."
+
+msgid "Partial overlap"
+msgstr "Recouvrement partiel"
+
+msgid "Reading your draft…"
+msgstr "Lecture de votre brouillon…"
+
+msgid "Scoop watch"
+msgstr "Veille anti-scoop"
+
+msgid "Stop watching and delete"
+msgstr "Arrêter la veille et supprimer"
+
+msgid "Strong overlap"
+msgstr "Fort recouvrement"
+
+msgid "Title"
+msgstr "Titre"
+
+#, python-format
+msgid "Up to %(n)s projects watched."
+msgstr "Jusqu'à %(n)s projets surveillés."
+
+msgid ""
+"Useful during a thesis or a long project, to know early that a competing team"
+" is close, cite it, and adjust how you present your work."
+msgstr ""
+"Utile pendant une thèse ou un long projet : savoir tôt qu'une équipe "
+"concurrente est proche, la citer et ajuster la présentation de votre travail."
+
+msgid "Watch a project"
+msgstr "Surveiller un projet"
+
+msgid "Watch this project"
+msgstr "Surveiller ce projet"
+
+msgid ""
+"We could not read this draft. Check that the PDF holds text (not only scanned"
+" images), or describe the project instead."
+msgstr ""
+"Nous n'avons pas pu lire ce brouillon. Vérifiez que le PDF contient du texte "
+"(pas seulement des images scannées), ou décrivez plutôt le projet."
+
+msgid ""
+"What it does: the question, the method, the data, the results you expect"
+msgstr ""
+"Ce qu'il fait : la question, la méthode, les données, les résultats attendus"
+
+msgid "What stays yours:"
+msgstr "Ce qui reste à vous :"
+
+msgid ""
+"When one overlaps your project, you get an email the same day: a strong "
+"overlap (same question, same or very close approach) or a partial one."
+msgstr ""
+"Quand l'un d'eux recoupe votre projet, vous recevez un email le jour même : "
+"fort recouvrement (même question, approche identique ou très proche) ou "
+"recouvrement partiel."
+
+msgid ""
+"When you add a project, the papers of the last ten days are checked at once."
+msgstr ""
+"Quand vous ajoutez un projet, les articles des dix derniers jours sont "
+"vérifiés tout de suite."
+
+#, python-format
+msgid "You can watch %(n)s projects at most."
+msgstr "Vous pouvez surveiller %(n)s projets au maximum."
+
+msgid ""
+"Your description stays private and is only used for the comparison. A PDF is "
+"read once and is not stored."
+msgstr ""
+"Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu "
+"une fois et n'est pas conservé."
+
+msgid ""
+"Your description stays private and is only used for the comparison. A PDF is "
+"read once to write the description and is not stored."
+msgstr ""
+"Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu "
+"une fois pour écrire la description et n'est pas conservé."
+
+msgid ""
+"Your name as it appears on your papers (optional: your own papers are then "
+"never reported)"
+msgstr ""
+"Votre nom tel qu'il apparaît sur vos articles (facultatif : vos propres "
+"articles ne sont alors jamais signalés)"
+
+msgid ""
+"Your own papers are never reported: give your name as it appears on your "
+"papers."
+msgstr ""
+"Vos propres articles ne sont jamais signalés : donnez votre nom tel qu'il "
+"apparaît sur vos articles."
+
+msgid "Your projects:"
+msgstr "Vos projets :"
+
+msgid ""
+"an email the day a new paper comes close to the project you are working on"
+msgstr ""
+"un email le jour où un nouvel article s'approche du projet sur lequel vous "
+"travaillez"
+
+msgid "or the PDF of your draft"
+msgstr "ou le PDF de votre brouillon"
+
+#, python-format
+msgid "A new paper is close to your project"
+msgid_plural "%(n)s new papers are close to your projects"
+msgstr[0] "Un nouvel article est proche de votre projet"
+msgstr[1] "%(n)s nouveaux articles sont proches de vos projets"
+
+#, python-format
+msgid "A new paper overlaps your project"
+msgid_plural "%(n)s new papers overlap your projects"
+msgstr[0] "Un nouvel article recoupe votre projet"
+msgstr[1] "%(n)s nouveaux articles recoupent vos projets"
+
+#, python-format
+msgid "and %(n)s more on the page"
+msgid_plural "and %(n)s more on the page"
+msgstr[0] "et %(n)s autre sur la page"
+msgstr[1] "et %(n)s autres sur la page"

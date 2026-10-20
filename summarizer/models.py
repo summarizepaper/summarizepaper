@@ -682,3 +682,45 @@ class LetterSubscription(models.Model):
 
     class Meta:
         unique_together = ('user', 'topic')
+
+
+class WatchedProject(models.Model):
+    """A Premium user's ongoing project, compared with every new announcement to catch close papers (see scoops.py)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watched_projects')
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True, default='')  # written by the user, or by the model from their draft
+    author_name = models.CharField(max_length=200, blank=True, default='')  # papers signed by it are the user's own
+    lang = models.CharField(max_length=10, default='en')
+    vector = models.BinaryField(blank=True, null=True)
+    vector_key = models.CharField(max_length=64, blank=True, default='')
+    last_day = models.DateField(blank=True, null=True)  # the last announcement compared with it; None until the first check
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created',)
+
+    def __str__(self):
+        return '%s: %s' % (self.user.username, self.title)
+
+
+class ScoopMatch(models.Model):
+    """A new paper close to a watched project, with what it shares with it and what stays the project's own."""
+    project = models.ForeignKey(WatchedProject, on_delete=models.CASCADE, related_name='matches')
+    arxiv_id = models.CharField(max_length=100)  # AnnouncedPaper.arxiv_id
+    title = models.TextField()
+    authors = models.TextField(blank=True, default='')  # JSON list of names
+    announced = models.DateField()
+    similarity = models.FloatField()
+    overlap = models.CharField(max_length=10)  # 'high' or 'partial'
+    shared = models.TextField(blank=True, default='')
+    original = models.TextField(blank=True, default='')
+    emailed = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('project', 'arxiv_id')
+        ordering = ('-announced', '-similarity')
+
+    def author_list(self):
+        import json
+        return json.loads(self.authors or '[]')

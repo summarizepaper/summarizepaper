@@ -1,0 +1,1 @@
+{% load i18n %}{% if high %}{% blocktrans count n=high %}A new paper overlaps your project{% plural %}{{ n }} new papers overlap your projects{% endblocktrans %}{% else %}{% blocktrans count n=count %}A new paper is close to your project{% plural %}{{ n }} new papers are close to your projects{% endblocktrans %}{% endif %}

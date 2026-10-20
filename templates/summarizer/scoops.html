@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Scoop watch' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Describe the project you are working on: every day, we compare it with the new papers on arXiv, bioRxiv and medRxiv, and email you when one comes close, with what it shares with your project and what stays yours.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/scoops/" />
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <span class="eyebrow">Premium</span>
+    <h1>{% trans 'Scoop watch' %}</h1>
+    <p class="lead">{% trans 'Describe the project you are working on, before it is published: every day, we compare it with the new papers of arXiv, bioRxiv and medRxiv, and email you as soon as one comes close.' %}</p>
+  </header>
+
+  {% if anonymous or not paid %}
+    <h2>{% trans 'How it works' %}</h2>
+    <ol class="tool-steps">
+      <li>{% trans 'Describe your project in a few paragraphs (question, method, data, expected results), or upload the PDF of your draft: an AI writes the description from it.' %}</li>
+      <li>{% trans 'Every day, the new papers of the announcement are ranked by closeness to your project, and an AI reads the abstracts of the closest ones.' %}</li>
+      <li>{% trans 'When one overlaps your project, you get an email the same day: a strong overlap (same question, same or very close approach) or a partial one.' %}</li>
+      <li>{% trans 'For each paper, the AI says what it shares with your project, and what stays original in yours and how to set it apart.' %}</li>
+    </ol>
+    <ul class="tool-features">
+      <li>{% trans 'When you add a project, the papers of the last ten days are checked at once.' %}</li>
+      <li>{% trans 'Your own papers are never reported: give your name as it appears on your papers.' %}</li>
+      <li>{% blocktrans with n=max_projects %}Up to {{ n }} projects watched.{% endblocktrans %}</li>
+      <li>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once and is not stored.' %}</li>
+    </ul>
+    <p class="muted">{% trans 'Useful during a thesis or a long project, to know early that a competing team is close, cite it, and adjust how you present your work.' %}</p>
+    {% if anonymous %}
+      {% include 'summarizer/tool_signup.html' with premium_tool=True %}
+    {% else %}
+      <div class="upsell"><p>{% trans 'Know the day a close paper comes out, not the day a reviewer tells you.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    {% endif %}
+  {% else %}
+    {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_projects %}You can watch {{ n }} projects at most.{% endblocktrans %}</p>
+    {% elif error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
+    {% elif error == 'empty' %}<p class="error">{% blocktrans with n=min_chars %}Give a title and a description of at least {{ n }} characters, or a PDF of your draft.{% endblocktrans %}</p>{% endif %}
+    {% if projects|length < max_projects %}
+    <form method="post" enctype="multipart/form-data" class="card section-card">
+      {% csrf_token %}
+      <p><strong>{% trans 'Watch a project' %}</strong></p>
+      <p><label>{% trans 'Title' %}<br><input type="text" name="title" maxlength="300" value="{{ form.title }}"></label></p>
+      <p><label>{% trans 'What it does: the question, the method, the data, the results you expect' %}<br>
+        <textarea name="description" style="min-height:140px">{{ form.description }}</textarea></label></p>
+      <p><label>{% trans 'or the PDF of your draft' %}<br><input type="file" name="draft" accept="application/pdf,.pdf"></label></p>
+      <p><label>{% trans 'Your name as it appears on your papers (optional: your own papers are then never reported)' %}<br>
+        <input type="text" name="author_name" maxlength="200" value="{{ form.author_name|default:author_name }}"></label></p>
+      <p><button class="btn" type="submit">{% trans 'Watch this project' %}</button></p>
+      <p class="muted"><small>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once to write the description and is not stored.' %}</small></p>
+    </form>
+    {% endif %}
+
+    {% for project in projects %}
+    <section class="card section-card">
+      <h2 style="margin-top:0">{{ project.title|default:_('Your draft') }}</h2>
+      <div class="meta muted">
+        {% if project.failed %}{% trans 'We could not read this draft. Check that the PDF holds text (not only scanned images), or describe the project instead.' %}
+        {% elif not project.description %}{% trans 'Reading your draft…' %}
+        {% elif not project.last_day %}{% trans 'First check in progress (the papers of the last ten days)…' %}
+        {% else %}{% blocktrans with day=project.last_day|date:"j F Y" %}Compared with the papers announced up to {{ day }}.{% endblocktrans %}{% endif %}
+      </div>
+      {% if project.description %}<details style="margin:8px 0"><summary>{% trans 'Description' %}</summary><p>{{ project.description|linebreaksbr }}</p></details>{% endif %}
+      {% if project.shown %}
+      <ul class="item-list" style="margin-top:12px">
+        {% for m in project.shown %}
+        <li class="card">
+          <span class="importance {% if m.overlap == 'high' %}high{% else %}medium{% endif %}">{% if m.overlap == 'high' %}{% trans 'Strong overlap' %}{% else %}{% trans 'Partial overlap' %}{% endif %}</span>
+          <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ m.arxiv_id }}/"><strong>{{ m.title }}</strong></a></p>
+          <div class="meta">{{ m.author_list|join:", " }} · {{ m.announced|date:"j F Y" }} · {{ m.arxiv_id|paper_ref }}</div>
+          {% if m.shared %}<p style="margin:8px 0 0"><strong>{% trans 'In common:' %}</strong> {{ m.shared }}</p>{% endif %}
+          {% if m.original %}<p style="margin:4px 0 0"><strong>{% trans 'What stays yours:' %}</strong> {{ m.original }}</p>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% elif project.last_day %}
+      <p class="muted">{% trans 'No close paper so far.' %}</p>
+      {% endif %}
+      <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}">
+        <button class="link-button" name="action" value="delete">{% trans 'Stop watching and delete' %}</button></form>
+    </section>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

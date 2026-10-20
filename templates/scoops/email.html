@@ -1,0 +1,25 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 24px;color:#666;">{% blocktrans count n=count %}A new paper is close to your project{% plural %}{{ n }} new papers are close to your projects{% endblocktrans %}</p>
+    {% for project, matches in projects %}
+    <p style="margin:20px 0 8px;font-size:16px;font-weight:bold;">{{ project.title }}</p>
+    {% for m in matches %}
+    <div style="border-left:3px solid {% if m.overlap == 'high' %}#dc2626{% else %}#d97706{% endif %};padding:4px 0 4px 12px;margin:0 0 14px;">
+      <div style="font-size:12px;font-weight:bold;color:{% if m.overlap == 'high' %}#991b1b{% else %}#92400e{% endif %};">{% if m.overlap == 'high' %}{% trans 'Strong overlap' %}{% else %}{% trans 'Partial overlap' %}{% endif %}</div>
+      <a href="{{ m.url }}" style="color:#1a0dab;font-weight:bold;text-decoration:none;">{{ m.title }}</a>
+      <div style="color:#666;font-size:13px;">{{ m.author_list|join:", " }} · {{ m.announced|date:"j F Y" }}</div>
+      {% if m.shared %}<div style="font-size:14px;line-height:1.5;margin-top:4px;"><strong>{% trans 'In common:' %}</strong> {{ m.shared }}</div>{% endif %}
+      {% if m.original %}<div style="font-size:14px;line-height:1.5;margin-top:2px;"><strong>{% trans 'What stays yours:' %}</strong> {{ m.original }}</div>{% endif %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+    {% if more %}<p style="color:#666;font-size:13px;">{% blocktrans count n=more %}and {{ n }} more on the page{% plural %}and {{ n }} more on the page{% endblocktrans %}</p>{% endif %}
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      {% trans 'Judged from the abstracts by an AI: read the paper before drawing conclusions.' %} <a href="{{ manage_url }}" style="color:#888;">{% trans 'Manage your projects' %}</a>
+    </p>
+  </div>
+</body>
+</html>

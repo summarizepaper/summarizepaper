@@ -11,11 +11,11 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
-from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, trends
+from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, scoops, trends
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
-                               CollectionPaper, DigestItem, DigestSubscription, FollowedPaper, Generated, Letter,
-                               LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, SummaryPaper,
-                               TermDay, UserPlan, ZoteroAccount)
+                               CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated,
+                               Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
+                               SummaryPaper, TermDay, UserPlan, WatchedProject, ZoteroAccount)
 
 
 class ToolsTestCase(TestCase):
@@ -441,6 +441,69 @@ class CitationTests(ToolsTestCase):
              mock.patch('summarizer.library.lookup_many', return_value={}):
             self.assertEqual(citations.refresh_due(timezone.now()), 1)
         fetch.assert_called_once_with('2101.00001')
+
+
+class ScoopTests(ToolsTestCase):
+    DESCRIPTION = 'We measure the clouds of hot Jupiters with JWST transmission spectra and a new retrieval code. ' * 4
+
+    def announce(self, day, prefix):
+        """A close paper, the user's own close paper, and a far one."""
+        ArxivBatch.objects.create(day=day, papers=3)
+        for n, title, author, vector in ((1, 'Clouds of hot Jupiters with JWST', 'Zoe Q', [1.0, 0.0]),
+                                         (2, 'Our own clouds paper', 'A. Lee', [1.0, 0.0]),
+                                         (3, 'Protein folding', 'Max P', [0.0, 1.0])):
+            aid = '%s%d' % (prefix, n)
+            AnnouncedPaper.objects.create(arxiv_id=aid, announced=day, title=title, abstract=title + ' abstract.',
+                                          authors=json.dumps([author]), categories='astro-ph.EP')
+            DigestVector.objects.create(arxiv_id=aid, vector=np.array(vector, dtype=np.float32).tobytes())
+
+    def verdict(self, aid, overlap):
+        return {'items': [{'id': aid, 'overlap': overlap, 'shared': 'Same clouds.', 'original': 'Your retrieval code.'}]}
+
+    def test_first_check_is_shown_then_new_papers_are_emailed_once(self):
+        today = timezone.now().date()
+        self.announce(today - datetime.timedelta(days=1), '2610.0000')
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.similar.embed', return_value=np.array([[1.0, 0.0]], dtype=np.float32)), \
+             mock.patch('summarizer.generated.chat_json', return_value=self.verdict('2610.00001', 'high')) as chat:
+            r = client.post('/en/scoops/', {'title': 'Hot clouds', 'description': self.DESCRIPTION, 'author_name': 'Ann Lee'})
+        self.assertEqual(r.status_code, 302)
+        listing = chat.call_args[1]['system']
+        self.assertIn('2610.00001', listing)
+        self.assertNotIn('2610.00002', listing)  # the user's own paper
+        self.assertNotIn('2610.00003', listing)  # too far
+        match = ScoopMatch.objects.get()
+        self.assertTrue(match.emailed)  # the first check is not emailed
+        page = client.get('/en/scoops/')
+        self.assertContains(page, 'Clouds of hot Jupiters with JWST')
+        self.assertContains(page, 'Strong overlap')
+
+        self.announce(today, '2610.0001')
+        with mock.patch('summarizer.generated.chat_json', return_value=self.verdict('2610.00011', 'partial')) as chat:
+            self.assertEqual(scoops.run(timezone.now(), 5), 1)
+            self.assertEqual(scoops.run(timezone.now(), 5), 0)
+        chat.assert_called_once()
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('close to your project', mail.outbox[0].subject)
+        self.assertIn('Your retrieval code.', mail.outbox[0].body)
+        self.assertEqual(WatchedProject.objects.get().last_day, today)
+
+    def test_premium_only_and_short_descriptions_refused(self):
+        self.assertContains(self.client_for(self.user()).get('/en/scoops/'), 'Discover Premium')
+        self.assertContains(Client().get('/en/scoops/'), 'Create a free account')
+        client = self.client_for(self.user('pro', paid=True))
+        self.assertContains(client.post('/en/scoops/', {'title': 'T', 'description': 'too short'}), 'at least 300')
+        self.assertFalse(WatchedProject.objects.exists())
+
+    def test_projects_of_lapsed_subscribers_are_not_checked(self):
+        user = self.user(paid=True)
+        WatchedProject.objects.create(user=user, title='T', description=self.DESCRIPTION,
+                                      last_day=timezone.now().date() - datetime.timedelta(days=2))
+        self.announce(timezone.now().date(), '2610.0000')
+        UserPlan.objects.filter(user=user).update(paid=False)
+        with mock.patch('summarizer.generated.chat_json') as chat:
+            scoops.run(timezone.now(), 5)
+        chat.assert_not_called()
 
 
 class AudioTests(ToolsTestCase):
