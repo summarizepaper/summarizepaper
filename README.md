@@ -42,6 +42,7 @@ Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL o
 | `summarizer/slides.py` | Journal club slides of a paper, with its figures under an open license |
 | `summarizer/conference.py` | Conference companion: the talks of a program ranked for a researcher |
 | `summarizer/scoops.py` | Scoop watch: projects in progress compared with each new announcement |
+| `summarizer/usage.py` | AI tokens and cost by task, model, day and user (admin: usage de l’IA) |
 | `summarizer/audio.py`, `trends.py`, `letters.py` | Digest read aloud; rising topics; weekly letters |
 
 ## Local setup :floppy_disk:

@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, digest, letters, scoops, trends
+from summarizer import audio, changes, citations, digest, letters, scoops, trends, usage
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,9 @@ class Command(BaseCommand):
         parser.add_argument('--base-url', default='https://www.summarizepaper.com')
 
     def handle(self, *args, **options):
-        sent = digest.run(base_url=options['base_url'], dry_run=options['dry_run'],
-                          only_user=options['user'], stdout=self.stdout)
+        with usage.task('digest'):
+            sent = digest.run(base_url=options['base_url'], dry_run=options['dry_run'],
+                              only_user=options['user'], stdout=self.stdout)
         self.stdout.write(self.style.SUCCESS('%d digest(s) sent' % sent))
         if options['user'] or options['dry_run']:
             return
@@ -35,7 +36,8 @@ class Command(BaseCommand):
                            ('version alerts', lambda: changes.run(now, budget)),
                            ('letter emails', lambda: letters.send(now, budget))):
             try:
-                done = step()
+                with usage.task(name.replace(' ', '_')):
+                    done = step()
             except Exception:
                 logger.exception('Hourly step %s failed', name)
                 continue

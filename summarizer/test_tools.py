@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, changes, citations, conference, digest, generated, letters, library, missed, presskit, questions, refcheck, scoops, slides, teams, trends
+from summarizer import audio, changes, citations, conference, digest, generated, letters, library, missed, presskit, questions, refcheck, scoops, slides, teams, trends, usage
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
@@ -819,6 +819,45 @@ class QuestionsTests(ToolsTestCase):
         self.assertContains(page, 'Papers disagree')
         self.assertContains(page, 'Observe ten planets.')
         self.assertContains(self.client_for(self.user('free')).post('/en/collections/%d/questions/' % collection.pk), '', status_code=404)
+
+
+class UsageTests(ToolsTestCase):
+    def openai(self, content='{"ok": 1}', prompt=1000, completion=200):
+        return mock.Mock(status_code=200, raise_for_status=lambda: None, json=lambda: {
+            'model': 'gpt-test', 'usage': {'prompt_tokens': prompt, 'completion_tokens': completion},
+            'choices': [{'message': {'content': content}}]})
+
+    def test_background_tools_are_counted_by_kind_and_user(self):
+        from summarizer.models import AIPrice, AIUsage
+        user = self.user(paid=True)
+        with mock.patch('summarizer.generated.requests.post', return_value=self.openai()):
+            generated.start('refcheck', 'k1', 'en', lambda pk: generated.chat_json('x'), user=user)
+            generated.start('refcheck', 'k2', 'en', lambda pk: generated.chat_json('x'), user=user)
+            generated.chat_json('outside any task')
+        row = AIUsage.objects.get(task='refcheck')
+        self.assertEqual((row.user, row.calls, row.prompt_tokens, row.completion_tokens), (user, 2, 2000, 400))
+        self.assertEqual(AIUsage.objects.get(task='other').calls, 1)
+        AIPrice.objects.create(model='gpt-test', input_per_million=2, output_per_million=10)
+        summary = usage.summary(7)
+        self.assertEqual(summary['tasks'][0]['name'], 'refcheck')
+        self.assertAlmostEqual(summary['tasks'][0]['cost'], (2000 * 2 + 400 * 10) / 1e6)
+        self.assertEqual(summary['users'][0]['name'], user.username)
+        self.assertEqual(summary['unpriced'], [])
+
+    def test_counting_never_breaks_the_call(self):
+        with mock.patch('summarizer.usage._save', side_effect=RuntimeError):
+            self.assertEqual(usage.record({'model': 'm', 'usage': {'prompt_tokens': 1}}), {'model': 'm', 'usage': {'prompt_tokens': 1}})
+        self.assertEqual(usage.record(None), None)
+
+    def test_admin_shows_the_costs(self):
+        from summarizer.models import AIUsage
+        AIUsage.objects.create(day=timezone.now().date(), task='summary', model='gpt-unpriced', calls=3, prompt_tokens=10)
+        admin = User.objects.create_superuser('boss', 'boss@example.com', 'x')
+        client = self.client_for(admin)
+        page = client.get('/admin/summarizer/aiusage/')
+        self.assertContains(page, 'Par tâche')
+        self.assertContains(page, 'gpt-unpriced')
+        self.assertContains(client.get('/admin/'), 'Coût IA (7 j)')
 
 
 class AudioTests(ToolsTestCase):

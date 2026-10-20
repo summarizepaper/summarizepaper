@@ -17,8 +17,8 @@ from unfold.admin import ModelAdmin, StackedInline
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from unfold.widgets import UnfoldAdminTextareaWidget
 
-from . import guides
-from .models import (AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestFeedback,
+from . import guides, usage
+from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, UserPlan, Vote)
@@ -44,6 +44,10 @@ def dashboard_callback(request, context):
          '%d sur 7 jours' % AIassistant.objects.filter(created__gte=week).count(),
          reverse('admin:summarizer_aiassistant_changelist')),
     ]
+    week_cost = usage.summary(7)
+    context['kpis'].append(('Coût IA (7 j)', '$%.2f' % week_cost['total'],
+                            'modèles sans prix : %s' % ', '.join(week_cost['unpriced']) if week_cost['unpriced']
+                            else 'résumés, assistant, outils, digests', reverse('admin:summarizer_aiusage_changelist')))
     context['site_settings'] = cfg
     context['recent_users'] = User.objects.order_by('-date_joined')[:8]
     return context
@@ -367,3 +371,33 @@ class PickledDataAdmin(ModelAdmin):
 
 
 admin.site.register(PickledData, PickledDataAdmin)
+
+
+# --- AI usage and prices (usage.py) ----------------------------------------
+
+@admin.register(AIPrice)
+class AIPriceAdmin(ModelAdmin):
+    list_display = ('model', 'input_per_million', 'output_per_million')
+    list_editable = ('input_per_million', 'output_per_million')
+
+
+@admin.register(AIUsage)
+class AIUsageAdmin(ModelAdmin):
+    list_display = ('day', 'task', 'model', 'user', 'calls', 'prompt_tokens', 'completion_tokens', 'dollars')
+    list_filter = ('task', 'model')
+    date_hierarchy = 'day'
+    search_fields = ('user__username', 'user__email')
+    list_before_template = 'admin/summarizer/aiusage_summary.html'
+    readonly_fields = [f.name for f in AIUsage._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.display(description='coût ($)')
+    def dollars(self, obj):
+        cost = obj.cost()
+        return '—' if cost is None else '%.4f' % cost
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = dict(extra_context or {}, usage=usage.summary(30))
+        return super().changelist_view(request, extra_context)

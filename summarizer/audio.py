@@ -15,6 +15,7 @@ from django.shortcuts import render
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
+from . import usage
 from .models import DigestItem, PaperAudio, SiteSettings
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ def speak(text):
                              json={'model': cfg.model_tts, 'voice': cfg.tts_voice, 'input': text[:4000],
                                    'response_format': 'mp3'})
     response.raise_for_status()
+    usage.add(cfg.model_tts, len(text[:4000]), 0, 'audio')  # speech is priced by character
     return response.content
 
 

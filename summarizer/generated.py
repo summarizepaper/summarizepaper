@@ -20,6 +20,7 @@ from django.db import IntegrityError, connections
 from django.http import Http404, JsonResponse
 from django.utils import timezone
 
+from . import usage
 from .models import Generated
 from .utils import ai_models, chat_params
 
@@ -56,7 +57,7 @@ def chat_json(prompt, paid=True, max_tokens=3000, system=None):
         timeout=300,
     )
     response.raise_for_status()
-    content = response.json()['choices'][0]['message']['content']
+    content = usage.record(response.json())['choices'][0]['message']['content']
     answer = json.loads(content)
     if not isinstance(answer, dict):
         raise GenerationError('the model did not answer with a JSON object')
@@ -109,8 +110,10 @@ def start(kind, key, lang, work, user=None, force=False):
 
 
 def _run(pk, work):
+    kind, user_id = Generated.objects.filter(pk=pk).values_list('kind', 'user_id').first() or ('other', None)
     try:
-        content = work(pk)
+        with usage.task(kind, user_id):
+            content = work(pk)
     except Exception as e:
         logger.exception('Generation %s failed', pk)
         Generated.objects.filter(pk=pk).update(status='failed', error=repr(e)[:2000], updated=timezone.now())

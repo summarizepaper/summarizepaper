@@ -39,7 +39,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
-from . import access, audio, mailcheck, similar, sources
+from . import access, audio, mailcheck, similar, sources, usage
 from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestFeedback, DigestItem,
                      DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
 from .utils import ai_models, chat_params
@@ -667,7 +667,7 @@ def _chat(prompt, model, paid, max_tokens):
         timeout=300,
     )
     response.raise_for_status()
-    return response.json()['choices'][0]['message']['content']
+    return usage.record(response.json())['choices'][0]['message']['content']
 
 
 def ensure_items(papers, lang):

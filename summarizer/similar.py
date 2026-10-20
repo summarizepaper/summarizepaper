@@ -35,7 +35,8 @@ def embed(texts):
                              headers={'Authorization': 'Bearer %s' % settings.OPENAI_KEY},
                              json={'model': MODEL, 'input': texts, 'dimensions': DIMENSIONS})
     response.raise_for_status()
-    rows = sorted(response.json()['data'], key=lambda row: row['index'])
+    from . import usage
+    rows = sorted(usage.record(response.json())['data'], key=lambda row: row['index'])
     vectors = np.array([row['embedding'] for row in rows], dtype=np.float32)
     return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
 

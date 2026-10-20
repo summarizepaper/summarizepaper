@@ -2,7 +2,7 @@ from ipaddress import ip_address
 import time
 import requests
 from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore, Author, PaperAuthor, SiteSettings
-from . import keypoints, sources
+from . import keypoints, sources, usage
 from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
@@ -1195,7 +1195,7 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
         return {
             "error_message": str(e),
         }
-    response3b=response3b.json()
+    response3b=usage.record(response3b.json(), 'summary')
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
@@ -1349,7 +1349,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
         return {
             "error_message": str(e),
         }
-    response3=response3.json()
+    response3=usage.record(response3.json(), 'summary')
     #if response3.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response3.text}")
 
@@ -1472,7 +1472,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
         return {
             "error_message": str(e),
         }
-    response4=response4.json()
+    response4=usage.record(response4.json(), 'summary')
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")
 
@@ -1570,7 +1570,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
         return {
             "error_message": str(e),
         }
-    response5=response5.json()
+    response5=usage.record(response5.json(), 'summary')
     blog_truncated = response5["choices"][0].get("finish_reason") == "length"
     print('resp5',response5)
     #if response4.status_code != 200:
@@ -1647,7 +1647,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
             "error_message": str(e),
         }
 
-    response6=response6.json()
+    response6=usage.record(response6.json(), 'summary')
     print('resp6',response6)
     #if response4.status_code != 200:
     #    raise Exception(f"Failed to extract key points: {response4.text}")

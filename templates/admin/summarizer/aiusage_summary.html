@@ -1,0 +1,17 @@
+<div class="grid lg:grid-cols-2 gap-6 mb-6">
+  <div class="border border-base-200 rounded-default p-4 dark:border-base-800">
+    <p class="font-semibold mb-2">Par tâche, {{ usage.days }} derniers jours : ${{ usage.total|floatformat:2 }}</p>
+    <table class="w-full text-sm">
+      <tr class="text-left text-subtle"><th>Tâche</th><th>Appels</th><th>Tokens entrée</th><th>Tokens sortie</th><th>$</th></tr>
+      {% for t in usage.tasks %}<tr><td>{{ t.name }}</td><td>{{ t.calls }}</td><td>{{ t.prompt }}</td><td>{{ t.completion }}</td><td>{{ t.cost|floatformat:2 }}</td></tr>{% endfor %}
+    </table>
+    {% if usage.unpriced %}<p class="text-subtle mt-2">Sans prix (comptés 0 $) : {{ usage.unpriced|join:", " }}. Ajoutez-les dans « prix des modèles IA ».</p>{% endif %}
+  </div>
+  <div class="border border-base-200 rounded-default p-4 dark:border-base-800">
+    <p class="font-semibold mb-2">Utilisateurs qui coûtent le plus, {{ usage.days }} derniers jours</p>
+    <table class="w-full text-sm">
+      <tr class="text-left text-subtle"><th>Utilisateur</th><th>Appels</th><th>Tokens entrée</th><th>Tokens sortie</th><th>$</th></tr>
+      {% for u in usage.users %}<tr><td>{{ u.name }}</td><td>{{ u.calls }}</td><td>{{ u.prompt }}</td><td>{{ u.completion }}</td><td>{{ u.cost|floatformat:2 }}</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>

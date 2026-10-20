@@ -746,3 +746,45 @@ class VersionAlert(models.Model):
 
     class Meta:
         unique_together = ('user', 'arxiv_id', 'new')
+
+
+class AIPrice(models.Model):
+    """Price of an OpenAI model, set in the admin, to turn the counted tokens into dollars (see usage.py)."""
+    model = models.CharField('modèle', max_length=100, unique=True, help_text='Identifiant exact de l’API OpenAI.')
+    input_per_million = models.DecimalField('$ par million de tokens en entrée', max_digits=8, decimal_places=4, default=0)
+    output_per_million = models.DecimalField('$ par million de tokens en sortie', max_digits=8, decimal_places=4, default=0,
+        help_text='Pour la synthèse vocale, le prix par million de caractères va en entrée.')
+
+    class Meta:
+        verbose_name = 'prix d’un modèle IA'
+        verbose_name_plural = 'prix des modèles IA'
+
+    def __str__(self):
+        return self.model
+
+
+class AIUsage(models.Model):
+    """Tokens used by the AI in a day, for one task, model and user (see usage.py)."""
+    day = models.DateField('jour', db_index=True)
+    task = models.CharField('tâche', max_length=40)
+    model = models.CharField('modèle', max_length=100)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='ai_usage')
+    calls = models.PositiveIntegerField('appels', default=0)
+    prompt_tokens = models.PositiveBigIntegerField('tokens en entrée', default=0)
+    completion_tokens = models.PositiveBigIntegerField('tokens en sortie', default=0)
+
+    class Meta:
+        verbose_name = 'usage de l’IA'
+        verbose_name_plural = 'usage de l’IA'
+        ordering = ('-day', 'task')
+        indexes = [models.Index(fields=['day', 'task', 'model', 'user'])]
+
+    def cost(self, prices=None):
+        """Dollars, from AIPrice; None when the model has no price."""
+        if prices is None:
+            prices = {p.model: p for p in AIPrice.objects.all()}
+        price = prices.get(self.model)
+        if price is None:
+            return None
+        return (self.prompt_tokens * float(price.input_per_million) +
+                self.completion_tokens * float(price.output_per_million)) / 1e6

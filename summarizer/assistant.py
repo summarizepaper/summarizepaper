@@ -15,7 +15,7 @@ from django.utils.translation import get_language_info
 
 from .models import AIassistant, ArxivPaper, SummaryPaper
 from .paper_source import paper_text
-from . import sources
+from . import sources, usage
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -83,10 +83,11 @@ def conversation_history(arxiv_id, lang, user, hashed_ip):
     return messages
 
 
-async def complete(messages, paid, max_tokens, on_delta=None):
+async def complete(messages, paid, max_tokens, on_delta=None, task='assistant', user_id=None):
     """Run a chat completion, streaming text pieces to on_delta; return the full text."""
     model_free, model_paid = await sync_to_async(ai_models)()
-    payload = {'model': model_paid if paid else model_free, 'messages': messages, 'stream': True, **chat_params(paid, max_tokens)}
+    payload = {'model': model_paid if paid else model_free, 'messages': messages, 'stream': True,
+               'stream_options': {'include_usage': True}, **chat_params(paid, max_tokens)}
     headers = {'Authorization': 'Bearer %s' % settings.OPENAI_KEY}
     parts = []
     timeout = aiohttp.ClientTimeout(total=300)
@@ -101,7 +102,10 @@ async def complete(messages, paid, max_tokens, on_delta=None):
                 data = line[5:].strip()
                 if data == '[DONE]':
                     break
-                choices = json.loads(data).get('choices') or []
+                chunk = json.loads(data)
+                if chunk.get('usage'):  # the last chunk, with include_usage
+                    usage.record(chunk, task, user_id)
+                choices = chunk.get('choices') or []
                 delta = (choices[0].get('delta') or {}).get('content') if choices else None
                 if delta:
                     parts.append(delta)
@@ -122,7 +126,8 @@ async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_
     messages = [{'role': 'system', 'content': context + '\n\n' + INSTRUCTIONS.format(language=language)}]
     messages += history
     messages.append({'role': 'user', 'content': question})
-    text = await complete(messages, paid, 1500, on_delta)
+    user_id = user.pk if user is not None and user.is_authenticated else None
+    text = await complete(messages, paid, 1500, on_delta, user_id=user_id)
     await sync_to_async(AIassistant.objects.create)(
         arxiv_id=conversation_id, query=question, response=text, lang=lang, ip_address=hashed_ip,
         user=user if user is not None and user.is_authenticated else None)
@@ -140,4 +145,4 @@ async def detailed_summary(arxiv_id, lang, paid):
             'headings or bullet points. Cover the question addressed, the method, the main results with their key '
             'numbers, and the conclusions and limitations. Do not use LaTeX.' % language)},
     ]
-    return await complete(messages, paid, 1500)
+    return await complete(messages, paid, 1500, task='summary')
