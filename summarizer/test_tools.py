@@ -353,15 +353,26 @@ class CitationTests(ToolsTestCase):
     def test_free_users_cannot_follow_and_page_lists(self):
         self.assertEqual(self.client_for(self.user()).post('/en/citations/follow/', {'arxiv_id': '2101.00001'}).status_code, 403)
         user = self.user('pro', paid=True)
+        found = lambda ids: {a: ('Title of %s' % a, 'A') for a in ids}
         with mock.patch('summarizer.citations.fetch', return_value=self.citing('c1')), \
              mock.patch('summarizer.citations.time.sleep'), \
-             mock.patch('summarizer.library.lookup', return_value=('Followed title', 'A')):
+             mock.patch('summarizer.library.lookup_many', side_effect=found):
             self.client_for(user).post('/en/citations/', {'ids': '2101.00001 https://arxiv.org/abs/hep-th/9901001v2'})
-        self.assertEqual(sorted(FollowedPaper.objects.filter(user=user).values_list('arxiv_id', flat=True)),
-                         ['2101.00001', 'hep-th/9901001'])
+        self.assertEqual(sorted(FollowedPaper.objects.filter(user=user).values_list('arxiv_id', 'title')),
+                         [('2101.00001', 'Title of 2101.00001'), ('hep-th/9901001', 'Title of hep-th--9901001')])
         page = self.client_for(user).get('/en/citations/')
-        self.assertContains(page, 'Followed title')
+        self.assertContains(page, 'Title of 2101.00001')
         self.assertContains(page, '1 citation')
+
+    def test_title_is_known_without_semantic_scholar(self):
+        user = self.user('pro', paid=True)
+        # followed before titles were looked up, and Semantic Scholar does not know it
+        FollowedPaper.objects.create(user=user, arxiv_id='2607.11677')
+        with mock.patch('summarizer.citations.fetch', return_value=None), \
+             mock.patch('summarizer.library.lookup_many', return_value={'2607.11677': ('A new disc', 'A')}):
+            citations.refresh('2607.11677', timezone.now())
+            self.assertContains(self.client_for(user).get('/en/citations/'), 'A new disc')
+        self.assertEqual(FollowedPaper.objects.get(user=user).title, 'A new disc')
 
     def test_refresh_due_skips_fresh_papers(self):
         user = self.user(paid=True)
@@ -370,7 +381,7 @@ class CitationTests(ToolsTestCase):
         CitationCache.objects.create(arxiv_id='2101.00002', checked=timezone.now())
         with mock.patch('summarizer.citations.fetch', return_value={}) as fetch, \
              mock.patch('summarizer.citations.time.sleep'), \
-             mock.patch('summarizer.library.lookup', return_value=None):
+             mock.patch('summarizer.library.lookup_many', return_value={}):
             self.assertEqual(citations.refresh_due(timezone.now()), 1)
         fetch.assert_called_once_with('2101.00001')
 

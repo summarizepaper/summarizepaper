@@ -103,9 +103,7 @@ def refresh(arxiv_id, now):
     cached.save()
     for followed in FollowedPaper.objects.filter(arxiv_id=arxiv_id):
         if not followed.title:
-            from .library import lookup
-            found = lookup(arxiv_id.replace('/', '--'))
-            followed.title = found[0] if found else ''
+            followed.title = titles([arxiv_id]).get(arxiv_id, '')
         if followed.known == '':
             # first check since the user followed it: what it already has is not news
             followed.known = json.dumps(list(citing))
@@ -133,12 +131,20 @@ def refresh_due(now, limit=MAX_REFRESH_PER_RUN):
     return done
 
 
-def follow(user, arxiv_id):
+def titles(arxiv_ids):
+    """{arxiv_id: title} from our tables, then one arXiv query for the rest; unknown ids are left out."""
+    from .library import lookup_many
+    found = lookup_many([a.replace('/', '--') for a in arxiv_ids])
+    return {a: found[a.replace('/', '--')][0] for a in arxiv_ids if a.replace('/', '--') in found}
+
+
+def follow(user, arxiv_id, title=''):
     """Start following. Nothing slow here: the first check, in the background, records the citations it
     already has as known, so they are not reported."""
     paper = ArxivPaper.objects.filter(arxiv_id__startswith=arxiv_id.replace('/', '--') + 'v').first()
-    followed, created = FollowedPaper.objects.get_or_create(user=user, arxiv_id=arxiv_id, defaults={
-        'title': ' '.join((paper.title or '').split()) if paper else ''})
+    if paper and paper.title:
+        title = ' '.join(paper.title.split())
+    followed, created = FollowedPaper.objects.get_or_create(user=user, arxiv_id=arxiv_id, defaults={'title': title})
     if created:
         cached = CitationCache.objects.filter(arxiv_id=arxiv_id, checked__isnull=False).first()
         if cached is not None:
@@ -258,14 +264,24 @@ def citations_page(request):
         room = MAX_FOLLOWED - FollowedPaper.objects.filter(user=request.user).count()
         if len(ids) > room:
             error = 'too_many'
-        new = [a for a in ids[:max(0, room)] if follow(request.user, a)[1] and not
+        ids = ids[:max(0, room)]
+        known = titles([a for a in ids if not FollowedPaper.objects.filter(user=request.user, arxiv_id=a).exists()])
+        new = [a for a in ids if follow(request.user, a, known.get(a, ''))[1] and not
                CitationCache.objects.filter(arxiv_id=a, checked__isnull=False).exists()]
         if new:
             generated.background(refresh_new, new)
         if not error:
             return redirect('/%s/citations/' % get_language())
     followed = list(FollowedPaper.objects.filter(user=request.user))
-    totals = dict(CitationCache.objects.filter(arxiv_id__in=[f.arxiv_id for f in followed]).values_list('arxiv_id', 'total'))
+    untitled = [f for f in followed if not f.title]
+    if untitled:
+        # followed before their title was looked up, or unknown to Semantic Scholar
+        found = titles([f.arxiv_id for f in untitled])
+        for f in untitled:
+            if found.get(f.arxiv_id):
+                f.title = found[f.arxiv_id]
+                f.save(update_fields=['title'])
+    totals =dict(CitationCache.objects.filter(arxiv_id__in=[f.arxiv_id for f in followed]).values_list('arxiv_id', 'total'))
     for f in followed:
         f.total = totals.get(f.arxiv_id)
         f.queued = len(json.loads(f.pending or '[]'))
@@ -287,6 +303,9 @@ def follow_view(request):
     if FollowedPaper.objects.filter(user=request.user).count() >= MAX_FOLLOWED:
         return JsonResponse({'status': 'too_many'})
     followed, created = follow(request.user, arxiv_id)
+    if created and not followed.title:
+        followed.title = titles([arxiv_id]).get(arxiv_id, '')
+        followed.save(update_fields=['title'])
     if created and followed.known == '':
         generated.background(refresh_new, [arxiv_id])
     return JsonResponse({'status': 'following'})
