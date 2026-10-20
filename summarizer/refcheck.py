@@ -15,6 +15,7 @@ From a BibTeX file, and optionally the LaTeX source that cites it:
    to the abstract of the cited paper, and reports the sentences the abstract
    does not support. Only abstracts are read: it is a warning, not a verdict.
 """
+import contextvars
 import html
 import re
 import uuid
@@ -45,6 +46,7 @@ QUOTA_KEY = 'refcheck-quota:%s:%s'
 CITE_RE = re.compile(r'\\(?:cite|citep|citet|citealp|citealt|citeauthor|parencite|textcite|autocite|footcite)\*?'
                      r'(?:\[[^\]]*\]){0,2}\{([^}]+)\}')
 LEVELS = ('error', 'warning', 'info')
+LIMITED = contextvars.ContextVar('openalex_limited', default=False)  # set when OpenAlex calls were skipped
 STEPS = [
     ('read', _('Reading your references')),
     ('identify', _('Finding each paper on arXiv, OpenAlex and Semantic Scholar')),
@@ -167,7 +169,8 @@ def openalex_works(dois):
     dois = list(dict.fromkeys(d for d in dois if d))
     for start in range(0, len(dois), OPENALEX_BATCH):
         batch = dois[start:start + OPENALEX_BATCH]
-        if not sources._spend(sources.OPENALEX_SEARCH_KEY, sources.OPENALEX_SEARCHES_PER_DAY):
+        if not sources.tool_search_allowed():
+            LIMITED.set(True)
             break
         try:
             body = sources._json('%s/works' % sources.OPENALEX, sources._openalex_params({
@@ -184,7 +187,8 @@ def openalex_works(dois):
 
 def by_title(title):
     """(doi, arxiv id) of the OpenAlex work with this title, ('', '') when no title matches closely."""
-    if not sources._spend(sources.OPENALEX_SEARCH_KEY, sources.OPENALEX_SEARCHES_PER_DAY):
+    if not sources.tool_search_allowed():
+        LIMITED.set(True)
         return '', ''
     try:
         body = sources._json('%s/works' % sources.OPENALEX, sources._openalex_params({
@@ -294,6 +298,7 @@ def check_claims(claims, lang):
 # --- the check ---------------------------------------------------------------
 
 def check(bib, tex, lang, step=lambda name: None):
+    LIMITED.set(False)
     entries = parse_bibtex(bib)
     if not entries:
         raise generated.GenerationError('no BibTeX entry found')
@@ -374,7 +379,7 @@ def check(bib, tex, lang, step=lambda name: None):
             {k: c[k] for k in ('key', 'title', 'sentence', 'verdict', 'reason')} for c in flagged],
         'claims_checked': len(claims), 'with_tex': bool(tex),
         'counts': {level: sum(any(x['level'] == level for x in i['issues']) for i in items) for level in LEVELS},
-        'fixed_bib': fixed_bib if corrected else '', 'corrected': len(corrected),
+        'fixed_bib': fixed_bib if corrected else '', 'corrected': len(corrected), 'limited': LIMITED.get(),
     }
 
 

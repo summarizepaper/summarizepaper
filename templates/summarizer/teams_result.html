@@ -13,6 +13,7 @@
   </header>
 
   {% if result %}
+    {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this search: some papers are missing. Run it again tomorrow for a complete map.' %}</p>{% endif %}
     {% if result.groups %}
     <p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). An author is counted at their first affiliation.{% endblocktrans %}</p>
     {% if result.landscape %}<section class="card section-card"><p style="margin:0">{{ result.landscape }}</p></section>{% endif %}

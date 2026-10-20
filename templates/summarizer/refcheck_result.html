@@ -13,6 +13,7 @@
   </header>
 
   {% if result %}
+    {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this check: retractions and titles were not checked for some references. Run it again tomorrow for a complete check.' %}</p>{% endif %}
     <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference checked.{% plural %}{{ n }} references checked.{% endblocktrans %}
       {% if result.counts.error %}<span class="importance high">{% blocktrans count n=result.counts.error %}{{ n }} serious problem{% plural %}{{ n }} serious problems{% endblocktrans %}</span>{% endif %}
       {% if result.counts.warning %}<span class="importance medium">{% blocktrans count n=result.counts.warning %}{{ n }} to fix{% plural %}{{ n }} to fix{% endblocktrans %}</span>{% endif %}</p>

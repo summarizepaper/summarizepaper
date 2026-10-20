@@ -52,9 +52,9 @@ STEPS = [
 
 
 def works(query, since):
-    """OpenAlex works matching a query, published since `since`."""
-    if not sources._spend(sources.OPENALEX_SEARCH_KEY, sources.OPENALEX_SEARCHES_PER_DAY):
-        return []
+    """OpenAlex works matching a query, published since `since`; None when today's budget is used up."""
+    if not sources.tool_search_allowed():
+        return None
     try:
         body = sources._json('%s/works' % sources.OPENALEX, sources._openalex_params({
             'search': query, 'filter': 'from_publication_date:%s' % since.isoformat(), 'per_page': PER_QUERY,
@@ -126,14 +126,16 @@ def find(topic, lang, step=lambda name: None):
     queries = [str(q) for q in plan.get('queries', []) if str(q).strip()][:QUERIES]
     step('search')
     since = timezone.now().date() - datetime.timedelta(days=365 * YEARS)
-    found = {}
+    found, limited = {}, False
     for query in queries:
-        for work in works(query, since):
+        answer = works(query, since)
+        limited = limited or answer is None
+        for work in answer or []:
             if work.get('id') and work.get('display_name'):
                 found.setdefault(work['id'], work)
     papers = list(found.values())
     if not papers:
-        return {'title': str(plan.get('title', '')).strip(), 'groups': [], 'papers': 0, 'landscape': ''}
+        return {'title': str(plan.get('title', '')).strip(), 'groups': [], 'papers': 0, 'landscape': '', 'limited': limited}
     step('group')
     vectors = similar.embed([topic[:similar.MAX_INPUT_CHARS]] + [w['display_name'][:500] for w in papers])
     scores = vectors[1:] @ vectors[0]
@@ -157,7 +159,7 @@ def find(topic, lang, step=lambda name: None):
         note = by_id.get(str(i), {})
         g['focus'], g['approach'] = str(note.get('focus', '')).strip(), str(note.get('approach', '')).strip()
     return {'title': str(plan.get('title', '')).strip(), 'groups': groups, 'papers': len(kept),
-            'landscape': str(notes.get('landscape', '')).strip(), 'since': since.year}
+            'landscape': str(notes.get('landscape', '')).strip(), 'since': since.year, 'limited': limited}
 
 
 def write(topic, lang):

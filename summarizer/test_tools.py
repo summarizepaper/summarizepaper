@@ -885,6 +885,21 @@ class ToolsPageTests(ToolsTestCase):
         self.assertIn('/en/scoops/', mail.outbox[0].body)
 
 
+class OpenAlexBudgetTests(ToolsTestCase):
+    def test_tools_leave_a_reserve_to_the_paper_search_and_say_when_limited(self):
+        from summarizer import sources
+        with mock.patch('summarizer.sources.OPENALEX_SEARCHES_PER_DAY', 3), mock.patch('summarizer.sources.TOOL_RESERVE', 1):
+            self.assertEqual([sources.tool_search_allowed() for _ in range(3)], [True, True, False])
+            with mock.patch('summarizer.sources._json') as call:
+                self.assertIsNone(teams.works('exomoons', timezone.now().date()))
+                self.assertEqual(refcheck.by_title('A title'), ('', ''))
+                self.assertTrue(refcheck.LIMITED.get())
+                call.assert_not_called()
+        with mock.patch('summarizer.teams.works', return_value=None), \
+             mock.patch('summarizer.generated.chat_json', return_value={'title': 'T', 'queries': ['q']}):
+            self.assertTrue(teams.find('exomoons', 'en')['limited'])
+
+
 class AudioTests(ToolsTestCase):
     def test_clips_are_shared_and_joined(self):
         items = [DigestItem.objects.create(arxiv_id='2610.0000%dv1' % i, lang='en', title='Paper %d' % i, blurb='Blurb %d.' % i)
