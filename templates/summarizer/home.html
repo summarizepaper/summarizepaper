@@ -92,7 +92,8 @@
       border-radius: 50%;
       animation: spin .7s linear infinite;
     }
-    .is-loading .spinner { display: inline-block; }
+    .search-box .spinner { display: none; }  /* site.css shows .spinner by default (tools pages) */
+    .search-box .is-loading .spinner { display: inline-block; }
     .is-loading #sub-text { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .search-helper {
