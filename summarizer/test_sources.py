@@ -551,3 +551,19 @@ class ToolsWithOtherSourcesTests(TestCase):
         self.assertContains(faq, 'Which papers can I summarize?')
         self.assertContains(faq, 'Why is a summary sometimes made from the abstract only?')
         self.assertContains(Client().get('/fr/faq/'), 'Quels articles puis-je résumer ?')
+
+
+class HashedKeyTests(TestCase):
+    def test_a_search_result_with_a_hashed_key_opens_its_page(self):
+        doi = '10.1016/s0006-3495(98)77654-3'
+        paper = journal_paper(key=sources.doi_key(doi), doi=doi)
+        with mock.patch('summarizer.sources._json', return_value={'results': []}), \
+             mock.patch('summarizer.sources.openalex_paper', return_value=paper):
+            sources.search_papers('membranes')
+        self.assertEqual(sources.key_doi(paper['key']), '')  # no OpenAlex result: nothing stored
+        cache.clear()
+        with mock.patch('summarizer.sources._json', return_value={'results': [{}]}), \
+             mock.patch('summarizer.sources.openalex_paper', return_value=paper):
+            sources.search_papers('membranes')
+        self.assertEqual(sources.key_doi(paper['key']), doi)
+        cache.clear()

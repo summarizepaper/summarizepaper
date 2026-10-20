@@ -898,6 +898,9 @@ def search_papers(query, kind='', per_page=25, abstracts=False):
     if papers is None:
         papers = crossref_search(query, per_page)
     papers = [p for p in papers if p['key'] and p['title']]
+    for paper in papers:
+        if paper['key'].startswith('doi_h'):
+            remember(paper)  # a hashed key can only be read back from ExternalPaper (see key_doi)
     cache.set(cache_key, papers, SEARCH_SECONDS)
     return papers
 
