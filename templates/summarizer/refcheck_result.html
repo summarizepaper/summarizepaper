@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Bibliography check' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/refcheck/">← {% trans 'Bibliography check' %}</a></p>
+    <h1>{% trans 'Your references' %}</h1>
+  </header>
+
+  {% if result %}
+    <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference checked.{% plural %}{{ n }} references checked.{% endblocktrans %}
+      {% if result.counts.error %}<span class="importance high">{% blocktrans count n=result.counts.error %}{{ n }} serious problem{% plural %}{{ n }} serious problems{% endblocktrans %}</span>{% endif %}
+      {% if result.counts.warning %}<span class="importance medium">{% blocktrans count n=result.counts.warning %}{{ n }} to fix{% plural %}{{ n }} to fix{% endblocktrans %}</span>{% endif %}</p>
+    {% if result.fixed_bib %}
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{{ row.key }}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
+    {% endif %}
+
+    {% if result.problems %}
+    <ul class="item-list">
+      {% for item in result.problems %}
+      <li class="card">
+        <p style="margin:0 0 4px"><code>{{ item.key }}</code> · <strong>{{ item.title }}</strong></p>
+        {% for issue in item.issues %}
+        <div style="margin-top:8px">
+          {% if issue.kind == 'retracted' %}<span class="importance high">{% trans 'Retracted' %}</span> {% trans 'This paper has been retracted. Remove it, or cite it as retracted.' %}
+          {% elif issue.kind == 'withdrawn' %}<span class="importance high">{% trans 'Withdrawn' %}</span> {% trans 'Withdrawn from arXiv by its authors:' %} <em>{{ issue.detail }}</em>
+          {% elif issue.kind == 'published' %}<span class="importance medium">{% trans 'Published since' %}</span> {% blocktrans with journal=issue.journal %}Cited as a preprint, but published in {{ journal }}.{% endblocktrans %} <a href="https://doi.org/{{ issue.doi }}" target="_blank" rel="noopener">{{ issue.doi }}</a>
+            <details style="margin-top:6px"><summary>{% trans 'Corrected entry' %}</summary><pre class="bibtex">{{ issue.bibtex }}</pre></details>
+          {% elif issue.kind == 'duplicate' %}<span class="importance medium">{% trans 'Duplicate' %}</span> {% blocktrans with other=issue.other %}The same paper as <code>{{ other }}</code>.{% endblocktrans %}
+          {% elif issue.kind == 'arxiv_missing' %}<span class="importance medium">{% trans 'Not found' %}</span> {% blocktrans with id=issue.arxiv %}arXiv does not know {{ id }}: check the identifier.{% endblocktrans %}
+          {% elif issue.kind == 'old_version' %}<span class="importance low">{% trans 'Older version' %}</span> {% blocktrans with cited=issue.cited latest=issue.latest %}You cite {{ cited }}; the latest version is {{ latest }}.{% endblocktrans %}
+          {% elif issue.kind == 'unknown' %}<span class="importance low">{% trans 'Not checked' %}</span> {% trans 'No DOI or arXiv identifier, and no paper with this exact title found.' %}{% endif %}
+        </div>
+        {% endfor %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="notice">{% trans 'No problem found in your references.' %}</p>
+    {% endif %}
+
+    {% if result.with_tex %}
+    <h2>{% trans 'Citations to check' %}</h2>
+    {% if result.claims %}
+    <p class="muted">{% blocktrans with n=result.claims_checked %}{{ n }} citations read next to the abstract of the cited paper. Only the abstract is known: a citation flagged here may be right, check it in the paper.{% endblocktrans %}</p>
+    <ul class="item-list">
+      {% for c in result.claims %}
+      <li class="card">
+        <span class="importance {% if c.verdict == 'contradicted' %}high{% else %}medium{% endif %}">{% if c.verdict == 'contradicted' %}{% trans 'The abstract says otherwise' %}{% else %}{% trans 'Not in the abstract' %}{% endif %}</span>
+        <code>{{ c.key }}</code> · {{ c.title }}
+        <blockquote class="key-sentence">{{ c.sentence }}</blockquote>
+        <p style="margin:4px 0 0">{{ c.reason }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="notice">{% blocktrans with n=result.claims_checked %}The {{ n }} citations we could read all match the abstract of the cited paper.{% endblocktrans %}</p>
+    {% endif %}
+    {% endif %}
+  {% elif row.status == 'failed' %}
+    <p class="error">{% trans 'The check failed. Check that your file is BibTeX, and try again.' %}</p>
+  {% else %}
+    {% trans 'Checking your references' as working_title %}
+    {% trans 'usually 1 to 3 minutes' as working_time %}
+    {% include 'summarizer/working.html' with working_id='refcheck-working' working_steps=steps working_visible=True working_started=row.created %}
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      SP.track(document.getElementById('refcheck-working'), {{ row.pk }}, function () { location.reload(); });
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

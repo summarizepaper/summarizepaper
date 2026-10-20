@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, billing, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               library, missed, presskit, reading, scoops, trends)
+               library, missed, presskit, reading, refcheck, scoops, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -54,6 +54,9 @@ urlpatterns = [
     path("missed/<str:key>/", missed.missed_result, name="missed_result"),
     path("citations/", citations.citations_page, name="citations"),
     path("scoops/", scoops.scoops_page, name="scoops"),
+    path("refcheck/", refcheck.refcheck_page, name="refcheck"),
+    path("refcheck/<str:key>/", refcheck.refcheck_result, name="refcheck_result"),
+    path("refcheck/<str:key>/bib/", refcheck.refcheck_bib, name="refcheck_bib"),
     path("citations/follow/", citations.follow_view, name="citations_follow"),
     path("trends/", trends.trends_page, name="trends"),
     path("letters/", letters.letters_page, name="letters"),

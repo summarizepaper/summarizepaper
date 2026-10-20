@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, scoops, trends
+from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, refcheck, scoops, trends
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
@@ -509,6 +509,65 @@ class ScoopTests(ToolsTestCase):
         with mock.patch('summarizer.generated.chat_json') as chat:
             scoops.run(timezone.now(), 5)
         chat.assert_not_called()
+
+
+class RefcheckTests(ToolsTestCase):
+    BIB = """@article{retracted, title = {A retracted result}, journal = {J}, doi = {10.1000/RETRACTED}}
+@misc{pre, author = {Lee, Ann}, title = {{Clouds} on a "hot" planet}, eprint = {2101.00001v1}, archivePrefix = {arXiv}}
+@misc{again, title = "Clouds again", howpublished = {arXiv:2101.00001}}
+@book{nothing, title = {A book with no identifier}}
+@string{foo = "bar"}
+"""
+    TEX = r"""\documentclass{article}\begin{document}
+Clouds are thick on hot planets \citep{pre}. % \cite{retracted} in a comment is not read
+Earlier work found no clouds at all \citet[see][]{pre,again}.
+\end{document}"""
+
+    def test_parse_and_identify(self):
+        entries = refcheck.parse_bibtex(self.BIB)
+        self.assertEqual([e['key'] for e in entries], ['retracted', 'pre', 'again', 'nothing'])
+        self.assertEqual(entries[1]['fields']['title'], '{Clouds} on a "hot" planet')
+        self.assertEqual([refcheck.identify(e) for e in entries],
+                         [('', '', '10.1000/retracted'), ('2101.00001', 'v1', ''), ('2101.00001', '', ''), ('', '', '')])
+        self.assertEqual(refcheck.citing_sentences(self.TEX),
+                         [('Clouds are thick on hot planets \\citep{pre}.', ['pre']),
+                          ('Earlier work found no clouds at all \\citet[see][]{pre,again}.', ['pre', 'again'])])
+
+    def test_check_reports_problems_and_corrects_the_bib(self):
+        record = {'arxiv_id': '2101.00001v3', 'title': 'Clouds on a hot planet', 'abstract': 'We see thick clouds.',
+                  'doi': '10.1093/mnras/x1', 'journal_ref': 'MNRAS 500', 'comment': '', 'version': '3'}
+        verdicts = {'items': [{'id': '0', 'verdict': 'supported'}, {'id': '1', 'verdict': 'contradicted', 'reason': 'It finds clouds.'}]}
+        with mock.patch('summarizer.refcheck.arxiv_records', return_value={'2101.00001': record}), \
+             mock.patch('summarizer.refcheck.openalex_works', return_value={'10.1000/retracted': {'retracted': True, 'abstract': ''}}), \
+             mock.patch('summarizer.refcheck.s2_published', return_value={}), \
+             mock.patch('summarizer.refcheck.by_title', return_value=('', '')) as by_title, \
+             mock.patch('summarizer.refcheck.crossref_fields', return_value={'journal': 'MNRAS & Co', 'year': '2021', 'doi': '10.1093/mnras/x1'}), \
+             mock.patch('summarizer.generated.chat_json', return_value=verdicts) as chat:
+            result = refcheck.check(self.BIB, self.TEX, 'en')
+        by_title.assert_called_once_with('A book with no identifier')
+        kinds = {p['key']: [i['kind'] for i in p['issues']] for p in result['problems']}
+        self.assertEqual(kinds, {'retracted': ['retracted'], 'pre': ['published', 'old_version'],
+                                 'again': ['duplicate', 'published'], 'nothing': ['unknown']})
+        self.assertEqual(result['problems'][0]['key'], 'retracted')  # serious problems first
+        self.assertIn('journal = {MNRAS \\& Co}', result['fixed_bib'])
+        self.assertIn('@article{pre,', result['fixed_bib'])
+        self.assertNotIn('archiveprefix', result['fixed_bib'])
+        self.assertEqual(result['claims_checked'], 3)
+        self.assertEqual([(c['key'], c['verdict']) for c in result['claims']], [('pre', 'contradicted')])
+        self.assertIn('We see thick clouds.', chat.call_args[1]['system'])
+
+    def test_page_is_premium_and_report_is_private(self):
+        self.assertContains(self.client_for(self.user()).get('/en/refcheck/'), 'Discover Premium')
+        client = self.client_for(self.user('pro', paid=True))
+        self.assertContains(client.post('/en/refcheck/', {'bibtext': 'no entries here'}), 'We found no BibTeX entry')
+        result = {'entries': 1, 'problems': [], 'claims': [], 'claims_checked': 0, 'with_tex': False,
+                  'counts': {'error': 0, 'warning': 0, 'info': 0}, 'fixed_bib': '@article{a,\n}', 'corrected': 1}
+        with mock.patch('summarizer.refcheck.check', return_value=result) as check:
+            r = client.post('/en/refcheck/', {'bibtext': '@misc{a, title={T}}'})
+        self.assertEqual(check.call_args[0][1], '')
+        self.assertContains(client.get(r['Location']), 'No problem found')
+        self.assertEqual(client.get(r['Location'] + 'bib/').content, b'@article{a,\n}')
+        self.assertEqual(self.client_for(self.user('other', paid=True)).get(r['Location']).status_code, 404)
 
 
 class AudioTests(ToolsTestCase):

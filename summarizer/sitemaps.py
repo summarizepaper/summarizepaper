@@ -13,7 +13,7 @@ class StaticViewSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        items = ['summarize','about','author','faq','contact','privacy','legal','digest','premium','letters','trends','collections','missed','citations','scoops','integrations']
+        items = ['summarize','about','author','faq','contact','privacy','legal','digest','premium','letters','trends','collections','missed','refcheck','citations','scoops','integrations']
         if guides.published('en'):
             items.append('guides')
         return items

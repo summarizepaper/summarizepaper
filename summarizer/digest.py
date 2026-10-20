@@ -253,6 +253,10 @@ def parse_feed(xml_text):
             'authors': [a.findtext(ATOM + 'name', '') for a in entry.findall(ATOM + 'author')],
             'categories': [c.get('term') for c in entry.findall(ATOM + 'category')],
             'published': parse_datetime(entry.findtext(ATOM + 'published', '')),
+            'updated': parse_datetime(entry.findtext(ATOM + 'updated', '')),
+            'doi': entry.findtext(ARXIV_NS + 'doi', '').strip(),
+            'journal_ref': re.sub(r'\s+', ' ', entry.findtext(ARXIV_NS + 'journal_ref', '')).strip(),
+            'comment': re.sub(r'\s+', ' ', entry.findtext(ARXIV_NS + 'comment', '')).strip(),
         })
     return papers
 

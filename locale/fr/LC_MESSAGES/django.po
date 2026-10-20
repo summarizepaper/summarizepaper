@@ -5136,3 +5136,250 @@ msgstr "Longueur suffisante"
 
 msgid "Compared with the new papers as:"
 msgstr "Comparé aux nouveaux articles sous cette forme :"
+
+msgid "Bibliography check"
+msgstr "Vérification de bibliographie"
+
+msgid ""
+"Check the references of your paper before you submit it: retracted papers, "
+"preprints published since with their corrected BibTeX, outdated arXiv "
+"versions, duplicates, and citations that the cited abstract does not "
+"support."
+msgstr ""
+"Vérifiez les références de votre article avant de le soumettre : articles "
+"rétractés, preprints publiés depuis avec leur BibTeX corrigé, versions arXiv"
+" dépassées, doublons, et citations que le résumé de l'article cité ne "
+"confirme pas."
+
+msgid ""
+"Give us your .bib file, and your LaTeX source if you want: we find the "
+"retracted papers, the preprints published since, the outdated versions and "
+"duplicates, and the citations that do not say what your sentence claims."
+msgstr ""
+"Donnez-nous votre fichier .bib, et votre source LaTeX si vous le souhaitez :"
+" nous trouvons les articles rétractés, les preprints publiés depuis, les "
+"versions dépassées et les doublons, et les citations qui ne disent pas ce "
+"que votre phrase leur fait dire."
+
+msgid "What is checked"
+msgstr "Ce qui est vérifié"
+
+msgid ""
+"Retracted papers (from Retraction Watch, through OpenAlex) and papers "
+"withdrawn from arXiv."
+msgstr ""
+"Les articles rétractés (d'après Retraction Watch, via OpenAlex) et les "
+"articles retirés d'arXiv."
+
+msgid ""
+"Preprints you cite as preprints that have been published in a journal since:"
+" we give the corrected BibTeX entry, with the journal, volume, pages and "
+"DOI, and a corrected .bib file to download."
+msgstr ""
+"Les preprints cités comme preprints mais publiés depuis dans un journal : "
+"nous donnons l'entrée BibTeX corrigée, avec le journal, le volume, les pages"
+" et le DOI, et un fichier .bib corrigé à télécharger."
+
+msgid ""
+"arXiv versions older than the latest one, and the same paper cited under two"
+" keys."
+msgstr ""
+"Les versions arXiv plus anciennes que la dernière, et le même article cité "
+"sous deux clés."
+
+msgid ""
+"With your LaTeX source: an AI reads each sentence with a citation next to "
+"the abstract of the cited paper, and flags the sentences the abstract does "
+"not support or contradicts."
+msgstr ""
+"Avec votre source LaTeX : une IA lit chaque phrase qui cite un article à "
+"côté du résumé de cet article, et signale les phrases que le résumé ne "
+"confirme pas ou contredit."
+
+msgid ""
+"Before you submit a paper or a thesis, so a referee does not find a "
+"retracted reference or a misquoted result for you."
+msgstr ""
+"Avant de soumettre un article ou une thèse, pour qu'un referee ne trouve pas"
+" à votre place une référence rétractée ou un résultat mal cité."
+
+msgid "Submit with clean references."
+msgstr "Soumettez avec des références propres."
+
+msgid "Send files of 5 MB at most."
+msgstr "Envoyez des fichiers de 5 Mo au maximum."
+
+msgid "We found no BibTeX entry. Send a .bib file or paste its content."
+msgstr ""
+"Nous n'avons trouvé aucune entrée BibTeX. Envoyez un fichier .bib ou collez "
+"son contenu."
+
+msgid "Your references (.bib)"
+msgstr "Vos références (.bib)"
+
+msgid "or paste them:"
+msgstr "ou collez-les :"
+
+msgid ""
+"Optional: your LaTeX source (.tex), to check what each citation is used for"
+msgstr ""
+"Facultatif : votre source LaTeX (.tex), pour vérifier à quoi sert chaque "
+"citation"
+
+msgid "Check my references"
+msgstr "Vérifier mes références"
+
+msgid ""
+"Your files are read once and are not stored. Only the report is kept, in "
+"your account."
+msgstr ""
+"Vos fichiers sont lus une fois et ne sont pas conservés. Seul le rapport est"
+" gardé, dans votre compte."
+
+msgid "Your checks"
+msgstr "Vos vérifications"
+
+#, python-format
+msgid "You can run %(per_day)s checks a day. Come back tomorrow."
+msgstr ""
+"Vous pouvez lancer %(per_day)s vérifications par jour. Revenez demain."
+
+#, python-format
+msgid "%(n)s reference"
+msgid_plural "%(n)s references"
+msgstr[0] "%(n)s référence"
+msgstr[1] "%(n)s références"
+
+msgid "Your references"
+msgstr "Vos références"
+
+msgid "Retracted"
+msgstr "Rétracté"
+
+msgid "This paper has been retracted. Remove it, or cite it as retracted."
+msgstr "Cet article a été rétracté. Retirez-le, ou citez-le comme rétracté."
+
+msgid "Withdrawn"
+msgstr "Retiré"
+
+msgid "Withdrawn from arXiv by its authors:"
+msgstr "Retiré d'arXiv par ses auteurs :"
+
+msgid "Published since"
+msgstr "Publié depuis"
+
+msgid "Corrected entry"
+msgstr "Entrée corrigée"
+
+msgid "Duplicate"
+msgstr "Doublon"
+
+msgid "Not found"
+msgstr "Introuvable"
+
+msgid "Older version"
+msgstr "Ancienne version"
+
+msgid "Not checked"
+msgstr "Non vérifié"
+
+msgid "No DOI or arXiv identifier, and no paper with this exact title found."
+msgstr ""
+"Pas de DOI ni d'identifiant arXiv, et aucun article trouvé avec ce titre "
+"exact."
+
+msgid "No problem found in your references."
+msgstr "Aucun problème trouvé dans vos références."
+
+msgid "Citations to check"
+msgstr "Citations à vérifier"
+
+msgid "The abstract says otherwise"
+msgstr "Le résumé dit autre chose"
+
+msgid "Not in the abstract"
+msgstr "Absent du résumé"
+
+msgid "The check failed. Check that your file is BibTeX, and try again."
+msgstr ""
+"La vérification a échoué. Vérifiez que votre fichier est en BibTeX, et "
+"réessayez."
+
+msgid "Checking your references"
+msgstr "Vérification de vos références"
+
+#, python-format
+msgid "%(n)s reference checked."
+msgid_plural "%(n)s references checked."
+msgstr[0] "%(n)s référence vérifiée."
+msgstr[1] "%(n)s références vérifiées."
+
+#, python-format
+msgid "%(n)s serious problem"
+msgid_plural "%(n)s serious problems"
+msgstr[0] "%(n)s problème grave"
+msgstr[1] "%(n)s problèmes graves"
+
+#, python-format
+msgid "%(n)s to fix"
+msgid_plural "%(n)s to fix"
+msgstr[0] "%(n)s à corriger"
+msgstr[1] "%(n)s à corriger"
+
+#, python-format
+msgid "Download the .bib with %(n)s entry corrected"
+msgid_plural "Download the .bib with %(n)s entries corrected"
+msgstr[0] "Télécharger le .bib avec %(n)s entrée corrigée"
+msgstr[1] "Télécharger le .bib avec %(n)s entrées corrigées"
+
+#, python-format
+msgid "Cited as a preprint, but published in %(journal)s."
+msgstr "Cité comme preprint, mais publié dans %(journal)s."
+
+#, python-format
+msgid "The same paper as <code>%(other)s</code>."
+msgstr "Le même article que <code>%(other)s</code>."
+
+#, python-format
+msgid "arXiv does not know %(id)s: check the identifier."
+msgstr "arXiv ne connaît pas %(id)s : vérifiez l'identifiant."
+
+#, python-format
+msgid "You cite %(cited)s; the latest version is %(latest)s."
+msgstr "Vous citez la %(cited)s ; la dernière version est la %(latest)s."
+
+#, python-format
+msgid ""
+"%(n)s citations read next to the abstract of the cited paper. Only the "
+"abstract is known: a citation flagged here may be right, check it in the "
+"paper."
+msgstr ""
+"%(n)s citations lues à côté du résumé de l'article cité. Seul le résumé est "
+"connu : une citation signalée ici peut être juste, vérifiez-la dans "
+"l'article."
+
+#, python-format
+msgid ""
+"The %(n)s citations we could read all match the abstract of the cited paper."
+msgstr ""
+"Les %(n)s citations que nous avons pu lire correspondent toutes au résumé de"
+" l'article cité."
+
+msgid "Reading your references"
+msgstr "Lecture de vos références"
+
+msgid "Finding each paper on arXiv, OpenAlex and Semantic Scholar"
+msgstr "Recherche de chaque article sur arXiv, OpenAlex et Semantic Scholar"
+
+msgid "Looking for retractions and for preprints published since"
+msgstr "Recherche des rétractations et des preprints publiés depuis"
+
+msgid "An AI checks each citation against the abstract of the cited paper"
+msgstr "Une IA compare chaque citation au résumé de l'article cité"
+
+msgid ""
+"retracted papers, preprints published since, and citations the cited "
+"abstract does not support"
+msgstr ""
+"articles rétractés, preprints publiés depuis, et citations que le résumé de "
+"l'article cité ne confirme pas"

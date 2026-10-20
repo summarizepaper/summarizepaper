@@ -738,6 +738,7 @@ img { max-width: 100%; }
 .hype-list .caution { border-left-color: var(--premium); }
 .hype-list .warning { border-left-color: var(--danger); }
 .hype-list strong { display: block; }
+pre.bibtex { margin: 6px 0 0; padding: 10px 12px; background: var(--bg-soft); border-radius: 8px; overflow-x: auto; font-size: 13px; white-space: pre; }
 blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px solid var(--accent); color: #33333f; }
 
 .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: var(--radius); }
