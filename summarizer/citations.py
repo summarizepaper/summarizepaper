@@ -1,7 +1,9 @@
 """Citation alerts (Premium): who cites the papers I follow, and what they say about them.
 
-Semantic Scholar gives the citing papers of an arXiv paper and, when it has
-their full text, the sentences around the citation. Once a day the hourly
+NASA ADS gives the citing papers of an arXiv paper: it links preprints to
+their journal version, so its counts are the ones astronomers and physicists
+know. Semantic Scholar adds, when it has their full text, the sentences around
+the citation, and is the source for papers ADS does not know. Once a day the hourly
 digest run refreshes the papers somebody follows; a new citing paper is
 queued for each follower, and once a week a follower with queued citations
 gets one email. The model reads the citation sentences to say whether the
@@ -33,6 +35,9 @@ from .models import ArxivPaper, CitationAlertLog, CitationCache, FollowedPaper
 
 logger = logging.getLogger(__name__)
 
+ADS = 'https://api.adsabs.harvard.edu/v1/search/query'
+ADS_FIELDS = 'bibcode,title,author,pubdate,identifier,doi'
+ADS_PAGE = 2000
 S2 = 'https://api.semanticscholar.org/graph/v1/paper/arXiv:%s/citations'
 FIELDS = 'title,externalIds,publicationDate,authors,contexts,intents'
 PAGE = 1000
@@ -53,7 +58,7 @@ def base_id(text):
     return re.sub(r'v\d+$', '', match.group(1)) if match else None
 
 
-def fetch(arxiv_id):
+def fetch_s2(arxiv_id):
     """{paperId: citing paper} from Semantic Scholar; None when it does not know the paper."""
     citing, offset = {}, 0
     headers = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
@@ -87,18 +92,87 @@ def fetch(arxiv_id):
     return citing
 
 
+def ads_get(params):
+    response = requests.get(ADS, params=params, timeout=60,
+                            headers={'Authorization': 'Bearer %s' % settings.ADS_TOKEN})
+    response.raise_for_status()
+    return response.json()['response']
+
+
+def fetch_ads(arxiv_id):
+    """{'ads:<bibcode>': citing paper} from ADS; None when it does not know the paper."""
+    target = 'identifier:"arXiv:%s"' % arxiv_id
+    if not ads_get({'q': target, 'fl': 'bibcode', 'rows': 1})['numFound']:
+        return None
+    citing = {}
+    for page in range(MAX_PAGES):
+        body = ads_get({'q': 'citations(%s)' % target, 'fl': ADS_FIELDS, 'rows': ADS_PAGE,
+                        'start': page * ADS_PAGE, 'sort': 'date desc'})
+        for doc in body['docs']:
+            if not doc.get('title'):
+                continue
+            arxiv = next((i[6:] for i in doc.get('identifier') or [] if i.startswith('arXiv:')), '')
+            citing['ads:' + doc['bibcode']] = {
+                'title': ' '.join(doc['title'][0].split()),
+                'arxiv_id': arxiv,
+                'doi': (doc.get('doi') or [''])[0],
+                'date': (doc.get('pubdate') or '').replace('-00', ''),
+                'authors': (doc.get('author') or [])[:6],
+                'contexts': [],
+                'intents': [],
+            }
+        if (page + 1) * ADS_PAGE >= body['numFound']:
+            break
+    return citing
+
+
+def same_paper(c):
+    return [k for k in (c['arxiv_id'] and 'arxiv:' + re.sub(r'v\d+$', '', c['arxiv_id']).lower(),
+                        c['doi'] and 'doi:' + c['doi'].lower()) if k]
+
+
+def fetch(arxiv_id):
+    """{id: citing paper}, from ADS when it knows the paper, with the citation sentences of Semantic
+    Scholar; from Semantic Scholar alone otherwise. None when neither knows it."""
+    citing = fetch_ads(arxiv_id) if getattr(settings, 'ADS_TOKEN', '') else None
+    if citing is None:
+        return fetch_s2(arxiv_id)
+    try:
+        sentences = fetch_s2(arxiv_id) or {}
+    except (requests.RequestException, ValueError):
+        sentences = {}  # the counts do not depend on it; tomorrow's check adds the sentences
+    by_key = {k: c for c in sentences.values() if c['contexts'] for k in same_paper(c)}
+    for c in citing.values():
+        match = next((by_key[k] for k in same_paper(c) if k in by_key), None)
+        if match:
+            c['contexts'], c['intents'] = match['contexts'], match['intents']
+    return citing
+
+
+def rekey(ids, old, new):
+    """The ids of `new` for the papers `ids` of `old`, when the source of a paper's citations changed."""
+    index = {k: pid for pid, c in new.items() for k in same_paper(c)}
+    found = (next((index[k] for k in same_paper(old[pid]) if k in index), None) for pid in ids if pid in old)
+    return [pid for pid in dict.fromkeys(found) if pid]
+
+
 def refresh(arxiv_id, now):
     """Update the cached citations of a paper and queue the new ones for its followers."""
     try:
         citing = fetch(arxiv_id)
-    except (requests.RequestException, ValueError):
-        logger.warning('Semantic Scholar failed for %s', arxiv_id)
+    except (requests.RequestException, ValueError, KeyError):
+        logger.warning('Citations failed for %s', arxiv_id)
         return False
     cached, _ = CitationCache.objects.get_or_create(arxiv_id=arxiv_id)
     cached.checked = now
     if citing is None:
         cached.save(update_fields=['checked'])
         return False
+    before = json.loads(cached.citing or '{}')
+    # ids are bibcodes ('ads:...') or Semantic Scholar ids: when the source changes, carry over what
+    # followers knew and had queued, by arXiv id or DOI, instead of reporting every citation as new
+    switched = bool(before) and bool(citing) and \
+        any(k.startswith('ads:') for k in before) != any(k.startswith('ads:') for k in citing)
     cached.citing, cached.total = json.dumps(citing), len(citing)
     cached.save()
     for followed in FollowedPaper.objects.filter(arxiv_id=arxiv_id):
@@ -108,6 +182,13 @@ def refresh(arxiv_id, now):
             # first check since the user followed it: what it already has is not news
             followed.known = json.dumps(list(citing))
             followed.save(update_fields=['known', 'title'])
+            continue
+        if switched:
+            pending = rekey(json.loads(followed.pending or '[]'), before, citing)
+            # a citation the new source has and the old one missed is not news either
+            followed.known = json.dumps([pid for pid in citing if pid not in pending])
+            followed.pending = json.dumps(pending) if pending else ''
+            followed.save(update_fields=['known', 'pending', 'title'])
             continue
         known = set(json.loads(followed.known))
         pending = json.loads(followed.pending or '[]')
@@ -211,7 +292,9 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
             items = []
             for pid, c in list(new.items())[:MAX_PER_EMAIL]:
                 link = ('%s/%s/arxiv-id/%s/' % (base_url, lang, c['arxiv_id'].replace('/', '--'))) if c['arxiv_id'] else \
-                    ('https://doi.org/%s' % c['doi'] if c['doi'] else 'https://www.semanticscholar.org/paper/%s' % pid)
+                    ('https://doi.org/%s' % c['doi'] if c['doi'] else
+                     'https://ui.adsabs.harvard.edu/abs/%s/abstract' % pid[4:] if pid.startswith('ads:') else
+                     'https://www.semanticscholar.org/paper/%s' % pid)
                 items.append(dict(c, url=link, **notes.get(pid, {'stance': '', 'note': ''})))
             papers.append({'followed': followed, 'items': items, 'more': max(0, len(new) - MAX_PER_EMAIL)})
         if not papers:

@@ -8,7 +8,7 @@ import numpy as np
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.cache import cache
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
 from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, trends
@@ -373,6 +373,42 @@ class CitationTests(ToolsTestCase):
             citations.refresh('2607.11677', timezone.now())
             self.assertContains(self.client_for(user).get('/en/citations/'), 'A new disc')
         self.assertEqual(FollowedPaper.objects.get(user=user).title, 'A new disc')
+
+    @override_settings(ADS_TOKEN='token')
+    def test_ads_counts_with_semantic_scholar_sentences(self):
+        def ads(params):
+            if params['q'] == 'identifier:"arXiv:2101.00001"':
+                return {'numFound': 1, 'docs': [{'bibcode': '2021A&A...1K'}]}
+            if params['q'].startswith('identifier:'):
+                return {'numFound': 0, 'docs': []}
+            return {'numFound': 2, 'docs': [
+                {'bibcode': '2026MNRAS.1A', 'title': ['Thick  clouds'], 'author': ['Zoe Q'], 'pubdate': '2026-10-00',
+                 'identifier': ['2026MNRAS.1A', 'arXiv:2201.00003'], 'doi': ['10.1/a']},
+                {'bibcode': '2026ApJ...2B', 'title': ['Not on arXiv'], 'pubdate': '2026-09-00'}]}
+        s2 = {'s3': dict(self.citing('c3')['c3'], arxiv_id='2201.00003v2')}
+        with mock.patch('summarizer.citations.ads_get', side_effect=ads), \
+             mock.patch('summarizer.citations.fetch_s2', return_value=s2) as fetch_s2:
+            citing = citations.fetch('2101.00001')
+            self.assertEqual(list(citing), ['ads:2026MNRAS.1A', 'ads:2026ApJ...2B'])
+            self.assertEqual(citing['ads:2026MNRAS.1A']['contexts'], ['As shown by [3], clouds are thick.'])
+            self.assertEqual((citing['ads:2026MNRAS.1A']['title'], citing['ads:2026MNRAS.1A']['date']), ('Thick clouds', '2026-10'))
+            # papers ADS does not know keep Semantic Scholar
+            self.assertEqual(citations.fetch('cs/0101001'), s2)
+            self.assertEqual(fetch_s2.call_count, 2)
+
+    def test_switching_source_keeps_known_and_queued_citations(self):
+        user = self.user(paid=True)
+        now = timezone.now()
+        old = self.citing('c1', 'c2')
+        CitationCache.objects.create(arxiv_id='2101.00001', citing=json.dumps(old), total=2, checked=now)
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='T', known='["c1"]', pending='["c2"]')
+        new = {'ads:' + pid: dict(c) for pid, c in self.citing('c1', 'c2', 'c4').items()}
+        with mock.patch('summarizer.citations.fetch', return_value=new):
+            citations.refresh('2101.00001', now)
+        followed = FollowedPaper.objects.get(user=user)
+        self.assertEqual(json.loads(followed.pending), ['ads:c2'])
+        self.assertEqual(json.loads(followed.known), ['ads:c1', 'ads:c4'])
+        self.assertEqual(CitationCache.objects.get(arxiv_id='2101.00001').total, 3)
 
     def test_refresh_due_skips_fresh_papers(self):
         user = self.user(paid=True)

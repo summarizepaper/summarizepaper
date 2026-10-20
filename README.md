@@ -58,6 +58,7 @@ Run the tests with `venv/bin/python manage.py test summarizer`.
 | `DATABASE_URL`, `REDISCLOUD_URL` | Set by the Postgres and Redis Cloud add-ons |
 | `OPENAI_KEY` | OpenAI API key |
 | `SECRETCMTA` | SMTP password (outgoing email) |
+| `ADS_TOKEN` | NASA ADS API token, source of the citation alerts' citing papers (Semantic Scholar alone while unset) |
 | `S2_API_KEY` | Optional Semantic Scholar key, raises the rate limit of the citation alerts |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | Premium subscriptions; Premium stays closed while unset |
 

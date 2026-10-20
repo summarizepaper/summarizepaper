@@ -31,6 +31,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 OPENAI_KEY = os.getenv('OPENAI_KEY')
 # optional: a Semantic Scholar API key raises the rate limit of the citation alerts
 S2_API_KEY = os.getenv('S2_API_KEY', '')
+# NASA ADS token: the citation alerts take their citing papers from ADS when it knows the paper
+ADS_TOKEN = os.getenv('ADS_TOKEN', '')
 SECRETSG = os.getenv('SECRETSG')
 SECRETCMTA = os.getenv('SECRETCMTA')
 
