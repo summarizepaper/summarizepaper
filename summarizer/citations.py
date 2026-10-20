@@ -126,6 +126,14 @@ def fetch_ads(arxiv_id):
     return citing
 
 
+class Citing(dict):
+    """{id: citing paper}, and the source it came from ('ads' or 's2'), known even when it is empty."""
+
+    def __init__(self, papers, source):
+        super().__init__(papers)
+        self.source = source
+
+
 def same_paper(c):
     return [k for k in (c['arxiv_id'] and 'arxiv:' + re.sub(r'v\d+$', '', c['arxiv_id']).lower(),
                         c['doi'] and 'doi:' + c['doi'].lower()) if k]
@@ -136,7 +144,8 @@ def fetch(arxiv_id):
     Scholar; from Semantic Scholar alone otherwise. None when neither knows it."""
     citing = fetch_ads(arxiv_id) if getattr(settings, 'ADS_TOKEN', '') else None
     if citing is None:
-        return fetch_s2(arxiv_id)
+        s2 = fetch_s2(arxiv_id)
+        return None if s2 is None else Citing(s2, 's2')
     try:
         sentences = fetch_s2(arxiv_id) or {}
     except (requests.RequestException, ValueError):
@@ -146,7 +155,14 @@ def fetch(arxiv_id):
         match = next((by_key[k] for k in same_paper(c) if k in by_key), None)
         if match:
             c['contexts'], c['intents'] = match['contexts'], match['intents']
-    return citing
+    return Citing(citing, 'ads')
+
+
+def source_of(citing):
+    """'ads' or 's2' from the ids of the citing papers, '' when there are none."""
+    if not citing:
+        return ''
+    return 'ads' if any(k.startswith('ads:') for k in citing) else 's2'
 
 
 def rekey(ids, old, new):
@@ -170,10 +186,12 @@ def refresh(arxiv_id, now):
         return False
     before = json.loads(cached.citing or '{}')
     # ids are bibcodes ('ads:...') or Semantic Scholar ids: when the source changes, carry over what
-    # followers knew and had queued, by arXiv id or DOI, instead of reporting every citation as new
-    switched = bool(before) and bool(citing) and \
-        any(k.startswith('ads:') for k in before) != any(k.startswith('ads:') for k in citing)
-    cached.citing, cached.total = json.dumps(citing), len(citing)
+    # followers knew and had queued, by arXiv id or DOI, instead of reporting every citation as new.
+    # The source is stored, so a paper with no citation in the old source switches too.
+    previous = cached.source or source_of(before)
+    current = getattr(citing, 'source', '') or source_of(citing) or previous
+    switched = bool(previous) and current != previous
+    cached.citing, cached.total, cached.source = json.dumps(citing), len(citing), current
     cached.save()
     for followed in FollowedPaper.objects.filter(arxiv_id=arxiv_id):
         if not followed.title:

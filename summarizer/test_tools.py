@@ -410,6 +410,26 @@ class CitationTests(ToolsTestCase):
         self.assertEqual(json.loads(followed.known), ['ads:c1', 'ads:c4'])
         self.assertEqual(CitationCache.objects.get(arxiv_id='2101.00001').total, 3)
 
+    def test_switching_from_a_paper_without_citations_reports_nothing_old(self):
+        user = self.user(paid=True)
+        now = timezone.now()
+        CitationCache.objects.create(arxiv_id='2101.00001', citing='{}', total=0, source='s2', checked=now)
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='T', known='[]')
+        new = citations.Citing({'ads:' + pid: dict(c) for pid, c in self.citing('c1', 'c2').items()}, 'ads')
+        with mock.patch('summarizer.citations.fetch', return_value=new):
+            citations.refresh('2101.00001', now)
+        followed = FollowedPaper.objects.get(user=user)
+        self.assertEqual(followed.pending, '')
+        self.assertEqual(sorted(json.loads(followed.known)), ['ads:c1', 'ads:c2'])
+        # ADS knows a paper with no citation yet: its first citation is news, not a switch of source
+        CitationCache.objects.create(arxiv_id='2101.00002', citing='{}', total=0, source='s2', checked=now)
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00002', title='U', known='[]')
+        with mock.patch('summarizer.citations.fetch', return_value=citations.Citing({}, 'ads')):
+            citations.refresh('2101.00002', now)
+        with mock.patch('summarizer.citations.fetch', return_value=new):
+            citations.refresh('2101.00002', now)
+        self.assertEqual(sorted(json.loads(FollowedPaper.objects.get(arxiv_id='2101.00002').pending)), ['ads:c1', 'ads:c2'])
+
     def test_refresh_due_skips_fresh_papers(self):
         user = self.user(paid=True)
         FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', known='[]')

@@ -585,6 +585,8 @@ class CitationCache(models.Model):
     arxiv_id = models.CharField(max_length=40, unique=True)
     citing = models.TextField(blank=True, default='')  # JSON {paperId: {title, arxiv_id, date, authors, contexts, intents}}
     total = models.PositiveIntegerField(default=0)
+    # 'ads' or 's2': where `citing` came from, kept even when there are no citations to tell it by their ids
+    source = models.CharField(max_length=10, blank=True, default='')
     checked = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
