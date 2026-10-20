@@ -1566,7 +1566,7 @@ class DigestPremiumTests(TestCase):
         sent, _ = self.run_digest(now=MONDAY + datetime.timedelta(days=2))
         self.assertEqual(sent, 1)
         self.assertIn('Last Thursday', mail.outbox[0].body)
-        self.assertIn('Your week on arXiv', mail.outbox[0].subject)
+        self.assertIn('Your week of research', mail.outbox[0].subject)
 
     def test_only_the_first_digest_without_premium(self):
         u = self.user('lapsed', False)

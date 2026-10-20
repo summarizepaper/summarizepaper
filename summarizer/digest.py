@@ -176,12 +176,36 @@ def clean_categories(values, limit=MAX_CATEGORIES):
 
 
 def clean_references(text):
-    """arXiv ids found in what the user typed (ids or arXiv links), in arXiv form."""
+    """Papers found in what the user typed: arXiv ids or links, in arXiv form; DOIs, other links and
+    keys of other sources, as keys (see sources.py)."""
     found = []
-    for match in ARXIV_ID_RE.findall(text.replace('--', '/')):
-        if match not in found:
-            found.append(match)
+    for token in re.split(r'[\s,;]+', text):
+        key = token.strip().lower()
+        if not key:
+            continue
+        if sources.is_external(key):
+            ref = key if sources.valid_key(key) else None
+        else:
+            doi = sources.clean_doi(token)
+            match = None if doi and not sources.ARXIV_DOI_RE.match(doi) else ARXIV_ID_RE.search(token.replace('--', '/'))
+            ref = sources.doi_key(doi) if doi and not match else (match.group(1) if match else None)
+        if ref and ref not in found:
+            found.append(ref)
     return found[:MAX_REFERENCES]
+
+
+def reference_texts(refs):
+    """Title and abstract of the reference papers of a research profile, from arXiv and the other sources."""
+    texts = [paper_text(p) for p in fetch_ids([r for r in refs if not sources.is_external(r)])]
+    for key in (r for r in refs if sources.is_external(r)):
+        try:
+            paper = sources.metadata(key)
+        except sources.SourceUnavailable:
+            logger.warning('Reference %s of a research profile could not be read', key)
+            continue
+        if paper:
+            texts.append(paper_text(paper))
+    return texts
 
 
 def clean_authors(text):
@@ -529,7 +553,7 @@ def profile_vector(subscription):
     if subscription.profile_key == key and subscription.profile_vector:
         return np.frombuffer(bytes(subscription.profile_vector), dtype=np.float32)
     try:
-        inputs = ([text] if text else []) + [paper_text(p) for p in fetch_ids(refs)]
+        inputs = ([text] if text else []) + reference_texts(refs)
         if not inputs:
             return None
         vector = similar.embed(inputs).mean(axis=0)

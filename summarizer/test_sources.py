@@ -481,3 +481,73 @@ class PipelineTests(TestCase):
         self.assertEqual(PaperText.objects.get(arxiv_id=MNRAS_KEY).source, 'abstract')
         self.assertIn('We reconstruct colours.', book.call_args.args[2])
         self.assertContains(Client().get('/en/arxiv-id/%s/' % MNRAS_KEY), 'CC BY-NC-ND')
+
+
+class ToolsWithOtherSourcesTests(TestCase):
+    def test_relay_answers_journal_searches_in_arxiv_form(self):
+        from xml.etree import ElementTree
+        with mock.patch('summarizer.sources.search_papers', return_value=[journal_paper()]) as search:
+            r = Client().get('/en/arxiv-api/', {'search_query': 'all:galaxy AND all:quenching', 'src': 'open'})
+        search.assert_called_once_with('galaxy quenching', per_page=10)
+        entry = ElementTree.fromstring(r.content).find('{http://www.w3.org/2005/Atom}entry')
+        self.assertTrue(entry.findtext('{http://www.w3.org/2005/Atom}id').endswith('/abs/' + MNRAS_KEY))
+        self.assertEqual(entry.findtext('{http://www.w3.org/2005/Atom}label'), 'DOI: ' + MNRAS)
+        self.assertEqual(entry.findtext('{http://www.w3.org/2005/Atom}published'), '2023-04-27T00:00:00Z')
+
+    def test_relay_looks_up_a_doi_and_leaves_arxiv_to_arxiv(self):
+        with mock.patch('summarizer.sources.fetch', return_value=journal_paper()):
+            r = Client().get('/en/arxiv-api/', {'id_list': 'https://doi.org/10.1093/mnras/stad1234'})
+        self.assertIn(('/abs/' + MNRAS_KEY).encode(), r.content)
+        arxiv = mock.Mock(status_code=200, content=b'<feed/>')
+        with mock.patch('summarizer.views.requests.get', return_value=arxiv) as get:
+            Client().get('/en/arxiv-api/', {'id_list': '10.48550/arXiv.2301.03702'})
+            Client().get('/en/arxiv-api/', {'id_list': 'hep-th--9901001v1'})
+        self.assertEqual([c.kwargs['params'] for c in get.call_args_list],
+                         [{'id_list': '2301.03702'}, {'id_list': 'hep-th/9901001v1'}])
+
+    def test_digest_reference_papers_take_dois(self):
+        self.assertEqual(digest.clean_references('2310.01234, https://doi.org/10.1093/mnras/stad1234, arXiv:hep-th/9901001'),
+                         ['2310.01234', MNRAS_KEY, 'hep-th/9901001'])
+        with mock.patch('summarizer.digest.fetch_ids', return_value=[]) as ids, \
+             mock.patch('summarizer.sources.fetch', return_value=journal_paper()):
+            texts = digest.reference_texts(['2310.01234', MNRAS_KEY])
+        ids.assert_called_once_with(['2310.01234'])
+        self.assertEqual(texts, ['Galaxy quenching time-scales\n\nWe reconstruct colours.'])
+
+    def test_what_did_i_miss_searches_the_journals_too(self):
+        from summarizer import missed
+        arxiv = [{'arxiv_id': '2301.03702v1', 'title': 'Quenching on arXiv', 'abstract': 'A.', 'authors': ['A B'],
+                  'published': datetime.datetime(2023, 1, 1), 'categories': ['astro-ph.GA']}]
+        open_papers = [journal_paper(arxiv_id='2301.03702'),  # the same paper, already given by arXiv
+                       journal_paper(key='doi_10.1--j', doi='10.1/j', title='A journal paper', arxiv_id=''),
+                       journal_paper(key='doi_10.1--n', doi='10.1/n', title='No abstract', abstract='', arxiv_id='')]
+        with mock.patch('summarizer.digest.arxiv_get', return_value=arxiv), \
+             mock.patch('summarizer.sources.search_papers', return_value=open_papers):
+            found = missed.search(['galaxy quenching'])
+        self.assertEqual([c['arxiv_id'] for c in found], ['2301.03702v1', 'doi_10.1--j'])
+        self.assertTrue(missed.cited(found[1], set(), '', {'10.1/j'}))
+
+    def test_assistant_reads_what_the_summary_read(self):
+        from summarizer import assistant
+        paper = ArxivPaper.objects.create(arxiv_id=MNRAS_KEY, title='Quenching', abstract='Abstract.',
+                                          license='https://creativecommons.org/licenses/by-nc/', journal_ref='MNRAS')
+        with mock.patch('summarizer.assistant.paper_text', return_value='Full text.'):
+            block = assistant._paper_block(paper, 1000)
+        self.assertIn('DOI: ' + MNRAS, block)
+        self.assertIn('Published in: MNRAS', block)
+        self.assertIn('Full text.', block)
+
+    def test_exports_of_a_paper_never_opened(self):
+        ExternalPaper.objects.create(key=MNRAS_KEY, source='openalex', doi=MNRAS, fetched=datetime.datetime.now(datetime.timezone.utc),
+                                     metadata=json.dumps(journal_paper()))
+        meta = exports.paper_meta(MNRAS_KEY)
+        self.assertEqual((meta['year'], meta['doi'], meta['journal']), ('2023', MNRAS, 'Monthly Notices of the Royal Astronomical Society'))
+
+    def test_home_and_faq_present_the_sources(self):
+        home = Client().get('/fr/')
+        self.assertContains(home, 'D’où viennent les articles')
+        self.assertContains(home, 'bioRxiv &amp; medRxiv')
+        faq = Client().get('/en/faq/')
+        self.assertContains(faq, 'Which papers can I summarize?')
+        self.assertContains(faq, 'Why is a summary sometimes made from the abstract only?')
+        self.assertContains(Client().get('/fr/faq/'), 'Quels articles puis-je résumer ?')

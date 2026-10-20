@@ -5,7 +5,7 @@
 
 {% block title %}{% trans 'Citation alerts' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Get an email when new papers cite your arXiv papers, with what they say about them: building on them, confirming them or questioning them.' %}" />
+  <meta name="description" content="{% trans 'Get an email when new papers cite your papers, on arXiv or in journals, with what they say about them: building on them, confirming them or questioning them.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/citations/" />
 {% endblock %}
 
@@ -20,7 +20,7 @@
   {% if anonymous or not paid %}
     <h2>{% trans 'What you can do' %}</h2>
     <ul class="tool-features">
-      <li>{% trans 'Follow your own papers, those of your team, or any paper you care about: paste their arXiv identifiers, or click "Tell me who cites it" on a paper page.' %}</li>
+      <li>{% trans 'Follow your own papers, those of your team, or any paper you care about: paste their arXiv identifiers or DOIs, or click "Tell me who cites it" on a paper page.' %}</li>
       <li>{% trans 'Once a week, one email lists the new papers that cite them, with their authors, date and link.' %}</li>
       <li>{% trans 'For each citation, an AI reads the sentences around it and tells you whether the new paper builds on yours, confirms it, questions it, or only mentions it.' %}</li>
       <li>{% blocktrans with n=max_followed %}Up to {{ n }} papers followed.{% endblocktrans %}</li>
@@ -37,8 +37,8 @@
       {% csrf_token %}
       <p><strong>{% trans 'Papers to follow' %}</strong></p>
       {% include 'summarizer/arxiv_picker.html' with target='follow-ids' %}
-      <p><label>{% trans 'Or paste their arXiv identifiers or links:' %}<br>
-        <textarea id="follow-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea></label></p>
+      <p><label>{% trans 'Or paste their arXiv identifiers, DOIs or links:' %}<br>
+        <textarea id="follow-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers, DOIs or links, separated by spaces or new lines' %}"></textarea></label></p>
       <p><button class="btn" type="submit">{% trans 'Follow' %}</button></p>
       <p class="muted"><small>{% trans 'Citations come from Semantic Scholar and are checked once a day. The citations a paper already has when you follow it are not reported.' %}</small></p>
     </form>
@@ -48,7 +48,7 @@
       {% for f in followed %}
       <li class="card">
         <a href="{{ f.arxiv_id|paper_url }}" target="_blank" rel="noopener"><strong>{{ f.title|default:f.arxiv_id }}</strong></a>
-        <div class="meta">arXiv:{{ f.arxiv_id }} ·
+        <div class="meta">{{ f.arxiv_id|paper_ref }} ·
           {% if f.total is None %}{% trans 'first check in progress' %}{% else %}{% blocktrans count n=f.total %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}{% endif %}
           {% if f.queued %} · {% blocktrans count n=f.queued %}{{ n }} new in your next email{% plural %}{{ n }} new in your next email{% endblocktrans %}{% endif %}</div>
         <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="pk" value="{{ f.pk }}">

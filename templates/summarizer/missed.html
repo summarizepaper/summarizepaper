@@ -4,7 +4,7 @@
 
 {% block title %}{% trans 'What did I miss?' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Upload your draft and find the arXiv papers close to it that it does not cite, with how each one relates to your work. Check your references before you submit.' %}" />
+  <meta name="description" content="{% trans 'Upload your draft and find the papers close to it that it does not cite, on arXiv and in journals and preprints, with how each one relates to your work. Check your references before you submit.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/missed/" />
 {% endblock %}
 
@@ -13,15 +13,15 @@
   <header class="page-header">
     <span class="eyebrow">Premium</span>
     <h1>{% trans 'What did I miss?' %}</h1>
-    <p class="lead">{% trans 'Give us your draft: we search arXiv for the papers closest to it that it does not cite, and say for each how it relates to your work and how to position yourself against it.' %}</p>
+    <p class="lead">{% trans 'Give us your draft: we search arXiv, journals and preprint servers for the papers closest to it that it does not cite, and say for each how it relates to your work and how to position yourself against it.' %}</p>
   </header>
 
   {% if anonymous or not paid %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'Upload the PDF of your draft, or paste its title, abstract, introduction and references.' %}</li>
-      <li>{% trans 'We write several arXiv searches from your draft and gather the papers they find.' %}</li>
-      <li>{% trans 'We remove the papers your draft already cites, found by their arXiv identifier or their title in your references.' %}</li>
+      <li>{% trans 'We write several searches from your draft, run them on arXiv and on the open-access journals and preprints, and gather the papers they find.' %}</li>
+      <li>{% trans 'We remove the papers your draft already cites, found by their arXiv identifier, their DOI or their title in your references.' %}</li>
       <li>{% trans 'We rank the others by closeness to your draft, and an AI reads the closest ones.' %}</li>
       <li>{% trans 'You get the list, from "should be cited" to "related", with for each paper how it relates to your work (same problem, competing method, earlier result, data set to use) and how to position yourself against it.' %}</li>
     </ol>
@@ -45,7 +45,7 @@
       <p class="muted">{% trans 'or paste its text (title, abstract, introduction and references are enough):' %}</p>
       <p><textarea name="text"></textarea></p>
       <p><button class="btn" type="submit">{% trans 'Find what I missed' %}</button></p>
-      <p class="muted"><small>{% trans 'Your draft is read once to search arXiv and is not stored. Only the list of papers found is kept, in your account.' %}</small></p>
+      <p class="muted"><small>{% trans 'Your draft is read once to run the searches and is not stored. Only the list of papers found is kept, in your account.' %}</small></p>
     </form>
 
     {% if searches %}

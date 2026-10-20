@@ -14,7 +14,8 @@ from django.conf import settings
 from django.utils.translation import get_language_info
 
 from .models import AIassistant, ArxivPaper, SummaryPaper
-from .paper_source import arxiv_ref, paper_text
+from .paper_source import paper_text
+from . import sources
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,6 @@ logger = logging.getLogger(__name__)
 ENDPOINT = 'https://api.openai.com/v1/chat/completions'
 MAX_CONTEXT_CHARS = 400_000  # about 100k tokens of paper text
 HISTORY_TURNS = 5
-OPEN_LICENSES = ('/by/', '/by-sa/', '/by-nc-sa/', '/zero/')
 
 INSTRUCTIONS = """You are the SummarizePaper assistant. You explain scientific papers to researchers, students and curious readers.
 The paper(s) to discuss are given above, between <paper> tags.
@@ -44,8 +44,11 @@ class AssistantError(Exception):
 def _paper_block(paper, budget):
     """<paper> block with as much text as the budget allows."""
     authors = ', '.join(a.name for a in paper.authors.all()[:30])
-    header = 'arXiv: %s\nTitle: %s\nAuthors: %s\n' % (arxiv_ref(paper.arxiv_id), ' '.join((paper.title or '').split()), authors)
-    open_license = any(marker in (paper.license or '') for marker in OPEN_LICENSES)
+    header = '%s\nTitle: %s\nAuthors: %s\n' % (sources.label(paper.arxiv_id), ' '.join((paper.title or '').split()), authors)
+    if sources.is_external(paper.arxiv_id) and paper.journal_ref:
+        header += 'Published in: %s\n' % paper.journal_ref
+    # the rule the summary followed when it read the paper (see consumers.LoadingConsumer)
+    open_license = sources.is_open_license(paper.license)
     if open_license:
         body = paper_text(paper.arxiv_id)
     else:

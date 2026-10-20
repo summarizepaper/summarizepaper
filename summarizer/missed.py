@@ -1,12 +1,14 @@
-"""'What did I miss?': arXiv papers close to a draft that the draft does not cite (Premium).
+"""'What did I miss?': papers close to a draft that the draft does not cite (Premium).
 
-1. The model reads the start of the draft and writes arXiv search queries.
-2. arXiv answers them; the candidates are ranked by closeness to the draft
+1. The model reads the start of the draft and writes search queries.
+2. arXiv and the open-access journals and preprints (OpenAlex, see sources.py)
+   answer them; the candidates are ranked by closeness to the draft
    (embeddings) and the papers the draft already cites are dropped, matched
-   by arXiv id or by title in the draft's text.
+   by arXiv id, DOI or title in the draft's text.
 3. The model reads the closest ones and says, for each, how it relates to
    the draft and how to position the draft against it.
 """
+import datetime
 import logging
 import re
 import uuid
@@ -21,7 +23,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, digest, generated, similar
+from . import access, digest, generated, similar, sources
 from .models import Generated
 
 logger = logging.getLogger(__name__)
@@ -30,12 +32,13 @@ MAX_UPLOAD = 20 * 1024 * 1024
 MAX_TEXT_CHARS = 300_000
 QUERIES = 6
 RESULTS_PER_QUERY = 30
+OPEN_RESULTS_PER_QUERY = 15  # OpenAlex: each search costs, see sources.OPENALEX_SEARCHES_PER_DAY
 SHOWN = 15
 PER_DAY = 10
 QUOTA_KEY = 'missed-quota:%s:%s'
 STEPS = [
     ('read', _('Reading your draft')),
-    ('search', _('Searching arXiv for close papers')),
+    ('search', _('Searching arXiv and the journals for close papers')),
     ('rank', _('Ranking them and removing the papers you already cite')),
     ('review', _('An AI reads the closest papers and explains each one')),
 ]
@@ -61,17 +64,17 @@ def normalized(text):
     return re.sub(r'[^a-z0-9]+', ' ', text.lower()).strip()
 
 
-def cited(candidate, draft_ids, draft_words):
-    """True if the draft already cites this paper (its arXiv id, or its title, appears in the draft)."""
+def cited(candidate, draft_ids, draft_words, draft_dois=frozenset()):
+    """True if the draft already cites this paper (its arXiv id, DOI or title appears in the draft)."""
     base = re.sub(r'v\d+$', '', candidate['arxiv_id'].replace('--', '/'))
-    if base in draft_ids:
+    if base in draft_ids or (candidate.get('doi') and candidate['doi'] in draft_dois):
         return True
     title = normalized(candidate['title'])
     return len(title) > 20 and title in draft_words
 
 
 def search(queries):
-    """Candidates from arXiv for these queries, one per paper."""
+    """Candidates from arXiv and the open-access journals and preprints for these queries, one per paper."""
     found = {}
     for query in queries[:QUERIES]:
         terms = ' AND '.join('all:%s' % w for w in re.findall(r'[\w\-]+', query)[:6])
@@ -85,6 +88,18 @@ def search(queries):
         for paper in papers:
             base = re.sub(r'v\d+$', '', paper['arxiv_id'])
             found.setdefault(base, paper)
+        try:
+            others = sources.search_papers(query, per_page=OPEN_RESULTS_PER_QUERY, abstracts=True)
+        except sources.SourceUnavailable:
+            logger.warning('Open-access search failed for %s', query)
+            others = []
+        for paper in others:
+            if not paper['abstract'] or (paper['arxiv_id'] and paper['arxiv_id'].replace('/', '--') in found):
+                continue  # nothing to rank it by, or arXiv already gave it
+            found.setdefault(paper['key'], {
+                'arxiv_id': paper['key'], 'title': paper['title'], 'abstract': paper['abstract'],
+                'authors': paper['authors'], 'doi': paper['doi'],
+                'published': datetime.datetime.fromisoformat(paper['published']) if paper['published'] else None})
     return list(found.values())
 
 
@@ -94,7 +109,7 @@ def find(text, lang, step=lambda name: None):
     head = text[:12000]
     plan = generated.chat_json(
         'Above is the beginning of a research draft. Answer with a JSON object {"title": "its title or a short '
-        'description", "summary": "what it does, in 3 sentences, in English", "queries": ["%d arXiv search queries of '
+        'description", "summary": "what it does, in 3 sentences, in English", "queries": ["%d literature search queries of '
         '2 to 5 keywords each, in English, covering its topic, its method and its closest problems"]}.' % QUERIES,
         paid=False, max_tokens=800, system='<draft>\n%s\n</draft>' % head)
     queries = [str(q) for q in plan.get('queries', []) if str(q).strip()]
@@ -104,7 +119,8 @@ def find(text, lang, step=lambda name: None):
     draft_ids = {m.replace('--', '/') for m in digest.ARXIV_ID_RE.findall(text)}
     draft_ids |= {re.sub(r'v\d+$', '', m) for m in draft_ids}
     draft_words = normalized(text)
-    fresh = [c for c in candidates if not cited(c, draft_ids, draft_words)]
+    draft_dois = {m.group(1).rstrip('.,;)]').lower() for m in sources.DOI_RE.finditer(text)}
+    fresh = [c for c in candidates if not cited(c, draft_ids, draft_words, draft_dois)]
     if not fresh:
         return {'title': plan.get('title', ''), 'items': [], 'searched': len(candidates), 'cited': len(candidates)}
     vectors = similar.embed(['%s\n\n%s' % (plan.get('title', ''), plan.get('summary', '') or head[:4000])] +
@@ -116,7 +132,7 @@ def find(text, lang, step=lambda name: None):
                           for c in closest)
     step('review')
     notes = generated.chat_json(
-        'The draft is summarized here: %s\n\nThe arXiv papers above are close to it and the draft does not cite them. '
+        'The draft is summarized here: %s\n\nThe papers above are close to it and the draft does not cite them. '
         'In %s, for each paper, say in one or two sentences how it relates to the draft (same problem, competing '
         'method, earlier result, data set to use...) and how the draft could position itself against it. Rate how '
         'important it is for the draft to cite it: "high", "medium" or "low". Answer with a JSON object '

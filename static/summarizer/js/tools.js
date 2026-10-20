@@ -92,21 +92,26 @@
     tick();
   }
 
-  // Paper search next to a field that takes arXiv ids (templates/summarizer/arxiv_picker.html):
-  // typing searches arXiv through our relay, clicking a result adds its id to the field.
+  // Paper search next to a field that takes paper ids (templates/summarizer/arxiv_picker.html):
+  // typing searches arXiv, or the open-access journals and preprints, through our relay (views.arxiv_api);
+  // clicking a result adds its id to the field: an arXiv id, or a key such as doi_10.1093--mnras--stad1234.
   var ARXIV_ID = /^(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?\/\d{7})(v\d+)?$/i;
+  var PAPER_KEY = /^(doi|hal|pmc)_[a-z0-9._-]+$/i;
+  var LINK = /^(10\.\d{4,9}\/|https?:\/\/|doi:|pmc\d|pmid)/i;
 
   function picker(box) {
     var field = document.getElementById(box.dataset.target);
     var input = box.querySelector('.arxiv-picker-input');
     var status = box.querySelector('.arxiv-picker-status');
     var list = box.querySelector('.arxiv-picker-results');
+    var source = box.querySelector('.arxiv-picker-source');
     var comma = box.dataset.separator === 'comma';
     var timer = null, seq = 0;
     if (!field || !input) return;
 
     function ids() {
       return field.value.split(/[\s,]+/).map(function (s) {
+        if (PAPER_KEY.test(s)) return s.toLowerCase();
         var m = s.match(/(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?\/\d{7})/i);
         return m ? m[1].replace(/v\d+$/, '') : '';
       }).filter(Boolean);
@@ -126,7 +131,8 @@
 
     // arXiv's own syntax (au:, ti:, AND...) is passed as is; plain words must all appear.
     function query(q) {
-      if (ARXIV_ID.test(q)) return {id_list: q};
+      if (ARXIV_ID.test(q) || PAPER_KEY.test(q) || LINK.test(q)) return {id_list: q};
+      if (source && source.value === 'open') return {search_query: q, src: 'open'};
       if (/\b(all|ti|au|abs|cat|id):/.test(q)) return {search_query: q};
       return {search_query: q.split(/\s+/).map(function (w) { return 'all:' + w.replace(/[():"]/g, ''); })
         .filter(function (w) { return w !== 'all:'; }).join(' AND ')};
@@ -140,7 +146,9 @@
       if (!entries.length) { list.hidden = true; return say(box.dataset.none); }
       say('');
       entries.forEach(function (entry) {
-        var id = entry.getElementsByTagName('id')[0].textContent.split('/abs/')[1].replace(/v\d+$/, '');
+        var id = entry.getElementsByTagName('id')[0].textContent.split('/abs/')[1];
+        if (!PAPER_KEY.test(id)) id = id.replace(/v\d+$/, '');
+        var label = entry.getElementsByTagName('label')[0];
         var authors = Array.prototype.map.call(entry.getElementsByTagName('author'), function (a) {
           return a.getElementsByTagName('name')[0].textContent;
         });
@@ -151,7 +159,7 @@
         info.appendChild(text('div', [
           authors.slice(0, 3).join(', ') + (authors.length > 3 ? ' et al.' : ''),
           published ? published.textContent.slice(0, 4) : '',
-          'arXiv:' + id
+          label ? label.textContent : 'arXiv:' + id
         ].filter(Boolean).join(' · '), 'meta'));
         var button = text('button', '', 'btn btn-sm btn-ghost');
         button.type = 'button';
@@ -188,6 +196,7 @@
 
     // arXiv asks for at most one request every 3 s: wait until typing pauses
     input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 600); });
+    if (source) source.addEventListener('change', function () { if (input.value.trim()) run(); });
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); clearTimeout(timer); run(); }
     });

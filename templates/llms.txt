@@ -1,18 +1,18 @@
 {% autoescape off %}# SummarizePaper
 
-> SummarizePaper (summarizepaper.com) publishes AI summaries of arXiv research papers, in English and French. Each paper page gives a detailed summary, the key points, a lay summary anyone can understand, a blog-style article, related papers and the BibTeX entry, all generated from the full text of the paper. It is free to read and is run by an astrophysics researcher, Quentin Kral.
+> SummarizePaper (summarizepaper.com) publishes AI summaries of research papers from arXiv, open-access journals (any DOI) and preprint servers (bioRxiv, medRxiv, HAL, ChemRxiv, PsyArXiv and the other OSF servers, Europe PMC), in English and French. Each paper page gives a detailed summary, the key points, a lay summary anyone can understand, a blog-style article, related papers and the BibTeX entry, generated from the full text of the paper when its license allows it (CC BY, BY-SA, BY-NC, BY-NC-SA, CC0), from its abstract otherwise. It is free to read and is run by an astrophysics researcher, Quentin Kral.
 
-Paper pages follow the pattern `https://www.summarizepaper.com/<lang>/arxiv-id/<arXiv ID>/`, where `<lang>` is `en` or `fr`, for example https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/. Every summarized paper is listed in the sitemap. Summaries are produced by OpenAI language models from the HTML or PDF version published by arXiv; the original paper on arxiv.org remains the reference.
+Paper pages follow the pattern `https://www.summarizepaper.com/<lang>/arxiv-id/<id>/`, where `<lang>` is `en` or `fr` and `<id>` is an arXiv ID (https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/) or, for other sources, `doi_` followed by the DOI with `/` written `--` (https://www.summarizepaper.com/en/arxiv-id/doi_10.1093--mnras--stad1234/). Every summarized paper is listed in the sitemap. Summaries are produced by OpenAI language models from the version published by arXiv, the publisher or the preprint server; the original paper remains the reference.
 
 ## Main pages
 
-- [Home and search](https://www.summarizepaper.com/en/): look up any arXiv paper by title, keywords or arXiv ID
+- [Home and search](https://www.summarizepaper.com/en/): look up any arXiv paper by title, keywords or arXiv ID, any paper by DOI or link, or search the open-access journals and preprints
 - [Sitemap of summarized papers](https://www.summarizepaper.com/sitemap.xml): every paper and language that has a summary
 - [FAQ](https://www.summarizepaper.com/en/faq/): how the summaries are made, limits, Premium, digest, exports, how to cite
 - [About](https://www.summarizepaper.com/en/about/): who runs the site and why
 - [Chat with papers](https://www.summarizepaper.com/en/chat/): an AI assistant that answers questions from the full text of one or several papers
 - [About the author](https://www.summarizepaper.com/en/author/quentin-kral/): Quentin Kral, astronomer at the Paris Observatory
-- [Daily digest](https://www.summarizepaper.com/en/digest/): a free weekday email with new papers in chosen arXiv categories, each with a two-sentence summary
+- [Daily digest](https://www.summarizepaper.com/en/digest/): a free weekday email with new papers in chosen arXiv categories and bioRxiv or medRxiv subject areas, each with a two-sentence summary
 
 {% if guides %}## Guides
 
@@ -20,7 +20,7 @@ Paper pages follow the pattern `https://www.summarizepaper.com/<lang>/arxiv-id/<
 {% endfor %}
 {% endif %}## Citation
 
-Cite a summary with its paper page URL, for example https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/, and the site as "SummarizePaper, https://www.summarizepaper.com, Quentin Kral". The BibTeX entry for the site is on the FAQ page. For scientific claims, cite the original arXiv paper.
+Cite a summary with its paper page URL, for example https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/, and the site as "SummarizePaper, https://www.summarizepaper.com, Quentin Kral". The BibTeX entry for the site is on the FAQ page. For scientific claims, cite the original paper.
 
 ## Optional
 

@@ -100,7 +100,7 @@ class ProgressTests(ToolsTestCase):
         page = client.get('/en/missed/k1/')
         self.assertContains(page, 'class="spinner"')
         self.assertContains(page, 'data-step="review"')
-        self.assertContains(page, 'Searching arXiv for close papers')
+        self.assertContains(page, 'Searching arXiv and the journals for close papers')
         self.assertContains(page, 'data-started=')
 
 
@@ -295,6 +295,7 @@ class MissedTests(ToolsTestCase):
             return np.array([[1.0, 0.0]] + [[0.6, 0.8] if 'Other' in t else [0.8, 0.6] for t in texts[1:]], dtype=np.float32)
         with mock.patch('summarizer.generated.chat_json', side_effect=[plan, notes]), \
              mock.patch('summarizer.digest.arxiv_get', return_value=self.candidates()) as search, \
+             mock.patch('summarizer.sources.search_papers', return_value=[]), \
              mock.patch('summarizer.similar.embed', side_effect=embed):
             result = missed.find(draft, 'en')
         self.assertEqual(search.call_args_list[1][0][0]['search_query'], 'all:deep AND all:learning')
@@ -628,7 +629,7 @@ class PageTests(ToolsTestCase):
             self.assertContains(Client().get(url), text, msg_prefix=url)
         # fields that take arXiv ids come with a paper search
         self.assertContains(client.get('/en/citations/'), 'data-target="follow-ids"')
-        self.assertContains(client.get('/fr/citations/'), 'Chercher sur arXiv')
+        self.assertContains(client.get('/fr/citations/'), 'Titre, mots-clés, auteur ou DOI')
         self.assertContains(client.get('/en/digest/'), 'data-target="reference_papers"')
         self.assertContains(self.client_for(self.user('free')).get('/en/citations/'), 'Discover Premium')
         self.assertEqual(Client().get('/en/missed/abc/').status_code, 302)

@@ -5,7 +5,7 @@
 
 {% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: how the AI summaries and assistant work, free limits, Premium, the daily arXiv digest, accounts and citing us.' %}" />
+  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: which papers we summarize (arXiv, journals, bioRxiv, medRxiv, HAL...), how the AI summaries and assistant work, licenses, free limits, Premium, the daily digest and citing us.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/faq/" />
 {% endblock %}
 
@@ -19,25 +19,43 @@
       <details>
         <summary>{% trans "What is this website about?" %}</summary>
         <div class="answer">
-          {% trans "SummarizePaper summarizes arXiv papers with AI: for each paper you get a detailed summary, the key points, a lay summary anyone can understand and a blog-style article, in English or French, as well as a list of related papers. An AI assistant answers your questions about one or several papers, and a free daily email digest brings you the new papers in your fields." %}
+          {% trans "SummarizePaper summarizes scientific papers with AI: arXiv papers, journal articles and preprints from bioRxiv, medRxiv, HAL and other servers. For each paper you get a detailed summary, the key points, a lay summary anyone can understand and a blog-style article, in English or French, as well as a list of related papers. An AI assistant answers your questions about one or several papers, and a free daily email digest brings you the new arXiv, bioRxiv and medRxiv papers in your fields." %}
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Which papers can I summarize?" %}</summary>
+        <div class="answer">
+          <p>{% trans "Every arXiv paper, and papers from many other sources:" %}</p>
+          <ul>
+            <li>{% trans "Journal articles: any paper with a DOI. Paste the DOI or the link of the article, or search the open-access literature from the home page (we use OpenAlex, which lists more than 250 million works)." %}</li>
+            <li>{% trans "bioRxiv and medRxiv preprints, whose new papers can also come in your daily digest." %}</li>
+            <li>{% trans "HAL, ChemRxiv, the OSF preprint servers (PsyArXiv, SocArXiv, EarthArXiv, EdArXiv...), and the articles of PubMed and Europe PMC: paste their link, their PMID or their PMCID." %}</li>
+          </ul>
+          <p>{% trans "When a journal article also has an arXiv version and its own license does not let us read it, we take you to the arXiv page." %}</p>
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "Why is a summary sometimes made from the abstract only?" %}</summary>
+        <div class="answer">
+          {% trans "A summary is a derivative work, so our AI reads the full text of a paper only when its license allows it: CC BY, CC BY-SA, CC BY-NC, CC BY-NC-SA or CC0 (public domain). For the other papers (arXiv's default license, “no derivatives” licenses, articles behind a paywall), the summary and the assistant use the title, the authors and the abstract, and the page says so. Many bioRxiv preprints, for instance, are under CC BY-NC-ND." %}
         </div>
       </details>
       <details>
         <summary>{% trans "How does the AI summarization work?" %}</summary>
         <div class="answer">
-          {% trans "We read the full text of the paper (the HTML version published by arXiv when it exists, the PDF otherwise) and send it to recent OpenAI language models with a series of prompts that produce each part of the summary. Free users get our standard model; Premium subscribers get our most capable model, for summaries as well as for answers." %}
+          {% trans "We read the full text of the paper and send it to recent OpenAI language models with a series of prompts that produce each part of the summary. For arXiv, we read the HTML version when it exists and the PDF otherwise; for journals and other preprint servers, the structured text of the publisher or of Europe PMC when there is one, an open PDF otherwise, or the arXiv version. Free users get our standard model; Premium subscribers get our most capable model, for summaries as well as for answers." %}
         </div>
       </details>
       <details>
         <summary>{% trans "How do I get the summary of a paper?" %}</summary>
         <div class="answer">
-          {% trans "Search for a paper with the search bar on the home page, or type its arXiv ID. If the paper has already been summarized, the summary shows up immediately. If it is the first time someone looks for it, our AI has to read and summarize it first, which can take a few minutes; the progress is shown on the page." %}
+          {% trans "Search for a paper with the search bar on the home page (on arXiv, or in the journals and preprints), or paste its arXiv ID, its DOI or its link. If the paper has already been summarized, the summary shows up immediately. If it is the first time someone looks for it, our AI has to read and summarize it first, which can take a few minutes; the progress is shown on the page." %}
         </div>
       </details>
       <details>
         <summary>{% trans "Does the AI assistant read the whole paper?" %}</summary>
         <div class="answer">
-          {% blocktrans %}Yes. The assistant answers from the full text of the paper, not just the abstract, and its answers appear as they are written. Ask it questions from the paper page, or on the <a href="/{{ LANGUAGE_CODE }}/chat/">chat page</a> to question several papers at once.{% endblocktrans %}
+          {% blocktrans %}Yes, when the license of the paper allows it (see above); otherwise it answers from the abstract and tells you so. Its answers appear as they are written. Ask it questions from the paper page, or on the <a href="/{{ LANGUAGE_CODE }}/chat/">chat page</a> to question several papers at once, from arXiv, journals or preprint servers.{% endblocktrans %}
         </div>
       </details>
       <details>
@@ -62,8 +80,8 @@
       <details>
         <summary>{% trans "How does the daily digest work?" %}</summary>
         <div class="answer">
-          {% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to {{ papers_per_email }} new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}
-          {% blocktrans %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the digest ranks papers by closeness to a description of your research or to papers you choose, follows authors across all categories, adds a synthesis of the week in your fields, and has the full summary of your best papers ready before you open the email. You can have up to 5 digests, with 15 categories and 25 papers each.{% endblocktrans %}
+          {% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories or bioRxiv and medRxiv subject areas, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to {{ papers_per_email }} new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}
+          {% blocktrans %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the digest ranks papers by closeness to a description of your research or to papers you choose (by arXiv ID or DOI), follows authors across all categories, adds a synthesis of the week in your fields, and has the full summary of your best papers ready before you open the email. You can have up to 5 digests, with 15 categories and 25 papers each.{% endblocktrans %}
         </div>
       </details>
       <details>
@@ -75,7 +93,7 @@
       <details>
         <summary>{% trans "Can I export a summary or a reference?" %}</summary>
         <div class="answer">
-          {% trans "Yes. Each paper page lets you download the summary as a PDF and get the BibTeX entry of the paper for your bibliography." %}
+          {% trans "Yes. Each paper page lets you download the summary as a PDF, and export the paper to BibTeX, RIS (Zotero, Mendeley, EndNote) or Markdown (Notion, Obsidian), whether it comes from arXiv, a journal or a preprint server. With Premium, you can also send it to your Zotero library with its summary." %}
         </div>
       </details>
       <details>

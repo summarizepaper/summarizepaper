@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load dash_slash %}
 
 <!DOCTYPE html>
 <html>
@@ -118,7 +119,7 @@
 </head>
 <body>
     <h1>{{ paper.title }}</h1>
-    <p class="arx">arXiv: {{ paper.arxiv_id }}</p>
+    <p class="arx">{{ paper.arxiv_id|paper_ref }}</p>
     <p><a href="{{ link }}" target="_blank">{% trans 'Read the full paper here' %}</a></p>
 
     {% if keywords %}

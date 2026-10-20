@@ -4,7 +4,7 @@
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
-    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
+    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
     {% if listen_url %}
     <p style="margin:0 0 16px;"><a href="{{ listen_url }}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">&#127911; {% trans 'Listen to this digest' %}</a></p>
     {% endif %}

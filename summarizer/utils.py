@@ -2,7 +2,7 @@ from ipaddress import ip_address
 import time
 import requests
 from .models import ArxivPaper, SummaryPaper, PickledData, AIassistant, PaperScore, Author, PaperAuthor, SiteSettings
-from . import keypoints
+from . import keypoints, sources
 from django.contrib.auth.models import User, AnonymousUser
 import asyncio
 from asgiref.sync import sync_to_async,async_to_sync
@@ -535,7 +535,7 @@ def summary_pdf2(arxiv_id,language):
             #def header(self):
             #    self.set_font("DejaVu", "B", size=14)
             #    #self.set_font("Arial","B", size=14)
-            #    self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
+            #    self.cell(0, 10, "Made from SummarizePaper.com for " + sources.label(str(arxiv_id)), 1, 0, "C")
             #    self.ln(20)
 
             def paperdet(self, title, text, url):
@@ -635,7 +635,7 @@ def summary_pdf(arxiv_id,language):
             def header(self):
                 self.set_font("DejaVu", "B", size=14)
                 #self.set_font("Arial","B", size=14)
-                self.cell(0, 10, "Made from SummarizePaper.com for arXiv ID: "+str(arxiv_id), 1, 0, "C")
+                self.cell(0, 10, "Made from SummarizePaper.com for " + sources.label(str(arxiv_id)), 1, 0, "C")
                 self.ln(20)
 
             def paperdet(self, title, text, url):

@@ -261,7 +261,7 @@ def collection_export(request, pk, fmt):
             raise Http404
         out = io.StringIO()
         writer = csv.writer(out)
-        writer.writerow(['arXiv', 'Title'] + [str(label) for _, label in COLUMNS])
+        writer.writerow(['Identifier', 'Title'] + [str(label) for _, label in COLUMNS])
         for line in row.data()['rows']:
             writer.writerow([exports.bare_ref(line['arxiv_id']), line['title']] + [line[c] for c, _ in COLUMNS])
         response = HttpResponse('﻿' + out.getvalue(), content_type='text/csv; charset=utf-8')

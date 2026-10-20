@@ -14,14 +14,14 @@
   </header>
 
   {% if result %}
-    <p class="muted">{% blocktrans with searched=result.searched cited=result.cited %}{{ searched }} arXiv papers found by our searches; {{ cited }} of them are already cited by your draft.{% endblocktrans %}</p>
+    <p class="muted">{% blocktrans with searched=result.searched cited=result.cited %}{{ searched }} papers found by our searches; {{ cited }} of them are already cited by your draft.{% endblocktrans %}</p>
     {% if result.items %}
     <ul class="item-list">
       {% for item in result.items %}
       <li class="card">
         <span class="importance {{ item.importance }}">{% if item.importance == 'high' %}{% trans 'Should be cited' %}{% elif item.importance == 'medium' %}{% trans 'Worth a look' %}{% else %}{% trans 'Related' %}{% endif %}</span>
         <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ item.arxiv_id }}/"><strong>{{ item.title }}</strong></a></p>
-        <div class="meta">{{ item.authors }}{% if item.year %} · {{ item.year }}{% endif %} · arXiv:{{ item.arxiv_id|dash_slash }} · {% blocktrans with s=item.similarity %}{{ s }}% similar{% endblocktrans %}</div>
+        <div class="meta">{{ item.authors }}{% if item.year %} · {{ item.year }}{% endif %} · {{ item.arxiv_id|paper_ref }} · {% blocktrans with s=item.similarity %}{{ s }}% similar{% endblocktrans %}</div>
         {% if item.relation %}<p style="margin:8px 0 0">{{ item.relation }}</p>{% endif %}
       </li>
       {% endfor %}

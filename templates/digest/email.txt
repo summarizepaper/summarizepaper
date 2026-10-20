@@ -1,4 +1,4 @@
-{% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly arXiv digest' %}{% else %}{% trans 'Your daily arXiv digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
+{% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
 
 {% if listen_url %}{% trans 'Listen to this digest' %}: {{ listen_url }}
 

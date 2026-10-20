@@ -45,6 +45,7 @@
 }
 .search-container:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .search-container label { color: var(--text-muted); }
+.search-container select { flex: none; width: auto; max-width: 150px; padding: 6px 4px; border: 0; border-right: 1px solid var(--border); border-radius: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text-muted); }
 #search { flex: 1; min-width: 0; padding: 12px 0; border: 0; outline: none; font: 15px var(--font); background: transparent; }
 #spinner { color: var(--text-muted); }
 #atleast p, #nonefound p { margin: 8px 0 0; }
@@ -145,8 +146,8 @@
 {% block content %}
 <div class="chat-page">
 <header class="page-header">
-  <h1>{% trans 'Chat with arXiv Papers' %}</h1>
-  <p class="lead">{% trans 'Did you know you can chat directly with one or several arXiv papers? Our chatbot allows you to have a conversation with any paper on arXiv, enabling you to get more insights and ask questions in a natural language way.' %}</p>
+  <h1>{% trans 'Chat with research papers' %}</h1>
+  <p class="lead">{% trans 'Chat with one or several papers at once: arXiv papers, but also journal articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions in plain language; the assistant answers from the full text when the license allows it, from the abstract otherwise.' %}</p>
 </header>
 
 <div id="warnassistant" style="display:none;">
@@ -160,6 +161,10 @@
       <form class="searchform">
         <div class="search-container">
           <label for="search"><i class="fas fa-search"></i></label>
+          <select id="search-source" aria-label="{% trans 'Where to search' %}">
+            <option value="">arXiv</option>
+            <option value="open">{% trans 'Journals and preprints' %}</option>
+          </select>
           <input type="text" id="search" placeholder="{% trans 'Search for papers' %}">
           <div id="spinner" style="display: none;">
             <i class="fas fa-spinner fa-spin"></i>
@@ -175,7 +180,7 @@
           <p>{% trans 'Add a paper directly' %}</p>
           <div class="add-paper-row">
           <div class="input-container">
-            <input type="text" id="paper-id" placeholder="{% trans 'Arxiv ID (e.g. 2211.04191v1)' %}">
+            <input type="text" id="paper-id" placeholder="{% trans 'arXiv ID or DOI (e.g. 2211.04191v1, 10.1093/mnras/stad1234)' %}">
           </div>
           <button type="button" id="add-paper">{% trans 'Add' %}</button>
           </div>
@@ -190,7 +195,7 @@
       <h2 class="column-title"><span class="step">2</span>{% trans 'Selected Papers' %}</h2>    
       <ul class="list-group" id="selected-papers">
         <p id="nopap">
-          {% trans 'No papers selected yet. Search for papers to chat with using the search field on the left or add a paper directly via its arXiv ID using the form and clicking the Add button.' %}
+          {% trans 'No papers selected yet. Search for papers to chat with using the search field on the left, or add a paper directly with its arXiv ID or DOI and the Add button.' %}
         </p>      
       </ul>
       <div id='maxpapreached' style="display: none;"><p style="color:red;"><span class='warning-sign'>&#9888;</span>{% trans 'You have reached the limit of' %} {{ max_nb_paper }} {% trans 'papers you can interact with and cannot add more.' %}</p></div>
@@ -403,6 +408,9 @@ searchInput.addEventListener('keyup', function() {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(runSearch, 400);
 });
+document.getElementById('search-source').addEventListener('change', function () {
+  if (searchInput.value.trim().length >= 3) runSearch();
+});
 
 function runSearch() {
   var query = searchInput.value.trim();
@@ -416,7 +424,8 @@ function runSearch() {
     showSpinner();
     var seq = ++searchSeq;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '{% url "arxiv_api" %}?search_query=' + encodeURIComponent(query) + '&max_results=10');
+    var source = document.getElementById('search-source').value;
+    xhr.open('GET', '{% url "arxiv_api" %}?search_query=' + encodeURIComponent(query) + '&max_results=10' + (source ? '&src=' + source : ''));
     xhr.onload = function() {
       if (seq !== searchSeq) return;
       if (xhr.status === 200) {
@@ -645,7 +654,9 @@ searchResults.addEventListener('click', function(event) {
 
   addPaperButton.addEventListener('click', function() {
     var id = paperIdInput.value.trim();
-    if (!id.match(/v\d+$/)) {
+    // an arXiv id gets its version; a DOI, a link or a key is looked up by the relay, which answers with our key
+    var arxivLike = /^(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?(\/|--)\d{7})(v\d+)?$/i.test(id);
+    if (arxivLike && !id.match(/v\d+$/)) {
       id += 'v1';
     }
     if (id) {
@@ -658,7 +669,11 @@ searchResults.addEventListener('click', function(event) {
           errID.style.display = 'none';
           var data = xhr.responseXML;
           var entries = data.getElementsByTagName('entry');
-          if (entries[0].getElementsByTagName('title')[0]){
+          if (entries[0] && entries[0].getElementsByTagName('title')[0]){
+          var entryId = entries[0].getElementsByTagName('id')[0].textContent;
+          if (!arxivLike && entryId.indexOf('/abs/') > 0) {
+            id = entryId.split('/abs/')[1];
+          }
 
           var title = entries[0].getElementsByTagName('title')[0].textContent;
           var author = entries[0].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
@@ -960,7 +975,7 @@ function addTheListeners() {
     }
   
     // Call the scrollToBottom function when the page is fully loaded
-    window.addEventListener("load", scrollToBottom);
+  window.addEventListener("load", scrollToBottom);
   </script>
 
 {% endblock %}

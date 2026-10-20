@@ -16,7 +16,7 @@
 
   {% if message == 'added' %}<p class="notice">{% trans 'Added.' %}</p>
   {% elif message == 'full' %}<p class="error">{% blocktrans with n=limits.papers %}A collection holds {{ n }} papers at most on your plan.{% endblocktrans %}</p>
-  {% elif message == 'unknown' %}<p class="error">{% trans 'arXiv does not know this identifier.' %}</p>{% endif %}
+  {% elif message == 'unknown' %}<p class="error">{% trans 'No paper was found with this identifier.' %}</p>{% endif %}
 
   <div class="item-actions" style="margin-bottom:24px">
     {% if papers %}
@@ -70,7 +70,7 @@
     {% for p in papers %}
     <li class="card">
       <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/"><strong>{{ p.title|default:p.arxiv_id }}</strong></a>
-      <div class="meta">{{ p.authors }} · arXiv:{{ p.arxiv_id|dash_slash }}</div>
+      <div class="meta">{{ p.authors }} · {{ p.arxiv_id|paper_ref }}</div>
       <form method="post" class="item-actions">
         {% csrf_token %}
         <input type="hidden" name="arxiv_id" value="{{ p.arxiv_id }}">
@@ -89,7 +89,7 @@
     {% csrf_token %}
     <input type="hidden" name="action" value="add">
     {% include 'summarizer/arxiv_picker.html' with target='add-ids' %}
-    <textarea id="add-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers or links, separated by spaces or new lines' %}"></textarea>
+    <textarea id="add-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers, DOIs or links, separated by spaces or new lines' %}"></textarea>
     <p><button class="btn" type="submit">{% trans 'Add' %}</button></p>
   </form>
 

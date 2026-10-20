@@ -3,9 +3,9 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'Daily arXiv digest by email' %}{% endblock %}
+{% block title %}{% trans 'Daily digest of arXiv, bioRxiv and medRxiv papers by email' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Every morning, the new arXiv papers in your fields with a 2-sentence plain-language summary. Free.' %}" />
+  <meta name="description" content="{% trans 'Every morning, the new arXiv, bioRxiv and medRxiv papers in your fields with a 2-sentence plain-language summary. Free.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/digest/" />
 <style>
   .digest .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px 16px; }
@@ -32,7 +32,7 @@
 {% block content %}
 <div class="page digest">
   <header class="page-header">
-  <h1>{% trans 'Your daily arXiv digest' %}</h1>
+  <h1>{% trans 'Your daily paper digest' %}</h1>
   {% if paid %}
   <p class="lead">{% blocktrans %}Up to {{ papers_per_email }} new papers every weekday or once a week, ranked for your research, each with a 2-sentence summary anyone can understand, and the full AI summary ready to read.{% endblocktrans %}</p>
   {% else %}
@@ -48,7 +48,7 @@
     </div>
   {% else %}
     {% if saved %}<p class="notice">{% blocktrans with email=request.user.email %}Saved. Your next digest goes to {{ email }}.{% endblocktrans %}{% if subscription.active and not subscription.last_sent %} {% trans 'Want to see it now? Use the "Send me a preview now" button below.' %}{% endif %}</p>{% endif %}
-    {% if preview == 'sent' %}<p class="notice">{% blocktrans with email=request.user.email %}Your digest is on its way to {{ email }}, with the latest arXiv announcement. It takes about a minute.{% endblocktrans %}</p>
+    {% if preview == 'sent' %}<p class="notice">{% blocktrans with email=request.user.email %}Your digest is on its way to {{ email }}, with the latest papers. It takes about a minute.{% endblocktrans %}</p>
     {% elif preview == 'again' %}<p class="notice">{% trans 'A preview of this digest was already sent today.' %}</p>
     {% elif preview == 'busy' %}<p class="notice">{% trans 'Many previews were asked for this hour. Please try again a bit later.' %}</p>{% endif %}
     {% if digests|length > 1 or paid and digests %}
@@ -96,9 +96,9 @@
         {% if not paid %}<p class="muted">{% blocktrans %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, describe your research and the digest puts the closest papers first, instead of the newest.{% endblocktrans %}</p>{% endif %}
         <p><label for="profile">{% trans 'Describe your research in a few sentences. Papers are ranked by how close they are to it.' %}</label>
         <textarea id="profile" name="profile" maxlength="2000" placeholder="{% trans 'e.g. I study the atmospheres of hot Jupiters with JWST transmission spectra, especially clouds and hazes.' %}">{{ subscription.profile }}</textarea></p>
-        <p><label for="reference_papers">{% blocktrans %}Or give up to {{ max_references }} papers close to your work (arXiv ids or links, comma-separated):{% endblocktrans %}</label></p>
+        <p><label for="reference_papers">{% blocktrans %}Or give up to {{ max_references }} papers close to your work (arXiv ids, DOIs or links, comma-separated):{% endblocktrans %}</label></p>
         {% include 'summarizer/arxiv_picker.html' with target='reference_papers' separator='comma' %}
-        <p><input type="text" id="reference_papers" name="reference_papers" value="{{ subscription.reference_papers }}" placeholder="2310.01234, https://arxiv.org/abs/2401.04567"></p>
+        <p><input type="text" id="reference_papers" name="reference_papers" value="{{ subscription.reference_papers }}" placeholder="2310.01234, 10.1093/mnras/stad1234"></p>
         <p><label for="authors">{% blocktrans %}Authors to follow, in any category (up to {{ max_authors }}, comma-separated):{% endblocktrans %}</label>
         <input type="text" id="authors" name="authors" value="{{ subscription.authors }}" placeholder="Sara Seager, Yann LeCun"></p>
         <p class="muted">{% trans 'You also get a synthesis of the week in your categories (in the weekly digest, or on Mondays), and the full AI summary of your 3 best papers is ready before you open the email.' %}</p>

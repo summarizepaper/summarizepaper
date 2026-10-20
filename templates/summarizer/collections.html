@@ -2,23 +2,23 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% if anonymous %}{% trans 'Collections of arXiv papers' %}{% else %}{% trans 'My collections' %}{% endif %}{% endblock %}
+{% block title %}{% if anonymous %}{% trans 'Collections of research papers' %}{% else %}{% trans 'My collections' %}{% endif %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Group arXiv papers by project, compare them in one table, chat with all of them at once and export them to Zotero, LaTeX, Notion or Obsidian.' %}" />
+  <meta name="description" content="{% trans 'Group papers from arXiv, journals and preprint servers by project, compare them in one table, chat with all of them at once and export them to Zotero, LaTeX, Notion or Obsidian.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/collections/" />
 {% endblock %}
 
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <h1>{% if anonymous %}{% trans 'Collections of arXiv papers' %}{% else %}{% trans 'My collections' %}{% endif %}</h1>
+    <h1>{% if anonymous %}{% trans 'Collections of research papers' %}{% else %}{% trans 'My collections' %}{% endif %}</h1>
     <p class="lead">{% trans 'Group papers by project to compare them in one table, chat with all of them at once, and export them to your reference manager.' %}</p>
   </header>
 
   {% if anonymous %}
   <h2>{% trans 'What you can do' %}</h2>
   <ul class="tool-features">
-    <li>{% trans 'Save any paper in a collection from its page, in one click, or add papers by their arXiv identifier or link.' %}</li>
+    <li>{% trans 'Save any paper in a collection from its page, in one click, or add papers by their arXiv identifier, DOI or link.' %}</li>
     <li>{% trans 'Chat with all the papers of a collection at once: ask what they have in common, which method works best, what they disagree on.' %}</li>
     <li>{% trans 'Keep a note on each paper.' %}</li>
     <li>{% trans 'Export a whole collection to BibTeX for LaTeX, to RIS for Zotero, Mendeley or EndNote, or to Markdown for Notion and Obsidian.' %}</li>

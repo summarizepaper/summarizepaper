@@ -851,12 +851,44 @@ def create_embed(request):
 ARXIV_API_URL = 'https://export.arxiv.org/api/query'
 
 
+ARXIV_ID_FULL = re.compile(r'^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?/\d{7})(v\d+)?$', re.I)
+
+
+def open_feed(request, search_query, id_list):
+    """The other sources in arXiv's Atom form (sources.atom_feed): a search of the open-access journals and
+    preprints, or one paper by DOI, key or link."""
+    try:
+        if id_list:
+            found = sources.resolve(id_list) if not sources.is_external(id_list.lower()) else ('key', id_list.lower())
+            if found and found[0] == 'arxiv':
+                return None  # an arXiv DOI: arXiv answers
+            paper = sources.metadata(found[1]) if found and sources.valid_key(found[1]) else None
+            papers = [paper] if paper else []
+        else:
+            words = re.sub(r'\b(all|ti|au|abs|cat|id):', ' ', search_query).replace(' AND ', ' ')
+            words = ' '.join(re.sub(r'[()"]', ' ', words).split())
+            papers = sources.search_papers(words, per_page=10) if words else []
+    except sources.SourceUnavailable:
+        return HttpResponse('The journal search is not reachable right now.', status=502, content_type='text/plain')
+    return HttpResponse(sources.atom_feed(papers), content_type='application/atom+xml; charset=utf-8')
+
+
 def arxiv_api(request):
-    """Relay the chat page's arXiv lookups: arXiv sends no CORS header, so browsers block direct calls."""
+    """Relay the chat page's arXiv lookups: arXiv sends no CORS header, so browsers block direct calls.
+
+    With src=open, or an identifier that is not arXiv's (a DOI, a HAL or PubMed link...), the answer comes
+    from the other sources, in the same Atom form."""
     search_query = request.GET.get('search_query', '').strip()[:300]
-    id_list = request.GET.get('id_list', '').strip()[:100]
+    id_list = request.GET.get('id_list', '').strip()[:300]
     if bool(search_query) == bool(id_list):
         return HttpResponse('Give either search_query or id_list.', status=400, content_type='text/plain')
+    if id_list and ARXIV_ID_FULL.match(id_list.replace('--', '/')):
+        id_list = id_list.replace('--', '/')  # our URL form of old ids, from a collection's "chat with these"
+    if request.GET.get('src') == 'open' or (id_list and not ARXIV_ID_FULL.match(id_list)):
+        answer = open_feed(request, search_query, id_list)
+        if answer is not None:
+            return answer
+        id_list = sources.ARXIV_DOI_RE.match(sources.clean_doi(id_list)).group(1)
     if id_list:
         params = {'id_list': id_list}
     else:

@@ -1,7 +1,13 @@
-{% load i18n %}{# Search arXiv and add the chosen papers to the field `target` (an element id); see SP.picker in tools.js. #}
+{% load i18n %}{# Search arXiv or the open-access journals and add the chosen papers to the field `target` (an element id); see picker in tools.js. #}
 <div class="arxiv-picker" data-target="{{ target }}" data-separator="{{ separator|default:'newline' }}" data-url="{% url 'arxiv_api' %}"
-     data-added="{% trans 'Added' %}" data-add="{% trans 'Add' %}" data-none="{% trans 'No paper found.' %}" data-error="{% trans 'arXiv is not reachable right now. Try again in a moment.' %}">
-  <input type="text" class="arxiv-picker-input" autocomplete="off" placeholder="{% trans 'Search arXiv: title, keywords or author' %}" aria-label="{% trans 'Search arXiv: title, keywords or author' %}">
+     data-added="{% trans 'Added' %}" data-add="{% trans 'Add' %}" data-none="{% trans 'No paper found.' %}" data-error="{% trans 'The search is not reachable right now. Try again in a moment.' %}">
+  <div class="arxiv-picker-bar">
+    <select class="arxiv-picker-source" aria-label="{% trans 'Where to search' %}">
+      <option value="">arXiv</option>
+      <option value="open">{% trans 'Journals and preprints' %}</option>
+    </select>
+    <input type="text" class="arxiv-picker-input" autocomplete="off" placeholder="{% trans 'Title, keywords, author, or a DOI' %}" aria-label="{% trans 'Title, keywords, author, or a DOI' %}">
+  </div>
   <p class="arxiv-picker-status muted" hidden></p>
   <ul class="arxiv-picker-results" hidden></ul>
 </div>

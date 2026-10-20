@@ -5,7 +5,7 @@
 
 {% block title %}{% trans 'SummarizePaper Premium' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Premium gives you our most capable AI model for arXiv summaries and answers, no daily summary limit and many more questions to the AI assistant.' %}" />
+  <meta name="description" content="{% trans 'Premium gives you our most capable AI model for the summaries and answers of arXiv, journal and preprint papers, no daily summary limit and many more questions to the AI assistant.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/premium/" />
 <style>
   .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 32px 0 24px; }
@@ -55,7 +55,7 @@
         <li>{% blocktrans %}{{ runs_per_day }} new summaries per day{% endblocktrans %}</li>
         <li>{% blocktrans %}{{ chat_free }} questions per day to the AI assistant{% endblocktrans %}</li>
         <li>{% trans 'Standard AI model' %}</li>
-        <li>{% trans 'One arXiv digest, daily or weekly' %}</li>
+        <li>{% trans 'One digest of arXiv, bioRxiv and medRxiv papers, daily or weekly' %}</li>
         <li>{% blocktrans %}{{ readings_free }} rewrites per day of a summary for another reader or in another language{% endblocktrans %}</li>
         <li>{% trans '3 collections of 20 papers, chat with a collection, BibTeX, RIS and Markdown exports' %}</li>
         <li>{% trans 'Weekly letters and the top rising topics on the web' %}</li>
@@ -67,10 +67,10 @@
         <li>{% trans 'Our most capable AI model for summaries and answers' %}</li>
         <li>{% trans 'No daily summary limit' %}</li>
         <li>{% blocktrans %}{{ chat_paid }} questions per day to the AI assistant{% endblocktrans %}</li>
-        <li>{% trans 'A smarter arXiv digest: papers ranked by closeness to your research, authors you follow, a weekly synthesis of your fields, full summaries ready in advance, up to 5 digests' %}</li>
+        <li>{% trans 'A smarter digest: papers ranked by closeness to your research, authors you follow, a weekly synthesis of your fields, full summaries ready in advance, up to 5 digests' %}</li>
         <li>{% trans 'Your digest read aloud, to listen on the go' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/collections/">{% trans 'Comparison tables of your collections' %}</a>: {% trans 'question, method, data, results and limitations of each paper, where they agree and disagree, what is missing' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>: {% trans 'the arXiv papers close to your draft that it does not cite' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>: {% trans 'the papers close to your draft that it does not cite, on arXiv and in journals' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/citations/">{% trans 'Citation alerts' %}</a>: {% trans 'who cites your papers, and what they say about them' %}</li>
         <li>{% trans 'Press kit for journalists: hype check, key sentences quoted word for word, questions for the authors, independent researchers to call' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/trends/">{% trans 'All the rising topics' %}</a>, {% trans 'field by field, and the weekly letters by email' %}</li>

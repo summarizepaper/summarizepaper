@@ -52,6 +52,17 @@ def paper_meta(arxiv_id, fallback=None):
             'year': announced.announced.year, 'date': announced.announced.isoformat(),
             'category': announced.categories.split(',')[0], 'abstract': announced.abstract, 'doi': '', 'journal': '',
         }
+    if sources.is_external(arxiv_id):
+        try:
+            paper = sources.metadata(arxiv_id)
+        except sources.SourceUnavailable:
+            paper = None
+        if paper:
+            return {
+                'arxiv_id': arxiv_id, 'title': paper['title'], 'authors': paper['authors'],
+                'year': paper['published'][:4], 'date': paper['published'], 'category': paper['category'],
+                'abstract': paper['abstract'], 'doi': paper['doi'], 'journal': paper['journal'],
+            }
     if fallback is not None:
         return {'arxiv_id': arxiv_id, 'title': fallback.title, 'authors': [a for a in fallback.authors.split(', ') if a],
                 'year': '', 'date': '', 'category': '', 'abstract': '', 'doi': '', 'journal': ''}

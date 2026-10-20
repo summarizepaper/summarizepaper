@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %} {% trans 'AI-Powered arXiv Paper Summarization - Ask questions about a Paper' %} {% endblock %}
+{% block title %} {% trans 'AI summaries of research papers: arXiv, journals and preprints' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Our AI-powered arXiv paper summarization service provides fast, accurate, and easy-to-read summaries of scientific papers. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
+  <meta name="description" content="{% trans 'Easy-to-read AI summaries of scientific papers from arXiv, open-access journals and preprint servers (bioRxiv, medRxiv, HAL, PsyArXiv...): key points, lay summary, an assistant that answers your questions, and a daily digest of your fields.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/" />
 
   <script>
@@ -127,6 +128,13 @@
     .search-syntax ul { margin: 0; padding-left: 18px; }
     .search-syntax li + li { margin-top: 6px; }
 
+    .hero .lead { max-width: 680px; margin: -8px auto 28px; font-size: 18px; color: var(--text-muted); }
+    .sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+    .source-card { padding: 22px; }
+    .source-card h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 17px; }
+    .source-card h3 i { color: var(--accent); }
+    .source-card p { margin: 0; font-size: 14px; color: var(--text-muted); }
+    .sources-note { margin: 16px 0 0; font-size: 14px; color: var(--text-muted); }
     .section { padding: 48px 0; }
     .section-title {
       margin: 0 0 24px;
@@ -219,7 +227,8 @@
 
 <section class="hero">
   <div class="container">
-    <h1>{% trans "Discover Key Insights from arXiv's Latest Articles" %}</h1>
+    <h1>{% trans 'Key insights from arXiv papers, journal articles and preprints' %}</h1>
+    <p class="lead">{% trans 'Search or paste a link: our AI reads the paper and gives you its key points, a summary anyone can understand, and an assistant to question it.' %}</p>
     <form method="post" class="search-form" id="search-form">
       {% csrf_token %}
       <label for="arxiv-id" style="position:absolute;left:-9999px">{% trans 'Search for an article' %}</label>
@@ -252,14 +261,39 @@
 </section>
 
 <section class="section" style="padding-top:16px">
+  <div class="container">
+    <h2 class="section-title">{% trans 'Where the papers come from' %}</h2>
+    <div class="sources-grid">
+      <div class="card source-card">
+        <h3><i class="fas fa-atom"></i> arXiv</h3>
+        <p>{% trans 'Every paper of every category, read from its HTML version or its PDF. Type an arXiv ID or search by title, author or keywords.' %}</p>
+      </div>
+      <div class="card source-card">
+        <h3><i class="fas fa-book-open"></i> {% trans 'Journals' %}</h3>
+        <p>{% trans 'Any article with a DOI: paste it, or search the open-access literature. MNRAS, A&A, PLOS, Nature Communications, eLife and thousands of other journals.' %}</p>
+      </div>
+      <div class="card source-card">
+        <h3><i class="fas fa-dna"></i> bioRxiv &amp; medRxiv</h3>
+        <p>{% trans 'Biology and medicine preprints, summarized like arXiv papers. Their new preprints also come in the daily digest, by subject area.' %}</p>
+      </div>
+      <div class="card source-card">
+        <h3><i class="fas fa-layer-group"></i> {% trans 'Other preprint servers' %}</h3>
+        <p>{% trans 'HAL, ChemRxiv, PsyArXiv, SocArXiv, EarthArXiv and the other OSF servers, PubMed and Europe PMC.' %}</p>
+      </div>
+    </div>
+    <p class="sources-note">{% blocktrans %}When the license of a paper allows it (CC BY, BY-SA, BY-NC, BY-NC-SA or CC0), our AI reads the full text; otherwise the summary is written from the abstract and says so. <a href="/{{ LANGUAGE_CODE }}/faq/">More in the FAQ</a>.{% endblocktrans %}</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:16px">
   <div class="container intro-grid">
     <div class="card">
-      <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool, where you can stay up-to-date with the latest research on arXiv. Our goal is to provide you with concise, understandable, and insightful summaries (key-points, layman's summary, ...) for all arXiv research articles using AI, so you can quickly get a grasp of the latest developments in your field. In addition to our summary service, we offer an <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> to answer your questions about arXiv papers. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
+      <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool to stay up-to-date with research. For each paper, from arXiv, a journal or a preprint server, you get concise, understandable and insightful summaries (key points, lay summary, blog-style article...), in English, French and 14 other languages, so you quickly grasp the latest developments in your field. Our <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> answers your questions about one paper or several at once, and the <a href="/{{ LANGUAGE_CODE }}/digest/" class="chat-link">daily digest</a> brings you the new arXiv, bioRxiv and medRxiv papers of your fields. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
     </div>
     <div class="card chat-card">
       <div class="icon"><i class="fas fa-comments"></i></div>
-      <h2>{% trans 'Chat with arXiv Papers' %}</h2>
-      <p>{% trans 'Did you know you can chat directly with one or several arXiv papers? Our chatbot allows you to have a conversation with any paper on arXiv, enabling you to get more insights and ask questions in a natural language way.' %}</p>
+      <h2>{% trans 'Chat with research papers' %}</h2>
+      <p>{% trans 'Chat with one or several papers at once: arXiv papers, but also journal articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions in plain language; the assistant answers from the full text when the license allows it, from the abstract otherwise.' %}</p>
       <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn">{% trans 'Start Chatting' %} <i class="fas fa-arrow-right" style="font-size:13px"></i></a>
     </div>
   </div>
@@ -272,7 +306,7 @@
       {% for paper in latestpapers %}
         <a class="paper card" href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">
           <span class="title">{{ paper.paper.title|truncatechars:90 }}</span>
-          <span class="category">{{ paper.paper.category }}</span>
+          <span class="category">{{ paper.paper.category|category_label }}</span>
         </a>
       {% endfor %}
     </div>

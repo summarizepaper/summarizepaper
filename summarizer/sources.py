@@ -762,22 +762,6 @@ def read_candidate(kind, where):
     return '', ''
 
 
-def openalex_content_allowed():
-    """Count one OpenAlex download against today's cap (OPENALEX_CONTENT_PER_DAY)."""
-    from django.core.cache import cache
-    key = OPENALEX_CONTENT_KEY % timezone.now().date()
-    cache.add(key, 0, 2 * 86400)
-    try:
-        used = cache.incr(key)
-    except ValueError:  # expired between add and incr
-        return True
-    if used > OPENALEX_CONTENT_PER_DAY:
-        if used == OPENALEX_CONTENT_PER_DAY + 1:
-            logger.warning('OpenAlex full texts: the daily cap of %d is reached', OPENALEX_CONTENT_PER_DAY)
-        return False
-    return True
-
-
 def arxiv_text(arxiv_id):
     """(text, source) of the arXiv version of a paper, when its own arXiv license lets us read it."""
     import asyncio
@@ -867,38 +851,98 @@ SEARCH_TYPES = {'journals': 'type:article', 'preprints': 'type:preprint'}
 SEARCH_FIELDS = 'id,doi,display_name,authorships,publication_date,primary_location,best_oa_location,locations,type'
 
 
-def search(query, kind='', per_page=25):
-    """Open-access papers matching a query, from OpenAlex (Crossref when OpenAlex refuses).
+SEARCH_SECONDS = 6 * 3600  # pages, reloads and the same words typed again reuse a search
+# Searches cost $0.001 each on the same $1 a day as the full texts (OPENALEX_CONTENT_PER_DAY): past this many,
+# the day's searches go to Crossref, which is free but does not know which papers are open.
+OPENALEX_SEARCHES_PER_DAY = 450
+OPENALEX_SEARCH_KEY = 'openalex-searches:%s'
 
-    [{'key', 'title', 'authors', 'venue', 'published', 'license', 'open'}], open = we can read the full text.
-    """
-    filters = ['is_oa:true', 'has_doi:true'] + ([SEARCH_TYPES[kind]] if kind in SEARCH_TYPES else [])
+
+def _spend(key, limit):
+    """Count one call against a daily limit kept in the cache; False once it is reached."""
+    from django.core.cache import cache
+    key = key % timezone.now().date()
+    cache.add(key, 0, 2 * 86400)
     try:
-        body = _json('%s/works' % OPENALEX, _openalex_params({
-            'search': query, 'filter': ','.join(filters), 'per_page': per_page, 'select': SEARCH_FIELDS}))
-        papers = [openalex_paper(work) for work in (body or {}).get('results', [])]
-    except SourceUnavailable:
-        logger.warning('OpenAlex search failed, trying Crossref', exc_info=True)
-        body = _json('https://api.crossref.org/works', {
-            'query.bibliographic': query, 'rows': per_page, 'filter': 'has-license:true',
-            'select': 'DOI,title,author,published,container-title,license', 'mailto': 'contact@summarizepaper.com'})
-        papers = []
-        for work in ((body or {}).get('message') or {}).get('items', []):
-            doi = work['DOI'].lower()
-            date = (work.get('published') or {}).get('date-parts') or [[]]
-            papers.append(_paper(
-                key=doi_key(doi), source='crossref', doi=doi, title=(work.get('title') or [''])[0],
-                authors=[_clean('%s %s' % (a.get('given', ''), a.get('family', ''))) for a in work.get('author') or []],
-                published=_date(date[0]), journal=(work.get('container-title') or [''])[0],
-                license=((work.get('license') or [{}])[0]).get('URL', '')))
-    results = []
+        used = cache.incr(key)
+    except ValueError:
+        return True
+    if used == limit + 1:
+        logger.warning('OpenAlex: the daily limit %s (%d) is reached', key, limit)
+    return used <= limit
+
+
+def openalex_content_allowed():
+    """Count one OpenAlex download against today's cap (OPENALEX_CONTENT_PER_DAY)."""
+    return _spend(OPENALEX_CONTENT_KEY, OPENALEX_CONTENT_PER_DAY)
+
+
+def search_papers(query, kind='', per_page=25, abstracts=False):
+    """Open-access papers matching a query, as _paper dicts: from OpenAlex, or Crossref past the daily limit
+    or when OpenAlex refuses. Cached SEARCH_SECONDS."""
+    from django.core.cache import cache
+    cache_key = 'open-papers:%s' % hashlib.sha256(json.dumps([query.lower(), kind, per_page, abstracts]).encode()).hexdigest()
+    papers = cache.get(cache_key)
+    if papers is not None:
+        return papers
+    filters = ['is_oa:true', 'has_doi:true'] + ([SEARCH_TYPES[kind]] if kind in SEARCH_TYPES else [])
+    papers = None
+    if _spend(OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY):
+        try:
+            body = _json('%s/works' % OPENALEX, _openalex_params({
+                'search': query, 'filter': ','.join(filters), 'per_page': per_page,
+                'select': OPENALEX_FIELDS if abstracts else SEARCH_FIELDS}))
+            papers = [openalex_paper(work) for work in (body or {}).get('results', [])]
+        except SourceUnavailable:
+            logger.warning('OpenAlex search failed, trying Crossref', exc_info=True)
+    if papers is None:
+        papers = crossref_search(query, per_page)
+    papers = [p for p in papers if p['key'] and p['title']]
+    cache.set(cache_key, papers, SEARCH_SECONDS)
+    return papers
+
+
+def crossref_search(query, per_page):
+    body = _json('https://api.crossref.org/works', {
+        'query.bibliographic': query, 'rows': per_page, 'filter': 'has-license:true',
+        'select': 'DOI,title,author,published,container-title,license,abstract', 'mailto': 'contact@summarizepaper.com'})
+    papers = []
+    for work in ((body or {}).get('message') or {}).get('items', []):
+        doi = work['DOI'].lower()
+        date = (work.get('published') or {}).get('date-parts') or [[]]
+        papers.append(_paper(
+            key=doi_key(doi), source='crossref', doi=doi, title=(work.get('title') or [''])[0],
+            abstract=_strip_tags(work.get('abstract', '')),
+            authors=[_clean('%s %s' % (a.get('given', ''), a.get('family', ''))) for a in work.get('author') or []],
+            published=_date(date[0]), journal=(work.get('container-title') or [''])[0],
+            license=((work.get('license') or [{}])[0]).get('URL', '')))
+    return papers
+
+
+def search(query, kind='', per_page=25):
+    """Search results as the search page shows them.
+
+    [{'key', 'title', 'authors', 'venue', 'published', 'license', 'open', 'arxiv_id'}], open = we can read the full text.
+    """
+    return [{
+        'key': paper['key'], 'title': paper['title'], 'authors': paper['authors'][:6],
+        'more_authors': len(paper['authors']) > 6, 'venue': paper['journal'] or paper['source_name'],
+        'published': paper['published'], 'license': license_label(paper['license']),
+        'open': is_open_license(paper['license']), 'arxiv_id': paper['arxiv_id'].replace('/', '--'),
+    } for paper in search_papers(query, kind, per_page)]
+
+
+def atom_feed(papers, base_url='https://www.summarizepaper.com'):
+    """Papers as an Atom feed shaped like arXiv's, for the page scripts that read arXiv answers
+    (the paper picker of tools.js and the chat page): the id ends with /abs/<key>."""
+    feed = ElementTree.Element('feed', xmlns='http://www.w3.org/2005/Atom')
     for paper in papers:
-        if not paper['key'] or not paper['title']:
-            continue
-        results.append({
-            'key': paper['key'], 'title': paper['title'], 'authors': paper['authors'][:6],
-            'more_authors': len(paper['authors']) > 6, 'venue': paper['journal'] or paper['source_name'],
-            'published': paper['published'], 'license': license_label(paper['license']),
-            'open': is_open_license(paper['license']), 'arxiv_id': paper['arxiv_id'].replace('/', '--'),
-        })
-    return results
+        entry = ElementTree.SubElement(feed, 'entry')
+        ElementTree.SubElement(entry, 'id').text = '%s/abs/%s' % (base_url, paper['key'])
+        ElementTree.SubElement(entry, 'title').text = paper['title']
+        ElementTree.SubElement(entry, 'summary').text = paper['abstract']
+        ElementTree.SubElement(entry, 'published').text = '%sT00:00:00Z' % (paper['published'] or '1970-01-01')
+        ElementTree.SubElement(entry, 'label').text = label(paper['key'])
+        for name in paper['authors'][:20] or ['']:
+            ElementTree.SubElement(ElementTree.SubElement(entry, 'author'), 'name').text = name
+    return b'<?xml version="1.0" encoding="UTF-8"?>' + ElementTree.tostring(feed, encoding='utf-8')

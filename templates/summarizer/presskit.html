@@ -11,12 +11,12 @@
   <header class="page-header">
     <span class="eyebrow">{% trans 'Press kit' %} · Premium</span>
     <h1>{{ paper.title }}</h1>
-    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %} · arXiv:{{ arxiv_id|dash_slash }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
+    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
 
   {% if not paid %}
   <div class="upsell">
-    <p><strong>{% trans 'A press kit for every arXiv paper.' %}</strong> {% trans 'What is really new, a hype check (peer review, sample size, claims that go beyond the results), key sentences quoted word for word, questions to ask the authors, researchers who work on the same topic but did not sign the paper, and a glossary.' %}</p>
+    <p><strong>{% trans 'A press kit for every paper: arXiv, journals and preprints.' %}</strong> {% trans 'What is really new, a hype check (peer review, sample size, claims that go beyond the results), key sentences quoted word for word, questions to ask the authors, researchers who work on the same topic but did not sign the paper, and a glossary.' %}</p>
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>
   {% elif kit %}
