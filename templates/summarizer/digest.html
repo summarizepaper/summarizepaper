@@ -11,6 +11,8 @@
   .digest .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px 16px; }
   .digest .cats label { position: relative; display: block; padding: 6px 8px 6px 34px; border-radius: 6px; font-weight: 400; line-height: 1.45; cursor: pointer; }
   .digest .cats input { position: absolute; left: 8px; top: 9px; }
+  .digest .bio-cats { margin: 12px 0 0; }
+  .digest .bio-cats summary { padding: 6px 8px; font-weight: 600; cursor: pointer; }
   .digest .cats label:hover { background: var(--bg-soft); }
   .digest .cats small { color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; }
   .digest fieldset > p:last-child { margin-bottom: 0; }
@@ -71,6 +73,16 @@
           <label><input type="checkbox" name="categories" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
           {% endfor %}
         </div>
+        {% for server, codes in bio_categories %}
+        <details class="bio-cats" {% for code, name in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
+          <summary>{% blocktrans %}{{ server }} preprints (biology and medicine){% endblocktrans %}</summary>
+          <div class="cats">
+            {% for code, name in codes %}
+            <label><input type="checkbox" name="categories" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ name }}</label>
+            {% endfor %}
+          </div>
+        </details>
+        {% endfor %}
         <p><label for="other">{% trans 'Other arXiv categories, comma-separated (e.g.' %} <code>math.AP, nlin.CD</code>)</label>
         <input type="text" id="other" name="other" value="{{ other }}"></p>
       </fieldset>

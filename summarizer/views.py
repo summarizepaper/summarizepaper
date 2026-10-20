@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, citations, digest, library, mailcheck, reading, similar, exports
+from summarizer import access, accounts, citations, digest, library, mailcheck, reading, similar, sources, exports
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -49,6 +49,9 @@ import aiohttp
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.utils.safestring import mark_safe
+import logging
+
+logger = logging.getLogger(__name__)
 
 @require_GET
 def robots_txt(request):
@@ -202,9 +205,14 @@ def search_results(request):
     except (TypeError, ValueError):
         page_num = 1
 
+    src = 'open' if request.GET.get('src') == 'open' else 'arxiv'
+    kind = request.GET.get('type') if request.GET.get('type') in sources.SEARCH_TYPES else ''
     if not query:
         # arXiv answers 400 to an empty search_query: show the empty search page instead.
-        return render(request, 'summarizer/search_results.html', {'query': '', 'search': [], 'page_obj': None})
+        return render(request, 'summarizer/search_results.html', {'query': '', 'search': [], 'page_obj': None,
+                                                                    'src': src, 'kind': kind})
+    if src == 'open':
+        return open_search_results(request, query, kind, page_num)
 
     # perform search and pagination logic here
     search_results = []
@@ -380,7 +388,7 @@ def search_results(request):
 
     #total_pages = math.ceil(total_results / items_per_page)
 
-    context = {'query': query, 'search': search_results,'page_obj': page_obj}
+    context = {'query': query, 'search': search_results,'page_obj': page_obj, 'src': src, 'kind': kind}
 
     print('page_num',page_num)
     if page_num==1:
@@ -401,6 +409,28 @@ def search_results(request):
 
     return render(request, 'summarizer/search_results.html', context)
 
+OPEN_SEARCH_SECONDS = 6 * 3600  # an OpenAlex search costs; pages and reloads of the same search reuse it
+
+
+def open_search_results(request, query, kind, page_num):
+    """Search of the open-access journals and preprint servers (sources.search)."""
+    cache_key = 'open-search:%s' % hashlib.sha256(json.dumps([query.lower(), kind]).encode()).hexdigest()
+    results, failed = cache.get(cache_key), False
+    if results is None:
+        try:
+            results = sources.search(query, kind)
+            cache.set(cache_key, results, OPEN_SEARCH_SECONDS)
+        except sources.SourceUnavailable:
+            logger.warning('Open-access search failed for %r', query, exc_info=True)
+            results, failed = [], True
+    page_obj = Paginator(results, 10).get_page(page_num) if results else None
+    if page_num == 1:
+        Search.objects.create(query=query, user=request.user if request.user.is_authenticated else None,
+                              lang=get_language())
+    return render(request, 'summarizer/search_results.html', {
+        'query': query, 'search': results, 'page_obj': page_obj, 'src': 'open', 'kind': kind, 'failed': failed})
+
+
 def summarize(request):
     stuff_for_frontend = {}
     lang = get_language()
@@ -420,8 +450,24 @@ def summarize(request):
         # Compile the regular expression pattern into a regex object
         pattern2 = re.compile(regex_pattern2)
 
+        # a DOI, or a bioRxiv, HAL, OSF, PubMed or Europe PMC link or id: straight to its page
+        # an old arXiv id has its archive before a slash; 'hal-01234567v2' or 'dz6ut_v1' only look like one
+        arxiv_like = bool(pattern1.match(arxiv_id) or (pattern2.match(arxiv_id) and '/' in arxiv_id))
+        found = None
+        if not arxiv_like:
+            try:
+                found = sources.resolve(arxiv_id)
+            except sources.SourceUnavailable:
+                logger.warning('Could not resolve %r', arxiv_id, exc_info=True)
+        if found:
+            Search.objects.create(query=arxiv_id[:2000], user=request.user if request.user.is_authenticated else None,
+                                  lang=lang)
+            kind, value = found
+            target = digest.site_id(value) if kind == 'arxiv' else value
+            return HttpResponseRedirect(reverse('arxividpage', args=(target,)))
+
         # Match the pattern against the input string
-        if not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
+        if not arxiv_like:
             # Return an error message if the format is incorrect
             #search_results=utils.arxiv_search(arxiv_id)
 
@@ -439,6 +485,8 @@ def summarize(request):
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
             query_params = {'q': query, 'page': page}
+            if request.POST.get('src') == 'open':
+                query_params['src'] = 'open'
             url = f'/{lang}/search-results/?{urlencode(query_params)}'
             return redirect(url)
             #return redirect('search_results?q={}&page={}'.format(query, page))
@@ -576,16 +624,39 @@ def escape_latex(abstract):
 
 def arxiv_metadata_or_none(arxiv_id):
     try:
+        if sources.is_external(arxiv_id):
+            return sources.metadata_list(arxiv_id)
         return asyncio.run(utils.get_arxiv_metadata(arxiv_id))
     # arXiv sometimes answers with an empty or non-XML body when it is rate limiting
-    except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError):
+    except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError, sources.SourceUnavailable):
         return None
 
 
 def arxiv_unavailable(request, arxiv_id):
-    return render(request, 'summarizer/arxividpage.html',
-                  {'arxiv_id': arxiv_id, 'errormess': 'arXiv is not responding right now. Please try again in a moment.'},
-                  status=503)
+    if sources.is_external(arxiv_id):
+        message = _('The source of this paper is not responding right now. Please try again in a moment.')
+    else:
+        message = 'arXiv is not responding right now. Please try again in a moment.'
+    return render(request, 'summarizer/arxividpage.html', {'arxiv_id': arxiv_id, 'errormess': message}, status=503)
+
+
+def license_display(url):
+    """(label shown, whether the full text may be read) of a paper's license."""
+    if not url:
+        return '', False
+    return sources.license_label(url), sources.is_open_license(url)
+
+
+def arxiv_version_redirect(arxiv_id):
+    """For a DOI first opened here: its arXiv page, when there is an arXiv version and the DOI's own
+    license does not let us read the text (the arXiv version may, and its page is the one people share)."""
+    try:
+        paper = sources.metadata(arxiv_id)
+    except sources.SourceUnavailable:
+        return None
+    if paper and paper['arxiv_id'] and not sources.is_open_license(paper['license']):
+        return redirect(reverse('arxividpage', kwargs={'arxiv_id': digest.site_id(paper['arxiv_id'])}))
+    return None
 
 
 def tree(request, arxiv_id):
@@ -603,17 +674,7 @@ def tree(request, arxiv_id):
         print('dejabbbbbbbbbbbb')
         paper=ArxivPaper.objects.filter(arxiv_id=arxiv_id)[0]
 
-        url = paper.license
-        license = ''
-        if url != '' and url != None:
-            parts = url.split('/')
-            print('parts',parts)
-            license = parts[-3]
-            version = parts[-2]
-            if license.upper() != "NONEXCLUSIVE-DISTRIB":
-                cc_format = 'CC ' + license.upper() + ' ' + version
-            else:
-                cc_format = license.upper() + ' ' + version
+        cc_format, _public = license_display(paper.license)
 
         alpaper=True
         relpapers=''
@@ -850,14 +911,14 @@ def chat(request):
 
 def paper_structured_data(paper, sumpaper, lang):
     """schema.org JSON-LD for a paper page, already escaped for a <script> tag."""
-    arxiv_url = 'https://arxiv.org/abs/' + paper.arxiv_id.replace('--', '/')
+    arxiv_url = sources.ref_url(paper.arxiv_id)
     title = re.sub(r'\s+', ' ', paper.title or paper.arxiv_id).strip()
     data = {
         '@context': 'https://schema.org',
         '@type': 'ScholarlyArticle',
         'headline': title[:110],
         'name': title,
-        'identifier': paper.arxiv_id.replace('--', '/'),
+        'identifier': sources.label(paper.arxiv_id).split(': ', 1)[-1],
         'url': 'https://www.summarizepaper.com/%s/arxiv-id/%s/' % (lang, paper.arxiv_id),
         'sameAs': arxiv_url,
         'inLanguage': lang,
@@ -867,6 +928,8 @@ def paper_structured_data(paper, sumpaper, lang):
         data['datePublished'] = paper.published_arxiv.isoformat()
     if paper.category:
         data['about'] = paper.category
+    if sources.is_external(paper.arxiv_id) and paper.journal_ref:
+        data['isPartOf'] = {'@type': 'Periodical', 'name': paper.journal_ref}
     if sumpaper and sumpaper.summary:
         data['abstract'] = sumpaper.summary.strip()
     elif paper.abstract:
@@ -883,8 +946,12 @@ def citation_meta(paper):
     tags += [('citation_author', a.name) for a in paper.authors.all()[:100]]
     if paper.published_arxiv:
         tags.append(('citation_publication_date', paper.published_arxiv.strftime('%Y/%m/%d')))
-    tags += [('citation_arxiv_id', ref), ('citation_publisher', 'arXiv'),
-             ('citation_pdf_url', 'https://arxiv.org/pdf/%s' % ref)]
+    if sources.is_external(paper.arxiv_id):
+        if paper.journal_ref:
+            tags.append(('citation_journal_title', paper.journal_ref))
+    else:
+        tags += [('citation_arxiv_id', ref), ('citation_publisher', 'arXiv'),
+                 ('citation_pdf_url', 'https://arxiv.org/pdf/%s' % ref)]
     if paper.abstract:
         tags.append(('citation_abstract', ' '.join(paper.abstract.split())))
     if paper.link_doi and 'doi.org' in paper.link_doi:
@@ -916,7 +983,11 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         arxiv_id=cat+'--'+arxiv_id
         print('comp',arxiv_id)
 
-    if not re.search(r'v\d{1,2}$', arxiv_id):
+    external = sources.is_external(arxiv_id.lower())
+    if external and arxiv_id != arxiv_id.lower():
+        return redirect(reverse('arxividpage', kwargs={'arxiv_id': arxiv_id.lower()}))
+
+    if not external and not re.search(r'v\d{1,2}$', arxiv_id):
         arxiv_id += "v1"
         #arxiv_id=arxiv_id.replace('--','/')
         # redirect to the new URL
@@ -964,7 +1035,11 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
     #pattern = re.compile(r'^\d{4}\.\d{4,5}(v\d+)?$')
     #if not pattern.match(arxiv_id):
-    if not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
+    if external and not sources.valid_key(arxiv_id):
+        stuff_for_frontend.update({'errormess': _('Wrong url: this is not a paper identifier we know.')})
+        return render(request, "summarizer/arxividpage.html", stuff_for_frontend, status=404)
+
+    if not external and not pattern1.match(arxiv_id) and not pattern2.match(arxiv_id):
 
         print('not')
         errormess='Wrong url. '+arxiv_id+' is an invalid arXiv ID format. It should be a four-digit number, a dot, a four or five-digit number, and an optional version number consisting of the letter "v" and one or more digits. For example, 2101.1234, 2101.12345, and 2101.12345v2 are valid identifiers.'
@@ -1157,24 +1232,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                 # code to run if the paper was not updated in the last year
                 print('1 days b')
 
-            url = paper.license
-            cc_format=''
-            license = ''
-            if url != '' and url != None:
-                parts = url.split('/')
-                print('parts',parts)
-                license = parts[-3]
-                version = parts[-2]
-                if license.upper() != "NONEXCLUSIVE-DISTRIB":
-                    cc_format = 'CC ' + license.upper() + ' ' + version
-                else:
-                    cc_format = license.upper() + ' ' + version
-
-            public=False
-            #print('lo',license.upper())
-            if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
-                public=True
-                print('pub')
+            cc_format, public = license_display(paper.license)
 
             print('cc',cc_format) # Output: CC BY-NC-SA 4.0
 
@@ -1271,6 +1329,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
         else:
             print('nope')
             alpaper=False
+            if external:
+                to_arxiv = arxiv_version_redirect(arxiv_id)
+                if to_arxiv:
+                    return to_arxiv
             arxiv_detailsf=arxiv_metadata_or_none(arxiv_id)
             if arxiv_detailsf is None:
                 return arxiv_unavailable(request, arxiv_id)
@@ -1294,24 +1356,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
                 arxiv_dict['published_arxiv']=published_datetime
 
-                url = arxiv_dict['license']
-                cc_format=''
-                license=''
-                if url != '':
-                    parts = url.split('/')
-                    print('parts',parts)
-                    license = parts[-3]
-                    version = parts[-2]
-                    if license.upper() != "NONEXCLUSIVE-DISTRIB":
-                        cc_format = 'CC ' + license.upper() + ' ' + version
-                    else:
-                        cc_format = license.upper() + ' ' + version
-
-                public=False
-                #print('lo',license.upper())
-                if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
-                    public=True
-                    print('pub2')
+                cc_format, public = license_display(arxiv_dict['license'])
 
                 print(cc_format) # Output: CC BY-NC-SA 4.0
 
@@ -1402,5 +1447,5 @@ def bibtex(request, arxiv_id):
     get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
     meta = exports.paper_meta(arxiv_id)
     response = HttpResponse(exports.bibtex_entry(meta), content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = 'inline; filename="%s.bib"' % exports.bare_ref(arxiv_id).replace('/', '_')
+    response['Content-Disposition'] = 'inline; filename="%s.bib"' % exports.file_name(arxiv_id)
     return response

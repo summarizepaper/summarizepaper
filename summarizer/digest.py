@@ -1,10 +1,17 @@
-"""Email digests of new arXiv papers, by category, keywords and, with Premium, a research profile.
+"""Email digests of new arXiv, bioRxiv and medRxiv papers, by category, keywords and, with Premium, a research profile.
 
 Run every hour (Heroku Scheduler): python manage.py send_digest
 
 arXiv announces its new papers once a day. Once per announcement, the RSS feed of
 every archive is read and the whole batch is stored (AnnouncedPaper); a digest then
 gets the best papers of the batches announced since its previous email.
+
+bioRxiv and medRxiv post every day, weekends included. Each arXiv announcement also
+takes their new preprints (first versions) of the days since the previous one, read
+from api.biorxiv.org, up to the day before yesterday, so the days read are complete
+(see bio_window). Their categories are written 'biorxiv.neuroscience'. When their
+API fails, the batch is stored without them and only the digests following their
+categories wait for them, as for an arXiv archive.
 
 Whatever costs a model call is done once and shared by every subscriber: the
 2-sentence blurb (per paper and language), the embedding (per paper), the full
@@ -27,11 +34,12 @@ from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
+from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
-from . import access, audio, mailcheck, similar
+from . import access, audio, mailcheck, similar, sources
 from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestFeedback, DigestItem,
                      DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
 from .utils import ai_models, chat_params
@@ -64,6 +72,10 @@ KEEP_DAYS = 10  # announced papers kept for weekly digests and syntheses
 RSS = 'https://rss.arxiv.org/atom/'
 ARCHIVES = ['astro-ph', 'cond-mat', 'cs', 'econ', 'eess', 'gr-qc', 'hep-ex', 'hep-lat', 'hep-ph', 'hep-th', 'math',
             'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'q-bio', 'q-fin', 'quant-ph', 'stat']
+BIO_ARCHIVES = ['biorxiv', 'medrxiv']
+SERVER_NAMES = {'biorxiv': 'bioRxiv', 'medrxiv': 'medRxiv'}
+BIORXIV_DETAILS = 'https://api.biorxiv.org/details/%s/%s/%s/%d'
+BIO_MAX_PAGES = 200
 RSS_MAX_ENTRIES = 2000  # a longer feed is cut by arXiv; its followed categories are then read one by one
 PARTIAL_AFTER = datetime.timedelta(hours=3)  # then a batch is accepted without the archives that still fail
 QUIET_KEY = 'arxiv-rss-quiet:%s'  # set when no archive has the expected day hours after it was due (arXiv holiday)
@@ -84,6 +96,28 @@ LOCK_SECONDS = 2 * 3600
 # arXiv's RSS feeds switch to the next announcement around 00:05 in New York, Monday to Friday
 ANNOUNCE_TZ = zoneinfo.ZoneInfo('America/New_York')
 RSS_DELAY = datetime.timedelta(minutes=30)
+
+# bioRxiv and medRxiv subject areas offered in the form (their API names, see sources.category_code)
+BIO_CATEGORIES = [
+    ('biorxiv', ['Animal Behavior and Cognition', 'Biochemistry', 'Bioengineering', 'Bioinformatics', 'Biophysics',
+                 'Cancer Biology', 'Cell Biology', 'Developmental Biology', 'Ecology', 'Evolutionary Biology', 'Genetics', 'Genomics', 'Immunology', 'Microbiology', 'Molecular Biology',
+                 'Neuroscience', 'Paleontology', 'Pathology', 'Pharmacology and Toxicology', 'Physiology',
+                 'Plant Biology', 'Scientific Communication and Education', 'Synthetic Biology',
+                 'Systems Biology', 'Zoology']),
+    ('medrxiv', ['Addiction Medicine', 'Allergy and Immunology', 'Anesthesia', 'Cardiovascular Medicine',
+                 'Dentistry and Oral Medicine', 'Dermatology', 'Emergency Medicine', 'Endocrinology', 'Epidemiology',
+                 'Forensic Medicine', 'Gastroenterology', 'Genetic and Genomic Medicine', 'Geriatric Medicine',
+                 'Health Economics', 'Health Informatics', 'Health Policy', 'Health Systems and Quality Improvement',
+                 'Hematology', 'HIV AIDS',
+                 'Infectious Diseases', 'Intensive Care and Critical Care Medicine', 'Medical Education',
+                 'Medical Ethics', 'Nephrology', 'Neurology', 'Nursing', 'Nutrition', 'Obstetrics and Gynecology',
+                 'Occupational and Environmental Health', 'Oncology', 'Ophthalmology', 'Orthopedics',
+                 'Otolaryngology', 'Pain Medicine', 'Palliative Medicine', 'Pathology', 'Pediatrics',
+                 'Pharmacology and Therapeutics', 'Primary Care Research', 'Psychiatry and Clinical Psychology',
+                 'Public and Global Health', 'Radiology and Imaging', 'Rehabilitation Medicine and Physical Therapy',
+                 'Respiratory Medicine', 'Rheumatology', 'Sexual and Reproductive Health', 'Sports Medicine',
+                 'Surgery', 'Toxicology', 'Transplantation', 'Urology']),
+]
 
 # Categories offered in the form; any valid arXiv category code is accepted too.
 CATEGORIES = [
@@ -120,6 +154,7 @@ CATEGORIES = [
 ]
 TIMEZONES = {tz for tz in zoneinfo.available_timezones() if '/' in tz and not tz.startswith(('Etc/', 'SystemV/', 'US/'))} | {'UTC'}
 CATEGORY_RE = re.compile(r'^[a-z\-]+(\.[A-Za-z\-]+)?$')
+BIO_CODES = {sources.category_code(server, name): (server, name) for server, names in BIO_CATEGORIES for name in names}
 ARXIV_ID_RE = re.compile(r'(\d{4}\.\d{4,5}(?:v\d+)?|[a-z\-]+(?:\.[A-Z]{2})?/\d{7}(?:v\d+)?)')
 
 
@@ -303,9 +338,19 @@ def fetch_batch(expected, now, categories=(), batch=None):
     The batch is stored once every archive was read for that day, or after PARTIAL_AFTER without the
     archives that still fail; those are read again at each run until they answer.
     """
-    archives = batch.missing_list() if batch else ARCHIVES
-    found, missing, on_time, stale = {}, [], 0, 0
+    archives = batch.missing_list() if batch else ARCHIVES + BIO_ARCHIVES
+    found, bio_found, missing, on_time, stale = {}, {}, [], 0, 0
     for archive in archives:
+        if archive in BIO_ARCHIVES:
+            try:
+                papers = read_bio(archive, expected)
+            except ArxivUnavailable:
+                logger.exception('%s could not be read', SERVER_NAMES[archive])
+                missing.append(archive)
+                continue
+            for paper in papers:
+                bio_found.setdefault(paper['arxiv_id'], paper)
+            continue  # never on time or stale: arXiv's feeds alone tell a holiday
         try:
             day, papers, entries = read_feed(archive)
             if entries >= RSS_MAX_ENTRIES:
@@ -326,6 +371,9 @@ def fetch_batch(expected, now, categories=(), batch=None):
         for paper in papers:
             if paper['announced'] == expected:
                 found.setdefault(paper['arxiv_id'], paper)
+    if batch is not None or on_time or not stale:
+        # on an arXiv holiday no batch is stored: the next one reads these days again
+        found.update(bio_found)
     AnnouncedPaper.objects.bulk_create([AnnouncedPaper(
         arxiv_id=p['arxiv_id'], announced=p['announced'], title=p['title'], abstract=p['abstract'],
         authors=json.dumps(p['authors']), categories=','.join(p['categories'])) for p in found.values()],
@@ -337,11 +385,68 @@ def fetch_batch(expected, now, categories=(), batch=None):
     elif stale and not on_time:
         if now >= announcement_time(expected) + PARTIAL_AFTER:
             cache.set(QUIET_KEY % expected, True, QUIET_SECONDS)  # feeds still on an older day: arXiv holiday
-    elif not missing or now >= announcement_time(expected) + PARTIAL_AFTER:
+    elif not [m for m in missing if m not in BIO_ARCHIVES] or now >= announcement_time(expected) + PARTIAL_AFTER:
+        # bioRxiv or medRxiv missing holds back only the digests that follow them (see _run)
         if missing:
             logger.warning('arXiv batch %s accepted without %s', expected, missing)
         ArxivBatch.objects.get_or_create(day=expected, defaults={
             'papers': AnnouncedPaper.objects.filter(announced=expected).count(), 'missing': ','.join(missing)})
+
+
+def bio_window(expected):
+    """(first, last) posting days of the bioRxiv and medRxiv preprints that go with the arXiv announcement of
+    `expected`: from the day before the previous announcement to the day before yesterday. Each day is taken
+    once (Monday takes Thursday to Saturday), and only once it is over everywhere."""
+    previous = (ArxivBatch.objects.filter(day__lt=expected, day__gte=expected - WEEK)
+                .order_by('-day').values_list('day', flat=True).first())
+    if previous is None:
+        previous = expected - datetime.timedelta(days=1)
+        while previous.weekday() >= 5:
+            previous -= datetime.timedelta(days=1)
+    return previous - datetime.timedelta(days=1), expected - datetime.timedelta(days=2)
+
+
+def bio_page(server, first, last, cursor):
+    """(rows, total) of one page of api.biorxiv.org, retried like arXiv."""
+    error = None
+    for wait in RETRY_WAITS + (None,):
+        try:
+            response = requests.get(BIORXIV_DETAILS % (server, first, last, cursor), timeout=60,
+                                    headers={'User-Agent': sources.USER_AGENT})
+            if response.status_code == 200:
+                body = response.json()
+                message = (body.get('messages') or [{}])[0]
+                return body.get('collection') or [], int(message.get('total') or 0)
+            error = 'HTTP %s' % response.status_code
+        except (requests.RequestException, ValueError) as e:
+            error = repr(e)
+        if wait is not None:
+            logger.info('%s page %d failed (%s), retrying in %ds', server, cursor, error, wait)
+            time.sleep(wait)
+    raise ArxivUnavailable('%s: %s' % (server, error))
+
+
+def read_bio(server, expected):
+    """New preprints (first versions) of bioRxiv or medRxiv for the announcement of `expected`."""
+    first, last = bio_window(expected)
+    papers, cursor = [], 0
+    for _ in range(BIO_MAX_PAGES):
+        rows, total = bio_page(server, first, last, cursor)
+        for row in rows:
+            if str(row.get('version')) != '1' or not row.get('doi'):
+                continue  # later versions are revisions of preprints already sent
+            paper = sources.biorxiv_paper(row, server)
+            published = datetime.datetime.fromisoformat(paper['published']) if paper['published'] else \
+                datetime.datetime.combine(expected, datetime.time())
+            papers.append({
+                'arxiv_id': paper['key'], 'title': paper['title'], 'abstract': paper['abstract'],
+                'authors': paper['authors'], 'categories': [paper['category']],
+                'published': published.replace(tzinfo=ANNOUNCE_TZ), 'announced': expected,
+            })
+        cursor += len(rows)
+        if not rows or cursor >= total:
+            break
+    return papers
 
 
 def announcement_time(day):
@@ -350,6 +455,11 @@ def announcement_time(day):
 
 def archive_of(category):
     return category.split('.')[0]
+
+
+def category_name(category):
+    """'biorxiv.cell-biology' -> 'Cell Biology'; arXiv codes stay as they are."""
+    return BIO_CODES.get(category, (None, category))[1]
 
 
 def load_papers(days):
@@ -599,19 +709,19 @@ def category_synthesis(category, lang, day, papers):
                   .values_list('arxiv_id', 'blurb')[:SYNTHESIS_MAX_BLURBS])
     language = 'French' if lang == 'fr' else 'English'
     prompt = (
-        'Here are the %d papers announced on arXiv in the category %s over the last 7 days (ID | title, '
+        'Here are the %d papers announced on %s in the category %s over the last 7 days (ID | title, '
         'and a short summary for some of them). '
         'In %s, write for a researcher of this field: the 3 to 5 main trends or topics of the week, each with a '
         'short title and 2 sentences, and the IDs of the 3 papers most likely to matter. Be concrete, no hype, no LaTeX, '
         'and never write paper IDs in the trend texts: they are read by people. '
         'Answer with a JSON object {"trends": [{"title": "...", "text": "..."}], "notable": ["ID", ...]}.\n\n%s'
-        % (len(week), category, language, '\n'.join(
+        % (len(week), SERVER_NAMES.get(archive_of(category), 'arXiv'), category_name(category), language, '\n'.join(
             '%s | %s%s' % (p['arxiv_id'], p['title'], ' | ' + blurbs[p['arxiv_id']] if p['arxiv_id'] in blurbs else '')
             for p in week)))
     try:
         answer = json.loads(_chat(prompt, ai_models()[1], True, 3000))
         content = {
-            'category': category,
+            'category': category_name(category),
             'trends': [{'title': str(t['title']).strip(), 'text': str(t['text']).strip()}
                        for t in answer.get('trends', [])[:5] if isinstance(t, dict) and t.get('title') and t.get('text')],
             'notable': [{'arxiv_id': aid, 'title': by_id[aid]['title']}
@@ -703,7 +813,7 @@ def premium_teaser(plan):
     for synthesis in CategorySynthesis.objects.filter(category__in=plan.categories, lang=plan.subscription.lang, day=plan.today):
         trends = json.loads(synthesis.content).get('trends')
         if trends:
-            return {'category': synthesis.category, 'title': trends[0]['title']}
+            return {'category': category_name(synthesis.category), 'title': trends[0]['title']}
     return {}
 
 
@@ -805,7 +915,8 @@ def check_health(now):
         return []
     problems = []
     expected = expected_batch(now)
-    stored = ArxivBatch.objects.filter(day=expected).exists()
+    batch = ArxivBatch.objects.filter(day=expected).first()
+    stored = batch is not None
     if expected == local.date() and local.hour >= 6 and not stored and not cache.get(QUIET_KEY % expected):
         problems.append(('batch', 'The arXiv announcement of %s is still not stored at %s in New York'
                          % (expected, local.strftime('%H:%M'))))
@@ -814,6 +925,11 @@ def check_health(now):
         last = DigestSubscription.objects.exclude(last_sent=None).order_by('-last_sent').values_list('last_sent', flat=True).first()
         if last is None or last < now - datetime.timedelta(hours=30):
             problems.append(('sent', 'No digest was sent since %s' % last))
+    bio_missing = [SERVER_NAMES[a] for a in batch.missing_list() if a in BIO_ARCHIVES] if batch else []
+    if bio_missing and expected == local.date() and local.hour >= 9 and DigestSubscription.objects.filter(
+            active=True).filter(models.Q(categories__contains='biorxiv.') | models.Q(categories__contains='medrxiv.')).exists():
+        problems.append(('bio', '%s still missing from the announcement of %s at %s in New York'
+                         % (' and '.join(bio_missing), expected, local.strftime('%H:%M'))))
     for name, message in problems:
         if cache.add(HEALTH_KEY % (name, now.date()), True, 86400):
             logger.error('Digest health: %s', message)
@@ -1044,7 +1160,7 @@ def hour_label(hour):
 def _digest_context(request, subscription, digests, paid, error=False):
     lim = limits(paid)
     chosen = subscription.category_list() if subscription else []
-    known = {code for code, _ in CATEGORIES}
+    known = {code for code, _ in CATEGORIES} | set(BIO_CODES)
     return {
         'subscription': subscription,
         'digests': digests,
@@ -1052,6 +1168,8 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'can_create': len(digests) < lim['digests'],
         'inactive_digests': [] if paid else digests[1:],
         'categories': CATEGORIES,
+        'bio_categories': [(SERVER_NAMES[server], [(sources.category_code(server, n), n) for n in names])
+                           for server, names in BIO_CATEGORIES],
         'chosen': chosen,
         'other': ', '.join(c for c in chosen if c not in known),
         'max_categories': lim['categories'],

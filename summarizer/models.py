@@ -67,7 +67,7 @@ class Author(models.Model):
 
 class PaperHistory(models.Model):
     id = models.AutoField(primary_key=True)
-    arxiv_id = models.CharField(max_length=20)
+    arxiv_id = models.CharField(max_length=100)
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User,blank=True, null=True, on_delete=models.CASCADE)
     ip_address = models.TextField(blank=True, null=True)
@@ -78,7 +78,7 @@ class PaperHistory(models.Model):
 
 class PDFHistory(models.Model):
     id = models.AutoField(primary_key=True)
-    arxiv_id = models.CharField(max_length=20)
+    arxiv_id = models.CharField(max_length=100)
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User,blank=True, null=True, on_delete=models.CASCADE)
     ip_address = models.TextField(blank=True, null=True)
@@ -90,7 +90,7 @@ class PDFHistory(models.Model):
 
 class ArxivPaper(models.Model):
     id = models.AutoField(primary_key=True)
-    arxiv_id = models.CharField(max_length=20, unique=True)
+    arxiv_id = models.CharField(max_length=100, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=400, blank=True, null=True)
@@ -106,7 +106,7 @@ class ArxivPaper(models.Model):
     journal_ref = models.CharField(max_length=200, blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     license = models.CharField(max_length=400, blank=True, null=True)
-    category = models.CharField(max_length=50, blank=True, null=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
     updated_arxiv = models.DateField(blank=True, null=True)
     closest_papers = models.ManyToManyField('self', through='PaperScore', symmetrical=False, related_name='closest_to')
     #total_votes = models.IntegerField(default=0)
@@ -193,7 +193,7 @@ class Vote(models.Model):
 
 class PickledData(models.Model):
     id = models.AutoField(primary_key=True)
-    arxiv_id = models.CharField(max_length=20)
+    arxiv_id = models.CharField(max_length=100)
     docstore_pickle = models.BinaryField(editable=True)
     buffer = models.BinaryField(editable=True)
     index_to_docstore_id_pickle = models.BinaryField(editable=True)
@@ -203,7 +203,7 @@ class PickledData(models.Model):
 
 class AIassistant(models.Model):
     id = models.AutoField(primary_key=True)
-    arxiv_id = models.CharField(max_length=20)
+    arxiv_id = models.CharField(max_length=100)
     query = models.TextField(blank=True, null=True)
     response = models.TextField(blank=True, null=True)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
@@ -221,7 +221,7 @@ class DigestSubscription(models.Model):
     FREQUENCIES = [('daily', 'Every weekday'), ('weekly', 'Once a week')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='digests')
     name = models.CharField(max_length=80, blank=True, default='')
-    categories = models.CharField(max_length=500)  # comma-separated arXiv categories, e.g. "astro-ph.EP,cs.LG"
+    categories = models.CharField(max_length=1500)  # comma-separated, e.g. "astro-ph.EP,cs.LG,biorxiv.neuroscience"
     keywords = models.CharField(max_length=500, blank=True, default='')  # comma-separated, optional filter
     lang = models.CharField(max_length=10, default='en')
     frequency = models.CharField(max_length=10, choices=FREQUENCIES, default='daily')
@@ -282,7 +282,7 @@ class DigestSubscription(models.Model):
 
 class DigestItem(models.Model):
     """A new paper with its short plain-language blurb, generated once per language."""
-    arxiv_id = models.CharField(max_length=40)
+    arxiv_id = models.CharField(max_length=100)
     lang = models.CharField(max_length=10, default='en')
     title = models.TextField()
     authors = models.TextField(blank=True, default='')
@@ -301,7 +301,7 @@ class DigestItem(models.Model):
 class DigestDelivery(models.Model):
     """Which paper was already sent to which subscriber, so no paper is sent twice."""
     subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='deliveries')
-    arxiv_id = models.CharField(max_length=40)
+    arxiv_id = models.CharField(max_length=100)
     sent = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -310,7 +310,7 @@ class DigestDelivery(models.Model):
 
 class DigestVector(models.Model):
     """Embedding of a new paper's title and abstract, to rank it against Premium research profiles."""
-    arxiv_id = models.CharField(max_length=40, unique=True)
+    arxiv_id = models.CharField(max_length=100, unique=True)
     vector = models.BinaryField()
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -332,7 +332,7 @@ class ArxivBatch(models.Model):
 
 class AnnouncedPaper(models.Model):
     """A new or cross-listed paper of a daily arXiv announcement, from its RSS feeds."""
-    arxiv_id = models.CharField(max_length=40, unique=True)
+    arxiv_id = models.CharField(max_length=100, unique=True)
     announced = models.DateField(db_index=True)
     title = models.TextField()
     abstract = models.TextField(blank=True, default='')
@@ -346,7 +346,7 @@ class AnnouncedPaper(models.Model):
 class DigestFeedback(models.Model):
     """"More like this" (+1) or "less like this" (-1) on a paper of a Premium digest, steering its ranking."""
     subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='feedback')
-    arxiv_id = models.CharField(max_length=40)
+    arxiv_id = models.CharField(max_length=100)
     value = models.SmallIntegerField()
     vector = models.BinaryField(blank=True, null=True)  # the paper's embedding, kept after DigestVector is cleaned up
     created = models.DateTimeField(auto_now=True)
@@ -357,7 +357,7 @@ class DigestFeedback(models.Model):
 
 class CategorySynthesis(models.Model):
     """What happened in one arXiv category over the last 7 days, written once and shared by every digest."""
-    category = models.CharField(max_length=40)
+    category = models.CharField(max_length=100)
     lang = models.CharField(max_length=10)
     day = models.DateField()
     content = models.TextField()  # JSON: {"trends": [{"title", "text"}], "notable": [arxiv_id, ...]}
@@ -373,8 +373,9 @@ class CategorySynthesis(models.Model):
 
 class PaperText(models.Model):
     """Text of a paper as given to the language model (see paper_source.py)."""
-    SOURCES = [('html', 'arXiv HTML'), ('pdf', 'PDF'), ('abstract', 'Metadata and abstract only'), ('index', 'Rebuilt from FAISS index')]
-    arxiv_id = models.CharField(max_length=40, unique=True)
+    SOURCES = [('html', 'arXiv HTML'), ('xml', 'Publisher XML (JATS or TEI)'), ('pdf', 'PDF'),
+               ('abstract', 'Metadata and abstract only'), ('index', 'Rebuilt from FAISS index')]
+    arxiv_id = models.CharField(max_length=100, unique=True)
     text = models.TextField()
     source = models.CharField(max_length=10, choices=SOURCES)
     updated = models.DateTimeField(auto_now=True)
@@ -383,10 +384,22 @@ class PaperText(models.Model):
         return '%s (%s)' % (self.arxiv_id, self.source)
 
 
+class ExternalPaper(models.Model):
+    """Metadata of a paper from another source than arXiv, as sources.py found it (refreshed once a day)."""
+    key = models.CharField(max_length=100, unique=True)  # 'doi_10.1093--mnras--stad1234', 'hal_hal-01234567'...
+    source = models.CharField(max_length=20)  # biorxiv, medrxiv, osf, hal, europepmc, openalex, crossref
+    doi = models.CharField(max_length=300, blank=True, default='')
+    metadata = models.TextField(blank=True, default='')  # JSON, see sources._paper
+    fetched = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.key, self.source)
+
+
 class PaperEmbedding(models.Model):
     """One vector per paper, from its title and abstract (see similar.py)."""
-    arxiv_id = models.CharField(max_length=40, unique=True)
-    category = models.CharField(max_length=40, blank=True, db_index=True)
+    arxiv_id = models.CharField(max_length=100, unique=True)
+    category = models.CharField(max_length=100, blank=True, db_index=True)
     model = models.CharField(max_length=60)
     vector = models.BinaryField()
     updated = models.DateTimeField(auto_now=True)
@@ -549,7 +562,7 @@ class Collection(models.Model):
 
 class CollectionPaper(models.Model):
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='papers')
-    arxiv_id = models.CharField(max_length=40)
+    arxiv_id = models.CharField(max_length=100)
     title = models.TextField(blank=True, default='')
     authors = models.TextField(blank=True, default='')
     note = models.TextField(blank=True, default='')
@@ -566,7 +579,7 @@ class CollectionPaper(models.Model):
 class FollowedPaper(models.Model):
     """A paper whose new citations a Premium user is told about (see citations.py)."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_papers')
-    arxiv_id = models.CharField(max_length=40)  # without version, arXiv form ('2101.00001', 'hep-th/9901001')
+    arxiv_id = models.CharField(max_length=100)  # without version, arXiv form ('2101.00001', 'hep-th/9901001')
     title = models.TextField(blank=True, default='')
     known = models.TextField(blank=True, default='')  # JSON list of the citing papers already reported
     pending = models.TextField(blank=True, default='')  # JSON list of citing papers not emailed yet
@@ -582,7 +595,7 @@ class FollowedPaper(models.Model):
 
 class CitationCache(models.Model):
     """The citing papers of an arXiv paper, from Semantic Scholar, refreshed once a day at most."""
-    arxiv_id = models.CharField(max_length=40, unique=True)
+    arxiv_id = models.CharField(max_length=100, unique=True)
     citing = models.TextField(blank=True, default='')  # JSON {paperId: {title, arxiv_id, date, authors, contexts, intents}}
     total = models.PositiveIntegerField(default=0)
     # 'ads' or 's2': where `citing` came from, kept even when there are no citations to tell it by their ids
@@ -601,7 +614,7 @@ class CitationAlertLog(models.Model):
 
 class PaperAudio(models.Model):
     """A paper's title and blurb read aloud, shared by every Premium digest that lists it (see audio.py)."""
-    arxiv_id = models.CharField(max_length=40)
+    arxiv_id = models.CharField(max_length=100)
     lang = models.CharField(max_length=10)
     mp3 = models.BinaryField()
     created = models.DateTimeField(auto_now_add=True, db_index=True)

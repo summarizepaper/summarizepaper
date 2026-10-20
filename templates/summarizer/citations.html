@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Citation alerts' %}{% endblock %}
@@ -46,7 +47,7 @@
     <ul class="item-list">
       {% for f in followed %}
       <li class="card">
-        <a href="https://arxiv.org/abs/{{ f.arxiv_id }}" target="_blank" rel="noopener"><strong>{{ f.title|default:f.arxiv_id }}</strong></a>
+        <a href="{{ f.arxiv_id|paper_url }}" target="_blank" rel="noopener"><strong>{{ f.title|default:f.arxiv_id }}</strong></a>
         <div class="meta">arXiv:{{ f.arxiv_id }} ·
           {% if f.total is None %}{% trans 'first check in progress' %}{% else %}{% blocktrans count n=f.total %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}{% endif %}
           {% if f.queued %} · {% blocktrans count n=f.queued %}{{ n }} new in your next email{% plural %}{{ n }} new in your next email{% endblocktrans %}{% endif %}</div>

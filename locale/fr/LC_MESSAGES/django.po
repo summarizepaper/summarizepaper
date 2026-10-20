@@ -4601,3 +4601,110 @@ msgstr "arXiv ne répond pas pour le moment. Réessayez dans un instant."
 #: templates/summarizer/citations.html
 msgid "Or paste their arXiv identifiers or links:"
 msgstr "Ou collez leurs identifiants ou liens arXiv :"
+
+#: summarizer/views.py
+msgid "The source of this paper is not responding right now. Please try again in a moment."
+msgstr "La source de cet article ne répond pas pour le moment. Réessayez dans un instant."
+
+#: summarizer/views.py
+msgid "Wrong url: this is not a paper identifier we know."
+msgstr "Adresse incorrecte : ce n’est pas un identifiant d’article que nous connaissons."
+
+#: templates/summarizer/arxividpage.html
+msgid "AI-Powered Paper Summarization about the paper"
+msgstr "Résumé par IA de l’article"
+
+#: templates/summarizer/arxividpage.html
+msgid "Easy-to-read summary of the paper"
+msgstr "Résumé facile à lire de l’article"
+
+#: templates/summarizer/arxividpage.html
+msgid "not stated (all rights reserved)"
+msgstr "non indiquée (tous droits réservés)"
+
+#: templates/summarizer/arxividpage.html
+msgid "Published on"
+msgstr "Publié le"
+
+#: templates/summarizer/arxividpage.html
+msgid "Results of the summarizing process for the paper:"
+msgstr "Résultats du résumé de l’article :"
+
+#: templates/summarizer/arxividpage.html
+msgid "No paper was found with this identifier:"
+msgstr "Aucun article n’a été trouvé avec cet identifiant :"
+
+#: templates/summarizer/arxividpage.html
+#, python-format
+msgid ""
+"Check it, or <a href=\"/%(LANGUAGE_CODE)s/search-results/?src=open\">search "
+"the journals and preprint servers</a>."
+msgstr ""
+"Vérifiez-le, ou <a href=\"/%(LANGUAGE_CODE)s/search-results/?src=open\">cherchez "
+"dans les revues et les serveurs de prépublications</a>."
+
+#: templates/summarizer/arxividpage.html
+msgid "We are analysing the following article:"
+msgstr "Nous analysons l’article suivant :"
+
+#: templates/summarizer/search_results.html templates/summarizer/home.html
+msgid "Where to search"
+msgstr "Où chercher"
+
+#: templates/summarizer/search_results.html templates/summarizer/home.html
+msgid "Journals and preprints (open access)"
+msgstr "Revues et prépublications (accès ouvert)"
+
+#: templates/summarizer/search_results.html
+msgid "Journals only"
+msgstr "Revues seulement"
+
+#: templates/summarizer/search_results.html
+msgid "Preprints only (bioRxiv, medRxiv, ChemRxiv, PsyArXiv...)"
+msgstr "Prépublications seulement (bioRxiv, medRxiv, ChemRxiv, PsyArXiv...)"
+
+#: templates/summarizer/search_results.html
+msgid "Full text summarized"
+msgstr "Texte intégral résumé"
+
+#: templates/summarizer/search_results.html
+msgid "No open license"
+msgstr "Pas de licence ouverte"
+
+#: templates/summarizer/search_results.html
+msgid "Summary from the abstract"
+msgstr "Résumé à partir de l’abstract"
+
+#: templates/summarizer/search_results.html
+msgid ""
+"The search of journals and preprint servers is not responding right now. "
+"Please try again in a moment, or paste the DOI of the paper."
+msgstr ""
+"La recherche dans les revues et les serveurs de prépublications ne répond pas "
+"pour le moment. Réessayez dans un instant, ou collez le DOI de l’article."
+
+#: templates/summarizer/search_results.html
+msgid ""
+"Only open-access papers are listed. You can also paste a DOI, or a bioRxiv, "
+"medRxiv, HAL, OSF or PubMed link in the search field."
+msgstr ""
+"Seuls les articles en accès ouvert sont listés. Vous pouvez aussi coller un "
+"DOI, ou un lien bioRxiv, medRxiv, HAL, OSF ou PubMed dans le champ de recherche."
+
+#: templates/summarizer/home.html
+msgid ""
+"Enter keywords, titles, authors, an arXiv ID (e.g., 2211.04191) or a DOI. "
+"bioRxiv, medRxiv, HAL, OSF and PubMed links work too."
+msgstr ""
+"Saisissez des mots-clés, un titre, des auteurs, un identifiant arXiv (par ex. "
+"2211.04191) ou un DOI. Les liens bioRxiv, medRxiv, HAL, OSF et PubMed "
+"fonctionnent aussi."
+
+#: templates/summarizer/digest.html
+#, python-format
+msgid "%(server)s preprints (biology and medicine)"
+msgstr "Prépublications %(server)s (biologie et médecine)"
+
+#: templates/summarizer/search_results.html
+msgid "Also on arXiv"
+msgstr "Aussi sur arXiv"

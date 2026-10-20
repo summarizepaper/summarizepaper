@@ -4,7 +4,7 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, keypoints, similar
+from summarizer import access, assistant, keypoints, similar, sources
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,25 +35,9 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
         url = licenseurl
         print('url',url)
 
-        cc_format=''
-        license = ''
-        if url != '' and url != None:
-            parts = url.split('/')
-            print('parts',parts)
-            license = parts[-3]
-            version = parts[-2]
-            if license.upper() != "NONEXCLUSIVE-DISTRIB":
-                cc_format = 'CC ' + license.upper() + ' ' + version
-            else:
-                cc_format = license.upper() + ' ' + version
-
-            public=False
-            #print('lo',license.upper())
-            if (license.upper().strip() == "BY" or license.upper().strip() == "BY-SA" or license.upper().strip() == "BY-NC-SA" or license.upper().strip() == "ZERO"):
-                public=True
-                print('pub')
-
-            print('cc',cc_format) # Output: CC BY-NC-SA 4.0
+        if url:
+            cc_format = sources.license_label(url)
+            public = sources.is_open_license(url)
         else:
             public=False
             licenseurl="http://arxiv.org/licenses/assumed-1991-2003/" 
@@ -120,10 +104,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
             
 
             print('lic',license)
-            if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
-                public=1
-            else:
-                public=0
+            public = 1 if sources.is_open_license(license) else 0
 
 
             print('pubbbllllliiiiiiccccc',public)
@@ -176,6 +157,12 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
 
 
     
+
+def published_label(arxiv_id, lang):
+    if not sources.is_external(arxiv_id):
+        return 'Soumis à arXiv le' if lang == 'fr' else 'Submitted to arXiv on'
+    return 'Publié le' if lang == 'fr' else 'Published on'
+
 
 class LoadingConsumer(AsyncWebsocketConsumer):
     sendmessages_running = {}
@@ -241,10 +228,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         
 
         print('lic',license)
-        if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
-            public=1
-        else:
-            public=0
+        public = 1 if sources.is_open_license(license) else 0
 
 
         print('pubbbllllliiiiiiccccc',public)
@@ -329,10 +313,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         '''
 
         print('lic',license)
-        if license=='http://creativecommons.org/licenses/by/4.0/' or license=='http://creativecommons.org/licenses/by-sa/4.0/' or license=='http://creativecommons.org/licenses/by-nc-sa/4.0/' or license=='http://creativecommons.org/publicdomain/zero/1.0/':
-            public=1
-        else:
-            public=0
+        public = 1 if sources.is_open_license(license) else 0
 
 
         print('pubbbllllliiiiiiccccc',public)
@@ -677,9 +658,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         message["progress"] = 5
         if l == 'fr':
-            message["loading_message"] = "Chargement des informations du papier arXiv..."
+            message["loading_message"] = "Chargement des informations du papier..."
         else:
-            message["loading_message"] = "Loading the arXiv paper information..."
+            message["loading_message"] = "Loading the paper information..."
 
         c=asyncio.create_task(self.send_message_now(message))
         await c
@@ -713,9 +694,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
             message["progress"] = 10
             if l == 'fr':
-                message["loading_message"] = "Informations d'arXiv chargée..."
+                message["loading_message"] = "Informations du papier chargées..."
             else:
-                message["loading_message"] = "The arXiv info are loaded..."
+                message["loading_message"] = "The paper information is loaded..."
 
             c=asyncio.create_task(self.send_message_now(message))
             await c
@@ -728,6 +709,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             #arxiv_dict2 = dict(zip(keys, arxiv_array2))
             arxiv_dict2=arxiv_dict
             arxiv_dict2['published_arxiv']=published2
+            # shown by the page as they are: the page script does not know the other sources
+            arxiv_dict2['ref_label'] = sources.label(v)
+            arxiv_dict2['license_label'] = sources.license_label(arxiv_dict['license'])
+            arxiv_dict2['license_public'] = sources.is_open_license(arxiv_dict['license'])
+            arxiv_dict2['published_label'] = published_label(v, l)
             c = asyncio.create_task(self.send_message_arxiv(arxiv_dict2))
             await c
 

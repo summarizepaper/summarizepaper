@@ -15,15 +15,21 @@ from django.utils.html import escape
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
-from . import access, generated, keypoints
+from . import access, generated, keypoints, sources
 from .models import AnnouncedPaper, ArxivPaper, CollectionPaper, SummaryPaper, ZoteroAccount
 
 ZOTERO_API = 'https://api.zotero.org'
 
 
 def bare_ref(arxiv_id):
-    """'hep-th--9901001v2' -> 'hep-th/9901001'."""
+    """'hep-th--9901001v2' -> 'hep-th/9901001'; for other sources the DOI (or HAL / PMC id)."""
+    if sources.is_external(arxiv_id):
+        return sources.label(arxiv_id).split(': ', 1)[-1]
     return re.sub(r'v\d+$', '', arxiv_id.replace('--', '/'))
+
+
+def file_name(arxiv_id):
+    return re.sub(r'[^A-Za-z0-9._-]+', '_', bare_ref(arxiv_id))
 
 
 def paper_meta(arxiv_id, fallback=None):
@@ -52,12 +58,30 @@ def paper_meta(arxiv_id, fallback=None):
     return None
 
 
+def is_preprint(meta):
+    return 'preprint' in (meta['journal'] or '').lower() or not meta['journal']
+
+
 def bibtex_entry(meta):
     ref = bare_ref(meta['arxiv_id'])
     first_word = next((w for w in re.findall(r'[A-Za-z]+', meta['title']) if len(w) > 3), 'paper')
-    last_name = re.sub(r'[^A-Za-z]', '', meta['authors'][0].split()[-1]) if meta['authors'] else 'arxiv'
+    last_name = re.sub(r'[^A-Za-z]', '', meta['authors'][0].split()[-1]) if meta['authors'] else 'paper'
+    cite_key = '%s%s%s' % (last_name.lower(), meta['year'], first_word.lower())
+    if sources.is_external(meta['arxiv_id']):
+        lines = ['@%s{%s,' % ('misc' if is_preprint(meta) else 'article', cite_key),
+                 '  title={%s},' % meta['title'], '  author={%s},' % ' and '.join(meta['authors']),
+                 '  year={%s},' % meta['year']]
+        if meta['journal'] and not is_preprint(meta):
+            lines.append('  journal={%s},' % meta['journal'])
+        elif meta['journal']:
+            lines.append('  howpublished={%s},' % meta['journal'])
+        if meta['doi']:
+            lines.append('  doi={%s},' % meta['doi'])
+        lines.append('  url={%s}' % sources.ref_url(meta['arxiv_id']))
+        lines.append('}')
+        return '\n'.join(lines) + '\n'
     lines = [
-        '@misc{%s%s%s,' % (last_name.lower(), meta['year'], first_word.lower()),
+        '@misc{%s,' % cite_key,
         '  title={%s},' % meta['title'],
         '  author={%s},' % ' and '.join(meta['authors']),
         '  year={%s},' % meta['year'],
@@ -75,7 +99,8 @@ def bibtex_entry(meta):
 
 def ris_entry(meta):
     ref = bare_ref(meta['arxiv_id'])
-    lines = ['TY  - PREP', 'TI  - %s' % meta['title']]
+    external = sources.is_external(meta['arxiv_id'])
+    lines = ['TY  - %s' % ('JOUR' if external and not is_preprint(meta) else 'PREP'), 'TI  - %s' % meta['title']]
     lines += ['AU  - %s' % a for a in meta['authors']]
     if meta['year']:
         lines.append('PY  - %s' % meta['year'])
@@ -85,7 +110,12 @@ def ris_entry(meta):
         lines.append('AB  - %s' % meta['abstract'])
     if meta['doi']:
         lines.append('DO  - %s' % meta['doi'])
-    lines += ['PB  - arXiv', 'AN  - arXiv:%s' % ref, 'UR  - https://arxiv.org/abs/%s' % ref, 'ER  - ']
+    if external:
+        if meta['journal']:
+            lines.append('%s  - %s' % ('T2' if not is_preprint(meta) else 'PB', meta['journal']))
+        lines += ['UR  - %s' % sources.ref_url(meta['arxiv_id']), 'ER  - ']
+    else:
+        lines += ['PB  - arXiv', 'AN  - arXiv:%s' % ref, 'UR  - https://arxiv.org/abs/%s' % ref, 'ER  - ']
     return '\n'.join(lines) + '\n'
 
 
@@ -101,7 +131,12 @@ def markdown_entry(meta, lang):
     lines = ['# %s' % meta['title'], '']
     if meta['authors']:
         lines.append('**Authors:** %s  ' % ', '.join(meta['authors'][:20]))
-    lines.append('**arXiv:** [%s](https://arxiv.org/abs/%s)  ' % (ref, ref))
+    if sources.is_external(meta['arxiv_id']):
+        if meta['journal']:
+            lines.append('**Published in:** %s  ' % meta['journal'])
+        lines.append('**%s:** [%s](%s)  ' % (sources.label(meta['arxiv_id']).split(':')[0], ref, sources.ref_url(meta['arxiv_id'])))
+    else:
+        lines.append('**arXiv:** [%s](https://arxiv.org/abs/%s)  ' % (ref, ref))
     if meta['date']:
         lines.append('**Date:** %s  ' % meta['date'])
     lines.append('**Summary page:** https://www.summarizepaper.com/%s/arxiv-id/%s/' % (lang, meta['arxiv_id']))
@@ -126,7 +161,7 @@ def export_paper(request, arxiv_id, fmt):
     meta = paper_meta(arxiv_id)
     if meta is None:
         raise Http404
-    name = bare_ref(arxiv_id).replace('/', '_')
+    name = file_name(arxiv_id)
     if fmt == 'ris':
         return _download(ris_entry(meta), name + '.ris', 'application/x-research-info-systems; charset=utf-8')
     if fmt == 'md':
@@ -158,6 +193,14 @@ def zotero_item(meta, lang):
         'date': meta['date'], 'url': 'https://arxiv.org/abs/%s' % ref, 'DOI': meta['doi'],
         'tags': [{'tag': 'SummarizePaper'}],
     }
+    if sources.is_external(meta['arxiv_id']):
+        item.pop('archiveID')
+        item['url'] = sources.ref_url(meta['arxiv_id'])
+        if is_preprint(meta):
+            item['repository'] = (meta['journal'] or '').replace(' preprint', '').split(',')[0]
+        else:
+            item.pop('repository')
+            item.update({'itemType': 'journalArticle', 'publicationTitle': meta['journal']})
     row = summary_of(meta['arxiv_id'], lang)
     note = None
     if row is not None:

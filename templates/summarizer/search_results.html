@@ -44,6 +44,11 @@
     .pagination a { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); text-decoration: none; }
     .pagination a:hover { background: var(--bg-soft); }
     .pagination .current-page { padding: 8px 12px; font-weight: 600; color: var(--text); }
+    .source-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: -12px 0 24px; }
+    .source-tabs a { padding: 7px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text-muted); font-size: 14px; text-decoration: none; }
+    .source-tabs a.active { border-color: var(--accent); color: var(--accent); font-weight: 600; background: var(--accent-soft); }
+    .search-result-access { position: relative; z-index: 1; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); }
+    .search-result-access.open { color: #137333; border-color: #a8dab5; background: #e6f4ea; }
     .no-results { padding: 40px 24px; text-align: center; }
     .no-results h2 { margin: 0 0 12px; font-size: 20px; }
     .no-results p { color: var(--text-muted); max-width: 560px; margin: 0 auto 10px; font-size: 15px; }
@@ -66,10 +71,43 @@
     {% csrf_token %}
     <i class="fas fa-search"></i>
     <input type="text" name="arxiv_id" value="{{ query }}" placeholder="{% trans 'Search for an article' %}" aria-label="{% trans 'Search for an article' %}">
+    <input type="hidden" name="src" value="{{ src }}">
     <button type="submit" class="btn">{% trans 'Search' %}</button>
   </form>
 
-  {% if page_obj %}
+  {% if query %}
+  <nav class="source-tabs" aria-label="{% trans 'Where to search' %}">
+    <a href="?q={{ query|urlencode }}" {% if src != 'open' %}class="active"{% endif %}>arXiv</a>
+    <a href="?q={{ query|urlencode }}&src=open" {% if src == 'open' and not kind %}class="active"{% endif %}>{% trans 'Journals and preprints (open access)' %}</a>
+    {% if src == 'open' %}
+    <a href="?q={{ query|urlencode }}&src=open&type=journals" {% if kind == 'journals' %}class="active"{% endif %}>{% trans 'Journals only' %}</a>
+    <a href="?q={{ query|urlencode }}&src=open&type=preprints" {% if kind == 'preprints' %}class="active"{% endif %}>{% trans 'Preprints only (bioRxiv, medRxiv, ChemRxiv, PsyArXiv...)' %}</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  {% if page_obj and src == 'open' %}
+  <div class="search-results-list">
+    {% for paper in page_obj %}
+    <div class="search-result card">
+      <div class="search-result-title">
+        <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.key }}/">{{ paper.title }}</a>
+      </div>
+      <div class="search-result-authors">{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %}</div>
+      <div class="search-result-metadata">
+        {% if paper.venue %}<span>{{ paper.venue }}</span>{% endif %}
+        {% if paper.published %}<span class="search-result-published">{{ paper.published }}</span>{% endif %}
+        {% if paper.open %}
+        <span class="search-result-access open" title="{{ paper.license }}">{% trans 'Full text summarized' %}</span>
+        {% else %}
+        <span class="search-result-access" title="{{ paper.license|default:_('No open license') }}">{% trans 'Summary from the abstract' %}</span>
+        {% endif %}
+        {% if paper.arxiv_id %}<span class="search-result-arxiv-id"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.arxiv_id }}/">{% trans 'Also on arXiv' %}</a></span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% elif page_obj %}
   <div class="search-results-list">
     {% for paper in page_obj %}
     <div class="search-result card">
@@ -88,21 +126,26 @@
 
   <nav class="pagination">
     {% if page_obj.has_previous %}
-      <a href="?q={{ query }}&page=1">&laquo; {% trans 'first' %}</a>
-      <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
+      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page=1">&laquo; {% trans 'first' %}</a>
+      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
     {% endif %}
     <span class="current-page">{% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-      <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
-      <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
+      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
+      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
     {% endif %}
   </nav>
 
   {% else %}
   <div class="no-results card">
     <h2>{% trans 'No results found.' %}</h2>
+    {% if src == 'open' %}
+    {% if failed %}<p>{% trans 'The search of journals and preprint servers is not responding right now. Please try again in a moment, or paste the DOI of the paper.' %}</p>{% endif %}
+    <p>{% trans 'Only open-access papers are listed. You can also paste a DOI, or a bioRxiv, medRxiv, HAL, OSF or PubMed link in the search field.' %}</p>
+    {% else %}
     <p>{% trans 'Make sure to search with the language used in the arXiv paper, i.e. use mostly English.' %}</p>
     <p>{% trans 'You can also use field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</p>
+    {% endif %}
   </div>
   {% endif %}
 </div>

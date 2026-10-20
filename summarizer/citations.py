@@ -30,7 +30,7 @@ from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
-from . import access, digest, generated, mailcheck
+from . import access, digest, generated, mailcheck, sources
 from .models import ArxivPaper, CitationAlertLog, CitationCache, FollowedPaper
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 ADS = 'https://api.adsabs.harvard.edu/v1/search/query'
 ADS_FIELDS = 'bibcode,title,author,pubdate,identifier,doi'
 ADS_PAGE = 2000
-S2 = 'https://api.semanticscholar.org/graph/v1/paper/arXiv:%s/citations'
+S2 = 'https://api.semanticscholar.org/graph/v1/paper/%s/citations'
 FIELDS = 'title,externalIds,publicationDate,authors,contexts,intents'
 PAGE = 1000
 MAX_PAGES = 10
@@ -53,7 +53,14 @@ STANCES = ('builds_on', 'supports', 'questions', 'mentions')
 
 
 def base_id(text):
-    """'2101.00001v2', 'hep-th--9901001', or an arXiv link -> '2101.00001' / 'hep-th/9901001'."""
+    """'2101.00001v2', 'hep-th--9901001', or an arXiv link -> '2101.00001' / 'hep-th/9901001';
+    a DOI or a doi_ key -> the doi_ key (Semantic Scholar and ADS know papers by DOI too)."""
+    key = text.strip().lower()
+    if sources.is_external(key):
+        return key if key.startswith('doi_') and sources.valid_key(key) and sources.key_doi(key) else None
+    doi = sources.clean_doi(text)
+    if doi and not sources.ARXIV_DOI_RE.match(doi):
+        return sources.doi_key(doi)
     match = digest.ARXIV_ID_RE.search(text.replace('--', '/'))
     return re.sub(r'v\d+$', '', match.group(1)) if match else None
 
@@ -64,7 +71,7 @@ def fetch_s2(arxiv_id):
     headers = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
     for _ in range(MAX_PAGES):
         for wait in (5, 20, None):
-            response = requests.get(S2 % arxiv_id, params={'fields': FIELDS, 'limit': PAGE, 'offset': offset},
+            response = requests.get(S2 % s2_ref(arxiv_id), params={'fields': FIELDS, 'limit': PAGE, 'offset': offset},
                                     headers=headers, timeout=60)
             if response.status_code != 429 or wait is None:
                 break
@@ -93,6 +100,13 @@ def fetch_s2(arxiv_id):
     return citing
 
 
+def s2_ref(paper_id):
+    """How Semantic Scholar names a followed paper: 'arXiv:2101.00001' or 'DOI:10.1093/mnras/stad1234'."""
+    if sources.is_external(paper_id):
+        return 'DOI:%s' % sources.key_doi(paper_id)
+    return 'arXiv:%s' % paper_id
+
+
 def ads_get(params):
     response = requests.get(ADS, params=params, timeout=60,
                             headers={'Authorization': 'Bearer %s' % settings.ADS_TOKEN})
@@ -102,7 +116,10 @@ def ads_get(params):
 
 def fetch_ads(arxiv_id):
     """{'ads:<bibcode>': citing paper} from ADS; None when it does not know the paper."""
-    target = 'identifier:"arXiv:%s"' % arxiv_id
+    if sources.is_external(arxiv_id):
+        target = 'doi:"%s"' % sources.key_doi(arxiv_id)
+    else:
+        target = 'identifier:"arXiv:%s"' % arxiv_id
     if not ads_get({'q': target, 'fl': 'bibcode', 'rows': 1})['numFound']:
         return None
     citing = {}
@@ -241,7 +258,10 @@ def titles(arxiv_ids):
 def follow(user, arxiv_id, title=''):
     """Start following. Nothing slow here: the first check, in the background, records the citations it
     already has as known, so they are not reported."""
-    paper = ArxivPaper.objects.filter(arxiv_id__startswith=arxiv_id.replace('/', '--') + 'v').first()
+    if sources.is_external(arxiv_id):
+        paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    else:
+        paper = ArxivPaper.objects.filter(arxiv_id__startswith=arxiv_id.replace('/', '--') + 'v').first()
     if paper and paper.title:
         title = ' '.join(paper.title.split())
     followed, created = FollowedPaper.objects.get_or_create(user=user, arxiv_id=arxiv_id, defaults={'title': title})

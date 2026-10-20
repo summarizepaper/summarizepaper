@@ -1345,7 +1345,16 @@ def blurbs(batch, lang):
     return {p['arxiv_id']: 'Blurb of %s.' % p['arxiv_id'] for p in batch}
 
 
-class ArxivFetchTests(TestCase):
+class NoBioServers:
+    """Batch tests about arXiv: bioRxiv and medRxiv answer with no new preprint, without the network."""
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch('summarizer.digest.read_bio', return_value=[])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+
+class ArxivFetchTests(NoBioServers, TestCase):
     def response(self, status, entries=()):
         body = FEED_HEAD + ''.join(
             '<entry><id>http://arxiv.org/abs/%s</id><title>T</title><summary>S</summary><category term="cs.LG"/>'
@@ -1779,7 +1788,7 @@ class DigestBatchQualityTests(DigestPremiumTests):
         self.assertContains(c.get('/en/digest/?d=%d' % sub.pk), 'Send me a preview now')
 
 
-class PartialBatchTests(TestCase):
+class PartialBatchTests(NoBioServers, TestCase):
     def feeds(self, failing=(), day=datetime.date(2026, 10, 19)):
         def read(name):
             if name in failing:

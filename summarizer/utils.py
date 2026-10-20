@@ -381,8 +381,13 @@ def has_paper_text(arxiv_id):
 
 
 async def read_paper(arxiv_id, pdf_url):
-    """Full text of an openly licensed paper: arXiv HTML when it exists, else the PDF."""
+    """Full text of an openly licensed paper: arXiv HTML when it exists, else the PDF.
+
+    Papers from other sources are read by sources.full_text (publisher XML, then PDF)."""
     from .paper_source import fetch_arxiv_html
+    from . import sources
+    if sources.is_external(arxiv_id):
+        return await asyncio.to_thread(sources.in_thread, sources.full_text, arxiv_id)
     text = await asyncio.to_thread(fetch_arxiv_html, arxiv_id)
     if text:
         return text, 'html'
@@ -1768,6 +1773,9 @@ ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 
 async def get_arxiv_metadata(arxiv_id):
+    from . import sources
+    if sources.is_external(arxiv_id):
+        return await asyncio.to_thread(sources.in_thread, sources.metadata_list, arxiv_id)
     print('aaa',arxiv_id)
     if '--' in arxiv_id:
         print('arxiv_id1',arxiv_id)

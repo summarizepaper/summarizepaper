@@ -8,14 +8,14 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %}{% firstof paper.title details.title as paper_title %}{% if paper_title %}{{ paper_title|oneline|truncatechars:90 }} | {% trans 'AI summary' %}{% else %}{% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %}{% endblock %}
+{% block title %}{% firstof paper.title details.title as paper_title %}{% if paper_title %}{{ paper_title|oneline|truncatechars:90 }} | {% trans 'AI summary' %}{% elif arxiv_id|is_external %}{% trans 'AI-Powered Paper Summarization about the paper' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %}{% endblock %}
 {% block extra_head_tags %}
   {% firstof paper.title details.title as paper_title %}
   {% firstof sumpaper.lay_summary sumpaper.summary paper.abstract details.abstract as page_excerpt %}
   {% if page_excerpt %}
   <meta name="description" content="{{ page_excerpt|plaintext|truncatechars:158 }}" />
   {% else %}
-  <meta name="description" content="{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }} {% trans 'entitled ' %}{{ paper_title }}" />
+  <meta name="description" content="{% if arxiv_id|is_external %}{% trans 'Easy-to-read summary of the paper' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %} {% trans 'entitled ' %}{{ paper_title }}" />
   {% endif %}
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
   {% if sumpaper %}
@@ -423,7 +423,7 @@
     </div>
     {% endif %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id|dash_slash }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
+      <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}{{ arxiv_id|paper_ref }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi and not arxiv_id|is_external %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category|category_label }}){% endif %}</div>
     </div>
     {% if paper.comments %}
     <div class="info-block">
@@ -436,7 +436,7 @@
     </div>
     {% else %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% if arxiv_id|is_external %}{% trans 'not stated (all rights reserved)' %}{% else %}<a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a>{% endif %}</div>
     </div>
     {% endif %}
     </div>
@@ -489,7 +489,7 @@
     </div>
     {% if paper.published_arxiv %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
+      <div class="info-text"><i class="fas fa-clock"></i> {% if arxiv_id|is_external %}{% trans 'Published on' %}{% else %}{% trans 'Submitted to arXiv on' %}{% endif %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
     <div class="info-block">
@@ -537,7 +537,7 @@
 
 
   <div class="message-box" id="results">
-    <h1 class="message-header">{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id|dash_slash }}</h1>
+    <h1 class="message-header">{% if arxiv_id|is_external %}{% trans 'Results of the summarizing process for the paper:' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id|dash_slash }}{% endif %}</h1>
     {% if not public %}
     <p class="message-header2"><small><span class="warning-sign">&#9888;</span>{% trans "This paper's license doesn't allow us to build upon its content and the summarizing process is here made with the paper's metadata rather than the article." %}</small></p>
     {% endif %}
@@ -729,7 +729,11 @@ submitButton.addEventListener('click', () => {
 {% else %}
 
 {% if exist == 0 %}
+{% if arxiv_id|is_external %}
+<p>{% trans 'No paper was found with this identifier:' %} {{ arxiv_id|paper_ref }}. {% blocktrans %}Check it, or <a href="/{{LANGUAGE_CODE}}/search-results/?src=open">search the journals and preprint servers</a>.{% endblocktrans %}</p>
+{% else %}
 <p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}. {% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
+{% endif %}
 {% else %}
 
 <div class="run-intro">
@@ -770,12 +774,12 @@ submitButton.addEventListener('click', () => {
     <div class="waiting-paper">
       <h2>{{ waiting.title }}</h2>
       {% if waiting.authors %}<p class="waiting-authors">{{ waiting.authors }}</p>{% endif %}
-      <p class="waiting-meta">arXiv: {{ arxiv_id|dash_slash }}</p>
+      <p class="waiting-meta">{{ arxiv_id|paper_ref }}</p>
       {% if waiting.abstract %}<p class="waiting-abstract">{{ waiting.abstract }}</p>{% endif %}
     </div>
     {% else %}
     <div class="info-block">
-      <p> {% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id|dash_slash }}</p>
+      <p> {% if arxiv_id|is_external %}{% trans 'We are analysing the following article:' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'We are analysing the following arXiv article:' %} {{ arxiv_id|dash_slash }}{% endif %}</p>
     </div>
     {% endif %}
     {% if not close %}<p class="waiting-time">{% trans 'The summary is usually ready in 1 to 2 minutes. This page updates by itself.' %}</p>{% endif %}
@@ -798,7 +802,7 @@ submitButton.addEventListener('click', () => {
     </div>
     {% endif %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-link"></i> {% if details.link_homepage %}<a href="{{ details.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id|dash_slash }}{% if details.link_homepage %}</a>{% endif %}{% if details.link_doi %} - <a href="{{ details.link_doi }}" target="_blank">DOI</a>{% endif %}{% if details.category %} ({{ details.category }}){% endif %}</div>
+      <div class="info-text"><i class="fas fa-link"></i> {% if details.link_homepage %}<a href="{{ details.link_homepage }}" target="_blank">{% endif %}{{ arxiv_id|paper_ref }}{% if details.link_homepage %}</a>{% endif %}{% if details.link_doi and not arxiv_id|is_external %} - <a href="{{ details.link_doi }}" target="_blank">DOI</a>{% endif %}{% if details.category %} ({{ details.category|category_label }}){% endif %}</div>
     </div>
     {% if details.comments %}
     <div class="info-block">
@@ -811,7 +815,7 @@ submitButton.addEventListener('click', () => {
     </div>
     {% else %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% if arxiv_id|is_external %}{% trans 'not stated (all rights reserved)' %}{% else %}<a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a>{% endif %}</div>
     </div>
     {% endif %}
     <div class="paper-details">
@@ -821,7 +825,7 @@ submitButton.addEventListener('click', () => {
     </div>
     {% if details.published_arxiv %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ details.published_arxiv|date:"d M. Y" }}</div>
+      <div class="info-text"><i class="fas fa-clock"></i> {% if arxiv_id|is_external %}{% trans 'Published on' %}{% else %}{% trans 'Submitted to arXiv on' %}{% endif %} {{ details.published_arxiv|date:"d M. Y" }}</div>
     </div>
     {% endif %}
 
@@ -1117,7 +1121,7 @@ submitButton.addEventListener('click', () => {
         linkHTML += '<a href="'+data.message.link_homepage+'" target="_blank">';
       }
         arxname = arxivRoomName.replace(/--/g, '/');
-        linkHTML += "arXiv: "+arxname;
+        linkHTML += data.message.ref_label || ("arXiv: "+arxname);
       if (data.message.link_homepage){
         linkHTML += '</a>';
       }
@@ -1155,8 +1159,14 @@ submitButton.addEventListener('click', () => {
         } else {
           var ccFormat = license.toUpperCase() + ' ' + version;
         }
+        // the server sends the label and the verdict (see sources.license_label and is_open_license)
+        if (data.message.license_label){
+          ccFormat = data.message.license_label;
+        }
+        var publicLicense = (data.message.license_public !== undefined) ? data.message.license_public :
+          (license.trim().toUpperCase() == "BY" || license.trim().toUpperCase() == "BY-SA" || license.trim().toUpperCase() == "BY-NC-SA" || license.trim().toUpperCase() == "ZERO");
 
-        if (license.trim().toUpperCase() != "BY" && license.trim().toUpperCase() != "BY-SA" && license.trim().toUpperCase() != "BY-NC-SA" && license.trim().toUpperCase() != "ZERO") {
+        if (!publicLicense) {
             document.getElementsByClassName("message-header2")[0].innerHTML+="<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the summarizing process is here made with the paper metadata rather than the article.' %}</small>";
         }
 
@@ -1186,7 +1196,7 @@ submitButton.addEventListener('click', () => {
       if (data.message.published_arxiv){
         //alert(data.message.journal_ref)
         var publHTML = '<div class="info-block"><div class="info-text"><i class="fas fa-clock"></i> ';
-        publHTML += '{% trans "Submitted to arXiv on" %} '+data.message.published_arxiv;
+        publHTML += (data.message.published_label || '{% trans "Submitted to arXiv on" %}')+' '+data.message.published_arxiv;
         publHTML += '</div></div>';
         publContainer.innerHTML = publHTML;
       }

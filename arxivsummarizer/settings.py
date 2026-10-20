@@ -33,6 +33,8 @@ OPENAI_KEY = os.getenv('OPENAI_KEY')
 S2_API_KEY = os.getenv('S2_API_KEY', '')
 # NASA ADS token: the citation alerts take their citing papers from ADS when it knows the paper
 ADS_TOKEN = os.getenv('ADS_TOKEN', '')
+# optional: an OpenAlex API key (free) for journal searches and the full texts OpenAlex keeps (see sources.py)
+OPENALEX_API_KEY = os.getenv('OPENALEX_API_KEY', '')
 SECRETSG = os.getenv('SECRETSG')
 SECRETCMTA = os.getenv('SECRETCMTA')
 

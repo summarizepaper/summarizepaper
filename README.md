@@ -1,13 +1,14 @@
 # arXiv Paper Summarization Website :books::robot:
 
-A web application that uses AI to summarize academic papers from arXiv and provides a virtual assistant :robot: to answer questions about them. Live at [SummarizePaper.com](https://www.summarizepaper.com).
+A web application that uses AI to summarize academic papers from arXiv, journals and other preprint servers, and provides a virtual assistant :robot: to answer questions about them. Live at [SummarizePaper.com](https://www.summarizepaper.com).
 
 ## Features :sparkles:
 
 - Summaries of arXiv papers (detailed summary, key points, lay summary, blog-style article) in English and French
+- Papers from journals and other preprint servers too: paste a DOI or a bioRxiv, medRxiv, HAL, OSF (PsyArXiv...), PubMed or Europe PMC link, or search the open-access literature (OpenAlex). As for arXiv, the full text is read only under a license that allows it (CC BY, BY-SA, BY-NC, BY-NC-SA, CC0), otherwise the abstract
 - An AI assistant that answers questions from the full text of the paper, with streamed answers
 - Chat with several papers at once
-- A daily email digest of new papers in the arXiv categories you follow
+- A daily email digest of new papers in the arXiv, bioRxiv and medRxiv categories you follow
 - Premium subscriptions (Stripe) for the most capable model and higher limits
 - BibTeX, RIS and Markdown exports, related papers, PDF export of summaries
 - Summaries rewritten for another reader (a 12-year-old to an expert) or in 16 languages
@@ -25,6 +26,7 @@ Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL o
 | `summarizer/consumers.py` | Websocket: runs summaries and the assistant |
 | `summarizer/assistant.py` | Questions and detailed summaries over the full paper text |
 | `summarizer/paper_source.py` | Paper text: arXiv HTML first, PDF fallback |
+| `summarizer/sources.py` | Papers from other sources (DOI, bioRxiv, medRxiv, OSF, HAL, Europe PMC, OpenAlex): keys, licenses, metadata, full text, search |
 | `summarizer/access.py` | Client IP, paid status, quotas (never trusts the browser) |
 | `summarizer/billing.py` | Stripe Checkout, Customer Portal, webhook |
 | `summarizer/digest.py` | Daily digest selection, blurbs and emails |
@@ -60,6 +62,7 @@ Run the tests with `venv/bin/python manage.py test summarizer`.
 | `SECRETCMTA` | SMTP password (outgoing email) |
 | `ADS_TOKEN` | NASA ADS API token, source of the citation alerts' citing papers (Semantic Scholar alone while unset) |
 | `S2_API_KEY` | Optional Semantic Scholar key, raises the rate limit of the citation alerts |
+| `OPENALEX_API_KEY` | Optional, free (openalex.org/settings/api): raises the daily budget of the journal search from $0.10 per IP to $1, and lets us read the full text OpenAlex keeps when publishers refuse scripts (MNRAS, A&A...) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | Premium subscriptions; Premium stays closed while unset |
 
 ## Deployment

@@ -101,6 +101,8 @@
       font-size: 14px;
       color: var(--text-muted);
     }
+    .search-sources { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 12px; font-size: 14px; color: var(--text); }
+    .search-sources label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
     .search-error { margin-top: 12px; color: var(--danger); font-weight: 500; }
     .toggle-button {
       margin-top: 8px;
@@ -226,7 +228,11 @@
         <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Search for an article' %}">
         <button type="submit" id="submit-button" class="btn"><span id="sub-text">{% trans 'Search' %}</span><span class="spinner" aria-label="{% trans 'Loading...' %}"></span></button>
       </div>
-      <div class="search-helper">{% trans 'Enter keywords, article titles, arXiv IDs (e.g., 2211.04191), or authors to search (use the language of papers you are interested in)' %}</div>
+      <div class="search-sources" role="radiogroup" aria-label="{% trans 'Where to search' %}">
+        <label><input type="radio" name="src" value="arxiv" checked> arXiv</label>
+        <label><input type="radio" name="src" value="open"> {% trans 'Journals and preprints (open access)' %}</label>
+      </div>
+      <div class="search-helper">{% trans 'Enter keywords, titles, authors, an arXiv ID (e.g., 2211.04191) or a DOI. bioRxiv, medRxiv, HAL, OSF and PubMed links work too.' %}</div>
       {% if error %}
         <div class="search-error">{{ error }}</div>
       {% endif %}

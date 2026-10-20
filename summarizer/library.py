@@ -19,7 +19,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, digest, exports, generated
+from . import access, digest, exports, generated, sources
 from .models import AnnouncedPaper, ArxivPaper, Collection, CollectionPaper, Generated, SummaryPaper
 
 FREE = {'collections': 3, 'papers': 20}
@@ -46,7 +46,14 @@ def limits(paid):
 
 
 def canonical_id(text):
-    """An arXiv id or link as typed -> the id form of our URLs ('2101.00001v1', 'hep-th--9901001v1')."""
+    """An arXiv id or link as typed -> the id form of our URLs ('2101.00001v1', 'hep-th--9901001v1');
+    a DOI or the key of a paper from another source -> its key (see sources.py)."""
+    key = text.strip().lower()
+    if sources.is_external(key):
+        return key if sources.valid_key(key) else None
+    doi = sources.clean_doi(text)
+    if doi and not sources.ARXIV_DOI_RE.match(doi):
+        return sources.doi_key(doi)
     match = digest.ARXIV_ID_RE.search(text.replace('--', '/'))
     return digest.site_id(match.group(1)) if match else None
 
@@ -59,7 +66,14 @@ def lookup_many(arxiv_ids):
             found[paper.arxiv_id] = (' '.join(paper.title.split()), ', '.join(a.name for a in paper.authors.all()[:8]))
     for announced in AnnouncedPaper.objects.filter(arxiv_id__in=[a for a in arxiv_ids if a not in found]):
         found[announced.arxiv_id] = (announced.title, ', '.join(json.loads(announced.authors or '[]')[:8]))
-    missing = [a for a in arxiv_ids if a not in found]
+    for key in [a for a in arxiv_ids if a not in found and sources.is_external(a)]:
+        try:
+            paper = sources.metadata(key)
+        except sources.SourceUnavailable:
+            paper = None
+        if paper and paper['title']:
+            found[key] = (paper['title'], ', '.join(paper['authors'][:8]))
+    missing = [a for a in arxiv_ids if a not in found and not sources.is_external(a)]
     if missing:
         try:
             response = requests.get(digest.ARXIV_API, timeout=10, params={

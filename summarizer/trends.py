@@ -20,7 +20,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 
 from . import access, generated
-from .digest import ARCHIVES, archive_of
+from .digest import ARCHIVES, BIO_ARCHIVES, SERVER_NAMES, archive_of
 from .models import AnnouncedPaper, ArxivBatch, RisingTopics, TermDay
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,9 @@ def count_day(day):
     scopes = {}
     for title, abstract, categories in papers:
         found = terms('%s. %s' % (title, abstract))
-        for scope in {'*'} | {archive_of(c) for c in categories.split(',') if c}:
+        own = {archive_of(c) for c in categories.split(',') if c}
+        # '*' stays all of arXiv: bioRxiv and medRxiv papers only count in their own scope
+        for scope in own | ({'*'} if not own or not own.issubset(BIO_ARCHIVES) else set()):
             totals = scopes.setdefault(scope, [0, {}])
             totals[0] += 1
             for term in found:
@@ -171,13 +173,14 @@ def write(scope, day, lang, rising=None):
                         % (term, n, growth, ' | '.join('%s [%s]' % (p['title'], p['arxiv_id']) for p in samples[term]))
                         for term, n, growth in rising)
     answer = generated.chat_json(
-        'These terms are used in many more arXiv papers this week than usual%s. Group the ones that belong together '
+        'These terms are used in many more %s papers this week than usual%s. Group the ones that belong together '
         'into 3 to 7 topics; leave out terms that are only noise (formatting, generic words). For each topic, in %s, '
         'write a title a curious non-specialist understands and 2 or 3 sentences saying what it is about and why '
         'researchers may be publishing more on it now, without inventing events. Give the terms it groups, copied '
         'exactly, and up to 3 of the example IDs. Never write IDs in the texts. Answer with a JSON object '
         '{"topics": [{"title": "...", "text": "...", "terms": ["..."], "papers": ["ID"]}]}.\n\n%s'
-        % ('' if scope == '*' else ' in the arXiv archive %s' % scope, generated.language_name(lang), listing),
+        % (SERVER_NAMES.get(scope, 'arXiv'), '' if scope == '*' or scope in BIO_ARCHIVES else ' in the arXiv archive %s' % scope,
+           generated.language_name(lang), listing),
         paid=True, max_tokens=3000)
     stats = {term: (n, growth) for term, n, growth in rising}
     titles = {p['arxiv_id']: p['title'] for ps in samples.values() for p in ps}
@@ -205,7 +208,8 @@ def due_scopes(day):
     """Scopes whose topics of the week up to `day` are not written yet, all of arXiv first."""
     done = set(RisingTopics.objects.filter(day=day).values_list('scope', 'lang'))
     sizes = {r.scope: r.papers for r in TermDay.objects.filter(day=day)}
-    scopes = ['*'] + sorted((a for a in ARCHIVES if sizes.get(a, 0) * 5 >= MIN_WEEK_PAPERS), key=lambda a: -sizes[a])
+    scopes = ['*'] + sorted((a for a in ARCHIVES + BIO_ARCHIVES if sizes.get(a, 0) * 5 >= MIN_WEEK_PAPERS),
+                            key=lambda a: -sizes[a])
     return [(s, lang) for s in scopes for lang in LANGS if (s, lang) not in done]
 
 
@@ -263,7 +267,7 @@ def trends_page(request):
     paid = access.is_paid(request.user)
     lang = get_language()
     scope = request.GET.get('scope', '*')
-    if scope != '*' and scope not in ARCHIVES:
+    if scope != '*' and scope not in ARCHIVES + BIO_ARCHIVES:
         raise Http404
     if scope != '*' and not paid:
         scope = '*'
