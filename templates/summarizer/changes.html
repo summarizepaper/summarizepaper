@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'What changed' %} | {{ title|truncatechars:70 }}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <span class="eyebrow">{% trans 'What changed' %} · Premium</span>
+    <h1>{{ title }}</h1>
+    <p class="lead">arXiv: {{ base }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ site_base }}v{{ latest }}/">{% trans 'Summary page' %}</a> · <a href="https://arxiv.org/abs/{{ base }}" target="_blank" rel="noopener">arXiv</a></p>
+  </header>
+
+  {% if latest < 2 %}
+    <p class="notice">{% trans 'This paper has only one version on arXiv so far.' %}</p>
+    {% if paid %}<p class="muted">{% trans 'Follow its citations from its page: you will also get an email when a new version comes out, with what changed.' %}</p>{% endif %}
+  {% elif not paid %}
+  <div class="upsell">
+    <p><strong>{% trans 'What changed between two versions of a paper.' %}</strong> {% trans 'Changed results and numbers (before and after), conclusions, method, data, errors fixed, or only the writing, and whether the main results changed. And an email when a paper you follow gets a new version.' %}</p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
+  </div>
+  {% else %}
+    <form method="get" class="tool-row" style="margin-bottom:16px">
+      <label>{% trans 'From' %} <select name="from">{% for v in versions %}{% if v < latest %}<option value="{{ v }}"{% if v == old %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
+      <label>{% trans 'to' %} <select name="to">{% for v in versions %}{% if v > 1 %}<option value="{{ v }}"{% if v == new %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
+      <button class="btn btn-sm btn-ghost" type="submit">{% trans 'Compare' %}</button>
+    </form>
+    {% if result %}
+    <section class="card section-card">
+      <h2 style="margin-top:0">{% blocktrans with old=result.old new=result.new %}From v{{ old }} to v{{ new }}{% endblocktrans %}</h2>
+      <p class="meta muted">{{ result.old_date }} → {{ result.new_date }}</p>
+      <p>{% if result.results_changed %}<span class="importance high">{% trans 'The results changed' %}</span>{% else %}<span class="importance low">{% trans 'Same main results' %}</span>{% endif %}</p>
+      <p><strong>{{ result.verdict }}</strong></p>
+      {% if result.new_comment %}<p class="muted">{% trans "The authors' comment:" %} <em>{{ result.new_comment }}</em></p>{% endif %}
+      {% if result.changes %}
+      <ul class="item-list">
+        {% for c in result.changes %}
+        <li class="card"><span class="importance {% if c.importance == 'major' %}high{% else %}low{% endif %}">{% if c.kind == 'results' %}{% trans 'Results' %}{% elif c.kind == 'conclusions' %}{% trans 'Conclusions' %}{% elif c.kind == 'method' %}{% trans 'Method' %}{% elif c.kind == 'data' %}{% trans 'Data' %}{% elif c.kind == 'error_fix' %}{% trans 'Error fixed' %}{% elif c.kind == 'figures' %}{% trans 'Figures' %}{% elif c.kind == 'references' %}{% trans 'References' %}{% else %}{% trans 'Writing' %}{% endif %}</span>
+          <p style="margin:6px 0 0">{{ c.detail }}</p></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% if not result.full_text %}<p class="muted"><small>{% trans "This paper's license, or the lack of an HTML version, only lets us compare the abstracts and the authors' comments. Changes inside the paper may be missing." %}</small></p>{% endif %}
+      <p class="muted"><small>{% trans 'Written by AI from the two versions. Check in the paper before relying on it.' %}</small></p>
+    </section>
+    {% else %}
+    <div class="card section-card" id="changes-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
+      <p>{% blocktrans %}Compare v{{ old }} with v{{ new }}. It takes about a minute.{% endblocktrans %}</p>
+      <button type="button" class="btn" id="changes-go">{% trans 'See what changed' %}</button>
+      {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
+    </div>
+    {% trans 'Comparing the two versions' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='changes-working' working_steps=steps working_started=row.updated %}
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      var start = document.getElementById('changes-start');
+      var panel = document.getElementById('changes-working');
+      function follow(id) {
+        start.hidden = true;
+        SP.track(panel, id, function () { location.reload(); });
+      }
+      document.getElementById('changes-go').addEventListener('click', function () {
+        panel.dataset.started = '';
+        SP.post('/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id|escapejs }}/start/', {from: {{ old }}, to: {{ new }}}).then(function (json) {
+          if (json.id) follow(json.id);
+        });
+      });
+      {% if row and row.status == 'pending' %}follow({{ row.pk }});{% endif %}
+    });
+    </script>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

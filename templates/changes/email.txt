@@ -1,0 +1,8 @@
+{% load i18n %}{% autoescape off %}{% for item in items %}== {{ item.title }} (v{{ item.old }} → v{{ item.new }}) ==
+{% if item.results_changed %}{% trans 'The results changed' %}{% else %}{% trans 'Same main results' %}{% endif %}. {{ item.verdict }}
+{% for c in item.changes|slice:":5" %}- {{ c.detail }}
+{% endfor %}{{ item.url }}
+
+{% endfor %}{% trans 'Written by AI from the two versions. Check in the paper before relying on it.' %}
+{% trans 'Manage the papers you follow:' %} {{ manage_url }}
+{% endautoescape %}

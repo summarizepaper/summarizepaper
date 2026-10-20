@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, citations, digest, letters, scoops, trends
+from summarizer import audio, changes, citations, digest, letters, scoops, trends
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +32,13 @@ class Command(BaseCommand):
                            ('letters', lambda: letters.update(now)),
                            ('scoop alerts', lambda: scoops.run(now, budget)),
                            ('citation alerts', lambda: citations.run(now, budget)),
+                           ('version alerts', lambda: changes.run(now, budget)),
                            ('letter emails', lambda: letters.send(now, budget))):
             try:
                 done = step()
             except Exception:
                 logger.exception('Hourly step %s failed', name)
                 continue
-            if name in ('scoop alerts', 'citation alerts', 'letter emails'):
+            if name in ('scoop alerts', 'citation alerts', 'version alerts', 'letter emails'):
                 budget -= done
             self.stdout.write('%s: %s' % (name, done))

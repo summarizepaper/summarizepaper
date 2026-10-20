@@ -725,3 +725,23 @@ class ScoopMatch(models.Model):
     def author_list(self):
         import json
         return json.loads(self.authors or '[]')
+
+
+class PaperVersion(models.Model):
+    """The latest arXiv version seen of a paper someone follows or keeps (see changes.py)."""
+    arxiv_id = models.CharField(max_length=100, unique=True)  # without version, arXiv form ('hep-th/9901001')
+    version = models.PositiveIntegerField()
+    checked = models.DateTimeField()
+
+
+class VersionAlert(models.Model):
+    """A new version of a paper a user follows, to email with what changed."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='version_alerts')
+    arxiv_id = models.CharField(max_length=100)
+    old = models.PositiveIntegerField()
+    new = models.PositiveIntegerField()
+    emailed = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'arxiv_id', 'new')

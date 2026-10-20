@@ -11,9 +11,9 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, citations, digest, generated, letters, library, missed, presskit, refcheck, scoops, trends
+from summarizer import audio, changes, citations, digest, generated, letters, library, missed, presskit, refcheck, scoops, trends
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
-                               CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated,
+                               CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
                                SummaryPaper, TermDay, UserPlan, WatchedProject, ZoteroAccount)
 
@@ -568,6 +568,83 @@ Earlier work found no clouds at all \citet[see][]{pre,again}.
         self.assertContains(client.get(r['Location']), 'No problem found')
         self.assertEqual(client.get(r['Location'] + 'bib/').content, b'@article{a,\n}')
         self.assertEqual(self.client_for(self.user('other', paid=True)).get(r['Location']).status_code, 404)
+
+
+class ChangesTests(ToolsTestCase):
+    def record(self, version, abstract, comment=''):
+        return {'arxiv_id': '2101.00001v%d' % version, 'title': 'Clouds on a hot planet', 'abstract': abstract,
+                'comment': comment, 'published': timezone.now(), 'updated': timezone.now(), 'authors': [],
+                'categories': [], 'doi': '', 'journal_ref': ''}
+
+    def test_base_id_and_changed_paragraphs(self):
+        self.assertEqual(changes.base_id('2101.00001v2'), ('2101.00001', 2))
+        self.assertEqual(changes.base_id('hep-th--9901001'), ('hep-th/9901001', 0))
+        old = ['Intro paragraph that stays the same in both versions.', 'We find a mass of 3 Jupiter masses for the planet.',
+               'Same conclusion paragraph, with a typo fixed here.']
+        new = ['Intro paragraph that stays the same in both versions.', 'We find a mass of 5 Jupiter masses for the planet.',
+               'Same conclusion paragraph, with a typo fixed hère.', 'A new appendix on the data.']
+        diff = changes.changed_paragraphs(old, new)
+        self.assertIn('- We find a mass of 3', diff)
+        self.assertIn('+ We find a mass of 5', diff)
+        self.assertIn('+ A new appendix', diff)
+        self.assertNotIn('Intro', diff)
+
+    def test_compare_reads_full_text_only_under_an_open_license(self):
+        self.paper()  # CC BY
+        answer = {'verdict': 'The mass changed.', 'results_changed': True,
+                  'changes': [{'kind': 'writing', 'importance': 'minor', 'detail': 'Typos.'},
+                              {'kind': 'results', 'importance': 'major', 'detail': 'Mass from 3 to 5.'}]}
+        records = {1: self.record(1, 'Old abstract.'), 2: self.record(2, 'New abstract.', 'v2: corrected mass')}
+        with mock.patch('summarizer.changes.version_record', side_effect=lambda base, v: records[v]), \
+             mock.patch('summarizer.changes.version_html', side_effect=lambda base, v: ['Mass is %d.' % (v + 2) * 3]) as html, \
+             mock.patch('summarizer.generated.chat_json', return_value=answer) as chat:
+            result = changes.compare('2101.00001', 1, 2, 'en')
+        self.assertTrue(result['full_text'])
+        self.assertEqual(html.call_count, 2)
+        self.assertIn('<changed_paragraphs>', chat.call_args[1]['system'])
+        self.assertIn('v2: corrected mass', chat.call_args[1]['system'])
+        self.assertEqual([c['kind'] for c in result['changes']], ['results', 'writing'])  # major first
+        ArxivPaper.objects.update(license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
+        with mock.patch('summarizer.changes.version_record', side_effect=lambda base, v: records[v]), \
+             mock.patch('summarizer.changes.version_html') as html, \
+             mock.patch('summarizer.generated.chat_json', return_value=answer) as chat:
+            result = changes.compare('2101.00001', 1, 2, 'en')
+        html.assert_not_called()
+        self.assertFalse(result['full_text'])
+        self.assertNotIn('<changed_paragraphs>', chat.call_args[1]['system'])
+
+    def test_new_version_of_a_followed_paper_is_emailed_once(self):
+        user = self.user(paid=True)
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', known='[]')
+        now = timezone.now()
+        latest = [[self.record(1, 'A')]]
+        with mock.patch('summarizer.digest.fetch_ids', side_effect=lambda ids: latest[0]):
+            self.assertEqual(changes.check_versions(now), 0)  # first sight: nothing to report
+            latest[0] = [self.record(3, 'C')]
+            self.assertEqual(changes.check_versions(now), 1)
+        self.assertEqual(PaperVersion.objects.get().version, 3)
+        result = {'title': 'Clouds on a hot planet', 'old': 1, 'new': 3, 'verdict': 'The mass changed.',
+                  'results_changed': True, 'changes': [{'kind': 'results', 'importance': 'major', 'detail': 'Mass from 3 to 5.'}]}
+        with mock.patch('summarizer.changes.compare', return_value=result) as compare:
+            self.assertEqual(changes.send_alerts(now, 5), 1)
+            self.assertEqual(changes.send_alerts(now, 5), 0)
+        compare.assert_called_once()
+        self.assertIn('New version: Clouds on a hot planet', mail.outbox[0].subject)
+        self.assertIn('Mass from 3 to 5.', mail.outbox[0].body)
+        self.assertIn('/en/changes/2101.00001v3/?from=1', mail.outbox[0].body)
+
+    def test_page_is_premium(self):
+        with mock.patch('summarizer.changes.latest_version', return_value=2):
+            self.assertContains(self.client_for(self.user()).get('/en/changes/2101.00001v1/'), 'Discover Premium')
+            client = self.client_for(self.user('pro', paid=True))
+            page = client.get('/en/changes/2101.00001v1/')
+            self.assertContains(page, 'Compare v1 with v2')
+            with mock.patch('summarizer.changes.compare', return_value={'title': 'T', 'old': 1, 'new': 2, 'verdict': 'Same.',
+                                                                         'results_changed': False, 'changes': [], 'full_text': True}):
+                self.assertIn('id', client.post('/en/changes/2101.00001v1/start/', {'from': 1, 'to': 2}).json())
+            self.assertContains(client.get('/en/changes/2101.00001v1/'), 'Same main results')
+        with mock.patch('summarizer.changes.latest_version', return_value=1):
+            self.assertContains(client.get('/en/changes/2101.00001v1/'), 'only one version')
 
 
 class AudioTests(ToolsTestCase):

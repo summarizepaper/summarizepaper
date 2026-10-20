@@ -5383,3 +5383,132 @@ msgid ""
 msgstr ""
 "articles rétractés, preprints publiés depuis, et citations que le résumé de "
 "l'article cité ne confirme pas"
+
+msgid "What changed"
+msgstr "Ce qui a changé"
+
+msgid "This paper has only one version on arXiv so far."
+msgstr "Cet article n'a pour l'instant qu'une version sur arXiv."
+
+msgid ""
+"Follow its citations from its page: you will also get an email when a new "
+"version comes out, with what changed."
+msgstr ""
+"Suivez ses citations depuis sa page : vous recevrez aussi un email quand une"
+" nouvelle version sortira, avec ce qui a changé."
+
+msgid "What changed between two versions of a paper."
+msgstr "Ce qui a changé entre deux versions d'un article."
+
+msgid ""
+"Changed results and numbers (before and after), conclusions, method, data, "
+"errors fixed, or only the writing, and whether the main results changed. And"
+" an email when a paper you follow gets a new version."
+msgstr ""
+"Résultats et chiffres modifiés (avant et après), conclusions, méthode, "
+"données, erreurs corrigées, ou seulement la rédaction, et si les résultats "
+"principaux ont changé. Et un email quand un article que vous suivez a une "
+"nouvelle version."
+
+msgid "to"
+msgstr "à"
+
+msgid "Compare"
+msgstr "Comparer"
+
+msgid "The results changed"
+msgstr "Les résultats ont changé"
+
+msgid "Same main results"
+msgstr "Mêmes résultats principaux"
+
+msgid "Results"
+msgstr "Résultats"
+
+msgid "Conclusions"
+msgstr "Conclusions"
+
+msgid "Error fixed"
+msgstr "Erreur corrigée"
+
+msgid "Figures"
+msgstr "Figures"
+
+msgid "References"
+msgstr "Références"
+
+msgid "Writing"
+msgstr "Rédaction"
+
+msgid ""
+"Written by AI from the two versions. Check in the paper before relying on "
+"it."
+msgstr ""
+"Écrit par une IA à partir des deux versions. Vérifiez dans l'article avant "
+"de vous y fier."
+
+msgid "See what changed"
+msgstr "Voir ce qui a changé"
+
+msgid "Comparing the two versions"
+msgstr "Comparaison des deux versions"
+
+msgid "The authors' comment:"
+msgstr "Le commentaire des auteurs :"
+
+msgid ""
+"This paper's license, or the lack of an HTML version, only lets us compare "
+"the abstracts and the authors' comments. Changes inside the paper may be "
+"missing."
+msgstr ""
+"La licence de cet article, ou l'absence de version HTML, ne nous permet de "
+"comparer que les résumés et les commentaires des auteurs. Des changements "
+"dans le corps de l'article peuvent manquer."
+
+#, python-format
+msgid "From v%(old)s to v%(new)s"
+msgstr "De la v%(old)s à la v%(new)s"
+
+#, python-format
+msgid "Compare v%(old)s with v%(new)s. It takes about a minute."
+msgstr "Comparer la v%(old)s et la v%(new)s. Cela prend environ une minute."
+
+#, python-format
+msgid "New version: %(title)s"
+msgstr "Nouvelle version : %(title)s"
+
+#, python-format
+msgid "%(count)s papers you follow have a new version"
+msgstr "%(count)s articles que vous suivez ont une nouvelle version"
+
+#, python-format
+msgid "A paper you follow has a new version"
+msgid_plural "%(n)s papers you follow have a new version"
+msgstr[0] "Un article que vous suivez a une nouvelle version"
+msgstr[1] "%(n)s articles que vous suivez ont une nouvelle version"
+
+msgid "Reading both versions"
+msgstr "Lecture des deux versions"
+
+msgid "Finding the paragraphs that changed"
+msgstr "Recherche des paragraphes modifiés"
+
+msgid "An AI explains what changed"
+msgstr "Une IA explique ce qui a changé"
+
+msgid "Versions"
+msgstr "Versions"
+
+msgid "What changed between versions"
+msgstr "Ce qui a changé entre les versions"
+
+msgid "and what changed when they get a new version"
+msgstr "et ce qui change quand ils ont une nouvelle version"
+
+msgid ""
+"When a paper you follow gets a new version on arXiv, an email tells you what"
+" changed: results, conclusions, method, data or errors fixed."
+msgstr ""
+"Quand un article que vous suivez a une nouvelle version sur arXiv, un email "
+"vous dit ce qui a changé : résultats, conclusions, méthode, données ou "
+"erreurs corrigées."

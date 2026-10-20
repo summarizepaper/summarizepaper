@@ -1,0 +1,20 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 24px;color:#666;">{% blocktrans count n=count %}A paper you follow has a new version{% plural %}{{ n }} papers you follow have a new version{% endblocktrans %}</p>
+    {% for item in items %}
+    <div style="border-left:3px solid {% if item.results_changed %}#dc2626{% else %}#ddd{% endif %};padding:4px 0 4px 12px;margin:0 0 18px;">
+      <a href="{{ item.url }}" style="color:#1a0dab;font-weight:bold;text-decoration:none;">{{ item.title }}</a>
+      <div style="color:#666;font-size:13px;">v{{ item.old }} → v{{ item.new }} · {% if item.results_changed %}<strong style="color:#991b1b">{% trans 'The results changed' %}</strong>{% else %}{% trans 'Same main results' %}{% endif %}</div>
+      <div style="font-size:14px;line-height:1.5;margin-top:4px;">{{ item.verdict }}</div>
+      <ul style="font-size:14px;line-height:1.5;margin:6px 0 0;padding-left:18px;">{% for c in item.changes|slice:":5" %}<li>{{ c.detail }}</li>{% endfor %}</ul>
+    </div>
+    {% endfor %}
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      {% trans 'Written by AI from the two versions. Check in the paper before relying on it.' %} <a href="{{ manage_url }}" style="color:#888;">{% trans 'Manage the papers you follow' %}</a>
+    </p>
+  </div>
+</body>
+</html>

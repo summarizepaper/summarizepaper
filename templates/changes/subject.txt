@@ -1,0 +1,1 @@
+{% load i18n %}{% if count == 1 %}{% blocktrans with title=items.0.title|truncatechars:80 %}New version: {{ title }}{% endblocktrans %}{% else %}{% blocktrans %}{{ count }} papers you follow have a new version{% endblocktrans %}{% endif %}

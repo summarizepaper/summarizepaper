@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n %}{% load dash_slash %}
 <section class="card tools-card" id="tools">
   <h3>{% trans 'Tools for this paper' %}</h3>
 
@@ -42,6 +42,14 @@
     <span class="badge-premium">Premium</span>
     <span class="tool-status" id="follow-status"></span>
   </div>
+
+  {% if not arxiv_id|is_external %}
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Versions' %}</span>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id }}/" rel="nofollow">{% trans 'What changed between versions' %}</a>
+    <span class="badge-premium">Premium</span>
+  </div>
+  {% endif %}
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'For journalists' %}</span>
