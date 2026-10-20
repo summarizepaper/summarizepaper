@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Tools for researchers' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'AI tools for every step of research: read papers faster, follow your field and your competitors, check your references before you submit, prepare a journal club or a conference, and find what is left to work on.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/tools/" />
+{% endblock %}
+
+{% block content %}
+<div class="page" style="max-width:1100px">
+  <header class="page-header">
+    <h1>{% trans 'Tools for researchers' %}</h1>
+    <p class="lead">{% trans 'For every step of research: reading, following your field, writing and submitting, presenting, and finding what to work on next.' %}</p>
+  </header>
+
+  {% for group in groups %}
+  <h2>{{ group.title }}</h2>
+  <div class="sources-grid tools-grid">
+    {% for tool in group.tools %}
+    <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/{{ tool.path }}">
+      <h3><i class="fas fa-{{ tool.icon }}"></i> {{ tool.name }}{% if tool.premium %} <span class="badge-premium">Premium</span>{% endif %}</h3>
+      <p>{{ tool.text }}</p>
+    </a>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <div class="upsell" style="margin-top:32px"><p>{% trans 'The tools marked Premium are all included in one subscription, cancelable in one click.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+</div>
+{% endblock %}

@@ -24,6 +24,7 @@ urlpatterns = [
     path("chat/", views.chat, name="chat"),
     path("arxiv-api/", views.arxiv_api, name="arxiv_api"),
     path("faq/", views.faq, name="faq"),
+    path("tools/", views.tools, name="tools"),
     path("guides/", guides.guide_index, name="guides"),
     path("guides/<slug:slug>/", guides.guide_detail, name="guide"),
     path("author/quentin-kral/", TemplateView.as_view(template_name="summarizer/author.html"), name="author"),

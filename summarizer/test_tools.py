@@ -860,6 +860,31 @@ class UsageTests(ToolsTestCase):
         self.assertContains(client.get('/admin/'), 'Coût IA (7 j)')
 
 
+class ToolsPageTests(ToolsTestCase):
+    def test_tools_page_home_and_faq_present_the_tools(self):
+        page = Client().get('/en/tools/')
+        for name in ('Scoop watch', 'Bibliography check', 'Who works on it?', 'Conference companion', 'Journal club'):
+            self.assertContains(page, name)
+        self.assertContains(page, '/en/faq/#journal-club')
+        self.assertContains(Client().get('/fr/tools/'), 'Veille anti-scoop')
+        self.assertContains(Client().get('/en/faq/'), 'id="scoops"')
+
+    def test_announcement_goes_once_to_premium_subscribers(self):
+        from django.core.management import call_command
+        from io import StringIO
+        self.user('free')
+        self.user('pro', paid=True)
+        out = StringIO()
+        call_command('announce_tools', stdout=out)
+        self.assertIn('1 Premium subscriber', out.getvalue())
+        self.assertEqual(len(mail.outbox), 0)  # nothing without --send
+        call_command('announce_tools', '--send', stdout=StringIO())
+        call_command('announce_tools', '--send', stdout=StringIO())
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['pro@example.com'])
+        self.assertIn('/en/scoops/', mail.outbox[0].body)
+
+
 class AudioTests(ToolsTestCase):
     def test_clips_are_shared_and_joined(self):
         items = [DigestItem.objects.create(arxiv_id='2610.0000%dv1' % i, lang='en', title='Paper %d' % i, blurb='Blurb %d.' % i)

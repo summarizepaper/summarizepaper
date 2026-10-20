@@ -96,6 +96,30 @@
           {% trans "Yes. Each paper page lets you download the summary as a PDF, and export the paper to BibTeX, RIS (Zotero, Mendeley, EndNote) or Markdown (Notion, Obsidian), whether it comes from arXiv, a journal or a preprint server. With Premium, you can also send it to your Zotero library with its summary." %}
         </div>
       </details>
+      <details id="tools">
+        <summary>{% trans "Which tools do you offer researchers?" %}</summary>
+        <div class="answer">
+          <p>{% blocktrans %}Besides the summaries, the assistant and the digest: a scoop watch that emails you when a new paper comes close to your project in progress, citation alerts that also say what changed when a followed paper gets a new version, a bibliography check before you submit, "What did I miss?" for the close papers your draft does not cite, a map of the groups that work on a topic, journal club slides, a conference companion, and the open questions of a collection. <a href="/{{ LANGUAGE_CODE }}/tools/">See all the tools</a>.{% endblocktrans %}</p>
+        </div>
+      </details>
+      <details id="scoops">
+        <summary>{% trans "Is the description of my project private in the scoop watch?" %}</summary>
+        <div class="answer">
+          {% trans "Yes. Only you see it. It is used to compare your project with the new papers: an AI rewrites it once as an English abstract, and both are sent to our AI provider for that comparison only. If you give the PDF of a draft, it is read once to write the description and is not stored. You can delete a project at any time." %}
+        </div>
+      </details>
+      <details id="refcheck">
+        <summary>{% trans "How does the bibliography check work?" %}</summary>
+        <div class="answer">
+          {% trans "Give your .bib file, and your LaTeX source if you want. We look for each paper on arXiv, OpenAlex and Semantic Scholar: retracted papers come from Retraction Watch through OpenAlex, and preprints published since get their corrected BibTeX entry from Crossref. With the LaTeX source, an AI reads each sentence that cites a paper next to the abstract of that paper. It only knows the abstract, so a flagged citation is something to check, not a proof of error. Your files are not stored." %}
+        </div>
+      </details>
+      <details id="journal-club">
+        <summary>{% trans "How do I make journal club slides?" %}</summary>
+        <div class="answer">
+          {% trans "Open the page of the paper and, in its tools, click “Slides to present it” (Premium). In about a minute you get around ten slides with what to say on each, the strengths and limits of the paper and questions for the discussion. The figures of the paper are included when its license allows it (CC BY and similar). Present them full screen, or save them as PDF from your browser." %}
+        </div>
+      </details>
       <details>
         <summary>{% trans "Who is behind this website?" %}</summary>
         <div class="answer">
@@ -135,4 +159,11 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+// a link to /faq/#scoops opens that answer
+if (location.hash) {
+  var answer = document.getElementById(location.hash.slice(1));
+  if (answer && answer.tagName === 'DETAILS') answer.open = true;
+}
+</script>
 {% endblock %}

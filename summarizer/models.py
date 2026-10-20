@@ -788,3 +788,13 @@ class AIUsage(models.Model):
             return None
         return (self.prompt_tokens * float(price.input_per_million) +
                 self.completion_tokens * float(price.output_per_million)) / 1e6
+
+
+class AnnouncementSent(models.Model):
+    """An announcement email a user got, so a command run again does not send it twice (see announce_tools)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='announcements')
+    name = models.CharField(max_length=50)
+    sent = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'name')

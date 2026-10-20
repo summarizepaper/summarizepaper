@@ -286,6 +286,31 @@
 </section>
 
 <section class="section" style="padding-top:16px">
+  <div class="container">
+    <h2 class="section-title">{% trans 'Tools for researchers' %}</h2>
+    <div class="sources-grid">
+      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/scoops/">
+        <h3><i class="fas fa-user-secret"></i> {% trans 'Scoop watch' %}</h3>
+        <p>{% trans 'Describe your project in progress: we email you the day a new paper comes close to it.' %}</p>
+      </a>
+      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/refcheck/">
+        <h3><i class="fas fa-tasks"></i> {% trans 'Bibliography check' %}</h3>
+        <p>{% trans 'Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.' %}</p>
+      </a>
+      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/teams/">
+        <h3><i class="fas fa-users"></i> {% trans 'Who works on it?' %}</h3>
+        <p>{% trans 'The groups that publish the most on a topic, their lead researchers and their approach.' %}</p>
+      </a>
+      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/conference/">
+        <h3><i class="fas fa-calendar-alt"></i> {% trans 'Conference companion' %}</h3>
+        <p>{% trans 'The talks of a conference program that matter for your research, and the people to meet.' %}</p>
+      </a>
+    </div>
+    <p class="sources-note"><a href="/{{ LANGUAGE_CODE }}/tools/" class="btn btn-ghost">{% trans 'See all the tools' %} <i class="fas fa-arrow-right" style="font-size:13px"></i></a></p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:16px">
   <div class="container intro-grid">
     <div class="card">
       <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool to stay up-to-date with research. For each paper, from arXiv, a journal or a preprint server, you get concise, understandable and insightful summaries (key points, lay summary, blog-style article...), in English, French and 14 other languages, so you quickly grasp the latest developments in your field. Our <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> answers your questions about one paper or several at once, and the <a href="/{{ LANGUAGE_CODE }}/digest/" class="chat-link">daily digest</a> brings you the new arXiv, bioRxiv and medRxiv papers of your fields. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>

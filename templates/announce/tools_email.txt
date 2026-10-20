@@ -1,0 +1,14 @@
+{% load i18n %}{% autoescape off %}{% trans 'Hello,' %}
+
+{% trans 'Your Premium subscription now includes new tools for researchers:' %}
+
+- {% trans 'Scoop watch' %}: {% trans 'Describe your project in progress: we email you the day a new paper comes close to it.' %} {{ base_url }}/{{ lang }}/scoops/
+- {% trans 'Bibliography check' %}: {% trans 'Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.' %} {{ base_url }}/{{ lang }}/refcheck/
+- {% trans 'Who works on it?' %}: {% trans 'The groups that publish the most on a topic, their lead researchers and their approach.' %} {{ base_url }}/{{ lang }}/teams/
+- {% trans 'Conference companion' %}: {% trans 'The talks of a conference program that matter for your research, and the people to meet.' %} {{ base_url }}/{{ lang }}/conference/
+- {% trans 'Journal club slides, what changed between two versions of a paper, and the open questions of your collections, from the paper and collection pages.' %}
+
+{% trans 'All the tools:' %} {{ base_url }}/{{ lang }}/tools/
+
+{% trans 'Thank you for supporting SummarizePaper. Reply to this email to tell us what you think.' %}
+{% endautoescape %}

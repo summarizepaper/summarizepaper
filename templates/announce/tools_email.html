@@ -1,0 +1,17 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;line-height:1.5;">
+    <p style="margin:0 0 20px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p>{% trans 'Hello,' %}</p>
+    <p>{% trans 'Your Premium subscription now includes new tools for researchers:' %}</p>
+    <p><a href="{{ base_url }}/{{ lang }}/scoops/" style="color:#1a0dab;font-weight:bold;">{% trans 'Scoop watch' %}</a><br>{% trans 'Describe your project in progress: we email you the day a new paper comes close to it.' %}</p>
+    <p><a href="{{ base_url }}/{{ lang }}/refcheck/" style="color:#1a0dab;font-weight:bold;">{% trans 'Bibliography check' %}</a><br>{% trans 'Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.' %}</p>
+    <p><a href="{{ base_url }}/{{ lang }}/teams/" style="color:#1a0dab;font-weight:bold;">{% trans 'Who works on it?' %}</a><br>{% trans 'The groups that publish the most on a topic, their lead researchers and their approach.' %}</p>
+    <p><a href="{{ base_url }}/{{ lang }}/conference/" style="color:#1a0dab;font-weight:bold;">{% trans 'Conference companion' %}</a><br>{% trans 'The talks of a conference program that matter for your research, and the people to meet.' %}</p>
+    <p>{% trans 'Journal club slides, what changed between two versions of a paper, and the open questions of your collections, from the paper and collection pages.' %}</p>
+    <p><a href="{{ base_url }}/{{ lang }}/tools/" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;">{% trans 'See all the tools' %}</a></p>
+    <p style="color:#666;">{% trans 'Thank you for supporting SummarizePaper. Reply to this email to tell us what you think.' %}</p>
+  </div>
+</body>
+</html>

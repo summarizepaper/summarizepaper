@@ -882,3 +882,12 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
   .slide { break-after: page; border: 0; border-radius: 0; height: 100vh; aspect-ratio: auto; }
   .deck.hide-notes .slide-notes { display: none; }
 }
+
+/* ---------- Tools page and home tool cards ---------- */
+.tools-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 8px; }
+.tools-grid .source-card { padding: 20px; }
+.tools-grid .source-card h3 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; font-size: 17px; }
+.tools-grid .source-card h3 i { color: var(--accent); }
+.tools-grid .source-card p { margin: 0; font-size: 14px; color: var(--text-muted); }
+a.tool-card { color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }

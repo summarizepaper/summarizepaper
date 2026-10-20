@@ -1481,3 +1481,33 @@ def bibtex(request, arxiv_id):
     response = HttpResponse(exports.bibtex_entry(meta), content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = 'inline; filename="%s.bib"' % exports.file_name(arxiv_id)
     return response
+
+
+def tools(request):
+    """Every tool for researchers, by step of research."""
+    groups = [
+        (_('Read papers faster'), [
+            ('', 'file-alt', _('Summaries'), False, _('Detailed summary, key points, lay summary and blog article of any paper, from arXiv, a journal or a preprint server, in 16 languages.')),
+            ('chat/', 'comments', _('Chat with papers'), False, _('Ask questions to one paper or several at once; answers from the full text when the license allows it.')),
+            ('collections/', 'layer-group', _('Collections'), False, _('Keep papers together, chat with a whole collection, and with Premium compare them in a table and find their open questions.')),
+        ]),
+        (_('Follow your field'), [
+            ('digest/', 'envelope', _('Daily digest'), False, _('The new arXiv, bioRxiv and medRxiv papers of your fields, ranked for you, every morning.')),
+            ('scoops/', 'user-secret', _('Scoop watch'), True, _('Describe your project in progress: we email you the day a new paper comes close to it.')),
+            ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they say about them, and what changed when they get a new version.')),
+            ('teams/', 'users', _('Who works on it?'), True, _('The groups that publish the most on a topic, their lead researchers and their approach.')),
+            ('trends/', 'chart-line', _('Rising topics'), False, _('The terms that rise on arXiv week after week, field by field.')),
+        ]),
+        (_('Write and submit'), [
+            ('missed/', 'search', _('What did I miss?'), True, _('The papers close to your draft that it does not cite.')),
+            ('refcheck/', 'tasks', _('Bibliography check'), True, _('Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.')),
+            ('integrations/', 'book', _('Zotero, Notion, Obsidian'), False, _('BibTeX, RIS and Markdown exports, and papers sent to Zotero with their summary.')),
+        ]),
+        (_('Present and meet'), [
+            ('faq/#journal-club', 'chalkboard-teacher', _('Journal club'), True, _('Slides of any paper, with its figures when its license allows it, its strengths and limits, and questions. From the tools of each paper page.')),
+            ('conference/', 'calendar-alt', _('Conference companion'), True, _('The talks of a conference program that matter for your research, and the people to meet.')),
+        ]),
+    ]
+    return render(request, 'summarizer/tools.html', {'groups': [
+        {'title': title, 'tools': [{'path': path, 'icon': icon, 'name': name, 'premium': premium, 'text': text}
+                                   for path, icon, name, premium, text in tools]} for title, tools in groups]})
