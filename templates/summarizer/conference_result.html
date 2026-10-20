@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Conference companion' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
+    <h1>{% if result.name %}{{ result.name }}{% else %}{% trans 'Your program' %}{% endif %}</h1>
+  </header>
+
+  {% if result %}
+    {% if result.talks %}
+    <p class="muted">{% blocktrans count n=result.listed with chosen=result.talks|length %}{{ chosen }} talks for you, out of {{ n }} in the program.{% plural %}{{ chosen }} talks for you, out of {{ n }} in the program.{% endblocktrans %}</p>
+    <ul class="item-list">
+      {% for t in result.talks %}
+      <li class="card">
+        <span class="importance {% if t.priority == 'must' %}high{% elif t.priority == 'should' %}medium{% else %}low{% endif %}">{% if t.priority == 'must' %}{% trans 'Do not miss it' %}{% elif t.priority == 'should' %}{% trans 'Worth it' %}{% else %}{% trans 'If you have time' %}{% endif %}</span>
+        <p style="margin:8px 0 4px"><strong>{{ t.title }}</strong></p>
+        <div class="meta">{{ t.speakers }}{% if t.session %} · {{ t.session }}{% endif %}{% if t.time %} · {{ t.time }}{% endif %}</div>
+        {% if t.why %}<p style="margin:8px 0 0">{{ t.why }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if result.people %}
+    <h2>{% trans 'People to meet' %}</h2>
+    <ul>{% for p in result.people %}<li>{{ p }}</li>{% endfor %}</ul>
+    {% endif %}
+    <p class="muted"><small>{% trans 'Read from the program by an AI: check the times and rooms on the conference website.' %}</small></p>
+    {% else %}
+    <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
+    {% endif %}
+  {% elif row.status == 'failed' %}
+    <p class="error">{% trans 'Reading the program failed. If you sent a PDF, check that it holds text, and try again.' %}</p>
+  {% else %}
+    {% trans 'Making your program' as working_title %}
+    {% trans 'usually 1 to 3 minutes' as working_time %}
+    {% include 'summarizer/working.html' with working_id='conference-working' working_steps=steps working_visible=True working_started=row.created %}
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      SP.track(document.getElementById('conference-working'), {{ row.pk }}, function () { location.reload(); });
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

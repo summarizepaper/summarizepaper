@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import (views, billing, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+from . import (views, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                changes, library, missed, presskit, reading, refcheck, scoops, slides, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -60,6 +60,8 @@ urlpatterns = [
     path("scoops/", scoops.scoops_page, name="scoops"),
     path("refcheck/", refcheck.refcheck_page, name="refcheck"),
     path("teams/", teams.teams_page, name="teams"),
+    path("conference/", conference.conference_page, name="conference"),
+    path("conference/<str:key>/", conference.conference_result, name="conference_result"),
     path("teams/<str:key>/", teams.teams_result, name="teams_result"),
     path("refcheck/<str:key>/", refcheck.refcheck_result, name="refcheck_result"),
     path("refcheck/<str:key>/bib/", refcheck.refcheck_bib, name="refcheck_bib"),

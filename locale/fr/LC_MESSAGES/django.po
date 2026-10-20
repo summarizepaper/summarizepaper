@@ -5744,3 +5744,151 @@ msgstr ""
 "Des slides de journal club pour tout article, avec ses figures quand sa "
 "licence le permet, ses points forts et limites, et des questions pour la "
 "discussion"
+
+msgid "Conference companion"
+msgstr "Compagnon de conférence"
+
+msgid ""
+"Paste the program of a conference: we find the talks and posters that matter"
+" for your research among hundreds, say why, and list the people to meet."
+msgstr ""
+"Collez le programme d'une conférence : parmi des centaines de présentations "
+"et de posters, nous trouvons ceux qui comptent pour votre recherche, disons "
+"pourquoi, et listons les personnes à rencontrer."
+
+msgid ""
+"Paste the program of a conference, or give its PDF: among hundreds of talks "
+"and posters, we find the ones that matter for your research, say why, and "
+"list the people to meet."
+msgstr ""
+"Collez le programme d'une conférence, ou donnez son PDF : parmi des "
+"centaines de présentations et de posters, nous trouvons ceux qui comptent "
+"pour votre recherche, disons pourquoi, et listons les personnes à "
+"rencontrer."
+
+msgid ""
+"An AI lists the talks and posters of the program, with their speakers, "
+"session and time."
+msgstr ""
+"Une IA liste les présentations et posters du programme, avec leurs orateurs,"
+" leur session et leur horaire."
+
+msgid ""
+"They are ranked by closeness to your research: the research profile of your "
+"digest, a project of your scoop watch, or a few sentences."
+msgstr ""
+"Ils sont classés par proximité avec votre recherche : le profil de recherche"
+" de votre digest, un projet de votre veille anti-scoop, ou quelques phrases."
+
+msgid ""
+"For the closest ones, the AI says why they matter to you and how much: do "
+"not miss it, worth it, or if you have time."
+msgstr ""
+"Pour les plus proches, l'IA dit pourquoi ils comptent pour vous et à quel "
+"point : à ne pas manquer, intéressant, ou si vous avez le temps."
+
+msgid "You get your own program, and the list of the people to meet."
+msgstr ""
+"Vous obtenez votre propre programme, et la liste des personnes à rencontrer."
+
+msgid "Do not miss the talk that mattered."
+msgstr "Ne manquez pas la présentation qui comptait."
+
+msgid "Paste the program, or send its PDF."
+msgstr "Collez le programme, ou envoyez son PDF."
+
+msgid "Describe your research in a few words at least, or choose a project."
+msgstr ""
+"Décrivez votre recherche en quelques mots au moins, ou choisissez un projet."
+
+msgid "Conference name (optional)"
+msgstr "Nom de la conférence (facultatif)"
+
+msgid "The program: paste it from the conference website"
+msgstr "Le programme : collez-le depuis le site de la conférence"
+
+msgid "or its PDF"
+msgstr "ou son PDF"
+
+msgid "and, if you want, a project of your scoop watch"
+msgstr "et, si vous voulez, un projet de votre veille anti-scoop"
+
+msgid "Make my program"
+msgstr "Faire mon programme"
+
+msgid "The first 120,000 characters of the program are read, about 300 talks."
+msgstr ""
+"Les 120 000 premiers caractères du programme sont lus, soit environ 300 "
+"présentations."
+
+msgid "Your programs"
+msgstr "Vos programmes"
+
+msgid "Conference"
+msgstr "Conférence"
+
+#, python-format
+msgid "You can read %(per_day)s programs a day. Come back tomorrow."
+msgstr "Vous pouvez lire %(per_day)s programmes par jour. Revenez demain."
+
+msgid "Your program"
+msgstr "Votre programme"
+
+msgid "Do not miss it"
+msgstr "À ne pas manquer"
+
+msgid "Worth it"
+msgstr "Intéressant"
+
+msgid "If you have time"
+msgstr "Si vous avez le temps"
+
+msgid "People to meet"
+msgstr "Personnes à rencontrer"
+
+msgid ""
+"Read from the program by an AI: check the times and rooms on the conference "
+"website."
+msgstr ""
+"Lu dans le programme par une IA : vérifiez les horaires et les salles sur le"
+" site de la conférence."
+
+msgid "We found no talk close to your research in this program."
+msgstr ""
+"Nous n'avons trouvé aucune présentation proche de votre recherche dans ce "
+"programme."
+
+msgid ""
+"Reading the program failed. If you sent a PDF, check that it holds text, and"
+" try again."
+msgstr ""
+"La lecture du programme a échoué. Si vous avez envoyé un PDF, vérifiez qu'il"
+" contient du texte, et réessayez."
+
+msgid "Making your program"
+msgstr "Préparation de votre programme"
+
+#, python-format
+msgid "%(chosen)s talks for you, out of %(n)s in the program."
+msgid_plural "%(chosen)s talks for you, out of %(n)s in the program."
+msgstr[0] "%(chosen)s présentations pour vous, sur %(n)s au programme."
+msgstr[1] "%(chosen)s présentations pour vous, sur %(n)s au programme."
+
+msgid "Reading the program"
+msgstr "Lecture du programme"
+
+msgid "Listing the talks and posters"
+msgstr "Liste des présentations et des posters"
+
+msgid "Ranking them by closeness to your research"
+msgstr "Classement par proximité avec votre recherche"
+
+msgid "An AI says why the closest ones matter to you"
+msgstr "Une IA dit pourquoi les plus proches comptent pour vous"
+
+msgid ""
+"the talks of a conference program that matter for your research, and the "
+"people to meet"
+msgstr ""
+"les présentations d'un programme de conférence qui comptent pour votre "
+"recherche, et les personnes à rencontrer"
