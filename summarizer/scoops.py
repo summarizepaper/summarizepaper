@@ -246,7 +246,7 @@ def scoops_page(request):
                 user=request.user, title=title, description='' if upload is not None else description,
                 author_name=request.POST.get('author_name', '').strip()[:200], lang=get_language())
             generated.background(prepare, project.pk, upload.read() if upload is not None else None)
-            return redirect('/%s/scoops/' % get_language())
+            return redirect('/%s/scoops/#project-%d' % (get_language(), project.pk))
     projects = list(projects)
     for project in projects:
         project.shown = list(project.matches.all()[:SHOWN])

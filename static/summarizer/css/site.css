@@ -232,6 +232,7 @@ img { max-width: 100%; }
 .muted { color: var(--text-muted); }
 .char-count { display: block; margin-top: 4px; color: var(--text-muted); }
 .char-count.enough { color: #15803d; }
+[id^="project-"] { scroll-margin-top: 88px; }  /* below the sticky header */
 .alert {
   max-width: var(--container);
   margin: 16px auto 0;

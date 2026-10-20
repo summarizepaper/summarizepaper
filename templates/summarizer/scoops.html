@@ -59,12 +59,12 @@
     {% endif %}
 
     {% for project in projects %}
-    <section class="card section-card">
+    <section class="card section-card" id="project-{{ project.pk }}"{% if not project.failed and not project.last_day %} data-pending{% endif %}>
       <h2 style="margin-top:0">{{ project.title|default:_('Your draft') }}</h2>
       <div class="meta muted">
         {% if project.failed %}{% trans 'We could not read this draft. Check that the PDF holds text (not only scanned images), or describe the project instead.' %}
-        {% elif not project.description %}{% trans 'Reading your draft…' %}
-        {% elif not project.last_day %}{% trans 'First check in progress (the papers of the last ten days)…' %}
+        {% elif not project.description %}<span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Reading your draft…' %}
+        {% elif not project.last_day %}<span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'First check in progress (the papers of the last ten days)…' %}
         {% else %}{% blocktrans with day=project.last_day|date:"j F Y" %}Compared with the papers announced up to {{ day }}.{% endblocktrans %}{% endif %}
       </div>
       {% if project.description %}<details style="margin:8px 0"><summary>{% trans 'Description' %}</summary><p>{{ project.description|linebreaksbr }}</p></details>{% endif %}
@@ -87,6 +87,21 @@
         <button class="link-button" name="action" value="delete">{% trans 'Stop watching and delete' %}</button></form>
     </section>
     {% endfor %}
+    <script>
+    // Swap in each project still being prepared once it is ready, without reloading (a form being typed stays)
+    (function poll() {
+      if (!document.querySelector('[data-pending]')) return;
+      setTimeout(function () {
+        fetch(location.pathname, {credentials: 'same-origin'}).then(function (r) { return r.text(); }).then(function (html) {
+          var fresh = new DOMParser().parseFromString(html, 'text/html');
+          document.querySelectorAll('[data-pending]').forEach(function (old) {
+            var now = fresh.getElementById(old.id);
+            if (now && !now.hasAttribute('data-pending')) old.replaceWith(now);
+          });
+        }).catch(function () {}).then(poll);
+      }, 5000);
+    })();
+    </script>
   {% endif %}
 </div>
 {% endblock %}

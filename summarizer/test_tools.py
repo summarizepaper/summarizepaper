@@ -467,7 +467,7 @@ class ScoopTests(ToolsTestCase):
         with mock.patch('summarizer.similar.embed', return_value=np.array([[1.0, 0.0]], dtype=np.float32)), \
              mock.patch('summarizer.generated.chat_json', return_value=self.verdict('2610.00001', 'high')) as chat:
             r = client.post('/en/scoops/', {'title': 'Hot clouds', 'description': self.DESCRIPTION, 'author_name': 'Ann Lee'})
-        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r['Location'], '/en/scoops/#project-%d' % WatchedProject.objects.get().pk)
         listing = chat.call_args[1]['system']
         self.assertIn('2610.00001', listing)
         self.assertNotIn('2610.00002', listing)  # the user's own paper
