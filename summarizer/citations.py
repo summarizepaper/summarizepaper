@@ -89,6 +89,7 @@ def fetch_s2(arxiv_id):
         if body.get('next') is None:
             break
         offset = body['next']
+        time.sleep(SECONDS_BETWEEN_CALLS)
     return citing
 
 
