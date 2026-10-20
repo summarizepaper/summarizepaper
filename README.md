@@ -12,7 +12,7 @@ A web application that uses AI to summarize academic papers from arXiv, journals
 - Premium subscriptions (Stripe) for the most capable model and higher limits
 - BibTeX, RIS and Markdown exports, related papers, PDF export of summaries
 - Summaries rewritten for another reader (a 12-year-old to an expert) or in 16 languages
-- Collections of papers, with a comparison table (Premium) and chat with a whole collection
+- Collections of papers, with a comparison table and their open questions (Premium) and chat with a whole collection
 - Premium tools: press kit with a hype check for journalists, "What did I miss?" (arXiv papers close to a draft that it does not cite), scoop watch (an email the day a new paper comes close to a project in progress), bibliography check (retractions, preprints published since, citations their abstract does not support), what changed between two versions of a paper (and an email when a followed paper gets one), who works on a topic (the groups that publish the most on it, OpenAlex), journal club slides, a conference companion (the talks of a program that matter for one's research), citation alerts, the digest read aloud, papers sent to Zotero with their summaries
 - Rising topics on arXiv (term counts week over week) and weekly letters written like magazine articles
 
@@ -33,6 +33,7 @@ Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL o
 | `summarizer/accounts.py` | Email login links (also activate new accounts), signup bot checks |
 | `summarizer/generated.py` | Model-written results made in a background thread and polled by the page |
 | `summarizer/reading.py`, `presskit.py` | Rewrites for another reader or language; press kit |
+| `summarizer/questions.py` | Open questions of a collection |
 | `summarizer/library.py`, `exports.py` | Collections and their comparison table; BibTeX, RIS, Markdown, Zotero |
 | `summarizer/missed.py`, `citations.py` | "What did I miss?"; citation alerts (Semantic Scholar) |
 | `summarizer/refcheck.py` | Bibliography check of a .bib (and its .tex) |

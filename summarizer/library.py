@@ -32,6 +32,10 @@ COMPARE_STEPS = [
     ('read', _('Reading the papers and our summaries')),
     ('compare', _('Filling the table and comparing the results')),
 ]
+QUESTIONS_STEPS = [  # the steps of questions.write, kept here so this module does not import it
+    ('read', _('Reading the limitations, discussions and future work of each paper')),
+    ('write', _('An AI gathers the open questions and groups them')),
+]
 COLUMNS = [
     ('question', _('Question')),
     ('method', _('Method')),
@@ -206,11 +210,14 @@ def collection_page(request, pk):
     papers = list(collection.papers.all())
     lang = get_language()
     comparison = Generated.objects.filter(kind='compare', key=comparison_key(collection), lang=lang).first() if paid else None
+    questions = Generated.objects.filter(kind='questions', key=comparison_key(collection), lang=lang).first() if paid else None
     return render(request, 'summarizer/collection.html', {
         'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid),
         'comparison': comparison, 'table': comparison.data() if comparison and comparison.status == 'done' else None,
         'columns': COLUMNS, 'compare_max': COMPARE_MAX, 'compare_steps': COMPARE_STEPS, 'message': request.GET.get('m'),
         'chat_ids': ','.join(p.arxiv_id for p in papers[:CHAT_MAX]), 'chat_max': CHAT_MAX,
+        'questions': questions, 'open': questions.data() if questions and questions.status == 'done' else None,
+        'questions_steps': QUESTIONS_STEPS,
     })
 
 

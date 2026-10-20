@@ -5892,3 +5892,75 @@ msgid ""
 msgstr ""
 "les présentations d'un programme de conférence qui comptent pour votre "
 "recherche, et les personnes à rencontrer"
+
+msgid "Open questions"
+msgstr "Questions ouvertes"
+
+msgid ""
+"Premium reads the limitations, discussions and future work of the papers, "
+"gathers the questions they leave open, says which papers raise each one, and"
+" suggests projects that would answer them. To find a thesis topic or write a"
+" proposal."
+msgstr ""
+"Premium lit les limites, discussions et perspectives des articles, rassemble"
+" les questions qu'ils laissent ouvertes, dit quels articles soulèvent "
+"chacune, et propose des projets qui y répondraient. Pour trouver un sujet de"
+" thèse ou écrire un projet de recherche."
+
+msgid "Add at least two papers to find their open questions."
+msgstr "Ajoutez au moins deux articles pour trouver leurs questions ouvertes."
+
+msgid "Papers disagree"
+msgstr "Les articles divergent"
+
+msgid "Limitation"
+msgstr "Limite"
+
+msgid "Untested assumption"
+msgstr "Hypothèse non testée"
+
+msgid "Open problem"
+msgstr "Problème ouvert"
+
+msgid "First step:"
+msgstr "Premier pas :"
+
+msgid "Projects that would answer them"
+msgstr "Des projets qui y répondraient"
+
+msgid "Builds on:"
+msgstr "S'appuie sur :"
+
+msgid "Find the open questions"
+msgstr "Trouver les questions ouvertes"
+
+msgid "Gathering the open questions of this collection"
+msgstr "Recherche des questions ouvertes de cette collection"
+
+#, python-format
+msgid "Raised by:"
+msgid_plural "Raised by %(n)s papers:"
+msgstr[0] "Soulevée par :"
+msgstr[1] "Soulevée par %(n)s articles :"
+
+#, python-format
+msgid ""
+"Reads the limitations, discussions and future work of the first %(n)s papers"
+" (their abstract and our summary when their license does not let us read "
+"more). It takes about a minute."
+msgstr ""
+"Lit les limites, discussions et perspectives des %(n)s premiers articles "
+"(leur résumé et notre synthèse quand leur licence ne nous permet pas d'en "
+"lire plus). Cela prend environ une minute."
+
+msgid "Reading the limitations, discussions and future work of each paper"
+msgstr "Lecture des limites, discussions et perspectives de chaque article"
+
+msgid "An AI gathers the open questions and groups them"
+msgstr "Une IA rassemble les questions ouvertes et les regroupe"
+
+msgid ""
+"and the open questions they leave, with projects that would answer them"
+msgstr ""
+"et les questions ouvertes qu'ils laissent, avec des projets qui y "
+"répondraient"

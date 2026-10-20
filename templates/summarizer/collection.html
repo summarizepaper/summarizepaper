@@ -65,6 +65,43 @@
     <p class="tool-status" id="compare-status"></p>
   {% endif %}
 
+  <h2>{% trans 'Open questions' %} <span class="badge-premium">Premium</span></h2>
+  {% if not paid %}
+    <div class="upsell"><p>{% trans 'Premium reads the limitations, discussions and future work of the papers, gathers the questions they leave open, says which papers raise each one, and suggests projects that would answer them. To find a thesis topic or write a proposal.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% elif papers|length < 2 %}
+    <p class="muted">{% trans 'Add at least two papers to find their open questions.' %}</p>
+  {% else %}
+    {% if open %}
+    <ul class="item-list">
+      {% for q in open.questions %}
+      <li class="card">
+        <span class="importance {% if q.kind == 'disagreement' %}high{% elif q.kind == 'open_problem' %}medium{% else %}low{% endif %}">{% if q.kind == 'disagreement' %}{% trans 'Papers disagree' %}{% elif q.kind == 'limitation' %}{% trans 'Limitation' %}{% elif q.kind == 'untested' %}{% trans 'Untested assumption' %}{% else %}{% trans 'Open problem' %}{% endif %}</span>
+        <p style="margin:8px 0 4px"><strong>{{ q.question }}</strong></p>
+        {% if q.detail %}<p style="margin:0">{{ q.detail }}</p>{% endif %}
+        {% if q.next_step %}<p style="margin:6px 0 0"><strong>{% trans 'First step:' %}</strong> {{ q.next_step }}</p>{% endif %}
+        {% if q.papers %}<div class="meta" style="margin-top:6px">{% blocktrans count n=q.papers|length %}Raised by:{% plural %}Raised by {{ n }} papers:{% endblocktrans %}
+          {% for p in q.papers %}<a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title|truncatechars:70 }}</a>{% if p.authors %} ({{ p.authors|truncatechars:40 }}){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% if open.projects %}
+    <h3>{% trans 'Projects that would answer them' %}</h3>
+    <ul class="item-list">
+      {% for p in open.projects %}<li class="card"><strong>{{ p.title }}</strong><p style="margin:6px 0 0">{{ p.idea }}</p>
+        {% if p.papers %}<div class="meta" style="margin-top:6px">{% trans 'Builds on:' %} {% for x in p.papers %}{{ x.title|truncatechars:60 }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    <div class="item-actions"><button type="button" class="btn btn-sm btn-ghost" id="questions-again">{% trans 'Write it again' %}</button></div>
+    {% else %}
+    <p>{% blocktrans with n=compare_max %}Reads the limitations, discussions and future work of the first {{ n }} papers (their abstract and our summary when their license does not let us read more). It takes about a minute.{% endblocktrans %}</p>
+    <button type="button" class="btn" id="questions-go">{% trans 'Find the open questions' %}</button>
+    {% endif %}
+    {% trans 'Gathering the open questions of this collection' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='questions-working' working_steps=questions_steps working_started=questions.updated %}
+    <p class="tool-status" id="questions-status"></p>
+  {% endif %}
+
   <h2>{% trans 'Papers' %}</h2>
   <ul class="item-list">
     {% for p in papers %}
@@ -128,6 +165,23 @@ window.addEventListener('DOMContentLoaded', function () {
   var again = document.getElementById('compare-again');
   if (again) again.addEventListener('click', function () { again.disabled = true; panel.dataset.started = ''; compare(true); });
   {% if comparison and comparison.status == 'pending' %}compare(false);{% endif %}
+
+  var qStatus = document.getElementById('questions-status');
+  var qPanel = document.getElementById('questions-working');
+  var qGo = document.getElementById('questions-go');
+  function findQuestions(again) {
+    qStatus.textContent = '';
+    SP.post(base + '/collections/{{ collection.pk }}/questions/', {again: again ? '1' : '0'}).then(function (json) {
+      if (json.status === 'premium') return qStatus.textContent = t.premium;
+      if (!json.id) return qStatus.textContent = t.failed;
+      if (qGo) qGo.hidden = true;
+      SP.track(qPanel, json.id, function () { location.reload(); });
+    });
+  }
+  if (qGo) qGo.addEventListener('click', function () { qGo.disabled = true; qPanel.dataset.started = ''; findQuestions(false); });
+  var qAgain = document.getElementById('questions-again');
+  if (qAgain) qAgain.addEventListener('click', function () { qAgain.disabled = true; qPanel.dataset.started = ''; findQuestions(true); });
+  {% if questions and questions.status == 'pending' %}findQuestions(false);{% endif %}
 
   var zotero = document.getElementById('zotero-go');
   if (zotero) zotero.addEventListener('click', function () {

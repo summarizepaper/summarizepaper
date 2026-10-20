@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, changes, citations, conference, digest, generated, letters, library, missed, presskit, refcheck, scoops, slides, teams, trends
+from summarizer import audio, changes, citations, conference, digest, generated, letters, library, missed, presskit, questions, refcheck, scoops, slides, teams, trends
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
@@ -775,6 +775,38 @@ class ConferenceTests(ToolsTestCase):
         self.assertEqual(find.call_args[0][1], 'clouds of hot planets')
         self.assertContains(client.get(r['Location']), 'EAS 2026')
         self.assertContains(client.get('/en/conference/'), 'EAS 2026')
+
+
+class QuestionsTests(ToolsTestCase):
+    def test_reads_closing_sections_and_groups_questions(self):
+        user = self.user(paid=True)
+        self.paper()  # CC BY
+        self.paper('2101.00002v1', title='Closed paper', summary='Summary of the closed paper.')
+        ArxivPaper.objects.filter(arxiv_id='2101.00002v1').update(license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
+        collection = Collection.objects.create(user=user, name='Clouds')
+        for aid in ('2101.00001v1', '2101.00002v1'):
+            CollectionPaper.objects.create(collection=collection, arxiv_id=aid, title='T ' + aid, authors='Ann Lee')
+        text = 'Intro. ' * 600 + '\n\n## 5 Limitations\n\nWe only observed one planet.\n\n## References\n[1] X'
+        answer = {'questions': [{'question': 'Are clouds common?', 'kind': 'untested', 'papers': ['2101.00001v1']},
+                                {'question': 'Do the papers agree on cloud height?', 'kind': 'disagreement',
+                                 'papers': ['2101.00001v1', '2101.00002v1', 'made-up']}],
+                  'projects': [{'title': 'A survey', 'idea': 'Observe ten planets.', 'papers': ['2101.00002v1']}]}
+        client = self.client_for(user)
+        with mock.patch('summarizer.paper_source.paper_text', return_value=text), \
+             mock.patch('summarizer.generated.chat_json', return_value=answer) as chat:
+            self.assertIn('id', client.post('/en/collections/%d/questions/' % collection.pk).json())
+        blocks = chat.call_args[1]['system']
+        self.assertIn('We only observed one planet.', blocks)  # the open paper: its limitations section
+        self.assertNotIn('Intro. Intro.', blocks)
+        self.assertIn('Summary of the closed paper.', blocks)  # the closed one: abstract and summary
+        row = Generated.objects.get(kind='questions')
+        self.assertEqual([q['question'] for q in row.data()['questions']],
+                         ['Do the papers agree on cloud height?', 'Are clouds common?'])  # shared questions first
+        self.assertEqual(len(row.data()['questions'][0]['papers']), 2)
+        page = client.get('/en/collections/%d/' % collection.pk)
+        self.assertContains(page, 'Papers disagree')
+        self.assertContains(page, 'Observe ten planets.')
+        self.assertContains(self.client_for(self.user('free')).post('/en/collections/%d/questions/' % collection.pk), '', status_code=404)
 
 
 class AudioTests(ToolsTestCase):

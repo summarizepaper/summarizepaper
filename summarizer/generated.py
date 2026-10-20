@@ -29,7 +29,7 @@ STALE = datetime.timedelta(minutes=10)  # a 'pending' row older than this was lo
 MAX_THREADS = 3  # each one holds a database connection now and then; the pool has 8
 _slots = threading.BoundedSemaphore(MAX_THREADS)
 LANGUAGES = {'en': 'English', 'fr': 'French'}
-PREMIUM_KINDS = {'presskit', 'compare', 'missed', 'zotero', 'refcheck', 'changes', 'teams', 'slides', 'conference'}  # their results are only shown to Premium accounts
+PREMIUM_KINDS = {'presskit', 'compare', 'missed', 'zotero', 'refcheck', 'changes', 'teams', 'slides', 'conference', 'questions'}  # their results are only shown to Premium accounts
 
 
 class GenerationError(Exception):
