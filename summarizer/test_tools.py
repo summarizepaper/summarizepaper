@@ -613,6 +613,18 @@ class ChangesTests(ToolsTestCase):
         self.assertFalse(result['full_text'])
         self.assertNotIn('<changed_paragraphs>', chat.call_args[1]['system'])
 
+    def test_license_from_arxiv_when_the_paper_is_not_stored(self):
+        record = mock.Mock(status_code=200, text='<arXiv><license>http://creativecommons.org/licenses/by/4.0/</license></arXiv>')
+        with mock.patch('summarizer.changes.requests.get', return_value=record) as get:
+            self.assertTrue(changes.can_read('2101.00009'))
+            self.assertTrue(changes.can_read('2101.00009'))
+        get.assert_called_once()  # cached
+        self.paper('2101.00008v1')
+        ArxivPaper.objects.filter(arxiv_id='2101.00008v1').update(license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
+        with mock.patch('summarizer.changes.requests.get') as get:
+            self.assertFalse(changes.can_read('2101.00008'))
+        get.assert_not_called()  # the stored license comes first
+
     def test_new_version_of_a_followed_paper_is_emailed_once(self):
         user = self.user(paid=True)
         FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', known='[]')

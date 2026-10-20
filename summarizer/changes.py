@@ -33,6 +33,7 @@ from .models import ArxivPaper, FollowedPaper, Generated, PaperVersion, VersionA
 
 logger = logging.getLogger(__name__)
 
+OAI = 'https://oaipmh.arxiv.org/oai'
 MAX_DIFF_CHARS = 40000
 SAME_PARAGRAPH = 0.97  # a paragraph this close to its old self only had typos fixed
 CHECK_BATCH = 100  # ids per arXiv query
@@ -79,10 +80,27 @@ def day(record):
     return date.date().isoformat() if date else ''
 
 
+def arxiv_license(base):
+    """The license URL arXiv gives a paper (OAI-PMH), '' when it gives none; cached a month."""
+    key = 'arxiv-license:%s' % base
+    found = cache.get(key)
+    if found is None:
+        try:
+            response = requests.get(OAI, timeout=30, params={
+                'verb': 'GetRecord', 'identifier': 'oai:arXiv.org:%s' % base, 'metadataPrefix': 'arXiv'})
+            match = re.search(r'<license>\s*([^<\s]+)\s*</license>', response.text) if response.status_code == 200 else None
+        except requests.RequestException:
+            return ''  # not cached: tried again next time
+        found = match.group(1) if match else ''
+        cache.set(key, found, 30 * 86400)
+    return found
+
+
 def can_read(base):
-    """True when the paper's license lets us read its full text (the license is the same for every version)."""
+    """True when the paper's license lets us read its full text (the license is the same for every version):
+    the license we stored when the paper was summarized, or the one arXiv gives."""
     paper = ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v').exclude(license=None).first()
-    return bool(paper) and sources.is_open_license(paper.license)
+    return sources.is_open_license(paper.license if paper else arxiv_license(base))
 
 
 def version_html(base, version):
