@@ -6231,3 +6231,13 @@ msgstr ""
 "épuisé pendant cette vérification : les rétractations et les titres n'ont "
 "pas été vérifiés pour certaines références. Relancez-la demain pour une "
 "vérification complète."
+
+
+msgid "Payment is temporarily unavailable. Please try again."
+msgstr "Le paiement est temporairement indisponible. Veuillez réessayer."
+
+msgid "Payment cancelled. You can choose a subscription again below."
+msgstr "Paiement annulé. Vous pouvez choisir à nouveau un abonnement ci-dessous."
+
+msgid "We could not send your activation email. Please try requesting a login link."
+msgstr "Nous n’avons pas pu envoyer votre email d’activation. Essayez de demander un lien de connexion."

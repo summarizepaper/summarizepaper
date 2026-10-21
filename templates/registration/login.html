@@ -37,6 +37,7 @@
   <!-- Login form -->
   <form method="post">
     {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
     <!-- Username field -->
     <input type="text" class="form-input" placeholder="{% trans 'Username or email' %}" name="username">
     <!-- Password field -->
@@ -50,7 +51,7 @@
     <a href="{% url 'email_login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">{% trans 'Log in with an email link (no password)' %}</a>
   </p>
   <p>
-    {% trans 'No account yet?' %} <a href="{% url 'register' %}">{% trans 'Register' %}</a>
+    {% trans 'No account yet?' %} <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">{% trans 'Register' %}</a>
   </p>
   <p>
     <small><a href="{% url 'password_reset' %}">{% trans 'Lost your password?' %}</a></small>

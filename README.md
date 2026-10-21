@@ -73,6 +73,43 @@ Run the tests with `venv/bin/python manage.py test summarizer`.
 | `OPENALEX_API_KEY` | Optional, free (openalex.org/settings/api): raises the daily budget of the journal search from $0.10 per IP to $1, and lets us read the full text OpenAlex keeps when publishers refuse scripts (MNRAS, A&A...) |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY` | Premium subscriptions; Premium stays closed while unset |
 
+## Premium conversion tracking
+
+The 2026-10-21 code audit prioritised lost Premium intent after signup/activation,
+pricing and subscribe buttons hidden below the feature list, and unrecoverable Checkout errors.
+The home hero now links to Premium, the Premium card comes first with its prices and CTA above
+its features, and signup, Google sign-in and email activation preserve a validated `next` URL.
+Stripe errors display a retry message; active subscribers cannot start another purchase.
+
+With `UMAMI_WEBSITE_ID` enabled, `static/summarizer/js/funnel.js` sends:
+
+| Event | Meaning |
+| --- | --- |
+| `premium_click`, `premium_view` | Homepage/navigation interest, then pricing page |
+| `premium_signup`, `signup_view`, `signup_submit`, `signup_error` | Signup entry, submission attempt or validation error |
+| `activation_email_pending` | Activation instructions displayed; **not** proof of email delivery or account activation |
+| `checkout_start` | Checkout form submitted, with `period` monthly/yearly; **not** proof a Stripe session was created |
+| `checkout_error`, `checkout_cancel`, `checkout_return` | Stripe API failure shown, cancellation return, or success return |
+| `premium_activated` | First Premium page rendered with server-confirmed paid access after Checkout started in this browser session |
+
+Build separate Umami funnels for anonymous visitors (Premium → signup → Checkout → activation)
+and existing accounts (Premium → Checkout → activation), split by language and billing period.
+Returns and submitted forms must never be counted as payments. `premium_activated` is a browser
+signal: it can be missed if the visitor never returns, blocks analytics, or activates on another
+device. Stripe/webhooks and UserPlan remain the subscription source of truth. Compare their totals
+before drawing conclusions about conversion. No production Umami dashboard or Stripe account was
+available for this audit; no uplift or abandonment rate has been measured.
+
+Analytics failures do not block forms. Event properties contain only a billing period; URLs remove
+login/reset tokens and arbitrary query strings while preserving UTM campaign attribution.
+Future priorities: measure stage drop-off, then test simpler signup (currently username, email and
+two password fields) and a shorter benefit-led feature list. Do not remove email verification or bot
+checks based on an unmeasured assumption.
+
+Verification: `python manage.py test summarizer` and `node --test tests/funnel.test.cjs`.
+French source translations are in `locale/fr/LC_MESSAGES/django.po`; compile catalogs with
+`python manage.py compilemessages` when preparing translated runtime assets.
+
 ## Deployment
 
 `git push heroku master`. The `release` phase of the Procfile applies migrations.

@@ -21,6 +21,6 @@
     <input type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="{% trans 'Email address' %}" required autofocus>
     <button type="submit">{% trans 'Send me a login link' %}</button>
   </form>
-  <p><small><a href="{% url 'login' %}">{% trans 'Log in with a password' %}</a> · <a href="{% url 'register' %}">{% trans 'Register' %}</a></small></p>
+  <p><small><a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">{% trans 'Log in with a password' %}</a> · <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">{% trans 'Register' %}</a></small></p>
 </div>
 {% endblock %}

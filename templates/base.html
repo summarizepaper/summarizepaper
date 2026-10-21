@@ -21,10 +21,26 @@
     // Drop hits from automated browsers (scrapers driving headless Chrome)
     function umamiBeforeSend(type, payload) {
       if (navigator.webdriver || /HeadlessChrome|PhantomJS|Puppeteer|Playwright|bot|crawl|spider/i.test(navigator.userAgent)) return false;
+      // Authentication URLs contain signed login tokens and sometimes email addresses.
+      function clean(value) {
+        if (!value) return value;
+        var base = value.split('?')[0].split('#')[0].replace(/(\/login\/link\/)[^/]+/, '$1redacted');
+        base = base.replace(/(\/(?:activate|reset)\/).*/, '$1redacted/');
+        var source = new URLSearchParams((value.split('?')[1] || '').split('#')[0]);
+        var campaign = new URLSearchParams();
+        // Preserve acquisition attribution, but never arbitrary searches, emails or OAuth codes.
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(function (key) {
+          if (source.has(key)) campaign.set(key, source.get(key));
+        });
+        return base + (campaign.toString() ? '?' + campaign.toString() : '');
+      }
+      payload.url = clean(payload.url);
+      payload.referrer = clean(payload.referrer);
       return payload;
     }
   </script>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="{{ UMAMI_WEBSITE_ID }}" data-before-send="umamiBeforeSend"></script>
+  <script defer src="{% static_v 'summarizer/js/funnel.js' %}"></script>
   {% endif %}
 
   {% block extra_head_tags %}
@@ -81,7 +97,7 @@
           </div>
         </li>
         <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
-        <li><a href="/{{LANGUAGE_CODE}}/premium/" class="nav-premium"><i class="fas fa-star" style="font-size:12px"></i> {% trans 'Premium' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/premium/" class="nav-premium" data-funnel="premium_click"><i class="fas fa-star" style="font-size:12px"></i> {% trans 'Premium' %}</a></li>
         {% if request.user.is_authenticated %}
         <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
         {% endif %}

@@ -158,11 +158,15 @@ class ActivateView(View):
 class RegisterView(View):
     def get(self, request):
         form = RegistrationForm()
-        return render(request, 'register.html', {'form': form, **accounts.auth_context()})
+        return render(request, 'register.html', {'form': form,
+                   'next': accounts._safe_next(request, request.POST.get('next') or request.GET.get('next')),
+                   **accounts.auth_context()})
 
     def post(self, request):
         form = RegistrationForm(request.POST)
-        context = {'form': form, **accounts.auth_context()}
+        context = {'form': form,
+                   'next': accounts._safe_next(request, request.POST.get('next') or request.GET.get('next')),
+                   **accounts.auth_context()}
         ip = access.hash_ip(access.client_ip(request))
         if accounts.looks_like_bot(request.POST) or accounts.signups_exhausted(ip):
             # no account and no email, but the same page a person would see
@@ -186,7 +190,11 @@ class RegisterView(View):
             user.is_active = False
             user.save()
             accounts.count_signup(ip)
-            accounts.send_login_link(request, user)
+            sent = accounts.send_login_link(request, user, context['next'])
+            if not sent:
+                context['email_taken'] = email
+                form.add_error(None, _('We could not send your activation email. Please try requesting a login link.'))
+                return render(request, 'register.html', context)
             return redirect('account_activation_sent')
 
         return render(request, 'register.html', context)

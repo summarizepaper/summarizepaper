@@ -12,16 +12,19 @@ Configuration (Heroku config vars):
 """
 import datetime
 import logging
+from urllib.parse import urlencode
 
 import stripe
 from django.conf import settings
 from django.core.cache import cache
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import get_language
+from django.utils.translation import get_language, gettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -71,11 +74,15 @@ def price_label(price_id):
 
 def premium(request):
     plan = _latest_plan(request.user) if request.user.is_authenticated else None
+    paid = access.is_paid(request.user)
+    # This marker requires server-side Premium access, never just ?success=1.
+    activated = bool(paid and request.session.pop('premium_checkout_pending', False))
     return render(request, 'summarizer/premium.html', {
         'billing_enabled': billing_enabled(),
         'monthly_price': price_label(settings.STRIPE_PRICE_MONTHLY),
         'yearly_price': price_label(settings.STRIPE_PRICE_YEARLY),
-        'is_paid': access.is_paid(request.user),
+        'is_paid': paid,
+        'premium_activated': activated,
         'plan': plan,
         'can_manage': bool(plan and plan.stripe_customer_id),
         'runs_per_day': access.runs_per_day(),
@@ -83,22 +90,29 @@ def premium(request):
         'chat_paid': access.chat_messages_per_day()['paid'],
         'readings_free': SiteSettings.current().free_readings_per_day,
         'success': request.GET.get('success') == '1',
+        'checkout_cancelled': request.GET.get('cancelled') == '1',
     })
 
 
-@login_required
 @require_POST
 def checkout(request):
+    if not request.user.is_authenticated:
+        return redirect(reverse("login") + "?" + urlencode({"next": reverse("premium")}))
     if not billing_enabled():
         return redirect('premium')
-    price = settings.STRIPE_PRICE_YEARLY if request.POST.get('period') == 'yearly' else settings.STRIPE_PRICE_MONTHLY
+    if access.is_paid(request.user):
+        return redirect('premium')
+    period = request.POST.get('period', 'monthly')
+    if period not in ('monthly', 'yearly') or (period == 'yearly' and not settings.STRIPE_PRICE_YEARLY):
+        return HttpResponseBadRequest('invalid billing period')
+    price = settings.STRIPE_PRICE_YEARLY if period == 'yearly' else settings.STRIPE_PRICE_MONTHLY
     plan = _latest_plan(request.user)
     params = {
         'mode': 'subscription',
         'line_items': [{'price': price, 'quantity': 1}],
         'client_reference_id': str(request.user.id),
         'success_url': _absolute(request, 'premium/') + '?success=1',
-        'cancel_url': _absolute(request, 'premium/'),
+        'cancel_url': _absolute(request, 'premium/') + '?cancelled=1',
         'allow_promotion_codes': True,
         'subscription_data': {'metadata': {'user_id': str(request.user.id)}},
     }
@@ -106,7 +120,13 @@ def checkout(request):
         params['customer'] = plan.stripe_customer_id
     elif request.user.email:
         params['customer_email'] = request.user.email
-    session = _stripe().checkout.Session.create(**params)
+    try:
+        session = _stripe().checkout.Session.create(**params)
+    except stripe.error.StripeError:
+        logger.exception('Could not create Stripe Checkout session')
+        messages.error(request, _('Payment is temporarily unavailable. Please try again.'))
+        return redirect('premium')
+    request.session['premium_checkout_pending'] = True
     return redirect(session.url, permanent=False)
 
 

@@ -132,7 +132,7 @@ def send_login_link(request, user, next_url=''):
         return False
     link = '%s%s' % (_base_url(request), reverse('login_link', args=[make_link_token(user)]))
     if next_url:
-        link += '?next=' + next_url
+        link += '?' + urlencode({'next': _safe_next(request, next_url)}, safe='/')
     context = {'user': user, 'link': link, 'activation': not user.is_active, 'hours': LINK_MAX_AGE // 3600}
     subject = render_to_string('accounts/login_link_subject.txt', context).strip()
     text = render_to_string('accounts/login_link_email.txt', context)

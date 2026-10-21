@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="page"{% if premium_activated %} data-funnel-view="premium_activated"{% endif %}>
   <header class="page-header">
     <span class="eyebrow"><i class="fas fa-star"></i> Premium</span>
     <h1 style="margin-top:14px">{% trans 'SummarizePaper Premium' %}</h1>
@@ -48,21 +48,40 @@
   <p class="notice">{% trans 'Thank you! Your Premium subscription is being activated, it can take a few seconds.' %}</p>
   {% endif %}
 
+  {% for message in messages %}<p class="notice" role="alert" data-funnel-view="checkout_error">{{ message }}</p>{% endfor %}
+  {% if checkout_cancelled %}<p class="notice">{% trans "Payment cancelled. You can choose a subscription again below." %}</p>{% endif %}
   <div class="plans">
-    <div class="plan card">
-      <h2>{% trans 'Free' %}</h2>
-      <ul>
-        <li>{% blocktrans %}{{ runs_per_day }} new summaries per day{% endblocktrans %}</li>
-        <li>{% blocktrans %}{{ chat_free }} questions per day to the AI assistant{% endblocktrans %}</li>
-        <li>{% trans 'Standard AI model' %}</li>
-        <li>{% trans 'One digest of arXiv, bioRxiv and medRxiv papers, daily or weekly' %}</li>
-        <li>{% blocktrans %}{{ readings_free }} rewrites per day of a summary for another reader or in another language{% endblocktrans %}</li>
-        <li>{% trans '3 collections of 20 papers, chat with a collection, BibTeX, RIS and Markdown exports' %}</li>
-        <li>{% trans 'Weekly letters and the top rising topics on the web' %}</li>
-      </ul>
-    </div>
     <div class="plan card highlight">
       <h2>{% trans 'Premium' %}</h2>
+      {% if is_paid %}
+        {% if can_manage %}
+        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
+          <button type="submit" class="btn btn-ghost">{% trans 'Manage my subscription' %}</button>
+        </form>
+        {% endif %}
+      {% elif not billing_enabled %}
+        <p class="muted-note">{% trans 'Subscriptions open soon.' %}</p>
+      {% elif not request.user.is_authenticated %}
+        {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
+        {% if yearly_price %}<p class="fine">{{ yearly_price }}</p>{% endif %}
+        <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next=/{{ LANGUAGE_CODE }}/premium/" data-funnel="premium_signup">{% trans 'Create a free account to subscribe' %}</a>
+        <p><small>{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/premium/">{% trans 'Log in' %}</a></small></p>
+      {% else %}
+        <form method="post" data-funnel="checkout_start" action="/{{ LANGUAGE_CODE }}/premium/checkout/">{% csrf_token %}
+          {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
+          <button type="submit" class="btn" name="period" value="monthly">{% trans 'Subscribe monthly' %}</button>
+          {% if yearly_price %}
+          <div class="price">{{ yearly_price }}</div>
+          <button type="submit" class="btn" name="period" value="yearly">{% trans 'Subscribe yearly' %}</button>
+          {% endif %}
+        </form>
+        {% if can_manage %}
+        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
+          <button type="submit" class="btn btn-ghost">{% trans 'Manage my subscription' %}</button>
+        </form>
+        {% endif %}
+      {% endif %}
+      <p class="fine">{% trans 'Payments are handled by Stripe. We never see your card details.' %} {% trans 'Cancel anytime in one click' %}</p>
       <ul>
         <li>{% trans 'Our most capable AI model for summaries and answers' %}</li>
         <li>{% trans 'No daily summary limit' %}</li>
@@ -83,33 +102,19 @@
         <li>{% trans 'Cancel anytime in one click' %}</li>
       </ul>
 
-      {% if is_paid %}
-        {% if can_manage %}
-        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
-          <button type="submit" class="btn btn-ghost">{% trans 'Manage my subscription' %}</button>
-        </form>
-        {% endif %}
-      {% elif not billing_enabled %}
-        <p class="muted-note">{% trans 'Subscriptions open soon.' %}</p>
-      {% elif not request.user.is_authenticated %}
-        {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
-        <a class="btn" href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account to subscribe' %}</a>
-        <p><small>{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/premium/">{% trans 'Log in' %}</a></small></p>
-      {% else %}
-        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/checkout/">{% csrf_token %}
-          {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
-          <button type="submit" class="btn" name="period" value="monthly">{% trans 'Subscribe monthly' %}</button>
-          {% if yearly_price %}
-          <div class="price">{{ yearly_price }}</div>
-          <button type="submit" class="btn" name="period" value="yearly">{% trans 'Subscribe yearly' %}</button>
-          {% endif %}
-        </form>
-        {% if can_manage %}
-        <form method="post" action="/{{ LANGUAGE_CODE }}/premium/portal/">{% csrf_token %}
-          <button type="submit" class="btn btn-ghost">{% trans 'Manage my subscription' %}</button>
-        </form>
-        {% endif %}
-      {% endif %}
+
+    </div>
+    <div class="plan card">
+      <h2>{% trans 'Free' %}</h2>
+      <ul>
+        <li>{% blocktrans %}{{ runs_per_day }} new summaries per day{% endblocktrans %}</li>
+        <li>{% blocktrans %}{{ chat_free }} questions per day to the AI assistant{% endblocktrans %}</li>
+        <li>{% trans 'Standard AI model' %}</li>
+        <li>{% trans 'One digest of arXiv, bioRxiv and medRxiv papers, daily or weekly' %}</li>
+        <li>{% blocktrans %}{{ readings_free }} rewrites per day of a summary for another reader or in another language{% endblocktrans %}</li>
+        <li>{% trans '3 collections of 20 papers, chat with a collection, BibTeX, RIS and Markdown exports' %}</li>
+        <li>{% trans 'Weekly letters and the top rising topics on the web' %}</li>
+      </ul>
     </div>
   </div>
 

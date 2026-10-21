@@ -246,6 +246,7 @@
         <div class="search-error">{{ error }}</div>
       {% endif %}
     </form>
+    <p><a class="btn btn-ghost" data-funnel="premium_click" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a> — {% trans 'No daily summary limit' %} · {% trans 'Cancel anytime in one click' %}</p>
     <button id="toggle-syntax" class="toggle-button" type="button" aria-expanded="false">{% trans 'Refine your Search' %} <i class="fas fa-chevron-down" style="font-size:11px"></i></button>
     <div class="search-syntax card" hidden>
       <p><strong>{% trans 'Search Syntax:' %}</strong></p>

@@ -15,14 +15,15 @@
 {% block content %}
 
 <div class="account-box">
-<form method="post">
+<form method="post" data-funnel="signup_submit">
+    <input type="hidden" name="next" value="{{ next }}">
     {% csrf_token %}
     {% include 'accounts/_antibot.html' %}
     <h1 style="text-align:center">{% trans 'Register' %}</h1>
     {% if email_taken %}
     <p class="warn">
       {% trans 'An account already uses this email address.' %}
-      <a href="{% url 'email_login' %}?email={{ email_taken|urlencode }}">{% trans 'Get a login link by email' %}</a>
+      <a href="{% url 'email_login' %}?email={{ email_taken|urlencode }}{% if next %}&amp;next={{ next|urlencode }}{% endif %}">{% trans 'Get a login link by email' %}</a>
     </p>
     {% endif %}
     {% include 'accounts/_google_button.html' %}
@@ -46,7 +47,7 @@
     </div>
     <button type="submit">{% trans 'Sign up' %}</button>
     {% if form.errors %}
-        <div class="form-errors">
+        <div class="form-errors" role="alert" data-funnel-view="signup_error">
             {% trans 'Please fix the following errors:' %}
             <ul>
                 {% for field in form %}
@@ -61,7 +62,7 @@
         </div>
     {% endif %}
 </form>
-<div class="links"><p>{% trans 'Already registered?' %} <a href="{% url 'login' %}">{% trans 'Log in' %}</a></p></div>
+<div class="links"><p>{% trans 'Already registered?' %} <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">{% trans 'Log in' %}</a></p></div>
 </div>
 
 {% endblock %}

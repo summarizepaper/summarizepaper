@@ -212,7 +212,44 @@ class BillingTests(TestCase):
         self.assertEqual(kwargs['client_reference_id'], str(self.user.id))
         self.assertEqual(kwargs['line_items'][0]['price'], 'price_m')
         self.assertEqual(kwargs['success_url'], 'http://testserver/en/premium/?success=1')
-        self.assertEqual(kwargs['cancel_url'], 'http://testserver/en/premium/')
+        self.assertEqual(kwargs['cancel_url'], 'http://testserver/en/premium/?cancelled=1')
+
+    def test_activation_event_requires_server_confirmed_access_and_is_once(self):
+        c = Client(); c.force_login(self.user)
+        session = c.session
+        session['premium_checkout_pending'] = True
+        session.save()
+        with mock.patch('summarizer.billing.price_label', return_value=None):
+            self.assertNotContains(c.get('/en/premium/?success=1'), 'data-funnel-view="premium_activated"')
+            UserPlan.objects.create(user=self.user, paid=True)
+            self.assertContains(c.get('/en/premium/'), 'data-funnel-view="premium_activated"')
+            self.assertNotContains(c.get('/en/premium/'), 'data-funnel-view="premium_activated"')
+            self.assertNotContains(Client().get('/en/premium/?success=1'), 'data-funnel-view="premium_activated"')
+
+    def test_checkout_guards_and_failure(self):
+        c = Client()
+        r = c.post('/fr/premium/checkout/')
+        self.assertEqual(r['Location'], '/fr/login/?next=%2Ffr%2Fpremium%2F')
+        c.force_login(self.user)
+        with mock.patch('stripe.checkout.Session.create') as create:
+            for period in ('yearly', 'invalid'):
+                self.assertEqual(c.post('/en/premium/checkout/', {'period': period}).status_code, 400)
+            UserPlan.objects.create(user=self.user, paid=True)
+            self.assertEqual(c.post('/en/premium/checkout/')['Location'], '/en/premium/')
+            create.assert_not_called()
+        UserPlan.objects.filter(user=self.user).delete()
+        import stripe
+        with mock.patch('stripe.checkout.Session.create', side_effect=stripe.error.APIConnectionError('offline')):
+            self.assertEqual(c.post('/en/premium/checkout/')['Location'], '/en/premium/')
+        with mock.patch('summarizer.billing.price_label', return_value=None):
+            self.assertContains(c.get('/en/premium/'), 'Payment is temporarily unavailable')
+
+    @override_settings(STRIPE_PRICE_YEARLY='price_y')
+    def test_yearly_checkout(self):
+        c = Client(); c.force_login(self.user)
+        with mock.patch('stripe.checkout.Session.create', return_value=mock.Mock(url='https://checkout.stripe.com/x')) as create:
+            c.post('/fr/premium/checkout/', {'period': 'yearly'})
+        self.assertEqual(create.call_args.kwargs['line_items'][0]['price'], 'price_y')
 
     def test_portal_return_url(self):
         UserPlan.objects.create(user=self.user, paid=True, stripe_customer_id='cus_1')
@@ -721,6 +758,29 @@ class AccountTests(TestCase):
         self.assertEqual(int(client.session['_auth_user_id']), user.pk)
         self.assertContains(client.get('/en/'), '(newbie)')  # still logged in on the next page
         self.assertEqual(Client().post('/' + path).status_code, 400)
+
+    def test_signup_preserves_safe_premium_destination(self):
+        from django.core import mail
+        from urllib.parse import urlsplit
+        import re
+        destination = '/en/premium/?period=yearly&source=home'
+        self.register(next=destination)
+        link = re.search(r'http\S+', mail.outbox[-1].body).group(0)
+        parsed = urlsplit(link)
+        c = Client()
+        r = c.post(parsed.path + '?' + parsed.query)
+        self.assertEqual(r['Location'], destination)
+        page = Client().get('/en/register/', {'next': destination})
+        self.assertContains(page, 'name="next"')
+        self.assertContains(page, 'next=%2Fen%2Fpremium%2F')
+
+    def test_signup_rejects_offsite_destination_and_reports_mail_failure(self):
+        from summarizer import accounts
+        with mock.patch.object(accounts, 'send_login_link', return_value=False) as send:
+            r = self.register(next='https://evil.example/')
+        self.assertContains(r, 'could not send your activation email')
+        self.assertEqual(send.call_args.args[2], '')
+        self.assertContains(r, 'Get a login link by email')
 
     def test_bots_get_no_account(self):
         from django.core import mail
@@ -1869,6 +1929,9 @@ class DigestHealthTests(TestCase):
 
 class RunLockPerLanguageTests(TestCase):
     def test_a_summary_running_in_english_does_not_block_french_readers(self):
+        # Keep this language-lock test independent of the live arXiv API.
+        ArxivPaper.objects.create(arxiv_id='2610.22462v1', title='The environments forming stars',
+                                  abstract='Stars form in clusters.', license='http://creativecommons.org/licenses/by/4.0/')
         AnnouncedPaper.objects.create(arxiv_id='2610.22462v1', announced=MONDAY.date(), title='The environments forming stars',
                                       abstract='Stars form in clusters.', authors=json.dumps(['Ann Lee', 'Bob Ray']))
         cache.set('ar_2610.22462v1_en', True)
