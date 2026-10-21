@@ -31,6 +31,9 @@ application = ProtocolTypeRouter({
 
 print('joe')
 
+from summarizer import threadwatch
+threadwatch.start()  # logs the threads of the web process (see threadwatch.py)
+
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
