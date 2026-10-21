@@ -283,24 +283,35 @@ def run(now, budget):
 
 # --- views -------------------------------------------------------------------
 
-def _versions(arxiv_id, request):
+def _number(value, default):
+    try:
+        return int(value or default)
+    except (TypeError, ValueError):
+        return default
+
+
+def _versions(arxiv_id, request, ask_arxiv=True):
+    """(base id, latest version, old, new). Without ask_arxiv, the latest version is the one we know: crawlers
+    follow the link of every paper page, and arXiv answers one query every 3 seconds for the whole site."""
     if sources.is_external(arxiv_id):
         raise Http404
     base, shown = base_id(arxiv_id)
-    try:
-        latest = latest_version(base)
-    except digest.ArxivUnavailable:
-        latest = shown
+    latest = max(shown, PaperVersion.objects.filter(arxiv_id=base).values_list('version', flat=True).first() or 0)
+    if ask_arxiv:
+        try:
+            latest = latest_version(base) or latest
+        except digest.ArxivUnavailable:
+            pass
     if not latest:
         raise Http404
-    new = min(int(request.GET.get('to') or request.POST.get('to') or latest), latest)
-    old = int(request.GET.get('from') or request.POST.get('from') or new - 1)
+    new = min(_number(request.GET.get('to') or request.POST.get('to'), latest), latest)
+    old = _number(request.GET.get('from') or request.POST.get('from'), new - 1)
     return base, latest, max(1, min(old, new - 1)), new
 
 
 def changes_page(request, arxiv_id):
-    base, latest, old, new = _versions(arxiv_id, request)
     paid = access.is_paid(request.user)
+    base, latest, old, new = _versions(arxiv_id, request, ask_arxiv=paid)
     row = Generated.objects.filter(kind='changes', key=comparison_key(base, old, new),
                                    lang=request.LANGUAGE_CODE).first() if paid and latest > 1 else None
     title = ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v').values_list('title', flat=True).first()

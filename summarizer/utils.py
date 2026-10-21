@@ -953,7 +953,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {api_key}"
             }
-            response = requests.post(endpoint, headers=headers, json={"model": (await sync_to_async(ai_models)())[0], "prompt": prompt, "max_tokens": 400, "temperature": temp, "n":1, "stop":None})
+            response = requests.post(endpoint, headers=headers, json={"model": (await sync_to_async(ai_models)())[0], "prompt": prompt, "max_tokens": 400, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
             try:
                 print('in try1')
@@ -1009,7 +1009,7 @@ async def summarize_book(arxiv_id, language, book_text, p, api_key):
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {api_key}"
                 }
-                response2 = requests.post(endpoint, headers=headers2, json={"prompt": prompt2, "max_tokens": 500, "temperature": temp, "n":1, "stop":None})
+                response2 = requests.post(endpoint, headers=headers2, json={"prompt": prompt2, "max_tokens": 500, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
                 #if response2.status_code != 200:
                 #    raise Exception(f"Failed to summarize text: {response2.text}")
@@ -1138,7 +1138,7 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
         print('gpt45')
         
         #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
-        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "messages": mes, **chat_params(p, 800)})
+        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "messages": mes, **chat_params(p, 800)}, timeout=300)
         '''
         async with aiohttp.ClientSession() as session:
             async with session.post(endpoint, headers=headers3b, json={"model": model_forced, "messages": mes, **chat_params(p, 800)}) as response:
@@ -1182,7 +1182,7 @@ async def finalise_and_keywords(arxiv_id, language, summary, p, api_key):
         print('he2',response3b)
         '''
         #response3b = requests.post(endpoint, headers=headers3b, json={"model": model_forced, "prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
-        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None})
+        response3b = await asyncio.to_thread(requests.post, endpoint, headers=headers3b, json={"model": model_forced, "prompt": prompt3b,"frequency_penalty":0.6, "presence_penalty":0.6,"max_tokens": 800, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
     try:
         print('in try2b',response3b)
@@ -1296,7 +1296,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
 
 
         #response3 = requests.post(endpoint, headers=headers3, json={"model": model, "messages": mes, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model_take, "messages": mes, **chat_params(p, 500)})
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model_take, "messages": mes, **chat_params(p, 500)}, timeout=300)
 
         '''
         async with aiohttp.ClientSession() as session:
@@ -1336,7 +1336,7 @@ async def extract_key_points(arxiv_id, language, summary, p, api_key):
                 response3 = await response.json()
 
         '''
-        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model, "prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response3 = await asyncio.to_thread(requests.post, endpoint, headers=headers3, json={"model": model, "prompt": prompt3, "max_tokens": 500,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
     try:
         print('in try3',response3)
@@ -1421,7 +1421,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
         else:
             model_take=model_free
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "messages": mes,"max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(p, 700)})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model_take, "messages": mes, **chat_params(p, 700)}, timeout=300)
 
         '''
         async with aiohttp.ClientSession() as session:
@@ -1459,7 +1459,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
                 response4 = await response.json()
         #response4 = requests.post(endpoint, headers=headers4, json={"model": model, "prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
         '''
-        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model, "prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None})
+        response4 = await asyncio.to_thread(requests.post, endpoint, headers=headers4, json={"model": model, "prompt": prompt4, "max_tokens": 300,"frequency_penalty":0.6, "presence_penalty":0.6, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
     try:
         print('in try4',response4)
@@ -1549,7 +1549,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
-        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(p, 2500)})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "messages": mes, **chat_params(p, 2500)}, timeout=300)
 
         
     else:
@@ -1557,7 +1557,7 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
 
        
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
     try:
         print('in try5',response5)
@@ -1624,7 +1624,7 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
 
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "messages":mes, "frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
         #print('response 5', response5.json())
-        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "messages": mes, **chat_params(False, 1500)})
+        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "messages": mes, **chat_params(False, 1500)}, timeout=300)
 
         
     else:
@@ -1632,8 +1632,8 @@ async def refine_blog_article(arxiv_id, language, roughblog, api_key):
 
         print('aqui')
         #response5 = requests.post(endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
-        #response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None})
+        response6 = await asyncio.to_thread(requests.post, endpoint, headers=headers6, json={"model": model_forced, "prompt": prompt6,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}, timeout=300)
+        #response5 = await asyncio.to_thread(requests.post, endpoint, headers=headers5, json={"model": model_forced, "prompt": prompt5,"frequency_penalty":0.8, "presence_penalty":0.8, "max_tokens": 1500, "temperature": temp, "n":1, "stop":None}, timeout=300)
 
     try:
         print('in try6',response6)

@@ -13,7 +13,6 @@ import asyncio
 import contextlib
 import contextvars
 import logging
-import threading
 
 from django.db import connections
 from django.db.models import F
@@ -51,16 +50,16 @@ def _save(day, name, user_id, model, calls, prompt, completion, close=False):
 
 
 def add(model, prompt, completion, name=None, user_id=None):
-    """Count one call. From async code, the row is written in a thread (the ORM is sync only)."""
+    """Count one call. From async code, the row is written in the loop's thread pool (the ORM is sync only)."""
     current, current_user = _current.get()
     args = (timezone.now().date(), name or current, user_id if user_id is not None else current_user,
             (model or 'unknown')[:100], 1, int(prompt or 0), int(completion or 0))
     try:
-        asyncio.get_running_loop()
+        loop = asyncio.get_running_loop()
     except RuntimeError:
         _save(*args)
         return
-    threading.Thread(target=_save, args=args + (True,), daemon=True).start()
+    loop.run_in_executor(None, _save, *args, True)  # the loop's bounded pool, not a new thread per call
 
 
 def record(body, name=None, user_id=None):

@@ -645,6 +645,12 @@ class ChangesTests(ToolsTestCase):
         self.assertIn('Mass from 3 to 5.', mail.outbox[0].body)
         self.assertIn('/en/changes/2101.00001v3/?from=1', mail.outbox[0].body)
 
+    def test_crawlers_and_free_accounts_never_make_the_page_query_arxiv(self):
+        with mock.patch('summarizer.changes.latest_version') as latest:
+            self.assertContains(Client().get('/en/changes/2101.00001v1/'), 'Discover Premium')
+            self.assertContains(Client().get('/en/changes/2101.00001v1/?to=abc'), 'Discover Premium')
+        latest.assert_not_called()
+
     def test_page_is_premium(self):
         with mock.patch('summarizer.changes.latest_version', return_value=2):
             self.assertContains(self.client_for(self.user()).get('/en/changes/2101.00001v1/'), 'Discover Premium')

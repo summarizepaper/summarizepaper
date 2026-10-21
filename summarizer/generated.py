@@ -12,7 +12,7 @@ press kit or reading level is written once and shared by every reader.
 import datetime
 import json
 import logging
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from django.conf import settings
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 STALE = datetime.timedelta(minutes=10)  # a 'pending' row older than this was lost (dyno restart): start again
 MAX_THREADS = 3  # each one holds a database connection now and then; the pool has 8
-_slots = threading.BoundedSemaphore(MAX_THREADS)
+_pool = ThreadPoolExecutor(MAX_THREADS, thread_name_prefix='background')  # more work waits in its queue, not in threads
 LANGUAGES = {'en': 'English', 'fr': 'French'}
 PREMIUM_KINDS = {'presskit', 'compare', 'missed', 'zotero', 'refcheck', 'changes', 'teams', 'slides', 'conference', 'questions'}  # their results are only shown to Premium accounts
 
@@ -65,16 +65,15 @@ def chat_json(prompt, paid=True, max_tokens=3000, system=None):
 
 
 def background(work, *args):
-    """Run work(*args) in a thread that leaves the database pool as it found it."""
+    """Run work(*args) in one of MAX_THREADS threads, leaving the database pool as it found it."""
     def run():
-        with _slots:
-            try:
-                work(*args)
-            except Exception:
-                logger.exception('Background work %s failed', getattr(work, '__name__', work))
-            finally:
-                connections.close_all()
-    threading.Thread(target=run, daemon=True).start()
+        try:
+            work(*args)
+        except Exception:
+            logger.exception('Background work %s failed', getattr(work, '__name__', work))
+        finally:
+            connections.close_all()
+    _pool.submit(run)
 
 
 def release_connection():

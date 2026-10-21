@@ -13,14 +13,14 @@
     <p class="lead">arXiv: {{ base }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ site_base }}v{{ latest }}/">{% trans 'Summary page' %}</a> · <a href="https://arxiv.org/abs/{{ base }}" target="_blank" rel="noopener">arXiv</a></p>
   </header>
 
-  {% if latest < 2 %}
-    <p class="notice">{% trans 'This paper has only one version on arXiv so far.' %}</p>
-    {% if paid %}<p class="muted">{% trans 'Follow its citations from its page: you will also get an email when a new version comes out, with what changed.' %}</p>{% endif %}
-  {% elif not paid %}
+  {% if not paid %}
   <div class="upsell">
     <p><strong>{% trans 'What changed between two versions of a paper.' %}</strong> {% trans 'Changed results and numbers (before and after), conclusions, method, data, errors fixed, or only the writing, and whether the main results changed. And an email when a paper you follow gets a new version.' %}</p>
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>
+  {% elif latest < 2 %}
+    <p class="notice">{% trans 'This paper has only one version on arXiv so far.' %}</p>
+    <p class="muted">{% trans 'Follow its citations from its page: you will also get an email when a new version comes out, with what changed.' %}</p>
   {% else %}
     <form method="get" class="tool-row" style="margin-bottom:16px">
       <label>{% trans 'From' %} <select name="from">{% for v in versions %}{% if v < latest %}<option value="{{ v }}"{% if v == old %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
