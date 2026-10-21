@@ -14,6 +14,7 @@ import traceback
 logger = logging.getLogger(__name__)
 
 EVERY = 300
+ALERT = 150  # threads; about 20 normally, and the dyno failed at a few hundred
 
 
 def where(frame):
@@ -27,8 +28,12 @@ def where(frame):
 def report():
     frames = sys._current_frames()
     counts = collections.Counter(where(frames[t.ident]) for t in threading.enumerate() if t.ident in frames)
-    logger.warning('threadwatch: %d threads; %s', threading.active_count(),
-                   '; '.join('%d x %s' % (n, place) for place, n in counts.most_common(8)))
+    total = threading.active_count()
+    places = '; '.join('%d x %s' % (n, place) for place, n in counts.most_common(8))
+    if total >= ALERT:
+        logger.error('threadwatch: %d threads, the web process is piling them up; %s', total, places)  # Sentry
+    else:
+        logger.warning('threadwatch: %d threads; %s', total, places)
 
 
 def loop():
