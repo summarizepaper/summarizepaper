@@ -518,7 +518,7 @@ class AssistantTests(TransactionTestCase):
             self.assertEqual(AIassistant.objects.get().response, 'The answer.')
             asyncio.run(assistant.answer(['2101.00001v1'], 'en', 'And then?', True, hashed_ip='h'))
         messages = FakeSession.last_payload['messages']
-        self.assertEqual([m['role'] for m in messages], ['system', 'user', 'assistant', 'user'])
+        self.assertEqual([m['role'] for m in messages], ['system', 'user', 'user', 'assistant', 'user'])
         self.assertEqual(FakeSession.last_payload['model'], SiteSettings.current().model_paid)
         self.assertTrue(FakeSession.last_payload['stream'])
 

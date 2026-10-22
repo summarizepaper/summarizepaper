@@ -1,0 +1,16 @@
+<script>
+  MathJax = {
+    loader: {load: ['ui/safe']},
+    tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
+    svg: {fontCache: 'global'},
+    options: {
+      safeOptions: {
+        allow: {URLs: 'safe', classes: 'safe', cssIDs: 'safe', styles: 'safe'},
+        safeProtocols: {http: true, https: true, file: false, javascript: false, data: false}
+      }
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+</script>

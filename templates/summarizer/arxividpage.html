@@ -40,19 +40,7 @@
   {% for name, value in citation_meta %}
   <meta name="{{ name }}" content="{{ value }}" />
   {% endfor %}
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-      },
-      svg: {
-        fontCache: 'global'
-      }
-    };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
+  {% include 'summarizer/mathjax.html' %}
 
   <style>
 /* Class names below are also used by the page scripts (tabs, live run, chat): keep them. */
@@ -514,7 +502,7 @@
           {% endfor %}
         {% endif %}</div>
       <form class="chatbot-form">
-        <input type="text" placeholder="{% trans 'Type your question here' %}">
+        <input type="text" maxlength="6000" placeholder="{% trans 'Type your question here' %}">
         <button type="submit" id="send-btn">{% trans 'Send' %}</button>
       </form>
       <div id="loading-spinner" style="display: none;text-align:right;">

@@ -167,6 +167,11 @@ def published_label(arxiv_id, lang):
 class LoadingConsumer(AsyncWebsocketConsumer):
     sendmessages_running = {}
 
+    async def invalid_chat_message(self):
+        message = ('Message invalide. Envoyez une question de 1 à 6 000 caractères et sélectionnez au maximum 10 articles.'
+                   if self.language == 'fr' else
+                   'Invalid message. Send a question of 1 to 6,000 characters and select at most 10 papers.')
+        await self.send(text_data=json.dumps({'message': message}))
 
     async def send_message_now(self,message):
         print('in sendmesnow',message)
@@ -910,9 +915,19 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #asyncio.create_task(self.sendmessages(v,l,message))
 
     # Receive message from WebSocket
-    async def receive(self, text_data):
-        print('rec',text_data)
-        data = json.loads(text_data)
+    async def receive(self, text_data=None, bytes_data=None):
+        # Bound and validate client input before any database/model work. Never log private questions.
+        if not isinstance(text_data, str) or len(text_data) > 65536:
+            await self.invalid_chat_message()
+            return
+        try:
+            data = json.loads(text_data)
+        except (ValueError, TypeError):
+            await self.invalid_chat_message()
+            return
+        if not isinstance(data, dict):
+            await self.invalid_chat_message()
+            return
 
         paid = self.paid
 
@@ -953,9 +968,17 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 asyncio.create_task(self.sendclose(v,l,message))
 
         else:
-            message = data["message"]
-            print('receive',message)
-            selectedpapers=''
+            message = data.get('message')
+            selectedpapers = data.get('selectedpapers', [])
+            try:
+                assistant.validate_question(message)
+            except assistant.AssistantError:
+                await self.invalid_chat_message()
+                return
+            if not isinstance(selectedpapers, list) or len(selectedpapers) > 10 or any(
+                    not isinstance(p, str) or not p.strip() or len(p) > 100 for p in selectedpapers):
+                await self.invalid_chat_message()
+                return
 
             if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) <= 0:
                 if self.language == 'fr':
@@ -964,10 +987,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     limit_text = "You have reached the daily question limit. Come back tomorrow or upgrade to Premium."
                 await self.send(text_data=json.dumps({'message': limit_text}))
                 return
-
-            if "selectedpapers" in data:
-                selectedpapers=data["selectedpapers"]
-                print('selectedpapers',selectedpapers)
 
             #the multi-paper chat page sends the papers to discuss, a paper page discusses its own paper
             if selectedpapers:
