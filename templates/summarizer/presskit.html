@@ -11,8 +11,22 @@
   <header class="page-header">
     <span class="eyebrow">{% trans 'Press kit' %} · Premium</span>
     <h1>{{ paper.title }}</h1>
-    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
+    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %}{% if paper.authors.count %} · {% endif %}{{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
+
+  {% if editorial %}
+  <section class="card section-card editorial-context">
+    <span class="eyebrow">{% trans 'From the weekly letter' %} · {{ editorial.letter.day|date:"j F Y" }}</span>
+    <h2>{% trans 'Why cover this story this week?' %}</h2>
+    <h3>{{ editorial.heading }}</h3>
+    {{ editorial.text|linebreaks }}
+    <p class="muted">{% trans 'Editorial context written by AI from abstracts, not independent scientific validation. The kit and its verified quotes rely on the source paper, not on this letter.' %}</p>
+    {% if editorial.others %}<details><summary>{% trans 'Other papers in this selection' %}</summary>
+      <ul>{% for p in editorial.others %}<li><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
+    </details>{% endif %}
+    <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ editorial.letter.topic }}/{{ editorial.letter.day|date:'Y-m-d' }}/">{% trans 'Read the full letter' %} →</a></p>
+  </section>
+  {% endif %}
 
   {% if not paid %}
   <div class="upsell">
@@ -20,7 +34,7 @@
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>
   {% elif kit %}
-    {% if kit.abstract_only %}<p class="error">{% trans "This paper's license only lets us read its abstract: the kit is based on the abstract alone. Read the full paper before writing." %}</p>{% endif %}
+    {% if kit.abstract_only %}<p class="error">{% trans 'Only the abstract was available for this kit. Read the full paper before writing.' %}</p>{% endif %}
 
     <section class="card section-card">
       <h2>{{ kit.headline }}</h2>

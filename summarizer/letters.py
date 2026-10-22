@@ -183,10 +183,12 @@ def send(now, budget, base_url=digest.BASE_URL):
 # --- views -------------------------------------------------------------------
 
 def letter_context(letter):
+    from .presskit import paper_id
     content = json.loads(letter.content)
     titles = content.get('papers', {})
     for section in content['sections']:
-        section['links'] = [{'arxiv_id': a, 'title': titles.get(a, a)} for a in section['papers']]
+        section['links'] = [{'arxiv_id': a, 'title': titles.get(a, a), 'presskit_id': paper_id(a)}
+                            for a in section['papers']]
     with translation.override(letter.lang):
         name = str(TOPICS[letter.topic]['name'])
     return {'letter': letter, 'sections': content['sections'], 'closing': content.get('closing', ''),

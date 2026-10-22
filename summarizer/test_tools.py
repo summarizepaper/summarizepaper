@@ -133,6 +133,123 @@ class ReadingTests(ToolsTestCase):
 
 
 class PressKitTests(ToolsTestCase):
+    def letter(self, lang='en'):
+        return Letter.objects.create(topic='space', lang=lang, day=datetime.date(2026, 10, 19),
+            title='The sky this week', content=json.dumps({'count': 3,
+                'sections': [{'heading': 'Clouds', 'text': 'Editorial angle <script>alert(1)</script>',
+                              'papers': ['2101.00001', '2101.00002', '2101.00002']}],
+                'papers': {'2101.00001': 'Clouds on a hot planet', '2101.00002': 'Another observation'}}))
+
+    def test_letter_links_to_kit_with_language_and_editorial_context(self):
+        self.paper()
+        for lang in ('en', 'fr'):
+            letter = self.letter(lang)
+            path = '/%s/press-kit/2101.00001v1/?letter=%s' % (lang, letter.pk)
+            page = Client().get('/%s/letters/space/2026-10-19/' % lang)
+            self.assertContains(page, path)
+            self.assertContains(page, 'rel="canonical"')
+            kit = Client().get(path)
+            self.assertContains(kit, 'Clouds on a hot planet')
+            self.assertContains(kit, 'Editorial angle &lt;script&gt;')
+            self.assertNotContains(kit, '<script>alert(1)</script>')
+            self.assertContains(kit, 'Another observation', count=1)
+            self.assertContains(kit, '/%s/letters/space/2026-10-19/' % lang)
+            self.assertEqual(kit.context['editorial']['letter'], letter)
+            self.assertFalse(Generated.objects.exists())
+
+    def test_editorial_context_rejects_unrelated_wrong_language_or_invalid_letters(self):
+        paper = self.paper()
+        letter = self.letter()
+        other = self.paper('2101.00003v1')
+        self.assertIsNone(presskit.editorial_context(letter.pk, other.arxiv_id, 'en'))
+        self.assertIsNone(presskit.editorial_context(letter.pk, paper.arxiv_id, 'fr'))
+        for value in (None, 'bogus', '9' * 100, '١'):
+            self.assertIsNone(presskit.editorial_context(value, paper.arxiv_id, 'en'))
+        letter.content = '{'
+        letter.save()
+        self.assertIsNone(presskit.editorial_context(letter.pk, paper.arxiv_id, 'en'))
+
+    def test_announced_paper_landing_does_not_fetch_generate_or_store_on_get(self):
+        AnnouncedPaper.objects.create(arxiv_id='2101.00001', title='Newly announced',
+                                      announced=datetime.date(2026, 10, 19))
+        letter = self.letter()
+        with mock.patch('summarizer.views.arxiv_metadata_or_none') as fetch, \
+             mock.patch('summarizer.generated.chat_json') as chat:
+            for client in (Client(), self.client_for(self.user(paid=True))):
+                page = client.get('/en/press-kit/2101.00001v1/?letter=%s' % letter.pk)
+                self.assertContains(page, 'Newly announced')
+                self.assertIsNotNone(page.context['editorial'])
+            fetch.assert_not_called()
+            chat.assert_not_called()
+        self.assertFalse(ArxivPaper.objects.exists())
+        self.assertFalse(Generated.objects.exists())
+        self.assertEqual(Client().get('/en/press-kit/2101.99999v1/').status_code, 404)
+        self.assertEqual(Client().post('/en/press-kit/2101.00001v1/start/').status_code, 403)
+
+    def test_announced_paper_imports_metadata_only_when_premium_starts_kit(self):
+        AnnouncedPaper.objects.create(arxiv_id='2101.00001', title='Newly announced',
+                                      announced=datetime.date(2026, 10, 19))
+        client = self.client_for(self.user(paid=True))
+        metadata = [1, ['Ann Lee'], [''], 'https://arxiv.org/abs/2101.00001', 'Source title',
+                    '', 'Original scientific abstract.', 'astro-ph.EP', '2021-01-01T00:00:00Z',
+                    '2021-01-01T00:00:00Z', '', '', '']
+        with mock.patch('summarizer.views.arxiv_metadata_or_none', return_value=metadata) as fetch, \
+             mock.patch('summarizer.presskit.experts', return_value=[]), \
+             mock.patch('summarizer.generated.chat_json', return_value={'headline': 'Source headline'}) as chat:
+            client.post('/en/press-kit/2101.00001v1/start/')
+        fetch.assert_called_once_with('2101.00001v1')
+        kit = Generated.objects.get(kind='presskit')
+        self.assertEqual(kit.status, 'done')
+        self.assertIn('Original scientific abstract.', chat.call_args.kwargs['system'])
+        self.assertNotIn('Editorial angle', chat.call_args.kwargs['system'])
+        self.assertEqual(ArxivPaper.objects.get().authors.get().name, 'Ann Lee')
+
+    def test_announced_source_outage_is_retryable_without_partial_paper(self):
+        AnnouncedPaper.objects.create(arxiv_id='2101.00001', title='Newly announced',
+                                      announced=datetime.date(2026, 10, 19))
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.views.arxiv_metadata_or_none', return_value=None), \
+             mock.patch('summarizer.generated.chat_json') as chat:
+            client.post('/en/press-kit/2101.00001v1/start/')
+            self.assertEqual(Generated.objects.get().status, 'failed')
+            self.assertFalse(ArxivPaper.objects.exists())
+            chat.assert_not_called()
+        self.assertContains(client.get('/en/press-kit/2101.00001v1/'), 'Please try again')
+
+    def test_cached_kit_is_unchanged_by_letter_context(self):
+        self.paper()
+        letter = self.letter()
+        row = Generated.objects.create(kind='presskit', key='2101.00001v1', lang='en', status='done',
+                                       content=json.dumps({'headline': 'Scientific kit'}))
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.generated.chat_json') as chat:
+            page = client.get('/en/press-kit/2101.00001v1/?letter=%s' % letter.pk)
+            self.assertContains(page, 'Scientific kit')
+            self.assertContains(page, 'Editorial angle')
+            chat.assert_not_called()
+        row.refresh_from_db()
+        self.assertEqual(row.data(), {'headline': 'Scientific kit'})
+
+    def test_open_paper_fetches_missing_text_or_labels_abstract_fallback(self):
+        paper = self.paper()
+        client = self.client_for(self.user(paid=True))
+        full_text = 'We observe clouds on a hot planet with a large telescope.'
+        for text, expected_abstract in ((full_text, False), ('', True)):
+            Generated.objects.all().delete()
+            with mock.patch('summarizer.paper_source.paper_text', return_value=paper.abstract), \
+                 mock.patch('summarizer.paper_source.read_again', return_value=(text, 'html')) as read, \
+                 mock.patch('summarizer.paper_source.store_text') as store, \
+                 mock.patch('summarizer.presskit.experts', return_value=[]), \
+                 mock.patch('summarizer.generated.chat_json', return_value={}):
+                client.post('/en/press-kit/2101.00001v1/start/')
+            read.assert_called_once_with(paper.arxiv_id)
+            self.assertEqual(Generated.objects.get().data()['abstract_only'], expected_abstract)
+            if text:
+                store.assert_called_once_with(paper.arxiv_id, text, 'html')
+            else:
+                store.assert_not_called()
+                self.assertContains(client.get('/en/press-kit/2101.00001v1/'), 'Only the abstract was available')
+
     def test_kit_keeps_only_real_sentences_and_independent_experts(self):
         paper = self.paper()
         close = self.paper('2101.00002v1', 'Other clouds', authors=('Bob Ray', 'Cid Moe', 'Dee Fox'))

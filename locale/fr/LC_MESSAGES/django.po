@@ -7355,6 +7355,37 @@ msgstr ""
 "langue du site. Les présentations précédentes et vos modifications restent "
 "accessibles."
 
+msgid "Prepare a press kit"
+msgstr "Préparer un kit presse"
+
+msgid "From the weekly letter"
+msgstr "Dans la lettre de la semaine"
+
+msgid "Why cover this story this week?"
+msgstr "Pourquoi en parler cette semaine ?"
+
+msgid ""
+"Editorial context written by AI from abstracts, not independent scientific "
+"validation. The kit and its verified quotes rely on the source paper, not on"
+" this letter."
+msgstr ""
+"Contexte éditorial rédigé par IA à partir des résumés, sans validation "
+"scientifique indépendante. Le kit et ses citations vérifiées s’appuient sur "
+"l’article source, et non sur cette lettre."
+
+msgid "Other papers in this selection"
+msgstr "Autres articles de cette sélection"
+
+msgid "Read the full letter"
+msgstr "Lire la lettre complète"
+
+msgid ""
+"Only the abstract was available for this kit. Read the full paper before "
+"writing."
+msgstr ""
+"Seul le résumé était disponible pour ce kit. Lisez l’article complet avant "
+"de rédiger."
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

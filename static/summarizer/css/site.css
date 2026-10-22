@@ -891,3 +891,10 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .tools-grid .source-card p { margin: 0; font-size: 14px; color: var(--text-muted); }
 a.tool-card { color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
 a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.letter-papers { list-style: none; padding: 0; margin: 1.25rem 0 2rem; }
+.letter-papers li { border-left: 2px solid #cbd5e1; padding: .65rem 1rem; margin: .65rem 0; }
+.letter-kit-link { display: block; width: fit-content; margin-top: .45rem; font-size: .9rem; }
+.letter-kit-link small { color: #64748b; white-space: nowrap; }
+.editorial-context { border-left: 3px solid #64748b; overflow-wrap: anywhere; }
+.editorial-context h2 { text-wrap: balance; }
+.editorial-context summary { cursor: pointer; padding: .5rem 0; }

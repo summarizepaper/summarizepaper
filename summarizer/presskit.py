@@ -9,6 +9,7 @@ than trusted to the model:
 - the independent researchers come from our own data (authors of the closest
   papers who did not sign this one), the model only reads them.
 """
+import json
 import re
 
 from django.http import Http404
@@ -16,10 +17,11 @@ from django.shortcuts import render
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 
-from . import access, generated, similar
+from . import access, generated, paper_source, similar, sources
 from .assistant import build_context
 from .digest import name_key
-from .models import ArxivPaper, Generated, PaperScore
+from .models import AnnouncedPaper, ArxivPaper, Author, Generated, Letter, PaperScore
+from .library import canonical_id
 
 from django.utils.translation import gettext_lazy as _
 
@@ -90,8 +92,32 @@ def experts(paper):
 def write(arxiv_id, lang):
     def work(pk):
         generated.progress(pk, 'read')
+        if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+            # Import only on explicit Premium generation, never on a public GET.
+            from .views import arxiv_metadata_or_none
+            from .utils import updatearvixdatapaper
+            from django.utils.dateparse import parse_datetime
+            metadata = arxiv_metadata_or_none(arxiv_id)
+            if not metadata or not metadata[0]:
+                raise ValueError('Paper metadata is temporarily unavailable')
+            keys = ['authors', 'affiliation', 'link_homepage', 'title', 'link_doi', 'abstract',
+                    'category', 'updated', 'published_arxiv', 'journal_ref', 'comments', 'license']
+            fields = dict(zip(keys, metadata[1:]))
+            fields['published_arxiv'] = parse_datetime(fields['published_arxiv']).date()
+            updatearvixdatapaper(arxiv_id, fields)
         paper = ArxivPaper.objects.get(arxiv_id=arxiv_id)
+        abstract_only = False
+        if sources.is_open_license(paper.license):
+            available = paper_source.paper_text(arxiv_id)
+            if not available or normalized(available) == normalized(paper.abstract or ''):
+                full_text, source = paper_source.read_again(arxiv_id)
+                if full_text:
+                    paper_source.store_text(arxiv_id, full_text, source)
+                else:
+                    abstract_only = True
         context = build_context([arxiv_id])
+        if abstract_only:
+            context += '\nOnly the title, authors and abstract are available. Do not imply the full paper was read.'
         generated.progress(pk, 'experts')
         people = experts(paper)
         generated.progress(pk, 'write')
@@ -110,21 +136,62 @@ def write(arxiv_id, lang):
             'glossary': [{'term': str(g.get('term', '')).strip(), 'definition': str(g.get('definition', '')).strip()}
                          for g in answer.get('glossary', []) if isinstance(g, dict) and g.get('term')][:10],
             'experts': people,
-            'abstract_only': 'Only the title, authors and abstract are available' in context,
+            'abstract_only': abstract_only or 'Only the title, authors and abstract are available' in context,
         }
     return work
+
+
+def paper_id(value):
+    key = canonical_id(value)
+    if key and re.fullmatch(r'(?:\d{4}\.\d{4,5}|[a-z-]+--\d{7})', key):
+        key += 'v1'
+    return key
+
+
+def editorial_context(letter_id, arxiv_id, lang):
+    """Display-only context, restricted to a real selection in the requested language."""
+    if not str(letter_id or '').isascii() or not str(letter_id or '').isdigit():
+        return None
+    if len(str(letter_id)) > 18:
+        return None
+    letter = Letter.objects.filter(pk=letter_id, lang=lang).first()
+    if letter is None:
+        return None
+    try:
+        content = json.loads(letter.content)
+        for section in content['sections']:
+            ids = section.get('papers', [])
+            if arxiv_id not in [paper_id(a) for a in ids]:
+                continue
+            return {'letter': letter, 'heading': section.get('heading', ''),
+                    'text': section.get('text', ''), 'others': [
+                        {'arxiv_id': paper_id(a), 'title': content.get('papers', {}).get(a, a)}
+                        for a in dict.fromkeys(ids) if paper_id(a) and paper_id(a) != arxiv_id][:5]}
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None
+    return None
+
+
+def announced_paper(arxiv_id):
+    # RSS IDs can be versionless. Keep explicit versions intact.
+    bare = re.sub(r'v\d+$', '', arxiv_id)
+    return AnnouncedPaper.objects.filter(arxiv_id__in=[arxiv_id, bare]).first()
 
 
 def presskit_page(request, arxiv_id):
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
     if paper is None:
-        raise Http404
+        announced = announced_paper(arxiv_id)
+        if announced is None or canonical_id(arxiv_id) != arxiv_id:
+            raise Http404
+        paper = {'title': announced.title, 'authors': Author.objects.none()}
     paid = access.is_paid(request.user)
     lang = request.LANGUAGE_CODE
     row = Generated.objects.filter(kind='presskit', key=arxiv_id, lang=lang).first() if paid else None
     return render(request, 'summarizer/presskit.html', {
         'paper': paper, 'arxiv_id': arxiv_id, 'paid': paid, 'row': row,
         'kit': row.data() if row is not None and row.status == 'done' else None, 'steps': STEPS,
+        'editorial': editorial_context(request.GET.get('letter'), arxiv_id, lang),
     })
 
 
@@ -132,7 +199,8 @@ def presskit_page(request, arxiv_id):
 def presskit_start(request, arxiv_id):
     if not access.is_paid(request.user):
         return JsonResponse({'status': 'premium'}, status=403)
-    if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+    if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists() and (
+            canonical_id(arxiv_id) != arxiv_id or announced_paper(arxiv_id) is None):
         raise Http404
     lang = request.LANGUAGE_CODE
     row = generated.start('presskit', arxiv_id, lang, write(arxiv_id, lang), force=request.POST.get('again') == '1')
