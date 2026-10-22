@@ -4366,222 +4366,6 @@ msgstr ""
 "Vous pouvez quitter cette page : le travail continue, et le résultat sera là"
 " à votre retour."
 
-#~ msgid ""
-#~ "Searching arXiv and reading the closest papers… this takes one to three "
-#~ "minutes. The page updates by itself."
-#~ msgstr ""
-#~ "Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
-#~ " à trois minutes. La page se met à jour toute seule."
-
-#~ msgid "Writing… the page reloads by itself when the kit is ready."
-#~ msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
-
-#~ msgid "For researchers and students who read papers every day."
-#~ msgstr ""
-#~ "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
-
-#~ msgid "Home"
-#~ msgstr "Accueil"
-
-#~ msgid ""
-#~ "Find answers to commonly asked questions about our AI-powered arXiv paper "
-#~ "summarization service. Learn how our technology works, what types of papers "
-#~ "we summarize, and how to get started with our service."
-#~ msgstr ""
-#~ "Trouvez des réponses aux questions fréquemment posées sur notre service de "
-#~ "résumés d'articles arXiv alimenté par l'IA. Découvrez comment fonctionne "
-#~ "notre technologie, quels types de documents nous résumons et comment "
-#~ "démarrer avec notre service."
-
-#~ msgid ""
-#~ "This website is a platform that summarizes scientific papers from arXiv "
-#~ "using AI and allows you to interrogate our virtual assistant about the "
-#~ "content of all articles."
-#~ msgstr ""
-#~ "Ce site Web est une plateforme qui résume les articles scientifiques d'arXiv"
-#~ " en utilisant l'IA et vous permet d'interroger notre assistant virtuel sur "
-#~ "le contenu de tous les articles."
-
-#~ msgid ""
-#~ "The AI uses advanced machine learning algorithms to analyze and extract the "
-#~ "most important information from the papers, and present it in a condensed "
-#~ "and understandable format. It is using the latest engines from OpenAI, gpt3,"
-#~ " gpt3.5 and gpt4."
-#~ msgstr ""
-#~ "L'IA utilise des algorithmes avancés d'apprentissage automatique pour "
-#~ "analyser et extraire les informations les plus importantes des documents, et"
-#~ " les présenter dans un format condensé et compréhensible. Nous utilisons les"
-#~ " derniers moteurs d'OpenAI, gpt3, gpt3. 5 et gpt4."
-
-#~ msgid "How can I suggest a paper for summarization?"
-#~ msgstr "Comment puis-je suggérer un article pour le résumer avec vos outils ?"
-
-#~ msgid "Yes, this website is completely free to use."
-#~ msgstr "Oui, l'utilisation de ce site Web est entièrement gratuite."
-
-#~ msgid "What is the process of summarizing a paper?"
-#~ msgstr "Quel est le processus de synthèse d'un article ?"
-
-#~ msgid ""
-#~ "The process of summarizing a paper involves several steps, including text "
-#~ "pre-processing, feature extraction, and summarization using a series of "
-#~ "complex prompts. The AI uses a combination of natural language processing "
-#~ "and machine learning techniques to analyze the paper and generate a concise "
-#~ "summary."
-#~ msgstr ""
-#~ "Le processus de synthèse d'un article comporte plusieurs étapes, notamment "
-#~ "le prétraitement du texte, l'extraction des caractéristiques et la synthèse "
-#~ "à l'aide d'une série de prompts complexes. L'IA utilise une combinaison de "
-#~ "techniques de traitement du langage naturel et d'apprentissage automatique "
-#~ "pour analyser le document et générer un résumé concis."
-
-#~ msgid ""
-#~ "There is no limit to the number of papers you can summarize (but this may "
-#~ "change if it gets overloaded). You can use the platform as much as you need "
-#~ "to keep updated on the latest research developments."
-#~ msgstr ""
-#~ "Il n'y a pas de limite au nombre d'articles que vous pouvez résumer (mais "
-#~ "cela pourrait changer si l'outil devient surchargé). Vous pouvez utiliser la"
-#~ " plate-forme autant que nécessaire pour vous tenir au courant des derniers "
-#~ "développements de la recherche."
-
-#~ msgid "Go back"
-#~ msgstr "Revenir en arrière"
-
-#~ msgid ""
-#~ "Your account is not activated yet. Click the link in the activation email we"
-#~ " sent you."
-#~ msgstr ""
-#~ "Votre compte n'est pas encore activé. Cliquez sur le lien de l'email "
-#~ "d'activation que nous vous avons envoyé."
-
-#~ msgid ""
-#~ "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
-#~ "for ID numbers id:\"2211.04191\""
-#~ msgstr ""
-#~ "Entourez les termes de recherche contenant des espaces de guillemets: au: "
-#~ "\"John Doe\" , ou si vous recherchez des numéros d'identification "
-#~ "id:\"2211.04191\""
-
-#, fuzzy
-#~ msgid ""
-#~ "The license of \" + count + \" paper\" + privateIDsMsg + \" does not allow "
-#~ "us to build upon its content and the AI assistant only knows about the paper"
-#~ " metadata rather than the full article."
-#~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
-
-#, fuzzy
-#~ msgid ""
-#~ "The licenses of \" + count + \" papers\" + privateIDsMsg + \" do not allow "
-#~ "us to build upon their contents and the AI assistant only knows about the "
-#~ "papers\\"
-#~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
-
-#, fuzzy
-#~ msgid ""
-#~ "do not allow us to build upon their contents and the AI assistant only knows"
-#~ " about the papers\\"
-#~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
-
-#~ msgid "AIer"
-#~ msgstr "AIer"
-
-#~ msgid "Ourh with our cutting-edge technology."
-#~ msgstr "Ourh avec notre technologie de pointe."
-
-#~ msgid "The paper with an ID"
-#~ msgstr "Le papier avec l'ID"
-
-#~ msgid "was not found, try again!"
-#~ msgstr "n'a pas été trouvé, essayez à nouveau !"
-
-#~ msgid "Total number of votes:"
-#~ msgstr "Nombre total de votes :"
-
-#~ msgid ""
-#~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "
-#~ "AI-powered summarization service. Our cutting-edge technology uses machine "
-#~ "learning and natural language processing to deliver a high-quality summary "
-#~ "in just a few seconds. Try it out today!"
-#~ msgstr ""
-#~ "Obtenez un résumé rapide, précis et facile à lire de votre document arXiv "
-#~ "avec notre service de résumé alimenté par l'IA. Notre technologie de pointe "
-#~ "utilise l'apprentissage automatique et le traitement du langage naturel pour"
-#~ " fournir un résumé de haute qualité en quelques minutes seulement. Essayez-"
-#~ "le aujourd'hui !"
-
-#~ msgid ""
-#~ "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
-#~ "Summaries"
-#~ msgstr ""
-#~ "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des Résumés "
-#~ "Précis et Rapides"
-
-#~ msgid "More advanced Search?"
-#~ msgstr "Recherche avancée ?"
-
-#~ msgid "Enter arXiv ID: "
-#~ msgstr "Entrez un ID arXiv :"
-
-#~ msgid "Example:"
-#~ msgstr "Exemple :"
-
-#~ msgid "Submit"
-#~ msgstr "Envoyer"
-
-#~ msgid "You:"
-#~ msgstr "Vous :"
-
-#~ msgid "Our Promise"
-#~ msgstr "Notre promesse"
-
-#~ msgid ""
-#~ "At our website, we are committed to providing you with the highest quality "
-#~ "summaries of the latest research. We do our best to make sure that our AI "
-#~ "algorithms accurately reflect the key findings and conclusions of each "
-#~ "paper, so that you can stay informed and ahead of the curve in your field of"
-#~ " interest. "
-#~ msgstr ""
-#~ "Sur notre site Web, nous nous engageons à vous fournir des résumés de la "
-#~ "plus haute qualité des dernières recherches. Nous faisons tout notre "
-#~ "possible pour que nos algorithmes d'IA reflètent fidèlement les principaux "
-#~ "résultats et conclusions de chaque article, afin que vous puissiez rester "
-#~ "informé et prendre une longueur d'avance dans votre domaine d'intérêt."
-
-#~ msgid ""
-#~ "Yes, this website is completely free to use. There are no hidden fees or "
-#~ "charges."
-#~ msgstr ""
-#~ "Oui, l'utilisation de ce site Web est entièrement gratuite. Il n'y a pas de "
-#~ "frais cachés."
-
-#~ msgid ""
-#~ "Our website uses cookies to store information about user preferences and to "
-#~ "keep track of user activity on our site. This information is used to provide"
-#~ " a more personalized user experience and to improve the functionality of our"
-#~ " website."
-#~ msgstr ""
-#~ "Notre site Web utilise des cookies pour stocker des informations sur les "
-#~ "préférences des utilisateurs et pour suivre l'activité des utilisateurs sur "
-#~ "notre site. Ces informations sont utilisées pour offrir une expérience "
-#~ "utilisateur plus personnalisée et pour améliorer les fonctionnalités de "
-#~ "notre site Web."
-
-#~ msgid "10-yrs old Summary"
-#~ msgstr "Résumé pour un enfant de 10 ans"
-
-#~ msgid "The 10-yrs old summary is not ready yet"
-#~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
-
 #: templates/summarizer/arxiv_picker.html
 msgid "Added"
 msgstr "Ajouté"
@@ -4603,12 +4387,18 @@ msgid "Or paste their arXiv identifiers or links:"
 msgstr "Ou collez leurs identifiants ou liens arXiv :"
 
 #: summarizer/views.py
-msgid "The source of this paper is not responding right now. Please try again in a moment."
-msgstr "La source de cet article ne répond pas pour le moment. Réessayez dans un instant."
+msgid ""
+"The source of this paper is not responding right now. Please try again in a "
+"moment."
+msgstr ""
+"La source de cet article ne répond pas pour le moment. Réessayez dans un "
+"instant."
 
 #: summarizer/views.py
 msgid "Wrong url: this is not a paper identifier we know."
-msgstr "Adresse incorrecte : ce n’est pas un identifiant d’article que nous connaissons."
+msgstr ""
+"Adresse incorrecte : ce n’est pas un identifiant d’article que nous "
+"connaissons."
 
 #: templates/summarizer/arxividpage.html
 msgid "AI-Powered Paper Summarization about the paper"
@@ -4640,8 +4430,9 @@ msgid ""
 "Check it, or <a href=\"/%(LANGUAGE_CODE)s/search-results/?src=open\">search "
 "the journals and preprint servers</a>."
 msgstr ""
-"Vérifiez-le, ou <a href=\"/%(LANGUAGE_CODE)s/search-results/?src=open\">cherchez "
-"dans les revues et les serveurs de prépublications</a>."
+"Vérifiez-le, ou <a href=\"/%(LANGUAGE_CODE)s/search-"
+"results/?src=open\">cherchez dans les revues et les serveurs de "
+"prépublications</a>."
 
 #: templates/summarizer/arxividpage.html
 msgid "We are analysing the following article:"
@@ -4680,8 +4471,9 @@ msgid ""
 "The search of journals and preprint servers is not responding right now. "
 "Please try again in a moment, or paste the DOI of the paper."
 msgstr ""
-"La recherche dans les revues et les serveurs de prépublications ne répond pas "
-"pour le moment. Réessayez dans un instant, ou collez le DOI de l’article."
+"La recherche dans les revues et les serveurs de prépublications ne répond "
+"pas pour le moment. Réessayez dans un instant, ou collez le DOI de "
+"l’article."
 
 #: templates/summarizer/search_results.html
 msgid ""
@@ -4689,15 +4481,16 @@ msgid ""
 "medRxiv, HAL, OSF or PubMed link in the search field."
 msgstr ""
 "Seuls les articles en accès ouvert sont listés. Vous pouvez aussi coller un "
-"DOI, ou un lien bioRxiv, medRxiv, HAL, OSF ou PubMed dans le champ de recherche."
+"DOI, ou un lien bioRxiv, medRxiv, HAL, OSF ou PubMed dans le champ de "
+"recherche."
 
 #: templates/summarizer/home.html
 msgid ""
 "Enter keywords, titles, authors, an arXiv ID (e.g., 2211.04191) or a DOI. "
 "bioRxiv, medRxiv, HAL, OSF and PubMed links work too."
 msgstr ""
-"Saisissez des mots-clés, un titre, des auteurs, un identifiant arXiv (par ex. "
-"2211.04191) ou un DOI. Les liens bioRxiv, medRxiv, HAL, OSF et PubMed "
+"Saisissez des mots-clés, un titre, des auteurs, un identifiant arXiv (par "
+"ex. 2211.04191) ou un DOI. Les liens bioRxiv, medRxiv, HAL, OSF et PubMed "
 "fonctionnent aussi."
 
 #: templates/summarizer/digest.html
@@ -4710,84 +4503,178 @@ msgid "Also on arXiv"
 msgstr "Aussi sur arXiv"
 
 msgid "A press kit for every paper: arXiv, journals and preprints."
-msgstr "Un dossier de presse pour chaque article : arXiv, revues et prépublications."
+msgstr ""
+"Un dossier de presse pour chaque article : arXiv, revues et prépublications."
 
 msgid "No paper was found with this identifier."
 msgstr "Aucun article n’a été trouvé avec cet identifiant."
 
 msgid "arXiv identifiers, DOIs or links, separated by spaces or new lines"
-msgstr "Identifiants arXiv, DOI ou liens, séparés par des espaces ou des retours à la ligne"
+msgstr ""
+"Identifiants arXiv, DOI ou liens, séparés par des espaces ou des retours à "
+"la ligne"
 
 msgid "Collections of research papers"
 msgstr "Collections d’articles scientifiques"
 
-msgid "Group papers from arXiv, journals and preprint servers by project, compare them in one table, chat with all of them at once and export them to Zotero, LaTeX, Notion or Obsidian."
-msgstr "Regroupez par projet des articles d’arXiv, de revues et de serveurs de prépublications, comparez-les dans un tableau, discutez avec tous à la fois et exportez-les vers Zotero, LaTeX, Notion ou Obsidian."
+msgid ""
+"Group papers from arXiv, journals and preprint servers by project, compare "
+"them in one table, chat with all of them at once and export them to Zotero, "
+"LaTeX, Notion or Obsidian."
+msgstr ""
+"Regroupez par projet des articles d’arXiv, de revues et de serveurs de "
+"prépublications, comparez-les dans un tableau, discutez avec tous à la fois "
+"et exportez-les vers Zotero, LaTeX, Notion ou Obsidian."
 
-msgid "Save any paper in a collection from its page, in one click, or add papers by their arXiv identifier, DOI or link."
-msgstr "Enregistrez n’importe quel article dans une collection depuis sa page, en un clic, ou ajoutez des articles par leur identifiant arXiv, leur DOI ou leur lien."
+msgid ""
+"Save any paper in a collection from its page, in one click, or add papers by"
+" their arXiv identifier, DOI or link."
+msgstr ""
+"Enregistrez n’importe quel article dans une collection depuis sa page, en un"
+" clic, ou ajoutez des articles par leur identifiant arXiv, leur DOI ou leur "
+"lien."
 
-msgid "Get an email when new papers cite your papers, on arXiv or in journals, with what they say about them: building on them, confirming them or questioning them."
-msgstr "Recevez un e-mail quand de nouveaux articles citent vos articles, sur arXiv ou dans des revues, avec ce qu’ils en disent : ils s’appuient dessus, les confirment ou les remettent en question."
+msgid ""
+"Get an email when new papers cite your papers, on arXiv or in journals, with"
+" what they say about them: building on them, confirming them or questioning "
+"them."
+msgstr ""
+"Recevez un e-mail quand de nouveaux articles citent vos articles, sur arXiv "
+"ou dans des revues, avec ce qu’ils en disent : ils s’appuient dessus, les "
+"confirment ou les remettent en question."
 
-msgid "Follow your own papers, those of your team, or any paper you care about: paste their arXiv identifiers or DOIs, or click \"Tell me who cites it\" on a paper page."
-msgstr "Suivez vos propres articles, ceux de votre équipe ou tout article qui vous intéresse : collez leurs identifiants arXiv ou leurs DOI, ou cliquez sur « Dites-moi qui le cite » sur la page d’un article."
+msgid ""
+"Follow your own papers, those of your team, or any paper you care about: "
+"paste their arXiv identifiers or DOIs, or click \"Tell me who cites it\" on "
+"a paper page."
+msgstr ""
+"Suivez vos propres articles, ceux de votre équipe ou tout article qui vous "
+"intéresse : collez leurs identifiants arXiv ou leurs DOI, ou cliquez sur « "
+"Dites-moi qui le cite » sur la page d’un article."
 
 msgid "Or paste their arXiv identifiers, DOIs or links:"
 msgstr "Ou collez leurs identifiants arXiv, DOI ou liens :"
 
-msgid "Upload your draft and find the papers close to it that it does not cite, on arXiv and in journals and preprints, with how each one relates to your work. Check your references before you submit."
-msgstr "Envoyez votre brouillon et trouvez les articles proches qu’il ne cite pas, sur arXiv et dans les revues et prépublications, avec le lien de chacun avec votre travail. Vérifiez vos références avant de soumettre."
+msgid ""
+"Upload your draft and find the papers close to it that it does not cite, on "
+"arXiv and in journals and preprints, with how each one relates to your work."
+" Check your references before you submit."
+msgstr ""
+"Envoyez votre brouillon et trouvez les articles proches qu’il ne cite pas, "
+"sur arXiv et dans les revues et prépublications, avec le lien de chacun avec"
+" votre travail. Vérifiez vos références avant de soumettre."
 
-msgid "Give us your draft: we search arXiv, journals and preprint servers for the papers closest to it that it does not cite, and say for each how it relates to your work and how to position yourself against it."
-msgstr "Donnez-nous votre brouillon : nous cherchons sur arXiv, dans les revues et sur les serveurs de prépublications les articles les plus proches qu’il ne cite pas, et disons pour chacun son lien avec votre travail et comment vous positionner."
+msgid ""
+"Give us your draft: we search arXiv, journals and preprint servers for the "
+"papers closest to it that it does not cite, and say for each how it relates "
+"to your work and how to position yourself against it."
+msgstr ""
+"Donnez-nous votre brouillon : nous cherchons sur arXiv, dans les revues et "
+"sur les serveurs de prépublications les articles les plus proches qu’il ne "
+"cite pas, et disons pour chacun son lien avec votre travail et comment vous "
+"positionner."
 
-msgid "We write several searches from your draft, run them on arXiv and on the open-access journals and preprints, and gather the papers they find."
-msgstr "Nous écrivons plusieurs recherches à partir de votre brouillon, les lançons sur arXiv et dans les revues et prépublications en accès ouvert, et rassemblons les articles trouvés."
+msgid ""
+"We write several searches from your draft, run them on arXiv and on the "
+"open-access journals and preprints, and gather the papers they find."
+msgstr ""
+"Nous écrivons plusieurs recherches à partir de votre brouillon, les lançons "
+"sur arXiv et dans les revues et prépublications en accès ouvert, et "
+"rassemblons les articles trouvés."
 
-msgid "We remove the papers your draft already cites, found by their arXiv identifier, their DOI or their title in your references."
-msgstr "Nous retirons les articles que votre brouillon cite déjà, reconnus à leur identifiant arXiv, leur DOI ou leur titre dans vos références."
+msgid ""
+"We remove the papers your draft already cites, found by their arXiv "
+"identifier, their DOI or their title in your references."
+msgstr ""
+"Nous retirons les articles que votre brouillon cite déjà, reconnus à leur "
+"identifiant arXiv, leur DOI ou leur titre dans vos références."
 
-msgid "Your draft is read once to run the searches and is not stored. Only the list of papers found is kept, in your account."
-msgstr "Votre brouillon est lu une fois pour lancer les recherches et n’est pas conservé. Seule la liste des articles trouvés est gardée, dans votre compte."
+msgid ""
+"Your draft is read once to run the searches and is not stored. Only the list"
+" of papers found is kept, in your account."
+msgstr ""
+"Votre brouillon est lu une fois pour lancer les recherches et n’est pas "
+"conservé. Seule la liste des articles trouvés est gardée, dans votre compte."
 
 #, python-format
-msgid "%(searched)s papers found by our searches; %(cited)s of them are already cited by your draft."
-msgstr "%(searched)s articles trouvés par nos recherches ; %(cited)s sont déjà cités par votre brouillon."
+msgid ""
+"%(searched)s papers found by our searches; %(cited)s of them are already "
+"cited by your draft."
+msgstr ""
+"%(searched)s articles trouvés par nos recherches ; %(cited)s sont déjà cités"
+" par votre brouillon."
 
-msgid "Premium gives you our most capable AI model for the summaries and answers of arXiv, journal and preprint papers, no daily summary limit and many more questions to the AI assistant."
-msgstr "Premium vous donne notre modèle d’IA le plus performant pour les résumés et les réponses sur les articles d’arXiv, des revues et des prépublications, sans limite quotidienne de résumés et avec bien plus de questions à l’assistant IA."
+msgid ""
+"Premium gives you our most capable AI model for the summaries and answers of"
+" arXiv, journal and preprint papers, no daily summary limit and many more "
+"questions to the AI assistant."
+msgstr ""
+"Premium vous donne notre modèle d’IA le plus performant pour les résumés et "
+"les réponses sur les articles d’arXiv, des revues et des prépublications, "
+"sans limite quotidienne de résumés et avec bien plus de questions à "
+"l’assistant IA."
 
 msgid "One digest of arXiv, bioRxiv and medRxiv papers, daily or weekly"
-msgstr "Un digest des articles arXiv, bioRxiv et medRxiv, quotidien ou hebdomadaire"
+msgstr ""
+"Un digest des articles arXiv, bioRxiv et medRxiv, quotidien ou hebdomadaire"
 
-msgid "A smarter digest: papers ranked by closeness to your research, authors you follow, a weekly synthesis of your fields, full summaries ready in advance, up to 5 digests"
-msgstr "Un digest plus intelligent : articles classés selon leur proximité avec vos recherches, auteurs suivis, synthèse hebdomadaire de vos domaines, résumés complets prêts à l’avance, jusqu’à 5 digests"
+msgid ""
+"A smarter digest: papers ranked by closeness to your research, authors you "
+"follow, a weekly synthesis of your fields, full summaries ready in advance, "
+"up to 5 digests"
+msgstr ""
+"Un digest plus intelligent : articles classés selon leur proximité avec vos "
+"recherches, auteurs suivis, synthèse hebdomadaire de vos domaines, résumés "
+"complets prêts à l’avance, jusqu’à 5 digests"
 
-msgid "the papers close to your draft that it does not cite, on arXiv and in journals"
-msgstr "les articles proches de votre brouillon qu’il ne cite pas, sur arXiv et dans les revues"
+msgid ""
+"the papers close to your draft that it does not cite, on arXiv and in "
+"journals"
+msgstr ""
+"les articles proches de votre brouillon qu’il ne cite pas, sur arXiv et dans"
+" les revues"
 
 msgid "Daily digest of arXiv, bioRxiv and medRxiv papers by email"
 msgstr "Digest quotidien des articles arXiv, bioRxiv et medRxiv par e-mail"
 
-msgid "Every morning, the new arXiv, bioRxiv and medRxiv papers in your fields with a 2-sentence plain-language summary. Free."
-msgstr "Chaque matin, les nouveaux articles arXiv, bioRxiv et medRxiv de vos domaines, avec un résumé de 2 phrases en langage simple. Gratuit."
+msgid ""
+"Every morning, the new arXiv, bioRxiv and medRxiv papers in your fields with"
+" a 2-sentence plain-language summary. Free."
+msgstr ""
+"Chaque matin, les nouveaux articles arXiv, bioRxiv et medRxiv de vos "
+"domaines, avec un résumé de 2 phrases en langage simple. Gratuit."
 
 msgid "Your daily paper digest"
 msgstr "Votre digest quotidien d’articles"
 
 #, python-format
-msgid "Your digest is on its way to %(email)s, with the latest papers. It takes about a minute."
-msgstr "Votre digest part vers %(email)s, avec les derniers articles. Cela prend environ une minute."
+msgid ""
+"Your digest is on its way to %(email)s, with the latest papers. It takes "
+"about a minute."
+msgstr ""
+"Votre digest part vers %(email)s, avec les derniers articles. Cela prend "
+"environ une minute."
 
 msgid "Your weekly paper digest"
 msgstr "Votre digest hebdomadaire d’articles"
 
-msgid "SummarizePaper.com - AI summaries of arXiv papers, journal articles and preprints"
-msgstr "SummarizePaper.com - Résumés par IA des articles arXiv, des revues et des prépublications"
+msgid ""
+"SummarizePaper.com - AI summaries of arXiv papers, journal articles and "
+"preprints"
+msgstr ""
+"SummarizePaper.com - Résumés par IA des articles arXiv, des revues et des "
+"prépublications"
 
-msgid "SummarizePaper.com uses artificial intelligence to summarize scientific papers from arXiv, open-access journals and preprint servers such as bioRxiv, medRxiv and HAL. Get quick insights into complex research topics with our AI-powered summaries."
-msgstr "SummarizePaper.com résume par intelligence artificielle les articles scientifiques d’arXiv, des revues en accès ouvert et des serveurs de prépublications comme bioRxiv, medRxiv et HAL. Saisissez rapidement l’essentiel de sujets de recherche complexes grâce à nos résumés par IA."
+msgid ""
+"SummarizePaper.com uses artificial intelligence to summarize scientific "
+"papers from arXiv, open-access journals and preprint servers such as "
+"bioRxiv, medRxiv and HAL. Get quick insights into complex research topics "
+"with our AI-powered summaries."
+msgstr ""
+"SummarizePaper.com résume par intelligence artificielle les articles "
+"scientifiques d’arXiv, des revues en accès ouvert et des serveurs de "
+"prépublications comme bioRxiv, medRxiv et HAL. Saisissez rapidement "
+"l’essentiel de sujets de recherche complexes grâce à nos résumés par IA."
 
 msgid "Journals and preprints"
 msgstr "Revues et prépublications"
@@ -4801,113 +4688,335 @@ msgstr "La recherche ne répond pas pour le moment. Réessayez dans un instant."
 msgid "Chat with research papers"
 msgstr "Discuter avec des articles scientifiques"
 
-msgid "Chat with one or several papers at once: arXiv papers, but also journal articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions in plain language; the assistant answers from the full text when the license allows it, from the abstract otherwise."
-msgstr "Discutez avec un ou plusieurs articles à la fois : articles arXiv, mais aussi articles de revues et prépublications bioRxiv, medRxiv, PsyArXiv ou HAL. Posez vos questions en langage courant ; l’assistant répond à partir du texte intégral quand la licence le permet, de l’abstract sinon."
+msgid ""
+"Chat with one or several papers at once: arXiv papers, but also journal "
+"articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions"
+" in plain language; the assistant answers from the full text when the "
+"license allows it, from the abstract otherwise."
+msgstr ""
+"Discutez avec un ou plusieurs articles à la fois : articles arXiv, mais "
+"aussi articles de revues et prépublications bioRxiv, medRxiv, PsyArXiv ou "
+"HAL. Posez vos questions en langage courant ; l’assistant répond à partir du"
+" texte intégral quand la licence le permet, de l’abstract sinon."
 
 msgid "arXiv ID or DOI (e.g. 2211.04191v1, 10.1093/mnras/stad1234)"
 msgstr "Identifiant arXiv ou DOI (ex. 2211.04191v1, 10.1093/mnras/stad1234)"
 
-msgid "No papers selected yet. Search for papers to chat with using the search field on the left, or add a paper directly with its arXiv ID or DOI and the Add button."
-msgstr "Aucun article sélectionné. Cherchez des articles avec le champ de recherche à gauche, ou ajoutez directement un article avec son identifiant arXiv ou son DOI et le bouton Ajouter."
+msgid ""
+"No papers selected yet. Search for papers to chat with using the search "
+"field on the left, or add a paper directly with its arXiv ID or DOI and the "
+"Add button."
+msgstr ""
+"Aucun article sélectionné. Cherchez des articles avec le champ de recherche "
+"à gauche, ou ajoutez directement un article avec son identifiant arXiv ou "
+"son DOI et le bouton Ajouter."
 
 #, python-format
-msgid "Or give up to %(max_references)s papers close to your work (arXiv ids, DOIs or links, comma-separated):"
-msgstr "Ou donnez jusqu’à %(max_references)s articles proches de votre travail (identifiants arXiv, DOI ou liens, séparés par des virgules) :"
+msgid ""
+"Or give up to %(max_references)s papers close to your work (arXiv ids, DOIs "
+"or links, comma-separated):"
+msgstr ""
+"Ou donnez jusqu’à %(max_references)s articles proches de votre travail "
+"(identifiants arXiv, DOI ou liens, séparés par des virgules) :"
 
 msgid "Searching arXiv and the journals for close papers"
 msgstr "Recherche d’articles proches sur arXiv et dans les revues"
 
 msgid "AI summaries of research papers: arXiv, journals and preprints"
-msgstr "Résumés par IA d’articles scientifiques : arXiv, revues et prépublications"
+msgstr ""
+"Résumés par IA d’articles scientifiques : arXiv, revues et prépublications"
 
-msgid "Easy-to-read AI summaries of scientific papers from arXiv, open-access journals and preprint servers (bioRxiv, medRxiv, HAL, PsyArXiv...): key points, lay summary, an assistant that answers your questions, and a daily digest of your fields."
-msgstr "Des résumés par IA faciles à lire des articles scientifiques d’arXiv, des revues en accès ouvert et des serveurs de prépublications (bioRxiv, medRxiv, HAL, PsyArXiv...) : points clés, résumé vulgarisé, un assistant qui répond à vos questions et un digest quotidien de vos domaines."
+msgid ""
+"Easy-to-read AI summaries of scientific papers from arXiv, open-access "
+"journals and preprint servers (bioRxiv, medRxiv, HAL, PsyArXiv...): key "
+"points, lay summary, an assistant that answers your questions, and a daily "
+"digest of your fields."
+msgstr ""
+"Des résumés par IA faciles à lire des articles scientifiques d’arXiv, des "
+"revues en accès ouvert et des serveurs de prépublications (bioRxiv, medRxiv,"
+" HAL, PsyArXiv...) : points clés, résumé vulgarisé, un assistant qui répond "
+"à vos questions et un digest quotidien de vos domaines."
 
 msgid "Key insights from arXiv papers, journal articles and preprints"
 msgstr "L’essentiel des articles arXiv, des revues et des prépublications"
 
-msgid "Search or paste a link: our AI reads the paper and gives you its key points, a summary anyone can understand, and an assistant to question it."
-msgstr "Cherchez ou collez un lien : notre IA lit l’article et vous donne ses points clés, un résumé que tout le monde comprend, et un assistant pour l’interroger."
+msgid ""
+"Search or paste a link: our AI reads the paper and gives you its key points,"
+" a summary anyone can understand, and an assistant to question it."
+msgstr ""
+"Cherchez ou collez un lien : notre IA lit l’article et vous donne ses points"
+" clés, un résumé que tout le monde comprend, et un assistant pour "
+"l’interroger."
 
 msgid "Where the papers come from"
 msgstr "D’où viennent les articles"
 
-msgid "Every paper of every category, read from its HTML version or its PDF. Type an arXiv ID or search by title, author or keywords."
-msgstr "Tous les articles de toutes les catégories, lus dans leur version HTML ou leur PDF. Tapez un identifiant arXiv ou cherchez par titre, auteur ou mots-clés."
+msgid ""
+"Every paper of every category, read from its HTML version or its PDF. Type "
+"an arXiv ID or search by title, author or keywords."
+msgstr ""
+"Tous les articles de toutes les catégories, lus dans leur version HTML ou "
+"leur PDF. Tapez un identifiant arXiv ou cherchez par titre, auteur ou mots-"
+"clés."
 
 msgid "Journals"
 msgstr "Revues"
 
-msgid "Any article with a DOI: paste it, or search the open-access literature. MNRAS, A&A, PLOS, Nature Communications, eLife and thousands of other journals."
-msgstr "Tout article qui a un DOI : collez-le, ou cherchez dans la littérature en accès ouvert. MNRAS, A&A, PLOS, Nature Communications, eLife et des milliers d’autres revues."
+msgid ""
+"Any article with a DOI: paste it, or search the open-access literature. "
+"MNRAS, A&A, PLOS, Nature Communications, eLife and thousands of other "
+"journals."
+msgstr ""
+"Tout article qui a un DOI : collez-le, ou cherchez dans la littérature en "
+"accès ouvert. MNRAS, A&A, PLOS, Nature Communications, eLife et des milliers"
+" d’autres revues."
 
-msgid "Biology and medicine preprints, summarized like arXiv papers. Their new preprints also come in the daily digest, by subject area."
-msgstr "Les prépublications de biologie et de médecine, résumées comme les articles arXiv. Leurs nouvelles prépublications arrivent aussi dans le digest quotidien, par domaine."
+msgid ""
+"Biology and medicine preprints, summarized like arXiv papers. Their new "
+"preprints also come in the daily digest, by subject area."
+msgstr ""
+"Les prépublications de biologie et de médecine, résumées comme les articles "
+"arXiv. Leurs nouvelles prépublications arrivent aussi dans le digest "
+"quotidien, par domaine."
 
 msgid "Other preprint servers"
 msgstr "Autres serveurs de prépublications"
 
-msgid "HAL, ChemRxiv, PsyArXiv, SocArXiv, EarthArXiv and the other OSF servers, PubMed and Europe PMC."
-msgstr "HAL, ChemRxiv, PsyArXiv, SocArXiv, EarthArXiv et les autres serveurs OSF, PubMed et Europe PMC."
+msgid ""
+"HAL, ChemRxiv, PsyArXiv, SocArXiv, EarthArXiv and the other OSF servers, "
+"PubMed and Europe PMC."
+msgstr ""
+"HAL, ChemRxiv, PsyArXiv, SocArXiv, EarthArXiv et les autres serveurs OSF, "
+"PubMed et Europe PMC."
 
 #, python-format
-msgid "When the license of a paper allows it (CC BY, BY-SA, BY-NC, BY-NC-SA or CC0), our AI reads the full text; otherwise the summary is written from the abstract and says so. <a href=\"/%(LANGUAGE_CODE)s/faq/\">More in the FAQ</a>."
-msgstr "Quand la licence d’un article le permet (CC BY, BY-SA, BY-NC, BY-NC-SA ou CC0), notre IA lit le texte intégral ; sinon le résumé est écrit à partir de l’abstract, et la page le signale. <a href=\"/%(LANGUAGE_CODE)s/faq/\">En savoir plus dans la FAQ</a>."
+msgid ""
+"When the license of a paper allows it (CC BY, BY-SA, BY-NC, BY-NC-SA or "
+"CC0), our AI reads the full text; otherwise the summary is written from the "
+"abstract and says so. <a href=\"/%(LANGUAGE_CODE)s/faq/\">More in the "
+"FAQ</a>."
+msgstr ""
+"Quand la licence d’un article le permet (CC BY, BY-SA, BY-NC, BY-NC-SA ou "
+"CC0), notre IA lit le texte intégral ; sinon le résumé est écrit à partir de"
+" l’abstract, et la page le signale. <a href=\"/%(LANGUAGE_CODE)s/faq/\">En "
+"savoir plus dans la FAQ</a>."
 
 #, python-format
-msgid "Welcome to our <a href=\"https://github.com/summarizepaper/summarizepaper\" class=\"chat-link\">open-source</a> AI tool to stay up-to-date with research. For each paper, from arXiv, a journal or a preprint server, you get concise, understandable and insightful summaries (key points, lay summary, blog-style article...), in English, French and 14 other languages, so you quickly grasp the latest developments in your field. Our <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">AI assistant</a> answers your questions about one paper or several at once, and the <a href=\"/%(LANGUAGE_CODE)s/digest/\" class=\"chat-link\">daily digest</a> brings you the new arXiv, bioRxiv and medRxiv papers of your fields. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style=\"color:#34a853\">Paper</span>.com is here to make your life easier."
-msgstr "Bienvenue sur notre outil d’IA <a href=\"https://github.com/summarizepaper/summarizepaper\" class=\"chat-link\">open source</a> pour suivre la recherche. Pour chaque article, d’arXiv, d’une revue ou d’un serveur de prépublications, vous obtenez des résumés concis, compréhensibles et éclairants (points clés, résumé vulgarisé, article de blog...), en français, en anglais et dans 14 autres langues, pour saisir vite les dernières avancées de votre domaine. Notre <a href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">assistant IA</a> répond à vos questions sur un article ou plusieurs à la fois, et le <a href=\"/%(LANGUAGE_CODE)s/digest/\" class=\"chat-link\">digest quotidien</a> vous apporte les nouveaux articles arXiv, bioRxiv et medRxiv de vos domaines. Que vous soyez chercheur, étudiant, journaliste ou simplement curieux, Summarize<span style=\"color:#34a853\">Paper</span>.com est là pour vous faciliter la vie."
+msgid ""
+"Welcome to our <a href=\"https://github.com/summarizepaper/summarizepaper\" "
+"class=\"chat-link\">open-source</a> AI tool to stay up-to-date with "
+"research. For each paper, from arXiv, a journal or a preprint server, you "
+"get concise, understandable and insightful summaries (key points, lay "
+"summary, blog-style article...), in English, French and 14 other languages, "
+"so you quickly grasp the latest developments in your field. Our <a "
+"href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">AI assistant</a> "
+"answers your questions about one paper or several at once, and the <a "
+"href=\"/%(LANGUAGE_CODE)s/digest/\" class=\"chat-link\">daily digest</a> "
+"brings you the new arXiv, bioRxiv and medRxiv papers of your fields. Whether"
+" you're a researcher, a student, a journalist, or simply someone who wants "
+"to stay informed, Summarize<span style=\"color:#34a853\">Paper</span>.com is"
+" here to make your life easier."
+msgstr ""
+"Bienvenue sur notre outil d’IA <a "
+"href=\"https://github.com/summarizepaper/summarizepaper\" class=\"chat-"
+"link\">open source</a> pour suivre la recherche. Pour chaque article, "
+"d’arXiv, d’une revue ou d’un serveur de prépublications, vous obtenez des "
+"résumés concis, compréhensibles et éclairants (points clés, résumé "
+"vulgarisé, article de blog...), en français, en anglais et dans 14 autres "
+"langues, pour saisir vite les dernières avancées de votre domaine. Notre <a "
+"href=\"/%(LANGUAGE_CODE)s/chat/\" class=\"chat-link\">assistant IA</a> "
+"répond à vos questions sur un article ou plusieurs à la fois, et le <a "
+"href=\"/%(LANGUAGE_CODE)s/digest/\" class=\"chat-link\">digest quotidien</a>"
+" vous apporte les nouveaux articles arXiv, bioRxiv et medRxiv de vos "
+"domaines. Que vous soyez chercheur, étudiant, journaliste ou simplement "
+"curieux, Summarize<span style=\"color:#34a853\">Paper</span>.com est là pour"
+" vous faciliter la vie."
 
-msgid "Answers to common questions about SummarizePaper: which papers we summarize (arXiv, journals, bioRxiv, medRxiv, HAL...), how the AI summaries and assistant work, licenses, free limits, Premium, the daily digest and citing us."
-msgstr "Réponses aux questions fréquentes sur SummarizePaper : quels articles nous résumons (arXiv, revues, bioRxiv, medRxiv, HAL...), comment fonctionnent les résumés et l’assistant IA, les licences, les limites gratuites, Premium, le digest quotidien et comment nous citer."
+msgid ""
+"Answers to common questions about SummarizePaper: which papers we summarize "
+"(arXiv, journals, bioRxiv, medRxiv, HAL...), how the AI summaries and "
+"assistant work, licenses, free limits, Premium, the daily digest and citing "
+"us."
+msgstr ""
+"Réponses aux questions fréquentes sur SummarizePaper : quels articles nous "
+"résumons (arXiv, revues, bioRxiv, medRxiv, HAL...), comment fonctionnent les"
+" résumés et l’assistant IA, les licences, les limites gratuites, Premium, le"
+" digest quotidien et comment nous citer."
 
-msgid "SummarizePaper summarizes scientific papers with AI: arXiv papers, journal articles and preprints from bioRxiv, medRxiv, HAL and other servers. For each paper you get a detailed summary, the key points, a lay summary anyone can understand and a blog-style article, in English or French, as well as a list of related papers. An AI assistant answers your questions about one or several papers, and a free daily email digest brings you the new arXiv, bioRxiv and medRxiv papers in your fields."
-msgstr "SummarizePaper résume des articles scientifiques par IA : articles arXiv, articles de revues et prépublications de bioRxiv, medRxiv, HAL et d’autres serveurs. Pour chaque article, vous obtenez un résumé détaillé, les points clés, un résumé vulgarisé compréhensible par tous et un article de style blog, en français ou en anglais, ainsi qu’une liste d’articles proches. Un assistant IA répond à vos questions sur un ou plusieurs articles, et un digest quotidien gratuit par e-mail vous apporte les nouveaux articles arXiv, bioRxiv et medRxiv de vos domaines."
+msgid ""
+"SummarizePaper summarizes scientific papers with AI: arXiv papers, journal "
+"articles and preprints from bioRxiv, medRxiv, HAL and other servers. For "
+"each paper you get a detailed summary, the key points, a lay summary anyone "
+"can understand and a blog-style article, in English or French, as well as a "
+"list of related papers. An AI assistant answers your questions about one or "
+"several papers, and a free daily email digest brings you the new arXiv, "
+"bioRxiv and medRxiv papers in your fields."
+msgstr ""
+"SummarizePaper résume des articles scientifiques par IA : articles arXiv, "
+"articles de revues et prépublications de bioRxiv, medRxiv, HAL et d’autres "
+"serveurs. Pour chaque article, vous obtenez un résumé détaillé, les points "
+"clés, un résumé vulgarisé compréhensible par tous et un article de style "
+"blog, en français ou en anglais, ainsi qu’une liste d’articles proches. Un "
+"assistant IA répond à vos questions sur un ou plusieurs articles, et un "
+"digest quotidien gratuit par e-mail vous apporte les nouveaux articles "
+"arXiv, bioRxiv et medRxiv de vos domaines."
 
 msgid "Which papers can I summarize?"
 msgstr "Quels articles puis-je résumer ?"
 
 msgid "Every arXiv paper, and papers from many other sources:"
-msgstr "Tous les articles d’arXiv, et des articles de nombreuses autres sources :"
+msgstr ""
+"Tous les articles d’arXiv, et des articles de nombreuses autres sources :"
 
-msgid "Journal articles: any paper with a DOI. Paste the DOI or the link of the article, or search the open-access literature from the home page (we use OpenAlex, which lists more than 250 million works)."
-msgstr "Les articles de revues : tout article qui a un DOI. Collez le DOI ou le lien de l’article, ou cherchez dans la littérature en accès ouvert depuis la page d’accueil (nous utilisons OpenAlex, qui recense plus de 250 millions de travaux)."
+msgid ""
+"Journal articles: any paper with a DOI. Paste the DOI or the link of the "
+"article, or search the open-access literature from the home page (we use "
+"OpenAlex, which lists more than 250 million works)."
+msgstr ""
+"Les articles de revues : tout article qui a un DOI. Collez le DOI ou le lien"
+" de l’article, ou cherchez dans la littérature en accès ouvert depuis la "
+"page d’accueil (nous utilisons OpenAlex, qui recense plus de 250 millions de"
+" travaux)."
 
-msgid "bioRxiv and medRxiv preprints, whose new papers can also come in your daily digest."
-msgstr "Les prépublications bioRxiv et medRxiv, dont les nouveaux articles peuvent aussi arriver dans votre digest quotidien."
+msgid ""
+"bioRxiv and medRxiv preprints, whose new papers can also come in your daily "
+"digest."
+msgstr ""
+"Les prépublications bioRxiv et medRxiv, dont les nouveaux articles peuvent "
+"aussi arriver dans votre digest quotidien."
 
-msgid "HAL, ChemRxiv, the OSF preprint servers (PsyArXiv, SocArXiv, EarthArXiv, EdArXiv...), and the articles of PubMed and Europe PMC: paste their link, their PMID or their PMCID."
-msgstr "HAL, ChemRxiv, les serveurs de prépublications OSF (PsyArXiv, SocArXiv, EarthArXiv, EdArXiv...), et les articles de PubMed et Europe PMC : collez leur lien, leur PMID ou leur PMCID."
+msgid ""
+"HAL, ChemRxiv, the OSF preprint servers (PsyArXiv, SocArXiv, EarthArXiv, "
+"EdArXiv...), and the articles of PubMed and Europe PMC: paste their link, "
+"their PMID or their PMCID."
+msgstr ""
+"HAL, ChemRxiv, les serveurs de prépublications OSF (PsyArXiv, SocArXiv, "
+"EarthArXiv, EdArXiv...), et les articles de PubMed et Europe PMC : collez "
+"leur lien, leur PMID ou leur PMCID."
 
-msgid "When a journal article also has an arXiv version and its own license does not let us read it, we take you to the arXiv page."
-msgstr "Quand un article de revue a aussi une version arXiv et que sa propre licence ne nous permet pas de le lire, nous vous emmenons sur la page arXiv."
+msgid ""
+"When a journal article also has an arXiv version and its own license does "
+"not let us read it, we take you to the arXiv page."
+msgstr ""
+"Quand un article de revue a aussi une version arXiv et que sa propre licence"
+" ne nous permet pas de le lire, nous vous emmenons sur la page arXiv."
 
 msgid "Why is a summary sometimes made from the abstract only?"
-msgstr "Pourquoi un résumé est-il parfois fait à partir de l’abstract seulement ?"
+msgstr ""
+"Pourquoi un résumé est-il parfois fait à partir de l’abstract seulement ?"
 
-msgid "We read the full text of the paper and send it to recent OpenAI language models with a series of prompts that produce each part of the summary. For arXiv, we read the HTML version when it exists and the PDF otherwise; for journals and other preprint servers, the structured text of the publisher or of Europe PMC when there is one, an open PDF otherwise, or the arXiv version. Free users get our standard model; Premium subscribers get our most capable model, for summaries as well as for answers."
-msgstr "Nous lisons le texte intégral de l’article et l’envoyons à des modèles de langage récents d’OpenAI avec une série d’instructions qui produisent chaque partie du résumé. Pour arXiv, nous lisons la version HTML quand elle existe et le PDF sinon ; pour les revues et les autres serveurs de prépublications, le texte structuré de l’éditeur ou d’Europe PMC quand il y en a un, sinon un PDF en accès ouvert, ou la version arXiv. Les utilisateurs gratuits ont notre modèle standard ; les abonnés Premium ont notre modèle le plus performant, pour les résumés comme pour les réponses."
+msgid ""
+"We read the full text of the paper and send it to recent OpenAI language "
+"models with a series of prompts that produce each part of the summary. For "
+"arXiv, we read the HTML version when it exists and the PDF otherwise; for "
+"journals and other preprint servers, the structured text of the publisher or"
+" of Europe PMC when there is one, an open PDF otherwise, or the arXiv "
+"version. Free users get our standard model; Premium subscribers get our most"
+" capable model, for summaries as well as for answers."
+msgstr ""
+"Nous lisons le texte intégral de l’article et l’envoyons à des modèles de "
+"langage récents d’OpenAI avec une série d’instructions qui produisent chaque"
+" partie du résumé. Pour arXiv, nous lisons la version HTML quand elle existe"
+" et le PDF sinon ; pour les revues et les autres serveurs de "
+"prépublications, le texte structuré de l’éditeur ou d’Europe PMC quand il y "
+"en a un, sinon un PDF en accès ouvert, ou la version arXiv. Les utilisateurs"
+" gratuits ont notre modèle standard ; les abonnés Premium ont notre modèle "
+"le plus performant, pour les résumés comme pour les réponses."
 
-msgid "Search for a paper with the search bar on the home page (on arXiv, or in the journals and preprints), or paste its arXiv ID, its DOI or its link. If the paper has already been summarized, the summary shows up immediately. If it is the first time someone looks for it, our AI has to read and summarize it first, which can take a few minutes; the progress is shown on the page."
-msgstr "Cherchez un article avec la barre de recherche de la page d’accueil (sur arXiv, ou dans les revues et prépublications), ou collez son identifiant arXiv, son DOI ou son lien. Si l’article a déjà été résumé, le résumé s’affiche tout de suite. Si c’est la première fois que quelqu’un le cherche, notre IA doit d’abord le lire et le résumer, ce qui peut prendre quelques minutes ; la progression s’affiche sur la page."
+msgid ""
+"Search for a paper with the search bar on the home page (on arXiv, or in the"
+" journals and preprints), or paste its arXiv ID, its DOI or its link. If the"
+" paper has already been summarized, the summary shows up immediately. If it "
+"is the first time someone looks for it, our AI has to read and summarize it "
+"first, which can take a few minutes; the progress is shown on the page."
+msgstr ""
+"Cherchez un article avec la barre de recherche de la page d’accueil (sur "
+"arXiv, ou dans les revues et prépublications), ou collez son identifiant "
+"arXiv, son DOI ou son lien. Si l’article a déjà été résumé, le résumé "
+"s’affiche tout de suite. Si c’est la première fois que quelqu’un le cherche,"
+" notre IA doit d’abord le lire et le résumer, ce qui peut prendre quelques "
+"minutes ; la progression s’affiche sur la page."
 
 #, python-format
-msgid "Yes, when the license of the paper allows it (see above); otherwise it answers from the abstract and tells you so. Its answers appear as they are written. Ask it questions from the paper page, or on the <a href=\"/%(LANGUAGE_CODE)s/chat/\">chat page</a> to question several papers at once, from arXiv, journals or preprint servers."
-msgstr "Oui, quand la licence de l’article le permet (voir plus haut) ; sinon il répond à partir de l’abstract et vous le dit. Ses réponses s’affichent au fur et à mesure. Posez-lui vos questions depuis la page de l’article, ou sur la <a href=\"/%(LANGUAGE_CODE)s/chat/\">page de discussion</a> pour interroger plusieurs articles à la fois, d’arXiv, de revues ou de serveurs de prépublications."
+msgid ""
+"Yes, when the license of the paper allows it (see above); otherwise it "
+"answers from the abstract and tells you so. Its answers appear as they are "
+"written. Ask it questions from the paper page, or on the <a "
+"href=\"/%(LANGUAGE_CODE)s/chat/\">chat page</a> to question several papers "
+"at once, from arXiv, journals or preprint servers."
+msgstr ""
+"Oui, quand la licence de l’article le permet (voir plus haut) ; sinon il "
+"répond à partir de l’abstract et vous le dit. Ses réponses s’affichent au "
+"fur et à mesure. Posez-lui vos questions depuis la page de l’article, ou sur"
+" la <a href=\"/%(LANGUAGE_CODE)s/chat/\">page de discussion</a> pour "
+"interroger plusieurs articles à la fois, d’arXiv, de revues ou de serveurs "
+"de prépublications."
 
-msgid "Yes. Each paper page lets you download the summary as a PDF, and export the paper to BibTeX, RIS (Zotero, Mendeley, EndNote) or Markdown (Notion, Obsidian), whether it comes from arXiv, a journal or a preprint server. With Premium, you can also send it to your Zotero library with its summary."
-msgstr "Oui. Chaque page d’article permet de télécharger le résumé en PDF et d’exporter l’article en BibTeX, RIS (Zotero, Mendeley, EndNote) ou Markdown (Notion, Obsidian), qu’il vienne d’arXiv, d’une revue ou d’un serveur de prépublications. Avec Premium, vous pouvez aussi l’envoyer dans votre bibliothèque Zotero avec son résumé."
+msgid ""
+"Yes. Each paper page lets you download the summary as a PDF, and export the "
+"paper to BibTeX, RIS (Zotero, Mendeley, EndNote) or Markdown (Notion, "
+"Obsidian), whether it comes from arXiv, a journal or a preprint server. With"
+" Premium, you can also send it to your Zotero library with its summary."
+msgstr ""
+"Oui. Chaque page d’article permet de télécharger le résumé en PDF et "
+"d’exporter l’article en BibTeX, RIS (Zotero, Mendeley, EndNote) ou Markdown "
+"(Notion, Obsidian), qu’il vienne d’arXiv, d’une revue ou d’un serveur de "
+"prépublications. Avec Premium, vous pouvez aussi l’envoyer dans votre "
+"bibliothèque Zotero avec son résumé."
 
-msgid "A summary is a derivative work, so our AI reads the full text of a paper only when its license allows it: CC BY, CC BY-SA, CC BY-NC, CC BY-NC-SA or CC0 (public domain). For the other papers (arXiv's default license, “no derivatives” licenses, articles behind a paywall), the summary and the assistant use the title, the authors and the abstract, and the page says so. Many bioRxiv preprints, for instance, are under CC BY-NC-ND."
-msgstr "Un résumé est une œuvre dérivée : notre IA ne lit donc le texte intégral d’un article que si sa licence le permet : CC BY, CC BY-SA, CC BY-NC, CC BY-NC-SA ou CC0 (domaine public). Pour les autres articles (licence par défaut d’arXiv, licences « pas de modification », articles payants), le résumé et l’assistant utilisent le titre, les auteurs et l’abstract, et la page le signale. Beaucoup de prépublications bioRxiv, par exemple, sont sous CC BY-NC-ND."
+msgid ""
+"A summary is a derivative work, so our AI reads the full text of a paper "
+"only when its license allows it: CC BY, CC BY-SA, CC BY-NC, CC BY-NC-SA or "
+"CC0 (public domain). For the other papers (arXiv's default license, “no "
+"derivatives” licenses, articles behind a paywall), the summary and the "
+"assistant use the title, the authors and the abstract, and the page says so."
+" Many bioRxiv preprints, for instance, are under CC BY-NC-ND."
+msgstr ""
+"Un résumé est une œuvre dérivée : notre IA ne lit donc le texte intégral "
+"d’un article que si sa licence le permet : CC BY, CC BY-SA, CC BY-NC, CC BY-"
+"NC-SA ou CC0 (domaine public). Pour les autres articles (licence par défaut "
+"d’arXiv, licences « pas de modification », articles payants), le résumé et "
+"l’assistant utilisent le titre, les auteurs et l’abstract, et la page le "
+"signale. Beaucoup de prépublications bioRxiv, par exemple, sont sous CC BY-"
+"NC-ND."
 
 #, python-format
-msgid "On the <a href=\"/%(LANGUAGE_CODE)s/digest/\">digest page</a>, choose up to %(max_categories)s arXiv categories or bioRxiv and medRxiv subject areas, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to %(papers_per_email)s new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click."
-msgstr "Sur la <a href=\"/%(LANGUAGE_CODE)s/digest/\">page du digest</a>, choisissez jusqu’à %(max_categories)s catégories arXiv ou domaines bioRxiv et medRxiv, des mots-clés facultatifs, la langue des résumés et l’heure à laquelle vous voulez le recevoir. Chaque jour de semaine, vous recevez jusqu’à %(papers_per_email)s nouveaux articles, chacun avec un résumé de 2 phrases en langage simple et un lien vers le résumé complet par IA. Aucun digest n’est envoyé le samedi et le dimanche dans votre fuseau horaire. Vous pouvez aussi le recevoir une fois par semaine. Chaque e-mail contient un lien de désinscription en un clic."
+msgid ""
+"On the <a href=\"/%(LANGUAGE_CODE)s/digest/\">digest page</a>, choose up to "
+"%(max_categories)s arXiv categories or bioRxiv and medRxiv subject areas, "
+"optional keywords, the language of the summaries and the time you want to "
+"receive it. Every weekday, you get up to %(papers_per_email)s new papers, "
+"each with a 2-sentence plain-language summary and a link to the full AI "
+"summary. No digest is sent on Saturday and Sunday in your time zone. You can"
+" also receive it once a week instead. Every email has a link to unsubscribe "
+"in one click."
+msgstr ""
+"Sur la <a href=\"/%(LANGUAGE_CODE)s/digest/\">page du digest</a>, choisissez"
+" jusqu’à %(max_categories)s catégories arXiv ou domaines bioRxiv et medRxiv,"
+" des mots-clés facultatifs, la langue des résumés et l’heure à laquelle vous"
+" voulez le recevoir. Chaque jour de semaine, vous recevez jusqu’à "
+"%(papers_per_email)s nouveaux articles, chacun avec un résumé de 2 phrases "
+"en langage simple et un lien vers le résumé complet par IA. Aucun digest "
+"n’est envoyé le samedi et le dimanche dans votre fuseau horaire. Vous pouvez"
+" aussi le recevoir une fois par semaine. Chaque e-mail contient un lien de "
+"désinscription en un clic."
 
 #, python-format
-msgid "With <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium</a>, the digest ranks papers by closeness to a description of your research or to papers you choose (by arXiv ID or DOI), follows authors across all categories, adds a synthesis of the week in your fields, and has the full summary of your best papers ready before you open the email. You can have up to 5 digests, with 15 categories and 25 papers each."
-msgstr "Avec <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium</a>, le digest classe les articles selon leur proximité avec une description de vos recherches ou avec des articles que vous choisissez (par identifiant arXiv ou DOI), suit des auteurs dans toutes les catégories, ajoute une synthèse de la semaine dans vos domaines, et prépare le résumé complet de vos meilleurs articles avant que vous n’ouvriez l’e-mail. Vous pouvez avoir jusqu’à 5 digests, avec 15 catégories et 25 articles chacun."
+msgid ""
+"With <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium</a>, the digest ranks "
+"papers by closeness to a description of your research or to papers you "
+"choose (by arXiv ID or DOI), follows authors across all categories, adds a "
+"synthesis of the week in your fields, and has the full summary of your best "
+"papers ready before you open the email. You can have up to 5 digests, with "
+"15 categories and 25 papers each."
+msgstr ""
+"Avec <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium</a>, le digest classe "
+"les articles selon leur proximité avec une description de vos recherches ou "
+"avec des articles que vous choisissez (par identifiant arXiv ou DOI), suit "
+"des auteurs dans toutes les catégories, ajoute une synthèse de la semaine "
+"dans vos domaines, et prépare le résumé complet de vos meilleurs articles "
+"avant que vous n’ouvriez l’e-mail. Vous pouvez avoir jusqu’à 5 digests, avec"
+" 15 catégories et 25 articles chacun."
 
 #, python-format
 msgid "Your week of research: %(counter)s paper for you"
@@ -4930,24 +5039,24 @@ msgid ""
 "we compare it with the new papers of arXiv, bioRxiv and medRxiv, and email "
 "you as soon as one comes close."
 msgstr ""
-"Décrivez le projet sur lequel vous travaillez, avant sa publication : chaque "
-"jour, nous le comparons aux nouveaux articles d'arXiv, bioRxiv et medRxiv, et"
-" vous écrivons dès que l'un d'eux s'en approche."
+"Décrivez le projet sur lequel vous travaillez, avant sa publication : chaque"
+" jour, nous le comparons aux nouveaux articles d'arXiv, bioRxiv et medRxiv, "
+"et vous écrivons dès que l'un d'eux s'en approche."
 
 msgid ""
 "Describe the project you are working on: every day, we compare it with the "
-"new papers on arXiv, bioRxiv and medRxiv, and email you when one comes close,"
-" with what it shares with your project and what stays yours."
+"new papers on arXiv, bioRxiv and medRxiv, and email you when one comes "
+"close, with what it shares with your project and what stays yours."
 msgstr ""
 "Décrivez le projet sur lequel vous travaillez : chaque jour, nous le "
-"comparons aux nouveaux articles d'arXiv, bioRxiv et medRxiv, et vous écrivons"
-" quand l'un d'eux s'en approche, avec ce qu'il partage avec votre projet et "
-"ce qui reste à vous."
+"comparons aux nouveaux articles d'arXiv, bioRxiv et medRxiv, et vous "
+"écrivons quand l'un d'eux s'en approche, avec ce qu'il partage avec votre "
+"projet et ce qui reste à vous."
 
 msgid ""
 "Describe your project in a few paragraphs (question, method, data, expected "
-"results), or upload the PDF of your draft: an AI writes the description from "
-"it."
+"results), or upload the PDF of your draft: an AI writes the description from"
+" it."
 msgstr ""
 "Décrivez votre projet en quelques paragraphes (question, méthode, données, "
 "résultats attendus), ou envoyez le PDF de votre brouillon : une IA en écrit "
@@ -4957,8 +5066,8 @@ msgid "Description"
 msgstr "Description"
 
 msgid ""
-"Every day, the new papers of the announcement are ranked by closeness to your"
-" project, and an AI reads the abstracts of the closest ones."
+"Every day, the new papers of the announcement are ranked by closeness to "
+"your project, and an AI reads the abstracts of the closest ones."
 msgstr ""
 "Chaque jour, les nouveaux articles de l'annonce sont classés par proximité "
 "avec votre projet, et une IA lit les résumés des plus proches."
@@ -4967,19 +5076,19 @@ msgid "First check in progress (the papers of the last ten days)…"
 msgstr "Première vérification en cours (les articles des dix derniers jours)…"
 
 msgid ""
-"For each paper, the AI says what it shares with your project, and what stays "
-"original in yours and how to set it apart."
+"For each paper, the AI says what it shares with your project, and what stays"
+" original in yours and how to set it apart."
 msgstr ""
 "Pour chaque article, l'IA dit ce qu'il partage avec votre projet, ce qui "
 "reste original dans le vôtre et comment vous en démarquer."
 
 #, python-format
 msgid ""
-"Give a title and a description of at least %(n)s characters, or a PDF of your"
-" draft."
+"Give a title and a description of at least %(n)s characters, or a PDF of "
+"your draft."
 msgstr ""
-"Donnez un titre et une description d'au moins %(n)s caractères, ou le PDF de "
-"votre brouillon."
+"Donnez un titre et une description d'au moins %(n)s caractères, ou le PDF de"
+" votre brouillon."
 
 msgid "In common:"
 msgstr "En commun :"
@@ -4990,10 +5099,11 @@ msgid ""
 msgstr ""
 "Jugé par une IA à partir des résumés : lisez l'article avant de conclure."
 
-msgid "Know the day a close paper comes out, not the day a reviewer tells you."
+msgid ""
+"Know the day a close paper comes out, not the day a reviewer tells you."
 msgstr ""
-"Sachez qu'un article proche est sorti le jour même, pas le jour où un referee"
-" vous le signale."
+"Sachez qu'un article proche est sorti le jour même, pas le jour où un "
+"referee vous le signale."
 
 msgid "Manage your projects"
 msgstr "Gérer vos projets"
@@ -5024,11 +5134,12 @@ msgid "Up to %(n)s projects watched."
 msgstr "Jusqu'à %(n)s projets surveillés."
 
 msgid ""
-"Useful during a thesis or a long project, to know early that a competing team"
-" is close, cite it, and adjust how you present your work."
+"Useful during a thesis or a long project, to know early that a competing "
+"team is close, cite it, and adjust how you present your work."
 msgstr ""
 "Utile pendant une thèse ou un long projet : savoir tôt qu'une équipe "
-"concurrente est proche, la citer et ajuster la présentation de votre travail."
+"concurrente est proche, la citer et ajuster la présentation de votre "
+"travail."
 
 msgid "Watch a project"
 msgstr "Surveiller un projet"
@@ -5037,11 +5148,11 @@ msgid "Watch this project"
 msgstr "Surveiller ce projet"
 
 msgid ""
-"We could not read this draft. Check that the PDF holds text (not only scanned"
-" images), or describe the project instead."
+"We could not read this draft. Check that the PDF holds text (not only "
+"scanned images), or describe the project instead."
 msgstr ""
-"Nous n'avons pas pu lire ce brouillon. Vérifiez que le PDF contient du texte "
-"(pas seulement des images scannées), ou décrivez plutôt le projet."
+"Nous n'avons pas pu lire ce brouillon. Vérifiez que le PDF contient du texte"
+" (pas seulement des images scannées), ou décrivez plutôt le projet."
 
 msgid ""
 "What it does: the question, the method, the data, the results you expect"
@@ -5070,18 +5181,18 @@ msgid "You can watch %(n)s projects at most."
 msgstr "Vous pouvez surveiller %(n)s projets au maximum."
 
 msgid ""
-"Your description stays private and is only used for the comparison. A PDF is "
-"read once and is not stored."
+"Your description stays private and is only used for the comparison. A PDF is"
+" read once and is not stored."
 msgstr ""
-"Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu "
-"une fois et n'est pas conservé."
+"Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu"
+" une fois et n'est pas conservé."
 
 msgid ""
-"Your description stays private and is only used for the comparison. A PDF is "
-"read once to write the description and is not stored."
+"Your description stays private and is only used for the comparison. A PDF is"
+" read once to write the description and is not stored."
 msgstr ""
-"Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu "
-"une fois pour écrire la description et n'est pas conservé."
+"Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu"
+" une fois pour écrire la description et n'est pas conservé."
 
 msgid ""
 "Your name as it appears on your papers (optional: your own papers are then "
@@ -6232,20 +6343,22 @@ msgstr ""
 "pas été vérifiés pour certaines références. Relancez-la demain pour une "
 "vérification complète."
 
-
 msgid "Payment is temporarily unavailable. Please try again."
 msgstr "Le paiement est temporairement indisponible. Veuillez réessayer."
 
 msgid "Payment cancelled. You can choose a subscription again below."
-msgstr "Paiement annulé. Vous pouvez choisir à nouveau un abonnement ci-dessous."
+msgstr ""
+"Paiement annulé. Vous pouvez choisir à nouveau un abonnement ci-dessous."
 
-msgid "We could not send your activation email. Please try requesting a login link."
-msgstr "Nous n’avons pas pu envoyer votre email d’activation. Essayez de demander un lien de connexion."
+msgid ""
+"We could not send your activation email. Please try requesting a login link."
+msgstr ""
+"Nous n’avons pas pu envoyer votre email d’activation. Essayez de demander un"
+" lien de connexion."
 
 #: templates/summarizer/home.html
 msgid "AI Research Companion & Paper Summaries | SummarizePaper"
 msgstr "Assistant de recherche IA et résumés scientifiques | SummarizePaper"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6257,22 +6370,18 @@ msgstr ""
 " références. Résumés IA et veille gratuits ; outils de recherche spécialisés"
 " avec Premium."
 
-
 #: templates/summarizer/home.html
 msgid "Your AI research companion"
 msgstr "Votre compagnon de recherche scientifique"
-
 
 #: templates/summarizer/home.html
 msgid "Understand papers. Keep up with your field. Check before submitting."
 msgstr ""
 "Comprenez les articles. Suivez votre domaine. Vérifiez avant de soumettre."
 
-
 #: templates/summarizer/home.html
 msgid "From the first paper to your next submission"
 msgstr "Du premier article à votre prochaine soumission"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6282,7 +6391,6 @@ msgstr ""
 "Comprenez les articles, suivez votre domaine et vérifiez vos références "
 "avant de soumettre."
 
-
 #: templates/summarizer/home.html
 msgid ""
 "AI paper summaries, research digests and tools built around your scientific "
@@ -6291,21 +6399,17 @@ msgstr ""
 "Des résumés par IA, une veille scientifique et des outils conçus pour votre "
 "travail de recherche."
 
-
 #: templates/summarizer/home.html
 msgid "Start with a paper or a research topic"
 msgstr "Commencez par un article ou un sujet de recherche"
-
 
 #: templates/summarizer/home.html
 msgid "Paper URL, DOI, title or topic"
 msgstr "Lien, DOI, titre ou sujet"
 
-
 #: templates/summarizer/home.html
 msgid "Explore a paper"
 msgstr "Explorer un article"
-
 
 #: templates/summarizer/home.html
 msgid "Start free. No credit card required. Daily limits apply."
@@ -6313,11 +6417,9 @@ msgstr ""
 "Commencez gratuitement, sans carte bancaire. Des limites quotidiennes "
 "s’appliquent."
 
-
 #: templates/summarizer/home.html
 msgid "Search options"
 msgstr "Options de recherche"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6329,56 +6431,45 @@ msgstr ""
 " PubMed. Sur arXiv : au: pour les auteurs, ti: pour les titres, AND, OR et "
 "ANDNOT pour combiner les termes."
 
-
 #: templates/summarizer/home.html
 msgid "Try an example"
 msgstr "Essayer un exemple"
-
 
 #: templates/summarizer/home.html
 msgid "Research workflow preview"
 msgstr "Aperçu du parcours de recherche"
 
-
 #: templates/summarizer/home.html
 msgid "A companion for the work between papers"
 msgstr "Un compagnon à chaque étape de votre recherche"
-
 
 #: templates/summarizer/home.html
 msgid "Read with a question in mind"
 msgstr "Lisez avec une question en tête"
 
-
 #: templates/summarizer/home.html
 msgid "Get the key ideas, then ask about the method or limitations."
 msgstr "Identifiez les idées clés, puis interrogez la méthode ou les limites."
-
 
 #: templates/summarizer/home.html
 msgid "Free to start"
 msgstr "Pour commencer, gratuitement"
 
-
 #: templates/summarizer/home.html
 msgid "Build a reading habit"
 msgstr "Installez une routine de lecture"
-
 
 #: templates/summarizer/home.html
 msgid "Bring new papers from your fields into your inbox."
 msgstr "Recevez les nouveaux articles de vos domaines par email."
 
-
 #: templates/summarizer/home.html
 msgid "Free digest"
 msgstr "Veille gratuite"
 
-
 #: templates/summarizer/home.html
 msgid "Prepare your next submission"
 msgstr "Préparez votre prochaine soumission"
-
 
 #: templates/summarizer/home.html
 msgid "Check references and find related work your draft may have missed."
@@ -6386,31 +6477,25 @@ msgstr ""
 "Vérifiez les références et repérez les travaux proches que votre manuscrit "
 "pourrait avoir omis."
 
-
 #: templates/summarizer/home.html
 msgid "Find the tool for your next step"
 msgstr "Trouvez l’outil pour votre prochaine étape"
-
 
 #: templates/summarizer/home.html
 msgid "Built around your research"
 msgstr "Au service de votre recherche"
 
-
 #: templates/summarizer/home.html
 msgid "What are you working on today?"
 msgstr "Sur quoi travaillez-vous aujourd’hui ?"
-
 
 #: templates/summarizer/home.html
 msgid "All research tools"
 msgstr "Tous les outils de recherche"
 
-
 #: templates/summarizer/home.html
 msgid "Understand a paper"
 msgstr "Comprendre un article"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6420,21 +6505,17 @@ msgstr ""
 "Identifiez la question, les résultats principaux et les limites. Posez vos "
 "questions sur un ou plusieurs articles."
 
-
 #: templates/summarizer/home.html
 msgid "AI summaries · Paper assistant"
 msgstr "Résumés IA · Assistant de lecture"
-
 
 #: templates/summarizer/home.html
 msgid "Free with an account"
 msgstr "Gratuit avec un compte"
 
-
 #: templates/summarizer/home.html
 msgid "Keep up with your field"
 msgstr "Suivre votre domaine"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6444,16 +6525,13 @@ msgstr ""
 "Recevez les nouveaux articles des catégories suivies, avec de courts "
 "résumés. Choisissez un rythme quotidien ou hebdomadaire."
 
-
 #: templates/summarizer/home.html
 msgid "Set up my free digest"
 msgstr "Configurer ma veille gratuite"
 
-
 #: templates/summarizer/home.html
 msgid "Check before submitting"
 msgstr "Vérifier avant de soumettre"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6463,16 +6541,13 @@ msgstr ""
 "Repérez les références à revoir et les travaux proches que votre manuscrit "
 "ne cite pas."
 
-
 #: templates/summarizer/home.html
 msgid "See a reference-check example"
 msgstr "Voir un exemple de vérification"
 
-
 #: templates/summarizer/home.html
 msgid "Watch research close to yours"
 msgstr "Surveiller les travaux proches"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6482,21 +6557,17 @@ msgstr ""
 "Décrivez votre projet. Recevez un email lorsque de nouveaux articles arXiv, "
 "bioRxiv ou medRxiv recoupent vos travaux."
 
-
 #: templates/summarizer/home.html
 msgid "Discover Scoop Watch"
 msgstr "Découvrir Scoop Watch"
-
 
 #: templates/summarizer/home.html
 msgid "See what you can do"
 msgstr "Découvrez les possibilités"
 
-
 #: templates/summarizer/home.html
 msgid "A useful next step, made concrete"
 msgstr "Des résultats concrets pour avancer"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6506,16 +6577,13 @@ msgstr ""
 "Aperçus illustratifs fondés sur un article publié. Ouvrez un résumé "
 "disponible ou configurez votre veille pour essayer les outils."
 
-
 #: templates/summarizer/home.html
 msgid "Understand"
 msgstr "Comprendre"
 
-
 #: templates/summarizer/home.html
 msgid "The question"
 msgstr "La question"
-
 
 #: templates/summarizer/home.html
 msgid "Can attention alone support a strong sequence-to-sequence model?"
@@ -6523,11 +6591,9 @@ msgstr ""
 "L’attention seule peut-elle permettre un modèle performant de transformation"
 " de séquences ?"
 
-
 #: templates/summarizer/home.html
 msgid "The main idea"
 msgstr "L’idée principale"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6537,11 +6603,9 @@ msgstr ""
 "Le Transformer remplace la récurrence et la convolution par l’attention. "
 "L’article l’évalue sur des tâches de traduction."
 
-
 #: templates/summarizer/home.html
 msgid "A point to check"
 msgstr "Un point à vérifier"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6551,46 +6615,37 @@ msgstr ""
 "Les résultats sur ces tests ne démontrent pas les performances pour toutes "
 "les langues ou toutes les tâches."
 
-
 #: templates/summarizer/home.html
 msgid "Editorial reading example based on the abstract."
 msgstr "Exemple de lecture rédigé à partir de l’abstract."
-
 
 #: templates/summarizer/home.html
 msgid "Read the source"
 msgstr "Lire la source"
 
-
 #: templates/summarizer/home.html
 msgid "Open a ready-to-read AI summary"
 msgstr "Ouvrir un résumé IA déjà disponible"
-
 
 #: templates/summarizer/home.html
 msgid "Explore your own paper"
 msgstr "Explorer votre propre article"
 
-
 #: templates/summarizer/home.html
 msgid "Check references"
 msgstr "Vérifier les références"
-
 
 #: templates/summarizer/home.html
 msgid "A preprint has a published version"
 msgstr "Une prépublication a été publiée"
 
-
 #: templates/summarizer/home.html
 msgid "Your reference"
 msgstr "Votre référence"
 
-
 #: templates/summarizer/home.html
 msgid "Publication to review"
 msgstr "Publication à consulter"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6598,31 +6653,25 @@ msgid ""
 msgstr ""
 "Consultez la publication et mettez à jour votre bibliographie si nécessaire."
 
-
 #: templates/summarizer/home.html
 msgid "Illustrative check, verified against the proceedings."
 msgstr "Vérification illustrative, confirmée dans les actes de la conférence."
-
 
 #: templates/summarizer/home.html
 msgid "Publication record"
 msgstr "Fiche de publication"
 
-
 #: templates/summarizer/home.html
 msgid "Explore Bibliography Check"
 msgstr "Découvrir Bibliography Check"
-
 
 #: templates/summarizer/home.html
 msgid "Keep up"
 msgstr "Suivre son domaine"
 
-
 #: templates/summarizer/home.html
 msgid "Your reading list, in your inbox"
 msgstr "Votre sélection de lectures, par email"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6633,11 +6682,9 @@ msgstr ""
 "article présente le Transformer et évalue ses performances en traduction "
 "automatique."
 
-
 #: templates/summarizer/home.html
 msgid "Source paper"
 msgstr "Article source"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6647,16 +6694,13 @@ msgstr ""
 "Exemple d’email utilisant un article de 2017. Votre veille suit les nouveaux"
 " articles des catégories sélectionnées."
 
-
 #: templates/summarizer/home.html
 msgid "For the research you do every day"
 msgstr "Pour votre recherche au quotidien"
 
-
 #: templates/summarizer/home.html
 msgid "Go further with Premium"
 msgstr "Allez plus loin avec Premium"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6666,46 +6710,37 @@ msgstr ""
 "Vérifiez votre bibliographie, trouvez les travaux proches absents de votre "
 "manuscrit et surveillez les publications liées à votre projet."
 
-
 #: templates/summarizer/home.html
 msgid "Bibliography Check and What Did I Miss?"
 msgstr "Bibliography Check et What Did I Miss?"
-
 
 #: templates/summarizer/home.html
 msgid "Scoop Watch and a digest ranked for your research"
 msgstr "Scoop Watch et une veille classée selon votre recherche"
 
-
 #: templates/summarizer/home.html
 msgid "Our most capable model and no daily summary limit"
 msgstr "Notre modèle le plus performant, sans limite quotidienne de résumés"
-
 
 #: templates/summarizer/home.html
 msgid "See Premium tools"
 msgstr "Voir les outils Premium"
 
-
 #: templates/summarizer/home.html
 msgid "Payments handled by Stripe"
 msgstr "Paiements gérés par Stripe"
-
 
 #: templates/summarizer/home.html
 msgid "Grounded in scientific literature"
 msgstr "Ancré dans la littérature scientifique"
 
-
 #: templates/summarizer/home.html
 msgid "Research papers, with their sources"
 msgstr "Des articles scientifiques, avec leurs sources"
 
-
 #: templates/summarizer/home.html
 msgid "Journals via DOI"
 msgstr "Revues via DOI"
-
 
 #: templates/summarizer/home.html
 msgid ""
@@ -6717,31 +6752,25 @@ msgstr ""
 "Sinon, ils utilisent l’abstract et le précisent. L’IA est un point de départ"
 " : consultez l’article original pour vos décisions de recherche."
 
-
 #: templates/summarizer/home.html
 msgid "How the summaries work"
 msgstr "Comment fonctionnent les résumés"
-
 
 #: templates/summarizer/home.html
 msgid "Meet the researcher behind SummarizePaper"
 msgstr "Découvrez le chercheur derrière SummarizePaper"
 
-
 #: templates/summarizer/home.html
 msgid "Explore the open-source code"
 msgstr "Explorer le code open source"
-
 
 #: templates/summarizer/home.html
 msgid "Recently summarized research papers"
 msgstr "Articles scientifiques récemment résumés"
 
-
 #: templates/summarizer/home.html
 msgid "Read the summary"
 msgstr "Lire le résumé"
-
 
 msgid "Enter a paper link, DOI or research topic."
 msgstr "Saisissez un lien d’article, un DOI ou un sujet de recherche."
@@ -7113,3 +7142,254 @@ msgstr[0] ""
 msgstr[1] ""
 "Votre formule permet de conserver 50 recherches et %(count)s veilles "
 "actives."
+
+msgid ""
+"Watch enabled. Initialization will run automatically; no existing results "
+"will be emailed."
+msgstr ""
+"Veille activée. Son initialisation sera automatique ; aucun résultat déjà "
+"présent ne sera envoyé."
+
+msgid "Watch enabled · initialization pending"
+msgstr "Veille activée · initialisation en attente"
+
+msgid ""
+"The hourly background check will initialize this watch when all required "
+"sources respond. Temporary outages are retried automatically. Existing "
+"matches at initialization are not emailed."
+msgstr ""
+"Le traitement automatique, exécuté chaque heure, initialisera cette veille "
+"dès que toutes les sources nécessaires répondront. En cas d’indisponibilité,"
+" il réessaiera automatiquement. Les résultats présents à l’initialisation ne"
+" seront pas envoyés."
+
+msgid "Enabling…"
+msgstr "Activation…"
+
+msgid "Enabling your watch…"
+msgstr "Activation de votre veille…"
+
+msgid ""
+"Watches check up to 50 of the most recent matches daily or weekly. Existing "
+"matches are recorded during initialization; they are not emailed. Each email"
+" contains up to 10 unseen matches."
+msgstr ""
+"Les veilles vérifient jusqu’à 50 correspondances récentes, chaque jour ou "
+"chaque semaine. Les résultats présents à l’initialisation ne sont pas "
+"envoyés. Chaque email contient jusqu’à 10 nouvelles correspondances."
+
+#~ msgid ""
+#~ "Searching arXiv and reading the closest papers… this takes one to three "
+#~ "minutes. The page updates by itself."
+#~ msgstr ""
+#~ "Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
+#~ " à trois minutes. La page se met à jour toute seule."
+
+#~ msgid "Writing… the page reloads by itself when the kit is ready."
+#~ msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
+
+#~ msgid "For researchers and students who read papers every day."
+#~ msgstr ""
+#~ "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
+
+#~ msgid "Home"
+#~ msgstr "Accueil"
+
+#~ msgid ""
+#~ "Find answers to commonly asked questions about our AI-powered arXiv paper "
+#~ "summarization service. Learn how our technology works, what types of papers "
+#~ "we summarize, and how to get started with our service."
+#~ msgstr ""
+#~ "Trouvez des réponses aux questions fréquemment posées sur notre service de "
+#~ "résumés d'articles arXiv alimenté par l'IA. Découvrez comment fonctionne "
+#~ "notre technologie, quels types de documents nous résumons et comment "
+#~ "démarrer avec notre service."
+
+#~ msgid ""
+#~ "This website is a platform that summarizes scientific papers from arXiv "
+#~ "using AI and allows you to interrogate our virtual assistant about the "
+#~ "content of all articles."
+#~ msgstr ""
+#~ "Ce site Web est une plateforme qui résume les articles scientifiques d'arXiv"
+#~ " en utilisant l'IA et vous permet d'interroger notre assistant virtuel sur "
+#~ "le contenu de tous les articles."
+
+#~ msgid ""
+#~ "The AI uses advanced machine learning algorithms to analyze and extract the "
+#~ "most important information from the papers, and present it in a condensed "
+#~ "and understandable format. It is using the latest engines from OpenAI, gpt3,"
+#~ " gpt3.5 and gpt4."
+#~ msgstr ""
+#~ "L'IA utilise des algorithmes avancés d'apprentissage automatique pour "
+#~ "analyser et extraire les informations les plus importantes des documents, et"
+#~ " les présenter dans un format condensé et compréhensible. Nous utilisons les"
+#~ " derniers moteurs d'OpenAI, gpt3, gpt3. 5 et gpt4."
+
+#~ msgid "How can I suggest a paper for summarization?"
+#~ msgstr "Comment puis-je suggérer un article pour le résumer avec vos outils ?"
+
+#~ msgid "Yes, this website is completely free to use."
+#~ msgstr "Oui, l'utilisation de ce site Web est entièrement gratuite."
+
+#~ msgid "What is the process of summarizing a paper?"
+#~ msgstr "Quel est le processus de synthèse d'un article ?"
+
+#~ msgid ""
+#~ "The process of summarizing a paper involves several steps, including text "
+#~ "pre-processing, feature extraction, and summarization using a series of "
+#~ "complex prompts. The AI uses a combination of natural language processing "
+#~ "and machine learning techniques to analyze the paper and generate a concise "
+#~ "summary."
+#~ msgstr ""
+#~ "Le processus de synthèse d'un article comporte plusieurs étapes, notamment "
+#~ "le prétraitement du texte, l'extraction des caractéristiques et la synthèse "
+#~ "à l'aide d'une série de prompts complexes. L'IA utilise une combinaison de "
+#~ "techniques de traitement du langage naturel et d'apprentissage automatique "
+#~ "pour analyser le document et générer un résumé concis."
+
+#~ msgid ""
+#~ "There is no limit to the number of papers you can summarize (but this may "
+#~ "change if it gets overloaded). You can use the platform as much as you need "
+#~ "to keep updated on the latest research developments."
+#~ msgstr ""
+#~ "Il n'y a pas de limite au nombre d'articles que vous pouvez résumer (mais "
+#~ "cela pourrait changer si l'outil devient surchargé). Vous pouvez utiliser la"
+#~ " plate-forme autant que nécessaire pour vous tenir au courant des derniers "
+#~ "développements de la recherche."
+
+#~ msgid "Go back"
+#~ msgstr "Revenir en arrière"
+
+#~ msgid ""
+#~ "Your account is not activated yet. Click the link in the activation email we"
+#~ " sent you."
+#~ msgstr ""
+#~ "Votre compte n'est pas encore activé. Cliquez sur le lien de l'email "
+#~ "d'activation que nous vous avons envoyé."
+
+#~ msgid ""
+#~ "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
+#~ "for ID numbers id:\"2211.04191\""
+#~ msgstr ""
+#~ "Entourez les termes de recherche contenant des espaces de guillemets: au: "
+#~ "\"John Doe\" , ou si vous recherchez des numéros d'identification "
+#~ "id:\"2211.04191\""
+
+#, fuzzy
+#~ msgid ""
+#~ "The license of \" + count + \" paper\" + privateIDsMsg + \" does not allow "
+#~ "us to build upon its content and the AI assistant only knows about the paper"
+#~ " metadata rather than the full article."
+#~ msgstr ""
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
+#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
+#~ "que de l'article complet."
+
+#, fuzzy
+#~ msgid ""
+#~ "The licenses of \" + count + \" papers\" + privateIDsMsg + \" do not allow "
+#~ "us to build upon their contents and the AI assistant only knows about the "
+#~ "papers\\"
+#~ msgstr ""
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
+#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
+#~ "que de l'article complet."
+
+#, fuzzy
+#~ msgid ""
+#~ "do not allow us to build upon their contents and the AI assistant only knows"
+#~ " about the papers\\"
+#~ msgstr ""
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
+#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
+#~ "que de l'article complet."
+
+#~ msgid "AIer"
+#~ msgstr "AIer"
+
+#~ msgid "Ourh with our cutting-edge technology."
+#~ msgstr "Ourh avec notre technologie de pointe."
+
+#~ msgid "The paper with an ID"
+#~ msgstr "Le papier avec l'ID"
+
+#~ msgid "was not found, try again!"
+#~ msgstr "n'a pas été trouvé, essayez à nouveau !"
+
+#~ msgid "Total number of votes:"
+#~ msgstr "Nombre total de votes :"
+
+#~ msgid ""
+#~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "
+#~ "AI-powered summarization service. Our cutting-edge technology uses machine "
+#~ "learning and natural language processing to deliver a high-quality summary "
+#~ "in just a few seconds. Try it out today!"
+#~ msgstr ""
+#~ "Obtenez un résumé rapide, précis et facile à lire de votre document arXiv "
+#~ "avec notre service de résumé alimenté par l'IA. Notre technologie de pointe "
+#~ "utilise l'apprentissage automatique et le traitement du langage naturel pour"
+#~ " fournir un résumé de haute qualité en quelques minutes seulement. Essayez-"
+#~ "le aujourd'hui !"
+
+#~ msgid ""
+#~ "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
+#~ "Summaries"
+#~ msgstr ""
+#~ "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des Résumés "
+#~ "Précis et Rapides"
+
+#~ msgid "More advanced Search?"
+#~ msgstr "Recherche avancée ?"
+
+#~ msgid "Enter arXiv ID: "
+#~ msgstr "Entrez un ID arXiv :"
+
+#~ msgid "Example:"
+#~ msgstr "Exemple :"
+
+#~ msgid "Submit"
+#~ msgstr "Envoyer"
+
+#~ msgid "You:"
+#~ msgstr "Vous :"
+
+#~ msgid "Our Promise"
+#~ msgstr "Notre promesse"
+
+#~ msgid ""
+#~ "At our website, we are committed to providing you with the highest quality "
+#~ "summaries of the latest research. We do our best to make sure that our AI "
+#~ "algorithms accurately reflect the key findings and conclusions of each "
+#~ "paper, so that you can stay informed and ahead of the curve in your field of"
+#~ " interest. "
+#~ msgstr ""
+#~ "Sur notre site Web, nous nous engageons à vous fournir des résumés de la "
+#~ "plus haute qualité des dernières recherches. Nous faisons tout notre "
+#~ "possible pour que nos algorithmes d'IA reflètent fidèlement les principaux "
+#~ "résultats et conclusions de chaque article, afin que vous puissiez rester "
+#~ "informé et prendre une longueur d'avance dans votre domaine d'intérêt."
+
+#~ msgid ""
+#~ "Yes, this website is completely free to use. There are no hidden fees or "
+#~ "charges."
+#~ msgstr ""
+#~ "Oui, l'utilisation de ce site Web est entièrement gratuite. Il n'y a pas de "
+#~ "frais cachés."
+
+#~ msgid ""
+#~ "Our website uses cookies to store information about user preferences and to "
+#~ "keep track of user activity on our site. This information is used to provide"
+#~ " a more personalized user experience and to improve the functionality of our"
+#~ " website."
+#~ msgstr ""
+#~ "Notre site Web utilise des cookies pour stocker des informations sur les "
+#~ "préférences des utilisateurs et pour suivre l'activité des utilisateurs sur "
+#~ "notre site. Ces informations sont utilisées pour offrir une expérience "
+#~ "utilisateur plus personnalisée et pour améliorer les fonctionnalités de "
+#~ "notre site Web."
+
+#~ msgid "10-yrs old Summary"
+#~ msgstr "Résumé pour un enfant de 10 ans"
+
+#~ msgid "The 10-yrs old summary is not ready yet"
+#~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"

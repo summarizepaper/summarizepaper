@@ -48,6 +48,12 @@
 .watch-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 18px 0; }
 .watch-controls label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
 .page .watch-controls select { margin: 0; }
+.watch-controls button[type="submit"] { display: inline-flex; align-items: center; gap: 8px; }
+.watch-spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: watch-spin .7s linear infinite; }
+.watch-spinner[hidden] { display: none; }
+.watch-controls button:disabled { opacity: .75; cursor: wait; }
+@keyframes watch-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .watch-spinner { animation: none; } }
 .active-search-filters a:focus-visible, .search-result-abstract summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 .search-result-excerpt { position: relative; z-index: 1; font-size: 14px; line-height: 1.7; color: var(--text-muted); margin: 12px 0; }

@@ -120,30 +120,66 @@ class SavedSearchTests(TestCase):
         self.client.logout()
         self.assertEqual(self.client.get('/en/saved-searches/').status_code, 302)
 
-    def test_enable_records_a_baseline_without_emailing_old_results(self):
+    def test_enable_queues_initialization_without_waiting_for_sources(self):
         saved = self.create_saved()
-        with mock.patch.object(saved_searches, 'latest', return_value=([paper('doi_old')], False)):
+        with mock.patch.object(saved_searches, 'latest', side_effect=RuntimeError('source unavailable')) as latest:
             response = self.client.post('/en/saved-searches/', {'search': saved.pk, 'action': 'enable', 'frequency': 'daily'})
         self.assertEqual(response.status_code, 302)
         saved.refresh_from_db()
         self.assertTrue(saved.watch_enabled)
         self.assertEqual(saved.frequency, 'daily')
-        self.assertIn('doi_old', saved.seen)
-        self.assertIsNotNone(saved.last_checked)
-        self.assertContains(self.client.get('/en/saved-searches/'), 'data-funnel-view="search_watch_enabled"')
+        latest.assert_not_called()
+        self.assertEqual(saved.seen, [])
+        self.assertIsNone(saved.last_checked)
+        pending_page = self.client.get('/en/saved-searches/')
+        self.assertContains(pending_page, 'initialization pending')
+        self.assertContains(pending_page, 'data-funnel-view="search_watch_enabled"')
         self.assertNotContains(self.client.get('/en/saved-searches/'), 'data-funnel-view="search_watch_enabled"')
         self.assertEqual(len(mail.outbox), 0)
         self.client.post('/en/saved-searches/', {'search': saved.pk, 'action': 'pause'})
         saved.refresh_from_db()
         self.assertFalse(saved.watch_enabled)
 
-    def test_source_failure_cannot_enable_an_uninitialized_watch(self):
-        saved = self.create_saved()
-        with mock.patch.object(saved_searches, 'latest', return_value=([paper('a')], True)):
-            self.client.post('/en/saved-searches/', {'search': saved.pk, 'action': 'enable'})
+    def test_initialization_retries_outages_and_never_emails_the_baseline(self):
+        now = timezone.now()
+        saved = self.create_saved(watch_enabled=True, frequency='daily')
+        with mock.patch.object(saved_searches, 'latest', return_value=([paper('doi_old')], True)):
+            self.assertEqual(saved_searches.run(now, 1), 0)
         saved.refresh_from_db()
-        self.assertFalse(saved.watch_enabled)
+        self.assertTrue(saved.watch_enabled)
         self.assertIsNone(saved.last_checked)
+        self.assertEqual(saved.seen, [])
+        self.assertIsNone(saved.watch_claim_until)
+        later = now + datetime.timedelta(hours=1)
+        with mock.patch.object(saved_searches, 'latest', return_value=([paper('doi_old')], False)):
+            self.assertEqual(saved_searches.run(later, 1), 0)
+        saved.refresh_from_db()
+        self.assertEqual(saved.last_checked, later)
+        self.assertIn('doi_old', saved.seen)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertContains(self.client.get('/en/saved-searches/'), 'Watch active')
+        with mock.patch.object(saved_searches, 'latest', return_value=([paper('doi_old'), paper('doi_new')], False)):
+            self.assertEqual(saved_searches.run(later + datetime.timedelta(days=1), 1), 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('doi_new', mail.outbox[0].body)
+        self.assertNotIn('doi_old', mail.outbox[0].body)
+
+    def test_resume_clears_the_old_baseline_and_keeps_post_action_without_javascript(self):
+        saved = self.create_saved(last_checked=timezone.now(), last_attempt=timezone.now(), seen=['old'])
+        page = self.client.get('/en/saved-searches/')
+        soup = BeautifulSoup(page.content, 'html.parser')
+        form = soup.select_one('form[data-watch-activation]')
+        self.assertEqual(form.select_one('input[name=action]')['value'], 'enable')
+        self.assertIsNone(form.select_one('button[type=submit]').get('name'))
+        self.assertContains(page, 'summarizer/js/saved-searches.js')
+        with mock.patch.object(saved_searches, 'latest') as latest:
+            self.client.post('/en/saved-searches/', {'search': saved.pk, 'action': 'enable'})
+        latest.assert_not_called()
+        saved.refresh_from_db()
+        self.assertTrue(saved.watch_enabled)
+        self.assertEqual(saved.seen, [])
+        self.assertIsNone(saved.last_checked)
+        self.assertIsNone(saved.last_attempt)
 
     def test_tier_watch_limit_is_enforced_before_fetching(self):
         self.create_saved(watch_enabled=True)

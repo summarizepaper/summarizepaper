@@ -126,15 +126,8 @@ def manage(request):
             if request.user.saved_searches.filter(watch_enabled=True).exclude(pk=saved.pk).count() >= watch_limit(request.user):
                 messages.error(request, _('Watch limit reached. Pause another watch or see Premium for more watches.'))
                 return redirect('saved_searches')
-            # Baseline only: enabling or resuming a watch never emails old search results.
-            try:
-                rows, failed = latest(saved)
-            except Exception:
-                logger.exception('Could not initialize search watch %s', saved.pk)
-                rows, failed = [], True
-            if failed:
-                messages.error(request, _('The sources are unavailable. Your search is saved; please enable its watch again later.'))
-                return redirect('saved_searches')
+            # Persist the opt-in immediately. The hourly worker establishes the baseline
+            # after a complete source response, retrying outages without blocking the web request.
             with transaction.atomic():
                 User.objects.select_for_update().get(pk=request.user.pk)
                 saved = get_object_or_404(SavedSearch.objects.select_for_update(), pk=saved.pk, user=request.user)
@@ -145,11 +138,12 @@ def manage(request):
                     saved.watch_enabled = True
                     saved.frequency = 'daily' if request.POST.get('frequency') == 'daily' else 'weekly'
                     saved.lang = request.POST.get('lang') if request.POST.get('lang') in ('en', 'fr') else get_language()
-                    saved.seen = sorted({a for row in rows for a in unified_search.paper_aliases(row)})
-                    saved.last_checked = timezone.now()
-                    saved.save(update_fields=['watch_enabled', 'frequency', 'lang', 'seen', 'last_checked'])
+                    saved.seen = []
+                    saved.last_checked = None
+                    saved.last_attempt = None
+                    saved.save(update_fields=['watch_enabled', 'frequency', 'lang', 'seen', 'last_checked', 'last_attempt'])
                     request.session['search_watch_enabled'] = True
-                    messages.success(request, _('Watch enabled. You will receive email when new matches are found.'))
+                    messages.success(request, _('Watch enabled. Initialization will run automatically; no existing results will be emailed.'))
         return redirect('saved_searches')
     rows = list(request.user.saved_searches.all())
     eligible = set(request.user.saved_searches.filter(watch_enabled=True).order_by('pk').values_list('pk', flat=True)[:watch_limit(request.user)])
@@ -207,7 +201,7 @@ def run(now, budget, base_url='https://www.summarizepaper.com'):
             if failed:
                 continue
             if saved.last_checked is None:
-                # Defensive baseline for rows created outside the UI.
+                # First complete check after activation/resumption: never email historical matches.
                 saved.seen = sorted({a for row in matches for a in unified_search.paper_aliases(row)})
                 saved.last_checked = now
                 saved.save(update_fields=['seen', 'last_checked'])
