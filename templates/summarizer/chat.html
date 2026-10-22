@@ -10,14 +10,15 @@
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/chat/" />
 
   {% include 'summarizer/mathjax.html' %}
+  {% include 'summarizer/chat_rendering.html' %}
 
   <style>
 /* Ids and classes are used by the page script (search, selection, assistant): keep them. */
 .chat-page { max-width: 1120px; margin: 0 auto; padding: 48px 20px 0; }
 .chat-page .page-header { margin-bottom: 28px; }
-.columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.columns-container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .separator { display: none; }
-.column-card { padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+.column-card { min-width: 0; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
 .column-title { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 17px; font-weight: 700; }
 .column-title .step { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; }
 
@@ -85,7 +86,7 @@
 .add-paper-container { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .add-paper-container > p { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--text); }
 .add-paper-row { display: flex; gap: 8px; }
-.input-container { flex: 1; }
+.input-container { flex: 1; min-width: 0; }
 #paper-id {
   width: 100%;
   padding: 11px 14px;
@@ -123,7 +124,7 @@
 
 @media (max-width: 800px) {
   .chat-page { padding-top: 28px; }
-  .columns-container { grid-template-columns: 1fr; }
+  .columns-container { grid-template-columns: minmax(0, 1fr); }
   .column-card { padding: 18px; }
 }
   </style>
@@ -200,7 +201,7 @@
       {% if chathistory %}
         {% for chat in chathistory %}
           <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
-          <div class="chatbot-response">{% trans 'AI' %} - {{ chat.response }}</div>
+          <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
         {% endfor %}
       {% endif %}
     </div>
@@ -778,12 +779,11 @@ function addTheListeners() {
         if (!currentResponse) {
           currentResponse = document.createElement('div');
           currentResponse.classList.add('chatbot-response');
-          currentResponse.innerText = "{% trans 'AI -' %} ";
           chatbotMessages.appendChild(currentResponse);
           var loadingSpinner = document.getElementById("loading-spinner");
           loadingSpinner.style.display = "none";
         }
-        currentResponse.innerText += data.delta;
+        SPChat.append(currentResponse, data.delta, "{% trans 'AI -' %}");
         scrollToBottom();
         return;
       }
@@ -795,7 +795,8 @@ function addTheListeners() {
         currentResponse.classList.add('chatbot-response');
         chatbotMessages.appendChild(currentResponse);
       }
-      currentResponse.innerText = "{% trans 'AI -' %} " + data.message;
+      SPChat.render(currentResponse, data.message, "{% trans 'AI -' %}");
+      SPChat.typeset(currentResponse);
       currentResponse = null;
       var blinkingSquare = document.querySelector(".blinking-square");
       if (blinkingSquare) {
@@ -803,7 +804,6 @@ function addTheListeners() {
       }
       var loadingSpinner = document.getElementById("loading-spinner");
       loadingSpinner.style.display = "none";
-      MathJax.typeset();
       scrollToBottom();
   
   

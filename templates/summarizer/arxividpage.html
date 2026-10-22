@@ -41,6 +41,7 @@
   <meta name="{{ name }}" content="{{ value }}" />
   {% endfor %}
   {% include 'summarizer/mathjax.html' %}
+  {% include 'summarizer/chat_rendering.html' %}
 
   <style>
 /* Class names below are also used by the page scripts (tabs, live run, chat): keep them. */
@@ -498,7 +499,7 @@
       <div class="chatbot-messages" data-empty="{% trans 'Ask anything about this paper.' %}">{% if chathistory %}
           {% for chat in chathistory %}
             <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
-            <div class="chatbot-response">{% trans 'AI' %} - {{ chat.response }}</div>
+            <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
           {% endfor %}
         {% endif %}</div>
       <form class="chatbot-form">
@@ -1252,12 +1253,11 @@ function addTheListeners() {
         if (!currentResponse) {
           currentResponse = document.createElement('div');
           currentResponse.classList.add('chatbot-response');
-          currentResponse.innerText = "{% trans 'AI -' %} ";
           chatbotMessages.appendChild(currentResponse);
           var loadingSpinner = document.getElementById("loading-spinner");
           loadingSpinner.style.display = "none";
         }
-        currentResponse.innerText += data.delta;
+        SPChat.append(currentResponse, data.delta, "{% trans 'AI -' %}");
         scrollToBottom();
         return;
       }
@@ -1269,7 +1269,8 @@ function addTheListeners() {
         currentResponse.classList.add('chatbot-response');
         chatbotMessages.appendChild(currentResponse);
       }
-      currentResponse.innerText = "{% trans 'AI -' %} " + data.message;
+      SPChat.render(currentResponse, data.message, "{% trans 'AI -' %}");
+      SPChat.typeset(currentResponse);
       currentResponse = null;
       var blinkingSquare = document.querySelector(".blinking-square");
       if (blinkingSquare) {
@@ -1277,7 +1278,6 @@ function addTheListeners() {
       }
       var loadingSpinner = document.getElementById("loading-spinner");
       loadingSpinner.style.display = "none";
-      MathJax.typeset();
       scrollToBottom();
 
 

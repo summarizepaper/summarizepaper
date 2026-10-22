@@ -2,19 +2,18 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const {createHarness, element} = require('./chat-rendering-helper.cjs');
 
 for (const template of ['chat', 'arxividpage']) {
-  test(`${template}: streamed and final model output never become HTML`, () => {
+  test(`${template}: streamed and final model output only use the safe Markdown renderer`, () => {
     const source = fs.readFileSync(`templates/summarizer/${template}.html`, 'utf8');
     const handler = source.match(/socketl\.addEventListener\("message", function\(event\) \{([\s\S]*?)\n\s*\}\);/);
     assert.ok(handler, 'Exercise the actual chat message handler');
     const elements = [];
-    function element() {
-      return {innerText: '', style: {}, classList: {add() {}},
-        set innerHTML(_) {throw new Error('Untrusted HTML insertion');}};
-    }
+    const {SPChat} = createHarness();
     const context = {
       currentResponse: null,
+      SPChat,
       chatbotMessages: {appendChild(node) {elements.push(node);}},
       document: {createElement: element, getElementById: element, querySelector: () => null},
       MathJax: {typeset() {}}, scrollToBottom() {},
@@ -24,10 +23,12 @@ for (const template of ['chat', 'arxividpage']) {
     const attack = '<img src=x onerror="alert(document.cookie)"><script>alert(1)</script>';
     context.handle({data: JSON.stringify({type: 'chat_delta', delta: attack})});
     assert.equal(elements.length, 1);
-    assert.ok(elements[0].innerText.includes(attack));
+    assert.ok(elements[0].children[1].innerHTML.includes('&lt;script&gt;'));
+    assert.ok(!elements[0].children[1].innerHTML.includes('<img'));
     context.handle({data: JSON.stringify({message: attack})});
     assert.equal(elements.length, 1);
-    assert.ok(elements[0].innerText.endsWith(attack));
+    assert.ok(elements[0].children[1].innerHTML.includes('&lt;script&gt;'));
+    assert.ok(!elements[0].children[1].innerHTML.includes('<script'));
     assert.equal(context.currentResponse, null);
   });
 }

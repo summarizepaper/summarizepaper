@@ -494,6 +494,18 @@ img { max-width: 100%; }
   line-height: 1.6;
 }
 .chatbot-form { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+.chatbot-response { overflow-wrap: anywhere; }
+.chat-label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: .3rem; }
+.chat-answer > :first-child { margin-top: 0; }
+.chat-answer > :last-child { margin-bottom: 0; }
+.chat-answer p, .chat-answer ul, .chat-answer ol, .chat-answer blockquote { margin: .65rem 0; }
+.chat-answer ul, .chat-answer ol { padding-left: 1.4rem; }
+.chat-answer h1, .chat-answer h2, .chat-answer h3, .chat-answer h4 { font-size: 1.05rem; line-height: 1.4; margin: .9rem 0 .4rem; }
+.chat-answer pre, .chat-answer .chat-math { overflow-x: auto; max-width: 100%; }
+.chat-answer pre { padding: .7rem; border: 1px solid var(--border); border-radius: 6px; white-space: pre; }
+.chat-answer code { font-size: .9em; }
+.chat-answer table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.chat-answer th, .chat-answer td { padding: .4rem .65rem; border: 1px solid var(--border); }
 .chatbot-form input[type="text"] {
   flex: 1;
   min-width: 0;
