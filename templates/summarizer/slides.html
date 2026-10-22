@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Journal club' %} | {{ paper.title|truncatechars:70 }}{% endblock %}
+{% block extrahead %}<link rel="stylesheet" href="{% static_v 'summarizer/css/slides.css' %}">{% endblock %}
 {% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
@@ -20,72 +21,51 @@
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>
   {% elif deck %}
-    <div class="item-actions no-print" style="margin-bottom:16px">
-      <button type="button" class="btn" id="deck-present">{% trans 'Present full screen' %}</button>
-      <button type="button" class="btn btn-ghost" onclick="window.print()">{% trans 'Save as PDF' %}</button>
-      <label class="muted"><input type="checkbox" id="deck-notes" checked> {% trans 'Show the notes' %}</label>
+    <div class="deck-toolbar no-print">
+      <button type="button" class="btn" id="deck-edit" aria-pressed="false">{% trans 'Edit slides' %}</button>
+      <button type="button" class="btn btn-ghost" id="deck-save" disabled>{% trans 'Save my version' %}</button>
+      <button type="button" class="btn btn-ghost" id="deck-present">{% trans 'Present full screen' %}</button>
+      <button type="button" class="btn btn-ghost" id="deck-pdf">{% trans 'Save as PDF' %} · 16:9</button>
+      <label><input type="checkbox" id="deck-notes" checked> {% trans 'Show the notes' %}</label>
     </div>
+    <p class="muted no-print">{% trans 'Edit the text below each slide. Move figures with the position control and adjust their size. Your saved version is private.' %}</p>
+    <p id="deck-status" role="status" class="no-print"></p>
+    <p id="deck-overflow" role="alert" class="error no-print" hidden>{% trans 'Some text does not fit. Shorten it or choose a smaller text size before exporting.' %}</p>
+    {% csrf_token %}
     {% if deck.abstract_only %}<p class="error no-print">{% trans "This paper's license only lets us read its abstract: the slides are based on the abstract alone." %}</p>{% endif %}
-    <div class="deck" id="deck">
-      <section class="slide slide-title">
-        <h2>{{ paper.title }}</h2>
-        <p>{{ authors }}</p>
-        <p class="muted">{{ arxiv_id|paper_ref }}</p>
-      </section>
-      {% for s in deck.slides %}
-      <section class="slide">
-        <h2>{{ s.title }}</h2>
-        <div class="slide-body{% if s.figure %} with-figure{% endif %}">
-          <ul>{% for b in s.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
-          {% if s.figure %}<figure><img src="{{ s.figure.url }}" alt="" loading="lazy"><figcaption>{% blocktrans with n=s.figure.number license=deck.license %}Figure {{ n }} of the paper (arXiv, {{ license }}){% endblocktrans %}</figcaption></figure>{% endif %}
+    <div class="deck" id="deck" data-save-url="{% url 'slides_save' arxiv_id %}" data-revision="{{ deck_revision }}"
+      data-image-error="{% trans 'A figure has not loaded. Wait a moment or reload before exporting.' %}" data-saving="{% trans 'Saving…' %}" data-saved="{% trans 'Your version is saved.' %}"
+      data-unsaved="{% trans 'Unsaved changes' %}" data-error="{% trans 'Saving failed. Your changes remain on this page; please try again.' %}"
+      data-conflict="{% trans 'This presentation changed in another tab. Copy your edits before reloading.' %}">
+      {% for s in pages %}
+      <article class="slide-item" data-slide-index="{{ forloop.counter0 }}">
+        <div class="slide-frame"><section class="slide{% if s.kind == 'title' %} slide-title{% endif %}" data-kind="{{ s.kind }}" data-layout="{{ s.layout }}" style="--figure-share:{{ s.figure_size }}%; --slide-font:{{ s.text_size }}px">
+          <h2 data-preview-title>{{ s.title }}</h2>
+          <div class="slide-body{% if s.figure %} with-figure{% endif %}{% if s.kind == 'columns' %} two-columns{% endif %}">
+            <div class="slide-copy">{% if s.kind == 'columns' %}<h3>{% trans 'Strengths' %}</h3>{% endif %}<ul data-preview-bullets>{% for b in s.bullets %}<li>{{ b }}</li>{% endfor %}</ul></div>
+            {% if s.kind == 'columns' %}<div class="slide-secondary"><h3>{% trans 'Limits' %}</h3><ul data-preview-secondary>{% for b in s.secondary %}<li>{{ b }}</li>{% endfor %}</ul></div>{% endif %}
+            {% if s.figure %}<figure><img src="{{ s.figure.url }}" alt="{{ s.figure.caption }}" loading="eager"><figcaption>{% blocktrans with n=s.figure.number license=deck.license %}Figure {{ n }} of the paper (arXiv, {{ license }}){% endblocktrans %}</figcaption></figure>{% endif %}
+          </div>
+          <footer class="slide-credit">SummarizePaper · {{ arxiv_id|paper_ref }} <span>{{ forloop.counter }} / {{ pages|length }}</span></footer>
+        </section></div>
+        <p class="speaker-notes no-print" data-preview-notes{% if not s.notes %} hidden{% endif %}>{{ s.notes }}</p>
+        <div class="slide-editor no-print">
+          <label>{% trans 'Slide title' %}<input data-edit="title" maxlength="300" value="{{ s.title }}"></label>
+          <label>{% if s.kind == 'columns' %}{% trans 'Strengths' %}{% else %}{% trans 'Text (one bullet per line)' %}{% endif %}<textarea data-edit="bullets" rows="4">{% for b in s.bullets %}{{ b }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}</textarea></label>
+          {% if s.kind == 'columns' %}<label>{% trans 'Limits' %}<textarea data-edit="secondary" rows="4">{% for b in s.secondary %}{{ b }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}</textarea></label>{% endif %}
+          <label>{% trans 'Speaker notes (excluded from PDF)' %}<textarea data-edit="notes" rows="3" maxlength="3000">{{ s.notes }}</textarea></label>
+          <div class="slide-layout-controls">
+            <label>{% trans 'Text size' %}<select data-edit="text_size"><option value="24"{% if s.text_size == 24 %} selected{% endif %}>{% trans 'Small' %}</option><option value="30"{% if s.text_size == 30 %} selected{% endif %}>{% trans 'Medium' %}</option><option value="36"{% if s.text_size == 36 %} selected{% endif %}>{% trans 'Large' %}</option></select></label>
+            {% if s.figure %}<label>{% trans 'Figure position' %}<select data-edit="layout"><option value="right"{% if s.layout == 'right' %} selected{% endif %}>{% trans 'Right' %}</option><option value="left"{% if s.layout == 'left' %} selected{% endif %}>{% trans 'Left' %}</option><option value="top"{% if s.layout == 'top' %} selected{% endif %}>{% trans 'Top' %}</option><option value="bottom"{% if s.layout == 'bottom' %} selected{% endif %}>{% trans 'Bottom' %}</option></select></label>
+            <label>{% trans 'Figure size' %}<input type="range" data-edit="figure_size" min="25" max="70" value="{{ s.figure_size }}"></label>{% endif %}
+          </div>
         </div>
-        {% if s.notes %}<p class="slide-notes">{{ s.notes }}</p>{% endif %}
-      </section>
+      </article>
       {% endfor %}
-      <section class="slide">
-        <h2>{% trans 'Strengths and limits' %}</h2>
-        <div class="slide-body two-columns">
-          <div><h3>{% trans 'Strengths' %}</h3><ul>{% for x in deck.strengths %}<li>{{ x }}</li>{% endfor %}</ul></div>
-          <div><h3>{% trans 'Limits' %}</h3><ul>{% for x in deck.limitations %}<li>{{ x }}</li>{% endfor %}</ul></div>
-        </div>
-      </section>
-      <section class="slide">
-        <h2>{% trans 'For the discussion' %}</h2>
-        <div class="slide-body"><ol>{% for q in deck.questions %}<li>{{ q }}</li>{% endfor %}</ol></div>
-      </section>
+      <button type="button" class="btn no-print" id="deck-exit" hidden>{% trans 'Exit presentation' %}</button>
     </div>
     <p class="muted no-print"><small>{% blocktrans with date=row.updated|date:"j F Y" %}Written by AI on {{ date }} from the paper. Check the numbers against the paper before presenting.{% endblocktrans %}</small></p>
-    <script>
-    (function () {
-      var deck = document.getElementById('deck');
-      var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
-      var current = 0;
-      document.getElementById('deck-notes').addEventListener('change', function (e) {
-        deck.classList.toggle('hide-notes', !e.target.checked);
-      });
-      function show(i) {
-        current = Math.max(0, Math.min(slides.length - 1, i));
-        slides.forEach(function (s, j) { s.classList.toggle('is-current', j === current); });
-      }
-      document.getElementById('deck-present').addEventListener('click', function () {
-        deck.classList.add('presenting');
-        show(0);
-        if (deck.requestFullscreen) deck.requestFullscreen().catch(function () {});
-      });
-      document.addEventListener('fullscreenchange', function () {
-        if (!document.fullscreenElement) deck.classList.remove('presenting');
-      });
-      document.addEventListener('keydown', function (e) {
-        if (!deck.classList.contains('presenting')) return;
-        if (['ArrowRight', 'PageDown', ' '].indexOf(e.key) >= 0) { e.preventDefault(); show(current + 1); }
-        if (['ArrowLeft', 'PageUp'].indexOf(e.key) >= 0) { e.preventDefault(); show(current - 1); }
-        if (e.key === 'Escape') deck.classList.remove('presenting');
-      });
-      deck.addEventListener('click', function (e) {
-        if (deck.classList.contains('presenting')) show(current + (e.clientX > window.innerWidth / 3 ? 1 : -1));
-      });
-    })();
-    </script>
+    <script defer src="{% static_v 'summarizer/js/slides.js' %}"></script>
   {% else %}
     <div class="card section-card" id="deck-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
       <p>{% trans 'The slides are written from the paper. It takes about a minute.' %}</p>

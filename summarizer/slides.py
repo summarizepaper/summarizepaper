@@ -8,10 +8,17 @@ credit; it picks the ones worth a slide. The deck is a page: presented full
 screen with the arrow keys, or printed to PDF one slide per page.
 """
 import urllib.parse
+import copy
+import hashlib
+import json
 
 import requests
 from bs4 import BeautifulSoup
 from django.http import Http404, JsonResponse
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.views.decorators.cache import never_cache
+from django.utils.translation import gettext
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -96,16 +103,19 @@ def write(arxiv_id, lang):
     return work
 
 
+@never_cache
 def slides_page(request, arxiv_id):
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
     if paper is None:
         raise Http404
     paid = access.is_paid(request.user)
     row = Generated.objects.filter(kind='slides', key=arxiv_id, lang=request.LANGUAGE_CODE).first() if paid else None
+    deck = row.data() if row is not None and row.status == 'done' else None
+    pages, revision = editable_pages(request.user, arxiv_id, request.LANGUAGE_CODE, paper, deck) if deck else ([], '')
     return render(request, 'summarizer/slides.html', {
         'paper': paper, 'arxiv_id': arxiv_id, 'paid': paid, 'row': row, 'steps': STEPS,
         'authors': ', '.join(a.name for a in paper.authors.all()[:6]) + (' et al.' if paper.authors.count() > 6 else ''),
-        'deck': row.data() if row is not None and row.status == 'done' else None})
+        'deck': deck, 'pages': pages, 'deck_revision': revision})
 
 
 @require_POST
@@ -117,3 +127,94 @@ def slides_start(request, arxiv_id):
     lang = request.LANGUAGE_CODE
     row = generated.start('slides', arxiv_id, lang, write(arxiv_id, lang), force=request.POST.get('again') == '1')
     return JsonResponse({'status': row.status, 'id': row.pk})
+
+
+def edit_key(user, arxiv_id):
+    return '%s:%s' % (user.pk, hashlib.sha256(arxiv_id.encode()).hexdigest())
+
+
+def original_pages(paper, deck):
+    authors = ', '.join(a.name for a in paper.authors.all()[:6]) + (' et al.' if paper.authors.count() > 6 else '')
+    pages = [dict(kind='title', title=paper.title, bullets=[authors], notes='', figure=None)]
+    pages += [dict(s, kind='content') for s in deck['slides']]
+    pages += [dict(kind='columns', title=gettext('Strengths and limits'), bullets=deck['strengths'],
+                   secondary=deck['limitations'], notes='', figure=None),
+              dict(kind='discussion', title=gettext('For the discussion'), bullets=deck['questions'], notes='', figure=None)]
+    for page in pages:
+        page.setdefault('notes', '')
+        page.update(layout='right', figure_size=50, text_size=30)
+    return pages
+
+
+def editable_pages(user, arxiv_id, lang, paper, deck):
+    pages = original_pages(paper, deck)
+    saved = Generated.objects.filter(kind='slides_edit', key=edit_key(user, arxiv_id), lang=lang, user=user).first()
+    if saved:
+        # Merge edits with trusted source figures. URLs, licensing and slide kind are never client-controlled.
+        try:
+            pages = validate_pages(saved.data()['pages'], pages)
+        except (ValueError, KeyError, TypeError):
+            pass  # An updated generated deck may have a different slide count.
+    revision = hashlib.sha256(json.dumps(pages, sort_keys=True).encode()).hexdigest()
+    return pages, revision
+
+
+def validate_pages(value, originals):
+    if not isinstance(value, list) or len(value) != len(originals):
+        raise ValueError
+    pages = copy.deepcopy(originals)
+    def text(value, limit):
+        if not isinstance(value, str) or len(value) > limit or '\x00' in value:
+            raise ValueError
+        return value.strip()
+    for edit, page in zip(value, pages):
+        if not isinstance(edit, dict):
+            raise ValueError
+        page['title'] = text(edit.get('title'), 300)
+        if not page['title']:
+            raise ValueError
+        for field in ('bullets', 'secondary'):
+            if field == 'secondary' and page['kind'] != 'columns':
+                continue
+            lines = edit.get(field, [])
+            if not isinstance(lines, list) or len(lines) > 8:
+                raise ValueError
+            page[field] = [text(line, 600) for line in lines if text(line, 600)]
+        page['notes'] = text(edit.get('notes', ''), 3000)
+        page['layout'] = edit.get('layout', 'right')
+        page['figure_size'] = edit.get('figure_size', 50)
+        page['text_size'] = edit.get('text_size', 30)
+        if (page['layout'] not in ('left', 'right', 'top', 'bottom') or
+            type(page['figure_size']) is not int or not 25 <= page['figure_size'] <= 70 or
+            page['text_size'] not in (24, 30, 36)):
+            raise ValueError
+    return pages
+
+
+@never_cache
+@require_POST
+def slides_save(request, arxiv_id):
+    if not access.is_paid(request.user):
+        return JsonResponse({'status': 'premium'}, status=403)
+    if len(request.body) > 120000:
+        return JsonResponse({'status': 'invalid'}, status=400)
+    try:
+        payload = json.loads(request.body)
+        with transaction.atomic():
+            User.objects.select_for_update().get(pk=request.user.pk)
+            paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
+            row = Generated.objects.filter(kind='slides', key=arxiv_id, lang=request.LANGUAGE_CODE, status='done').first()
+            if paper is None or row is None:
+                raise Http404
+            current, revision = editable_pages(request.user, arxiv_id, request.LANGUAGE_CODE, paper, row.data())
+            if payload.get('revision') != revision:
+                return JsonResponse({'status': 'conflict'}, status=409)
+            pages = validate_pages(payload.get('pages'), original_pages(paper, row.data()))
+            # Store only editable text/layout, without retaining client-supplied URLs or HTML.
+            edits = [{k: v for k, v in p.items() if k in ('title', 'bullets', 'secondary', 'notes', 'layout', 'figure_size', 'text_size')} for p in pages]
+            Generated.objects.update_or_create(kind='slides_edit', key=edit_key(request.user, arxiv_id), lang=request.LANGUAGE_CODE,
+                defaults={'user': request.user, 'status': 'done', 'content': json.dumps({'pages': edits})})
+            revision = hashlib.sha256(json.dumps(pages, sort_keys=True).encode()).hexdigest()
+    except (ValueError, TypeError, AttributeError):
+        return JsonResponse({'status': 'invalid'}, status=400)
+    return JsonResponse({'status': 'saved', 'revision': revision})

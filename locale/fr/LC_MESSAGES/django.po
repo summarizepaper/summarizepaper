@@ -7178,6 +7178,103 @@ msgstr ""
 "chaque semaine. Les résultats présents à l’initialisation ne sont pas "
 "envoyés. Chaque email contient jusqu’à 10 nouvelles correspondances."
 
+msgid "Edit slides"
+msgstr "Modifier les slides"
+
+msgid "Save my version"
+msgstr "Enregistrer ma version"
+
+msgid ""
+"Edit the text below each slide. Move figures with the position control and "
+"adjust their size. Your saved version is private."
+msgstr ""
+"Modifiez les textes sous chaque slide. Choisissez la position et la taille "
+"des figures. Votre version enregistrée reste privée."
+
+msgid ""
+"Some text does not fit. Shorten it or choose a smaller text size before "
+"exporting."
+msgstr ""
+"Certains textes dépassent. Raccourcissez-les ou réduisez leur taille avant "
+"l’export."
+
+msgid "Your version is saved."
+msgstr "Votre version est enregistrée."
+
+msgid "Unsaved changes"
+msgstr "Modifications non enregistrées"
+
+msgid "Saving failed. Your changes remain on this page; please try again."
+msgstr ""
+"L’enregistrement a échoué. Vos modifications restent sur cette page ; "
+"réessayez."
+
+msgid ""
+"This presentation changed in another tab. Copy your edits before reloading."
+msgstr ""
+"Cette présentation a été modifiée dans un autre onglet. Copiez vos "
+"modifications avant de recharger."
+
+msgid "A figure has not loaded. Wait a moment or reload before exporting."
+msgstr ""
+"Une figure n’a pas été chargée. Patientez ou rechargez la page avant "
+"l’export."
+
+msgid "Slide title"
+msgstr "Titre de la slide"
+
+msgid "Text (one bullet per line)"
+msgstr "Texte (une puce par ligne)"
+
+msgid "Speaker notes (excluded from PDF)"
+msgstr "Notes du présentateur (exclues du PDF)"
+
+msgid "Text size"
+msgstr "Taille du texte"
+
+msgid "Small"
+msgstr "Petit"
+
+msgid "Medium"
+msgstr "Moyen"
+
+msgid "Large"
+msgstr "Grand"
+
+msgid "Figure position"
+msgstr "Position de la figure"
+
+msgid "Right"
+msgstr "À droite"
+
+msgid "Left"
+msgstr "À gauche"
+
+msgid "Top"
+msgstr "En haut"
+
+msgid "Bottom"
+msgstr "En bas"
+
+msgid "Figure size"
+msgstr "Taille de la figure"
+
+msgid "Exit presentation"
+msgstr "Quitter la présentation"
+
+msgid "Saving…"
+msgstr "Enregistrement…"
+
+msgid ""
+"You can edit the slide text and speaker notes, choose the position and size "
+"of figures, and save a private version. The PDF uses a 16:9 slide format, "
+"with one slide per page and no speaker notes."
+msgstr ""
+"Vous pouvez modifier les textes et les notes du présentateur, choisir la "
+"position et la taille des figures, puis enregistrer une version privée. Le "
+"PDF utilise un format de présentation 16:9, avec une slide par page et sans "
+"les notes."
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

@@ -165,6 +165,23 @@ API references: [OpenAlex filters](https://help.openalex.org/api/filtering/),
 Source abstracts appear directly as short excerpts, with the full abstract expandable. No AI calls
 are made for previews. Active-filter chips remove only the chosen filter and reset result paging.
 
+### Journal club editor and PDF layout
+
+Journal club keeps the generated deck shared and saves each Premium reader's text, notes and layout
+in a separate `Generated(kind='slides_edit')` row keyed by user, paper and language. Private results
+are owner-only and page/save responses are never cached. A revision hash rejects stale-tab saves
+with HTTP 409; failed requests retain the unsaved editor state. Source figures and credits cannot be
+replaced by client payloads. No schema migration is needed.
+
+`slides.js` previews the exact 1280 × 720 canvas, scales it to the screen, allows four figure positions,
+a 25–70% figure area and three text sizes, and shrinks overflowing text down to 20px before warning.
+Notes remain outside the slide and never enter the PDF. The PDF button waits for fonts/images and
+uses the browser's print-to-PDF dialog; `slides.css` specifies a zero-margin 338.666667 × 190.5mm page
+(16:9), one slide per page, including when invoked during presentation mode. A print-dialog paper
+size override may override the CSS page size. Check the final PDF in the target browser.
+
+Validation: `python manage.py test summarizer` and `node --test tests/*.test.cjs`.
+
 ### Saved searches and email watches
 
 Signed, validated search parameters can be saved by a logged-in user; records are private, unique
