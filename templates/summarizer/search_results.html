@@ -81,6 +81,15 @@
     <p class="search-status" role="status" data-search-status hidden>{% trans 'Searching scientific sources. This may take a few seconds.' %}</p>
   </form>
 
+  {% if search_notice %}<p role="status" class="notice">{{ search_notice }}</p>{% endif %}
+  {% if filter_chips %}<nav class="active-search-filters" aria-label="{% trans 'Active filters' %}">{% for chip in filter_chips %}<a href="{{ chip.url }}" aria-label="{% trans 'Remove' %} {{ chip.label }}">{{ chip.label }} <span aria-hidden="true">×</span></a>{% endfor %}</nav>{% endif %}
+  {% if save_token %}<div class="save-search-actions">
+    {% if request.user.is_authenticated %}
+      {% if saved_search %}<a href="{% url 'saved_searches' %}">{% trans 'Search saved · manage its watch' %}</a>
+      {% else %}<form method="post" action="{% url 'save_search' %}">{% csrf_token %}<input type="hidden" name="state" value="{{ save_token }}"><button class="btn btn-ghost" type="submit">{% trans 'Save search / create a watch' %}</button></form>{% endif %}
+    {% else %}<a href="{% url 'login' %}?next={{ search_return|urlencode }}">{% trans 'Log in to save this search or create a watch' %}</a>{% endif %}
+    <a href="{% url 'saved_searches' %}">{% trans 'Saved searches' %}</a>
+  </div>{% endif %}
   {% if restricted_sources %}<p class="search-filter-note">{% trans 'These filters search indexed publication records. The direct arXiv feed is not included.' %}</p>{% endif %}
   {% if failed %}<p role="status">{% trans 'Some sources are temporarily unavailable. Results may be incomplete; please try again shortly.' %}</p>{% endif %}
   {% if page_obj and src != 'arxiv' or page_obj and unified %}
@@ -91,6 +100,7 @@
         <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.key }}/">{{ paper.title }}</a>
       </div>
       <div class="search-result-authors">{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %}</div>
+      {% if paper.abstract %}<p class="search-result-excerpt">{{ paper.abstract|striptags|truncatewords:40 }}</p>{% if paper.abstract|wordcount > 40 %}<details class="search-result-abstract"><summary>{% trans 'Read the full abstract' %}</summary><p>{{ paper.abstract|striptags }}</p></details>{% endif %}{% endif %}
       <div class="search-result-metadata">
         {% if paper.venue %}<span>{{ paper.venue }}</span>{% endif %}
         {% if paper.published %}<span class="search-result-published">{{ paper.published }}</span>{% endif %}
@@ -155,6 +165,8 @@
     {% endif %}
   </nav>
   {% endif %}
+  {% if more_results_url and not page_obj.has_next %}<p class="load-more-results"><a class="btn" href="{{ more_results_url }}" data-funnel="search_more_click">{% trans 'Load more results' %}</a></p>{% endif %}
+  {% if results_limit %}<p class="search-filter-note">{% trans 'Many results are loaded. Refine the search to explore more precise matches.' %}</p>{% endif %}
 </div>
 {% endblock %}
 

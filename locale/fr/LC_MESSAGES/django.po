@@ -6945,3 +6945,171 @@ msgstr ""
 
 msgid "Search again without filters"
 msgstr "Relancer la recherche sans filtres"
+
+msgid "Saved searches"
+msgstr "Recherches enregistrées"
+
+msgid "Journal search"
+msgstr "Recherche par revue"
+
+msgid "This search link has expired. Run the search again before saving it."
+msgstr ""
+"Ce lien de recherche a expiré. Relancez la recherche avant de l’enregistrer."
+
+msgid ""
+"You can keep up to 50 saved searches. Remove one before adding another."
+msgstr ""
+"Vous pouvez conserver jusqu’à 50 recherches. Retirez-en une avant d’en "
+"ajouter une nouvelle."
+
+msgid "Search saved. You can reopen it or enable an email watch below."
+msgstr ""
+"Recherche enregistrée. Vous pouvez la rouvrir ou activer une veille par "
+"email ci-dessous."
+
+msgid "Saved search removed. Its watch is stopped."
+msgstr "Recherche retirée. Sa veille est arrêtée."
+
+msgid "Search watch paused."
+msgstr "Veille de recherche mise en pause."
+
+msgid "A deliverable account email is required to enable a watch."
+msgstr ""
+"Votre compte doit avoir une adresse email valide pour activer une veille."
+
+msgid ""
+"Watch limit reached. Pause another watch or see Premium for more watches."
+msgstr ""
+"Limite de veilles atteinte. Mettez une autre veille en pause ou découvrez "
+"Premium pour en créer davantage."
+
+msgid ""
+"The sources are unavailable. Your search is saved; please enable its watch "
+"again later."
+msgstr ""
+"Les sources sont indisponibles. Votre recherche est enregistrée ; réessayez "
+"d’activer sa veille plus tard."
+
+msgid "Watch enabled. You will receive email when new matches are found."
+msgstr ""
+"Veille activée. Vous recevrez un email lorsque de nouvelles correspondances "
+"seront trouvées."
+
+msgid "New matches for your saved search: %(name)s"
+msgstr "Nouvelles correspondances pour votre recherche : %(name)s"
+
+msgid ""
+"New matches among the latest indexed results. Read the source paper before "
+"relying on its findings."
+msgstr ""
+"De nouvelles correspondances parmi les résultats récemment indexés. "
+"Consultez l’article source avant de vous appuyer sur ses conclusions."
+
+msgid "Open the search"
+msgstr "Ouvrir la recherche"
+
+msgid "Manage saved searches"
+msgstr "Gérer les recherches enregistrées"
+
+msgid "Pause this watch"
+msgstr "Mettre cette veille en pause"
+
+msgid "This result window expired. The search has been refreshed."
+msgstr "Cette liste de résultats a expiré. La recherche a été actualisée."
+
+msgid "Reopen a search with its filters, or receive new matches by email."
+msgstr ""
+"Retrouvez une recherche avec ses filtres ou recevez de nouvelles "
+"correspondances par email."
+
+msgid ""
+"You can keep 50 saved searches and %(watch_limit)s active search watch(es) "
+"with your plan."
+msgstr ""
+"Votre formule permet de conserver 50 recherches et %(watch_limit)s veille(s)"
+" de recherche active(s)."
+
+msgid ""
+"Watches check up to 50 of the most recent matches daily or weekly. Existing "
+"matches are recorded at activation; they are not emailed. Each email "
+"contains up to 10 unseen matches."
+msgstr ""
+"Les veilles vérifient jusqu’à 50 correspondances récentes, chaque jour ou "
+"chaque semaine. Les résultats présents à l’activation ne sont pas envoyés. "
+"Chaque email contient jusqu’à 10 nouvelles correspondances."
+
+msgid "Search name"
+msgstr "Nom de la recherche"
+
+msgid "Watch active"
+msgstr "Veille active"
+
+msgid "Watch paused by your current plan limit."
+msgstr "Veille suspendue par la limite de votre formule actuelle."
+
+msgid "Daily"
+msgstr "Chaque jour"
+
+msgid "Weekly"
+msgstr "Chaque semaine"
+
+msgid "Frequency"
+msgstr "Fréquence"
+
+msgid "Email language"
+msgstr "Langue des emails"
+
+msgid "Enable email watch"
+msgstr "Activer la veille par email"
+
+msgid "Remove saved search"
+msgstr "Retirer cette recherche"
+
+msgid "No saved searches yet. Save a search from its results page."
+msgstr ""
+"Aucune recherche enregistrée. Enregistrez une recherche depuis sa page de "
+"résultats."
+
+msgid "Search watch paused. You can enable it again from your saved searches."
+msgstr ""
+"Veille mise en pause. Vous pouvez la réactiver depuis vos recherches "
+"enregistrées."
+
+msgid "Stop email notifications for this saved search?"
+msgstr "Arrêter les notifications par email pour cette recherche ?"
+
+msgid "Active filters"
+msgstr "Filtres actifs"
+
+msgid "Search saved · manage its watch"
+msgstr "Recherche enregistrée · gérer sa veille"
+
+msgid "Save search / create a watch"
+msgstr "Enregistrer la recherche / créer une veille"
+
+msgid "Log in to save this search or create a watch"
+msgstr "Connectez-vous pour enregistrer cette recherche ou créer une veille"
+
+msgid "Abstract preview"
+msgstr "Aperçu du résumé scientifique"
+
+msgid "Load more results"
+msgstr "Charger plus de résultats"
+
+msgid ""
+"Many results are loaded. Refine the search to explore more precise matches."
+msgstr ""
+"De nombreux résultats sont chargés. Affinez la recherche pour explorer des "
+"correspondances plus précises."
+
+msgid "Read the full abstract"
+msgstr "Lire le résumé scientifique complet"
+
+msgid "Up to 50 saved searches and %(count)s active watch with your plan."
+msgid_plural ""
+"Up to 50 saved searches and %(count)s active watches with your plan."
+msgstr[0] ""
+"Votre formule permet de conserver 50 recherches et %(count)s veille active."
+msgstr[1] ""
+"Votre formule permet de conserver 50 recherches et %(count)s veilles "
+"actives."

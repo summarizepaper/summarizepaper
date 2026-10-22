@@ -1071,11 +1071,13 @@ class PremiumDigestExtrasTests(ToolsTestCase):
              mock.patch('summarizer.trends.update', side_effect=RuntimeError) as trends_update, \
              mock.patch('summarizer.letters.update', return_value=0), \
              mock.patch('summarizer.citations.run', return_value=2) as citation_run, \
-             mock.patch('summarizer.letters.send', return_value=0) as letter_send:
+             mock.patch('summarizer.letters.send', return_value=0) as letter_send, \
+             mock.patch('summarizer.saved_searches.run', return_value=0) as search_watches:
             call_command('send_digest')
         trends_update.assert_called_once()
         self.assertEqual(citation_run.call_args[0][1], digest.MAX_EMAILS_PER_RUN - 3)
         self.assertEqual(letter_send.call_args[0][1], digest.MAX_EMAILS_PER_RUN - 5)
+        self.assertEqual(search_watches.call_args[0][1], digest.MAX_EMAILS_PER_RUN - 5)
 
 
 class PageTests(ToolsTestCase):

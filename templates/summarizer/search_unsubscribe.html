@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% load i18n %}{% block title %}{% trans 'Pause this watch' %}{% endblock %}
+{% block content %}<main class="page"><h1>{% trans 'Pause this watch' %}</h1>
+{% if paused %}<p role="status">{% trans 'Search watch paused. You can enable it again from your saved searches.' %}</p>
+{% else %}<p>{% trans 'Stop email notifications for this saved search?' %}</p><form method="post">{% csrf_token %}<button class="btn" type="submit">{% trans 'Pause this watch' %}</button></form>{% endif %}
+<a href="{% url 'saved_searches' %}">{% trans 'Manage saved searches' %}</a></main>{% endblock %}

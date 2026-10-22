@@ -1,0 +1,14 @@
+{% load i18n %}{% autoescape off %}{% blocktrans with name=saved.name %}New matches for your saved search: {{ name }}{% endblocktrans %}
+
+{% trans 'New matches among the latest indexed results. Read the source paper before relying on its findings.' %}
+{% for paper in papers %}
+{{ paper.title }}
+{{ paper.authors|join:", " }} · {{ paper.venue }} · {{ paper.published }}
+{{ paper.abstract|striptags|truncatewords:55 }}
+{{ base_url }}/{{ saved.lang }}/arxiv-id/{{ paper.key }}/
+{% endfor %}
+{% trans 'Open the search' %}: {{ search_url }}
+{% trans 'Manage saved searches' %}: {{ manage_url }}
+{% trans 'Pause this watch' %}: {{ unsubscribe_url }}
+
+{% endautoescape %}

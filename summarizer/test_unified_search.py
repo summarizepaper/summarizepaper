@@ -1,4 +1,5 @@
 from unittest import mock
+from urllib.parse import parse_qs, urlsplit
 
 import requests
 from bs4 import BeautifulSoup
@@ -84,12 +85,13 @@ class UnifiedSearchPageTests(TestCase):
             response = self.client.get('/en/search-results/?q=attention')
             self.assertContains(response, 'All sources')
             self.assertContains(response, 'Results may be incomplete')
-            self.assertTrue(any('src=all&type=&page=2' in a['href'] for a in
+            self.assertTrue(any(parse_qs(urlsplit(a['href']).query).get('page') == ['2'] and
+                                parse_qs(urlsplit(a['href']).query).get('src') == ['all'] for a in
                                 BeautifulSoup(response.content, 'html.parser').select('.pagination a')))
             self.assertContains(response, 'Paper 0')
             response = self.client.get('/en/search-results/?q=attention&src=all&page=2')
             self.assertContains(response, 'Paper 11')
-            self.assertEqual(search.call_count, 2)
+            self.assertEqual(search.call_count, 1)
 
 class ScopedSearchTests(SimpleTestCase):
     def setUp(self):
@@ -167,6 +169,7 @@ class ScopedSearchPageTests(TestCase):
             response = self.client.get('/en/search-results/?q=Kral&field=author')
         search.assert_called_once_with('Kral', field='author', source='all', kind='')
         self.assertContains(response, 'value="author" checked')
-        self.assertTrue(any('field=author&src=all&type=&page=2' in a['href'] for a in
+        self.assertTrue(any(parse_qs(urlsplit(a['href']).query).get('field') == ['author'] and
+                            parse_qs(urlsplit(a['href']).query).get('page') == ['2'] for a in
                             BeautifulSoup(response.content, 'html.parser').select('.pagination a')))
         self.assertContains(response, 'data-loading="Searching…"')

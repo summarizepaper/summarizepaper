@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, citations, digest, homepage, unified_search, search_filters, library, mailcheck, reading, similar, sources, exports
+from summarizer import access, accounts, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, reading, similar, sources, exports
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -261,217 +261,33 @@ def search_results(request):
         # arXiv answers 400 to an empty search_query: show the empty search page instead.
         return render(request, 'summarizer/search_results.html', {**filter_context, 'query': '', 'search': [], 'page_obj': None,
                                                                     'src': src, 'kind': kind, 'field': field})
-    if src == 'all' or field != 'all' or options or kind == 'reviews':
-        if field == 'all' and not options and not kind and src == 'all':
-            results, failed = unified_search.search(query)
-        else:
-            kwargs = {'field': field, 'source': src, 'kind': kind}
-            if options:
-                kwargs['filters'] = options
-            results, failed = unified_search.search(query, **kwargs)
-        if page_num == 1:
-            Search.objects.create(query=query[:2000], user=request.user if request.user.is_authenticated else None,
-                                  lang=get_language())
-        return render(request, 'summarizer/search_results.html', {
-            **filter_context, 'query': query, 'search': results, 'page_obj': Paginator(results, 10).get_page(page_num) if results else None,
-            'src': src, 'unified': True, 'failed': failed, 'field': field, 'kind': kind})
-    if src == 'open':
-        return open_search_results(request, query, kind, page_num, filter_context)
-
-    # perform search and pagination logic here
-    search_results = []
-    #total_results = 0
-    items_per_page = 10
-    #start = (int(page_num) - 1) * items_per_page
-    max_results=30
-    print('query',query)
-
-    '''
-    query1 = query# urllib.parse.quote(query)
-    print('query1',query1)
-
-    # Define the regular expressions for each search sequence
-    author_regex = re.compile(r'au')
-    title_regex = re.compile(r'ti:')
-    abstract_regex = re.compile(r'abs')
-    comments_regex = re.compile(r'co')
-    journal_regex = re.compile(r'jr')
-    category_regex = re.compile(r'cat')
-    id_regex = re.compile(r'id_list')
-    rn_regex = re.compile(r'rn')
-
-    # Split the query into individual search terms and boolean operators
-    #terms = re.findall(r'\w+:\"[^\"]+\"|\w+', query1)
-    #terms = re.findall(r'(\w+:\"[^\"]+\"|\w+:\w+|\w+:?\w+):?"?[^\s"]+"?|\w+', query1)
-    #terms = re.findall(r'\w+:\"[^\"]+\"|\w+:\w+|\w+', query1)
-    terms = re.findall(r'\w+:\"[^\"]+\"|\w+:\w+|\w+|\(|\)', query1)
-    print('terms',terms)
-    # Process each search term and boolean operator
-    new_terms = []
-    for i, term in enumerate(terms):
-        print('term',i,term)
-        if ':' in term:
-            # This is a search term
-            prefix, value = term.split(':')
-            value = value.strip(' "\t')
-            print('prefix, value',prefix, value)
-            if 1==1:#prefix == 'all':
-                # Replace 'all:' with the appropriate sequence
-                if author_regex.search(value):
-                    prefix = 'au'
-                    print('ok')
-                elif title_regex.search(value):
-                    prefix = 'ti'
-                elif abstract_regex.search(value):
-                    prefix = 'abs'
-                elif comments_regex.search(value):
-                    prefix = 'co'
-                elif journal_regex.search(value):
-                    prefix = 'jr'
-                elif category_regex.search(value):
-                    prefix = 'cat'
-                elif id_regex.search(value):
-                    prefix = 'id_list'
-                elif rn_regex.search(value):
-                    prefix = 'rn'
-                #value = value.replace('all:', f'{prefix}:')
-            #new_terms.append(f'{prefix}:{value}')
-            if  prefix=='au':
-                value=value.replace(" ","_")
-            else:
-                value=value.replace(" ","%20")
-
-
-            print('value',value,urllib.parse.quote(value))
-            new_terms.append(f'{prefix}:"{value}"')
-        elif term in ('AND', 'OR', 'ANDNOT'):
-            # This is a boolean operator
-            #new_terms.append(term.upper())
-            new_terms.append(f"+{term}+")
-        elif term in ('(',')'):
-            new_terms.append(f"{term}")
-
-    if new_terms==[]:
-        query1=query1.replace(" ","%20")
-        new_terms.append('all:'+query1)
-        print('new terms',new_terms)
-
-    # Construct the final URL for the API request
-    query2 = ' '.join(new_terms)
-    query2=query2.replace(" ","")
-    print('query2',query2)
-    #query2=urllib.parse.urlencode(query2)
-    #print('query2',query2)
-
-    '''
-    url = f'https://export.arxiv.org/api/query?search_query={query}&start=0&max_results={max_results}&sortBy=relevance&sortOrder=descending'
-    #url = f'https://export.arxiv.org/api/query?search_query={query2}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
-
-    # Define the API endpoint URL
-    #url = f"https://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results=25"
-
-    #response = urllib.request.urlopen(url)
-    #data = response.read()
-    #print('data',data.decode('utf-8'))
-
-    # find and modify the value of an element
-    ns = {'ns0': 'http://www.w3.org/2005/Atom','ns1':'http://a9.com/-/spec/opensearch/1.1/','ns2':'http://arxiv.org/schemas/atom'} # add more as needed
-    #tit=root.find('ns0:title', ns).text
-
-    #url = 'https://export.arxiv.org/api/query?search_query=all:'+query1+'&start='+str(start)+'&max_results='+str(items_per_page)
-    #url = 'https://export.arxiv.org/api/query?search_query=all:"'+query1+'"&start=0&max_results='+str(max_results)+'&sortBy=submittedDate&sortOrder=descending'
-
-    print('url::',url)
-    #input('jjk')
-    url = urllib.parse.quote(url, safe=':/=&?+')
-    print('url::2',url)
-
+    filter_context['filter_chips'] = search_filters.filter_chips(state, selected)
+    filter_context.update(saved_searches.action_context(request, state))
+    kwargs = {} if field == 'all' and not options and not kind and src == 'all' else {
+        'field': field, 'source': src, 'kind': kind}
+    if options:
+        kwargs['filters'] = options
     try:
-        data = urllib.request.urlopen(url, timeout=20).read().decode('utf-8')
-        root = ElementTree.fromstring(data)
-        entries = root.findall("ns0:entry",ns)
-    except (urllib.error.URLError, ElementTree.ParseError, TimeoutError) as e:
-        # Malformed query (arXiv 400) or arXiv unavailable: no results rather than a 500.
-        print('arXiv search failed', query, e)
-        entries = []
+        window = unified_search.window_search(query, kwargs, request.GET.get('window', ''))
+    except unified_search.ExpiredWindow:
+        window = unified_search.window_search(query, kwargs)
+        filter_context['search_notice'] = _('This result window expired. The search has been refreshed.')
+    state['window'] = window['token']
+    filter_context['pagination_query'] = state.urlencode()
+    if window['next_token']:
+        more = state.copy()
+        more['window'] = window['next_token']
+        more['page'] = str(len(window['rows']) // 10 + 1)
+        filter_context['more_results_url'] = '?' + more.urlencode()
+    filter_context['results_limit'] = window['at_limit']
+    if page_num == 1 and not request.GET.get('window'):
+        Search.objects.create(query=query[:2000], user=request.user if request.user.is_authenticated else None,
+                              lang=get_language())
+    return render(request, 'summarizer/search_results.html', {
+        **filter_context, 'query': query, 'search': window['rows'],
+        'page_obj': Paginator(window['rows'], 10).get_page(page_num) if window['rows'] else None,
+        'src': src, 'unified': True, 'failed': window['failed'], 'field': field, 'kind': kind})
 
-    for entry in entries:
-        if entry.find("ns0:title",ns) is not None:
-            authors = []
-            affiliation = []
-            title = ""
-            link_hp=""
-            cat=""
-            published=""
-            for author in entry.findall("ns0:author",ns):
-                authors.append(author.find("ns0:name",ns).text)
-                print('test',authors)
-                if author.find("ns2:affiliation",ns) is not None:
-                    print('aff',author.find("ns2:affiliation",ns).text)
-                    affiliation.append(author.find("ns2:affiliation",ns).text)
-                else:
-                    affiliation.append('')
-
-            link_hp = entry.find("ns0:id",ns).text
-            title = entry.find("ns0:title",ns).text
-            if entry.find("ns2:primary_category",ns) is not None:
-                cat = entry.find("ns2:primary_category",ns).attrib['term']
-            if entry.find("ns0:published",ns) is not None:
-                published = entry.find("ns0:published",ns).text
-                published = datetime.strptime(published, '%Y-%m-%dT%H:%M:%SZ')
-
-
-            print('link',link_hp)
-            pattern1 = r'http://arxiv.org/abs/([\d\.]+v\d)'
-            pattern2 = r'http://arxiv.org/abs/([\w\-/]+)'
-
-            match1 = re.search(pattern1, link_hp)
-            match2 = re.search(pattern2, link_hp)
-
-            # Check which pattern was matched
-            if match1:
-                print('Matched pattern 1:', match1.group(1))
-                arxiv_id=match1.group(1)
-            elif match2:
-                print('Matched pattern 2:', match2.group(1))
-                arxiv_id=match2.group(1)
-            else:
-                print('No pattern matched')
-                arxiv_id=''
-
-            #arxiv_id = re.search(r'/(\d+\.\d+)', link_hp).group(1)
-            #https://arxiv.org/abs/cond-mat/0609158v1
-            #http://arxiv.org/abs/1905.06628v1
-
-
-            search_results.append({'arxiv_id':arxiv_id,'title': title, 'authors': authors, 'link':link_hp,'category':cat,'published':published})
-
-
-    paginator = Paginator(search_results, items_per_page)
-    page_obj = paginator.get_page(page_num)
-
-    #total_pages = math.ceil(total_results / items_per_page)
-
-    context = {**filter_context, 'query': query, 'search': search_results,'page_obj': page_obj, 'src': src, 'kind': kind}
-
-    print('page_num',page_num)
-    if page_num==1:
-        if request.user.is_authenticated:
-            #if User.objects.filter(username=user).exists():
-            userinst = request.user#User.objects.get(username=user)
-            # Do something with the admin_user instance
-        else:
-            userinst = None# AnonymousUser()
-
-        lang = get_language()
-
-        Search.objects.create(
-            query=query,
-            user=userinst,
-            lang=lang
-        )
-
-    return render(request, 'summarizer/search_results.html', context)
 
 OPEN_SEARCH_SECONDS = 6 * 3600  # an OpenAlex search costs; pages and reloads of the same search reuse it
 

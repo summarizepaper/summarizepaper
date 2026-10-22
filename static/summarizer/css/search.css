@@ -33,3 +33,21 @@
 .journal-picker button:focus-visible, .search-refine summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 @media(max-width:760px) { .search-filter-grid { grid-template-columns: 1fr 1fr; } }
 @media(max-width:460px) { .search-filter-grid, .journal-lists { grid-template-columns: 1fr; } .journal-suggestions li { flex-wrap: wrap; } .journal-suggestions li > span { flex-basis: 100%; } }
+.active-search-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 18px; }
+.active-search-filters a { display: inline-flex; gap: 9px; align-items: center; border: 1px solid var(--border); border-radius: 16px; padding: 5px 10px; font-size: 12px; text-decoration: none; overflow-wrap: anywhere; }
+.active-search-filters a:hover { background: var(--accent-soft); }
+.save-search-actions, .saved-search-actions { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 18px 0; font-size: 13px; }
+.save-search-actions form, .saved-search-actions form { margin: 0; }
+.search-result-abstract { position: relative; z-index: 1; margin: 10px 0 14px; font-size: 14px; }
+.search-result-abstract summary { cursor: pointer; color: var(--accent); width: fit-content; }
+.search-result-abstract p { color: var(--text-muted); line-height: 1.7; }
+.load-more-results { text-align: center; margin: 24px 0; }
+.saved-search { padding: 24px; margin: 20px 0; }
+.saved-search h2 { overflow-wrap: anywhere; font-size: 20px; margin: 0 0 12px; }
+.saved-search details { font-size: 13px; }
+.watch-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 18px 0; }
+.watch-controls label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.page .watch-controls select { margin: 0; }
+.active-search-filters a:focus-visible, .search-result-abstract summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+.search-result-excerpt { position: relative; z-index: 1; font-size: 14px; line-height: 1.7; color: var(--text-muted); margin: 12px 0; }

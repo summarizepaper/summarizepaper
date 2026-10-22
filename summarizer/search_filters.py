@@ -120,3 +120,28 @@ def journal_suggestions(request):
         except sources.SourceUnavailable:
             return JsonResponse({'results': [], 'unavailable': True}, status=503)
     return JsonResponse({'results': rows})
+
+
+def filter_chips(state, selected):
+    """Each removal keeps the other validated filters and starts a fresh result window."""
+    from django.utils.translation import gettext as _
+    chips = []
+    labels = {'year_from': _('From year'), 'year_to': _('To year'), 'orcid': _('Author ORCID'),
+              'sort': _('Sort by'), 'type': _('Publication type'), 'src': _('Sources'), 'field': _('Search by')}
+    values = {'newest': _('Newest first'), 'oldest': _('Oldest first'), 'journals': _('Articles'),
+              'preprints': _('Preprints'), 'reviews': _('Literature reviews'), 'author': _('Author'),
+              'title': _('Title'), 'abstract': _('Abstract'), 'open': _('Journals and preprints (open access)'),
+              'arxiv': 'arXiv'}
+    for key in ('field', 'year_from', 'year_to', 'sort', 'type', 'src', 'orcid'):
+        value = state.get(key)
+        if not value or value in ('all', 'relevance'):
+            continue
+        copy = state.copy()
+        copy.pop(key, None)
+        chips.append({'label': '%s: %s' % (labels[key], values.get(value, value)), 'url': '?' + copy.urlencode()})
+    for key, label in (('journals', _('Include')), ('exclude_journals', _('Exclude'))):
+        for item in selected[key]:
+            copy = state.copy()
+            copy.setlist(key, [v for v in state.getlist(key) if v != item['id']])
+            chips.append({'label': '%s: %s' % (label, item['name']), 'url': '?' + copy.urlencode()})
+    return chips

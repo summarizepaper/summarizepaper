@@ -25,7 +25,7 @@ def arxiv_identifier(text):
     return None
 
 
-def arxiv_results(query, field='all', filters=None):
+def arxiv_results(query, field='all', filters=None, page=1):
     options = filters or {}
     if field in ('author', 'title', 'abstract'):
         text = re.sub(r'["\\]', ' ', query)
@@ -36,17 +36,20 @@ def arxiv_results(query, field='all', filters=None):
         end = '%s12312359' % (options.get('year_to') or 9999)
         query = '(%s) AND submittedDate:[%s TO %s]' % (query, start, end)
     response = requests.get(digest.ARXIV_API, params={
-        'search_query': query, 'start': 0, 'max_results': 25,
+        'search_query': query, 'start': (page - 1) * 25, 'max_results': 25,
         'sortBy': 'submittedDate' if options.get('sort') in ('newest', 'oldest') else 'relevance',
         'sortOrder': 'ascending' if options.get('sort') == 'oldest' else 'descending',
     }, headers={'User-Agent': sources.USER_AGENT}, timeout=8)
     response.raise_for_status()
-    return [{
+    papers = digest.parse_feed(response.text)
+    total = ElementTree.fromstring(response.text).findtext('{http://a9.com/-/spec/opensearch/1.1/}totalResults')
+    more = page * 25 < int(total) if total and total.isdigit() else len(papers) >= 25
+    return sources.SearchRows([{
         'key': p['arxiv_id'], 'arxiv_id': p['arxiv_id'], 'title': p['title'],
         'authors': p['authors'][:6], 'more_authors': len(p['authors']) > 6,
-        'venue': 'arXiv', 'published': p['published'], 'arxiv_result': True,
+        'venue': 'arXiv', 'published': p['published'], 'arxiv_result': True, 'abstract': p['abstract'],
         'doi_key': sources.doi_key(p['doi']) if p['doi'] else '',
-    } for p in digest.parse_feed(response.text)]
+    } for p in papers], has_more=more)
 
 
 def _fetch(provider, query, field):
@@ -60,17 +63,23 @@ def _fetch(provider, query, field):
         close_old_connections()
 
 
-def search(query, field='all', source='all', kind='', filters=None):
+def search(query, field='all', source='all', kind='', filters=None, page=1):
     options = filters or {}
     field = field if field in ('author', 'title', 'abstract') else 'all'
     source = source if source in ('open', 'arxiv') else 'all'
     kind = kind if kind in sources.SEARCH_TYPES else ''
-    key = 'unified-search:v3:' + hashlib.sha256(json.dumps([query.lower(), field, source, kind, options], sort_keys=True).encode()).hexdigest()
+    page = max(1, min(int(page), 400))
+    key = 'unified-search:v4:' + hashlib.sha256(json.dumps([query.lower(), field, source, kind, options, page], sort_keys=True).encode()).hexdigest()
     cached = cache.get(key)
     if cached is not None:
         return cached
     with ThreadPoolExecutor(max_workers=2) as pool:
-        arxiv_provider = partial(arxiv_results, filters=options) if options else arxiv_results
+        arxiv_kwargs = {}
+        if options:
+            arxiv_kwargs['filters'] = options
+        if page != 1:
+            arxiv_kwargs['page'] = page
+        arxiv_provider = partial(arxiv_results, **arxiv_kwargs) if arxiv_kwargs else arxiv_results
         arxiv_allowed = (source != 'open' and kind not in ('journals', 'reviews') and
                          not any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')))
         arxiv_job = pool.submit(_fetch, arxiv_provider, query, field) if arxiv_allowed else None
@@ -79,6 +88,8 @@ def search(query, field='all', source='all', kind='', filters=None):
             kwargs['kind'] = kind
         if options:
             kwargs['filters'] = options
+        if page != 1:
+            kwargs['page'] = page
         other_provider = partial(sources.search, **kwargs) if kwargs else sources.search
         other_job = pool.submit(_fetch, other_provider, query, field) if source != 'arxiv' else None
         arxiv, arxiv_failed = arxiv_job.result() if arxiv_job else ([], False)
@@ -102,6 +113,77 @@ def search(query, field='all', source='all', kind='', filters=None):
         undated = [p for p in results if not p.get('published')]
         results = sorted(dated, key=lambda p: str(p['published'])[:10],
                          reverse=options['sort'] == 'newest') + undated
+    results = sources.SearchRows(results, has_more=(
+        getattr(arxiv, 'has_more', len(arxiv) >= 25) or getattr(other, 'has_more', len(other) >= 25)))
     result = (results, arxiv_failed or other_failed)
     cache.set(key, result, 60 if result[1] else sources.SEARCH_SECONDS)
     return result
+
+
+WINDOW_SECONDS = 6 * 3600
+MAX_BATCHES = 20
+WINDOW_SALT = 'research-search-window'
+
+
+class ExpiredWindow(Exception):
+    pass
+
+
+def paper_aliases(paper):
+    aliases = {paper['key'].lower()}
+    if paper.get('doi_key'):
+        aliases.add(paper['doi_key'].lower())
+    if paper.get('arxiv_id'):
+        aliases.add(re.sub(r'v\d+$', '', paper['arxiv_id'].replace('/', '--').lower()))
+    return aliases
+
+
+def combine(previous, new, options):
+    rows, seen = list(previous), set()
+    for paper in previous:
+        seen.update(paper_aliases(paper))
+    for paper in new:
+        aliases = paper_aliases(paper)
+        duplicate = bool(aliases & seen)
+        seen.update(aliases)
+        if not duplicate:
+            rows.append(paper)
+    if options.get('sort') in ('newest', 'oldest'):
+        rows = sorted([r for r in rows if r.get('published')], key=lambda r: str(r['published'])[:10],
+                      reverse=options['sort'] == 'newest') + [r for r in rows if not r.get('published')]
+    return sources.SearchRows(rows, has_more=getattr(new, 'has_more', len(new) >= 25))
+
+
+def window_search(query, kwargs, token=''):
+    """A signed continuation can fetch only one batch after a cached prior batch."""
+    from django.core import signing
+    fingerprint = hashlib.sha256(json.dumps([query.lower(), kwargs], sort_keys=True).encode()).hexdigest()
+    batch = 1
+    if token:
+        try:
+            data = signing.loads(token, salt=WINDOW_SALT, max_age=WINDOW_SECONDS)
+            batch = data['batch']
+            if data['key'] != fingerprint or type(batch) is not int or not 1 <= batch <= MAX_BATCHES:
+                raise ValueError
+        except (signing.BadSignature, KeyError, TypeError, ValueError):
+            raise ExpiredWindow
+    key = 'search-window:%s:%s' % (fingerprint, batch)
+    cached = cache.get(key)
+    if cached is None:
+        previous = []
+        if batch > 1:
+            old = cache.get('search-window:%s:%s' % (fingerprint, batch - 1))
+            if old is None:
+                raise ExpiredWindow
+            previous = old[0]
+        rows, failed = search(query, **kwargs, **({'page': batch} if batch > 1 else {}))
+        rows = combine(previous, rows, kwargs.get('filters', {}))
+        cached = rows, failed
+        cache.set(key, cached, 60 if failed else WINDOW_SECONDS)
+    rows, failed = cached
+    current = signing.dumps({'key': fingerprint, 'batch': batch}, salt=WINDOW_SALT, compress=True)
+    next_token = ''
+    if not failed and rows.has_more and batch < MAX_BATCHES:
+        next_token = signing.dumps({'key': fingerprint, 'batch': batch + 1}, salt=WINDOW_SALT, compress=True)
+    return {'rows': rows, 'failed': failed, 'token': current, 'next_token': next_token,
+            'at_limit': rows.has_more and batch == MAX_BATCHES}

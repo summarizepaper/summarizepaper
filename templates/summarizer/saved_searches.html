@@ -1,0 +1,23 @@
+{% extends 'base.html' %}{% load i18n static_version %}
+{% block title %}{% trans 'Saved searches' %} | SummarizePaper{% endblock %}
+{% block extrahead %}<link rel="stylesheet" href="{% static_v 'summarizer/css/search.css' %}">{% endblock %}
+{% block content %}<main class="page">
+<h1>{% trans 'Saved searches' %}</h1>
+{% if search_saved_event %}<span hidden data-funnel-view="saved_search_created"></span>{% endif %}
+{% if watch_enabled_event %}<span hidden data-funnel-view="search_watch_enabled"></span>{% endif %}
+{% for message in messages %}<p class="notice" role="status">{{ message }}</p>{% endfor %}
+<p>{% trans 'Reopen a search with its filters, or receive new matches by email.' %}</p>
+<p class="search-filter-note">{% blocktrans count count=watch_limit %}Up to 50 saved searches and {{ count }} active watch with your plan.{% plural %}Up to 50 saved searches and {{ count }} active watches with your plan.{% endblocktrans %} <a href="{% url 'premium' %}">Premium</a></p>
+<p class="search-filter-note">{% trans 'Watches check up to 50 of the most recent matches daily or weekly. Existing matches are recorded at activation; they are not emailed. Each email contains up to 10 unseen matches.' %}</p>
+{% for search in searches %}<article class="card saved-search">
+<h2><a href="{{ search.get_absolute_url }}">{{ search.name }}</a></h2>
+<details><summary>{% trans 'Rename' %}</summary><form method="post">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}"><label>{% trans 'Search name' %}<input type="text" name="name" value="{{ search.name }}" maxlength="120" required></label><button class="btn" name="action" value="rename">{% trans 'Save' %}</button></form></details>
+{% if search.watch_enabled %}<p>{% if search.watch_available %}{% trans 'Watch active' %}{% else %}{% trans 'Watch paused by your current plan limit.' %}{% endif %} · {% if search.frequency == 'daily' %}{% trans 'Daily' %}{% else %}{% trans 'Weekly' %}{% endif %}</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}"><button class="btn btn-ghost" name="action" value="pause">{% trans 'Pause this watch' %}</button></form>
+{% else %}<form method="post" class="watch-controls">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}">
+<label>{% trans 'Frequency' %}<select name="frequency"><option value="weekly"{% if search.frequency == 'weekly' %} selected{% endif %}>{% trans 'Weekly' %}</option><option value="daily"{% if search.frequency == 'daily' %} selected{% endif %}>{% trans 'Daily' %}</option></select></label>
+<label>{% trans 'Email language' %}<select name="lang"><option value="en"{% if search.lang == 'en' %} selected{% endif %}>English</option><option value="fr"{% if search.lang == 'fr' %} selected{% endif %}>Français</option></select></label>
+<button class="btn" name="action" value="enable">{% trans 'Enable email watch' %}</button></form>{% endif %}
+<div class="saved-search-actions"><a href="{{ search.get_absolute_url }}">{% trans 'Open the search' %} →</a><form method="post">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}"><button class="btn btn-ghost" name="action" value="delete">{% trans 'Remove saved search' %}</button></form></div>
+</article>{% empty %}<p>{% trans 'No saved searches yet. Save a search from its results page.' %}</p><a class="btn" href="{% url 'summarize' %}">{% trans 'Search' %}</a>{% endfor %}
+</main>{% endblock %}

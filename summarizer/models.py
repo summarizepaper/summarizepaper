@@ -798,3 +798,29 @@ class AnnouncementSent(models.Model):
 
     class Meta:
         unique_together = ('user', 'name')
+
+
+class SavedSearch(models.Model):
+    """A user's validated search and optional opt-in watch of its latest matches."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_searches')
+    name = models.CharField(max_length=120)
+    params = models.JSONField(default=dict)
+    fingerprint = models.CharField(max_length=64)
+    lang = models.CharField(max_length=10, default='en')
+    watch_enabled = models.BooleanField(default=False)
+    frequency = models.CharField(max_length=10, choices=[('daily', 'Daily'), ('weekly', 'Weekly')], default='weekly')
+    seen = models.JSONField(default=list)
+    watch_claim_until = models.DateTimeField(null=True, blank=True)
+    last_attempt = models.DateTimeField(null=True, blank=True)
+    last_checked = models.DateTimeField(null=True, blank=True)
+    last_sent = models.DateTimeField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created', '-pk')
+        constraints = [models.UniqueConstraint(fields=('user', 'fingerprint'), name='unique_user_saved_search')]
+
+    def get_absolute_url(self):
+        from urllib.parse import urlencode
+        from django.urls import reverse
+        return reverse('search_results') + '?' + urlencode(self.params, doseq=True)

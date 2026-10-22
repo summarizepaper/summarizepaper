@@ -1,5 +1,5 @@
 {% load i18n %}
-<details class="search-refine"{% if filters_active or filter_form.errors %} open{% endif %}>
+<details class="search-refine"{% if filter_form.errors %} open{% endif %}>
   <summary>{% trans 'Refine results' %}{% if filters_active %} · {% trans 'Filters active' %}{% endif %}</summary>
   {% if filter_form.errors %}<div class="notice error" role="alert">{% for error in filter_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}{% for field in filter_form %}{% for error in field.errors %}<p>{{ field.label }} : {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
   <div class="search-filter-grid">

@@ -884,19 +884,27 @@ def openalex_content_allowed():
     return _spend(OPENALEX_CONTENT_KEY, OPENALEX_CONTENT_PER_DAY)
 
 
-def search_papers(query, kind='', per_page=25, abstracts=False, field='all', filters=None):
+class SearchRows(list):
+    """Rows plus the provider's continuation flag, preserved by the cache."""
+    def __init__(self, rows=(), has_more=False):
+        super().__init__(rows)
+        self.has_more = has_more
+
+
+def search_papers(query, kind='', per_page=25, abstracts=False, field='all', filters=None, page=1):
     """Open-access papers matching a query, as _paper dicts: from OpenAlex, or Crossref past the daily limit
     or when OpenAlex refuses. Cached SEARCH_SECONDS."""
     from django.core.cache import cache
     field = field if field in ('author', 'title', 'abstract') else 'all'
     options = filters or {}
-    cache_key = 'open-papers:v3:%s' % hashlib.sha256(json.dumps([query.lower(), kind, per_page, abstracts, field, options], sort_keys=True).encode()).hexdigest()
+    page = max(1, min(int(page), 400))
+    cache_key = 'open-papers:v4:%s' % hashlib.sha256(json.dumps([query.lower(), kind, per_page, abstracts, field, options, page], sort_keys=True).encode()).hexdigest()
     papers = cache.get(cache_key)
     if papers is not None:
         return papers
     filters = ['is_oa:true', 'has_doi:true'] + ([SEARCH_TYPES[kind]] if kind in SEARCH_TYPES else [])
     params = {'search': query, 'filter': ','.join(filters), 'per_page': per_page,
-              'select': OPENALEX_FIELDS if abstracts else SEARCH_FIELDS}
+              'select': OPENALEX_FIELDS if abstracts else SEARCH_FIELDS, 'page': page}
     if not query:
         params.pop('search')
     if field != 'all' and query:
@@ -922,16 +930,20 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
     if _spend(OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY):
         try:
             body = _json('%s/works' % OPENALEX, _openalex_params(params))
-            papers = [openalex_paper(work) for work in (body or {}).get('results', [])]
+            works = (body or {}).get('results', [])
+            count = ((body or {}).get('meta') or {}).get('count')
+            more = page * per_page < count if isinstance(count, int) else len(works) >= per_page
+            papers = SearchRows([openalex_paper(work) for work in works], has_more=more)
         except SourceUnavailable:
             logger.warning('OpenAlex search failed, trying Crossref', exc_info=True)
     if papers is None:
         if field == 'abstract' or kind or any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')):
             # Never silently broaden a filter the fallback cannot express reliably.
             raise SourceUnavailable('The filtered research index is unavailable')
-        papers = (crossref_search(query, per_page) if field == 'all' and not options else
-                  crossref_search(query, per_page, field=field, filters=options))
-    papers = [p for p in papers if p['key'] and p['title']]
+        papers = (crossref_search(query, per_page) if field == 'all' and not options and page == 1 else
+                  crossref_search(query, per_page, field=field, filters=options, page=page))
+    papers = SearchRows([p for p in papers if p['key'] and p['title']],
+                        has_more=getattr(papers, 'has_more', len(papers) >= per_page))
     for paper in papers:
         if paper['key'].startswith('doi_h'):
             remember(paper)  # a hashed key can only be read back from ExternalPaper (see key_doi)
@@ -939,7 +951,7 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
     return papers
 
 
-def crossref_search(query, per_page, field='all', filters=None):
+def crossref_search(query, per_page, field='all', filters=None, page=1):
     query_key = {'author': 'query.author', 'title': 'query.title'}.get(field, 'query.bibliographic')
     options = filters or {}
     clauses = ['has-license:true']
@@ -947,7 +959,7 @@ def crossref_search(query, per_page, field='all', filters=None):
         clauses.append('from-pub-date:%s-01-01' % options['year_from'])
     if options.get('year_to'):
         clauses.append('until-pub-date:%s-12-31' % options['year_to'])
-    params = {query_key: query, 'rows': per_page, 'filter': ','.join(clauses),
+    params = {query_key: query, 'rows': per_page, 'offset': (page - 1) * per_page, 'filter': ','.join(clauses),
               'select': 'DOI,title,author,published,container-title,license,abstract',
               'mailto': 'contact@summarizepaper.com'}
     if options.get('sort') in ('newest', 'oldest'):
@@ -972,21 +984,31 @@ def crossref_search(query, per_page, field='all', filters=None):
         terms = words(query)
         papers = [p for p in papers if any(terms <= words(value) for value in
                   (p['authors'] if field == 'author' else [p['title']]))]
-    return papers
+    count = ((body or {}).get('message') or {}).get('total-results')
+    more = page * per_page < count if isinstance(count, int) else len(((body or {}).get('message') or {}).get('items', [])) >= per_page
+    return SearchRows(papers, has_more=more)
 
 
-def search(query, kind='', per_page=25, field='all', filters=None):
+def search(query, kind='', per_page=25, field='all', filters=None, page=1):
     """Search results as the search page shows them.
 
     [{'key', 'title', 'authors', 'venue', 'published', 'license', 'open', 'arxiv_id'}], open = we can read the full text.
     """
-    return [{
+    kwargs = {'abstracts': True}
+    if field != 'all':
+        kwargs['field'] = field
+    if filters:
+        kwargs['filters'] = filters
+    if page != 1:
+        kwargs['page'] = page
+    papers = search_papers(query, kind, per_page, **kwargs)
+    return SearchRows([{
         'key': paper['key'], 'title': paper['title'], 'authors': paper['authors'][:6],
         'more_authors': len(paper['authors']) > 6, 'venue': paper['journal'] or paper['source_name'],
         'published': paper['published'], 'license': license_label(paper['license']),
+        'abstract': paper.get('abstract', ''),
         'open': is_open_license(paper['license']), 'arxiv_id': paper['arxiv_id'].replace('/', '--'),
-    } for paper in (search_papers(query, kind, per_page) if field == 'all' and not filters else
-                     search_papers(query, kind, per_page, field=field, **({'filters': filters} if filters else {})))]
+    } for paper in papers], has_more=getattr(papers, 'has_more', len(papers) >= per_page))
 
 
 def atom_feed(papers, base_url='https://www.summarizepaper.com'):
