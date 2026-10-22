@@ -1,17 +1,24 @@
-/* Only fixed event names and plan periods: never send form values or account IDs. */
+/* Only fixed UI labels and plan periods: never send form values or account IDs. */
 (function () {
   function track(name, data) {
     try {
       if (window.umami) Promise.resolve(window.umami.track(name, data)).catch(function () {});
     } catch (_) { /* Analytics must never prevent navigation or payment. */ }
   }
+  function context(element) {
+    var data = {};
+    if (['hero', 'needs', 'examples', 'offer', 'recent'].includes(element.dataset.placement)) data.placement = element.dataset.placement;
+    if (['paper', 'digest', 'refcheck', 'missed', 'scoops'].includes(element.dataset.tool)) data.tool = element.dataset.tool;
+    return data;
+  }
   document.addEventListener('click', function (event) {
     var link = event.target.closest('a[data-funnel]');
-    if (link) track(link.dataset.funnel);
+    if (link) track(link.dataset.funnel, context(link));
   });
   document.addEventListener('submit', function (event) {
     var form = event.target;
-    if (!form.dataset.funnel) return;
+    if (!form.dataset.funnel || event.defaultPrevented) return;
+    if (form.dataset.funnel === 'home_search_submit' && !form.elements.arxiv_id.value.trim()) return;
     var period = event.submitter && event.submitter.value;
     track(form.dataset.funnel, period === 'monthly' || period === 'yearly' ? {period: period} : {});
   });

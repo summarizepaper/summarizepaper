@@ -394,6 +394,7 @@
 {% block header_class %}{% endblock %}
 
 {% block content %}
+{% if sumpaper.summary or sumpaper.lay_summary %}<span hidden data-funnel-view="paper_result_view"></span>{% endif %}
 <div class="main-content2">
 
 {% if errormess %}

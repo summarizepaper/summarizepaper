@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, citations, digest, library, mailcheck, reading, similar, sources, exports
+from summarizer import access, accounts, citations, digest, homepage, library, mailcheck, reading, similar, sources, exports
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -445,8 +445,10 @@ def summarize(request):
 
     if request.method == 'POST':
         print('request.POST',request.POST)
-        arxiv_id = request.POST['arxiv_id']
-        arxiv_id = arxiv_id.strip()
+        arxiv_id = request.POST.get('arxiv_id', '').strip()
+        if not arxiv_id:
+            return render(request, 'summarizer/home.html', {
+                **homepage.context(), 'error': _('Enter a paper link, DOI or research topic.')})
 
         regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
         pattern1 = re.compile(regex_pattern1)
@@ -542,13 +544,8 @@ def summarize(request):
             #return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
     activated = request.GET.get('activated', False)
-    latestpapers=SummaryPaper.objects.filter(lang=lang).exclude(summary__exact='', notes__exact='', lay_summary__exact='', blog__exact='', keywords__exact='', summary__isnull=False, notes__isnull=False, lay_summary__isnull=False, blog__isnull=False, keywords__isnull=False).order_by('-updated')[:7]
-    print('latestpapers',latestpapers)
-
-    stuff_for_frontend.update({
-        'activated':activated,
-        'latestpapers':latestpapers
-    })
+    stuff_for_frontend.update(homepage.context())
+    stuff_for_frontend['activated'] = activated
 
 
     return render(request, 'summarizer/home.html', stuff_for_frontend)

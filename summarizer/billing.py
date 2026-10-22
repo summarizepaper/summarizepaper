@@ -65,11 +65,13 @@ def price_label(price_id):
             price = _stripe().Price.retrieve(price_id)
         except stripe.error.StripeError:
             logger.exception('Could not load Stripe price %s', price_id)
+            # Avoid retrying Stripe on every homepage visit during an outage.
+            cache.set(key, '', 60)
             return None
         interval = (price.get('recurring') or {}).get('interval', '')
         label = '%.2f %s / %s' % (price['unit_amount'] / 100, price['currency'].upper(), interval)
         cache.set(key, label, 3600)
-    return label
+    return label or None
 
 
 def premium(request):

@@ -545,8 +545,9 @@ class ToolsWithOtherSourcesTests(TestCase):
 
     def test_home_and_faq_present_the_sources(self):
         home = Client().get('/fr/')
-        self.assertContains(home, 'D’où viennent les articles')
-        self.assertContains(home, 'bioRxiv &amp; medRxiv')
+        self.assertContains(home, 'Des articles scientifiques, avec leurs sources')
+        self.assertContains(home, 'bioRxiv')
+        self.assertContains(home, 'medRxiv')
         faq = Client().get('/en/faq/')
         self.assertContains(faq, 'Which papers can I summarize?')
         self.assertContains(faq, 'Why is a summary sometimes made from the abstract only?')

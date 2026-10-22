@@ -1,357 +1,120 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load i18n %}
-{% load dash_slash %}
+{% load static static_version i18n dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
-
-{% block title %} {% trans 'AI summaries of research papers: arXiv, journals and preprints' %} {% endblock %}
+{% block title %}{% trans 'AI Research Companion & Paper Summaries | SummarizePaper' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Easy-to-read AI summaries of scientific papers from arXiv, open-access journals and preprint servers (bioRxiv, medRxiv, HAL, PsyArXiv...): key points, lay summary, an assistant that answers your questions, and a daily digest of your fields.' %}" />
-  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/" />
-
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-      },
-      svg: {
-        fontCache: 'global'
-      }
-    };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
-  <style>
-    .hero {
-      position: relative;
-      padding: 80px 0 56px;
-      text-align: center;
-      overflow: hidden;
-    }
-    .hero::before {
-      content: "";
-      position: absolute;
-      inset: -40% -10% auto;
-      height: 520px;
-      background:
-        radial-gradient(40% 50% at 25% 40%, rgba(249, 115, 22, .14), transparent 70%),
-        radial-gradient(40% 50% at 55% 30%, rgba(99, 102, 241, .18), transparent 70%),
-        radial-gradient(35% 45% at 80% 45%, rgba(16, 185, 129, .14), transparent 70%);
-      z-index: -1;
-    }
-    .hero h1 {
-      max-width: 820px;
-      margin: 0 auto 16px;
-      font-size: clamp(32px, 5.2vw, 56px);
-      font-weight: 800;
-      letter-spacing: -0.035em;
-    }
-    .hero h1 .grad {
-      background: var(--brand-gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .search-form {
-      max-width: 680px;
-      margin: 32px auto 0;
-    }
-    .search-box {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 6px 6px 18px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .search-box:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow);
-    }
-    .search-box .fa-search { color: var(--text-muted); }
-    .search-box input {
-      flex: 1;
-      min-width: 0;
-      padding: 12px 4px;
-      border: 0;
-      outline: none;
-      background: transparent;
-      font: 16px var(--font);
-      color: var(--text);
-    }
-    .search-box .btn { padding: 12px 22px; border-radius: 10px; min-width: 104px; }
-    .spinner {
-      display: none;
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255, 255, 255, .4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-    .search-box .spinner { display: none; }  /* site.css shows .spinner by default (tools pages) */
-    .search-box .is-loading .spinner { display: inline-block; }
-    .is-loading #sub-text { display: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .search-helper {
-      margin-top: 12px;
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-    .search-sources { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 12px; font-size: 14px; color: var(--text); }
-    .search-sources label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-    .search-error { margin-top: 12px; color: var(--danger); font-weight: 500; }
-    .toggle-button {
-      margin-top: 8px;
-      padding: 6px 10px;
-      border: 0;
-      border-radius: var(--radius-sm);
-      background: transparent;
-      color: var(--accent);
-      font: 600 14px var(--font);
-      cursor: pointer;
-    }
-    .toggle-button:hover { background: var(--accent-soft); }
-    .search-syntax {
-      max-width: 680px;
-      margin: 12px auto 0;
-      padding: 20px 24px;
-      text-align: left;
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-    .search-syntax p { margin-top: 0; color: var(--text); }
-    .search-syntax ul { margin: 0; padding-left: 18px; }
-    .search-syntax li + li { margin-top: 6px; }
-
-    .hero .lead { max-width: 680px; margin: -8px auto 28px; font-size: 18px; color: var(--text-muted); }
-    .sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
-    .source-card { padding: 22px; }
-    .source-card h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 17px; }
-    .source-card h3 i { color: var(--accent); }
-    .source-card p { margin: 0; font-size: 14px; color: var(--text-muted); }
-    .sources-note { margin: 16px 0 0; font-size: 14px; color: var(--text-muted); }
-    .section { padding: 48px 0; }
-    .section-title {
-      margin: 0 0 24px;
-      font-size: 26px;
-      font-weight: 700;
-    }
-
-    .intro-grid {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 20px;
-    }
-    .intro-grid .card { padding: 32px; }
-    .welcome { margin: 0; font-size: 17px; color: var(--text-muted); }
-    .welcome .chat-link { font-weight: 600; text-decoration: none; }
-    .welcome .chat-link:hover { text-decoration: underline; }
-    .welcome span[style] { color: var(--accent) !important; }
-    .chat-card {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      background: linear-gradient(160deg, #eef0ff, #f5f3ff 60%, #ecfdf5) !important;
-      border-color: #e0e3ff !important;
-    }
-    .chat-card .icon {
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      margin-bottom: 16px;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 18px;
-    }
-    .chat-card h2 { margin: 0 0 10px; font-size: 22px; }
-    .chat-card p { margin: 0 0 24px; color: var(--text-muted); }
-    .chat-card .btn { margin-top: auto; }
-
-    .paper-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
-    }
-    .paper {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      padding: 20px;
-      color: var(--text);
-      text-decoration: none;
-      transition: border-color .15s, box-shadow .15s, transform .15s;
-    }
-    .paper:hover {
-      border-color: #c7cbff;
-      box-shadow: var(--shadow);
-      transform: translateY(-2px);
-    }
-    .paper .title { font-weight: 600; line-height: 1.4; }
-    .paper .category {
-      align-self: flex-start;
-      margin-top: auto;
-      padding: 2px 10px;
-      border-radius: 999px;
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 500;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
-
-    @media (max-width: 800px) {
-      .hero { padding: 48px 0 32px; }
-      .intro-grid { grid-template-columns: 1fr; }
-      .intro-grid .card { padding: 24px; }
-      .search-box { padding-left: 14px; }
-      .search-box .btn { min-width: 0; padding: 12px 16px; }
-    }
-  </style>
+<meta name="description" content="{% trans 'Understand research papers, follow new discoveries and check references with SummarizePaper. Free AI summaries and daily digests; specialist research tools with Premium.' %}">
+<link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/">
+<link rel="alternate" hreflang="en" href="https://www.summarizepaper.com/en/">
+<link rel="alternate" hreflang="fr" href="https://www.summarizepaper.com/fr/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{% trans 'Your AI research companion' %} | SummarizePaper">
+<meta property="og:description" content="{% trans 'Understand papers. Keep up with your field. Check before submitting.' %}">
+<meta property="og:url" content="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/">
 {% endblock %}
-
-{% block header_class %}{% endblock %}
-
+{% block extrahead %}
+<link rel="stylesheet" href="{% static_v 'summarizer/css/home.css' %}">
+{% endblock %}
 {% block content %}
-
-{% if activated %}
-<div class="alert">{% trans 'Your account is now activated and you are logged in.' %}</div>
-{% endif %}
-
-<section class="hero">
-  <div class="container">
-    <h1>{% trans 'Key insights from arXiv papers, journal articles and preprints' %}</h1>
-    <p class="lead">{% trans 'Search or paste a link: our AI reads the paper and gives you its key points, a summary anyone can understand, and an assistant to question it.' %}</p>
-    <form method="post" class="search-form" id="search-form">
+<main class="home">
+{% if activated %}<div class="container"><p class="notice" role="status">{% trans 'Your account is now activated and you are logged in.' %}</p></div>{% endif %}
+<section class="home-hero container" aria-labelledby="home-title">
+  <div class="home-intro">
+    <p class="home-kicker">{% trans 'From the first paper to your next submission' %}</p>
+    <h1 id="home-title">{% trans 'Your AI research companion' %}</h1>
+    <p class="home-lead">{% trans 'Understand papers, keep up with your field, and check your references before submitting.' %}</p>
+    <p class="home-description">{% trans 'AI paper summaries, research digests and tools built around your scientific workflow.' %}</p>
+    <form method="post" class="home-search" id="search-form" data-funnel="home_search_submit">
       {% csrf_token %}
-      <label for="arxiv-id" style="position:absolute;left:-9999px">{% trans 'Search for an article' %}</label>
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" id="arxiv-id" name="arxiv_id" placeholder="{% trans 'Search for an article' %}">
-        <button type="submit" id="submit-button" class="btn"><span id="sub-text">{% trans 'Search' %}</span><span class="spinner" aria-label="{% trans 'Loading...' %}"></span></button>
+      <label for="arxiv-id">{% trans 'Start with a paper or a research topic' %}</label>
+      <div class="home-search-row">
+        <input type="text" id="arxiv-id" name="arxiv_id" required placeholder="{% trans 'Paper URL, DOI, title or topic' %}" aria-describedby="search-help">
+        <button type="submit" id="submit-button" class="btn">{% trans 'Explore a paper' %}</button>
       </div>
-      <div class="search-sources" role="radiogroup" aria-label="{% trans 'Where to search' %}">
-        <label><input type="radio" name="src" value="arxiv" checked> arXiv</label>
-        <label><input type="radio" name="src" value="open"> {% trans 'Journals and preprints (open access)' %}</label>
-      </div>
-      <div class="search-helper">{% trans 'Enter keywords, titles, authors, an arXiv ID (e.g., 2211.04191) or a DOI. bioRxiv, medRxiv, HAL, OSF and PubMed links work too.' %}</div>
-      {% if error %}
-        <div class="search-error">{{ error }}</div>
-      {% endif %}
+      <p id="search-help" class="home-fine">{% trans 'Start free. No credit card required. Daily limits apply.' %}</p>
+      <details class="home-search-options">
+        <summary>{% trans 'Search options' %}</summary>
+        <fieldset><legend>{% trans 'Where to search' %}</legend>
+          <label><input type="radio" name="src" value="arxiv" checked> arXiv</label>
+          <label><input type="radio" name="src" value="open"> {% trans 'Journals and preprints (open access)' %}</label>
+        </fieldset>
+        <p>{% trans 'Paste an arXiv ID, DOI, bioRxiv, medRxiv, HAL, OSF or PubMed link. For arXiv searches, use au: for authors, ti: for titles, AND, OR and ANDNOT to combine terms.' %}</p>
+      </details>
+      {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
     </form>
-    <p><a class="btn btn-ghost" data-funnel="premium_click" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a> — {% trans 'No daily summary limit' %} · {% trans 'Cancel anytime in one click' %}</p>
-    <button id="toggle-syntax" class="toggle-button" type="button" aria-expanded="false">{% trans 'Refine your Search' %} <i class="fas fa-chevron-down" style="font-size:11px"></i></button>
-    <div class="search-syntax card" hidden>
-      <p><strong>{% trans 'Search Syntax:' %}</strong></p>
-      <ul>
-        <li>{% trans 'By default, the search engine looks for the query in all fields.' %}</li>
-        <li>{% trans 'Use the field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</li>
-        <li>{% trans 'Example for an author - au:John Doe; for a title - ti:The universe and beyond; for words contained in abstract - abs:covid; for an arXiv ID - id:2211.04191' %}</li>
-        <li>{% trans 'Mix several fields in a search request using the Boolean operators "AND", "OR", and "ANDNOT". For example, au:John Smith AND abs:search for life' %}</li>
-        <li>{% trans 'Example of a complex research: au:Smith AND ti:climate ANDNOT ti:petrol AND (abs:renewable energy OR abs:solar)' %}</li>
-      </ul>
+    <div class="home-actions">
+      <a href="{% if example_paper %}{% url 'arxividpage' example_paper.paper.arxiv_id %}{% else %}#paper-example{% endif %}" data-funnel="home_example_click" data-placement="hero">{% trans 'Try an example' %} <span aria-hidden="true">↗</span></a>
+      <a href="{% url 'premium' %}" data-funnel="premium_click" data-placement="hero">Premium{% if home_price %} · {{ home_price }}{% endif %}</a>
     </div>
+  </div>
+  <aside class="home-preview" aria-label="{% trans 'Research workflow preview' %}">
+    <div class="home-preview-header"><span class="home-dot" aria-hidden="true"></span> {% trans 'A companion for the work between papers' %}</div>
+    <ol class="home-workflow">
+      <li><span class="home-step">01</span><div><strong>{% trans 'Read with a question in mind' %}</strong><p>{% trans 'Get the key ideas, then ask about the method or limitations.' %}</p><span class="home-tag">{% trans 'Free to start' %}</span></div></li>
+      <li><span class="home-step">02</span><div><strong>{% trans 'Build a reading habit' %}</strong><p>{% trans 'Bring new papers from your fields into your inbox.' %}</p><span class="home-tag">{% trans 'Free digest' %}</span></div></li>
+      <li><span class="home-step">03</span><div><strong>{% trans 'Prepare your next submission' %}</strong><p>{% trans 'Check references and find related work your draft may have missed.' %}</p><span class="home-tag home-tag-paid">Premium</span></div></li>
+    </ol>
+    <a href="#research-tools" class="home-preview-link">{% trans 'Find the tool for your next step' %} <span aria-hidden="true">↓</span></a>
+  </aside>
+</section>
+
+<section class="home-section container" id="research-tools" aria-labelledby="tools-title">
+  <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Built around your research' %}</p><h2 id="tools-title">{% trans 'What are you working on today?' %}</h2></div><a href="{% url 'tools' %}">{% trans 'All research tools' %} <span aria-hidden="true">↗</span></a></div>
+  <div class="home-needs">
+    <article class="home-need"><span class="home-tag">{% trans 'Free to start' %}</span><h3>{% trans 'Understand a paper' %}</h3><p>{% trans 'Find the question, the main results and the limits. Ask follow-up questions about one paper or several.' %}</p><p class="home-tool-names">{% trans 'AI summaries · Paper assistant' %}</p><a href="#arxiv-id" data-funnel="home_tool_click" data-tool="paper" data-placement="needs">{% trans 'Explore a paper' %} <span aria-hidden="true">→</span></a></article>
+    <article class="home-need"><span class="home-tag">{% trans 'Free with an account' %}</span><h3>{% trans 'Keep up with your field' %}</h3><p>{% trans 'Receive new papers from the categories you follow, with short summaries. Choose a daily or weekly rhythm.' %}</p><p class="home-tool-names">Daily Digest</p><a href="{% url 'digest' %}" data-funnel="home_tool_click" data-tool="digest" data-placement="needs">{% trans 'Set up my free digest' %} <span aria-hidden="true">→</span></a></article>
+    <article class="home-need"><span class="home-tag home-tag-paid">Premium</span><h3>{% trans 'Check before submitting' %}</h3><p>{% trans 'Spot references to review and find related research your draft does not cite.' %}</p><p class="home-tool-names">Bibliography Check · What Did I Miss?</p><a href="#reference-example" data-funnel="home_example_click" data-placement="needs">{% trans 'See a reference-check example' %} <span aria-hidden="true">→</span></a><div class="home-tool-links"><a href="{% url 'refcheck' %}" data-funnel="home_tool_click" data-tool="refcheck">Bibliography Check</a><a href="{% url 'missed' %}" data-funnel="home_tool_click" data-tool="missed">What Did I Miss?</a></div></article>
+    <article class="home-need"><span class="home-tag home-tag-paid">Premium</span><h3>{% trans 'Watch research close to yours' %}</h3><p>{% trans 'Describe your project. Get an email when new arXiv, bioRxiv or medRxiv papers overlap with it.' %}</p><p class="home-tool-names">Scoop Watch</p><a href="{% url 'scoops' %}" data-funnel="home_tool_click" data-tool="scoops" data-placement="needs">{% trans 'Discover Scoop Watch' %} <span aria-hidden="true">→</span></a></article>
   </div>
 </section>
 
-<section class="section" style="padding-top:16px">
+<section class="home-examples home-section" aria-labelledby="examples-title">
   <div class="container">
-    <h2 class="section-title">{% trans 'Where the papers come from' %}</h2>
-    <div class="sources-grid">
-      <div class="card source-card">
-        <h3><i class="fas fa-atom"></i> arXiv</h3>
-        <p>{% trans 'Every paper of every category, read from its HTML version or its PDF. Type an arXiv ID or search by title, author or keywords.' %}</p>
-      </div>
-      <div class="card source-card">
-        <h3><i class="fas fa-book-open"></i> {% trans 'Journals' %}</h3>
-        <p>{% trans 'Any article with a DOI: paste it, or search the open-access literature. MNRAS, A&A, PLOS, Nature Communications, eLife and thousands of other journals.' %}</p>
-      </div>
-      <div class="card source-card">
-        <h3><i class="fas fa-dna"></i> bioRxiv &amp; medRxiv</h3>
-        <p>{% trans 'Biology and medicine preprints, summarized like arXiv papers. Their new preprints also come in the daily digest, by subject area.' %}</p>
-      </div>
-      <div class="card source-card">
-        <h3><i class="fas fa-layer-group"></i> {% trans 'Other preprint servers' %}</h3>
-        <p>{% trans 'HAL, ChemRxiv, PsyArXiv, SocArXiv, EarthArXiv and the other OSF servers, PubMed and Europe PMC.' %}</p>
-      </div>
-    </div>
-    <p class="sources-note">{% blocktrans %}When the license of a paper allows it (CC BY, BY-SA, BY-NC, BY-NC-SA or CC0), our AI reads the full text; otherwise the summary is written from the abstract and says so. <a href="/{{ LANGUAGE_CODE }}/faq/">More in the FAQ</a>.{% endblocktrans %}</p>
-  </div>
-</section>
-
-<section class="section" style="padding-top:16px">
-  <div class="container">
-    <h2 class="section-title">{% trans 'Tools for researchers' %}</h2>
-    <div class="sources-grid">
-      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/scoops/">
-        <h3><i class="fas fa-user-secret"></i> {% trans 'Scoop watch' %}</h3>
-        <p>{% trans 'Describe your project in progress: we email you the day a new paper comes close to it.' %}</p>
-      </a>
-      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/refcheck/">
-        <h3><i class="fas fa-tasks"></i> {% trans 'Bibliography check' %}</h3>
-        <p>{% trans 'Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.' %}</p>
-      </a>
-      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/teams/">
-        <h3><i class="fas fa-users"></i> {% trans 'Who works on it?' %}</h3>
-        <p>{% trans 'The groups that publish the most on a topic, their lead researchers and their approach.' %}</p>
-      </a>
-      <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/conference/">
-        <h3><i class="fas fa-calendar-alt"></i> {% trans 'Conference companion' %}</h3>
-        <p>{% trans 'The talks of a conference program that matter for your research, and the people to meet.' %}</p>
-      </a>
-    </div>
-    <p class="sources-note"><a href="/{{ LANGUAGE_CODE }}/tools/" class="btn btn-ghost">{% trans 'See all the tools' %} <i class="fas fa-arrow-right" style="font-size:13px"></i></a></p>
-  </div>
-</section>
-
-<section class="section" style="padding-top:16px">
-  <div class="container intro-grid">
-    <div class="card">
-      <p class="welcome">{% blocktrans %}Welcome to our <a href="https://github.com/summarizepaper/summarizepaper" class="chat-link">open-source</a> AI tool to stay up-to-date with research. For each paper, from arXiv, a journal or a preprint server, you get concise, understandable and insightful summaries (key points, lay summary, blog-style article...), in English, French and 14 other languages, so you quickly grasp the latest developments in your field. Our <a href="/{{ LANGUAGE_CODE }}/chat/" class="chat-link">AI assistant</a> answers your questions about one paper or several at once, and the <a href="/{{ LANGUAGE_CODE }}/digest/" class="chat-link">daily digest</a> brings you the new arXiv, bioRxiv and medRxiv papers of your fields. Whether you're a researcher, a student, a journalist, or simply someone who wants to stay informed, Summarize<span style="color:#34a853">Paper</span>.com is here to make your life easier.{% endblocktrans %}</p>
-    </div>
-    <div class="card chat-card">
-      <div class="icon"><i class="fas fa-comments"></i></div>
-      <h2>{% trans 'Chat with research papers' %}</h2>
-      <p>{% trans 'Chat with one or several papers at once: arXiv papers, but also journal articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions in plain language; the assistant answers from the full text when the license allows it, from the abstract otherwise.' %}</p>
-      <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn">{% trans 'Start Chatting' %} <i class="fas fa-arrow-right" style="font-size:13px"></i></a>
+    <p class="home-kicker">{% trans 'See what you can do' %}</p><h2 id="examples-title">{% trans 'A useful next step, made concrete' %}</h2>
+    <p class="home-section-intro">{% trans 'Illustrative previews based on a published paper. Explore a live summary or set up your own digest to try the tools.' %}</p>
+    <div class="home-example-grid">
+      <article class="home-example" id="paper-example">
+        <p class="home-example-label">01 / {% trans 'Understand' %}</p><h3>Attention Is All You Need</h3><p class="home-fine">Vaswani et al. · 2017 · arXiv:1706.03762</p>
+        <dl><dt>{% trans 'The question' %}</dt><dd>{% trans 'Can attention alone support a strong sequence-to-sequence model?' %}</dd><dt>{% trans 'The main idea' %}</dt><dd>{% trans 'The Transformer replaces recurrence and convolution with attention. The paper evaluates it on translation tasks.' %}</dd><dt>{% trans 'A point to check' %}</dt><dd>{% trans 'Results on these benchmarks do not establish performance on every language or task.' %}</dd></dl>
+        <p class="home-fine">{% trans 'Editorial reading example based on the abstract.' %} <a href="https://arxiv.org/abs/1706.03762">{% trans 'Read the source' %} ↗</a></p>
+        {% if example_paper %}<a class="home-example-cta" href="{% url 'arxividpage' example_paper.paper.arxiv_id %}" data-funnel="home_example_click" data-placement="examples">{% trans 'Open a ready-to-read AI summary' %} →</a>{% else %}<a class="home-example-cta" href="#arxiv-id">{% trans 'Explore your own paper' %} →</a>{% endif %}
+      </article>
+      <article class="home-example" id="reference-example">
+        <p class="home-example-label">02 / {% trans 'Check references' %}</p><h3>{% trans 'A preprint has a published version' %}</h3>
+        <div class="home-reference"><span>{% trans 'Your reference' %}</span><p>Vaswani et al., 2017<br>arXiv:1706.03762</p></div>
+        <div class="home-reference home-reference-result"><span>{% trans 'Publication to review' %}</span><p>Advances in Neural Information Processing Systems 30 (2017)</p></div>
+        <p>{% trans 'Review the published record and update your bibliography when appropriate.' %}</p>
+        <p class="home-fine">{% trans 'Illustrative check, verified against the proceedings.' %} <a href="https://papers.nips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html">{% trans 'Publication record' %} ↗</a></p>
+        <a class="home-example-cta" href="{% url 'refcheck' %}" data-funnel="home_tool_click" data-tool="refcheck" data-placement="examples">{% trans 'Explore Bibliography Check' %} → <span class="home-tag home-tag-paid">Premium</span></a>
+      </article>
+      <article class="home-example" id="digest-example">
+        <p class="home-example-label">03 / {% trans 'Keep up' %}</p><h3>{% trans 'Your reading list, in your inbox' %}</h3>
+        <div class="home-mail"><div class="home-mail-top">Daily Digest <span>cs.CL · cs.LG</span></div><strong>Attention Is All You Need</strong><p>{% trans 'A model built around attention for sequence-to-sequence learning. This paper introduces the Transformer and evaluates machine translation performance.' %}</p><a href="https://arxiv.org/abs/1706.03762">{% trans 'Source paper' %} ↗</a></div>
+        <p class="home-fine">{% trans 'Example email layout using a 2017 paper. Your digest follows newly announced papers in your selected categories.' %}</p>
+        <a class="home-example-cta" href="{% url 'digest' %}" data-funnel="home_tool_click" data-tool="digest" data-placement="examples">{% trans 'Set up my free digest' %} →</a>
+      </article>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <h2 class="section-title">{% trans 'Latest Papers summarized with our AI tools' %}</h2>
-    <div class="paper-list">
-      {% for paper in latestpapers %}
-        <a class="paper card" href="/{{ paper.lang }}/arxiv-id/{{ paper.paper.arxiv_id }}" title="{{ paper.paper.title }}">
-          <span class="title">{{ paper.paper.title|truncatechars:90 }}</span>
-          <span class="category">{{ paper.paper.category|category_label }}</span>
-        </a>
-      {% endfor %}
-    </div>
+<section class="home-section container" aria-labelledby="premium-title">
+  <div class="home-premium">
+    <div><p class="home-kicker">{% trans 'For the research you do every day' %}</p><h2 id="premium-title">{% trans 'Go further with Premium' %}</h2><p>{% trans 'Check your bibliography, find related work missing from your draft, and monitor research close to your project.' %}</p><ul><li>{% trans 'Bibliography Check and What Did I Miss?' %}</li><li>{% trans 'Scoop Watch and a digest ranked for your research' %}</li><li>{% trans 'Our most capable model and no daily summary limit' %}</li></ul></div>
+    <div class="home-premium-action">{% if home_price %}<p class="home-price">{{ home_price }}</p>{% endif %}<a class="btn btn-lg" href="{% url 'premium' %}" data-funnel="premium_click" data-placement="offer">{% trans 'See Premium tools' %}</a><p class="home-fine">{% trans 'Cancel anytime in one click' %}<br>{% trans 'Payments handled by Stripe' %}</p></div>
   </div>
 </section>
+
+<section class="home-section home-trust container" aria-labelledby="sources-title">
+  <div><p class="home-kicker">{% trans 'Grounded in scientific literature' %}</p><h2 id="sources-title">{% trans 'Research papers, with their sources' %}</h2><p class="home-source-list">arXiv · {% trans 'Journals via DOI' %} · bioRxiv · medRxiv · HAL · OSF · PubMed</p><p>{% trans 'When a license permits it, summaries use the full text. Otherwise they use the abstract and say so. AI output is a starting point: check the original paper for your research decisions.' %}</p></div>
+  <div class="home-trust-links"><a href="{% url 'faq' %}">{% trans 'How the summaries work' %} →</a><a href="{% url 'author' %}">{% trans 'Meet the researcher behind SummarizePaper' %} →</a><a href="https://github.com/summarizepaper/summarizepaper">{% trans 'Explore the open-source code' %} ↗</a></div>
+</section>
+
+{% if latestpapers %}
+<section class="home-section container" aria-labelledby="latest-title">
+  <h2 id="latest-title">{% trans 'Recently summarized research papers' %}</h2>
+  <div class="home-recent">{% for paper in latestpapers|slice:':3' %}<a href="{% url 'arxividpage' paper.paper.arxiv_id %}" class="home-recent-paper" data-funnel="home_example_click" data-placement="recent"><span>{{ paper.paper.category|category_label }}</span><h3>{{ paper.paper.title|truncatechars:110 }}</h3><p>{{ paper.lay_summary|default:paper.summary|striptags|truncatewords:28 }}</p><strong>{% trans 'Read the summary' %} →</strong></a>{% endfor %}</div>
+</section>
+{% endif %}
+</main>
 {% endblock %}
-
-
-{% block scripts %}
-  <script>
-    document.getElementById('search-form').addEventListener('submit', function () {
-      document.getElementById('submit-button').classList.add('is-loading');
-    });
-
-    var toggleButton = document.getElementById('toggle-syntax');
-    var searchSyntax = document.querySelector('.search-syntax');
-    toggleButton.addEventListener('click', function () {
-      searchSyntax.hidden = !searchSyntax.hidden;
-      toggleButton.setAttribute('aria-expanded', !searchSyntax.hidden);
-    });
-  </script>
-{% endblock %}
+{% block scripts %}<script defer src="{% static_v 'summarizer/js/home.js' %}"></script>{% endblock %}

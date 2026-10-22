@@ -6,7 +6,7 @@
   <p><strong>{% trans 'Free with an account.' %}</strong> {% trans 'Create a free account in a few seconds to use it.' %}</p>
   {% endif %}
   <div class="item-actions">
-    <a class="btn" href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a>
+    <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}">{% trans 'Create a free account' %}</a>
     <a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}">{% trans 'Log in' %}</a>
     {% if premium_tool %}<a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See what Premium includes' %}</a>{% endif %}
   </div>

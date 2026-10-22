@@ -40,3 +40,21 @@ test('Umami payload strips email, query strings and signed tokens', () => {
   context.navigator.webdriver = true;
   assert.equal(context.umamiBeforeSend('event', {}), false);
 });
+test('home clicks send only fixed placement and tool properties', () => {
+  const {events, handlers} = run('/en/');
+  handlers.click({target: {closest: () => ({dataset: {funnel: 'home_tool_click', tool: 'digest', placement: 'needs', email: 'private@example.com'}})}});
+  assert.equal(JSON.stringify(events[0]), '{"name":"home_tool_click","data":{"placement":"needs","tool":"digest"}}');
+  handlers.click({target: {closest: () => ({dataset: {funnel: 'home_tool_click', tool: 'private text', placement: 'private text'}})}});
+  assert.equal(JSON.stringify(events[1].data), '{}');
+});
+test('empty home searches and prevented submissions are not counted', () => {
+  const {events, handlers} = run('/en/');
+  handlers.submit({target: {dataset: {funnel: 'home_search_submit'}, elements: {arxiv_id: {value: '   '}}}});
+  handlers.submit({defaultPrevented: true, target: {dataset: {funnel: 'signup_submit'}}});
+  assert.equal(events.length, 0);
+});
+test('a home search sends no research query', () => {
+  const {events, handlers} = run('/en/');
+  handlers.submit({target: {dataset: {funnel: 'home_search_submit'}, elements: {arxiv_id: {value: 'private research topic'}}}});
+  assert.equal(JSON.stringify(events[0]), '{"name":"home_search_submit","data":{}}');
+});

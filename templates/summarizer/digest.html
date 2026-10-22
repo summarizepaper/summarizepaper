@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page digest">
+<div class="page digest"{% if digest_configured %} data-funnel-view="digest_configured"{% endif %}>
   <header class="page-header">
   <h1>{% trans 'Your daily paper digest' %}</h1>
   {% if paid %}
@@ -43,7 +43,7 @@
 
   {% if not request.user.is_authenticated %}
     <div class="cta-row">
-    <a class="btn btn-lg" href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a>
+    <a class="btn btn-lg" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}">{% trans 'Create a free account' %}</a>
     <span class="muted">{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/digest/">{% trans 'Log in' %}</a></span>
     </div>
   {% else %}

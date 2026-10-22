@@ -1167,6 +1167,7 @@ def digest_page(request):
             subscription.authors = ', '.join(clean_authors(request.POST.get('authors', '')))
         subscription.active = True
         subscription.save()
+        request.session['digest_configured'] = subscription.pk
         return redirect('/%s/digest/?d=%s&saved=1' % (get_language(), subscription.pk))
     return render(request, 'summarizer/digest.html', _digest_context(request, subscription, digests, paid))
 
@@ -1189,7 +1190,12 @@ def _digest_context(request, subscription, digests, paid, error=False):
     lim = limits(paid)
     chosen = subscription.category_list() if subscription else []
     known = {code for code, _ in CATEGORIES} | set(BIO_CODES)
+    configured = bool(not error and subscription and
+                      request.session.get('digest_configured') == subscription.pk)
+    if configured:
+        request.session.pop('digest_configured')
     return {
+        'digest_configured': configured,
         'subscription': subscription,
         'digests': digests,
         'paid': paid,

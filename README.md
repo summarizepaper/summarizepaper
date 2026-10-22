@@ -100,7 +100,7 @@ device. Stripe/webhooks and UserPlan remain the subscription source of truth. Co
 before drawing conclusions about conversion. No production Umami dashboard or Stripe account was
 available for this audit; no uplift or abandonment rate has been measured.
 
-Analytics failures do not block forms. Event properties contain only a billing period; URLs remove
+Analytics failures do not block forms. Event properties contain only allowlisted language, billing period, placement and tool identifiers; URLs remove
 login/reset tokens and arbitrary query strings while preserving UTM campaign attribution.
 Future priorities: measure stage drop-off, then test simpler signup (currently username, email and
 two password fields) and a shorter benefit-led feature list. Do not remove email verification or bot
@@ -109,6 +109,21 @@ checks based on an unmeasured assumption.
 Verification: `python manage.py test summarizer` and `node --test tests/funnel.test.cjs`.
 French source translations are in `locale/fr/LC_MESSAGES/django.po`; compile catalogs with
 `python manage.py compilemessages` when preparing translated runtime assets.
+
+## Research companion homepage
+
+The bilingual homepage groups tools by research task, with free paper search and Daily Digest
+as entry points. Worked examples are editorial illustrations with original-paper links, not
+customer results or a live digest. Premium uses the existing cached Stripe monthly price; an
+unavailable quote is omitted. Existing search routes, canonical URLs and structured data remain.
+
+Additional Umami events: `home_search_submit` (nonempty search attempt), `home_example_click`,
+`home_tool_click`, `paper_result_view` (a page containing a completed summary), and
+`digest_configured` (shown once after a successful subscription save). Tool links allow only
+`paper`, `digest`, `refcheck`, `missed`, `scoops`; placements allow `hero`, `needs`, `examples`,
+`offer`, `recent`. Research queries, manuscript text and email addresses are never event properties.
+Measure distinct visitors reaching a result or saving a digest before examining Premium conversion.
+Result views can recur, and digest configuration is not proof that an email was delivered.
 
 ## Deployment
 

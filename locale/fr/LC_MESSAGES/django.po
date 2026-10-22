@@ -6241,3 +6241,507 @@ msgstr "Paiement annulé. Vous pouvez choisir à nouveau un abonnement ci-dessou
 
 msgid "We could not send your activation email. Please try requesting a login link."
 msgstr "Nous n’avons pas pu envoyer votre email d’activation. Essayez de demander un lien de connexion."
+
+#: templates/summarizer/home.html
+msgid "AI Research Companion & Paper Summaries | SummarizePaper"
+msgstr "Assistant de recherche IA et résumés scientifiques | SummarizePaper"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Understand research papers, follow new discoveries and check references with"
+" SummarizePaper. Free AI summaries and daily digests; specialist research "
+"tools with Premium."
+msgstr ""
+"Comprenez les articles scientifiques, suivez les découvertes et vérifiez vos"
+" références. Résumés IA et veille gratuits ; outils de recherche spécialisés"
+" avec Premium."
+
+
+#: templates/summarizer/home.html
+msgid "Your AI research companion"
+msgstr "Votre compagnon de recherche scientifique"
+
+
+#: templates/summarizer/home.html
+msgid "Understand papers. Keep up with your field. Check before submitting."
+msgstr ""
+"Comprenez les articles. Suivez votre domaine. Vérifiez avant de soumettre."
+
+
+#: templates/summarizer/home.html
+msgid "From the first paper to your next submission"
+msgstr "Du premier article à votre prochaine soumission"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Understand papers, keep up with your field, and check your references before"
+" submitting."
+msgstr ""
+"Comprenez les articles, suivez votre domaine et vérifiez vos références "
+"avant de soumettre."
+
+
+#: templates/summarizer/home.html
+msgid ""
+"AI paper summaries, research digests and tools built around your scientific "
+"workflow."
+msgstr ""
+"Des résumés par IA, une veille scientifique et des outils conçus pour votre "
+"travail de recherche."
+
+
+#: templates/summarizer/home.html
+msgid "Start with a paper or a research topic"
+msgstr "Commencez par un article ou un sujet de recherche"
+
+
+#: templates/summarizer/home.html
+msgid "Paper URL, DOI, title or topic"
+msgstr "Lien, DOI, titre ou sujet"
+
+
+#: templates/summarizer/home.html
+msgid "Explore a paper"
+msgstr "Explorer un article"
+
+
+#: templates/summarizer/home.html
+msgid "Start free. No credit card required. Daily limits apply."
+msgstr ""
+"Commencez gratuitement, sans carte bancaire. Des limites quotidiennes "
+"s’appliquent."
+
+
+#: templates/summarizer/home.html
+msgid "Search options"
+msgstr "Options de recherche"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Paste an arXiv ID, DOI, bioRxiv, medRxiv, HAL, OSF or PubMed link. For arXiv"
+" searches, use au: for authors, ti: for titles, AND, OR and ANDNOT to "
+"combine terms."
+msgstr ""
+"Collez un identifiant arXiv, un DOI ou un lien bioRxiv, medRxiv, HAL, OSF ou"
+" PubMed. Sur arXiv : au: pour les auteurs, ti: pour les titres, AND, OR et "
+"ANDNOT pour combiner les termes."
+
+
+#: templates/summarizer/home.html
+msgid "Try an example"
+msgstr "Essayer un exemple"
+
+
+#: templates/summarizer/home.html
+msgid "Research workflow preview"
+msgstr "Aperçu du parcours de recherche"
+
+
+#: templates/summarizer/home.html
+msgid "A companion for the work between papers"
+msgstr "Un compagnon à chaque étape de votre recherche"
+
+
+#: templates/summarizer/home.html
+msgid "Read with a question in mind"
+msgstr "Lisez avec une question en tête"
+
+
+#: templates/summarizer/home.html
+msgid "Get the key ideas, then ask about the method or limitations."
+msgstr "Identifiez les idées clés, puis interrogez la méthode ou les limites."
+
+
+#: templates/summarizer/home.html
+msgid "Free to start"
+msgstr "Pour commencer, gratuitement"
+
+
+#: templates/summarizer/home.html
+msgid "Build a reading habit"
+msgstr "Installez une routine de lecture"
+
+
+#: templates/summarizer/home.html
+msgid "Bring new papers from your fields into your inbox."
+msgstr "Recevez les nouveaux articles de vos domaines par email."
+
+
+#: templates/summarizer/home.html
+msgid "Free digest"
+msgstr "Veille gratuite"
+
+
+#: templates/summarizer/home.html
+msgid "Prepare your next submission"
+msgstr "Préparez votre prochaine soumission"
+
+
+#: templates/summarizer/home.html
+msgid "Check references and find related work your draft may have missed."
+msgstr ""
+"Vérifiez les références et repérez les travaux proches que votre manuscrit "
+"pourrait avoir omis."
+
+
+#: templates/summarizer/home.html
+msgid "Find the tool for your next step"
+msgstr "Trouvez l’outil pour votre prochaine étape"
+
+
+#: templates/summarizer/home.html
+msgid "Built around your research"
+msgstr "Au service de votre recherche"
+
+
+#: templates/summarizer/home.html
+msgid "What are you working on today?"
+msgstr "Sur quoi travaillez-vous aujourd’hui ?"
+
+
+#: templates/summarizer/home.html
+msgid "All research tools"
+msgstr "Tous les outils de recherche"
+
+
+#: templates/summarizer/home.html
+msgid "Understand a paper"
+msgstr "Comprendre un article"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Find the question, the main results and the limits. Ask follow-up questions "
+"about one paper or several."
+msgstr ""
+"Identifiez la question, les résultats principaux et les limites. Posez vos "
+"questions sur un ou plusieurs articles."
+
+
+#: templates/summarizer/home.html
+msgid "AI summaries · Paper assistant"
+msgstr "Résumés IA · Assistant de lecture"
+
+
+#: templates/summarizer/home.html
+msgid "Free with an account"
+msgstr "Gratuit avec un compte"
+
+
+#: templates/summarizer/home.html
+msgid "Keep up with your field"
+msgstr "Suivre votre domaine"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Receive new papers from the categories you follow, with short summaries. "
+"Choose a daily or weekly rhythm."
+msgstr ""
+"Recevez les nouveaux articles des catégories suivies, avec de courts "
+"résumés. Choisissez un rythme quotidien ou hebdomadaire."
+
+
+#: templates/summarizer/home.html
+msgid "Set up my free digest"
+msgstr "Configurer ma veille gratuite"
+
+
+#: templates/summarizer/home.html
+msgid "Check before submitting"
+msgstr "Vérifier avant de soumettre"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Spot references to review and find related research your draft does not "
+"cite."
+msgstr ""
+"Repérez les références à revoir et les travaux proches que votre manuscrit "
+"ne cite pas."
+
+
+#: templates/summarizer/home.html
+msgid "See a reference-check example"
+msgstr "Voir un exemple de vérification"
+
+
+#: templates/summarizer/home.html
+msgid "Watch research close to yours"
+msgstr "Surveiller les travaux proches"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Describe your project. Get an email when new arXiv, bioRxiv or medRxiv "
+"papers overlap with it."
+msgstr ""
+"Décrivez votre projet. Recevez un email lorsque de nouveaux articles arXiv, "
+"bioRxiv ou medRxiv recoupent vos travaux."
+
+
+#: templates/summarizer/home.html
+msgid "Discover Scoop Watch"
+msgstr "Découvrir Scoop Watch"
+
+
+#: templates/summarizer/home.html
+msgid "See what you can do"
+msgstr "Découvrez les possibilités"
+
+
+#: templates/summarizer/home.html
+msgid "A useful next step, made concrete"
+msgstr "Des résultats concrets pour avancer"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Illustrative previews based on a published paper. Explore a live summary or "
+"set up your own digest to try the tools."
+msgstr ""
+"Aperçus illustratifs fondés sur un article publié. Ouvrez un résumé "
+"disponible ou configurez votre veille pour essayer les outils."
+
+
+#: templates/summarizer/home.html
+msgid "Understand"
+msgstr "Comprendre"
+
+
+#: templates/summarizer/home.html
+msgid "The question"
+msgstr "La question"
+
+
+#: templates/summarizer/home.html
+msgid "Can attention alone support a strong sequence-to-sequence model?"
+msgstr ""
+"L’attention seule peut-elle permettre un modèle performant de transformation"
+" de séquences ?"
+
+
+#: templates/summarizer/home.html
+msgid "The main idea"
+msgstr "L’idée principale"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"The Transformer replaces recurrence and convolution with attention. The "
+"paper evaluates it on translation tasks."
+msgstr ""
+"Le Transformer remplace la récurrence et la convolution par l’attention. "
+"L’article l’évalue sur des tâches de traduction."
+
+
+#: templates/summarizer/home.html
+msgid "A point to check"
+msgstr "Un point à vérifier"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Results on these benchmarks do not establish performance on every language "
+"or task."
+msgstr ""
+"Les résultats sur ces tests ne démontrent pas les performances pour toutes "
+"les langues ou toutes les tâches."
+
+
+#: templates/summarizer/home.html
+msgid "Editorial reading example based on the abstract."
+msgstr "Exemple de lecture rédigé à partir de l’abstract."
+
+
+#: templates/summarizer/home.html
+msgid "Read the source"
+msgstr "Lire la source"
+
+
+#: templates/summarizer/home.html
+msgid "Open a ready-to-read AI summary"
+msgstr "Ouvrir un résumé IA déjà disponible"
+
+
+#: templates/summarizer/home.html
+msgid "Explore your own paper"
+msgstr "Explorer votre propre article"
+
+
+#: templates/summarizer/home.html
+msgid "Check references"
+msgstr "Vérifier les références"
+
+
+#: templates/summarizer/home.html
+msgid "A preprint has a published version"
+msgstr "Une prépublication a été publiée"
+
+
+#: templates/summarizer/home.html
+msgid "Your reference"
+msgstr "Votre référence"
+
+
+#: templates/summarizer/home.html
+msgid "Publication to review"
+msgstr "Publication à consulter"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Review the published record and update your bibliography when appropriate."
+msgstr ""
+"Consultez la publication et mettez à jour votre bibliographie si nécessaire."
+
+
+#: templates/summarizer/home.html
+msgid "Illustrative check, verified against the proceedings."
+msgstr "Vérification illustrative, confirmée dans les actes de la conférence."
+
+
+#: templates/summarizer/home.html
+msgid "Publication record"
+msgstr "Fiche de publication"
+
+
+#: templates/summarizer/home.html
+msgid "Explore Bibliography Check"
+msgstr "Découvrir Bibliography Check"
+
+
+#: templates/summarizer/home.html
+msgid "Keep up"
+msgstr "Suivre son domaine"
+
+
+#: templates/summarizer/home.html
+msgid "Your reading list, in your inbox"
+msgstr "Votre sélection de lectures, par email"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"A model built around attention for sequence-to-sequence learning. This paper"
+" introduces the Transformer and evaluates machine translation performance."
+msgstr ""
+"Un modèle fondé sur l’attention pour l’apprentissage de séquences. Cet "
+"article présente le Transformer et évalue ses performances en traduction "
+"automatique."
+
+
+#: templates/summarizer/home.html
+msgid "Source paper"
+msgstr "Article source"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Example email layout using a 2017 paper. Your digest follows newly announced"
+" papers in your selected categories."
+msgstr ""
+"Exemple d’email utilisant un article de 2017. Votre veille suit les nouveaux"
+" articles des catégories sélectionnées."
+
+
+#: templates/summarizer/home.html
+msgid "For the research you do every day"
+msgstr "Pour votre recherche au quotidien"
+
+
+#: templates/summarizer/home.html
+msgid "Go further with Premium"
+msgstr "Allez plus loin avec Premium"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"Check your bibliography, find related work missing from your draft, and "
+"monitor research close to your project."
+msgstr ""
+"Vérifiez votre bibliographie, trouvez les travaux proches absents de votre "
+"manuscrit et surveillez les publications liées à votre projet."
+
+
+#: templates/summarizer/home.html
+msgid "Bibliography Check and What Did I Miss?"
+msgstr "Bibliography Check et What Did I Miss?"
+
+
+#: templates/summarizer/home.html
+msgid "Scoop Watch and a digest ranked for your research"
+msgstr "Scoop Watch et une veille classée selon votre recherche"
+
+
+#: templates/summarizer/home.html
+msgid "Our most capable model and no daily summary limit"
+msgstr "Notre modèle le plus performant, sans limite quotidienne de résumés"
+
+
+#: templates/summarizer/home.html
+msgid "See Premium tools"
+msgstr "Voir les outils Premium"
+
+
+#: templates/summarizer/home.html
+msgid "Payments handled by Stripe"
+msgstr "Paiements gérés par Stripe"
+
+
+#: templates/summarizer/home.html
+msgid "Grounded in scientific literature"
+msgstr "Ancré dans la littérature scientifique"
+
+
+#: templates/summarizer/home.html
+msgid "Research papers, with their sources"
+msgstr "Des articles scientifiques, avec leurs sources"
+
+
+#: templates/summarizer/home.html
+msgid "Journals via DOI"
+msgstr "Revues via DOI"
+
+
+#: templates/summarizer/home.html
+msgid ""
+"When a license permits it, summaries use the full text. Otherwise they use "
+"the abstract and say so. AI output is a starting point: check the original "
+"paper for your research decisions."
+msgstr ""
+"Lorsque la licence le permet, les résumés s’appuient sur le texte intégral. "
+"Sinon, ils utilisent l’abstract et le précisent. L’IA est un point de départ"
+" : consultez l’article original pour vos décisions de recherche."
+
+
+#: templates/summarizer/home.html
+msgid "How the summaries work"
+msgstr "Comment fonctionnent les résumés"
+
+
+#: templates/summarizer/home.html
+msgid "Meet the researcher behind SummarizePaper"
+msgstr "Découvrez le chercheur derrière SummarizePaper"
+
+
+#: templates/summarizer/home.html
+msgid "Explore the open-source code"
+msgstr "Explorer le code open source"
+
+
+#: templates/summarizer/home.html
+msgid "Recently summarized research papers"
+msgstr "Articles scientifiques récemment résumés"
+
+
+#: templates/summarizer/home.html
+msgid "Read the summary"
+msgstr "Lire le résumé"
+
+
+msgid "Enter a paper link, DOI or research topic."
+msgstr "Saisissez un lien d’article, un DOI ou un sujet de recherche."
