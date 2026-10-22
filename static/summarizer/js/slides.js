@@ -92,6 +92,26 @@
     }).catch(function (error) { status.textContent = error.message === 'conflict' ? deck.dataset.conflict : deck.dataset.error; })
       .finally(function () { saving = false; saveButton.disabled = !dirty; });
   });
+  var powerpointButton = document.getElementById('deck-powerpoint');
+  if (powerpointButton) powerpointButton.addEventListener('click', function () {
+    if (powerpointButton.disabled || !fitAll()) return;
+    powerpointButton.disabled = true; status.textContent = deck.dataset.exporting;
+    fetch(deck.dataset.powerpointUrl, {method: 'POST', credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value},
+      body: JSON.stringify({revision: deck.dataset.revision, pages: collect()})
+    }).then(function (r) {
+      if (r.status === 409) throw new Error(deck.dataset.conflict);
+      if (!r.ok) return r.json().then(function (data) { throw new Error(data.message || deck.dataset.exportError); });
+      return r.blob();
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = 'SummarizePaper-JournalClub.pptx';
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      status.textContent = deck.dataset.exported;
+    }).catch(function (error) { status.textContent = error.message || deck.dataset.exportError; })
+      .finally(function () { powerpointButton.disabled = false; });
+  });
   document.getElementById('deck-notes').addEventListener('change', function () { deck.classList.toggle('hide-notes', !this.checked); });
   function show(index) {
     current = Math.max(0, Math.min(items.length - 1, index));

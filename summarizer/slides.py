@@ -14,7 +14,7 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.views.decorators.cache import never_cache
@@ -218,3 +218,34 @@ def slides_save(request, arxiv_id):
     except (ValueError, TypeError, AttributeError):
         return JsonResponse({'status': 'invalid'}, status=400)
     return JsonResponse({'status': 'saved', 'revision': revision})
+
+
+@never_cache
+@require_POST
+def slides_powerpoint(request, arxiv_id):
+    from . import slides_pptx
+    if not access.is_paid(request.user):
+        return JsonResponse({'status': 'premium'}, status=403)
+    if len(request.body) > 120000:
+        return JsonResponse({'status': 'invalid'}, status=400)
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
+    row = Generated.objects.filter(kind='slides', key=arxiv_id, lang=request.LANGUAGE_CODE, status='done').first()
+    if paper is None or row is None:
+        raise Http404
+    try:
+        payload = json.loads(request.body)
+        _, revision = editable_pages(request.user, arxiv_id, request.LANGUAGE_CODE, paper, row.data())
+        if payload.get('revision') != revision:
+            return JsonResponse({'status': 'conflict'}, status=409)
+        pages = validate_pages(payload.get('pages'), original_pages(paper, row.data()))
+    except (ValueError, TypeError, AttributeError):
+        return JsonResponse({'status': 'invalid'}, status=400)
+    try:
+        data = slides_pptx.render_pptx(pages, arxiv_id, row.data().get('license', ''), paper.title)
+    except slides_pptx.ExportError as error:
+        return JsonResponse({'status': 'unavailable', 'message': str(error)}, status=503)
+    import re
+    name = re.sub(r'[^a-zA-Z0-9._-]', '-', arxiv_id)[:80]
+    response = HttpResponse(data, content_type=slides_pptx.MIME)
+    response['Content-Disposition'] = 'attachment; filename="SummarizePaper-JournalClub-%s.pptx"' % name
+    return response

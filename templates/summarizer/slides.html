@@ -25,15 +25,17 @@
       <button type="button" class="btn" id="deck-edit" aria-pressed="false">{% trans 'Edit slides' %}</button>
       <button type="button" class="btn btn-ghost" id="deck-save" disabled>{% trans 'Save my version' %}</button>
       <button type="button" class="btn btn-ghost" id="deck-present">{% trans 'Present full screen' %}</button>
+      <button type="button" class="btn btn-ghost" id="deck-powerpoint">{% trans 'Download PowerPoint' %} · .pptx</button>
       <button type="button" class="btn btn-ghost" id="deck-pdf">{% trans 'Save as PDF' %} · 16:9</button>
       <label><input type="checkbox" id="deck-notes" checked> {% trans 'Show the notes' %}</label>
     </div>
     <p class="muted no-print">{% trans 'Edit the text below each slide. Move figures with the position control and adjust their size. Your saved version is private.' %}</p>
+    <p class="muted no-print">{% trans 'PowerPoint includes your current edits and speaker notes, with separate editable text and movable figures.' %}</p>
     <p id="deck-status" role="status" class="no-print"></p>
     <p id="deck-overflow" role="alert" class="error no-print" hidden>{% trans 'Some text does not fit. Shorten it or choose a smaller text size before exporting.' %}</p>
     {% csrf_token %}
     {% if deck.abstract_only %}<p class="error no-print">{% trans "This paper's license only lets us read its abstract: the slides are based on the abstract alone." %}</p>{% endif %}
-    <div class="deck" id="deck" data-save-url="{% url 'slides_save' arxiv_id %}" data-revision="{{ deck_revision }}"
+    <div class="deck" id="deck" data-powerpoint-url="{% url 'slides_powerpoint' arxiv_id %}" data-exporting="{% trans 'Preparing PowerPoint…' %}" data-exported="{% trans 'PowerPoint downloaded. Text and figures can be edited in PowerPoint.' %}" data-export-error="{% trans 'PowerPoint export failed. Your changes remain on this page; please try again.' %}" data-save-url="{% url 'slides_save' arxiv_id %}" data-revision="{{ deck_revision }}"
       data-image-error="{% trans 'A figure has not loaded. Wait a moment or reload before exporting.' %}" data-saving="{% trans 'Saving…' %}" data-saved="{% trans 'Your version is saved.' %}"
       data-unsaved="{% trans 'Unsaved changes' %}" data-error="{% trans 'Saving failed. Your changes remain on this page; please try again.' %}"
       data-conflict="{% trans 'This presentation changed in another tab. Copy your edits before reloading.' %}">

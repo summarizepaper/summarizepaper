@@ -7275,6 +7275,48 @@ msgstr ""
 "PDF utilise un format de présentation 16:9, avec une slide par page et sans "
 "les notes."
 
+msgid "Download PowerPoint"
+msgstr "Télécharger PowerPoint"
+
+msgid "Preparing PowerPoint…"
+msgstr "Préparation du PowerPoint…"
+
+msgid "PowerPoint downloaded. Text and figures can be edited in PowerPoint."
+msgstr ""
+"PowerPoint téléchargé. Les textes et les figures sont modifiables dans "
+"PowerPoint."
+
+msgid ""
+"PowerPoint export failed. Your changes remain on this page; please try "
+"again."
+msgstr ""
+"L’export PowerPoint a échoué. Vos modifications restent sur cette page ; "
+"réessayez."
+
+msgid ""
+"A figure could not be included. Please try the PowerPoint export again "
+"later."
+msgstr ""
+"Une figure n’a pas pu être intégrée. Réessayez l’export PowerPoint un peu "
+"plus tard."
+
+msgid "Figure %(number)s of the paper (%(license)s)"
+msgstr "Figure %(number)s de l’article (%(license)s)"
+
+msgid ""
+"PowerPoint includes your current edits and speaker notes, with separate "
+"editable text and movable figures."
+msgstr ""
+"Le PowerPoint reprend vos modifications actuelles et les notes du "
+"présentateur, avec des textes éditables et des figures déplaçables."
+
+msgid ""
+"Download the PowerPoint (.pptx) to continue editing text, moving figures and"
+" using speaker notes in PowerPoint."
+msgstr ""
+"Téléchargez le PowerPoint (.pptx) pour continuer à modifier les textes, "
+"déplacer les figures et utiliser les notes du présentateur dans PowerPoint."
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

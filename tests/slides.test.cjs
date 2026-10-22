@@ -29,17 +29,19 @@ function setup() {
   }});
   const deck = element({dataset: {revision: 'r1', saveUrl: '/save/', saved: 'Saved', saving: 'Saving', unsaved: 'Unsaved',
     error: 'Error', conflict: 'Conflict', imageError: 'Missing image'}, querySelectorAll: selector => selector === '.slide-item' ? [item] : []});
-  const ids = Object.fromEntries(['deck-status', 'deck-save', 'deck-pdf', 'deck-exit', 'deck-edit', 'deck-notes', 'deck-overflow', 'deck-present']
+  const ids = Object.fromEntries(['deck-status', 'deck-save', 'deck-pdf', 'deck-exit', 'deck-edit', 'deck-notes', 'deck-overflow', 'deck-present', 'deck-powerpoint']
     .map(id => [id, element()])); ids.deck = deck;
   const pageEvents = {}, requests = [];
   let response = () => Promise.resolve({ok: true, status: 200, json: () => Promise.resolve({revision: 'r2'})});
-  let prints = 0;
+  let prints = 0, downloads = 0;
+  deck.dataset.powerpointUrl = '/powerpoint/'; deck.dataset.exported = 'Downloaded'; deck.dataset.exportError = 'Export failed';
   vm.runInNewContext(source, {document: {getElementById: id => ids[id], querySelector: () => ({value: 'csrf-test'}),
-    createElement: () => element(), addEventListener() {}},
+    createElement: () => element({click() {downloads++;}, remove() {}}), body: {appendChild() {}}, addEventListener() {}},
     window: {addEventListener: (name, fn) => {pageEvents[name] = fn;}, print: () => {prints++;}},
-    fetch: (url, options) => {requests.push({url, options}); return response();}, setTimeout, Promise});
+    fetch: (url, options) => {requests.push({url, options}); return response();},
+    URL: {createObjectURL: () => 'blob:test', revokeObjectURL() {}}, setTimeout: () => {}, Promise});
   return {ids, inputs, item, body, slide, heading, bullets, deck, notes, requests, pageEvents,
-    response(fn) {response = fn;}, prints: () => prints,
+    response(fn) {response = fn;}, prints: () => prints, downloads: () => downloads,
     edit(name, value) {inputs[name].value = value; inputs[name].handlers.input();}};
 }
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -79,4 +81,23 @@ test('PDF export waits for readiness and blocks text that would be clipped', asy
   s.body.scrollHeight = 1000; s.edit('bullets', 'Much too much text');
   assert.equal(s.ids['deck-overflow'].hidden, false);
   s.ids['deck-pdf'].handlers.click(); await tick(); assert.equal(s.prints(), 1);
+});
+
+test('PowerPoint download includes unsaved edits and retains dirty state without saving the page', async () => {
+  const s = setup(); s.edit('title', 'Unsaved title');
+  s.response(() => Promise.resolve({ok: true, blob: () => Promise.resolve({})}));
+  s.ids['deck-powerpoint'].handlers.click(); await tick();
+  assert.equal(s.requests.length, 1); assert.equal(s.requests[0].url, '/powerpoint/');
+  assert.equal(JSON.parse(s.requests[0].options.body).pages[0].title, 'Unsaved title');
+  assert.equal(s.downloads(), 1); assert.equal(s.ids['deck-status'].textContent, 'Downloaded');
+  assert.equal(s.ids['deck-save'].disabled, false);
+  assert.equal(s.ids['deck-powerpoint'].disabled, false);
+});
+
+test('PowerPoint figure failure explains the error and preserves text for a retry', async () => {
+  const s = setup(); s.edit('title', 'My text');
+  s.response(() => Promise.resolve({ok: false, status: 503, json: () => Promise.resolve({message: 'Figure unavailable'})}));
+  s.ids['deck-powerpoint'].handlers.click(); await tick();
+  assert.equal(s.downloads(), 0); assert.equal(s.ids['deck-status'].textContent, 'Figure unavailable');
+  assert.equal(s.inputs.title.value, 'My text'); assert.equal(s.ids['deck-powerpoint'].disabled, false);
 });
