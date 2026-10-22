@@ -714,7 +714,7 @@ class TeamsTests(ToolsTestCase):
 
 
 class SlidesTests(ToolsTestCase):
-    ANSWER = {'slides': [{'title': 'Context', 'bullets': ['Hot planets', ''], 'figure': 2, 'notes': 'Say it.'},
+    ANSWER = {'title': 'Clouds on a hot planet', 'slides': [{'title': 'Context', 'bullets': ['Hot planets', ''], 'figure': 2, 'notes': 'Say it.'},
                          {'title': 'Again', 'bullets': ['Same figure'], 'figure': 2},
                          {'title': 'Made up', 'bullets': ['x'], 'figure': 9}, {'bullets': ['no title']}],
               'strengths': ['Big telescope'], 'limitations': ['One planet'], 'questions': ['Why?']}

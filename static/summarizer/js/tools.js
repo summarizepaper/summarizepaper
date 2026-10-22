@@ -49,7 +49,7 @@
 
   // A waiting panel (templates/summarizer/working.html): spinner, the work's real steps, elapsed time.
   // Shows the panel and follows result `id`; calls done(data) or shows the failure message.
-  function track(panel, id, done) {
+  function track(panel, id, done, failed) {
     panel.hidden = false;
     panel.classList.remove('is-failed');
     var tracking = Date.now();
@@ -83,6 +83,7 @@
           if (json.status === 'failed' || Date.now() - tracking > 600000) {
             clearInterval(timer);
             panel.classList.add('is-failed');
+            if (failed) failed();
             return;
           }
           setTimeout(tick, 2500);

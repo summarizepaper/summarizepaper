@@ -15,6 +15,25 @@
     <p class="lead">{{ authors }} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
 
+  {% if paid %}
+    <form id="deck-language-form" class="deck-language no-print" data-start-url="{% url 'slides_start' arxiv_id %}"
+      data-error="{% trans 'The presentation could not be prepared. Please try again.' %}"
+      data-return-url="{{ deck_return_url }}"{% if row and row.status == 'pending' %} data-pending-id="{{ row.pk }}"{% endif %}>
+      {% csrf_token %}
+      <label for="deck-language">{% trans 'Slide language' %}</label>
+      <select id="deck-language" name="deck_lang">{% for code, label in deck_languages %}<option value="{{ code }}"{% if code == deck_lang %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      <button type="submit" class="btn" id="deck-go">{% trans 'Generate slides in this language' %}</button>
+    </form>
+    <p class="muted no-print">{% trans 'Choose the language before generating. It applies to titles, text, speaker notes and exports. Labels inside the original figures are unchanged.' %}</p>
+    <p class="error no-print" id="deck-language-error" role="alert" hidden></p>
+    {% if legacy_deck %}<p class="notice no-print">{% trans 'This is an earlier presentation. Generate a new language version for consistent text; your previous presentation and edits are kept.' %}</p>{% endif %}
+    {% if previous_deck_url %}<p class="no-print"><a href="{{ previous_deck_url }}">{% trans 'Open my previous presentation and edits' %}</a></p>{% endif %}
+    {% trans 'Writing the slides' as working_title %}
+    {% trans 'usually about a minute' as working_time %}
+    {% include 'summarizer/working.html' with working_id='deck-working' working_steps=steps working_started=row.updated %}
+    <script defer src="{% static_v 'summarizer/js/slides-language.js' %}"></script>
+  {% endif %}
+
   {% if not paid %}
   <div class="upsell">
     <p><strong>{% trans 'Your journal club presentation, ready in a minute.' %}</strong> {% trans 'About ten slides with the figures of the paper when its license allows it, what to say on each one, the strengths and limits of the paper, and questions to start the discussion. Present it full screen or save it as PDF.' %}</p>
@@ -35,13 +54,13 @@
     <p id="deck-overflow" role="alert" class="error no-print" hidden>{% trans 'Some text does not fit. Shorten it or choose a smaller text size before exporting.' %}</p>
     {% csrf_token %}
     {% if deck.abstract_only %}<p class="error no-print">{% trans "This paper's license only lets us read its abstract: the slides are based on the abstract alone." %}</p>{% endif %}
-    <div class="deck" id="deck" data-powerpoint-url="{% url 'slides_powerpoint' arxiv_id %}" data-exporting="{% trans 'Preparing PowerPoint…' %}" data-exported="{% trans 'PowerPoint downloaded. Text and figures can be edited in PowerPoint.' %}" data-export-error="{% trans 'PowerPoint export failed. Your changes remain on this page; please try again.' %}" data-save-url="{% url 'slides_save' arxiv_id %}" data-revision="{{ deck_revision }}"
+    <div class="deck" id="deck" data-export-name="SummarizePaper-JournalClub-{{ deck_lang }}.pptx" data-powerpoint-url="{{ powerpoint_url }}" data-exporting="{% trans 'Preparing PowerPoint…' %}" data-exported="{% trans 'PowerPoint downloaded. Text and figures can be edited in PowerPoint.' %}" data-export-error="{% trans 'PowerPoint export failed. Your changes remain on this page; please try again.' %}" data-save-url="{{ save_url }}" data-revision="{{ deck_revision }}"
       data-image-error="{% trans 'A figure has not loaded. Wait a moment or reload before exporting.' %}" data-saving="{% trans 'Saving…' %}" data-saved="{% trans 'Your version is saved.' %}"
       data-unsaved="{% trans 'Unsaved changes' %}" data-error="{% trans 'Saving failed. Your changes remain on this page; please try again.' %}"
       data-conflict="{% trans 'This presentation changed in another tab. Copy your edits before reloading.' %}">
       {% for s in pages %}
       <article class="slide-item" data-slide-index="{{ forloop.counter0 }}">
-        <div class="slide-frame"><section class="slide{% if s.kind == 'title' %} slide-title{% endif %}" data-kind="{{ s.kind }}" data-layout="{{ s.layout }}" style="--figure-share:{{ s.figure_size }}%; --slide-font:{{ s.text_size }}px">
+        <div class="slide-frame">{% language deck_lang %}<section lang="{{ deck_lang }}" class="slide{% if s.kind == 'title' %} slide-title{% endif %}" data-kind="{{ s.kind }}" data-layout="{{ s.layout }}" style="--figure-share:{{ s.figure_size }}%; --slide-font:{{ s.text_size }}px">
           <h2 data-preview-title>{{ s.title }}</h2>
           <div class="slide-body{% if s.figure %} with-figure{% endif %}{% if s.kind == 'columns' %} two-columns{% endif %}">
             <div class="slide-copy">{% if s.kind == 'columns' %}<h3>{% trans 'Strengths' %}</h3>{% endif %}<ul data-preview-bullets>{% for b in s.bullets %}<li>{{ b }}</li>{% endfor %}</ul></div>
@@ -49,7 +68,7 @@
             {% if s.figure %}<figure><img src="{{ s.figure.url }}" alt="{{ s.figure.caption }}" loading="eager"><figcaption>{% blocktrans with n=s.figure.number license=deck.license %}Figure {{ n }} of the paper (arXiv, {{ license }}){% endblocktrans %}</figcaption></figure>{% endif %}
           </div>
           <footer class="slide-credit">SummarizePaper · {{ arxiv_id|paper_ref }} <span>{{ forloop.counter }} / {{ pages|length }}</span></footer>
-        </section></div>
+        </section>{% endlanguage %}</div>
         <p class="speaker-notes no-print" data-preview-notes{% if not s.notes %} hidden{% endif %}>{{ s.notes }}</p>
         <div class="slide-editor no-print">
           <label>{% trans 'Slide title' %}<input data-edit="title" maxlength="300" value="{{ s.title }}"></label>
@@ -71,29 +90,8 @@
   {% else %}
     <div class="card section-card" id="deck-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
       <p>{% trans 'The slides are written from the paper. It takes about a minute.' %}</p>
-      <button type="button" class="btn" id="deck-go">{% trans 'Write the slides' %}</button>
-      {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
+      {% if row and row.status == 'failed' %}<p class="error">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
     </div>
-    {% trans 'Writing the slides' as working_title %}
-    {% trans 'usually about a minute' as working_time %}
-    {% include 'summarizer/working.html' with working_id='deck-working' working_steps=steps working_started=row.updated %}
-    <script>
-    window.addEventListener('DOMContentLoaded', function () {
-      var start = document.getElementById('deck-start');
-      var panel = document.getElementById('deck-working');
-      function follow(id) {
-        start.hidden = true;
-        SP.track(panel, id, function () { location.reload(); });
-      }
-      document.getElementById('deck-go').addEventListener('click', function () {
-        panel.dataset.started = '';
-        SP.post('/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id|escapejs }}/start/', {}).then(function (json) {
-          if (json.id) follow(json.id);
-        });
-      });
-      {% if row and row.status == 'pending' %}follow({{ row.pk }});{% endif %}
-    });
-    </script>
   {% endif %}
 </div>
 {% endblock %}

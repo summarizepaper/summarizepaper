@@ -10,7 +10,7 @@ from urllib.parse import urljoin, urlsplit
 
 import requests
 from django.core.cache import cache
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, get_language
 from lxml import etree
 from PIL import Image, ImageFont
 from pptx import Presentation
@@ -171,6 +171,7 @@ def textbox(slide, name, lines, rect, size, *, bold=False, centered=False, bulle
     for i, text in enumerate(lines):
         paragraph = frame.paragraphs[0] if i == 0 else frame.add_paragraph()
         paragraph.text = clean_text(text)
+        paragraph.font._rPr.set('lang', 'fr-FR' if get_language() == 'fr' else 'en-US')
         paragraph.font.name = '+mj-lt' if bold else '+mn-lt'
         paragraph.font.size = Pt(size)
         paragraph.font.bold = bold
@@ -226,6 +227,7 @@ def render_pptx(pages, arxiv_id, license_label, title):
     presentation.slide_height = Inches(7.5)
     presentation.core_properties.title = clean_text(title)
     presentation.core_properties.author = 'SummarizePaper'
+    presentation.core_properties.language = get_language() or 'en'
     for number, page in enumerate(pages, 1):
         slide = presentation.slides.add_slide(presentation.slide_layouts[6])
         slide.background.fill.solid()
@@ -261,7 +263,10 @@ def render_pptx(pages, arxiv_id, license_label, title):
         textbox(slide, 'Source', ['SummarizePaper · ' + sources.label(arxiv_id)], (.58, 7.04, 10.8, .24), 10, muted=True)
         textbox(slide, 'Slide number', ['%s / %s' % (number, len(pages))], (11.8, 7.04, .95, .24), 10, muted=True)
         if page.get('notes'):
-            slide.notes_slide.notes_text_frame.text = clean_text(page['notes'])
+            notes = slide.notes_slide.notes_text_frame
+            notes.text = clean_text(page['notes'])
+            for paragraph in notes.paragraphs:
+                paragraph.font._rPr.set('lang', 'fr-FR' if get_language() == 'fr' else 'en-US')
     output = io.BytesIO()
     presentation.save(output)
     return output.getvalue()

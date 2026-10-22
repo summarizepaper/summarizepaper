@@ -1,4 +1,10 @@
 .deck-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.deck-language { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:0 0 12px; }
+.deck-language label { font-weight:600; }
+.page .deck-language select { margin:0; width:auto; }
+.deck-language[aria-busy=true] button::before { content:""; display:inline-block; width:12px; height:12px; margin-right:8px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:deck-language-spin .8s linear infinite; }
+@keyframes deck-language-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) { .deck-language[aria-busy=true] button::before { animation:none; } }
 .deck-toolbar label { font-size:14px; }
 .deck-page #deck { display:grid; gap:28px; }
 .slide-item { min-width:0; }

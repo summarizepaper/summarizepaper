@@ -167,6 +167,14 @@ are made for previews. Active-filter chips remove only the chosen filter and res
 
 ### Journal club editor and PDF layout
 
+The slide language is chosen explicitly (French/English), independently from the interface language.
+`deck_lang` and `deck_version` pin preview, save and PowerPoint URLs to the same content. Generation
+uses `slides_v2` and requires a translated presentation title; every generated text field is requested
+in that language. Built-in titles, figure credits, PowerPoint metadata and proofing language also follow
+the deck language. Original image labels and author names remain unchanged. Legacy `slides` /
+`slides_edit` records remain available through the previous-presentation link; new private copies use
+`slides_edit_v2`, so upgrading never overwrites an earlier edited presentation.
+
 Journal club keeps the generated deck shared and saves each Premium reader's text, notes and layout
 in a separate `Generated(kind='slides_edit')` row keyed by user, paper and language. Private results
 are owner-only and page/save responses are never cached. A revision hash rejects stale-tab saves

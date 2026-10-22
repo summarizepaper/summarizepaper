@@ -105,7 +105,7 @@
       return r.blob();
     }).then(function (blob) {
       var url = URL.createObjectURL(blob), link = document.createElement('a');
-      link.href = url; link.download = 'SummarizePaper-JournalClub.pptx';
+      link.href = url; link.download = deck.dataset.exportName || 'SummarizePaper-JournalClub.pptx';
       document.body.appendChild(link); link.click(); link.remove();
       setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
       status.textContent = deck.dataset.exported;

@@ -14,10 +14,12 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
-from django.http import Http404, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.views.decorators.cache import never_cache
+from django.utils import translation
+from django.urls import reverse
 from django.utils.translation import gettext
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
@@ -29,16 +31,21 @@ from .models import ArxivPaper, Generated
 
 MAX_FIGURES = 12
 MAX_SLIDES = 12
+DECK_LANGUAGES = (('fr', 'Français'), ('en', 'English'))
+DECK_KIND = 'slides_v2'
 STEPS = [
     ('read', _('Reading the paper and its figures')),
     ('write', _('Writing the slides, the strengths and limits, and the questions')),
 ]
 
 PROMPT = """You prepare a journal club presentation of the paper above for researchers of the field. Write in {language}.
+Every title, bullet, speaker note, strength, limitation, discussion question and the presentation title must be in {language}.
+Translate the paper title for display, even when the source paper is in another language. Keep proper names, technical
+acronyms, numbers and scientific claims accurate. Do not mix French and English prose. Do not translate image pixels.
 Make 8 to 10 slides: context and question, what was done (method, data), the main results with their key numbers,
 how it compares with earlier work, and the take-home message. Keep each bullet under 20 words; no LaTeX, no markdown.
 {figures}Answer with a JSON object:
-{{"slides": [{{"title": "...", "bullets": ["3 to 5 bullets"], "figure": null or a figure number, "notes": "2 or 3 sentences
+{{"title": "paper title translated into {language}", "slides": [{{"title": "...", "bullets": ["3 to 5 bullets"], "figure": null or a figure number, "notes": "2 or 3 sentences
 to say while showing it"}}],
   "strengths": ["3 or 4 strengths"], "limitations": ["3 or 4 limitations or open doubts, including the ones the authors
 do not state"], "questions": ["4 to 6 questions to start the discussion"]}}"""
@@ -83,6 +90,9 @@ def write(arxiv_id, lang):
                            'each:\n%s\n' % '\n'.join('Figure %d: %s' % (f['number'], f['caption'][:300]) for f in shown))
         answer = generated.chat_json(PROMPT.format(language=generated.language_name(lang), figures=figure_list),
                                      paid=True, max_tokens=5000, system=context)
+        title = str(answer.get('title') or '').strip()
+        if not title:
+            raise generated.GenerationError('missing presentation title in the requested language')
         by_number = {f['number']: f for f in shown}
         slides, used = [], set()
         for s in answer.get('slides', [])[:MAX_SLIDES]:
@@ -98,9 +108,35 @@ def write(arxiv_id, lang):
             raise generated.GenerationError('no slides')
         lists = {k: [str(x).strip() for x in answer.get(k, []) if str(x).strip()][:6]
                  for k in ('strengths', 'limitations', 'questions')}
-        return dict(lists, slides=slides, license=sources.license_label(paper.license or ''),
+        return dict(lists, slides=slides, title=title, language=lang, generation_version=2, license=sources.license_label(paper.license or ''),
                     abstract_only='Only the title, authors and abstract are available' in context)
     return work
+
+
+def deck_language(request, values=None):
+    lang = (request.GET if values is None else values).get('deck_lang', request.LANGUAGE_CODE)
+    if lang not in dict(DECK_LANGUAGES):
+        raise ValueError('Unsupported slide language')
+    return lang
+
+
+def selected_row(request, arxiv_id, lang):
+    version = request.GET.get('deck_version')
+    if version not in (None, '1', '2'):
+        raise ValueError('Unsupported slide version')
+    rows = Generated.objects.filter(key=arxiv_id, lang=lang)
+    if version == '1':
+        return rows.filter(kind='slides').first()
+    current = rows.filter(kind=DECK_KIND).first()
+    return current if current is not None or version == '2' else rows.filter(kind='slides').first()
+
+
+def private_kind(deck):
+    return 'slides_edit_v2' if deck.get('generation_version') == 2 else 'slides_edit'
+
+
+def deck_url(name, arxiv_id, lang, version):
+    return reverse(name, args=[arxiv_id]) + '?' + urllib.parse.urlencode({'deck_lang': lang, 'deck_version': version})
 
 
 @never_cache
@@ -108,14 +144,25 @@ def slides_page(request, arxiv_id):
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
     if paper is None:
         raise Http404
+    try:
+        lang = deck_language(request)
+        row = selected_row(request, arxiv_id, lang) if access.is_paid(request.user) else None
+    except ValueError:
+        return HttpResponseBadRequest('Unsupported slide language or version')
     paid = access.is_paid(request.user)
-    row = Generated.objects.filter(kind='slides', key=arxiv_id, lang=request.LANGUAGE_CODE).first() if paid else None
     deck = row.data() if row is not None and row.status == 'done' else None
-    pages, revision = editable_pages(request.user, arxiv_id, request.LANGUAGE_CODE, paper, deck) if deck else ([], '')
+    pages, revision = editable_pages(request.user, arxiv_id, lang, paper, deck) if deck else ([], '')
+    version = '2' if row is None or row.kind == DECK_KIND else '1'
+    previous = paid and version == '2' and Generated.objects.filter(kind='slides', key=arxiv_id, lang=lang, status='done').exists()
     return render(request, 'summarizer/slides.html', {
         'paper': paper, 'arxiv_id': arxiv_id, 'paid': paid, 'row': row, 'steps': STEPS,
         'authors': ', '.join(a.name for a in paper.authors.all()[:6]) + (' et al.' if paper.authors.count() > 6 else ''),
-        'deck': deck, 'pages': pages, 'deck_revision': revision})
+        'deck': deck, 'pages': pages, 'deck_revision': revision, 'deck_lang': lang,
+        'deck_languages': DECK_LANGUAGES, 'legacy_deck': bool(deck and version == '1'),
+        'deck_return_url': deck_url('slides', arxiv_id, lang, version),
+        'previous_deck_url': deck_url('slides', arxiv_id, lang, '1') if previous else '',
+        'save_url': deck_url('slides_save', arxiv_id, lang, version),
+        'powerpoint_url': deck_url('slides_powerpoint', arxiv_id, lang, version)})
 
 
 @require_POST
@@ -124,9 +171,12 @@ def slides_start(request, arxiv_id):
         return JsonResponse({'status': 'premium'}, status=403)
     if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
         raise Http404
-    lang = request.LANGUAGE_CODE
-    row = generated.start('slides', arxiv_id, lang, write(arxiv_id, lang), force=request.POST.get('again') == '1')
-    return JsonResponse({'status': row.status, 'id': row.pk})
+    try:
+        lang = deck_language(request, request.POST)
+    except ValueError:
+        return JsonResponse({'status': 'invalid_language'}, status=400)
+    row = generated.start(DECK_KIND, arxiv_id, lang, write(arxiv_id, lang))
+    return JsonResponse({'status': row.status, 'id': row.pk, 'url': deck_url('slides', arxiv_id, lang, '2')})
 
 
 def edit_key(user, arxiv_id):
@@ -135,11 +185,12 @@ def edit_key(user, arxiv_id):
 
 def original_pages(paper, deck):
     authors = ', '.join(a.name for a in paper.authors.all()[:6]) + (' et al.' if paper.authors.count() > 6 else '')
-    pages = [dict(kind='title', title=paper.title, bullets=[authors], notes='', figure=None)]
+    pages = [dict(kind='title', title=deck.get('title') or paper.title, bullets=[authors], notes='', figure=None)]
     pages += [dict(s, kind='content') for s in deck['slides']]
-    pages += [dict(kind='columns', title=gettext('Strengths and limits'), bullets=deck['strengths'],
-                   secondary=deck['limitations'], notes='', figure=None),
-              dict(kind='discussion', title=gettext('For the discussion'), bullets=deck['questions'], notes='', figure=None)]
+    with translation.override(deck.get('language') or translation.get_language()):
+        pages += [dict(kind='columns', title=gettext('Strengths and limits'), bullets=deck['strengths'],
+                       secondary=deck['limitations'], notes='', figure=None),
+                  dict(kind='discussion', title=gettext('For the discussion'), bullets=deck['questions'], notes='', figure=None)]
     for page in pages:
         page.setdefault('notes', '')
         page.update(layout='right', figure_size=50, text_size=30)
@@ -147,8 +198,9 @@ def original_pages(paper, deck):
 
 
 def editable_pages(user, arxiv_id, lang, paper, deck):
-    pages = original_pages(paper, deck)
-    saved = Generated.objects.filter(kind='slides_edit', key=edit_key(user, arxiv_id), lang=lang, user=user).first()
+    with translation.override(lang):
+        pages = original_pages(paper, deck)
+    saved = Generated.objects.filter(kind=private_kind(deck), key=edit_key(user, arxiv_id), lang=lang, user=user).first()
     if saved:
         # Merge edits with trusted source figures. URLs, licensing and slide kind are never client-controlled.
         try:
@@ -199,20 +251,24 @@ def slides_save(request, arxiv_id):
     if len(request.body) > 120000:
         return JsonResponse({'status': 'invalid'}, status=400)
     try:
+        lang = deck_language(request)
         payload = json.loads(request.body)
         with transaction.atomic():
             User.objects.select_for_update().get(pk=request.user.pk)
             paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
-            row = Generated.objects.filter(kind='slides', key=arxiv_id, lang=request.LANGUAGE_CODE, status='done').first()
+            row = selected_row(request, arxiv_id, lang)
+            if row is not None and row.status != 'done':
+                row = None
             if paper is None or row is None:
                 raise Http404
-            current, revision = editable_pages(request.user, arxiv_id, request.LANGUAGE_CODE, paper, row.data())
+            current, revision = editable_pages(request.user, arxiv_id, lang, paper, row.data())
             if payload.get('revision') != revision:
                 return JsonResponse({'status': 'conflict'}, status=409)
-            pages = validate_pages(payload.get('pages'), original_pages(paper, row.data()))
+            with translation.override(lang):
+                pages = validate_pages(payload.get('pages'), original_pages(paper, row.data()))
             # Store only editable text/layout, without retaining client-supplied URLs or HTML.
             edits = [{k: v for k, v in p.items() if k in ('title', 'bullets', 'secondary', 'notes', 'layout', 'figure_size', 'text_size')} for p in pages]
-            Generated.objects.update_or_create(kind='slides_edit', key=edit_key(request.user, arxiv_id), lang=request.LANGUAGE_CODE,
+            Generated.objects.update_or_create(kind=private_kind(row.data()), key=edit_key(request.user, arxiv_id), lang=lang,
                 defaults={'user': request.user, 'status': 'done', 'content': json.dumps({'pages': edits})})
             revision = hashlib.sha256(json.dumps(pages, sort_keys=True).encode()).hexdigest()
     except (ValueError, TypeError, AttributeError):
@@ -229,23 +285,29 @@ def slides_powerpoint(request, arxiv_id):
     if len(request.body) > 120000:
         return JsonResponse({'status': 'invalid'}, status=400)
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
-    row = Generated.objects.filter(kind='slides', key=arxiv_id, lang=request.LANGUAGE_CODE, status='done').first()
-    if paper is None or row is None:
+    try:
+        lang = deck_language(request)
+        row = selected_row(request, arxiv_id, lang)
+    except ValueError:
+        return JsonResponse({'status': 'invalid_language'}, status=400)
+    if paper is None or row is None or row.status != 'done':
         raise Http404
     try:
         payload = json.loads(request.body)
-        _, revision = editable_pages(request.user, arxiv_id, request.LANGUAGE_CODE, paper, row.data())
+        _, revision = editable_pages(request.user, arxiv_id, lang, paper, row.data())
         if payload.get('revision') != revision:
             return JsonResponse({'status': 'conflict'}, status=409)
-        pages = validate_pages(payload.get('pages'), original_pages(paper, row.data()))
+        with translation.override(lang):
+            pages = validate_pages(payload.get('pages'), original_pages(paper, row.data()))
     except (ValueError, TypeError, AttributeError):
         return JsonResponse({'status': 'invalid'}, status=400)
     try:
-        data = slides_pptx.render_pptx(pages, arxiv_id, row.data().get('license', ''), paper.title)
+        with translation.override(lang):
+            data = slides_pptx.render_pptx(pages, arxiv_id, row.data().get('license', ''), pages[0]['title'])
     except slides_pptx.ExportError as error:
         return JsonResponse({'status': 'unavailable', 'message': str(error)}, status=503)
     import re
     name = re.sub(r'[^a-zA-Z0-9._-]', '-', arxiv_id)[:80]
     response = HttpResponse(data, content_type=slides_pptx.MIME)
-    response['Content-Disposition'] = 'attachment; filename="SummarizePaper-JournalClub-%s.pptx"' % name
+    response['Content-Disposition'] = 'attachment; filename="SummarizePaper-JournalClub-%s.pptx"' % (name + '-' + lang)
     return response
