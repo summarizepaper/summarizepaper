@@ -71,13 +71,14 @@
     {% csrf_token %}
     <i class="fas fa-search"></i>
     <input type="text" name="arxiv_id" value="{{ query }}" placeholder="{% trans 'Search for an article' %}" aria-label="{% trans 'Search for an article' %}">
-    <input type="hidden" name="src" value="{{ src }}">
+
     <button type="submit" class="btn">{% trans 'Search' %}</button>
   </form>
 
   {% if query %}
   <nav class="source-tabs" aria-label="{% trans 'Where to search' %}">
-    <a href="?q={{ query|urlencode }}" {% if src != 'open' %}class="active"{% endif %}>arXiv</a>
+    <a href="?q={{ query|urlencode }}&src=all" {% if src == 'all' %}class="active"{% endif %}>{% trans 'All sources' %}</a>
+    <a href="?q={{ query|urlencode }}&src=arxiv" {% if src == 'arxiv' %}class="active"{% endif %}>arXiv</a>
     <a href="?q={{ query|urlencode }}&src=open" {% if src == 'open' and not kind %}class="active"{% endif %}>{% trans 'Journals and preprints (open access)' %}</a>
     {% if src == 'open' %}
     <a href="?q={{ query|urlencode }}&src=open&type=journals" {% if kind == 'journals' %}class="active"{% endif %}>{% trans 'Journals only' %}</a>
@@ -86,7 +87,8 @@
   </nav>
   {% endif %}
 
-  {% if page_obj and src == 'open' %}
+  {% if failed and src == 'all' %}<p role="status">{% trans 'Some sources are temporarily unavailable. Results may be incomplete; please try again shortly.' %}</p>{% endif %}
+  {% if page_obj and src != 'arxiv' %}
   <div class="search-results-list">
     {% for paper in page_obj %}
     <div class="search-result card">
@@ -97,12 +99,13 @@
       <div class="search-result-metadata">
         {% if paper.venue %}<span>{{ paper.venue }}</span>{% endif %}
         {% if paper.published %}<span class="search-result-published">{{ paper.published }}</span>{% endif %}
-        {% if paper.open %}
+        {% if paper.arxiv_result %}<span>{% trans 'Open paper' %}</span>
+        {% elif paper.open %}
         <span class="search-result-access open" title="{{ paper.license }}">{% trans 'Full text summarized' %}</span>
         {% else %}
         <span class="search-result-access" title="{{ paper.license|default:_('No open license') }}">{% trans 'Summary from the abstract' %}</span>
         {% endif %}
-        {% if paper.arxiv_id %}<span class="search-result-arxiv-id"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.arxiv_id }}/">{% trans 'Also on arXiv' %}</a></span>{% endif %}
+        {% if paper.arxiv_id and not paper.arxiv_result %}<span class="search-result-arxiv-id"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.arxiv_id }}/">{% trans 'Also on arXiv' %}</a></span>{% endif %}
       </div>
     </div>
     {% endfor %}
@@ -124,22 +127,14 @@
     {% endfor %}
   </div>
 
-  <nav class="pagination">
-    {% if page_obj.has_previous %}
-      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page=1">&laquo; {% trans 'first' %}</a>
-      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
-    {% endif %}
-    <span class="current-page">{% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}
-      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
-      <a href="?q={{ query|urlencode }}{% if src == 'open' %}&src=open&type={{ kind }}{% endif %}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
-    {% endif %}
-  </nav>
+
 
   {% else %}
   <div class="no-results card">
     <h2>{% trans 'No results found.' %}</h2>
-    {% if src == 'open' %}
+    {% if src == 'all' %}
+    <p>{% trans 'Try another title, topic, paper link, arXiv ID or DOI.' %}</p>
+    {% elif src == 'open' %}
     {% if failed %}<p>{% trans 'The search of journals and preprint servers is not responding right now. Please try again in a moment, or paste the DOI of the paper.' %}</p>{% endif %}
     <p>{% trans 'Only open-access papers are listed. You can also paste a DOI, or a bioRxiv, medRxiv, HAL, OSF or PubMed link in the search field.' %}</p>
     {% else %}
@@ -147,6 +142,19 @@
     <p>{% trans 'You can also use field codes to search for a specific field: "au:" for authors, "ti:" for titles, "abs:" for abstracts, "co:" for comments, "jr:" for journal reference,"cat:" for category, and "id:" for ID.' %}</p>
     {% endif %}
   </div>
+  {% endif %}
+  {% if page_obj %}
+  <nav class="pagination">
+    {% if page_obj.has_previous %}
+      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page=1">&laquo; {% trans 'first' %}</a>
+      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
+    {% endif %}
+    <span class="current-page">{% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
+      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
+    {% endif %}
+  </nav>
   {% endif %}
 </div>
 {% endblock %}

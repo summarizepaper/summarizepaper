@@ -32,14 +32,7 @@
         <button type="submit" id="submit-button" class="btn">{% trans 'Explore a paper' %}</button>
       </div>
       <p id="search-help" class="home-fine">{% trans 'Start free. No credit card required. Daily limits apply.' %}</p>
-      <details class="home-search-options">
-        <summary>{% trans 'Search options' %}</summary>
-        <fieldset><legend>{% trans 'Where to search' %}</legend>
-          <label><input type="radio" name="src" value="arxiv" checked> arXiv</label>
-          <label><input type="radio" name="src" value="open"> {% trans 'Journals and preprints (open access)' %}</label>
-        </fieldset>
-        <p>{% trans 'Paste an arXiv ID, DOI, bioRxiv, medRxiv, HAL, OSF or PubMed link. For arXiv searches, use au: for authors, ti: for titles, AND, OR and ANDNOT to combine terms.' %}</p>
-      </details>
+      <p class="home-fine">{% trans 'Search arXiv, journals and preprints together. Paper links, arXiv IDs and DOIs are recognized automatically.' %}</p>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
     </form>
     <div class="home-actions">

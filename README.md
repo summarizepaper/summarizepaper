@@ -125,6 +125,13 @@ Additional Umami events: `home_search_submit` (nonempty search attempt), `home_e
 Measure distinct visitors reaching a result or saving a digest before examining Premium conversion.
 Result views can recur, and digest configuration is not proof that an email was delivered.
 
+Homepage search now defaults to a combined arXiv and journal/preprint search. Both providers run
+concurrently, results are interleaved and deduplicated by DOI/arXiv identity, and successful searches
+are cached for six hours (partial failures for one minute). Partial results carry an explicit notice.
+Existing source-specific result URLs remain available as optional filters. arXiv IDs, abs/pdf/html
+links, versions and legacy archive IDs open directly; DOI and other supported identifiers retain
+the existing resolver. A fresh search from either page searches all sources by default.
+
 ## Deployment
 
 `git push heroku master`. The `release` phase of the Procfile applies migrations.

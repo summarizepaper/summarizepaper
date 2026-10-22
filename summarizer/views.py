@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, citations, digest, homepage, library, mailcheck, reading, similar, sources, exports
+from summarizer import access, accounts, citations, digest, homepage, unified_search, library, mailcheck, reading, similar, sources, exports
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -213,12 +213,20 @@ def search_results(request):
     except (TypeError, ValueError):
         page_num = 1
 
-    src = 'open' if request.GET.get('src') == 'open' else 'arxiv'
+    src = request.GET.get('src') if request.GET.get('src') in ('open', 'arxiv') else 'all'
     kind = request.GET.get('type') if request.GET.get('type') in sources.SEARCH_TYPES else ''
     if not query:
         # arXiv answers 400 to an empty search_query: show the empty search page instead.
         return render(request, 'summarizer/search_results.html', {'query': '', 'search': [], 'page_obj': None,
                                                                     'src': src, 'kind': kind})
+    if src == 'all':
+        results, failed = unified_search.search(query)
+        if page_num == 1:
+            Search.objects.create(query=query[:2000], user=request.user if request.user.is_authenticated else None,
+                                  lang=get_language())
+        return render(request, 'summarizer/search_results.html', {
+            'query': query, 'search': results, 'page_obj': Paginator(results, 10).get_page(page_num) if results else None,
+            'src': 'all', 'failed': failed})
     if src == 'open':
         return open_search_results(request, query, kind, page_num)
 
@@ -450,6 +458,11 @@ def summarize(request):
             return render(request, 'summarizer/home.html', {
                 **homepage.context(), 'error': _('Enter a paper link, DOI or research topic.')})
 
+        identifier = unified_search.arxiv_identifier(arxiv_id)
+        if identifier:
+            Search.objects.create(query=arxiv_id[:2000], user=request.user if request.user.is_authenticated else None, lang=lang)
+            return redirect('arxividpage', arxiv_id=identifier)
+
         regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
         pattern1 = re.compile(regex_pattern1)
         #pattern = 'cond-mat/0609158v1'
@@ -494,9 +507,9 @@ def summarize(request):
 
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
-            query_params = {'q': query, 'page': page}
-            if request.POST.get('src') == 'open':
-                query_params['src'] = 'open'
+            query_params = {'q': query, 'page': page, 'src': 'all'}
+            if request.POST.get('src') in ('open', 'arxiv'):
+                query_params['src'] = request.POST['src']
             url = f'/{lang}/search-results/?{urlencode(query_params)}'
             return redirect(url)
             #return redirect('search_results?q={}&page={}'.format(query, page))

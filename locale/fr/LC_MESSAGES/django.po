@@ -6745,3 +6745,28 @@ msgstr "Lire le résumé"
 
 msgid "Enter a paper link, DOI or research topic."
 msgstr "Saisissez un lien d’article, un DOI ou un sujet de recherche."
+
+msgid ""
+"Search arXiv, journals and preprints together. Paper links, arXiv IDs and "
+"DOIs are recognized automatically."
+msgstr ""
+"Recherchez dans arXiv, les revues et les prépublications en une seule fois. "
+"Les liens d’articles, identifiants arXiv et DOI sont reconnus "
+"automatiquement."
+
+msgid "All sources"
+msgstr "Toutes les sources"
+
+msgid "Open paper"
+msgstr "Ouvrir l’article"
+
+msgid ""
+"Some sources are temporarily unavailable. Results may be incomplete; please "
+"try again shortly."
+msgstr ""
+"Certaines sources sont temporairement indisponibles. Les résultats peuvent "
+"être incomplets ; réessayez dans quelques instants."
+
+msgid "Try another title, topic, paper link, arXiv ID or DOI."
+msgstr ""
+"Essayez un autre titre, sujet, lien d’article, identifiant arXiv ou DOI."
