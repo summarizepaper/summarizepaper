@@ -127,6 +127,10 @@
   {% elif not filter_form.errors %}
   <div class="no-results card">
     <h2>{% trans 'No results found.' %}</h2>
+    {% if filters_active %}
+    <p>{% trans 'No papers match all these filters. Try a wider period or remove a journal or author filter.' %}</p>
+    <p><a href="{{ reset_filters_url }}">{% trans 'Search again without filters' %}</a></p>
+    {% endif %}
     {% if src == 'all' %}
     <p>{% trans 'Try another title, topic, paper link, arXiv ID or DOI.' %}</p>
     {% elif src == 'open' %}

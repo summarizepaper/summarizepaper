@@ -9,7 +9,7 @@ function setup(options = {}) {
   const button = {textContent: 'Search', disabled: false, dataset: {loading: 'Searching…'}};
   const status = {hidden: true};
   const radio = {checked: false};
-  const example = {dataset: {query: 'Quentin Kral', field: 'author'}, addEventListener(type, fn) {this.click = fn;}};
+  const example = {dataset: {query: 'Yoshua Bengio', field: 'author'}, addEventListener(type, fn) {this.click = fn;}};
   const examples = {hidden: true, querySelectorAll: () => [example]};
   const form = {
     elements: options.results ? {q: input} : {arxiv_id: input}, addEventListener: (type, fn) => {handlers[type] = fn;},
@@ -51,7 +51,7 @@ test('example fills the input and selects its scope without submitting', () => {
   const s = setup();
   assert.equal(s.examples.hidden, false);
   s.example.click();
-  assert.equal(s.input.value, 'Quentin Kral');
+  assert.equal(s.input.value, 'Yoshua Bengio');
   assert.equal(s.radio.checked, true);
   assert.equal(s.input.focused, true);
   assert.equal(s.attrs['aria-busy'], undefined);

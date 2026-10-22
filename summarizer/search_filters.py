@@ -27,7 +27,7 @@ def clean_orcid(value):
     if not value:
         return ''
     if not re.fullmatch(r'\d{4}-\d{4}-\d{4}-\d{3}[\dX]', value):
-        raise forms.ValidationError(_('Enter a valid ORCID, for example 0000-0001-6527-4684.'))
+        raise forms.ValidationError(_('Enter a valid ORCID, for example 0000-0002-9322-3515.'))
     total = 0
     for digit in value.replace('-', '')[:-1]:
         total = (total + int(digit)) * 2
@@ -43,7 +43,7 @@ class SearchFilters(forms.Form):
     sort = forms.ChoiceField(required=False, choices=[('relevance', _('Relevance')),
         ('newest', _('Newest first')), ('oldest', _('Oldest first'))], label=_('Sort by'))
     orcid = forms.CharField(required=False, max_length=100, label=_('Author ORCID'),
-                            widget=forms.TextInput(attrs={'placeholder': '0000-0001-6527-4684'}))
+                            widget=forms.TextInput(attrs={'placeholder': '0000-0002-9322-3515'}))
     journals = SourceIds(required=False, label=_('Include journals'))
     exclude_journals = SourceIds(required=False, label=_('Exclude journals'))
 

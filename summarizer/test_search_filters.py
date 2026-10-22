@@ -134,6 +134,7 @@ class SearchFilterPageTests(TestCase):
             response = self.client.get('/en/search-results/', {'orcid': '0000-0001-6527-4684'})
         search.assert_called_once()
         self.assertContains(response, 'Research search results')
+        self.assertContains(response, 'Search again without filters')
         response = self.client.get('/en/search-results/?q=1706.03762')
         self.assertEqual(response['Location'], '/en/arxiv-id/1706.03762v1/')
 
