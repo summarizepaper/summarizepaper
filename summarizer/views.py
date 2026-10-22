@@ -207,6 +207,7 @@ def logout_view(request):
 
 def search_results(request):
     query = (request.GET.get('q') or '').strip()
+    field = request.GET.get('field') if request.GET.get('field') in ('author', 'title') else 'all'
     page_num = request.GET.get('page', 1)
     try:
         page_num = int(page_num)
@@ -218,15 +219,16 @@ def search_results(request):
     if not query:
         # arXiv answers 400 to an empty search_query: show the empty search page instead.
         return render(request, 'summarizer/search_results.html', {'query': '', 'search': [], 'page_obj': None,
-                                                                    'src': src, 'kind': kind})
-    if src == 'all':
-        results, failed = unified_search.search(query)
+                                                                    'src': src, 'kind': kind, 'field': field})
+    if src == 'all' or field != 'all':
+        results, failed = (unified_search.search(query) if field == 'all' else
+                           unified_search.search(query, field=field, source=src, kind=kind))
         if page_num == 1:
             Search.objects.create(query=query[:2000], user=request.user if request.user.is_authenticated else None,
                                   lang=get_language())
         return render(request, 'summarizer/search_results.html', {
             'query': query, 'search': results, 'page_obj': Paginator(results, 10).get_page(page_num) if results else None,
-            'src': 'all', 'failed': failed})
+            'src': src, 'unified': True, 'failed': failed, 'field': field, 'kind': kind})
     if src == 'open':
         return open_search_results(request, query, kind, page_num)
 
@@ -456,7 +458,7 @@ def summarize(request):
         arxiv_id = request.POST.get('arxiv_id', '').strip()
         if not arxiv_id:
             return render(request, 'summarizer/home.html', {
-                **homepage.context(), 'error': _('Enter a paper link, DOI or research topic.')})
+                **homepage.context(), 'field': request.POST.get('field', 'all'), 'error': _('Enter a paper link, DOI or research topic.')})
 
         identifier = unified_search.arxiv_identifier(arxiv_id)
         if identifier:
@@ -508,6 +510,8 @@ def summarize(request):
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
             query_params = {'q': query, 'page': page, 'src': 'all'}
+            if request.POST.get('field') in ('author', 'title'):
+                query_params['field'] = request.POST['field']
             if request.POST.get('src') in ('open', 'arxiv'):
                 query_params['src'] = request.POST['src']
             url = f'/{lang}/search-results/?{urlencode(query_params)}'

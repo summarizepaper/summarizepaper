@@ -2,6 +2,7 @@
 import hashlib
 import re
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from itertools import zip_longest
 from xml.etree import ElementTree
 
@@ -23,7 +24,10 @@ def arxiv_identifier(text):
     return None
 
 
-def arxiv_results(query):
+def arxiv_results(query, field='all'):
+    if field in ('author', 'title'):
+        text = re.sub(r'["\\]', ' ', query)
+        query = '%s:"%s"' % ('au' if field == 'author' else 'ti', text)
     response = requests.get(digest.ARXIV_API, params={
         'search_query': query if re.search(r'\b(?:all|au|ti|abs|cat|co|jr|id):', query) else 'all:' + query,
         'start': 0, 'max_results': 25, 'sortBy': 'relevance', 'sortOrder': 'descending',
@@ -37,25 +41,31 @@ def arxiv_results(query):
     } for p in digest.parse_feed(response.text)]
 
 
-def _fetch(provider, query):
+def _fetch(provider, query, field):
     # External-paper lookups may use a thread-local database connection.
     close_old_connections()
     try:
-        return provider(query), False
+        return (provider(query) if field == 'all' else provider(query, field=field)), False
     except (sources.SourceUnavailable, requests.RequestException, ElementTree.ParseError):
         return [], True
     finally:
         close_old_connections()
 
 
-def search(query):
-    key = 'unified-search:v1:' + hashlib.sha256(query.lower().encode()).hexdigest()
+def search(query, field='all', source='all', kind=''):
+    field = field if field in ('author', 'title') else 'all'
+    source = source if source in ('open', 'arxiv') else 'all'
+    kind = kind if kind in sources.SEARCH_TYPES else ''
+    key = 'unified-search:v2:' + ':'.join((field, source, kind)) + ':' + hashlib.sha256(query.lower().encode()).hexdigest()
     cached = cache.get(key)
     if cached is not None:
         return cached
     with ThreadPoolExecutor(max_workers=2) as pool:
-        jobs = [pool.submit(_fetch, provider, query) for provider in (arxiv_results, sources.search)]
-        (arxiv, arxiv_failed), (other, other_failed) = [job.result() for job in jobs]
+        arxiv_job = pool.submit(_fetch, arxiv_results, query, field) if source != 'open' else None
+        other_provider = partial(sources.search, kind=kind) if kind else sources.search
+        other_job = pool.submit(_fetch, other_provider, query, field) if source != 'arxiv' else None
+        arxiv, arxiv_failed = arxiv_job.result() if arxiv_job else ([], False)
+        other, other_failed = other_job.result() if other_job else ([], False)
     results, seen = [], set()
     for pair in zip_longest(arxiv, other):
         for paper in pair:

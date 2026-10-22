@@ -14,6 +14,7 @@
 {% endblock %}
 {% block extrahead %}
 <link rel="stylesheet" href="{% static_v 'summarizer/css/home.css' %}">
+<link rel="stylesheet" href="{% static_v 'summarizer/css/search.css' %}">
 {% endblock %}
 {% block content %}
 <main class="home">
@@ -24,15 +25,22 @@
     <h1 id="home-title">{% trans 'Your AI research companion' %}</h1>
     <p class="home-lead">{% trans 'Understand papers, keep up with your field, and check your references before submitting.' %}</p>
     <p class="home-description">{% trans 'AI paper summaries, research digests and tools built around your scientific workflow.' %}</p>
-    <form method="post" class="home-search" id="search-form" data-funnel="home_search_submit">
+    <form method="post" class="home-search" id="search-form" data-research-search data-funnel="home_search_submit">
       {% csrf_token %}
       <label for="arxiv-id">{% trans 'Start with a paper or a research topic' %}</label>
+      {% include "summarizer/search_scope.html" %}
       <div class="home-search-row">
         <input type="text" id="arxiv-id" name="arxiv_id" required placeholder="{% trans 'Paper URL, DOI, title or topic' %}" aria-describedby="search-help">
-        <button type="submit" id="submit-button" class="btn">{% trans 'Explore a paper' %}</button>
+        <button type="submit" id="submit-button" class="btn" data-loading="{% trans 'Searching…' %}">{% trans 'Search' %}</button>
       </div>
       <p id="search-help" class="home-fine">{% trans 'Start free. No credit card required. Daily limits apply.' %}</p>
-      <p class="home-fine">{% trans 'Search arXiv, journals and preprints together. Paper links, arXiv IDs and DOIs are recognized automatically.' %}</p>
+      <p class="home-fine">{% trans 'arXiv, journals and preprints · Links and DOIs recognized automatically.' %}</p>
+      <div class="search-examples" hidden><span>{% trans 'Try:' %}</span>
+        <button type="button" data-query="black holes" data-field="all">{% trans 'Topic: black holes' %}</button>
+        <button type="button" data-query="Quentin Kral" data-field="author">{% trans 'Author: Quentin Kral' %}</button>
+        <button type="button" data-query="Attention Is All You Need" data-field="title">{% trans 'Title: Attention Is All You Need' %}</button>
+      </div>
+      <p class="search-status" role="status" hidden>{% trans 'Searching scientific sources. This may take a few seconds.' %}</p>
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
     </form>
     <div class="home-actions">

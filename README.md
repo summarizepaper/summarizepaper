@@ -132,6 +132,15 @@ Existing source-specific result URLs remain available as optional filters. arXiv
 links, versions and legacy archive IDs open directly; DOI and other supported identifiers retain
 the existing resolver. A fresh search from either page searches all sources by default.
 
+Search scope is optional (`field=all`, `author`, or `title`) and persists through result filters
+and pagination. Identifiers still take precedence over scope. arXiv uses `au:` / `ti:`;
+OpenAlex uses quoted byline/title filters (see [search documentation](https://help.openalex.org/api/searching/)).
+Crossref fallback uses `query.author` / `query.title` and verifies the requested metadata.
+Caches include scope and source so author and title searches cannot share unrelated results.
+Clickable homepage examples fill the field and scope without submitting. Search forms show a
+translated loading state, prevent repeat submissions and reset after browser back navigation.
+Verify with `node --test tests/funnel.test.cjs tests/home-search.test.cjs` and the Django suite.
+
 ## Deployment
 
 `git push heroku master`. The `release` phase of the Procfile applies migrations.

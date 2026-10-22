@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static static_version %}
 {% load i18n %}
 
 {% get_current_language as LANGUAGE_CODE %}
@@ -57,6 +57,7 @@
 
 {% block header_class %}{% endblock %}
 
+{% block extrahead %}<link rel="stylesheet" href="{% static_v 'summarizer/css/search.css' %}">{% endblock %}
 {% block content %}
 <div class="page">
   <header class="page-header">
@@ -67,28 +68,32 @@
   {% endif %}
   </header>
 
-  <form method="post" action="/{{ LANGUAGE_CODE }}/" class="results-search">
+  <form method="post" action="/{{ LANGUAGE_CODE }}/" class="results-search-wrap" data-research-search>
+    {% include "summarizer/search_scope.html" %}
+    <div class="results-search">
     {% csrf_token %}
     <i class="fas fa-search"></i>
     <input type="text" name="arxiv_id" value="{{ query }}" placeholder="{% trans 'Search for an article' %}" aria-label="{% trans 'Search for an article' %}">
 
-    <button type="submit" class="btn">{% trans 'Search' %}</button>
+    <button type="submit" class="btn" data-loading="{% trans 'Searching…' %}">{% trans 'Search' %}</button>
+    </div>
+    <p class="search-status" role="status" hidden>{% trans 'Searching scientific sources. This may take a few seconds.' %}</p>
   </form>
 
   {% if query %}
   <nav class="source-tabs" aria-label="{% trans 'Where to search' %}">
-    <a href="?q={{ query|urlencode }}&src=all" {% if src == 'all' %}class="active"{% endif %}>{% trans 'All sources' %}</a>
-    <a href="?q={{ query|urlencode }}&src=arxiv" {% if src == 'arxiv' %}class="active"{% endif %}>arXiv</a>
-    <a href="?q={{ query|urlencode }}&src=open" {% if src == 'open' and not kind %}class="active"{% endif %}>{% trans 'Journals and preprints (open access)' %}</a>
+    <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src=all" {% if src == 'all' %}class="active"{% endif %}>{% trans 'All sources' %}</a>
+    <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src=arxiv" {% if src == 'arxiv' %}class="active"{% endif %}>arXiv</a>
+    <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src=open" {% if src == 'open' and not kind %}class="active"{% endif %}>{% trans 'Journals and preprints (open access)' %}</a>
     {% if src == 'open' %}
-    <a href="?q={{ query|urlencode }}&src=open&type=journals" {% if kind == 'journals' %}class="active"{% endif %}>{% trans 'Journals only' %}</a>
-    <a href="?q={{ query|urlencode }}&src=open&type=preprints" {% if kind == 'preprints' %}class="active"{% endif %}>{% trans 'Preprints only (bioRxiv, medRxiv, ChemRxiv, PsyArXiv...)' %}</a>
+    <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src=open&type=journals" {% if kind == 'journals' %}class="active"{% endif %}>{% trans 'Journals only' %}</a>
+    <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src=open&type=preprints" {% if kind == 'preprints' %}class="active"{% endif %}>{% trans 'Preprints only (bioRxiv, medRxiv, ChemRxiv, PsyArXiv...)' %}</a>
     {% endif %}
   </nav>
   {% endif %}
 
   {% if failed and src == 'all' %}<p role="status">{% trans 'Some sources are temporarily unavailable. Results may be incomplete; please try again shortly.' %}</p>{% endif %}
-  {% if page_obj and src != 'arxiv' %}
+  {% if page_obj and src != 'arxiv' or page_obj and unified %}
   <div class="search-results-list">
     {% for paper in page_obj %}
     <div class="search-result card">
@@ -146,20 +151,17 @@
   {% if page_obj %}
   <nav class="pagination">
     {% if page_obj.has_previous %}
-      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page=1">&laquo; {% trans 'first' %}</a>
-      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
+      <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src={{ src }}&type={{ kind }}&page=1">&laquo; {% trans 'first' %}</a>
+      <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.previous_page_number }}">&lsaquo; {% trans 'previous' %}</a>
     {% endif %}
     <span class="current-page">{% trans 'Page' %} {{ page_obj.number }} {% trans 'of' %} {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
-      <a href="?q={{ query|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
+      <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.next_page_number }}">{% trans 'next' %} &rsaquo;</a>
+      <a href="?q={{ query|urlencode }}&field={{ field|urlencode }}&src={{ src }}&type={{ kind }}&page={{ page_obj.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
     {% endif %}
   </nav>
   {% endif %}
 </div>
 {% endblock %}
 
-{% block scripts %}
-
-
-{% endblock %}
+{% block scripts %}<script defer src="{% static_v 'summarizer/js/home.js' %}"></script>{% endblock %}

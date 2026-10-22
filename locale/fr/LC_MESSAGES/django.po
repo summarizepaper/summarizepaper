@@ -6770,3 +6770,37 @@ msgstr ""
 msgid "Try another title, topic, paper link, arXiv ID or DOI."
 msgstr ""
 "Essayez un autre titre, sujet, lien d’article, identifiant arXiv ou DOI."
+
+msgid "Search by"
+msgstr "Rechercher par"
+
+msgid "All fields"
+msgstr "Tout"
+
+msgid "Author"
+msgstr "Auteur"
+
+msgid "Searching…"
+msgstr "Recherche en cours…"
+
+msgid ""
+"arXiv, journals and preprints · Links and DOIs recognized automatically."
+msgstr ""
+"arXiv, revues et prépublications · Liens et DOI reconnus automatiquement."
+
+msgid "Try:"
+msgstr "Essayez :"
+
+msgid "Topic: black holes"
+msgstr "Sujet : trous noirs"
+
+msgid "Author: Quentin Kral"
+msgstr "Auteur : Quentin Kral"
+
+msgid "Title: Attention Is All You Need"
+msgstr "Titre : Attention Is All You Need"
+
+msgid "Searching scientific sources. This may take a few seconds."
+msgstr ""
+"Recherche dans les sources scientifiques. Cela peut prendre quelques "
+"secondes."
