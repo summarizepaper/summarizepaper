@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const source = fs.readFileSync('static/summarizer/js/home.js', 'utf8');
-function setup() {
+function setup(options = {}) {
   const handlers = {}, windowHandlers = {}, attrs = {};
   const input = {value: '', focus() { this.focused = true; }};
   const button = {textContent: 'Search', disabled: false, dataset: {loading: 'Searching…'}};
@@ -12,11 +12,13 @@ function setup() {
   const example = {dataset: {query: 'Quentin Kral', field: 'author'}, addEventListener(type, fn) {this.click = fn;}};
   const examples = {hidden: true, querySelectorAll: () => [example]};
   const form = {
-    elements: {arxiv_id: input}, addEventListener: (type, fn) => {handlers[type] = fn;},
+    elements: options.results ? {q: input} : {arxiv_id: input}, addEventListener: (type, fn) => {handlers[type] = fn;},
     setAttribute: (key, value) => {attrs[key] = value;},
     getAttribute: key => attrs[key], removeAttribute: key => {delete attrs[key];},
+    querySelectorAll: selector => selector === 'button[type="submit"]' ? [button] :
+      (options.orcid && selector.includes('input[name=orcid]') ? [{value: options.orcid}] : []),
     querySelector: selector => selector === 'button[type="submit"]' ? button :
-      selector === '[role="status"]' ? status : selector === '.search-examples' ? examples : radio,
+      selector === '[data-search-status]' ? status : selector === '.search-examples' ? examples : radio,
   };
   vm.runInNewContext(source, {document: {querySelectorAll: () => [form]},
     window: {addEventListener: (type, fn) => {windowHandlers[type] = fn;}}});
@@ -53,4 +55,11 @@ test('example fills the input and selects its scope without submitting', () => {
   assert.equal(s.radio.checked, true);
   assert.equal(s.input.focused, true);
   assert.equal(s.attrs['aria-busy'], undefined);
+});
+
+test('results form allows an ORCID-only search with an empty query', () => {
+  const s = setup({results: true, orcid: '0000-0001-6527-4684'});
+  s.handlers.submit({preventDefault() {assert.fail('ORCID-only search must submit');}});
+  assert.equal(s.attrs['aria-busy'], 'true');
+  assert.equal(s.button.disabled, true);
 });

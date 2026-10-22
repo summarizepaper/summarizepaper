@@ -1,0 +1,42 @@
+{% load i18n %}
+<details class="search-refine"{% if filters_active or filter_form.errors %} open{% endif %}>
+  <summary>{% trans 'Refine results' %}{% if filters_active %} · {% trans 'Filters active' %}{% endif %}</summary>
+  {% if filter_form.errors %}<div class="notice error" role="alert">{% for error in filter_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}{% for field in filter_form %}{% for error in field.errors %}<p>{{ field.label }} : {{ error }}</p>{% endfor %}{% endfor %}</div>{% endif %}
+  <div class="search-filter-grid">
+    <label>{% trans 'From year' %} {{ filter_form.year_from }}</label>
+    <label>{% trans 'To year' %} {{ filter_form.year_to }}</label>
+    <label>{% trans 'Sort by' %} {{ filter_form.sort }}</label>
+    <label>{% trans 'Publication type' %}<select name="type">
+      <option value="">{% trans 'All publication types' %}</option>
+      <option value="journals"{% if kind == 'journals' %} selected{% endif %}>{% trans 'Articles' %}</option>
+      <option value="preprints"{% if kind == 'preprints' %} selected{% endif %}>{% trans 'Preprints' %}</option>
+      <option value="reviews"{% if kind == 'reviews' %} selected{% endif %}>{% trans 'Literature reviews' %}</option>
+    </select></label>
+    <label>{% trans 'Sources' %}<select name="src">
+      <option value="all"{% if src == 'all' %} selected{% endif %}>{% trans 'All sources' %}</option>
+      <option value="arxiv"{% if src == 'arxiv' %} selected{% endif %}>arXiv</option>
+      <option value="open"{% if src == 'open' %} selected{% endif %}>{% trans 'Journals and preprints (open access)' %}</option>
+    </select></label>
+    <label>{% trans 'Author ORCID' %} {{ filter_form.orcid }}</label>
+  </div>
+  <p class="home-fine search-filter-note">{% trans 'Years refer to the arXiv submission date or the publication date. Journal and ORCID filters use indexed publication records.' %}</p>
+  <div class="journal-picker" data-journal-picker data-url="{% url 'search_journals' %}"
+       data-remove="{% trans 'Remove' %}" data-include="{% trans 'Include' %}" data-exclude="{% trans 'Exclude' %}"
+       data-empty="{% trans 'No journals found.' %}" data-loading="{% trans 'Looking for journals…' %}"
+       data-error="{% trans 'Journal suggestions are unavailable. Please try again shortly.' %}"
+       data-limit="{% trans 'Choose up to five journals per list.' %}">
+    <label for="journal-lookup">{% trans 'Choose journals to include or exclude' %}</label>
+    <input id="journal-lookup" type="search" autocomplete="off" data-journal-query placeholder="{% trans 'Journal name or ISSN, for example Nature' %}" aria-describedby="journal-status">
+    <p id="journal-status" role="status" class="search-status"></p>
+    <ul class="journal-suggestions" data-journal-results></ul>
+    <div class="journal-lists">
+      <div><strong>{% trans 'Include journals' %}</strong><p class="search-filter-note">{% trans 'Match any selected journal.' %}</p>
+        <div data-journal-list="journals">{% for journal in selected_journals %}<span class="journal-chip" data-id="{{ journal.id }}"><input type="hidden" name="journals" value="{{ journal.id }}"><span>{{ journal.name }}</span><button type="button" data-remove-journal aria-label="{% trans 'Remove' %} {{ journal.name }}">×</button></span>{% endfor %}</div>
+      </div>
+      <div><strong>{% trans 'Exclude journals' %}</strong><p class="search-filter-note">{% trans 'Exclude every selected journal.' %}</p>
+        <div data-journal-list="exclude_journals">{% for journal in excluded_journals %}<span class="journal-chip" data-id="{{ journal.id }}"><input type="hidden" name="exclude_journals" value="{{ journal.id }}"><span>{{ journal.name }}</span><button type="button" data-remove-journal aria-label="{% trans 'Remove' %} {{ journal.name }}">×</button></span>{% endfor %}</div>
+      </div>
+    </div>
+  </div>
+  <div class="search-filter-actions"><button type="submit" class="btn" data-loading="{% trans 'Searching…' %}">{% trans 'Apply filters' %}</button><a href="{{ reset_filters_url }}">{% trans 'Clear filters' %}</a></div>
+</details>

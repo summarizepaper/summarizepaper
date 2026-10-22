@@ -6804,3 +6804,134 @@ msgid "Searching scientific sources. This may take a few seconds."
 msgstr ""
 "Recherche dans les sources scientifiques. Cela peut prendre quelques "
 "secondes."
+
+msgid "Choose up to five journals from the suggestions."
+msgstr "Choisissez jusqu’à cinq revues dans les suggestions."
+
+msgid "Enter a valid ORCID, for example 0000-0001-6527-4684."
+msgstr "Saisissez un ORCID valide, par exemple 0000-0001-6527-4684."
+
+msgid "The ORCID checksum is invalid."
+msgstr "La clé de contrôle de cet ORCID est invalide."
+
+msgid "From year"
+msgstr "Année de début"
+
+msgid "To year"
+msgstr "Année de fin"
+
+msgid "Relevance"
+msgstr "Pertinence"
+
+msgid "Newest first"
+msgstr "Les plus récents"
+
+msgid "Oldest first"
+msgstr "Les plus anciens"
+
+msgid "Sort by"
+msgstr "Trier par"
+
+msgid "Author ORCID"
+msgstr "ORCID de l’auteur"
+
+msgid "Choose a year no later than next year."
+msgstr "Choisissez une année ne dépassant pas l’année prochaine."
+
+msgid "The end year must be on or after the start year."
+msgstr "L’année de fin doit être supérieure ou égale à l’année de début."
+
+msgid "A journal cannot be included and excluded at the same time."
+msgstr "Une revue ne peut pas être incluse et exclue en même temps."
+
+msgid ""
+"Journal, ORCID and published-article filters require All sources or Journals"
+" and preprints."
+msgstr ""
+"Les filtres de revue, d’ORCID et d’article publié nécessitent « Toutes les "
+"sources » ou « Revues et prépublications »."
+
+msgid "Refine results"
+msgstr "Affiner les résultats"
+
+msgid "Filters active"
+msgstr "Filtres actifs"
+
+msgid "Publication type"
+msgstr "Type de publication"
+
+msgid "All publication types"
+msgstr "Tous les types"
+
+msgid "Articles"
+msgstr "Articles"
+
+msgid "Preprints"
+msgstr "Prépublications"
+
+msgid "Literature reviews"
+msgstr "Revues de littérature"
+
+msgid ""
+"Years refer to the arXiv submission date or the publication date. Journal "
+"and ORCID filters use indexed publication records."
+msgstr ""
+"Les années correspondent au dépôt arXiv ou à la date de publication. Les "
+"filtres de revue et d’ORCID utilisent les publications indexées."
+
+msgid "Include"
+msgstr "Inclure"
+
+msgid "Exclude"
+msgstr "Exclure"
+
+msgid "No journals found."
+msgstr "Aucune revue trouvée."
+
+msgid "Looking for journals…"
+msgstr "Recherche de revues…"
+
+msgid "Journal suggestions are unavailable. Please try again shortly."
+msgstr ""
+"Les suggestions de revues sont indisponibles. Réessayez dans quelques "
+"instants."
+
+msgid "Choose up to five journals per list."
+msgstr "Choisissez jusqu’à cinq revues par liste."
+
+msgid "Choose journals to include or exclude"
+msgstr "Choisir les revues à inclure ou exclure"
+
+msgid "Journal name or ISSN, for example Nature"
+msgstr "Nom de revue ou ISSN, par exemple Nature"
+
+msgid "Include journals"
+msgstr "Revues à inclure"
+
+msgid "Match any selected journal."
+msgstr "Au moins une des revues sélectionnées."
+
+msgid "Exclude journals"
+msgstr "Revues à exclure"
+
+msgid "Exclude every selected journal."
+msgstr "Exclure chacune des revues sélectionnées."
+
+msgid "Apply filters"
+msgstr "Appliquer les filtres"
+
+msgid "Clear filters"
+msgstr "Effacer les filtres"
+
+msgid "Abstract"
+msgstr "Résumé scientifique"
+
+msgid "Research search results"
+msgstr "Résultats de recherche scientifique"
+
+msgid ""
+"These filters search indexed publication records. The direct arXiv feed is "
+"not included."
+msgstr ""
+"Ces filtres interrogent les publications indexées. Le flux direct d’arXiv "
+"n’est pas inclus."

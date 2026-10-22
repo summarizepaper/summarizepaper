@@ -1,6 +1,7 @@
 <fieldset class="search-scope">
   <legend>{% load i18n %}{% trans 'Search by' %}</legend>
-  <label><input type="radio" name="field" value="all"{% if field != 'author' and field != 'title' %} checked{% endif %}> {% trans 'All fields' %}</label>
+  <label><input type="radio" name="field" value="all"{% if field != 'author' and field != 'title' and field != 'abstract' %} checked{% endif %}> {% trans 'All fields' %}</label>
   <label><input type="radio" name="field" value="author"{% if field == 'author' %} checked{% endif %}> {% trans 'Author' %}</label>
   <label><input type="radio" name="field" value="title"{% if field == 'title' %} checked{% endif %}> {% trans 'Title' %}</label>
+{% if advanced %}<label><input type="radio" name="field" value="abstract"{% if field == 'abstract' %} checked{% endif %}> {% trans 'Abstract' %}</label>{% endif %}
 </fieldset>

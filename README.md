@@ -141,6 +141,25 @@ Clickable homepage examples fill the field and scope without submitting. Search 
 translated loading state, prevent repeat submissions and reset after browser back navigation.
 Verify with `node --test tests/funnel.test.cjs tests/home-search.test.cjs` and the Django suite.
 
+The results page includes optional year bounds, relevance/newest/oldest ordering, publication type,
+abstract-only search, ORCID (format and checksum validated), and up to five included and five excluded
+journals. Journal suggestions use OpenAlex source IDs, display ISSN/publisher for disambiguation,
+are cached, and share the existing daily search budget. Includes are OR; exclusions are AND.
+All state is kept in GET parameters and pagination; changing filters starts from page one.
+
+Date and abstract filters are sent to both providers before retrieval. The combined date ordering
+sorts the returned records across providers. arXiv years refer to submission dates; indexed records
+use publication dates. Journal, ORCID, published-article and review filters use indexed records,
+with a visible notice; incompatible explicit arXiv-only requests show validation errors.
+Crossref retains supported date/order filters during fallback, but never substitutes a broader
+search for an unsupported abstract/journal/ORCID/type filter. Partial failures remain visible.
+The provider results are capped at 25 each; pagination covers the retrieved matches, not the full
+literature. Classification, journal assignment and ORCID coverage depend on the indexed metadata.
+
+API references: [OpenAlex filters](https://help.openalex.org/api/filtering/),
+[arXiv API](https://info.arxiv.org/help/api/user-manual.html),
+[Crossref filters](https://www.crossref.org/documentation/retrieve-metadata/rest-api/rest-api-filters/).
+
 ## Deployment
 
 `git push heroku master`. The `release` phase of the Procfile applies migrations.

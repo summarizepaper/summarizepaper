@@ -1,6 +1,7 @@
 from unittest import mock
 
 import requests
+from bs4 import BeautifulSoup
 from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 
@@ -83,7 +84,8 @@ class UnifiedSearchPageTests(TestCase):
             response = self.client.get('/en/search-results/?q=attention')
             self.assertContains(response, 'All sources')
             self.assertContains(response, 'Results may be incomplete')
-            self.assertContains(response, 'src=all&type=&page=2')
+            self.assertTrue(any('src=all&type=&page=2' in a['href'] for a in
+                                BeautifulSoup(response.content, 'html.parser').select('.pagination a')))
             self.assertContains(response, 'Paper 0')
             response = self.client.get('/en/search-results/?q=attention&src=all&page=2')
             self.assertContains(response, 'Paper 11')
@@ -165,5 +167,6 @@ class ScopedSearchPageTests(TestCase):
             response = self.client.get('/en/search-results/?q=Kral&field=author')
         search.assert_called_once_with('Kral', field='author', source='all', kind='')
         self.assertContains(response, 'value="author" checked')
-        self.assertContains(response, 'field=author&src=all&type=&page=2')
+        self.assertTrue(any('field=author&src=all&type=&page=2' in a['href'] for a in
+                            BeautifulSoup(response.content, 'html.parser').select('.pagination a')))
         self.assertContains(response, 'data-loading="Searching…"')

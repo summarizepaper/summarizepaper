@@ -1,24 +1,26 @@
 (function () {
   document.querySelectorAll('form[data-research-search]').forEach(function (form) {
-    var input = form.elements.arxiv_id;
-    var button = form.querySelector('button[type="submit"]');
-    var status = form.querySelector('[role="status"]');
+    var input = form.elements.arxiv_id || form.elements.q;
+    var buttons = Array.from(form.querySelectorAll('button[type="submit"]'));
+    var button = buttons[0];
+    var status = form.querySelector('[data-search-status]');
     var label = button.textContent;
     function reset() {
       form.removeAttribute('aria-busy');
-      button.disabled = false;
+      buttons.forEach(function (item) { item.disabled = false; });
       button.textContent = label;
       if (status) status.hidden = true;
     }
     form.addEventListener('submit', function (event) {
-      if (!input.value.trim() || form.getAttribute('aria-busy') === 'true') {
+      var hasFilter = Array.from(form.querySelectorAll('input[name=orcid], input[name=journals]')).some(function (item) { return item.value.trim(); });
+      if ((!input.value.trim() && !hasFilter) || form.getAttribute('aria-busy') === 'true') {
         event.preventDefault();
         if (!input.value.trim()) input.focus();
         return;
       }
       form.setAttribute('aria-busy', 'true');
       button.textContent = button.dataset.loading;
-      button.disabled = true;
+      buttons.forEach(function (item) { item.disabled = true; });
       if (status) status.hidden = false;
     });
     var examples = form.querySelector('.search-examples');

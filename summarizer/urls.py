@@ -1,5 +1,5 @@
 from django.urls import path, re_path
-from . import (views, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+from . import (views, search_filters, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                changes, library, missed, presskit, questions, reading, refcheck, scoops, slides, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -18,6 +18,7 @@ urlpatterns = [
     path("bibtex/<str:arxiv_id>/", views.bibtex, name="bibtex"),
     #path("summary-pdf/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),
+    path("search-journals/", search_filters.journal_suggestions, name="search_journals"),
     path("search-results/", views.search_results, name="search_results"),
     path("create-embed/", views.create_embed, name="create_embed"),
     path("about/", views.about, name="about"),

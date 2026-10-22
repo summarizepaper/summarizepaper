@@ -1,5 +1,6 @@
 """Cached search across arXiv and the existing journal/preprint index."""
 import hashlib
+import json
 import re
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
@@ -24,13 +25,20 @@ def arxiv_identifier(text):
     return None
 
 
-def arxiv_results(query, field='all'):
-    if field in ('author', 'title'):
+def arxiv_results(query, field='all', filters=None):
+    options = filters or {}
+    if field in ('author', 'title', 'abstract'):
         text = re.sub(r'["\\]', ' ', query)
-        query = '%s:"%s"' % ('au' if field == 'author' else 'ti', text)
+        query = '%s:"%s"' % ({'author': 'au', 'title': 'ti', 'abstract': 'abs'}[field], text)
+    query = query if re.search(r'\b(?:all|au|ti|abs|cat|co|jr|id):', query) else 'all:' + query
+    if options.get('year_from') or options.get('year_to'):
+        start = '%s01010000' % max(1991, options.get('year_from') or 1991)
+        end = '%s12312359' % (options.get('year_to') or 9999)
+        query = '(%s) AND submittedDate:[%s TO %s]' % (query, start, end)
     response = requests.get(digest.ARXIV_API, params={
-        'search_query': query if re.search(r'\b(?:all|au|ti|abs|cat|co|jr|id):', query) else 'all:' + query,
-        'start': 0, 'max_results': 25, 'sortBy': 'relevance', 'sortOrder': 'descending',
+        'search_query': query, 'start': 0, 'max_results': 25,
+        'sortBy': 'submittedDate' if options.get('sort') in ('newest', 'oldest') else 'relevance',
+        'sortOrder': 'ascending' if options.get('sort') == 'oldest' else 'descending',
     }, headers={'User-Agent': sources.USER_AGENT}, timeout=8)
     response.raise_for_status()
     return [{
@@ -52,17 +60,26 @@ def _fetch(provider, query, field):
         close_old_connections()
 
 
-def search(query, field='all', source='all', kind=''):
-    field = field if field in ('author', 'title') else 'all'
+def search(query, field='all', source='all', kind='', filters=None):
+    options = filters or {}
+    field = field if field in ('author', 'title', 'abstract') else 'all'
     source = source if source in ('open', 'arxiv') else 'all'
     kind = kind if kind in sources.SEARCH_TYPES else ''
-    key = 'unified-search:v2:' + ':'.join((field, source, kind)) + ':' + hashlib.sha256(query.lower().encode()).hexdigest()
+    key = 'unified-search:v3:' + hashlib.sha256(json.dumps([query.lower(), field, source, kind, options], sort_keys=True).encode()).hexdigest()
     cached = cache.get(key)
     if cached is not None:
         return cached
     with ThreadPoolExecutor(max_workers=2) as pool:
-        arxiv_job = pool.submit(_fetch, arxiv_results, query, field) if source != 'open' else None
-        other_provider = partial(sources.search, kind=kind) if kind else sources.search
+        arxiv_provider = partial(arxiv_results, filters=options) if options else arxiv_results
+        arxiv_allowed = (source != 'open' and kind not in ('journals', 'reviews') and
+                         not any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')))
+        arxiv_job = pool.submit(_fetch, arxiv_provider, query, field) if arxiv_allowed else None
+        kwargs = {}
+        if kind:
+            kwargs['kind'] = kind
+        if options:
+            kwargs['filters'] = options
+        other_provider = partial(sources.search, **kwargs) if kwargs else sources.search
         other_job = pool.submit(_fetch, other_provider, query, field) if source != 'arxiv' else None
         arxiv, arxiv_failed = arxiv_job.result() if arxiv_job else ([], False)
         other, other_failed = other_job.result() if other_job else ([], False)
@@ -80,6 +97,11 @@ def search(query, field='all', source='all', kind=''):
             seen.update(aliases)
             if not duplicate:
                 results.append(paper)
+    if options.get('sort') in ('newest', 'oldest'):
+        dated = [p for p in results if p.get('published')]
+        undated = [p for p in results if not p.get('published')]
+        results = sorted(dated, key=lambda p: str(p['published'])[:10],
+                         reverse=options['sort'] == 'newest') + undated
     result = (results, arxiv_failed or other_failed)
     cache.set(key, result, 60 if result[1] else sources.SEARCH_SECONDS)
     return result

@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, citations, digest, homepage, unified_search, library, mailcheck, reading, similar, sources, exports
+from summarizer import access, accounts, citations, digest, homepage, unified_search, search_filters, library, mailcheck, reading, similar, sources, exports
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -207,7 +207,18 @@ def logout_view(request):
 
 def search_results(request):
     query = (request.GET.get('q') or '').strip()
-    field = request.GET.get('field') if request.GET.get('field') in ('author', 'title') else 'all'
+    if query:
+        identifier = unified_search.arxiv_identifier(query)
+        if identifier:
+            return redirect('arxividpage', arxiv_id=identifier)
+        try:
+            found = sources.resolve(query)
+        except sources.SourceUnavailable:
+            found = None
+        if found:
+            source_kind, value = found
+            return redirect('arxividpage', arxiv_id=digest.site_id(value) if source_kind == 'arxiv' else value)
+    field = request.GET.get('field') if request.GET.get('field') in ('author', 'title', 'abstract') else 'all'
     page_num = request.GET.get('page', 1)
     try:
         page_num = int(page_num)
@@ -216,21 +227,56 @@ def search_results(request):
 
     src = request.GET.get('src') if request.GET.get('src') in ('open', 'arxiv') else 'all'
     kind = request.GET.get('type') if request.GET.get('type') in sources.SEARCH_TYPES else ''
-    if not query:
+    refinements = search_filters.SearchFilters(request.GET)
+    valid_filters = refinements.is_valid()
+    options = refinements.options() if valid_filters else {}
+    restricted = bool(kind in ('journals', 'reviews') or
+                      any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')))
+    if src == 'arxiv' and restricted:
+        refinements.add_error(None, _('Journal, ORCID and published-article filters require All sources or Journals and preprints.'))
+        valid_filters = False
+    selected = {}
+    for key in ('journals', 'exclude_journals'):
+        ids = list(dict.fromkeys(v for v in request.GET.getlist(key) if re.fullmatch(r'S\d{1,15}', v)))[:5]
+        selected[key] = search_filters.selected_journals(ids)
+    filter_context = {'filter_form': refinements, 'selected_journals': selected['journals'],
+                      'excluded_journals': selected['exclude_journals'], 'advanced': True,
+                      'filters_active': bool(options or kind), 'restricted_sources': restricted}
+    # Rebuild pagination from validated values; drop stale pages and journal lookup text.
+    from django.http import QueryDict
+    state = QueryDict(mutable=True)
+    for key, value in [('q', query), ('field', field), ('src', src), ('type', kind)]:
+        state[key] = value
+    for key, value in options.items():
+        if isinstance(value, list):
+            state.setlist(key, value)
+        else:
+            state[key] = str(value)
+    filter_context['pagination_query'] = state.urlencode()
+    filter_context['reset_filters_url'] = '?' + urlencode({'q': query, 'field': field, 'src': 'all'})
+    if not valid_filters:
+        return render(request, 'summarizer/search_results.html', {
+            **filter_context, 'query': query, 'src': src, 'kind': kind, 'field': field, 'search': []})
+    if not query and not options.get('orcid') and not options.get('journals'):
         # arXiv answers 400 to an empty search_query: show the empty search page instead.
-        return render(request, 'summarizer/search_results.html', {'query': '', 'search': [], 'page_obj': None,
+        return render(request, 'summarizer/search_results.html', {**filter_context, 'query': '', 'search': [], 'page_obj': None,
                                                                     'src': src, 'kind': kind, 'field': field})
-    if src == 'all' or field != 'all':
-        results, failed = (unified_search.search(query) if field == 'all' else
-                           unified_search.search(query, field=field, source=src, kind=kind))
+    if src == 'all' or field != 'all' or options or kind == 'reviews':
+        if field == 'all' and not options and not kind and src == 'all':
+            results, failed = unified_search.search(query)
+        else:
+            kwargs = {'field': field, 'source': src, 'kind': kind}
+            if options:
+                kwargs['filters'] = options
+            results, failed = unified_search.search(query, **kwargs)
         if page_num == 1:
             Search.objects.create(query=query[:2000], user=request.user if request.user.is_authenticated else None,
                                   lang=get_language())
         return render(request, 'summarizer/search_results.html', {
-            'query': query, 'search': results, 'page_obj': Paginator(results, 10).get_page(page_num) if results else None,
+            **filter_context, 'query': query, 'search': results, 'page_obj': Paginator(results, 10).get_page(page_num) if results else None,
             'src': src, 'unified': True, 'failed': failed, 'field': field, 'kind': kind})
     if src == 'open':
-        return open_search_results(request, query, kind, page_num)
+        return open_search_results(request, query, kind, page_num, filter_context)
 
     # perform search and pagination logic here
     search_results = []
@@ -406,7 +452,7 @@ def search_results(request):
 
     #total_pages = math.ceil(total_results / items_per_page)
 
-    context = {'query': query, 'search': search_results,'page_obj': page_obj, 'src': src, 'kind': kind}
+    context = {**filter_context, 'query': query, 'search': search_results,'page_obj': page_obj, 'src': src, 'kind': kind}
 
     print('page_num',page_num)
     if page_num==1:
@@ -430,7 +476,7 @@ def search_results(request):
 OPEN_SEARCH_SECONDS = 6 * 3600  # an OpenAlex search costs; pages and reloads of the same search reuse it
 
 
-def open_search_results(request, query, kind, page_num):
+def open_search_results(request, query, kind, page_num, filter_context=None):
     """Search of the open-access journals and preprint servers (sources.search)."""
     cache_key = 'open-search:%s' % hashlib.sha256(json.dumps([query.lower(), kind]).encode()).hexdigest()
     results, failed = cache.get(cache_key), False
@@ -446,7 +492,7 @@ def open_search_results(request, query, kind, page_num):
         Search.objects.create(query=query, user=request.user if request.user.is_authenticated else None,
                               lang=get_language())
     return render(request, 'summarizer/search_results.html', {
-        'query': query, 'search': results, 'page_obj': page_obj, 'src': 'open', 'kind': kind, 'failed': failed})
+        **(filter_context or {}), 'query': query, 'search': results, 'page_obj': page_obj, 'src': 'open', 'kind': kind, 'failed': failed})
 
 
 def summarize(request):
@@ -510,7 +556,7 @@ def summarize(request):
             # redirect to search results view with query and page as query strings
             #return redirect('search_results', q=query, page=page)
             query_params = {'q': query, 'page': page, 'src': 'all'}
-            if request.POST.get('field') in ('author', 'title'):
+            if request.POST.get('field') in ('author', 'title', 'abstract'):
                 query_params['field'] = request.POST['field']
             if request.POST.get('src') in ('open', 'arxiv'):
                 query_params['src'] = request.POST['src']
