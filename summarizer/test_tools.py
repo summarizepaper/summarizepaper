@@ -992,6 +992,43 @@ class SlidesTests(ToolsTestCase):
 
 
 class ConferenceTests(ToolsTestCase):
+    def test_detached_pdf_accents_preserve_names_titles_and_scientific_notation(self):
+        cases = {
+            'Th´eo Vrignaud': 'Théo Vrignaud',
+            'La mission spatiale PLATO: d´emographie et ´evolution des syst`emes plan´etaires':
+                'La mission spatiale PLATO: démographie et évolution des systèmes planétaires',
+            'The\u0301o Vrignaud': 'Théo Vrignaud',
+            "O'Neil · 12:30–12:45 · x^2 · 30′ · α · `name`": "O'Neil · 12:30–12:45 · x^2 · 30′ · α · `name`",
+        }
+        for before, after in cases.items():
+            with self.subTest(before=before):
+                self.assertEqual(conference.normalize_accents(before), after)
+                self.assertEqual(conference.normalize_accents(after), after)
+
+    def test_model_listing_is_normalized_before_ranking(self):
+        with mock.patch('summarizer.generated.chat_json', return_value={'talks': [
+                {'title': 'Syst`emes plan´etaires', 'speakers': 'Th´eo Vrignaud'}]}):
+            talks = conference.list_talks('Program')
+        self.assertEqual(talks[0]['title'], 'Systèmes planétaires')
+        self.assertEqual(talks[0]['speakers'], 'Théo Vrignaud')
+
+    def test_cached_results_display_correct_accents_without_regeneration(self):
+        user = self.user(paid=True)
+        raw = {'name': 'Journ´ees scientifiques', 'listed': 1, 'people': ['Th´eo Vrignaud'],
+               'talks': [{'title': 'Syst`emes plan´etaires', 'speakers': 'Th´eo Vrignaud',
+                         'priority': 'must', 'why': 'M´ethodes proches.', 'time': '12:30–12:45'}]}
+        row = Generated.objects.create(kind='conference', key='accent-test', user=user, lang='fr',
+                                       status='done', content=json.dumps(raw))
+        with mock.patch('summarizer.generated.chat_json') as chat:
+            page = self.client_for(user).get('/fr/conference/accent-test/')
+        self.assertContains(page, 'Théo Vrignaud', count=2)
+        self.assertContains(page, 'Systèmes planétaires')
+        self.assertContains(page, 'Journées scientifiques')
+        self.assertContains(page, 'Méthodes proches.')
+        chat.assert_not_called()
+        row.refresh_from_db()
+        self.assertEqual(row.data(), raw)
+
     def test_lists_ranks_and_explains_the_talks(self):
         program = ('Monday 9:00 Session A\n\nClouds on hot Jupiters, by Ann Lee\n\n' + 'x ' * 7000 +
                    '\n\nTuesday 10:00\n\nProtein folding, by Max P\n\nExomoons with Gaia, by Zoe Q')

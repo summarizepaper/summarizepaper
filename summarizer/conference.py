@@ -9,6 +9,8 @@
    much (do not miss, worth it, if you have time); their speakers are the
    people to meet.
 """
+import re
+import unicodedata
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
@@ -41,6 +43,36 @@ STEPS = [
     ('write', _('An AI says why the closest ones matter to you')),
 ]
 
+PDF_ACCENTS = {'´': '\u0301', 'ˊ': '\u0301', '`': '\u0300', 'ˋ': '\u0300',
+               '¨': '\u0308', 'ˆ': '\u0302', '˜': '\u0303', '¸': '\u0327'}
+PDF_ACCENT_RE = re.compile(r'(?<!\\)([' + re.escape(''.join(PDF_ACCENTS)) + r'])([A-Za-z])')
+
+
+def normalize_accents(text):
+    """Recompose detached PDF accent glyphs; preserve apostrophes and math symbols."""
+    text = unicodedata.normalize('NFC', text)
+
+    def compose(match):
+        combined = unicodedata.normalize('NFC', match[2] + PDF_ACCENTS[match[1]])
+        return combined if len(combined) == 1 else match[0]
+
+    # Backticks used as inline code delimiters are not detached grave accents.
+    parts = re.split(r'(?<!\w)(`[^`\n]+`)(?!\w)', text)
+    return ''.join(part if index % 2 else PDF_ACCENT_RE.sub(compose, part)
+                   for index, part in enumerate(parts))
+
+
+def result_data(data):
+    """Repair cached results at display time without regenerating scientific content."""
+    result = dict(data)
+    if isinstance(result.get('name'), str):
+        result['name'] = normalize_accents(result['name'])
+    result['talks'] = [dict(talk, **{key: normalize_accents(value) for key, value in talk.items()
+                                   if isinstance(value, str)}) for talk in result.get('talks', []) if isinstance(talk, dict)]
+    result['people'] = list(dict.fromkeys(normalize_accents(person) for person in result.get('people', [])
+                                         if isinstance(person, str)))
+    return result
+
 
 def chunks(text):
     """Pieces of about CHUNK characters, cut at blank lines when possible."""
@@ -63,14 +95,14 @@ def list_talks(piece):
         'object {"talks": [{"title": "...", "speakers": "names as written", "session": "session name or empty", '
         '"time": "day and time as written, or empty", "abstract": "its abstract if given, at most 600 characters, '
         'or empty"}]}.', paid=False, max_tokens=6000, system='<program>\n%s\n</program>' % piece)
-    return [{k: str(t.get(k, '')).strip() for k in ('title', 'speakers', 'session', 'time', 'abstract')}
+    return [{k: normalize_accents(str(t.get(k, '')).strip()) for k in ('title', 'speakers', 'session', 'time', 'abstract')}
             for t in answer.get('talks', []) if isinstance(t, dict) and str(t.get('title', '')).strip()]
 
 
 def find(program, interests, lang, step=lambda name: None):
     step('list')
     with ThreadPoolExecutor(PARALLEL) as pool:
-        listed = [t for found in pool.map(list_talks, chunks(program)) for t in found]
+        listed = [t for found in pool.map(list_talks, chunks(normalize_accents(program))) for t in found]
     unique = {}
     for talk in listed:  # a talk cut between two pieces is listed twice
         unique.setdefault(talk['title'].lower(), talk)
@@ -104,7 +136,7 @@ def find(program, interests, lang, step=lambda name: None):
     for t in chosen:
         t.pop('id')
         t['similarity'] = round(100 * t['similarity'])
-    return {'talks': chosen, 'listed': len(talks), 'people': people[:15]}
+    return result_data({'talks': chosen, 'listed': len(talks), 'people': people[:15]})
 
 
 def write(data, program, interests, name, lang):
@@ -113,7 +145,7 @@ def write(data, program, interests, name, lang):
         text = missed.pdf_text(data) if data is not None else program
         if len(text.strip()) < MIN_PROGRAM:
             raise generated.GenerationError('no text found in the program')
-        return dict(find(text, interests, lang, lambda step: generated.progress(pk, step)), name=name)
+        return dict(find(text, interests, lang, lambda step: generated.progress(pk, step)), name=normalize_accents(name))
     return work
 
 
@@ -174,4 +206,4 @@ def conference_result(request, key):
     if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
         row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/conference_result.html', {
-        'row': row, 'result': row.data() if row.status == 'done' else None, 'steps': STEPS})
+        'row': row, 'result': result_data(row.data()) if row.status == 'done' else None, 'steps': STEPS})
