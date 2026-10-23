@@ -1,0 +1,10 @@
+{% load i18n %}
+<form class="card section-card" method="post" action="{% url 'student_verify_source' pk=item.pk %}" data-student-source data-saving="{% trans 'Checking the institutional source…' %}">
+  {% csrf_token %}
+  <label for="source-{{ item.pk }}">{% trans 'Check an official profile or published offer' %}</label>
+  <p id="source-help-{{ item.pk }}" class="muted">{% trans 'Paste a page from the institution website below or one of its subdomains. Addresses without https:// are accepted. We check public structured data; a missing result does not mean the person or opportunity does not exist.' %}</p>
+  {% if item.snapshot.website %}<p>{% trans 'Institution website:' %} <a href="{{ item.snapshot.website }}" target="_blank" rel="noopener">{{ item.snapshot.website }}</a></p>{% endif %}
+  <input id="source-{{ item.pk }}" type="text" inputmode="url" name="url" required maxlength="2000" value="{{ source_url }}" aria-describedby="source-help-{{ item.pk }}" placeholder="https://…" style="width:100%;box-sizing:border-box" autocapitalize="none" spellcheck="false">
+  <button type="submit" class="btn btn-secondary">{% trans 'Check source' %}</button>
+  <p role="status" aria-live="polite"></p>
+</form>

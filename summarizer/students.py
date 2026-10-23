@@ -579,11 +579,14 @@ def verify_source(request, pk):
     item = get_object_or_404(StudentShortlist, pk=pk, user=request.user)
     if not access.has_tool(request.user, 'students'):
         raise Http404
-    url = request.POST.get('url', '')
+    supplied = request.POST.get('url', '')
+    url = student_sources.normalize_url(supplied)
+    context = {'item': item, 'source_url': supplied[:2000],
+               'source_domain': student_sources.host(item.snapshot.get('website', ''), allow_http=True)}
     if len(url) > 2000 or not student_sources.official(url, item.snapshot.get('website', '')):
-        return render(request, 'summarizer/student_source.html', {'item': item, 'invalid': True}, status=400)
+        return render(request, 'summarizer/student_source.html', dict(context, invalid=True), status=400)
     if not cache.add('student-verify:%s' % request.user.pk, True, 30):
-        return render(request, 'summarizer/student_source.html', {'item': item, 'busy': True}, status=429)
+        return render(request, 'summarizer/student_source.html', dict(context, busy=True), status=429)
     evidence = student_sources.inspect(item.snapshot, url)
     # Lock-free optimistic update: source checks must not overwrite concurrent notes or refreshes.
     old = item.snapshot.get('official_sources') or {}
@@ -592,4 +595,4 @@ def verify_source(request, pk):
     snapshot = dict(item.snapshot, official_sources=evidence)
     updated = StudentShortlist.objects.filter(pk=item.pk, revision=item.revision).update(
         snapshot=snapshot, revision=F('revision')+1, updated=timezone.now())
-    return render(request, 'summarizer/student_source.html', {'item': item, 'evidence': evidence, 'conflict': not updated})
+    return render(request, 'summarizer/student_source.html', dict(context, evidence=evidence, conflict=not updated))

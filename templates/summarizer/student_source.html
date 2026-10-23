@@ -1,6 +1,10 @@
-{% extends 'base.html' %}{% load i18n %}
+{% extends 'base.html' %}{% load i18n static_version %}
 {% block title %}{% trans 'Institutional source check' %}{% endblock %}
-{% block extra_head_tags %}<meta name="robots" content="noindex">{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex"><script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% endblock %}
 {% block content %}<div class="page"><h1>{% trans 'Institutional source check' %}</h1>
-{% if invalid %}<p class="error">{% trans 'Use an HTTPS page on the institution website or one of its subdomains.' %}</p>{% elif busy %}<p class="notice">{% trans 'Please wait thirty seconds before checking another source.' %}</p>{% elif conflict %}<p class="notice">{% trans 'The saved lead changed during this check. The evidence was not saved; reload and try again.' %}</p>{% else %}{% include 'summarizer/student_evidence.html' with evidence_open=True %}<p>{% trans 'The source check has been saved with this lead.' %}</p>{% endif %}
+{% if invalid %}
+  {% if source_domain %}<p class="error" role="alert">{% blocktrans %}This address is not accepted. Use a page on {{ source_domain }} or one of its subdomains, without a username, password or custom port.{% endblocktrans %}</p>
+  {% else %}<p class="error" role="alert">{% trans 'This saved lead has no usable institution website. Refresh the search to update its institution sources.' %}</p>{% endif %}
+{% elif busy %}<p class="notice" role="alert">{% trans 'Please wait thirty seconds before checking another source.' %}</p>{% elif conflict %}<p class="notice" role="alert">{% trans 'The saved lead changed during this check. The evidence was not saved; reload and try again.' %}</p>{% else %}{% include 'summarizer/student_evidence.html' with evidence_open=True %}<p>{% trans 'The source check has been saved with this lead.' %}</p>{% endif %}
+{% if source_domain %}{% include 'summarizer/student_source_form.html' %}{% endif %}
 <a href="{% url 'students' %}#lead-{{ item.pk }}">{% trans 'Back to my shortlist' %}</a></div>{% endblock %}

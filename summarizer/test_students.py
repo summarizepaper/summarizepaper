@@ -388,6 +388,32 @@ class StudentWorkflowTests(ToolsTestCase):
         other = self.client_for(self.user('source-other', paid=True))
         self.assertEqual(other.post(url, {'url': 'https://example.edu/'}).status_code, 404)
 
+    def test_source_validation_preserves_input_and_allows_correction(self):
+        user = self.user('source-retry', paid=True)
+        client = self.client_for(user)
+        item = StudentShortlist.objects.create(user=user, candidate_key='retry', snapshot=self.candidate(), notes='Keep')
+        url = '/fr/students/shortlist/%d/source/' % item.pk
+        with mock.patch.object(students.student_sources, 'inspect') as inspect:
+            response = client.post(url, {'url': 'https://wrong.example/profile?a=1&b=2'})
+            self.assertContains(response, 'example.edu', status_code=400)
+            self.assertContains(response, 'value="https://wrong.example/profile?a=1&amp;b=2"', status_code=400)
+            self.assertContains(response, 'data-student-source', status_code=400)
+            self.assertContains(response, 'Cette adresse', status_code=400)
+            inspect.assert_not_called()
+            inspect.return_value = {'profiles': [], 'offers': [], 'checked': '2026-10-23', 'partial': False}
+            self.assertEqual(client.post(url, {'url': '  example.edu/profile  '}).status_code, 200)
+            inspect.assert_called_once_with(item.snapshot, 'https://example.edu/profile')
+        item.refresh_from_db()
+        self.assertEqual(item.notes, 'Keep')
+        self.assertEqual(item.revision, 1)
+
+    def test_source_missing_institution_website_explains_refresh(self):
+        user = self.user('source-no-site', paid=True)
+        item = StudentShortlist.objects.create(user=user, candidate_key='missing', snapshot=dict(self.candidate(), website=''))
+        response = self.client_for(user).post('/en/students/shortlist/%d/source/' % item.pk, {'url': 'https://example.edu'})
+        self.assertContains(response, 'no usable institution website', status_code=400)
+        self.assertNotContains(response, 'data-student-source', status_code=400)
+
     def test_reading_methods_require_literal_evidence_and_keep_first_authors(self):
         person = self.candidate()
         person['readings'][0]['abstract'] = 'We use optical interferometry to detect astrometric signals.'
@@ -402,6 +428,15 @@ class StudentWorkflowTests(ToolsTestCase):
 
 
 class StudentPublicSourceTests(ToolsTestCase):
+    def test_pasted_addresses_are_normalized_without_relaxing_domain_checks(self):
+        from . import student_sources as public
+        for raw in (' example.edu/profile ', 'http://example.edu/profile', '//example.edu/profile', 'https://example.edu/profile'):
+            self.assertEqual(public.normalize_url(raw), 'https://example.edu/profile')
+            self.assertTrue(public.official(public.normalize_url(raw), 'https://example.edu'))
+        for raw in ('javascript:alert(1)', 'https://example.edu.evil.test', 'https://user:pw@example.edu',
+                    'https://example.edu:444/a', 'https://example.edu/\npage', 'https://example.edu\\@evil.test'):
+            self.assertFalse(public.official(public.normalize_url(raw), 'https://example.edu'))
+
     def test_institution_domain_boundary_and_private_ips(self):
         from . import student_sources as public
         for url in ('https://example.edu.evil.test/a', 'http://example.edu/a', 'https://user:pw@example.edu/a',

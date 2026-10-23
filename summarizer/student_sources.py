@@ -18,11 +18,25 @@ class Unavailable(Exception):
     pass
 
 
+def normalize_url(value):
+    """Accept pasted institutional addresses while always requesting HTTPS."""
+    value = value.strip()
+    if value.startswith('//'):
+        value = 'https:' + value
+    elif not re.match(r'^[a-z][a-z0-9+.-]*:', value, re.I):
+        value = 'https://' + value
+    elif value.lower().startswith('http://'):
+        value = 'https://' + value[7:]
+    return value
+
+
 def host(url, allow_http=False):
     try:
         p = urlsplit(url)
         allowed = ('https', 'http') if allow_http else ('https',)
         if p.scheme not in allowed or p.username or p.password or p.port not in (None, 80 if p.scheme == 'http' else 443):
+            return ''
+        if any(c.isspace() or ord(c) < 32 for c in url) or '\\' in url:
             return ''
         return (p.hostname or '').encode('idna').decode().lower().removeprefix('www.')
     except (ValueError, UnicodeError):
