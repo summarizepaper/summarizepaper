@@ -60,6 +60,20 @@ class BillingCurrencyTests(TestCase):
             self.client.post('/en/premium/checkout/', {'period': 'monthly', 'currency': 'usd'})
         self.assertEqual(create.call_args.kwargs['line_items'][0]['price'], 'price_usd')
 
+    @override_settings(STRIPE_PRICE_YEARLY_USD='price_year_usd')
+    def test_fixed_usd_yearly_price_is_displayed_and_used_by_checkout(self):
+        cache.set('stripe_price_label_price_year_usd', '80.00 USD / year', 3600)
+        self.client.force_login(self.user)
+        page = self.client.get('/en/premium/?currency=usd')
+        self.assertContains(page, '80.00 USD / year')
+        self.assertContains(page, 'Subscribe yearly')
+        with mock.patch('stripe.checkout.Session.create', return_value=mock.Mock(url='https://checkout.stripe.com/test')) as create:
+            self.client.post('/en/premium/checkout/', {'period': 'yearly', 'currency': 'usd'})
+        params = create.call_args.kwargs
+        self.assertEqual(params['line_items'][0]['price'], 'price_year_usd')
+        self.assertEqual(params['currency'], 'usd')
+        self.assertEqual(params['adaptive_pricing'], {'enabled': False})
+
     def test_unconfigured_or_invalid_currency_never_creates_checkout(self):
         self.client.force_login(self.user)
         with mock.patch('stripe.checkout.Session.create') as create:
