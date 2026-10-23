@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 function harness({fragmentOK = true, command = 'start_background_task'} = {}) {
-  const events = {}, requests = [], sockets = [], tabs = [], panels = [];
+  const events = {}, requests = [], sockets = [], tabs = [], panels = [], analytics = [];
   const el = () => ({dataset:{}, style:{}, hidden:false, textContent:'', children:[],
     classList:{add() {}}, addEventListener(t, fn) {this[t] = fn;},
     setAttribute() {}, replaceChildren(...nodes) {this.children = nodes; this.textContent = '';},
@@ -21,7 +21,7 @@ function harness({fragmentOK = true, command = 'start_background_task'} = {}) {
   let inits = 0, replacedURL = '', selected = -1, fragmentFailure = !fragmentOK;
   const context = {console, location:{protocol:'http:', host:'local', hash:'', assign() {throw Error('unexpected navigation');}},
     document:{getElementById: id => id === 'synthesis-live' ? box : page, createElement:el, importNode: x=>x},
-    window:{scrollY:12, scrollTo() {}, addEventListener() {}},
+    window:{umami:{track(name) {analytics.push(name);}}, scrollY:12, scrollTo() {}, addEventListener() {}},
     history:{state:null, replaceState(_,__,url) {replacedURL = url;}},
     SPPaper:{init() {inits++;}}, switchTab(i) {selected=i;},
     DOMParser: class {parseFromString() {return {querySelector: () => detail};}},
@@ -32,7 +32,7 @@ function harness({fragmentOK = true, command = 'start_background_task'} = {}) {
   };
   vm.runInNewContext(fs.readFileSync('static/summarizer/js/paper-live.js','utf8'),context);
   function emit(state) {sockets.at(-1).onmessage({data:JSON.stringify({type:'synthesis_snapshot',state})});}
-  return {box, status, progress, retry, page, panels, sockets, tabs, events, requests, emit, removedScripts,
+  return {box, status, progress, retry, page, panels, sockets, tabs, events, requests, emit, removedScripts, analytics,
     fixed() {fragmentFailure=false;}, get inits(){return inits;}, get url(){return replacedURL;}, get selected(){return selected;}};
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -55,7 +55,7 @@ test('reconnection resumes snapshots without replaying the authorized start', ()
 
 test('completed synthesis installs the final controls once without a navigation or executable scripts', async () => {
   const h=harness(); h.emit({progress:{progress:100}}); await settle();
-  assert.equal(h.inits,1); assert.equal(h.page.children.length,1); assert.equal(h.url,'/paper/');
+  assert.equal(h.inits,1); assert.deepEqual(h.analytics,['paper_result_view']); assert.equal(h.page.children.length,1); assert.equal(h.url,'/paper/');
   assert.equal(h.removedScripts.length,1); assert.equal(h.sockets[0].closed,true);
   h.emit({progress:{progress:100}}); await settle(); assert.equal(h.inits,1);
 });

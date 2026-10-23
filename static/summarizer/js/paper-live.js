@@ -76,6 +76,8 @@
       complete = true; stop();
       history.replaceState(history.state, '', box.dataset.canonical + (box.dataset.tree === '1' ? '#closest' : location.hash));
       SPPaper.init(); switchTab(selected);
+      // Preserve the result-view funnel event that previously came from the final navigation.
+      try {if (window.umami) Promise.resolve(window.umami.track('paper_result_view')).catch(function () {});} catch (_) {}
       if (window.SPChat) SPChat.typeset(wrapper);
       window.scrollTo(0, scrollY);
       if (box.dataset.tree === '1') {var closest = document.getElementById('closest'); if (closest) closest.scrollIntoView();}
