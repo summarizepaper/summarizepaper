@@ -9,6 +9,7 @@ than trusted to the model:
 - suggested outside commentators come from our own data (authors of related
   papers who did not sign this one); their independence still needs checking.
 """
+import datetime
 import json
 import re
 
@@ -17,7 +18,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_POST
 from django.http import JsonResponse, HttpResponse
 
-from . import access, generated, paper_source, similar, sources
+from . import access, generated, paper_source, publication_status, similar, sources
 from .assistant import SOURCE_POLICY, MAX_CONTEXT_CHARS
 from .digest import name_key
 from .models import AnnouncedPaper, ArxivPaper, Author, Generated, Letter, PaperScore
@@ -28,6 +29,7 @@ from django.utils.translation import gettext_lazy as _
 EXPERTS = 6
 STEPS = [
     ('read', _('Reading the full paper')),
+    ('publication', _('Checking publication records')),
     ('experts', _('Finding researchers for outside comment')),
     ('write', _('Writing the kit and checking the quotes against the paper')),
 ]
@@ -58,6 +60,10 @@ Also include:
 Give 3 to 4 evidence cards, 2 to 3 distinct reporting angles and 2 to 3 wording checks.
 Copy evidence quotes exactly in their ORIGINAL language; explanations must use {language}.
 Do not invent a quote, number, contact, publication status, peer review, independence, replication or section/page.
+Use the publication_check metadata to establish what has already been checked, with its date and sources.
+Do not ask a generic question about editorial/publication status if a publication has been found.
+Instead ask about remaining uncertainty: the version to cite, subsequent corrections, data, or changes between versions.
+For a declaration on arXiv, say it is author-declared, not independently confirmed. Missing records do not prove non-publication.
 A journal reference alone does not establish peer review. Missing disclosure is unknown, not proof of no conflict.
 Explain absolute effects, sample sizes, uncertainty, comparison groups and causal limits when the source supports them.
 Distinguish measured results, simulations, associations and speculation. Never turn association into causation.
@@ -176,7 +182,10 @@ def write(arxiv_id, lang):
             available = paper.abstract or ''
         scope = 'abstract' if abstract_only else 'excerpt' if len(available) > MAX_CONTEXT_CHARS else 'full_text'
         source_text = available[:MAX_CONTEXT_CHARS]
-        context = json.dumps({'source_documents': {'metadata': provenance(paper, scope), 'text': source_text}}, ensure_ascii=False)
+        generated.progress(pk, 'publication')
+        publication = publication_status.for_generation(paper)
+        context = json.dumps({'source_documents': {'metadata': provenance(paper, scope), 'text': source_text,
+                                                  'publication_check': publication}}, ensure_ascii=False)
         generated.progress(pk, 'experts')
         people = experts(paper)
         generated.progress(pk, 'write')
@@ -195,6 +204,7 @@ def write(arxiv_id, lang):
             'glossary': [{'term': str(g.get('term', '')).strip(), 'definition': str(g.get('definition', '')).strip()}
                          for g in answer.get('glossary', []) if isinstance(g, dict) and g.get('term')][:10],
             'experts': people,
+            'publication_status': publication,
             'abstract_only': abstract_only, 'schema_version': 2, 'source': provenance(paper, scope),
             'evidence_cards': evidence_cards(answer.get('evidence_cards'), source_text, abstract_only),
             'angles': records(answer.get('angles'), ['angle', 'why_now', 'reporting_step'], 3),
@@ -256,9 +266,13 @@ def presskit_page(request, arxiv_id):
     if kit:
         quoted = {' '.join(card.get('quote', '').split()) for card in kit.get('evidence_cards', []) if card.get('verified')}
         kit['key_sentences'] = [sentence for sentence in kit.get('key_sentences', []) if ' '.join(sentence.split()) not in quoted]
+    publication = publication_status.latest(arxiv_id, kit) if kit else None
     return render(request, 'summarizer/presskit.html', {
         'paper': paper, 'arxiv_id': arxiv_id, 'paid': paid, 'row': row,
         'kit': kit, 'steps': STEPS,
+        **publication_status.display_context(publication),
+        'publication_stale': row.status != 'pending' and publication_status.stale(publication) if row else False,
+        'author_questions': publication_status.questions(kit, publication),
         'editorial': editorial_context(request.GET.get('letter'), arxiv_id, lang),
         'source': provenance(paper, 'unknown') if isinstance(paper, ArxivPaper) else None,
     })
@@ -289,9 +303,41 @@ def presskit_pdf(request, arxiv_id):
         raise Http404
     from .presskit_pdf import document
     editorial = editorial_context(request.GET.get('letter'), arxiv_id, request.LANGUAGE_CODE)
-    response = HttpResponse(document(paper, row, editorial), content_type='application/pdf')
+    response = HttpResponse(document(paper, row, editorial, publication=publication_status.latest(arxiv_id, row.data())), content_type='application/pdf')
     safe_id = re.sub(r'[^a-zA-Z0-9._-]', '-', arxiv_id)[:100]
     response['Content-Disposition'] = 'attachment; filename="SummarizePaper-press-kit-%s-%s.pdf"' % (safe_id, request.LANGUAGE_CODE)
     response['Cache-Control'] = 'private, no-store'
     response['X-Content-Type-Options'] = 'nosniff'
     return response
+
+
+def status_kit(request, arxiv_id):
+    if not access.is_paid(request.user):
+        raise Http404
+    row = Generated.objects.filter(kind='presskit', key=arxiv_id, lang=request.LANGUAGE_CODE).exclude(content='').first()
+    if row is None or (row.user_id and row.user_id != request.user.pk):
+        raise Http404
+    return row
+
+
+@require_POST
+def publication_start(request, arxiv_id):
+    status_kit(request, arxiv_id)
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    if paper is None:
+        raise Http404
+    previous = publication_status.latest(arxiv_id)
+    # Share public publication metadata across languages; allow refresh at most once per minute.
+    row = generated.start(publication_status.KIND, arxiv_id, 'en', lambda pk: publication_status.lookup(paper),
+                          force=publication_status.stale(previous, datetime.timedelta(minutes=1)))
+    return JsonResponse({'id': row.pk, 'status': row.status})
+
+
+@require_GET
+def publication_result(request, arxiv_id):
+    from django.template.loader import render_to_string
+    kit = status_kit(request, arxiv_id).data()
+    report = publication_status.latest(arxiv_id, kit)
+    html = render_to_string('summarizer/publication_status.html', publication_status.display_context(report), request=request)
+    return JsonResponse({'html': html, 'questions': publication_status.questions(kit, report)},
+                        headers={'Cache-Control': 'private, no-store'})

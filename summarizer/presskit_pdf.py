@@ -7,7 +7,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext as _
 from fpdf import FPDF
 
-from . import sources
+from . import sources, publication_status
 from .latex_pdf import prose_html
 
 
@@ -28,8 +28,9 @@ class PressPDF(FPDF):
         self.cell(0, 6, 'SummarizePaper  ·  %s %s' % (_('Page'), self.page_no()), align='R')
 
 
-def document(paper, row, editorial=None):
+def document(paper, row, editorial=None, publication=None):
     kit = row.data()
+    publication = publication or kit.get("publication_status")
     pdf = PressPDF(format='A4')
     pdf.set_margins(18, 17, 18)
     pdf.set_auto_page_break(True, margin=21)
@@ -88,6 +89,19 @@ def document(paper, row, editorial=None):
         text('DOI: ' + source['doi'], size=9)
     text(_('AI-assisted reporting brief. Verify facts, interpretation and quotations against the original paper before publication.'), 'I', size=9)
 
+    if publication:
+        heading(_('Editorial status: automatic verification'))
+        text(publication_status.description(publication), 'B')
+        text(_('Checked at') + ': ' + publication.get('checked_at', ''), size=9)
+        if publication.get('journal'):
+            text(publication['journal'] + (' · ' + publication['date'] if publication.get('date') else ''))
+        if publication.get('unavailable'):
+            text(_('Some sources were unavailable') + ': ' + ', '.join(publication['unavailable']), 'I', size=9)
+        for reference in publication.get('sources', []):
+            text(reference['name'] + ': ' + reference['detail'], size=9)
+            text(reference['url'], size=9, link=reference['url'])
+        text(_('A publication record does not independently establish peer review. No publication found does not mean the manuscript is unpublished; private submission and review decisions may be inaccessible.'), 'I', size=9)
+
     heading(kit.get('headline') or _('Plain-language explanation'))
     text(kit.get('plain_explanation'))
     heading(_("What's new"))
@@ -136,7 +150,7 @@ def document(paper, row, editorial=None):
         for item in key_sentences:
             quote(item)
     heading(_('Questions to ask the authors'))
-    for index, item in enumerate(kit.get('questions_for_authors', []), 1):
+    for index, item in enumerate(publication_status.questions(kit, publication), 1):
         text('%s. %s' % (index, item))
     heading(_('Researchers to approach for outside comment'))
     text(_('These researchers are not listed as coauthors in our metadata. Their independence, affiliations and possible conflicts of interest still need to be checked.'), 'I', size=9)

@@ -7610,6 +7610,103 @@ msgstr ""
 "Kit de presse pour les journalistes : dossier PDF, citations contrôlées dans"
 " la source, angles de reportage et pistes de spécialistes à interroger"
 
+msgid "Checking publication records"
+msgstr "Vérification des publications"
+
+msgid "Checking publication records…"
+msgstr "Vérification des publications…"
+
+msgid "Editorial status: automatic verification"
+msgstr "Statut éditorial : vérification automatique"
+
+msgid "Checked at"
+msgstr "Vérifié le"
+
+msgid "Sources queried"
+msgstr "Sources interrogées"
+
+msgid "Some sources were unavailable"
+msgstr "Certaines sources étaient indisponibles"
+
+msgid "The verification may be incomplete."
+msgstr "La vérification peut être incomplète."
+
+msgid ""
+"A publication record does not independently establish peer review. No "
+"publication found does not mean the manuscript is unpublished; private "
+"submission and review decisions may be inaccessible."
+msgstr ""
+"Une notice de publication ne confirme pas à elle seule l’évaluation par les "
+"pairs. Ne pas retrouver de publication ne signifie pas que le manuscrit "
+"n’est pas publié ; les décisions de soumission et d’évaluation peuvent ne "
+"pas être publiques."
+
+msgid ""
+"We will check the latest arXiv record and Crossref publication metadata. "
+"This does not regenerate the kit."
+msgstr ""
+"Nous allons consulter la fiche arXiv la plus récente et les métadonnées de "
+"publication de Crossref, sans régénérer le kit."
+
+msgid "Check publication status"
+msgstr "Vérifier le statut de publication"
+
+msgid ""
+"The verification could not be completed. You can retry; the kit is "
+"unchanged."
+msgstr ""
+"La vérification n’a pas pu aboutir. Vous pouvez réessayer ; le kit est "
+"conservé."
+
+msgid "Journal publication found"
+msgstr "Publication en revue retrouvée"
+
+msgid "Journal publication announced for a future date"
+msgstr "Publication en revue annoncée à une date future"
+
+msgid ""
+"Journal reference declared on arXiv; publication not independently confirmed"
+msgstr ""
+"Référence à une revue déclarée sur arXiv ; publication non confirmée "
+"indépendamment"
+
+msgid "Acceptance declared on arXiv by the authors"
+msgstr "Acceptation annoncée sur arXiv par les auteurs"
+
+msgid "Submission or review declared on arXiv by the authors"
+msgstr "Soumission ou évaluation annoncée sur arXiv par les auteurs"
+
+msgid "Preprint found; no journal publication confirmed"
+msgstr "Prépublication retrouvée ; aucune publication en revue confirmée"
+
+msgid "Editorial status not confirmed by the sources checked"
+msgstr "Statut éditorial non confirmé par les sources consultées"
+
+msgid "Editorial status has not been checked yet"
+msgstr "Statut éditorial pas encore vérifié"
+
+msgid "Preprint record found."
+msgstr "Notice de prépublication retrouvée."
+
+msgid "Explicit link from the preprint to its published version."
+msgstr "Lien explicite entre la prépublication et sa version publiée."
+
+msgid ""
+"Which version of the text and data should be cited, and have any corrections"
+" appeared since publication?"
+msgstr ""
+"Quelle version du texte et des données faut-il citer, et des corrections "
+"sont-elles parues depuis la publication ?"
+
+msgid "Publication found"
+msgstr "Publication retrouvée"
+
+msgid "Publication announced for a future date"
+msgstr "Publication annoncée à une date future"
+
+msgid "Withdrawal declared on arXiv by the authors"
+msgstr "Retrait annoncé sur arXiv par les auteurs"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

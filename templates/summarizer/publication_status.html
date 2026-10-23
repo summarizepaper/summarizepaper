@@ -1,0 +1,15 @@
+{% load i18n %}
+<h2>{% trans 'Editorial status: automatic verification' %}</h2>
+<p><strong>{{ publication_label }}</strong></p>
+{% if publication %}
+<p>{% if publication.journal %}{{ publication.journal }}{% endif %}{% if publication.date %} · {{ publication.date }}{% endif %}{% if publication.doi %} · <a href="https://doi.org/{{ publication.doi }}" target="_blank" rel="noopener noreferrer">DOI: {{ publication.doi }}</a>{% endif %}</p>
+<p class="muted">{% trans 'Checked at' %} {{ publication_checked_at|date:"j F Y H:i T" }}{% if publication.checked_sources %} · {% trans 'Sources queried' %}: {{ publication.checked_sources|join:', ' }}{% endif %}</p>
+{% if publication.unavailable %}<p class="error">{% trans 'Some sources were unavailable' %}: {{ publication.unavailable|join:', ' }}. {% trans 'The verification may be incomplete.' %}</p>{% endif %}
+{% if publication.sources %}<ul>{% for source in publication.sources %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a> — {{ source.detail }}</li>{% endfor %}</ul>{% endif %}
+<p class="muted">{% trans 'A publication record does not independently establish peer review. No publication found does not mean the manuscript is unpublished; private submission and review decisions may be inaccessible.' %}</p>
+{% else %}
+<p class="muted">{% trans 'We will check the latest arXiv record and Crossref publication metadata. This does not regenerate the kit.' %}</p>
+{% endif %}
+<button type="button" class="btn btn-ghost" data-publication-refresh>{% trans 'Check publication status' %}</button>
+<span data-publication-progress role="status" hidden><span class="spinner spinner-sm" aria-hidden="true"></span> {% trans 'Checking publication records…' %}</span>
+<p class="error" data-publication-error role="status" hidden>{% trans 'The verification could not be completed. You can retry; the kit is unchanged.' %}</p>

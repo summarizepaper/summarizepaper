@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Press kit' %} | {{ paper.title|truncatechars:70 }}{% endblock %}
 {% block extra_head_tags %}
-  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+  {% include 'summarizer/mathjax.html' %}
+  <script defer src="{% static_v 'summarizer/js/publication-status.js' %}"></script><meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -14,6 +15,8 @@
     <h1>{{ paper.title }}</h1>
     <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %}{% if paper.authors.count %} · {% endif %}{{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
+
+  {% if paid %}{% csrf_token %}{% endif %}
 
   {% if editorial %}
   <section class="card section-card editorial-context">
@@ -39,6 +42,9 @@
       <a class="btn" href="{% url 'presskit_pdf' arxiv_id %}{% if editorial %}?letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download press kit as PDF' %}</a>
       {% if kit.schema_version != 2 or row.status == 'failed' %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Enrich this kit with verified evidence' %}</button>{% endif %}
     </div>
+    <section class="card section-card" id="publication-status" data-start="{% url 'presskit_publication_start' arxiv_id %}" data-result="{% url 'presskit_publication' arxiv_id %}" data-auto="{{ publication_stale|yesno:'1,0' }}">
+      {% include 'summarizer/publication_status.html' %}
+    </section>
     {% if kit.source %}
     <section class="card section-card">
       <h2>{% trans 'Source and verification status' %}</h2>
@@ -107,7 +113,7 @@
 
     <section class="card section-card">
       <h2>{% trans 'Questions to ask the authors' %}</h2>
-      <ol>{% for q in kit.questions_for_authors %}<li>{{ q }}</li>{% endfor %}</ol>
+      <ol id="author-questions">{% for q in author_questions %}<li>{{ q }}</li>{% endfor %}</ol>
     </section>
 
     <section class="card section-card">

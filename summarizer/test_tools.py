@@ -24,7 +24,10 @@ class ToolsTestCase(TestCase):
     def setUp(self):
         cache.clear()
         patches = [mock.patch('summarizer.generated.background', side_effect=lambda work, *args: work(*args)),
-                   mock.patch('summarizer.generated.release_connection')]
+                   mock.patch('summarizer.generated.release_connection'),
+                   mock.patch('summarizer.publication_status.lookup', return_value={
+                       'status': 'unknown', 'checked_at': timezone.now().isoformat(), 'sources': [],
+                       'checked_sources': [], 'unavailable': [], 'peer_review': 'not_independently_verified'})]
         for p in patches:
             p.start()
             self.addCleanup(p.stop)
@@ -244,7 +247,7 @@ class PressKitTests(ToolsTestCase):
                  mock.patch('summarizer.generated.chat_json', return_value={}):
                 client.post('/en/press-kit/2101.00001v1/start/')
             read.assert_called_once_with(paper.arxiv_id)
-            self.assertEqual(Generated.objects.get().data()['abstract_only'], expected_abstract)
+            self.assertEqual(Generated.objects.get(kind='presskit').data()['abstract_only'], expected_abstract)
             if text:
                 store.assert_called_once_with(paper.arxiv_id, text, 'html')
             else:
