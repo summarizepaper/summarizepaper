@@ -34,6 +34,7 @@
       <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% endif %}
   {% else %}
+    <p><a href="#citation-alert-history">{% trans 'View past citation alerts' %}</a></p>
     {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_followed %}You can follow {{ n }} papers at most.{% endblocktrans %}</p>{% endif %}
     <form method="post" class="card section-card">
       {% csrf_token %}
@@ -60,6 +61,38 @@
       <li class="muted">{% trans 'You follow no paper yet.' %}</li>
       {% endfor %}
     </ul>
+    <section id="citation-alert-history" class="section-card" style="scroll-margin-top:90px">
+      <h2>{% trans 'Citation alert history' %}</h2>
+      <p class="muted">{% trans 'Your sent alerts are saved here, including the citations beyond the email limit. They remain available when you stop following a paper.' %}</p>
+      {% for alert in alert_history %}
+      <details class="card section-card"{% if forloop.first %} open{% endif %}>
+        <summary><strong>{{ alert.sent|date:'SHORT_DATETIME_FORMAT' }}</strong> · {% blocktrans count n=alert.count %}{{ n }} new citation{% plural %}{{ n }} new citations{% endblocktrans %}</summary>
+        {% for paper in alert.papers %}
+          <h3><a href="{{ paper.arxiv_id|paper_url }}" target="_blank" rel="noopener">{{ paper.title|default:paper.arxiv_id }}</a></h3>
+          <ul class="item-list">
+          {% for c in paper.items %}<li class="card">
+            <a href="{{ c.url }}"><strong>{{ c.title }}</strong></a>
+            <p class="meta">{{ c.authors|join:', ' }}{% if c.date %} · {{ c.date }}{% endif %}
+              {% if c.stance %} · {% if c.stance == 'builds_on' %}{% trans 'builds on it' %}{% elif c.stance == 'supports' %}{% trans 'supports it' %}{% elif c.stance == 'questions' %}{% trans 'questions it' %}{% else %}{% trans 'mentions it' %}{% endif %}{% endif %}</p>
+            {% if c.note %}<p>{{ c.note }}</p>{% endif %}
+            {% if c.contexts %}<details><summary>{% trans 'Citation excerpts' %}</summary>{% for excerpt in c.contexts %}<blockquote>{{ excerpt }}</blockquote>{% endfor %}</details>{% endif %}
+          </li>{% endfor %}
+          </ul>
+        {% endfor %}
+      </details>
+      {% empty %}
+        <p>{% trans 'No archived citation alert yet. Your next sent alert will appear here.' %}</p>
+        {% if last_unarchived_alert %}<p>{% blocktrans with date=last_unarchived_alert|date:'SHORT_DATETIME_FORMAT' %}Last citation email sent: {{ date }} (content not archived).{% endblocktrans %}</p>{% endif %}
+      {% endfor %}
+      {% if alert_history.has_other_pages %}
+      <nav aria-label="{% trans 'Citation alert history' %}" class="item-actions">
+        {% if alert_history.has_previous %}<a href="?alerts_page={{ alert_history.previous_page_number }}#citation-alert-history">{% trans 'Previous' %}</a>{% endif %}
+        <span>{{ alert_history.number }} / {{ alert_history.paginator.num_pages }}</span>
+        {% if alert_history.has_next %}<a href="?alerts_page={{ alert_history.next_page_number }}#citation-alert-history">{% trans 'Next' %}</a>{% endif %}
+      </nav>
+      {% endif %}
+      <p class="muted"><small>{% trans 'The content of emails sent before this history was introduced was not stored and cannot be recovered here.' %}</small></p>
+    </section>
   {% endif %}
 </div>
 {% endblock %}

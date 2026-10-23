@@ -639,6 +639,19 @@ class CitationAlertLog(models.Model):
     sent = models.DateTimeField()
 
 
+class CitationAlertHistory(models.Model):
+    """Private snapshot of a citation alert, independent of live caches and follows."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='citation_alert_history')
+    sent = models.DateTimeField()
+    lang = models.CharField(max_length=10)
+    count = models.PositiveIntegerField(default=0)
+    papers = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ('-sent', '-pk')
+        constraints = [models.UniqueConstraint(fields=('user', 'sent'), name='unique_citation_alert_delivery')]
+
+
 class PaperAudio(models.Model):
     """A paper's title and blurb read aloud, shared by every Premium digest that lists it (see audio.py)."""
     arxiv_id = models.CharField(max_length=100)

@@ -22,6 +22,8 @@ import time
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.core.paginator import Paginator
+from django.db import transaction
 from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -31,7 +33,7 @@ from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
 from . import access, digest, generated, mailcheck, sources
-from .models import ArxivPaper, CitationAlertLog, CitationCache, FollowedPaper
+from .models import ArxivPaper, CitationAlertHistory, CitationAlertLog, CitationCache, FollowedPaper
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +321,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
         if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'citations'):
             continue
         lang = user.digests.values_list('lang', flat=True).first() or 'en'
-        papers = []
+        papers, archive, delivered = [], [], {}
         followed_rows = list(FollowedPaper.objects.filter(user=user).exclude(pending='').exclude(pending='[]'))
         for followed in followed_rows:
             cached = CitationCache.objects.filter(arxiv_id=followed.arxiv_id).first()
@@ -327,15 +329,17 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
             new = {pid: citing[pid] for pid in json.loads(followed.pending) if pid in citing}
             if not new:
                 continue
+            delivered[followed.pk] = list(new)
             notes = stances(followed.title, dict(list(new.items())[:MAX_PER_EMAIL]), lang)
             items = []
-            for pid, c in list(new.items())[:MAX_PER_EMAIL]:
+            for pid, c in new.items():
                 link = ('%s/%s/paper/%s/' % (base_url, lang, c['arxiv_id'].replace('/', '--'))) if c['arxiv_id'] else \
                     ('https://doi.org/%s' % c['doi'] if c['doi'] else
                      'https://ui.adsabs.harvard.edu/abs/%s/abstract' % pid[4:] if pid.startswith('ads:') else
                      'https://www.semanticscholar.org/paper/%s' % pid)
                 items.append(dict(c, url=link, **notes.get(pid, {'stance': '', 'note': ''})))
-            papers.append({'followed': followed, 'items': items, 'more': max(0, len(new) - MAX_PER_EMAIL)})
+            papers.append({'followed': followed, 'items': items[:MAX_PER_EMAIL], 'more': max(0, len(new) - MAX_PER_EMAIL)})
+            archive.append({'arxiv_id': followed.arxiv_id, 'title': followed.title, 'items': items})
         if not papers:
             continue
         context = {'papers': papers, 'count': sum(len(p['items']) + p['more'] for p in papers),
@@ -347,15 +351,24 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
         message = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email])
         message.attach_alternative(html, 'text/html')
         try:
-            message.send()
+            if not message.send():
+                continue
         except Exception:
             logger.exception('Citation alert to %s failed', user.username)
             continue
-        for followed in followed_rows:
-            followed.known = json.dumps(json.loads(followed.known or '[]') + json.loads(followed.pending or '[]'))
-            followed.pending = ''
-            followed.save(update_fields=['known', 'pending'])
-        CitationAlertLog.objects.update_or_create(user=user, defaults={'sent': now})
+        with transaction.atomic():
+            CitationAlertHistory.objects.get_or_create(user=user, sent=now, defaults={
+                'lang': lang, 'count': context['count'], 'papers': archive})
+            for followed in followed_rows:
+                current = FollowedPaper.objects.select_for_update().filter(pk=followed.pk, user=user).first()
+                if current is None or followed.pk not in delivered:
+                    continue
+                ids = delivered[followed.pk]
+                current.known = json.dumps(list(dict.fromkeys(json.loads(current.known or '[]') + ids)))
+                pending = [pid for pid in json.loads(current.pending or '[]') if pid not in set(ids)]
+                current.pending = json.dumps(pending) if pending else ''
+                current.save(update_fields=['known', 'pending'])
+            CitationAlertLog.objects.update_or_create(user=user, defaults={'sent': now})
         sent += 1
     return sent
 
@@ -407,8 +420,13 @@ def citations_page(request):
     for f in followed:
         f.total = totals.get(f.arxiv_id)
         f.queued = len(json.loads(f.pending or '[]'))
+    history = (Paginator(CitationAlertHistory.objects.filter(user=request.user), 10)
+               .get_page(request.GET.get('alerts_page'))) if paid else None
+    last_sent = (CitationAlertLog.objects.filter(user=request.user).values_list('sent', flat=True).first()
+                 if paid and not history.paginator.count else None)
     return render(request, 'summarizer/citations.html', {
-        'paid': paid, 'followed': followed, 'error': error, 'max_followed': MAX_FOLLOWED})
+        'paid': paid, 'followed': followed, 'error': error, 'max_followed': MAX_FOLLOWED,
+        'alert_history': history, 'last_unarchived_alert': last_sent})
 
 
 @require_POST

@@ -8117,6 +8117,45 @@ msgstr ""
 "L’analyse précédente n’a pas pu aboutir. Vous pouvez la relancer ci-dessous "
 "; votre collection est conservée."
 
+msgid "View past citation alerts"
+msgstr "Voir les alertes de citation passées"
+
+msgid "Citation alert history"
+msgstr "Historique des alertes de citation"
+
+msgid ""
+"Your sent alerts are saved here, including the citations beyond the email "
+"limit. They remain available when you stop following a paper."
+msgstr ""
+"Vos alertes envoyées sont conservées ici, y compris les citations au-delà de"
+" la limite de l’email. Elles restent accessibles lorsque vous arrêtez de "
+"suivre un article."
+
+msgid "Citation excerpts"
+msgstr "Extraits des citations"
+
+msgid "No archived citation alert yet. Your next sent alert will appear here."
+msgstr ""
+"Aucune alerte de citation archivée pour le moment. Votre prochaine alerte "
+"envoyée apparaîtra ici."
+
+msgid ""
+"The content of emails sent before this history was introduced was not stored"
+" and cannot be recovered here."
+msgstr ""
+"Le contenu des emails envoyés avant la mise en place de cet historique "
+"n’était pas enregistré et ne peut pas être récupéré ici."
+
+#, python-format
+msgid "Last citation email sent: %(date)s (content not archived)."
+msgstr "Dernier email de citations envoyé : %(date)s (contenu non archivé)."
+
+#, python-format
+msgid "%(n)s new citation"
+msgid_plural "%(n)s new citations"
+msgstr[0] "%(n)s nouvelle citation"
+msgstr[1] "%(n)s nouvelles citations"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

@@ -465,6 +465,102 @@ class MissedTests(ToolsTestCase):
 
 
 class CitationTests(ToolsTestCase):
+    def queue(self, user, now, *ids):
+        citing = self.citing(*ids)
+        CitationCache.objects.create(arxiv_id='2101.00001', citing=json.dumps(citing), total=len(citing), checked=now)
+        return FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='Followed paper',
+                                          known='[]', pending=json.dumps(list(citing)))
+
+    def test_sent_alert_is_archived_and_survives_cache_changes_and_unfollow(self):
+        from .models import CitationAlertHistory
+        now = timezone.now()
+        user = self.user(paid=True)
+        followed = self.queue(user, now, 'c3')
+        with mock.patch('summarizer.citations.stances', return_value={'c3': {'stance': 'supports', 'note': 'Confirms it.'}}):
+            self.assertEqual(citations.send_alerts(now, 1), 1)
+        history = CitationAlertHistory.objects.get(user=user)
+        self.assertEqual((history.count, history.sent, history.lang), (1, now, 'en'))
+        self.assertEqual(history.papers[0]['items'][0]['note'], 'Confirms it.')
+        CitationCache.objects.all().delete()
+        client = self.client_for(user)
+        client.post('/en/citations/', {'action': 'unfollow', 'pk': followed.pk})
+        page = client.get('/en/citations/')
+        self.assertContains(page, 'Paper c3')
+        self.assertContains(page, 'Confirms it.')
+        self.assertContains(page, '/en/paper/2201.00003/')
+        self.assertContains(page, 'As shown by [3], clouds are thick.')
+        self.assertContains(client.get('/fr/citations/'), '1 nouvelle citation')
+        self.assertEqual(citations.send_alerts(now, 1), 0)
+        self.assertEqual(CitationAlertHistory.objects.count(), 1)
+
+    def test_failed_or_unsent_email_does_not_archive_or_consume_citations(self):
+        from .models import CitationAlertHistory
+        now = timezone.now()
+        user = self.user(paid=True)
+        followed = self.queue(user, now, 'c1')
+        for outcome in (RuntimeError('mail offline'), 0):
+            kwargs = {'side_effect': outcome} if isinstance(outcome, Exception) else {'return_value': outcome}
+            with mock.patch('summarizer.citations.EmailMultiAlternatives.send', **kwargs):
+                self.assertEqual(citations.send_alerts(now, 1), 0)
+            followed.refresh_from_db()
+            self.assertEqual(json.loads(followed.pending), ['c1'])
+            self.assertFalse(CitationAlertHistory.objects.exists())
+
+    def test_new_citation_arriving_during_delivery_remains_queued(self):
+        now = timezone.now()
+        user = self.user(paid=True)
+        followed = self.queue(user, now, 'c1')
+
+        def send():
+            FollowedPaper.objects.filter(pk=followed.pk).update(pending='["c1", "c2"]')
+            return 1
+
+        with mock.patch('summarizer.citations.EmailMultiAlternatives.send', side_effect=send):
+            self.assertEqual(citations.send_alerts(now, 1), 1)
+        followed.refresh_from_db()
+        self.assertEqual(json.loads(followed.pending), ['c2'])
+        self.assertEqual(json.loads(followed.known), ['c1'])
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_online_history_includes_citations_beyond_email_limit(self):
+        from .models import CitationAlertHistory
+        now = timezone.now()
+        user = self.user(paid=True)
+        self.queue(user, now, 'c1', 'c2', 'c3')
+        with mock.patch('summarizer.citations.MAX_PER_EMAIL', 2), mock.patch('summarizer.citations.stances', return_value={}):
+            self.assertEqual(citations.send_alerts(now, 1), 1)
+        row = CitationAlertHistory.objects.get()
+        self.assertEqual(row.count, 3)
+        self.assertEqual(len(row.papers[0]['items']), 3)
+        self.assertNotIn('Paper c3', mail.outbox[-1].alternatives[0][0])
+        self.assertContains(self.client_for(user).get('/en/citations/'), 'Paper c3')
+
+    def test_history_is_private_paginated_and_does_not_invent_old_alerts(self):
+        from .models import CitationAlertHistory, CitationAlertLog
+        now = timezone.now()
+        user = self.user(paid=True)
+        client = self.client_for(user)
+        CitationAlertLog.objects.create(user=user, sent=now)
+        page = client.get('/en/citations/')
+        self.assertContains(page, 'No archived citation alert yet')
+        self.assertContains(page, 'Last citation email sent:')
+        self.assertEqual(page.context['last_unarchived_alert'], now)
+        for day in range(11):
+            CitationAlertHistory.objects.create(user=user, sent=now-datetime.timedelta(days=day), lang='en', count=1,
+                papers=[{'title': 'Followed', 'arxiv_id': '2101.00001', 'items': [
+                    {'title': 'History entry %d' % day, 'url': '/en/paper/2101.00002v1/',
+                     'authors': [], 'note': '<script>privateTest()</script>'}]}])
+        page = client.get('/en/citations/')
+        self.assertContains(page, 'History entry 0')
+        self.assertNotContains(page, 'History entry 10')
+        self.assertContains(page, 'alerts_page=2')
+        self.assertContains(page, '&lt;script&gt;privateTest()&lt;/script&gt;')
+        self.assertContains(client.get('/en/citations/?alerts_page=2'), 'History entry 10')
+        self.assertNotContains(self.client_for(self.user('other', paid=True)).get('/en/citations/'), 'History entry')
+        self.assertNotContains(Client().get('/en/citations/'), 'History entry')
+        UserPlan.objects.filter(user=user).update(paid=False)
+        self.assertNotContains(client.get('/en/citations/'), 'History entry')
+
     def citing(self, *ids):
         return {pid: {'title': 'Paper %s' % pid, 'arxiv_id': '2201.0000%s' % pid[-1], 'doi': '', 'date': '2026-10-01',
                       'authors': ['Zoe Q'], 'contexts': ['As shown by [3], clouds are thick.'] if pid == 'c3' else [],
