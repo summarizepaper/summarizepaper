@@ -131,7 +131,7 @@ def default_interests(user):
 def conference_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/conference.html', {'anonymous': True, 'per_day': PER_DAY})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'conference')
     projects = WatchedProject.objects.filter(user=request.user).exclude(description='')
     error = None
     form = {}
@@ -166,6 +166,8 @@ def conference_page(request):
 
 @login_required
 def conference_result(request, key):
+    if not access.has_tool(request.user, 'conference'):
+        raise Http404
     row = Generated.objects.filter(kind='conference', key=key, user=request.user).first()
     if row is None:
         raise Http404

@@ -257,7 +257,7 @@ def presskit_page(request, arxiv_id):
         if announced is None or canonical_id(arxiv_id) != arxiv_id:
             raise Http404
         paper = {'title': announced.title, 'authors': Author.objects.none()}
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'presskit')
     lang = request.LANGUAGE_CODE
     row = Generated.objects.filter(kind='presskit', key=arxiv_id, lang=lang).first() if paid else None
     if row and row.user_id and row.user_id != request.user.pk:
@@ -280,7 +280,7 @@ def presskit_page(request, arxiv_id):
 
 @require_POST
 def presskit_start(request, arxiv_id):
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'presskit'):
         return JsonResponse({'status': 'premium'}, status=403)
     if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists() and (
             canonical_id(arxiv_id) != arxiv_id or announced_paper(arxiv_id) is None):
@@ -295,7 +295,7 @@ def presskit_start(request, arxiv_id):
 
 @require_GET
 def presskit_pdf(request, arxiv_id):
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'presskit'):
         return HttpResponse(status=403)
     row = Generated.objects.filter(kind='presskit', key=arxiv_id, lang=request.LANGUAGE_CODE).exclude(content='').first()
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
@@ -312,7 +312,7 @@ def presskit_pdf(request, arxiv_id):
 
 
 def status_kit(request, arxiv_id):
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'presskit'):
         raise Http404
     row = Generated.objects.filter(kind='presskit', key=arxiv_id, lang=request.LANGUAGE_CODE).exclude(content='').first()
     if row is None or (row.user_id and row.user_id != request.user.pk):

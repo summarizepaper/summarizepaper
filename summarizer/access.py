@@ -9,8 +9,10 @@ import hashlib
 import ipaddress
 
 from django.utils import timezone
+from django.db.models import Q
 
-from .models import AIassistant, PaperHistory, SiteSettings, UserPlan
+from .models import AIassistant, PaperHistory, SiteSettings, UserPlan, PremiumGrant
+from .premium_tools import TOOL_KEYS
 
 # https://www.cloudflare.com/ips/ - requests coming from these addresses are
 # Cloudflare edges, so their CF-Connecting-IP header is trustworthy.
@@ -82,15 +84,28 @@ def chat_messages_per_day():
     return {"anonymous": cfg.chat_anonymous_per_day, "user": cfg.chat_user_per_day, "paid": cfg.chat_paid_per_day}
 
 
+def active_grants(user):
+    """Read current grants afresh: revocations apply to the next request."""
+    if user is None or not user.is_authenticated or not getattr(user, 'is_active', True):
+        return PremiumGrant.objects.none()
+    return PremiumGrant.objects.filter(user=user, active=True).filter(Q(expires__isnull=True) | Q(expires__gte=timezone.now()))
+
+
 def is_paid(user):
-    if user is None or not user.is_authenticated:
+    """Full Premium only. A tool grant must never lift global AI quotas or block checkout."""
+    if user is None or not user.is_authenticated or not getattr(user, 'is_active', True):
         return False
-    plan = UserPlan.objects.filter(user=user).order_by("created").last()
-    if plan is None or not plan.paid:
-        return False
-    if plan.expires is not None and plan.expires < timezone.now():
-        return False
-    return True
+    plan = UserPlan.objects.filter(user=user).order_by('created', 'pk').last()
+    if plan and plan.paid and (plan.expires is None or plan.expires >= timezone.now()):
+        return True
+    return active_grants(user).filter(tool='all').exists()
+
+
+def has_tool(user, tool):
+    """Authorization shared by pages, generation, status APIs, downloads and jobs."""
+    if tool not in TOOL_KEYS:
+        return False  # typos and unregistered scopes cannot grant access
+    return is_paid(user) or active_grants(user).filter(tool=tool).exists()
 
 
 def run_quota(user, hashed_ip):

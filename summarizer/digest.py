@@ -885,7 +885,7 @@ def due_plans(now, only_user=None):
     paid, first = {}, {}
     for s in subscriptions:
         if s.user_id not in paid:
-            paid[s.user_id] = access.is_paid(s.user)
+            paid[s.user_id] = access.has_tool(s.user, 'digest')
             first[s.user_id] = DigestSubscription.objects.filter(user_id=s.user_id).values_list('pk', flat=True).first()
     # without Premium (or after it ended) only the first digest of an account is sent
     plans = [Plan(s, paid[s.user_id], now) for s in subscriptions if paid[s.user_id] or s.pk == first[s.user_id]]
@@ -1075,7 +1075,7 @@ def preview(subscription, base_url=BASE_URL):
     days = list(ArxivBatch.objects.order_by('-day').values_list('day', flat=True)[:1])
     if not days:
         return False
-    plan = Plan(subscription, access.is_paid(subscription.user), timezone.now())
+    plan = Plan(subscription, access.has_tool(subscription.user, 'digest'), timezone.now())
     papers = load_papers(days)
     index = author_index(papers) if plan.authors else {}
     return deliver(plan, set(days), papers, index, base_url, timezone.now(), [0], new_syntheses=False)
@@ -1114,7 +1114,7 @@ from django.views.decorators.csrf import csrf_exempt  # noqa: E402
 def digest_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/digest.html', _digest_context(request, None, [], False))
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'digest')
     lim = limits(paid)
     digests = list(request.user.digests.all())
     wanted = request.POST.get('digest') if request.method == 'POST' else request.GET.get('d')

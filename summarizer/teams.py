@@ -178,7 +178,7 @@ def _spend(user):
 def teams_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/teams.html', {'anonymous': True, 'per_day': PER_DAY})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'teams')
     projects = WatchedProject.objects.filter(user=request.user).exclude(description='')
     error = None
     if request.method == 'POST' and paid:
@@ -199,6 +199,8 @@ def teams_page(request):
 
 @login_required
 def teams_result(request, key):
+    if not access.has_tool(request.user, 'teams'):
+        raise Http404
     row = Generated.objects.filter(kind='teams', key=key, user=request.user).first()
     if row is None:
         raise Http404

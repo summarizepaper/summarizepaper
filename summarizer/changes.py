@@ -237,7 +237,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
         if sent >= budget:
             break
         alerts = list(VersionAlert.objects.filter(user=user, emailed=False))
-        if not user.email or user.email.strip().lower() in suppressed or not access.is_paid(user):
+        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'changes'):
             VersionAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(emailed=True)
             continue
         lang = user.digests.values_list('lang', flat=True).first() or 'en'
@@ -310,7 +310,7 @@ def _versions(arxiv_id, request, ask_arxiv=True):
 
 
 def changes_page(request, arxiv_id):
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'changes')
     base, latest, old, new = _versions(arxiv_id, request, ask_arxiv=paid)
     row = Generated.objects.filter(kind='changes', key=comparison_key(base, old, new),
                                    lang=request.LANGUAGE_CODE).first() if paid and latest > 1 else None
@@ -323,7 +323,7 @@ def changes_page(request, arxiv_id):
 
 @require_POST
 def changes_start(request, arxiv_id):
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'changes'):
         return JsonResponse({'status': 'premium'}, status=403)
     base, latest, old, new = _versions(arxiv_id, request)
     if latest < 2:

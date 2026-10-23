@@ -157,7 +157,7 @@ def check_due(now, limit=MAX_CHECKS_PER_RUN):
         if done >= limit:
             break
         days = days_to_check(project, batches)
-        if not days or not access.is_paid(project.user):
+        if not days or not access.has_tool(project.user, 'scoops'):
             continue
         papers, vectors = papers_of(days, loaded)
         try:
@@ -177,7 +177,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
     for user in User.objects.filter(pk__in=list(waiting)):
         if sent >= budget:
             break
-        if not user.email or user.email.strip().lower() in suppressed or not access.is_paid(user):
+        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'scoops'):
             continue
         matches = list(ScoopMatch.objects.filter(project__user=user, emailed=False).select_related('project'))
         lang = matches[0].project.lang
@@ -237,7 +237,7 @@ def prepare(project_pk, data=None):
 def scoops_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/scoops.html', {'anonymous': True, 'max_projects': MAX_PROJECTS})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'scoops')
     error = None
     projects = WatchedProject.objects.filter(user=request.user)
     if request.method == 'POST' and paid:

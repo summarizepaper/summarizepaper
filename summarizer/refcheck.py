@@ -447,7 +447,7 @@ def _text(upload, pasted):
 def refcheck_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/refcheck.html', {'anonymous': True, 'per_day': PER_DAY})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'refcheck')
     error = None
     if request.method == 'POST' and paid:
         bib = _text(request.FILES.get('bib'), request.POST.get('bibtext', ''))
@@ -468,6 +468,8 @@ def refcheck_page(request):
 
 
 def _row(request, key):
+    if not access.has_tool(request.user, 'refcheck'):
+        raise Http404
     row = Generated.objects.filter(kind='refcheck', key=key, user=request.user).first()
     if row is None:
         raise Http404

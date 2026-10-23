@@ -189,7 +189,7 @@ def _mine(request, pk):
 def collections_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/collections.html', {'anonymous': True, 'limits': FREE, 'premium': PREMIUM})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'collections')
     collections = list(Collection.objects.filter(user=request.user).prefetch_related('papers'))
     can_create = len(collections) < limits(paid)['collections']
     if request.method == 'POST' and can_create:
@@ -204,7 +204,7 @@ def collections_page(request):
 @login_required
 def collection_page(request, pk):
     collection = _mine(request, pk)
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'collections')
     message = None
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -249,7 +249,7 @@ def add_to_collection(request):
     """From a paper page: add the paper to a collection, or to a new one. JSON."""
     if not request.user.is_authenticated:
         return JsonResponse({'status': 'login'}, status=403)
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'collections')
     arxiv_id = request.POST.get('arxiv_id', '')
     if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
         raise Http404
@@ -270,7 +270,7 @@ def add_to_collection(request):
 @require_POST
 def compare_start(request, pk):
     collection = _mine(request, pk)
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'collections'):
         return JsonResponse({'status': 'premium'}, status=403)
     if collection.papers.count() < 2:
         return JsonResponse({'status': 'too_few'})
@@ -287,7 +287,7 @@ def collection_export(request, pk, fmt):
     filename = re.sub(r'[^A-Za-z0-9_-]+', '-', collection.name).strip('-')[:60] or 'collection'
     if fmt == 'csv':
         row = Generated.objects.filter(kind='compare', key=comparison_key(collection), lang=lang, status='done').first()
-        if row is None or not access.is_paid(request.user):
+        if row is None or not access.has_tool(request.user, 'collections'):
             raise Http404
         out = io.StringIO()
         writer = csv.writer(out)

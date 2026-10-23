@@ -141,6 +141,8 @@ UNFOLD = {
             ]},
             {"title": "Utilisateurs", "items": [
                 {"title": "Utilisateurs", "icon": "person", "link": reverse_lazy("admin:auth_user_changelist")},
+                {"title": "Accès Premium offerts", "icon": "card_giftcard",
+                 "link": reverse_lazy("admin:summarizer_premiumgrant_changelist")},
                 {"title": "Abonnements", "icon": "workspace_premium",
                  "link": reverse_lazy("admin:summarizer_userplan_changelist")},
                 {"title": "Digests", "icon": "mail", "link": reverse_lazy("admin:summarizer_digestsubscription_changelist")},

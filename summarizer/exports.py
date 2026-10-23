@@ -269,7 +269,7 @@ def check_zotero(library_id, api_key):
 def zotero_settings(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/integrations.html', {'anonymous': True})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'zotero')
     account = ZoteroAccount.objects.filter(user=request.user).first()
     error = False
     if request.method == 'POST' and paid:
@@ -289,7 +289,7 @@ def zotero_settings(request):
 @require_POST
 def zotero_send(request):
     """Send one paper (arxiv_id) or a collection (collection) to Zotero, in the background."""
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'zotero'):
         return JsonResponse({'status': 'premium'}, status=403)
     account = ZoteroAccount.objects.filter(user=request.user).first()
     if account is None:

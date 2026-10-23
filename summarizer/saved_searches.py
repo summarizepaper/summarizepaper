@@ -34,7 +34,7 @@ MAX_EMAIL_ITEMS = 10
 
 
 def watch_limit(user):
-    return 5 if access.is_paid(user) else 1
+    return 5 if access.has_tool(user, 'saved_searches') else 1
 
 
 def fingerprint(params):

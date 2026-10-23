@@ -146,10 +146,10 @@ def slides_page(request, arxiv_id):
         raise Http404
     try:
         lang = deck_language(request)
-        row = selected_row(request, arxiv_id, lang) if access.is_paid(request.user) else None
+        row = selected_row(request, arxiv_id, lang) if access.has_tool(request.user, 'journal_club') else None
     except ValueError:
         return HttpResponseBadRequest('Unsupported slide language or version')
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'journal_club')
     deck = row.data() if row is not None and row.status == 'done' else None
     pages, revision = editable_pages(request.user, arxiv_id, lang, paper, deck) if deck else ([], '')
     version = '2' if row is None or row.kind == DECK_KIND else '1'
@@ -167,7 +167,7 @@ def slides_page(request, arxiv_id):
 
 @require_POST
 def slides_start(request, arxiv_id):
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'journal_club'):
         return JsonResponse({'status': 'premium'}, status=403)
     if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
         raise Http404
@@ -246,7 +246,7 @@ def validate_pages(value, originals):
 @never_cache
 @require_POST
 def slides_save(request, arxiv_id):
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'journal_club'):
         return JsonResponse({'status': 'premium'}, status=403)
     if len(request.body) > 120000:
         return JsonResponse({'status': 'invalid'}, status=400)
@@ -280,7 +280,7 @@ def slides_save(request, arxiv_id):
 @require_POST
 def slides_powerpoint(request, arxiv_id):
     from . import slides_pptx
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'journal_club'):
         return JsonResponse({'status': 'premium'}, status=403)
     if len(request.body) > 120000:
         return JsonResponse({'status': 'invalid'}, status=400)

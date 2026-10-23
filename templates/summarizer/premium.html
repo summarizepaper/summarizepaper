@@ -36,7 +36,7 @@
   {% if is_paid %}
   <p class="status">
     <strong>&#9733; {% trans 'You are Premium.' %}</strong>
-    {% if plan.expires %}
+    {% if subscription_active and plan.expires %}
       {% if plan.canceling %}
         {% blocktrans with date=plan.expires|date:"j F Y" %}Your subscription is cancelled: Premium stays active until {{ date }}.{% endblocktrans %}
       {% else %}
@@ -46,6 +46,14 @@
   </p>
   {% elif success %}
   <p class="notice">{% trans 'Thank you! Your Premium subscription is being activated, it can take a few seconds.' %}</p>
+  {% endif %}
+
+  {% if tool_grants %}
+  <div class="notice">
+    <strong>{% trans 'Access granted to your account' %}</strong>
+    <ul>{% for grant in tool_grants %}<li>{{ grant.get_tool_display }}{% if grant.expires %} — {% blocktrans with date=grant.expires|date:"j F Y" %}until {{ date }}{% endblocktrans %}{% endif %}</li>{% endfor %}</ul>
+    {% if not is_paid %}<p>{% trans 'These grants unlock only the tools listed above. A full Premium subscription remains available.' %}</p>{% endif %}
+  </div>
   {% endif %}
 
   {% for message in messages %}<p class="notice" role="alert" data-funnel-view="checkout_error">{{ message }}</p>{% endfor %}

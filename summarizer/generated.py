@@ -21,6 +21,7 @@ from django.http import Http404, JsonResponse
 from django.utils import timezone
 
 from . import usage
+from .premium_tools import GENERATED_TOOLS
 from .models import Generated
 from .utils import ai_models, chat_params
 
@@ -30,7 +31,7 @@ STALE = datetime.timedelta(minutes=10)  # a 'pending' row older than this was lo
 MAX_THREADS = 3  # each one holds a database connection now and then; the pool has 8
 _pool = ThreadPoolExecutor(MAX_THREADS, thread_name_prefix='background')  # more work waits in its queue, not in threads
 LANGUAGES = {'en': 'English', 'fr': 'French'}
-PREMIUM_KINDS = {'presskit_status', 'slides_v2', 'slides_edit_v2', 'slides_edit', 'presskit', 'compare', 'missed', 'zotero', 'refcheck', 'changes', 'teams', 'slides', 'conference', 'questions'}  # their results are only shown to Premium accounts
+PREMIUM_KINDS = set(GENERATED_TOOLS)
 
 
 class GenerationError(Exception):
@@ -131,11 +132,11 @@ def run_now(kind, key, lang, work, user=None):
 
 def status_view(request, pk):
     """{'status', 'data'} of a result; private results only for their owner."""
-    from .access import is_paid
+    from .access import has_tool
     row = Generated.objects.filter(pk=pk).first()
     if row is None or (row.user_id and row.user_id != request.user.id):
         raise Http404
-    if row.kind in PREMIUM_KINDS and not is_paid(request.user):
+    if row.kind in PREMIUM_KINDS and not has_tool(request.user, GENERATED_TOOLS[row.kind]):
         raise Http404
     if row.status == 'pending' and row.updated < timezone.now() - STALE:
         row.status = 'failed'

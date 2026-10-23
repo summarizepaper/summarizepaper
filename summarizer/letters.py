@@ -156,7 +156,7 @@ def send(now, budget, base_url=digest.BASE_URL):
         if letter is None or (subscription.last_letter and letter.day <= subscription.last_letter):
             continue
         user = subscription.user
-        if not user.email or user.email.strip().lower() in suppressed or not access.is_paid(user):
+        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'letters'):
             continue
         token = signing.dumps(subscription.pk, salt=UNSUBSCRIBE_SALT)
         context = dict(letter_context(letter), base_url=base_url,
@@ -197,7 +197,7 @@ def letter_context(letter):
 
 def letters_page(request):
     lang = get_language()
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'letters')
     subscribed = set()
     if request.user.is_authenticated:
         subscribed = set(LetterSubscription.objects.filter(user=request.user, active=True).values_list('topic', flat=True))
@@ -233,7 +233,7 @@ def letter_page(request, topic, day):
         raise Http404
     other = Letter.objects.filter(topic=topic, day=day).exclude(lang=letter.lang).values_list('lang', flat=True).first()
     return render(request, 'summarizer/letter.html', dict(letter_context(letter), other_lang=other,
-                                                         paid=access.is_paid(request.user)))
+                                                         paid=access.has_tool(request.user, 'letters')))
 
 
 @csrf_exempt  # mail clients send the one-click unsubscribe POST without a CSRF token

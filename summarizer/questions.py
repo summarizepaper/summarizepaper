@@ -84,7 +84,7 @@ def write(collection_pk, lang):
 @require_POST
 def questions_start(request, pk):
     collection = library._mine(request, pk)
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'collections'):
         return JsonResponse({'status': 'premium'}, status=403)
     if collection.papers.count() < 2:
         return JsonResponse({'status': 'too_few'})

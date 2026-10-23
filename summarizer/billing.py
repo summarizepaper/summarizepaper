@@ -86,6 +86,8 @@ def premium(request):
         'is_paid': paid,
         'premium_activated': activated,
         'plan': plan,
+        'tool_grants': list(access.active_grants(request.user)),
+        'subscription_active': bool(plan and plan.paid and (plan.expires is None or plan.expires >= timezone.now())),
         'can_manage': bool(plan and plan.stripe_customer_id),
         'runs_per_day': access.runs_per_day(),
         'chat_free': access.chat_messages_per_day()['user'],

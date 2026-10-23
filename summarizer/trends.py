@@ -264,7 +264,7 @@ def for_digest(categories, lang, today):
 
 
 def trends_page(request):
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'trends')
     lang = get_language()
     scope = request.GET.get('scope', '*')
     if scope != '*' and scope not in ARCHIVES + BIO_ARCHIVES:

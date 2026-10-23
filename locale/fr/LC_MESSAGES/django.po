@@ -7906,6 +7906,46 @@ msgstr[1] ""
 "%(n)s références non résolues : cela ne signifie pas qu’elles sont "
 "incorrectes."
 
+#: summarizer/premium_tools.py:1
+msgid "Full Premium"
+msgstr "Premium complet"
+
+#: summarizer/premium_tools.py:1
+msgid "Collections and comparison tables"
+msgstr "Collections et tableaux comparatifs"
+
+#: summarizer/premium_tools.py:1
+msgid "Zotero integration"
+msgstr "Intégration Zotero"
+
+#: summarizer/premium_tools.py:1
+msgid "Version alerts"
+msgstr "Alertes de versions"
+
+#: summarizer/premium_tools.py:1
+msgid "Saved search watches"
+msgstr "Veilles de recherches enregistrées"
+
+#: summarizer/premium_tools.py:1
+msgid "Reading levels"
+msgstr "Niveaux de lecture"
+
+#: summarizer/premium_tools.py:1
+msgid "Access granted to your account"
+msgstr "Accès accordés à votre compte"
+
+#: summarizer/premium_tools.py:1
+msgid "until %(date)s"
+msgstr "jusqu’au %(date)s"
+
+#: summarizer/premium_tools.py:1
+msgid ""
+"These grants unlock only the tools listed above. A full Premium subscription"
+" remains available."
+msgstr ""
+"Ces accès débloquent uniquement les outils indiqués ci-dessus. Vous pouvez "
+"toujours souscrire au Premium complet."
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

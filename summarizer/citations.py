@@ -316,7 +316,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
     for user in User.objects.filter(pk__in=due_users(now)):
         if sent >= budget:
             break
-        if not user.email or user.email.strip().lower() in suppressed or not access.is_paid(user):
+        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'citations'):
             continue
         lang = user.digests.values_list('lang', flat=True).first() or 'en'
         papers = []
@@ -372,7 +372,7 @@ def run(now, budget):
 def citations_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/citations.html', {'anonymous': True, 'max_followed': MAX_FOLLOWED})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'citations')
     error = None
     if request.method == 'POST' and paid:
         if request.POST.get('action') == 'unfollow':
@@ -414,7 +414,7 @@ def citations_page(request):
 @require_POST
 def follow_view(request):
     """From a paper page. JSON."""
-    if not access.is_paid(request.user):
+    if not access.has_tool(request.user, 'citations'):
         return JsonResponse({'status': 'premium'}, status=403)
     arxiv_id = base_id(request.POST.get('arxiv_id', ''))
     if not arxiv_id:

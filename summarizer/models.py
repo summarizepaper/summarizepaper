@@ -50,6 +50,32 @@ class UserPlan(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+class PremiumGrant(models.Model):
+    """An explicit administrative entitlement, independent of Stripe subscriptions."""
+    from .premium_tools import TOOL_CHOICES
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='premium_grants', verbose_name='utilisateur')
+    tool = models.CharField('accès accordé', max_length=32, choices=TOOL_CHOICES,
+                           help_text='Premium complet ouvre tous les outils. Sinon, seul l’outil choisi est débloqué.')
+    active = models.BooleanField('actif', default=True, help_text='Décochez pour révoquer cet accès offert.')
+    expires = models.DateTimeField('date de fin', blank=True, null=True,
+                                  help_text='Facultatif : sans date, l’accès reste valable jusqu’à sa révocation.')
+    note = models.TextField('note interne', blank=True, help_text='Motif, partenariat ou référence interne ; non visible par l’utilisateur.')
+    granted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='premium_grants_issued', editable=False, verbose_name='accordé par')
+    created = models.DateTimeField('créé le', auto_now_add=True)
+    updated = models.DateTimeField('modifié le', auto_now=True)
+
+    class Meta:
+        verbose_name = 'accès Premium offert'
+        verbose_name_plural = 'accès Premium offerts'
+        constraints = [models.UniqueConstraint(fields=('user', 'tool'), name='unique_user_premium_grant')]
+        ordering = ('user__username', 'tool')
+
+    def __str__(self):
+        return '%s — %s' % (self.user, self.get_tool_display())
+
+
 #class CustomUser(User):#add here if want to add CB info
     #address = models.CharField(max_length=100, blank=True)
     #phone_number = models.CharField(max_length=20, blank=True)

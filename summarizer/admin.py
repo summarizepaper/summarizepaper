@@ -6,7 +6,7 @@ from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
 from django.db import models
-from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
+from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
 from django.urls import path, reverse
@@ -21,7 +21,7 @@ from . import guides, usage
 from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
-                     SuppressedEmail, UserPlan, Vote)
+                     SuppressedEmail, UserPlan, PremiumGrant, Vote)
 
 admin.site.index_title = 'Tableau de bord'
 
@@ -30,13 +30,12 @@ def dashboard_callback(request, context):
     """Numbers shown on the admin home page (UNFOLD["DASHBOARD_CALLBACK"])."""
     now = timezone.now()
     day, week = now - timezone.timedelta(days=1), now - timezone.timedelta(days=7)
-    premium = (UserPlan.objects.filter(paid=True).filter(Q(expires__isnull=True) | Q(expires__gte=now))
-               .values('user').distinct().count())
+    premium = User.objects.annotate(**_premium_annotations()).filter(_premium_q()).count()
     cfg = SiteSettings.current()
     context['kpis'] = [
         ('Utilisateurs', User.objects.count(), '+%d cette semaine' % User.objects.filter(date_joined__gte=week).count(),
          reverse('admin:auth_user_changelist')),
-        ('Premium', premium, 'abonnements actifs', reverse('admin:auth_user_changelist') + '?premium=yes'),
+        ('Premium', premium, 'abonnements ou accès complets offerts', reverse('admin:auth_user_changelist') + '?premium=yes'),
         ('Résumés (24 h)', PaperHistory.objects.filter(created__gte=day).count(),
          '%d sur 7 jours' % PaperHistory.objects.filter(created__gte=week).count(),
          reverse('admin:summarizer_paperhistory_changelist')),
@@ -121,8 +120,19 @@ def _count_per_user(model):
     return Coalesce(Subquery(rows, output_field=IntegerField()), 0)
 
 
+def _current_grants():
+    return PremiumGrant.objects.filter(active=True, user__is_active=True).filter(Q(expires__isnull=True) | Q(expires__gte=timezone.now()))
+
+
+def _premium_annotations():
+    plan = UserPlan.objects.filter(user=OuterRef('pk')).order_by('-created', '-pk')
+    return {'plan_paid': Subquery(plan.values('paid')[:1]),
+            'plan_expires': Subquery(plan.values('expires')[:1]),
+            'gift_premium': Exists(_current_grants().filter(user=OuterRef('pk'), tool='all'))}
+
+
 def _premium_q():
-    return Q(plan_paid=True) & (Q(plan_expires__isnull=True) | Q(plan_expires__gte=timezone.now()))
+    return Q(is_active=True) & (Q(gift_premium=True) | (Q(plan_paid=True) & (Q(plan_expires__isnull=True) | Q(plan_expires__gte=timezone.now()))))
 
 
 class PremiumFilter(admin.SimpleListFilter):
@@ -149,6 +159,44 @@ class UserPlanInline(StackedInline):
     verbose_name_plural = 'abonnements (le plus récent compte ; sans date de fin = Premium offert à vie)'
 
 
+class PremiumGrantForm(forms.ModelForm):
+    class Meta:
+        model = PremiumGrant
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .premium_tools import TOOL_CHOICES
+        # A newly added inline must not silently default to full Premium.
+        self.fields['tool'].choices = [('', 'Choisissez un accès')] + list(TOOL_CHOICES)
+
+
+class PremiumGrantInline(StackedInline):
+    model = PremiumGrant
+    form = PremiumGrantForm
+    fk_name = 'user'
+    extra = 0
+    fields = ('tool', 'active', 'expires', 'note', 'granted_by', 'created')
+    readonly_fields = ('granted_by', 'created')
+    verbose_name = 'accès Premium offert'
+    verbose_name_plural = 'accès offerts : Premium complet ou outil au choix (indépendants de Stripe)'
+
+
+class GrantedToolFilter(admin.SimpleListFilter):
+    title = 'Accès offert'
+    parameter_name = 'granted_tool'
+
+    def lookups(self, request, model_admin):
+        from .premium_tools import TOOL_CHOICES
+        return TOOL_CHOICES
+
+    def queryset(self, request, queryset):
+        from .premium_tools import TOOL_KEYS
+        if self.value() in TOOL_KEYS:
+            return queryset.filter(pk__in=_current_grants().filter(tool=self.value()).values('user_id'))
+        return queryset
+
+
 class DigestInline(StackedInline):
     model = DigestSubscription
     extra = 0
@@ -171,24 +219,39 @@ class SiteUserAdmin(BaseUserAdmin, ModelAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
-    list_display = ('username', 'email', 'date_joined', 'last_login', 'is_active', 'premium', 'summaries', 'questions')
-    list_filter = (PremiumFilter, 'is_active', 'is_staff', 'date_joined')
+    list_display = ('username', 'email', 'date_joined', 'last_login', 'is_active', 'premium', 'offered_tools', 'summaries', 'questions')
+    list_filter = (PremiumFilter, GrantedToolFilter, 'is_active', 'is_staff', 'date_joined')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     ordering = ('-date_joined',)
-    inlines = (UserPlanInline, DigestInline)
+    inlines = (PremiumGrantInline, UserPlanInline, DigestInline)
 
     def get_queryset(self, request):
-        latest_plan = UserPlan.objects.filter(user=OuterRef('pk')).order_by('-created')
         return super().get_queryset(request).annotate(
-            plan_paid=Subquery(latest_plan.values('paid')[:1]),
-            plan_expires=Subquery(latest_plan.values('expires')[:1]),
-            n_summaries=_count_per_user(PaperHistory),
+            **_premium_annotations(), n_summaries=_count_per_user(PaperHistory),
             n_questions=_count_per_user(AIassistant),
-        )
+        ).prefetch_related(Prefetch('premium_grants', queryset=_current_grants(), to_attr='current_grants'))
 
-    @admin.display(boolean=True, description='Premium')
+    @admin.display(boolean=True, description='Premium complet')
     def premium(self, user):
-        return bool(user.plan_paid) and (user.plan_expires is None or user.plan_expires >= timezone.now())
+        return user.is_active and (bool(user.gift_premium) or (bool(user.plan_paid) and
+                (user.plan_expires is None or user.plan_expires >= timezone.now())))
+
+    @admin.display(description='Accès offerts')
+    def offered_tools(self, user):
+        return ', '.join(str(g.get_tool_display()) for g in user.current_grants) or '—'
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model is PremiumGrant:
+            instances = formset.save(commit=False)
+            for obj in formset.deleted_objects:
+                obj.delete()
+            for obj in instances:
+                if not obj.pk:
+                    obj.granted_by = request.user
+                obj.save()
+            formset.save_m2m()
+        else:
+            super().save_formset(request, form, formset, change)
 
     @admin.display(description='résumés', ordering='n_summaries')
     def summaries(self, user):
@@ -271,6 +334,33 @@ class UserPlanAdmin(ModelAdmin):
     list_filter = ('paid', 'canceling')
     search_fields = ('user__username', 'user__email', 'stripe_customer_id', 'stripe_subscription_id')
     raw_id_fields = ('user',)
+
+
+@admin.register(PremiumGrant)
+class PremiumGrantAdmin(ModelAdmin):
+    form = PremiumGrantForm
+    list_display = ('user', 'tool', 'active', 'current', 'expires', 'granted_by', 'created')
+    list_filter = ('tool', 'active', 'expires')
+    search_fields = ('user__username', 'user__email', 'note')
+    autocomplete_fields = ('user',)
+    list_select_related = ('user', 'granted_by')
+    readonly_fields = ('granted_by', 'created', 'updated')
+    fieldsets = (
+        ('Accès offert', {'fields': ('user', 'tool', 'active', 'expires'),
+                         'description': 'Accordez tous les avantages Premium ou seulement l’outil choisi. '
+                                        'Ces accès ne créent ni paiement ni abonnement Stripe. '
+                                        'Révoquer un accès offert ne résilie pas un abonnement payant.'}),
+        ('Suivi interne', {'fields': ('note', 'granted_by', 'created', 'updated')}),
+    )
+
+    @admin.display(boolean=True, description='Valable maintenant')
+    def current(self, obj):
+        return obj.active and obj.user.is_active and (obj.expires is None or obj.expires >= timezone.now())
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.granted_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 class HistoryAdmin(ModelAdmin):

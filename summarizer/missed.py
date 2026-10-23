@@ -176,7 +176,7 @@ def _spend(user):
 def missed_page(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/missed.html', {'anonymous': True, 'per_day': PER_DAY})
-    paid = access.is_paid(request.user)
+    paid = access.has_tool(request.user, 'missed')
     error = None
     if request.method == 'POST' and paid:
         upload = request.FILES.get('draft')
@@ -199,11 +199,13 @@ def missed_page(request):
 
 @login_required
 def missed_result(request, key):
+    if not access.has_tool(request.user, 'missed'):
+        raise Http404
     row = Generated.objects.filter(kind='missed', key=key, user=request.user).first()
     if row is None:
         raise Http404
     if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
         row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/missed_result.html', {
-        'row': row, 'result': row.data() if row.status == 'done' else None, 'paid': access.is_paid(request.user),
+        'row': row, 'result': row.data() if row.status == 'done' else None, 'paid': access.has_tool(request.user, 'missed'),
         'steps': STEPS})

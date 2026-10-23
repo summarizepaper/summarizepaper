@@ -69,7 +69,7 @@ def write(arxiv_id, level, out_lang):
 
 def quota_left(request):
     """New versions this visitor may still ask for today (None: unlimited)."""
-    if access.is_paid(request.user) or request.user.is_superuser:
+    if access.has_tool(request.user, 'reading') or request.user.is_superuser:
         return None
     who = request.user.pk if request.user.is_authenticated else access.hash_ip(access.client_ip(request))
     used = cache.get(QUOTA_KEY % (who, timezone.now().date()), 0)
