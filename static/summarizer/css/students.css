@@ -1,0 +1,17 @@
+.student-person>header{padding-bottom:12px;border-bottom:1px solid var(--border)}
+.student-person>header h2{margin:0 0 6px}.student-affiliation{margin:0 0 4px}
+.student-person h3{margin:0 0 10px;font-size:1.1rem}.student-profile,.student-fit,.student-readings{margin:24px 0}
+.student-fit{padding:18px 20px;border-left:3px solid var(--accent,#6554c0);background:var(--surface-alt,#f7f7fc);border-radius:0 8px 8px 0}
+.student-profile>p,.student-fit>p{margin:8px 0;line-height:1.65}.student-citations{font-size:.82rem;color:var(--text-muted,#666)}
+.student-citations a{display:inline-block;margin:3px 12px 3px 0}.student-reading-list{padding-left:24px}
+.student-reading{padding:16px 0 20px 8px;border-bottom:1px solid var(--border);scroll-margin-top:100px}.student-reading:last-child{border-bottom:0}
+.student-reading h4{font-size:1rem;line-height:1.5;margin:0 0 8px}.student-reading .meta{margin:6px 0}.student-reading>p{line-height:1.6}
+.student-badge{display:inline-block;padding:2px 8px;border-radius:5px;background:var(--surface-alt,#f3f3f7);font-size:.82rem}
+.student-badge-first{background:#edf5ef;color:#256641}.student-reading-guide{margin-top:12px}
+.student-person details>summary{cursor:pointer;font-weight:600;padding:10px 0}.student-person details>summary:focus-visible{outline:2px solid var(--accent,#6554c0);outline-offset:3px}
+.student-method{margin:14px 0}.student-method blockquote{font-size:.88rem;color:var(--text-muted,#666);border-left:2px solid var(--border);padding-left:12px;margin:8px 0;overflow-wrap:anywhere}
+.student-questions{padding-left:20px}.student-questions>li{margin:12px 0 18px}.student-questions .btn{padding:6px 10px;font-size:.82rem}
+.student-sources{border-top:1px solid var(--border);font-size:.9rem;line-height:1.6}.student-email{margin:12px 0}.student-person a{overflow-wrap:anywhere}
+@media(max-width:600px){.student-fit{padding:14px}.student-reading-list{padding-left:20px}.student-reading{padding-left:2px}.student-citations a{display:block}}
+
+.student-criteria>summary{cursor:pointer;font-weight:600;line-height:1.5}

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load i18n static_version %}
 {% block title %}{% trans 'Find a research placement' %}{% endblock %}
-{% block extra_head_tags %}<script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<style>
+{% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<style>
 .student-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
 .student-form-field label{display:block;font-weight:600;margin-bottom:6px}
 .student-form-field input,.student-form-field select,.student-form-field textarea{box-sizing:border-box;width:100%;min-width:0}

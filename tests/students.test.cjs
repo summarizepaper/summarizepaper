@@ -57,3 +57,10 @@ test('a reading question replaces the prompt before the signature and preserves 
   vm.runInNewContext(fs.readFileSync('static/summarizer/js/students.js','utf8'),{document:{readyState:'complete',querySelectorAll(selector){return selector==='[data-student-question]'?[button]:[];}}});
   click();click();assert.equal(draft.value,'Subject\n\nMy edited introduction. Specific question?\n\nThank you\n\nSignature');assert.equal(details.open,true);assert.equal(message.textContent,'Added');assert.equal(draft.focused,true);
 });
+test('the first paper title and the same selected question are not repeated in the email',()=>{
+  let click;const draft={value:'I noticed “Paper title”. [Prompt]\n\nRequest\n\nThanks',dataset:{questionPlaceholder:'[Prompt]',questionClosing:'Request'},closest(){return {open:false};},focus(){}};
+  const card={querySelector(selector){return selector==='[data-student-draft]'?draft:{dataset:{added:'Added'}};}};
+  const button={dataset:{studentQuestion:'Concerning “Paper title”: Which method?',studentPaperTitle:'Paper title',studentQuestionText:'Which method?'},closest(){return card;},addEventListener(name,fn){click=fn;}};
+  vm.runInNewContext(fs.readFileSync('static/summarizer/js/students.js','utf8'),{document:{readyState:'complete',querySelectorAll(selector){return selector==='[data-student-question]'?[button]:[];}}});
+  click();click();assert.equal(draft.value,'I noticed “Paper title”. Which method?\n\nRequest\n\nThanks');
+});

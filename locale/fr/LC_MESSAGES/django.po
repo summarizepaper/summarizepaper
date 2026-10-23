@@ -9329,3 +9329,76 @@ msgstr "Ma progression"
 
 msgid "Edit progress and notes"
 msgstr "Modifier l’état et les notes"
+
+msgid "Bibliographic affiliation"
+msgstr "Affiliation bibliographique"
+
+msgid "Current position to confirm"
+msgstr "Poste actuel à confirmer"
+
+msgid ""
+"Refresh this search to discover first-author papers beyond the initial "
+"results and get a personalised profile. Your saved notes are kept."
+msgstr ""
+"Actualisez cette recherche pour retrouver les articles en premier auteur au-"
+"delà des résultats initiaux et obtenir une présentation personnalisée. Vos "
+"notes sont conservées."
+
+msgid "Research in brief"
+msgstr "Ses recherches en quelques mots"
+
+msgid "Supporting publications:"
+msgstr "Publications à l’appui :"
+
+msgid "Connection to your project"
+msgstr "Le lien avec votre projet"
+
+msgid ""
+"We search this author’s bibliography beyond the initial two-year search. "
+"First-author papers on your topic come first; coauthor papers are used only "
+"to complete the selection."
+msgstr ""
+"La bibliographie de cette personne est explorée au-delà de la recherche "
+"initiale sur deux ans. Les articles en premier auteur sur votre sujet sont "
+"prioritaires ; les articles en coauteur complètent la sélection si "
+"nécessaire."
+
+msgid ""
+"First-author bibliography check is partial or unavailable. These readings "
+"are not a complete publication record."
+msgstr ""
+"La vérification de la bibliographie en premier auteur est partielle ou "
+"indisponible. Ces lectures ne constituent pas une liste complète des "
+"publications."
+
+msgid "First-author readings in this selection:"
+msgstr "Lectures en premier auteur dans cette sélection :"
+
+msgid "Coauthor — additional reading"
+msgstr "Coauteur — lecture complémentaire"
+
+msgid "Published version"
+msgstr "Version publiée"
+
+msgid "Reading guide and questions"
+msgstr "Guide de lecture et questions"
+
+msgid "Sources, affiliation and points to verify"
+msgstr "Sources, affiliation et points à vérifier"
+
+msgid ""
+"An umbrella organisation’s headquarters do not establish the location of "
+"this researcher’s laboratory."
+msgstr ""
+"Le siège d’un organisme regroupant plusieurs sites ne permet pas de situer "
+"le laboratoire de cette personne."
+
+msgid "Finding first-author publications in each bibliography"
+msgstr ""
+"Recherche des publications en premier auteur dans chaque bibliographie"
+
+msgid "Checking institutional pages"
+msgstr "Vérification des pages institutionnelles"
+
+msgid "Potential contacts: confirm the current position and availability before applying."
+msgstr "Contacts potentiels : confirmez le poste actuel et la disponibilité avant de candidater."

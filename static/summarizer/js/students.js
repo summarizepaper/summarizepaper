@@ -59,10 +59,10 @@
         var draft = card.querySelector('[data-student-draft]');
         var message = card.querySelector('[data-student-draft-status]');
         var snippet = button.dataset.studentQuestion;
-        if (!draft.value.includes(snippet)) {
+        if (!draft.value.includes(snippet) && !(button.dataset.studentQuestionText && draft.value.includes(button.dataset.studentQuestionText))) {
           var placeholder = draft.dataset.questionPlaceholder;
           var closing = draft.dataset.questionClosing;
-          if (placeholder && draft.value.includes(placeholder)) draft.value = draft.value.replace(placeholder, function () {return snippet;});
+          if (placeholder && draft.value.includes(placeholder)) draft.value = draft.value.replace(placeholder, function () {return button.dataset.studentPaperTitle && draft.value.includes(button.dataset.studentPaperTitle) ? button.dataset.studentQuestionText : snippet;});
           else if (closing && draft.value.includes(closing)) draft.value = draft.value.replace(closing, function () {return snippet + '\n\n' + closing;});
           else draft.value += '\n\n' + snippet;
         }

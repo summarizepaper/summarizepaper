@@ -103,7 +103,7 @@ class StudentTests(ToolsTestCase):
             first = students.institution_details('https://openalex.org/I1')
             self.assertEqual(students.institution_details('https://openalex.org/I1'), first)
         self.assertEqual(fetch.call_count, 1)
-        papers = [self.paper_data('A%d'%i, 'I%d'%i) for i in range(40)]
+        papers = [dict(self.paper_data('A%d'%i, 'I%d'%i), id='W%d' % i, doi='https://doi.org/10.1234/unique%d' % i) for i in range(40)]
         with mock.patch.object(students, 'institution_details', return_value=self.details()) as fetch:
             found, limited = students.candidates(papers, self.profile)
         self.assertEqual(fetch.call_count, students.MAX_AUTHORS)
@@ -454,3 +454,110 @@ class StudentPublicSourceTests(ToolsTestCase):
         self.assertEqual(fetch.call_count, 4)
         self.assertTrue(evidence['partial'])
         self.assertTrue(all(call.args[0].startswith('https://example.edu') for call in fetch.call_args_list))
+
+
+class StudentReadingDiscoveryTests(ToolsTestCase):
+    def work(self, key, title='Observing planetary gaps in the gas of debris disks', aid='A1', position='first', doi=None):
+        return {'id': 'https://openalex.org/'+key, 'display_name': title, 'doi': doi or 'https://doi.org/10.1234/'+key,
+                'publication_date': '2020-01-01', 'authorships': [
+                    {'author': {'id': 'https://openalex.org/'+aid, 'display_name': 'Example'}, 'author_position': position}]}
+
+    def test_preprint_and_publication_are_one_reading_with_both_links(self):
+        from . import student_papers as papers
+        preprint = self.work('W1', doi='https://doi.org/10.48550/arXiv.2411.14241')
+        published = self.work('W2', doi='https://doi.org/10.1051/0004-6361/202452097')
+        preprint['publication_date'] = published['publication_date'] = '2024-11-21'
+        for inputs in ([preprint, published], [published, preprint]):
+            result = papers.deduplicate(inputs)
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0]['id'], published['id'])
+            self.assertEqual(result[0]['alternate_links'], [{'url': 'https://arxiv.org/abs/2411.14241', 'kind': 'arxiv'}])
+        old = [papers.reading(w, 'https://openalex.org/A1') for w in [preprint, published]]
+        person = {'key': 'lead', 'author_url': 'https://openalex.org/A1', 'version': 3, 'readings': old}
+        students.prepare_card(person)
+        self.assertEqual(len(person['readings']), 1)  # Cached searches are corrected at display time too.
+
+    def test_generic_titles_different_authors_and_distinct_published_dois_are_kept(self):
+        from . import student_papers as papers
+        first = self.work('W1')
+        second = self.work('W2')
+        self.assertEqual(len(papers.deduplicate([first, second])), 2)
+        second.update(doi='https://doi.org/10.48550/arXiv.2411.14241')
+        second['authorships'][0]['author']['id'] = 'https://openalex.org/A2'
+        self.assertEqual(len(papers.deduplicate([first, second])), 2)
+        second['authorships'] = first['authorships']
+        second['publication_date'] = '2010-01-01'
+        self.assertEqual(len(papers.deduplicate([first, second])), 2)
+
+    def test_author_lookup_is_not_restricted_to_recent_topic_results_and_checks_exact_order(self):
+        from . import student_papers as papers
+        works = [self.work('W1'), self.work('W2', position='middle'), self.work('W3', aid='A2')]
+        with mock.patch.object(papers.sources, 'tool_search_allowed', return_value=True), \
+             mock.patch.object(papers.sources, '_json', return_value={'meta': {'count': 3}, 'results': works}) as fetch:
+            found = papers.author_publications('https://openalex.org/A1')
+            self.assertEqual(found, papers.author_publications('https://openalex.org/A1'))
+        self.assertEqual([w['id'] for w in found['works']], ['https://openalex.org/W1'])
+        self.assertEqual(fetch.call_count, 1)
+        self.assertNotIn('from_publication_date', fetch.call_args.args[1]['filter'])
+        self.assertIn('author.id:A1', fetch.call_args.args[1]['filter'])
+        self.assertFalse(found['limited'])
+
+    def test_large_bibliographies_and_failures_are_explicitly_partial_and_bounded(self):
+        from . import student_papers as papers
+        with mock.patch.object(papers.sources, 'tool_search_allowed', return_value=True), \
+             mock.patch.object(papers.sources, '_json', return_value={'meta': {'count': 1000}, 'results': [self.work('W1')]}) as fetch:
+            found = papers.author_publications('https://openalex.org/A1')
+        self.assertEqual(fetch.call_count, 3)
+        self.assertTrue(found['limited'])
+        self.assertEqual(len(found['works']), 1)
+        with mock.patch.object(papers.sources, 'tool_search_allowed', return_value=False), mock.patch.object(papers.sources, '_json') as fetch:
+            found = papers.author_publications('https://openalex.org/A9')
+        self.assertTrue(found['limited'])
+        fetch.assert_not_called()
+        self.assertEqual(papers.author_publications('https://evil.test/A1')['works'], [])
+
+    def test_older_relevant_first_author_papers_replace_recent_coauthored_readings(self):
+        import numpy as np
+        from . import student_papers as papers
+        works = [self.work('W%d' % i, title='Relevant exomoon method %d' % i) for i in range(1, 4)]
+        works.append(self.work('W4', title='Unrelated subject'))
+        record = {'works': works, 'limited': False}
+        found = [{'name': 'Example', 'author_url': 'https://openalex.org/A1', 'readings': [
+            {'id': 'https://openalex.org/W9', 'title': 'Recent coauthored result', 'year': '2026', 'first_author': False}]}]
+        with mock.patch.object(papers, 'author_publications', return_value=record), \
+             mock.patch.object(papers.similar, 'embed', return_value=np.array([[1.,0.],[1.,0.],[1.,0.],[1.,0.],[0.,1.]])), \
+             mock.patch.object(papers.teams, 'relevant_papers', side_effect=lambda topic, inputs: inputs) as screen:
+            papers.complete(found, {'topic': 'Exomoon detection'})
+        self.assertEqual(len(found[0]['readings']), 3)
+        self.assertTrue(all(p['first_author'] for p in found[0]['readings']))
+        self.assertEqual(found[0]['first_count'], 3)
+        self.assertTrue(all(p['year']=='2020' for p in found[0]['readings']))
+        self.assertEqual(len(screen.call_args.args[1]), 3)
+
+    def test_discovery_failure_keeps_existing_readings_and_marks_them_partial(self):
+        import requests
+        from . import student_papers as papers
+        old = {'id': 'W9', 'title': 'Existing reading', 'first_author': False}
+        found = [{'author_url': 'https://openalex.org/A1', 'readings': [old]}]
+        with mock.patch.object(papers, 'author_publications', return_value={'works': [self.work('W1')], 'limited': False}), \
+             mock.patch.object(papers.similar, 'embed', side_effect=requests.ConnectionError):
+            papers.complete(found, {'topic': 'Debris disks'})
+        self.assertEqual(found[0]['readings'][0]['title'], 'Existing reading')
+        self.assertTrue(found[0]['first_author_limited'])
+
+    def test_empty_questions_and_unsupported_personal_descriptions_are_discarded(self):
+        person = {'key': 'lead', 'name': 'Example', 'readings': [{'id': 'W1', 'title': 'A study', 'first_author': True}]}
+        answer = {'candidates': [{'key': 'lead',
+            'portrait': {'text': 'Unsupported biography', 'paper_ids': ['invented']},
+            'fit': {'text': 'Methods relevant to astrometry.', 'paper_ids': ['W1']},
+            'readings': [{'id': 'W1', 'questions': [' ', '-', '***', 'How is the signal measured?']}]}]}
+        with mock.patch.object(students.generated, 'chat_json', return_value=answer):
+            students.reading_notes([person], {'topic': 'Astrometry'}, 'en')
+        self.assertNotIn('portrait', person)
+        self.assertEqual(person['fit']['paper_ids'], ['W1'])
+        self.assertEqual(person['readings'][0]['questions'], ['How is the signal measured?'])
+
+    def test_international_headquarters_are_not_a_laboratory_location(self):
+        self.assertTrue(students.umbrella({'display_name': 'European Space Agency', 'type': 'facility'}))
+        self.assertFalse(students.location_matches({'country': 'France','city':'Paris'},
+            {'display_name': 'European Space Agency'}, {'geo': {'city':'Paris'},'country_code':'FR'}))
