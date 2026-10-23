@@ -405,7 +405,8 @@ def draft(person, lang):
 
 def prepare_card(person):
     publication_location(person)
-    person['readings'] = student_papers.deduplicate(person.get('readings') or [], owner=person.get('author_url'))
+    person['readings'] = student_papers.deduplicate(
+        [p for p in person.get('readings') or [] if student_papers.research_paper(p)], owner=person.get('author_url'))
     person['first_count'] = sum(bool(p.get('first_author')) for p in person['readings'])
     anchors = {}
     for paper in person['readings']:

@@ -491,9 +491,11 @@ class StudentReadingDiscoveryTests(ToolsTestCase):
 
     def test_author_lookup_is_not_restricted_to_recent_topic_results_and_checks_exact_order(self):
         from . import student_papers as papers
-        works = [self.work('W1'), self.work('W2', position='middle'), self.work('W3', aid='A2')]
+        works = [self.work('W1'), self.work('W2', position='middle'), self.work('W3', aid='A2'),
+                 self.work('W4', title='VizieR Online Data Catalog: cold-gas-bearing debris-disc stars'),
+                 self.work('W5', title='The co-existence of gas (Corrigendum)')]
         with mock.patch.object(papers.sources, 'tool_search_allowed', return_value=True), \
-             mock.patch.object(papers.sources, '_json', return_value={'meta': {'count': 3}, 'results': works}) as fetch:
+             mock.patch.object(papers.sources, '_json', return_value={'meta': {'count': 5}, 'results': works}) as fetch:
             found = papers.author_publications('https://openalex.org/A1')
             self.assertEqual(found, papers.author_publications('https://openalex.org/A1'))
         self.assertEqual([w['id'] for w in found['works']], ['https://openalex.org/W1'])
@@ -526,13 +528,22 @@ class StudentReadingDiscoveryTests(ToolsTestCase):
             {'id': 'https://openalex.org/W9', 'title': 'Recent coauthored result', 'year': '2026', 'first_author': False}]}]
         with mock.patch.object(papers, 'author_publications', return_value=record), \
              mock.patch.object(papers.similar, 'embed', return_value=np.array([[1.,0.],[1.,0.],[1.,0.],[1.,0.],[0.,1.]])), \
-             mock.patch.object(papers.teams, 'relevant_papers', side_effect=lambda topic, inputs: inputs) as screen:
+             mock.patch.object(papers, 'topical', side_effect=lambda inputs, topic: inputs) as screen:
             papers.complete(found, {'topic': 'Exomoon detection'})
         self.assertEqual(len(found[0]['readings']), 3)
         self.assertTrue(all(p['first_author'] for p in found[0]['readings']))
         self.assertEqual(found[0]['first_count'], 3)
         self.assertTrue(all(p['year']=='2020' for p in found[0]['readings']))
-        self.assertEqual(len(screen.call_args.args[1]), 3)
+        self.assertEqual(len(screen.call_args.args[0]), 3)
+
+    def test_author_relevance_uses_abstracts_and_rejects_unknown_ids(self):
+        from . import student_papers as papers
+        work = self.work('W1', title='Observations of Beta Pictoris')
+        work['abstract_inverted_index'] = {'Debris': [0], 'disk': [1], 'observations': [2]}
+        with mock.patch.object(papers.generated, 'chat_json', return_value={'relevant_ids': [work['id'], 'invented']}) as chat:
+            self.assertEqual(papers.topical([work], 'Debris disks'), [work])
+        payload = json.loads(chat.call_args.args[0])
+        self.assertEqual(payload['papers'][0]['abstract'], 'Debris disk observations')
 
     def test_discovery_failure_keeps_existing_readings_and_marks_them_partial(self):
         import requests
