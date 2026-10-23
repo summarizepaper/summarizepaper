@@ -34,6 +34,18 @@
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>
   {% elif kit %}
+    <div id="kit-start" class="presskit-actions"{% if row.status == 'pending' %} hidden{% endif %}>
+      <a class="btn" href="{% url 'presskit_pdf' arxiv_id %}{% if editorial %}?letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download press kit as PDF' %}</a>
+      {% if kit.schema_version != 2 or row.status == 'failed' %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Enrich this kit with verified evidence' %}</button>{% endif %}
+    </div>
+    {% if kit.source %}
+    <section class="card section-card">
+      <h2>{% trans 'Source and verification status' %}</h2>
+      <p><a href="{{ kit.source.url }}" rel="noopener noreferrer" target="_blank">{{ kit.source.paper_id }}</a>{% if kit.source.published %} · {{ kit.source.published }}{% endif %}</p>
+      <p>{% if kit.source.scope == 'abstract' %}{% trans 'Source read: abstract only.' %}{% elif kit.source.scope == 'excerpt' %}{% trans 'Source read: partial text. The analysis does not cover the entire paper.' %}{% else %}{% trans 'Source read: available full text.' %}{% endif %}</p>
+      <p class="muted">{% if kit.source.journal_ref %}{{ kit.source.journal_ref }} · {% endif %}{% trans 'Peer-review status is not independently confirmed. A journal reference alone does not establish it.' %}</p>
+    </section>
+    {% endif %}
     {% if kit.abstract_only %}<p class="error">{% trans 'Only the abstract was available for this kit. Read the full paper before writing.' %}</p>{% endif %}
 
     <section class="card section-card">
@@ -42,6 +54,37 @@
       <h3>{% trans "What's new" %}</h3>
       <p>{{ kit.whats_new }}</p>
     </section>
+
+    {% if kit.evidence_cards %}
+    <section class="card section-card">
+      <h2>{% trans 'Findings and source evidence' %}</h2>
+      <p class="muted">{% trans 'A matching quote confirms that the passage exists, not that the finding is independently validated.' %}</p>
+      {% for e in kit.evidence_cards %}
+      <article class="presskit-evidence">
+        <h3>{{ e.claim }}</h3>
+        <p>{{ e.why_it_matters }}</p>
+        {% if e.numeric_mismatch %}<p class="error">{% trans 'Numbers in this claim do not all match the cited passage. Check them before publication.' %}</p>{% endif %}
+        {% if e.verified %}<span class="eyebrow">{% trans 'Source passage verified' %}</span>
+        {% if e.location %}<p class="muted">{{ e.location }}</p>{% endif %}
+        <blockquote class="key-sentence">{{ e.quote }}</blockquote>
+        {% else %}<p class="error">{% trans 'Supporting passage not verified. Check this claim in the paper before using it.' %}</p>{% endif %}
+        <p><strong>{% trans 'Limit of this finding' %}:</strong> {{ e.limitation }}</p>
+      </article>
+      {% endfor %}
+    </section>
+    {% endif %}
+    {% if kit.angles %}
+    <section class="card section-card">
+      <h2>{% trans 'Reporting angles' %}</h2>
+      {% for a in kit.angles %}<h3>{{ a.angle }}</h3><p>{{ a.why_now }}</p><p><strong>{% trans 'Next reporting step' %}:</strong> {{ a.reporting_step }}</p>{% endfor %}
+    </section>
+    {% endif %}
+    {% if kit.wording_checks %}
+    <section class="card section-card">
+      <h2>{% trans 'Wording to check before publication' %}</h2>
+      {% for w in kit.wording_checks %}<p><strong>{% trans 'Avoid' %}:</strong> {{ w.avoid }}</p><p><strong>{% trans 'Prefer' %}:</strong> {{ w.prefer }}</p><p class="muted">{{ w.reason }}</p>{% endfor %}
+    </section>
+    {% endif %}
 
     <section class="card section-card">
       <h2>{% trans 'Hype check' %}</h2>
@@ -67,9 +110,9 @@
     </section>
 
     <section class="card section-card">
-      <h2>{% trans 'Independent researchers on the same topic' %}</h2>
+      <h2>{% trans 'Researchers to approach for outside comment' %}</h2>
       {% if kit.experts %}
-      <p class="muted">{% trans 'Authors of the closest papers we know who did not sign this one. Check their work and possible links with the authors before contacting them.' %}</p>
+      <p class="muted">{% trans 'These researchers are not listed as coauthors in our metadata. Their independence, affiliations and possible conflicts of interest still need to be checked.' %}</p>
       <ul>
         {% for e in kit.experts %}
         <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}){% endif %} — <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ e.arxiv_id }}/">{{ e.title }}</a></li>
@@ -93,6 +136,9 @@
       <button type="button" class="btn" id="kit-go">{% trans 'Write the press kit' %}</button>
       {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
     </div>
+  {% endif %}
+{% if paid %}
+    <p id="kit-request-error" class="error" role="status" hidden>{% trans 'Something went wrong. Please try again.' %}</p>
     {% trans 'Writing the press kit' as working_title %}
     {% trans 'usually about a minute' as working_time %}
     {% include 'summarizer/working.html' with working_id='kit-working' working_steps=steps working_started=row.updated %}
@@ -100,19 +146,30 @@
     window.addEventListener('DOMContentLoaded', function () {
       var start = document.getElementById('kit-start');
       var panel = document.getElementById('kit-working');
+      var error = document.getElementById('kit-request-error');
+      function failed() {
+        start.hidden = false;
+        error.hidden = false;
+        if (button) button.disabled = false;
+      }
       function follow(id) {
         start.hidden = true;
-        SP.track(panel, id, function () { location.reload(); });
+        SP.track(panel, id, function () { location.reload(); }, failed);
       }
-      document.getElementById('kit-go').addEventListener('click', function () {
+      var button = document.getElementById('kit-go');
+      if (button) button.addEventListener('click', function () {
+        if (button.disabled) return;
+        button.disabled = true;
+        error.hidden = true;
         panel.dataset.started = '';
-        SP.post('/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id|escapejs }}/start/', {}).then(function (json) {
+        SP.post('/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id|escapejs }}/start/', button.dataset.again ? {again: '1'} : {}).then(function (json) {
           if (json.id) follow(json.id);
-        });
+          else failed();
+        }).catch(failed);
       });
       {% if row and row.status == 'pending' %}follow({{ row.pk }});{% endif %}
     });
     </script>
-  {% endif %}
+{% endif %}
 </div>
 {% endblock %}

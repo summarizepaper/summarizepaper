@@ -938,3 +938,8 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .editorial-context { border-left: 3px solid #64748b; overflow-wrap: anywhere; }
 .editorial-context h2 { text-wrap: balance; }
 .editorial-context summary { cursor: pointer; padding: .5rem 0; }
+
+/* Press kits remain readable while an enriched version is prepared. */
+.presskit-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.presskit-actions[hidden] { display: none; }
+.presskit-evidence + .presskit-evidence { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 20px; }

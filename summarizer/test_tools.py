@@ -200,7 +200,8 @@ class PressKitTests(ToolsTestCase):
         fetch.assert_called_once_with('2101.00001v1')
         kit = Generated.objects.get(kind='presskit')
         self.assertEqual(kit.status, 'done')
-        self.assertIn('Original scientific abstract.', chat.call_args.kwargs['system'])
+        self.assertIn('Original scientific abstract.', chat.call_args.args[0])
+        self.assertNotIn('Original scientific abstract.', chat.call_args.kwargs['system'])
         self.assertNotIn('Editorial angle', chat.call_args.kwargs['system'])
         self.assertEqual(ArxivPaper.objects.get().authors.get().name, 'Ann Lee')
 

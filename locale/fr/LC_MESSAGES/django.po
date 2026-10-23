@@ -7498,6 +7498,118 @@ msgstr ""
 "figures et quatre panneaux par question. Les valeurs lues sur les graphiques"
 " sont approximatives ; vérifiez les données originales."
 
+msgid ""
+"A matching quote confirms that the passage exists, not that the finding is "
+"independently validated."
+msgstr ""
+"La correspondance confirme la présence du passage dans la source, pas une "
+"validation scientifique indépendante du résultat."
+
+msgid ""
+"AI-assisted reporting brief. Verify facts, interpretation and quotations "
+"against the original paper before publication."
+msgstr ""
+"Dossier de préparation journalistique assisté par IA. Vérifiez les faits, "
+"les interprétations et les citations dans l’article original avant "
+"publication."
+
+msgid "Avoid"
+msgstr "À éviter"
+
+msgid "Prefer"
+msgstr "Préférer"
+
+msgid "Download press kit as PDF"
+msgstr "Télécharger le kit de presse en PDF"
+
+msgid "Enrich this kit with verified evidence"
+msgstr "Enrichir ce kit avec les preuves vérifiées"
+
+msgid "Finding researchers for outside comment"
+msgstr "Recherche de spécialistes pour un regard extérieur"
+
+msgid "Findings and source evidence"
+msgstr "Résultats et preuves dans la source"
+
+msgid ""
+"Legacy kit: the exact source scope was not recorded. Enrich the kit to "
+"record it."
+msgstr ""
+"Ancien kit : le périmètre exact des sources n’a pas été enregistré. "
+"Enrichissez le kit pour le documenter."
+
+msgid "Limit of this finding"
+msgstr "Limite de ce résultat"
+
+msgid "Next reporting step"
+msgstr "Prochaine étape du reportage"
+
+msgid ""
+"Peer-review status is not independently confirmed. A journal reference alone"
+" does not establish it."
+msgstr ""
+"L’évaluation par les pairs n’est pas confirmée de manière indépendante. Une "
+"référence à une revue ne suffit pas à l’établir."
+
+msgid "Plain-language explanation"
+msgstr "Explication accessible"
+
+msgid "Reporting angles"
+msgstr "Angles de reportage"
+
+msgid "Researchers to approach for outside comment"
+msgstr "Spécialistes à solliciter pour un regard extérieur"
+
+msgid "Source and verification status"
+msgstr "Sources et état des vérifications"
+
+msgid "Source passage verified"
+msgstr "Passage retrouvé dans la source"
+
+msgid "Source read: abstract only."
+msgstr "Source consultée : abstract uniquement."
+
+msgid "Source read: available full text."
+msgstr "Source consultée : texte intégral disponible."
+
+msgid ""
+"Source read: partial text. The analysis does not cover the entire paper."
+msgstr ""
+"Source consultée : texte partiel. L’analyse ne couvre pas tout l’article."
+
+msgid ""
+"Supporting passage not verified. Check this claim in the paper before using "
+"it."
+msgstr ""
+"Passage justificatif non retrouvé. Vérifiez cette affirmation dans l’article"
+" avant de l’utiliser."
+
+msgid ""
+"These researchers are not listed as coauthors in our metadata. Their "
+"independence, affiliations and possible conflicts of interest still need to "
+"be checked."
+msgstr ""
+"Ces chercheurs ne figurent pas parmi les coauteurs dans nos métadonnées. "
+"Leur indépendance, leurs affiliations et leurs éventuels conflits d’intérêts"
+" restent à vérifier."
+
+msgid "Wording to check before publication"
+msgstr "Formulations à vérifier avant publication"
+
+msgid ""
+"Numbers in this claim do not all match the cited passage. Check them before "
+"publication."
+msgstr ""
+"Les nombres de cette affirmation ne correspondent pas tous au passage cité. "
+"Vérifiez-les avant publication."
+
+msgid ""
+"Press kit for journalists: PDF brief, source-checked quotes, reporting "
+"angles and outside-comment leads"
+msgstr ""
+"Kit de presse pour les journalistes : dossier PDF, citations contrôlées dans"
+" la source, angles de reportage et pistes de spécialistes à interroger"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

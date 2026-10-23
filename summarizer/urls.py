@@ -56,6 +56,7 @@ urlpatterns = [
     path("journal-club/<str:arxiv_id>/start/", slides.slides_start, name="slides_start"),
     path("changes/<str:arxiv_id>/start/", changes.changes_start, name="changes_start"),
     path("press-kit/<str:arxiv_id>/start/", presskit.presskit_start, name="presskit_start"),
+    path("press-kit/<str:arxiv_id>/pdf/", presskit.presskit_pdf, name="presskit_pdf"),
     path("collections/", library.collections_page, name="collections"),
     path("collections/add/", library.add_to_collection, name="collection_add"),
     path("collections/<int:pk>/", library.collection_page, name="collection"),
