@@ -4,6 +4,7 @@
 
 {% block title %}{% trans 'Conference companion' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/file_upload_assets.html' %}
   <meta name="description" content="{% trans 'Paste the program of a conference: we find the talks and posters that matter for your research among hundreds, say why, and list the people to meet.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/conference/" />
 {% endblock %}
@@ -38,7 +39,8 @@
       {% csrf_token %}
       <p><label>{% trans 'Conference name (optional)' %}<br><input type="text" name="name" maxlength="200" value="{{ form.name }}"></label></p>
       <p><label>{% trans 'The program: paste it from the conference website' %}<br><textarea name="program" style="min-height:160px">{{ form.program }}</textarea></label></p>
-      <p><label>{% trans 'or its PDF' %}<br><input type="file" name="program_pdf" accept="application/pdf,.pdf"></label></p>
+      {% trans 'or its PDF' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='program_pdf' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
       <p><label>{% trans 'Your research' %}<br><textarea name="interests" style="min-height:90px">{{ interests }}</textarea></label></p>
       {% if projects %}
       <p><label>{% trans 'and, if you want, a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.title }}</option>{% endfor %}</select></label></p>

@@ -5,6 +5,7 @@
 
 {% block title %}{% trans 'Scoop watch' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/file_upload_assets.html' %}
   {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% trans 'Describe the project you are working on: every day, we compare it with the new papers on arXiv, bioRxiv and medRxiv, and email you when one comes close, with what it shares with your project and what stays yours.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/scoops/" />
@@ -51,7 +52,8 @@
         <textarea name="description" style="min-height:140px" data-min-chars="{{ min_chars }}"
           data-missing="{% blocktrans with n=min_chars %}{n} more characters needed (at least {{ n }}){% endblocktrans %}"
           data-enough="{% trans 'Long enough' %}">{{ form.description }}</textarea></label></p>
-      <p><label>{% trans 'or the PDF of your draft' %}<br><input type="file" name="draft" accept="application/pdf,.pdf"></label></p>
+      {% trans 'or the PDF of your draft' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='draft' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
       <p><label>{% trans 'Your name as it appears on your papers (optional: your own papers are then never reported)' %}<br>
         <input type="text" name="author_name" maxlength="200" value="{{ form.author_name|default:author_name }}"></label></p>
       <p><button class="btn" type="submit">{% trans 'Watch this project' %}</button></p>

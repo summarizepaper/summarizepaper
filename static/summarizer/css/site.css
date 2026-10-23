@@ -943,3 +943,19 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .presskit-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
 .presskit-actions[hidden] { display: none; }
 .presskit-evidence + .presskit-evidence { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 20px; }
+
+/* Native file pickers with the same drag-and-drop behavior across research tools. */
+.file-upload { margin: 20px 0; }
+.file-upload-label { display: block; font-weight: 600; margin-bottom: 8px; }
+.file-upload-drop { border: 2px dashed var(--border); border-radius: 12px; padding: 20px; background: var(--surface); transition: border-color .15s, background .15s; }
+.file-upload-drop:hover, .file-upload-drop:focus-within, .file-upload-drop.is-dragover { border-color: var(--accent); background: var(--accent-soft); }
+.file-upload-prompt { display: block; font-weight: 600; cursor: pointer; }
+.file-upload-prompt span { display: inline-block; margin-right: 6px; color: var(--accent); font-size: 22px; }
+.file-upload input[type="file"] { display: block; width: 100%; max-width: 100%; margin-top: 12px; }
+.file-upload input::file-selector-button { cursor: pointer; border: 0; border-radius: 6px; padding: 8px 12px; margin-right: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.file-upload-hint { font-size: 13px; margin: 10px 0 0; }
+.file-upload-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.file-upload-status { flex: 1; min-width: 160px; overflow-wrap: anywhere; margin: 10px 0 0; font-size: 14px; }
+.file-upload-selection button { margin-top: 10px; }
+.file-upload-selection [hidden], .file-upload-error[hidden] { display: none; }
+.file-upload-error { margin: 8px 0 0; }

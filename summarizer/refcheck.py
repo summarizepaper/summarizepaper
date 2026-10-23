@@ -424,7 +424,7 @@ def refcheck_page(request):
             return redirect('/%s/refcheck/%s/' % (get_language(), row.key))
     checks = Generated.objects.filter(kind='refcheck', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/refcheck.html', {'paid': paid, 'error': error, 'checks': checks,
-                                                        'per_day': PER_DAY})
+                                                        'per_day': PER_DAY, 'upload_max_bytes': MAX_UPLOAD, 'upload_max_mb': MAX_UPLOAD // (1024 * 1024)})
 
 
 def _row(request, key):

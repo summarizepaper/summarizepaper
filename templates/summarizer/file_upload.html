@@ -1,0 +1,23 @@
+{% load i18n %}
+<div class="file-upload" data-file-upload data-max-bytes="{{ upload_max_bytes }}" data-max-mb="{{ upload_max_mb }}"
+     data-required-extension="{{ upload_required_extension|default:'' }}"
+     data-selected="{% trans 'Selected file: {name} ({size})' %}"
+     data-remove="{% trans 'Remove {name}' %}"
+     data-error-count="{% trans 'Drop one file at a time in the matching field.' %}"
+     data-error-type="{% trans 'This file format is not supported here. Accepted formats: {formats}.' %}"
+     data-error-size="{% trans 'This file is too large. Maximum size: {max} MB.' %}"
+     data-error-browser="{% trans 'Your browser could not attach this file. Use the file picker below.' %}"
+     data-kb="{% trans 'KB' %}" data-mb="{% trans 'MB' %}" data-bytes="{% trans 'bytes' %}">
+  <label class="file-upload-label" id="upload-label-{{ upload_name }}" for="upload-{{ upload_name }}">{{ upload_label }}</label>
+  <div class="file-upload-drop" data-file-drop>
+    <label class="file-upload-prompt" for="upload-{{ upload_name }}"><span aria-hidden="true">↓</span> {% trans 'Drop your file here, or choose it below' %}</label>
+    <input type="file" id="upload-{{ upload_name }}" name="{{ upload_name }}" accept="{{ upload_accept }}"
+           aria-labelledby="upload-label-{{ upload_name }}" aria-describedby="upload-hint-{{ upload_name }}">
+    <p class="muted file-upload-hint" id="upload-hint-{{ upload_name }}">{{ upload_formats }} · {% blocktrans with max=upload_max_mb %}Up to {{ max }} MB{% endblocktrans %} · {% trans 'One file per field' %}</p>
+  </div>
+  <div class="file-upload-selection">
+    <p class="file-upload-status" data-file-status role="status" aria-live="polite" hidden></p>
+    <button class="btn btn-sm btn-ghost" type="button" data-file-clear hidden>{% trans 'Remove file' %}</button>
+  </div>
+  <p class="error file-upload-error" data-file-error role="alert" hidden></p>
+</div>

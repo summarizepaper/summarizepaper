@@ -160,6 +160,7 @@ def conference_page(request):
     searches = Generated.objects.filter(kind='conference', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/conference.html', {
         'paid': paid, 'error': error, 'searches': searches, 'projects': projects, 'per_day': PER_DAY, 'form': form,
+        'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024),
         'interests': form.get('interests') if form else default_interests(request.user)})
 
 

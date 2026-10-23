@@ -7710,6 +7710,60 @@ msgstr "Retrait annoncé sur arXiv par les auteurs"
 msgid "Not stated"
 msgstr "Non précisé"
 
+#: templates/summarizer/file_upload.html:1
+msgid "Selected file: {name} ({size})"
+msgstr "Fichier sélectionné : {name} ({size})"
+
+#: templates/summarizer/file_upload.html:1
+msgid "Remove {name}"
+msgstr "Retirer {name}"
+
+#: templates/summarizer/file_upload.html:1
+msgid "Drop one file at a time in the matching field."
+msgstr "Déposez un seul fichier à la fois dans le champ correspondant."
+
+#: templates/summarizer/file_upload.html:1
+msgid "This file format is not supported here. Accepted formats: {formats}."
+msgstr "Ce format n’est pas accepté ici. Formats acceptés : {formats}."
+
+#: templates/summarizer/file_upload.html:1
+msgid "This file is too large. Maximum size: {max} MB."
+msgstr "Ce fichier est trop volumineux. Taille maximale : {max} Mo."
+
+#: templates/summarizer/file_upload.html:1
+msgid "Your browser could not attach this file. Use the file picker below."
+msgstr ""
+"Votre navigateur n’a pas pu joindre ce fichier. Utilisez le bouton de "
+"sélection ci-dessous."
+
+#: templates/summarizer/file_upload.html:1
+msgid "KB"
+msgstr "Ko"
+
+#: templates/summarizer/file_upload.html:1
+msgid "MB"
+msgstr "Mo"
+
+#: templates/summarizer/file_upload.html:1
+msgid "bytes"
+msgstr "octets"
+
+#: templates/summarizer/file_upload.html:1
+msgid "Drop your file here, or choose it below"
+msgstr "Déposez votre fichier ici ou sélectionnez-le ci-dessous"
+
+#: templates/summarizer/file_upload.html:1
+msgid "Up to %(max)s MB"
+msgstr "Jusqu’à %(max)s Mo"
+
+#: templates/summarizer/file_upload.html:1
+msgid "One file per field"
+msgstr "Un fichier par champ"
+
+#: templates/summarizer/file_upload.html:1
+msgid "Remove file"
+msgstr "Retirer le fichier"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

@@ -267,4 +267,5 @@ def scoops_page(request):
         project.failed = not project.description and project.created < timezone.now() - generated.STALE
     return render(request, 'summarizer/scoops.html', {
         'paid': paid, 'projects': projects, 'error': error, 'max_projects': MAX_PROJECTS, 'min_chars': MIN_CHARS,
-        'author_name': projects[0].author_name if projects else '', 'form': request.POST if error else {}})
+        'author_name': projects[0].author_name if projects else '',
+        'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024), 'form': request.POST if error else {}})

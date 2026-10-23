@@ -194,7 +194,7 @@ def missed_page(request):
             return redirect('/%s/missed/%s/' % (get_language(), row.key))
     searches = Generated.objects.filter(kind='missed', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/missed.html', {'paid': paid, 'error': error, 'searches': searches,
-                                                      'per_day': PER_DAY})
+                                                      'per_day': PER_DAY, 'upload_max_bytes': MAX_UPLOAD, 'upload_max_mb': MAX_UPLOAD // (1024 * 1024)})
 
 
 @login_required

@@ -4,6 +4,7 @@
 
 {% block title %}{% trans 'What did I miss?' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/file_upload_assets.html' %}
   <meta name="description" content="{% trans 'Upload your draft and find the papers close to it that it does not cite, on arXiv and in journals and preprints, with how each one relates to your work. Check your references before you submit.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/missed/" />
 {% endblock %}
@@ -41,7 +42,8 @@
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
       {% csrf_token %}
-      <p><label>{% trans 'Your draft (PDF)' %}<br><input type="file" name="draft" accept="application/pdf,.pdf"></label></p>
+      {% trans 'Your draft (PDF)' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='draft' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
       <p class="muted">{% trans 'or paste its text (title, abstract, introduction and references are enough):' %}</p>
       <p><textarea name="text"></textarea></p>
       <p><button class="btn" type="submit">{% trans 'Find what I missed' %}</button></p>

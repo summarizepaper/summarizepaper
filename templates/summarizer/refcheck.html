@@ -4,6 +4,7 @@
 
 {% block title %}{% trans 'Bibliography check' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/file_upload_assets.html' %}
   <meta name="description" content="{% trans 'Check the references of your paper before you submit it: retracted papers, preprints published since with their corrected BibTeX, outdated arXiv versions, duplicates, and citations that the cited abstract does not support.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/refcheck/" />
 {% endblock %}
@@ -36,10 +37,12 @@
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} checks a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
       {% csrf_token %}
-      <p><label>{% trans 'Your references (.bib)' %}<br><input type="file" name="bib" accept=".bib,text/plain"></label></p>
+      {% trans 'Your references (.bib)' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='bib' upload_accept='.bib,text/plain' upload_formats='.bib / .txt' upload_required_extension='' %}
       <p class="muted">{% trans 'or paste them:' %}</p>
       <p><textarea name="bibtext" placeholder="@article{key, ...}"></textarea></p>
-      <p><label>{% trans 'Optional: your LaTeX source (.tex), to check what each citation is used for' %}<br><input type="file" name="tex" accept=".tex,text/plain"></label></p>
+      {% trans 'Optional: your LaTeX source (.tex), to check what each citation is used for' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='tex' upload_accept='.tex,text/plain' upload_formats='.tex / .txt' upload_required_extension='' %}
       <p><button class="btn" type="submit">{% trans 'Check my references' %}</button></p>
       <p class="muted"><small>{% trans 'Your files are read once and are not stored. Only the report is kept, in your account.' %}</small></p>
     </form>
