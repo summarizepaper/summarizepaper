@@ -201,6 +201,7 @@ class StudentTests(ToolsTestCase):
         self.assertIn('6 months', draft)
         self.assertIn('Python', draft)
         self.assertContains(Client().get('/fr/students/'), 'Trouver un stage ou une thèse')
+        self.assertNotContains(Client().get('/fr/students/'), 'student-compare')
         pro = self.user('pro', paid=True)
         row = self.row(pro)
         self.assertContains(self.client_for(pro).get('/fr/students/student-demo/'), 'Lire avant')
