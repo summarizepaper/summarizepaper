@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, search_filters, saved_searches, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, library, missed, presskit, questions, reading, refcheck, scoops, slides, teams, trends)
+               synthesis, changes, chat_figures, library, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -74,6 +74,10 @@ urlpatterns = [
     path("citations/", citations.citations_page, name="citations"),
     path("scoops/", scoops.scoops_page, name="scoops"),
     path("refcheck/", refcheck.refcheck_page, name="refcheck"),
+    path("students/", students.page, name="students"),
+    path("students/shortlist/<int:pk>/", students.shortlist_update, name="student_shortlist_update"),
+    path("students/<str:key>/save/", students.save, name="student_save"),
+    path("students/<str:key>/", students.result, name="student_result"),
     path("teams/", teams.teams_page, name="teams"),
     path("conference/", conference.conference_page, name="conference"),
     path("conference/<str:key>/", conference.conference_result, name="conference_result"),

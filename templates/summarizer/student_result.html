@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Research placement search' %}{% endblock %}
+{% block extra_head_tags %}{% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="page"><header class="page-header"><p><a href="{% url 'students' %}">← {% trans 'Find a research placement' %}</a></p><h1>{{ result.title|default:_('Research placement search') }}</h1></header>
+{% if result %}
+  <section class="card section-card"><h2>{% trans 'Your criteria' %}</h2><p>{{ result.profile.level }} · {% if result.profile.kind == 'phd' %}{% trans 'PhD' %}{% else %}{% trans 'Research internship' %}{% endif %}</p><p>{{ result.profile.topic }}</p>
+  <p>{% if result.profile.country %}{{ result.profile.country }}{% endif %}{% if result.profile.city %} · {{ result.profile.city }}{% endif %}{% if not result.profile.country and not result.profile.city %}{% trans 'Any location' %}{% endif %}</p>
+  {% if result.profile.start %}<p>{% trans 'Desired start date (optional)' %} : {{ result.profile.start }}</p>{% endif %}{% if result.profile.duration %}<p>{% blocktrans with n=result.profile.duration %}Desired duration: {{ n }} months{% endblocktrans %}</p>{% endif %}{% if result.profile.skills %}<p>{{ result.profile.skills }}</p>{% endif %}
+  <p class="muted">{% trans 'Dates, duration, skills and level are preferences, not verified eligibility or availability.' %}</p></section>
+  {% if result.limited %}<p class="notice">{% trans 'This search is partial: the search budget, candidate limit or missing institution metadata prevented a complete check.' %}</p>{% endif %}
+  <p class="notice">{% trans 'These leads come from recent publication affiliations, not a recruitment directory. Confirm the current laboratory, supervisory role and availability before applying. Counts and author order are not measures of supervision quality.' %}</p>
+  {% for person in result.candidates %}{% include 'summarizer/student_card.html' %}{% empty %}<p class="notice">{% trans 'No sufficiently supported lead was found with these geographical criteria. Try a broader topic, country or region, or allow alternatives. No location filter has been silently removed.' %}</p>{% endfor %}
+{% elif row.status == 'failed' %}<p class="error">{% trans 'The search failed. Your saved leads are unchanged. Please start a new search.' %}</p><a class="btn" href="{% url 'students' %}">{% trans 'Try a new search' %}</a>
+{% else %}
+  {% trans 'Finding publication-based research contacts' as working_title %}{% trans 'a few minutes' as working_time %}
+  {% include 'summarizer/working.html' with working_id='students-working' working_visible=True working_started=row.created working_steps=steps %}
+  <script>window.addEventListener('DOMContentLoaded',function(){ SP.track(document.getElementById('students-working'),{{ row.pk }},function(){location.reload();}); });</script>
+{% endif %}</div>
+{% endblock %}

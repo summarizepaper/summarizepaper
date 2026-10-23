@@ -16,6 +16,7 @@
     <p class="lead">{% trans 'Describe a research topic: we find the institutions represented in matching papers from the last two years, in journals and on preprint servers, with their authors, supporting papers and approaches.' %}</p>
   </header>
 
+  <p><a href="{% url 'students' %}">{% trans 'Looking for an internship or PhD? Explore research placement leads.' %}</a></p>
   {% if anonymous or not paid %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">

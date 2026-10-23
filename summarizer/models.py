@@ -863,3 +863,20 @@ class SavedSearch(models.Model):
         from urllib.parse import urlencode
         from django.urls import reverse
         return reverse('search_results') + '?' + urlencode(self.params, doseq=True)
+
+
+class StudentShortlist(models.Model):
+    """Private, source-backed placement lead saved by its student, never an offer."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_shortlist')
+    candidate_key = models.CharField(max_length=64)
+    snapshot = models.JSONField(default=dict)
+    status = models.CharField(max_length=16, default='explore', choices=[
+        ('explore', 'To explore'), ('read', 'Paper read'),
+        ('contacted', 'Contacted'), ('replied', 'Reply received')])
+    notes = models.TextField(blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'candidate_key')
+        ordering = ('-updated', '-pk')

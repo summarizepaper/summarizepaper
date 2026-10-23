@@ -8511,3 +8511,393 @@ msgid "%(n)s matching paper"
 msgid_plural "%(n)s matching papers"
 msgstr[0] "%(n)s article pertinent"
 msgstr[1] "%(n)s articles pertinents"
+
+msgid "Find a research placement"
+msgstr "Trouver un stage ou une thèse"
+
+
+msgid "Checking relevance and publication affiliations"
+msgstr ""
+"Vérification de la pertinence et des affiliations dans les publications"
+
+
+msgid "Checking institution locations"
+msgstr "Vérification de la localisation des institutions"
+
+
+msgid "Preparing the reading suggestions"
+msgstr "Préparation des lectures conseillées"
+
+
+msgid "Your current level"
+msgstr "Votre niveau actuel"
+
+
+msgid "You are looking for"
+msgstr "Vous recherchez"
+
+
+msgid "Research internship"
+msgstr "Stage de recherche"
+
+
+msgid "research internship"
+msgstr "stage de recherche"
+
+
+msgid "PhD"
+msgstr "Thèse"
+
+
+msgid "Research topic"
+msgstr "Thème de recherche"
+
+
+msgid "Country (optional)"
+msgstr "Pays souhaité (facultatif)"
+
+
+msgid "City or region (optional)"
+msgstr "Ville ou région souhaitée (facultatif)"
+
+
+msgid "Geographical preference"
+msgstr "Préférence géographique"
+
+
+msgid "Only the requested location"
+msgstr "Uniquement la localisation demandée"
+
+
+msgid "Prefer this location; show other locations separately"
+msgstr "Privilégier cette localisation et signaler les autres possibilités"
+
+
+msgid "Desired start date (optional)"
+msgstr "Date de début souhaitée (facultatif)"
+
+
+msgid "Duration in months (optional)"
+msgstr "Durée en mois (facultatif)"
+
+
+msgid "Your skills and interests (optional)"
+msgstr "Vos compétences et centres d’intérêt (facultatif)"
+
+
+msgid "Progress"
+msgstr "État de la démarche"
+
+
+msgid "Private notes"
+msgstr "Notes privées"
+
+
+msgid "To explore"
+msgstr "À explorer"
+
+
+msgid "Paper read"
+msgstr "Article lu"
+
+
+msgid "Contacted"
+msgstr "Contacté"
+
+
+msgid "Reply received"
+msgstr "Réponse reçue"
+
+
+msgid ""
+"Hello,\n"
+"\n"
+"I am currently studying at %(level)s level and looking for a %(kind)s related to %(topic)s. I came across your publication “%(title)s” and would like to learn more about this research. Would you be the right person to ask about possible supervision or an appropriate contact?\n"
+"\n"
+"[Add your dates, skills, a specific question after reading the paper, and your signature.]\n"
+"\n"
+"Kind regards,"
+msgstr ""
+"Bonjour,\n"
+"\n"
+"Je suis actuellement en %(level)s et je recherche une possibilité de %(kind)s sur le thème suivant : %(topic)s. J’ai repéré votre publication « %(title)s » et je souhaiterais en savoir davantage sur ces recherches. Seriez-vous la bonne personne à contacter pour discuter d’un éventuel encadrement ou pourriez-vous m’orienter vers un contact approprié ?\n"
+"\n"
+"[Ajoutez vos dates, vos compétences réelles, une question précise après lecture de l’article et votre signature.]\n"
+"\n"
+"Bien cordialement,"
+
+
+msgid ""
+"Alternative location: outside the requested area or location not verified."
+msgstr ""
+"Autre possibilité : hors de la zone demandée ou localisation non vérifiée."
+
+
+msgid "Most recent affiliation evidence: %(year)s"
+msgstr ""
+"Affiliation attestée le plus récemment dans les publications : %(year)s"
+
+
+msgid ""
+"Potential spontaneous enquiry. No vacancy, availability, supervision "
+"eligibility or funding has been verified. Confirm the current affiliation on"
+" the institution website before writing."
+msgstr ""
+"Piste pour une candidature spontanée. Aucune offre, disponibilité, capacité "
+"d’encadrement ou possibilité de financement n’a été vérifiée. Confirmez "
+"l’affiliation actuelle sur le site de l’institution avant d’écrire."
+
+
+msgid "Author source (OpenAlex)"
+msgstr "Notice de l’auteur (OpenAlex)"
+
+
+msgid "Institution source"
+msgstr "Notice de l’institution"
+
+
+msgid "Institution website"
+msgstr "Site de l’institution"
+
+
+msgid "Metadata consulted: %(date)s"
+msgstr "Métadonnées consultées le %(date)s"
+
+
+msgid ""
+"Detailed institution location could not be checked. Any country shown comes "
+"from the publication affiliation."
+msgstr ""
+"La localisation détaillée de l’institution n’a pas pu être vérifiée. Le pays"
+" éventuellement affiché provient de l’affiliation indiquée dans les "
+"publications."
+
+
+msgid "Read before writing"
+msgstr "Lire avant d’écrire"
+
+
+msgid ""
+"Suggested order and reading prompts based on titles, not a full-text review "
+"or an assessment of difficulty."
+msgstr ""
+"L’ordre et les pistes de lecture reposent sur les titres. Il ne s’agit pas "
+"d’une analyse du texte intégral ni d’une évaluation de la difficulté."
+
+
+msgid ""
+"Start with the abstract, identify the method and note one specific question "
+"to ask."
+msgstr ""
+"Commencez par le résumé, repérez la méthode et notez une question précise à "
+"poser."
+
+
+msgid "Prepare a first email"
+msgstr "Préparer un premier email"
+
+
+msgid ""
+"Adapt this draft after reading. No message is sent. Add your actual skills "
+"and dates; do not claim a paper has been read unless you have read it."
+msgstr ""
+"Adaptez ce brouillon après lecture. Aucun message n’est envoyé. Ajoutez vos "
+"compétences réelles et vos dates ; n’affirmez avoir lu un article que si "
+"vous l’avez effectivement lu."
+
+
+msgid "Editable draft to copy"
+msgstr "Brouillon modifiable à copier"
+
+
+msgid "Saved to your private shortlist."
+msgstr "Piste enregistrée dans votre liste privée."
+
+
+msgid "View my shortlist"
+msgstr "Voir ma sélection"
+
+
+msgid "Save this lead"
+msgstr "Enregistrer cette piste"
+
+
+msgid ""
+"Explore potential research contacts for an internship or PhD, with "
+"publication evidence, reading suggestions and a private shortlist."
+msgstr ""
+"Explorez des contacts potentiels pour un stage de recherche ou une thèse, "
+"avec des publications justificatives, des lectures conseillées et une "
+"sélection privée."
+
+
+msgid ""
+"Explore potential contacts for a research internship or PhD, understand "
+"their connection to your topic and prepare your first enquiry."
+msgstr ""
+"Découvrez des contacts potentiels pour un stage de recherche ou une thèse, "
+"comprenez leur lien avec votre sujet et préparez votre premier contact."
+
+
+msgid ""
+"These are publication-based leads, not advertised vacancies. Affiliation "
+"metadata does not prove a current position or a right to supervise. Dates, "
+"duration, level and skills help prepare your enquiry; their compatibility "
+"must be confirmed with the institution."
+msgstr ""
+"Ces pistes reposent sur des publications, pas sur des offres de recrutement."
+" Une affiliation ne prouve ni un poste actuel ni une capacité d’encadrement."
+" Vos dates, durée, niveau et compétences servent à préparer votre "
+"candidature ; leur adéquation doit être confirmée auprès de l’institution."
+
+
+msgid "Daily search limit reached. Please come back tomorrow."
+msgstr "La limite quotidienne de recherches est atteinte. Revenez demain."
+
+
+msgid ""
+"Up to %(per_day)s searches a day. We check recent publications and "
+"institution metadata, then suggest up to ten people and three readings per "
+"person. This may take a few minutes."
+msgstr ""
+"Jusqu’à %(per_day)s recherches par jour. Nous vérifions les publications "
+"récentes et les métadonnées des institutions, puis proposons jusqu’à dix "
+"personnes et trois lectures par personne. Cela peut prendre quelques "
+"minutes."
+
+
+msgid "Find potential contacts"
+msgstr "Trouver des contacts potentiels"
+
+
+msgid "From a topic to an informed enquiry"
+msgstr "Du sujet de recherche à une candidature préparée"
+
+
+msgid "Choose your level, topic and geographical preferences."
+msgstr "Précisez votre niveau, votre sujet et vos préférences géographiques."
+
+
+msgid "Explore authors with supporting publications and institution sources."
+msgstr ""
+"Découvrez des auteurs avec leurs publications justificatives et les sources "
+"sur leurs institutions."
+
+
+msgid "Read, save your leads and prepare a personal email."
+msgstr "Lisez, conservez vos pistes et préparez un email personnalisé."
+
+
+msgid "Research placement search"
+msgstr "Recherche de stage ou de thèse"
+
+
+msgid "My private shortlist"
+msgstr "Ma sélection privée"
+
+
+msgid "Save my notes"
+msgstr "Enregistrer mes notes"
+
+
+msgid "Remove from shortlist"
+msgstr "Retirer de ma sélection"
+
+
+msgid ""
+"Save a lead from a search to keep its sources, reading suggestions and your "
+"private notes here."
+msgstr ""
+"Enregistrez une piste depuis une recherche pour retrouver ici ses sources, "
+"ses lectures conseillées et vos notes privées."
+
+
+msgid "Your criteria"
+msgstr "Vos critères"
+
+
+msgid "Any location"
+msgstr "Toutes les localisations"
+
+
+msgid "Desired duration: %(n)s months"
+msgstr "Durée souhaitée : %(n)s mois"
+
+
+msgid ""
+"Dates, duration, skills and level are preferences, not verified eligibility "
+"or availability."
+msgstr ""
+"Les dates, la durée, les compétences et le niveau sont des préférences. Leur"
+" compatibilité avec une candidature n’a pas été vérifiée."
+
+
+msgid ""
+"This search is partial: the search budget, candidate limit or missing "
+"institution metadata prevented a complete check."
+msgstr ""
+"Cette recherche est partielle : le budget de recherche, la limite de "
+"candidats ou des métadonnées institutionnelles manquantes ont empêché une "
+"vérification complète."
+
+
+msgid ""
+"These leads come from recent publication affiliations, not a recruitment "
+"directory. Confirm the current laboratory, supervisory role and availability"
+" before applying. Counts and author order are not measures of supervision "
+"quality."
+msgstr ""
+"Ces pistes proviennent des affiliations de publications récentes, pas d’un "
+"annuaire de recrutement. Confirmez le laboratoire actuel, le rôle "
+"d’encadrement et la disponibilité avant de candidater. Le nombre d’articles "
+"et l’ordre des auteurs ne mesurent pas la qualité d’encadrement."
+
+
+msgid ""
+"No sufficiently supported lead was found with these geographical criteria. "
+"Try a broader topic, country or region, or allow alternatives. No location "
+"filter has been silently removed."
+msgstr ""
+"Aucune piste suffisamment étayée n’a été trouvée avec ces critères "
+"géographiques. Essayez un thème, un pays ou une région plus large, ou "
+"autorisez des alternatives. Aucun filtre géographique n’a été retiré "
+"automatiquement."
+
+
+msgid ""
+"The search failed. Your saved leads are unchanged. Please start a new "
+"search."
+msgstr ""
+"La recherche a échoué. Vos pistes enregistrées sont conservées. Veuillez "
+"lancer une nouvelle recherche."
+
+
+msgid "Try a new search"
+msgstr "Lancer une nouvelle recherche"
+
+
+msgid "Finding publication-based research contacts"
+msgstr "Recherche de contacts à partir des publications"
+
+
+msgid "a few minutes"
+msgstr "quelques minutes"
+
+
+msgid "Looking for an internship or PhD? Explore research placement leads."
+msgstr ""
+"Vous cherchez un stage ou une thèse ? Explorez les pistes de candidature."
+
+
+msgid ""
+"Potential research contacts, supporting publications, reading suggestions "
+"and a private shortlist."
+msgstr ""
+"Contacts scientifiques potentiels, publications justificatives, lectures "
+"conseillées et sélection privée."
+
+
+msgid "Affiliated author on %(n)s matching publication"
+msgid_plural "Affiliated author on %(n)s matching publications"
+msgstr[0] "Auteur affilié dans %(n)s publication pertinente"
+msgstr[1] "Auteur affilié dans %(n)s publications pertinentes"

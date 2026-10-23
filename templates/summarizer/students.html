@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Find a research placement' %}{% endblock %}
+{% block extra_head_tags %}{% include 'summarizer/mathjax.html' %}<style>
+.student-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
+.student-form-field label{display:block;font-weight:600;margin-bottom:6px}
+.student-form-field input,.student-form-field select,.student-form-field textarea{box-sizing:border-box;width:100%;min-width:0}
+.student-form-field input[type=date],.student-form-field input[type=number]{padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font:15px var(--font)}
+.student-form-field textarea{min-height:100px}.student-form-wide{grid-column:1/-1}
+@media(max-width:600px){.student-form-grid{grid-template-columns:1fr}}
+</style><meta name="description" content="{% trans 'Explore potential research contacts for an internship or PhD, with publication evidence, reading suggestions and a private shortlist.' %}"><link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/students/">{% if request.user.is_authenticated %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
+{% block content %}
+<div class="page">
+  <header class="page-header"><span class="eyebrow">Premium</span><h1>{% trans 'Find a research placement' %}</h1>
+    <p class="lead">{% trans 'Explore potential contacts for a research internship or PhD, understand their connection to your topic and prepare your first enquiry.' %}</p>
+  </header>
+  <p class="notice">{% trans 'These are publication-based leads, not advertised vacancies. Affiliation metadata does not prove a current position or a right to supervise. Dates, duration, level and skills help prepare your enquiry; their compatibility must be confirmed with the institution.' %}</p>
+  {% if paid %}
+    {% if error == 'quota' %}<p class="error">{% trans 'Daily search limit reached. Please come back tomorrow.' %}</p>{% endif %}
+    <form method="post" class="card section-card">{% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="student-form-grid">{% for field in form %}
+        <div class="student-form-field{% if field.name == 'topic' or field.name == 'skills' %} student-form-wide{% endif %}">{{ field.label_tag }}{{ field.errors }}{{ field }}</div>
+      {% endfor %}</div>
+      <p class="muted">{% blocktrans %}Up to {{ per_day }} searches a day. We check recent publications and institution metadata, then suggest up to ten people and three readings per person. This may take a few minutes.{% endblocktrans %}</p>
+      <button type="submit" class="btn">{% trans 'Find potential contacts' %}</button>
+    </form>
+  {% else %}
+    <section class="card section-card"><h2>{% trans 'From a topic to an informed enquiry' %}</h2>
+      <ol><li>{% trans 'Choose your level, topic and geographical preferences.' %}</li><li>{% trans 'Explore authors with supporting publications and institution sources.' %}</li><li>{% trans 'Read, save your leads and prepare a personal email.' %}</li></ol>
+      {% if not request.user.is_authenticated %}{% include 'summarizer/tool_signup.html' with premium_tool=True %}{% else %}<a href="{% url 'premium' %}" class="btn">{% trans 'Discover Premium' %}</a>{% endif %}
+    </section>
+  {% endif %}
+  {% if searches %}<section class="section-card"><h2>{% trans 'Your searches' %}</h2><ul>{% for search in searches %}<li><a href="{% url 'student_result' key=search.key %}">{{ search.data.title|default:_('Research placement search') }}</a> · {{ search.created|date:'j F Y H:i' }} · {{ search.get_status_display }}</li>{% endfor %}</ul></section>{% endif %}
+  <section id="shortlist" style="scroll-margin-top:90px"><h2>{% trans 'My private shortlist' %}</h2>
+    {% for item in shortlist %}
+      {% include 'summarizer/student_card.html' with person=item.snapshot saved_item=True %}
+      <form class="card section-card" method="post" action="{% url 'student_shortlist_update' pk=item.pk %}">{% csrf_token %}{{ item.form.as_p }}<button class="btn" type="submit">{% trans 'Save my notes' %}</button> <button class="btn btn-secondary" type="submit" name="action" value="remove">{% trans 'Remove from shortlist' %}</button></form>
+    {% empty %}<p class="muted">{% trans 'Save a lead from a search to keep its sources, reading suggestions and your private notes here.' %}</p>{% endfor %}
+  </section>
+</div>
+{% endblock %}

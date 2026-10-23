@@ -10,6 +10,7 @@ TOOL_CHOICES = (
     ('scoops', _('Scoop watch')),
     ('conference', _('Conference companion')),
     ('teams', _('Who works on it?')),
+    ('students', _('Find a research placement')),
     ('collections', _('Collections and comparison tables')),
     ('zotero', _('Zotero integration')),
     ('changes', _('Version alerts')),
@@ -26,5 +27,5 @@ GENERATED_TOOLS = {
     'slides': 'journal_club', 'slides_v2': 'journal_club',
     'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club',
     'compare': 'collections', 'questions': 'collections',
-    **{k: k for k in ('missed', 'zotero', 'refcheck', 'changes', 'teams', 'conference')},
+    **{k: k for k in ('missed', 'zotero', 'refcheck', 'changes', 'teams', 'conference', 'students')},
 }
