@@ -92,6 +92,8 @@ def crossref_record(work):
               'year': first(dates), 'volume': work.get('volume', ''),
               'pages': work.get('page') or work.get('article-number') or '', 'publisher': work.get('publisher', ''),
               'doi': doi, 'isbn': first(work.get('ISBN'))}
+    if kind == 'book':
+        fields.pop('journal', None)  # a book's series/container is not a journal
     return {'fields': {k: html.unescape(str(v)) for k, v in fields.items() if v}, 'type': kind, 'doi': doi,
             'authors': [normalized(a) for a in authors], 'years': dates, 'source': 'Crossref',
             'url': 'https://doi.org/' + quote(doi, safe='/') if doi else '', 'arxiv': ''}
@@ -116,6 +118,8 @@ def ads_record(work):
          'volume': work.get('volume', ''), 'pages': '-'.join(work.get('page') or []),
          'doi': first(work.get('doi')), 'isbn': first(work.get('isbn'))}
     kind = {'article': 'article', 'book': 'book', 'inbook': 'incollection', 'inproceedings': 'inproceedings'}.get(work.get('doctype'), '')
+    if kind == 'book':
+        f.pop('journal', None)  # ADS pub holds the book title, not a journal
     return {'fields': {k: str(v) for k, v in f.items() if v}, 'type': kind,
             'doi': sources.clean_doi(f['doi']) or '', 'authors': [normalized(a.split(',')[0]) for a in authors],
             'years': [f['year']], 'source': 'NASA ADS',

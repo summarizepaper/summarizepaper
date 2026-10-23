@@ -59,6 +59,16 @@ class BibliographyTests(SimpleTestCase):
                     self.assertEqual(record['fields']['year'], '2010')
                     self.assertEqual(record['type'], 'book')
 
+    def test_a_book_misfiled_as_a_journal_article_is_still_recognized(self):
+        entry=refcheck.parse_bibtex(BIB)[3]
+        entry['fields']['journal']=entry['fields'].pop('publisher')
+        data=fixture('armitage');resolver=bib.Resolver()
+        with mock.patch.object(resolver,'crossref',return_value=[bib.crossref_record(w) for w in data['crossref']]), \
+             mock.patch.object(resolver,'ads',return_value=[bib.ads_record(w) for w in data['ads']]):
+            record=resolver.resolve(entry)
+        self.assertEqual(record['type'],'book')
+        self.assertEqual(bib.differences(entry,record),[{'field':'type','before':'@article','after':'@book'}])
+
     def test_wrong_title_recovers_via_locator_and_enriches_ads_first_page_with_crossref_range(self):
         entry=refcheck.parse_bibtex(BIB)[1]
         data=fixture('kenyon'); resolver=bib.Resolver()
