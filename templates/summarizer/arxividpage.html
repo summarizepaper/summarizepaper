@@ -1235,6 +1235,7 @@ function updateCache(arxiv_id) {
 <script>
 
 let currentResponse = null;
+let pendingFigures = null;
 function addTheListeners() {
   //alert('ok');
   if (socketl && (socketl.readyState === WebSocket.OPEN || socketl.readyState === WebSocket.CONNECTING)) {
@@ -1249,6 +1250,7 @@ function addTheListeners() {
       //socketl.onmessage = function(event) {
       //console.log('Received message:', event);
       const data = JSON.parse(event.data);
+      if (data.type === 'chat_figures') {pendingFigures = data; return;}
       // the answer streams in as chat_delta pieces, then arrives whole as {message}
       if (data.type === 'chat_delta') {
         if (!currentResponse) {
@@ -1272,6 +1274,10 @@ function addTheListeners() {
       }
       SPChat.render(currentResponse, data.message, "{% trans 'AI -' %}");
       SPChat.typeset(currentResponse);
+      if (pendingFigures && window.SPChatFigures) {
+        SPChatFigures.render(currentResponse, pendingFigures.figures, pendingFigures.status);
+      }
+      pendingFigures = null;
       currentResponse = null;
       var blinkingSquare = document.querySelector(".blinking-square");
       if (blinkingSquare) {

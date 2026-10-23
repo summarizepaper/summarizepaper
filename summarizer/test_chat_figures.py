@@ -2,6 +2,7 @@ import json
 from unittest import mock
 
 import requests
+from bs4 import BeautifulSoup
 from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase, override_settings
@@ -43,7 +44,7 @@ class ChatFiguresTests(TestCase):
         figure = data['figures'][0]
         self.assertEqual(figure['images'], ['https://arxiv.org/html/2401.04088v1/x3.png',
                                            'https://arxiv.org/html/2401.04088v1/x4.png'])
-        self.assertEqual(figure['caption'], 'Figure 3: A spectrum .')
+        self.assertEqual(figure['caption'], 'Figure 3: A spectrum.')
         self.assertEqual(figure['label'], 'Figure 3:')
         self.assertTrue(figure['source_url'].endswith('#S2.F3'))
         self.assertFalse(get.call_args.kwargs['allow_redirects'])
@@ -117,6 +118,7 @@ class ChatFiguresTests(TestCase):
             html = render_to_string('summarizer/chat_figures.html', {'figure_paper': self.paper.arxiv_id}, request)
         self.assertIn('Figures et graphiques', html)
         self.assertIn('data-paper="2401.04088v1"', html)
+        self.assertTrue(BeautifulSoup(html, 'html.parser').select_one('.chat-figures-picker').has_attr('hidden'))
         self.assertIn('/fr/paper-figures/PAPER_ID/', html)
         empty = render_to_string('summarizer/chat_figures.html', {}, request)
         self.assertIn('data-paper="" data-title=""', empty)
@@ -126,3 +128,39 @@ class ChatFiguresTests(TestCase):
         from pathlib import Path
         for template in ['chat.html', 'arxividpage.html']:
             self.assertIn("include 'summarizer/chat_figures.html'", (Path('templates/summarizer') / template).read_text())
+
+    def test_mathml_is_replaced_once_by_its_tex_source(self):
+        html = r'''<figcaption>Figure 1: Peak (<math alttext="\alpha_{\mathrm{ICRS}}"><semantics>
+        <msub><mi>α</mi><mi>ICRS</mi></msub><annotation encoding="application/x-tex">\alpha_{\mathrm{ICRS}}</annotation>
+        </semantics></math>, <math alttext="\delta_{\mathrm{ICRS}}"><mi>δ</mi><annotation>duplicate</annotation></math>).
+        The noise (<math alttext="\sigma"><mi>σ</mi><annotation>\sigma</annotation></math>) is
+        20 <math alttext="\mu"><mi>μ</mi><annotation>\mu</annotation></math>Jy beam<sup>-1</sup>.</figcaption>'''
+        text = figures.caption_text(BeautifulSoup(html, 'html.parser').figcaption)
+        self.assertEqual(text.count(r'\alpha_{\mathrm{ICRS}}'), 1)
+        self.assertEqual(text.count(r'\sigma'), 1)
+        self.assertIn(r'\(\delta_{\mathrm{ICRS}}\)', text)
+        self.assertIn(r'\(\mu\)Jy', text)
+        self.assertIn(r'beam\({}^{\text{-1}}\)', text)
+        self.assertNotIn('duplicate', text)
+        self.assertNotIn('α', text)
+        self.assertNotIn('<math', text)
+
+    def test_pmc_alternative_math_is_not_duplicated_and_annotation_is_a_fallback(self):
+        html = r'''<figcaption>Ratio <inline-formula><alternatives><tex-math><![CDATA[\frac{a_1}{b_2}]]></tex-math>
+        <math alttext="\frac{a_1}{b_2}"><mi>a</mi><mi>b</mi></math></alternatives></inline-formula>;
+        <math><semantics><mi>x</mi><annotation encoding="application/x-tex">x_i^2</annotation></semantics></math>;
+        <math><mi>y</mi><annotation encoding="application/unknown">hidden alternative</annotation></math>.
+        <script>alert(1)</script></figcaption>'''
+        text = figures.caption_text(BeautifulSoup(html, 'html.parser').figcaption)
+        self.assertEqual(text.count(r'\frac{a_1}{b_2}'), 1)
+        self.assertIn(r'\(x_i^2\)', text)
+        self.assertIn('y', text)
+        self.assertNotIn('hidden alternative', text)
+        self.assertNotIn('alert', text)
+
+    def test_formula_images_in_captions_are_not_treated_as_figure_panels(self):
+        html = '''<figure class="ltx_figure"><img src="paper/plot.png"><figcaption>Figure 1:
+        <img src="paper/formula.png" alt="x"> flux<sub>dust</sub></figcaption></figure>'''
+        data = figures.extract(html, 'https://arxiv.org/html/paper', 'arxiv')
+        self.assertEqual(data[0]['images'], ['https://arxiv.org/html/paper/plot.png'])
+        self.assertIn(r'flux\({}_{\text{dust}}\)', data[0]['caption'])

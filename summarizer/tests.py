@@ -528,7 +528,7 @@ class ConsumerChatTests(TransactionTestCase):
     async def test_chat_streams_deltas_then_message(self):
         from summarizer.routing import websocket_urlpatterns
 
-        async def fake_answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_delta=None, conversation_id=None):
+        async def fake_answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_delta=None, conversation_id=None, on_figures=None):
             self.assertEqual((arxiv_ids, paid, conversation_id), (['2101.00001v1'], False, '2101.00001v1'))
             await on_delta('Hel')
             await on_delta('lo')

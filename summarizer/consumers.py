@@ -997,10 +997,13 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             async def send_delta(delta):
                 await self.send(text_data=json.dumps({'type': 'chat_delta', 'delta': delta}))
 
+            async def send_figures(figures, status):
+                await self.send(text_data=json.dumps({'type': 'chat_figures', 'figures': figures, 'status': status}))
+
             try:
                 chatbot_text = await assistant.answer(
                     arxiv_ids, self.language, message, paid, user=self.user, hashed_ip=self.hashed_ip,
-                    on_delta=send_delta, conversation_id=self.arxiv_id)
+                    on_delta=send_delta, conversation_id=self.arxiv_id, on_figures=send_figures)
             except Exception:
                 logger.exception('Assistant failed for %s', self.arxiv_id)
                 chatbot_text = None

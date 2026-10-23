@@ -41,7 +41,7 @@ def safe_image_url(url):
         return False
 
 
-def svg_png(data):
+def svg_png(data, width_limit=1800, height_limit=1200):
     """No scripts, external references, DTDs or local files reach the SVG renderer."""
     import resvg_py
     root = etree.fromstring(data, parser=etree.XMLParser(resolve_entities=False, no_network=True))
@@ -82,7 +82,8 @@ def svg_png(data):
             raise ValueError
     except (ValueError, ZeroDivisionError, AttributeError):
         raise ExportError
-    width, height = (1800, round(1800 / ratio)) if ratio >= 1.5 else (round(1200 * ratio), 1200)
+    width, height = ((width_limit, round(width_limit / ratio)) if ratio >= width_limit / height_limit
+                     else (round(height_limit * ratio), height_limit))
     return resvg_py.svg_to_bytes(svg_string=etree.tostring(root, encoding='unicode'), width=width, height=height)
 
 

@@ -11,8 +11,12 @@ for (const template of ['chat', 'arxividpage']) {
     assert.ok(handler, 'Exercise the actual chat message handler');
     const elements = [];
     const {SPChat} = createHarness();
+    const visualCalls = [];
+    const SPChatFigures = {render: (...args) => visualCalls.push(args)};
     const context = {
       currentResponse: null,
+      pendingFigures: null,
+      window: {SPChatFigures}, SPChatFigures,
       SPChat,
       chatbotMessages: {appendChild(node) {elements.push(node);}},
       document: {createElement: element, getElementById: element, querySelector: () => null},
@@ -21,6 +25,8 @@ for (const template of ['chat', 'arxividpage']) {
     vm.createContext(context);
     vm.runInContext(`function handle(event) {${handler[1]}\n}`, context);
     const attack = '<img src=x onerror="alert(document.cookie)"><script>alert(1)</script>';
+    context.handle({data: JSON.stringify({type: 'chat_figures', status: 'ready', figures: [{paper_id: 'paper'}]})});
+    assert.equal(elements.length, 0);
     context.handle({data: JSON.stringify({type: 'chat_delta', delta: attack})});
     assert.equal(elements.length, 1);
     assert.ok(elements[0].children[1].innerHTML.includes('&lt;script&gt;'));
@@ -30,6 +36,13 @@ for (const template of ['chat', 'arxividpage']) {
     assert.ok(elements[0].children[1].innerHTML.includes('&lt;script&gt;'));
     assert.ok(!elements[0].children[1].innerHTML.includes('<script'));
     assert.equal(context.currentResponse, null);
+    assert.equal(context.pendingFigures, null);
+    assert.equal(visualCalls.length, 1);
+    assert.equal(visualCalls[0][0], elements[0]);
+    assert.equal(visualCalls[0][2], 'ready');
+    context.handle({data: JSON.stringify({message: 'A text-only answer'})});
+    assert.equal(elements.length, 2);
+    assert.equal(visualCalls.length, 1);
   });
 }
 

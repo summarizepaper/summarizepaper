@@ -49,6 +49,42 @@ def html_source(paper):
     return None
 
 
+def caption_text(caption):
+    """Keep one representation of each formula, never MathML plus its annotation.
+
+    Return plain text with TeX delimiters; the browser inserts it with textContent.
+    Publisher HTML and MathML are never copied into the page.
+    """
+    for node in caption.select('script, style'):
+        node.decompose()
+
+    def formula(node):
+        math = node if node.name == 'math' else node.find('math')
+        annotation = node.find('annotation', encoding=re.compile(r'(?:x-tex|latex)', re.I))
+        tex_node = node.find('tex-math')
+        tex = (math.get('alttext') if math else '') or (
+            tex_node.get_text() if tex_node else '') or (annotation.get_text() if annotation else '')
+        if tex and tex.strip():
+            return r'\(' + tex.strip() + r'\)'
+        # Without TeX, keep only the visible representation, not hidden alternatives.
+        for hidden in node.find_all(['annotation', 'annotation-xml', 'tex-math']):
+            hidden.decompose()
+        return node.get_text(' ', strip=True)
+
+    # PMC may wrap TeX and MathML together in alternatives inside inline-formula.
+    for node in list(caption.find_all(['inline-formula', 'disp-formula'])):
+        node.replace_with(formula(node))
+    for node in list(caption.find_all('math')):
+        node.replace_with(formula(node))
+    for node in caption.find_all(['sub', 'sup']):
+        text = node.get_text(' ', strip=True)
+        text = re.sub(r'([\\{}%$#&_])', r'\\\1', text)
+        node.replace_with(r'\({}' + ('_' if node.name == 'sub' else '^') + r'{\text{' + text + r'}}\)')
+    for block in caption.find_all(['p', 'div', 'br']):
+        block.insert_after(' ')
+    return ' '.join(caption.get_text().split())[:5000]
+
+
 def extract(html, base, kind):
     soup = BeautifulSoup(html, 'html.parser')
     found = []
@@ -61,6 +97,8 @@ def extract(html, base, kind):
             continue
         images = []
         for node in figure.find_all(['img', 'object']):
+            if node.find_parent('figcaption'):
+                continue
             source = node.get('src') or node.get('data-src') or node.get('data')
             if not source:
                 continue
@@ -71,7 +109,7 @@ def extract(html, base, kind):
                 break
         if not images:
             continue
-        text = ' '.join(caption.get_text(' ', strip=True).split())[:5000]
+        text = caption_text(caption)
         tag = figure.select_one('.ltx_tag_figure')
         match = re.match(r'\s*((?:Figure|Fig\.)\s*[A-Za-z]?\d+(?:[.\-]\d+)?)', text, flags=re.I)
         label = tag.get_text(' ', strip=True) if tag else (match.group(1) if match else 'Figure %d' % index)
@@ -83,20 +121,17 @@ def extract(html, base, kind):
     return found
 
 
-@require_GET
-def gallery(request, arxiv_id):
-    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
-    if paper is None:
-        return JsonResponse({'status': 'not_ready'}, status=404)
+def paper_gallery(paper):
+    """Shared by the public gallery and the assistant's validated image inputs."""
     data = {'paper_id': paper.arxiv_id, 'title': paper.title or paper.arxiv_id,
             'source_url': sources.ref_url(paper.arxiv_id), 'figures': []}
     if not sources.is_open_license(paper.license):
-        return JsonResponse(dict(data, status='license'))
+        return dict(data, status='license')
     source = html_source(paper)
     if source is None:
-        return JsonResponse(dict(data, status='unsupported'))
+        return dict(data, status='unsupported')
     url, kind = source
-    cache_key = 'chat-figures:v1:' + hashlib.sha256(url.encode()).hexdigest()
+    cache_key = 'chat-figures:v2:' + hashlib.sha256(url.encode()).hexdigest()
     figures = cache.get(cache_key)
     if figures is None:
         try:
@@ -116,5 +151,14 @@ def gallery(request, arxiv_id):
                     figures = extract(b''.join(chunks), url, kind)
             cache.set(cache_key, figures, 86400 if figures else 600)
         except (requests.RequestException, ValueError):
-            return JsonResponse(dict(data, status='unavailable'), status=503)
-    return JsonResponse(dict(data, status='ready' if figures else 'empty', figures=figures))
+            return dict(data, status='unavailable')
+    return dict(data, status='ready' if figures else 'empty', figures=figures)
+
+
+@require_GET
+def gallery(request, arxiv_id):
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    if paper is None:
+        return JsonResponse({'status': 'not_ready'}, status=404)
+    data = paper_gallery(paper)
+    return JsonResponse(data, status=503 if data['status'] == 'unavailable' else 200)

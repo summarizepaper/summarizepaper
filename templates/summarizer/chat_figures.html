@@ -1,4 +1,5 @@
 {% load i18n static_version %}
+<div class="chat-figures-widget">
 <details class="chat-figures" data-paper="{{ figure_paper|default:'' }}" data-title="{% firstof paper.title details.title figure_paper %}" data-url="{% url 'paper_figures' 'PAPER_ID' %}"
   data-loading="{% trans 'Loading figures…' %}" data-empty="{% trans 'No figures are available in this paper’s HTML version. Open the original paper to view them.' %}"
   data-license="{% trans 'This paper’s license does not allow us to display its figures here. View them in the original paper.' %}"
@@ -6,19 +7,22 @@
   data-pending="{% trans 'This paper is still being prepared. Try again in a moment.' %}"
   data-none="{% trans 'Select a paper to view its figures.' %}" data-source="{% trans 'View in the original paper' %}"
   data-ask="{% trans 'Ask about this figure' %}" data-question="{% trans 'About {figure} in the paper {paper} ({id}): ' %}"
+  data-vision-used="{% trans 'Figures provided to the assistant for this answer:' %}"
+  data-vision-unavailable="{% trans 'The requested figures could not be analyzed visually. This answer relies on the available text and captions.' %}"
   data-enlarge="{% trans 'Enlarge figure' %}" data-image-error="{% trans 'This image could not be loaded. View it in the original paper.' %}">
   <summary>{% trans 'Figures and plots' %}</summary>
   <div class="chat-figures-content">
-    <label>{% trans 'Paper' %} <select class="chat-figures-paper"></select></label>
+    <label class="chat-figures-picker"{% if figure_paper %} hidden{% endif %}>{% trans 'Paper' %} <select class="chat-figures-paper"{% if figure_paper %} disabled{% endif %}></select></label>
     <p class="chat-figures-status muted" role="status" aria-live="polite"></p>
     <button class="chat-figures-retry btn btn-sm" type="button" hidden>{% trans 'Try again' %}</button>
     <a class="chat-figures-source" target="_blank" rel="noopener noreferrer" hidden></a>
     <div class="chat-figures-grid"></div>
-    <p class="muted"><small>{% trans 'The assistant answers from the paper’s text and captions, not from image pixels. Check visual details in the original figure.' %}</small></p>
+    <p class="muted"><small>{% trans 'Ask about a figure by number or use its question button to request visual analysis. Up to two figures and four image panels per question. Values read from plots are approximate; check the original data.' %}</small></p>
   </div>
+</details>
   <dialog class="chat-figure-dialog" aria-label="{% trans 'Enlarged figure' %}">
     <button class="chat-figure-close btn btn-sm" type="button">{% trans 'Close' %}</button>
     <div class="chat-figure-enlarged"></div>
   </dialog>
-</details>
+</div>
 <script defer src="{% static_v 'summarizer/js/chat-figures.js' %}"></script>

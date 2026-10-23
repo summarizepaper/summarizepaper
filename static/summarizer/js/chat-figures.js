@@ -19,15 +19,24 @@
   }
   function mount(box) {
     var select = box.querySelector('select');
+    var picker = box.querySelector('.chat-figures-picker');
     var status = box.querySelector('.chat-figures-status');
     var grid = box.querySelector('.chat-figures-grid');
     var retry = box.querySelector('.chat-figures-retry');
     var source = box.querySelector('.chat-figures-source');
-    var dialog = box.querySelector('dialog');
-    var enlarged = box.querySelector('.chat-figure-enlarged');
+    var dialog = box.parentElement.querySelector('dialog');
+    var enlarged = dialog.querySelector('.chat-figure-enlarged');
     var selected = document.getElementById('selected-papers');
     var version = 0, controller, current = '', state = '', signature = '', opener, questionPrefix = '';
     var responses = new Map();
+
+    function clear(element) {
+      if (window.MathJax && typeof window.MathJax.typesetClear === 'function') window.MathJax.typesetClear([element]);
+      element.replaceChildren();
+    }
+    function typeset(element) {
+      if (window.SPChat) window.SPChat.typeset(element);
+    }
 
     function close() {
       if (!dialog.open) return;
@@ -59,9 +68,30 @@
       var a = node('a', box.dataset.source); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
       return a;
     }
+    function createCard(figure, data) {
+        var card = node('figure');
+        var button = node('button'); button.type = 'button'; button.className = 'chat-figure-thumb';
+        button.setAttribute('aria-label', box.dataset.enlarge + ' — ' + figure.label);
+        pictures(figure, button, false); card.appendChild(button);
+        card.appendChild(node('figcaption', figure.caption || figure.label));
+        var ask = node('button', box.dataset.ask); ask.type = 'button'; ask.className = 'btn btn-sm';
+        ask.addEventListener('click', function () {question(figure, data);}); card.appendChild(ask);
+        button.addEventListener('click', function () {
+          clear(enlarged);
+          enlarged.appendChild(node('h3', data.title + ' — ' + figure.label));
+          pictures(figure, enlarged, true);
+          enlarged.appendChild(node('p', figure.caption));
+          enlarged.appendChild(original(figure.source_url || data.source_url));
+          opener = button;
+          if (typeof dialog.showModal === 'function') dialog.showModal();
+          else dialog.setAttribute('open', '');
+          typeset(enlarged);
+        });
+      return card;
+    }
     function draw(data) {
       state = data.status;
-      grid.replaceChildren();
+      clear(grid);
       status.classList.remove('is-loading');
       status.textContent = state === 'ready' ? data.title :
         (state === 'license' ? box.dataset.license : state === 'not_ready' ? box.dataset.pending :
@@ -71,31 +101,16 @@
       if (!source.hidden) {source.href = data.source_url; source.textContent = box.dataset.source;}
       (data.figures || []).forEach(function (figure) {
         if (!(figure.images || []).some(imageURL)) return;
-        var card = node('figure');
-        var button = node('button'); button.type = 'button'; button.className = 'chat-figure-thumb';
-        button.setAttribute('aria-label', box.dataset.enlarge + ' — ' + figure.label);
-        pictures(figure, button, false); card.appendChild(button);
-        card.appendChild(node('figcaption', figure.caption || figure.label));
-        var ask = node('button', box.dataset.ask); ask.type = 'button'; ask.className = 'btn btn-sm';
-        ask.addEventListener('click', function () {question(figure, data);}); card.appendChild(ask);
-        button.addEventListener('click', function () {
-          enlarged.replaceChildren(node('h3', data.title + ' — ' + figure.label));
-          pictures(figure, enlarged, true);
-          enlarged.appendChild(node('p', figure.caption));
-          enlarged.appendChild(original(figure.source_url || data.source_url));
-          opener = button;
-          if (typeof dialog.showModal === 'function') dialog.showModal();
-          else dialog.setAttribute('open', '');
-        });
-        grid.appendChild(card);
+        grid.appendChild(createCard(figure, data));
       });
+      typeset(grid);
     }
     function load(force) {
       if (!box.open) return;
       var id = select.value;
       version++; var mine = version;
       if (controller) controller.abort();
-      close(); grid.replaceChildren(); retry.hidden = true; source.hidden = true;
+      close(); clear(grid); retry.hidden = true; source.hidden = true;
       current = id;
       if (!id) {state = ''; status.classList.remove('is-loading'); status.textContent = box.dataset.none; return;}
       if (!force && responses.has(id)) {draw(responses.get(id)); return;}
@@ -127,7 +142,8 @@
       select.replaceChildren();
       papers.slice(0, 10).forEach(function (p) {var option = node('option', p.title); option.value = p.id; select.appendChild(option);});
       if (papers.some(function (p) {return p.id === current;})) select.value = current;
-      select.disabled = !papers.length;
+      picker.hidden = papers.length <= 1;
+      select.disabled = papers.length <= 1;
       if (!skipLoad && box.open) load(false);
     }
     box.addEventListener('toggle', function () {
@@ -136,9 +152,28 @@
     });
     select.addEventListener('change', function () {load(false);});
     retry.addEventListener('click', function () {load(true);});
-    box.querySelector('.chat-figure-close').addEventListener('click', close);
+    dialog.querySelector('.chat-figure-close').addEventListener('click', close);
     dialog.addEventListener('close', function () {if (opener && opener.isConnected) opener.focus();});
     if (selected) new MutationObserver(function () {refresh(false);}).observe(selected, {childList: true, subtree: true});
+    window.SPChatFigures = {render: function (element, items, result) {
+      if (result === 'not_requested' || !result) return;
+      var section = node('div'); section.className = 'chat-visual-evidence';
+      if (result !== 'ready') {
+        section.appendChild(node('p', box.dataset.visionUnavailable));
+      } else {
+        section.appendChild(node('p', box.dataset.visionUsed));
+        var cards = node('div'); cards.className = 'chat-inline-figures';
+        (items || []).slice(0, 2).forEach(function (item) {
+          if (!item.figure || !(item.figure.images || []).some(imageURL)) return;
+          var card = createCard(item.figure, item);
+          card.appendChild(node('small', item.title + ' (' + item.paper_id + ')'));
+          cards.appendChild(card);
+        });
+        section.appendChild(cards);
+      }
+      element.appendChild(section);
+      typeset(section);
+    }};
     refresh();
   }
   document.querySelectorAll('.chat-figures').forEach(mount);

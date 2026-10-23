@@ -516,6 +516,11 @@ img { max-width: 100%; }
 .chat-figures-status.is-loading::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: chat-figure-spin .8s linear infinite; }
 .chat-figures-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 16px; max-height: 380px; overflow-y: auto; margin-top: 12px; }
 .chat-figures-grid figure { margin: 0; padding: 10px; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.chat-inline-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 12px; }
+.chat-inline-figures figure { margin: 0; padding: 10px; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.chat-inline-figures figcaption { font-size: .85rem; max-height: 120px; overflow-y: auto; margin: 8px 0; }
+.chat-inline-figures small { display: block; margin-top: 8px; overflow-wrap: anywhere; }
+.chat-visual-evidence { margin-top: 16px; }
 .chat-figure-thumb { display: block; width: 100%; padding: 0; border: 0; background: white; cursor: zoom-in; }
 .chat-figure-thumb img { width: 100%; height: 150px; object-fit: contain; }
 .chat-figures-grid figcaption { font-size: .85rem; line-height: 1.5; max-height: 100px; overflow-y: auto; margin: 8px 0; overflow-wrap: anywhere; }
