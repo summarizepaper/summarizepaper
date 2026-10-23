@@ -1,10 +1,10 @@
 {% load i18n %}
-<article class="card section-card">
+<article class="card section-card" data-student-card>
   <h2 style="margin-top:0">{{ person.name }}</h2>
   {% if person.outdated %}<p class="notice">{% trans 'Saved with the previous method: author order and latest affiliation need to be checked again. Refresh the search before contacting this person.' %}</p>{% endif %}
   <p><strong>{{ person.institution }}</strong>{% if person.city %} · {{ person.city }}{% endif %}{% if person.region and person.region != person.city %} · {{ person.region }}{% endif %}{% if person.country %} · {{ person.country }}{% endif %}</p>
   {% if not person.location_match %}<p class="notice">{% trans 'Alternative location: outside the requested area or location not verified.' %}</p>{% endif %}
-  {% if not person.outdated %}<p class="meta">{% blocktrans count n=person.count %}First author of {{ n }} matching paper{% plural %}First author of {{ n }} matching papers{% endblocktrans %}</p>
+  {% if not person.outdated %}<p class="meta">{% blocktrans count n=person.count %}Contributor to {{ n }} matching paper{% plural %}Contributor to {{ n }} matching papers{% endblocktrans %} · {% trans 'First-author papers:' %} {{ person.first_count|default:0 }}</p>
   {% if person.affiliation_evidence %}<p>{% if person.affiliation_source == 'author_record' %}{% trans 'Latest affiliation dated in the author record:' %}{% else %}{% trans 'Latest affiliation found in a publication:' %}{% endif %} {{ person.affiliation_date }} · <a href="{{ person.affiliation_evidence.url }}" target="_blank" rel="noopener">{{ person.affiliation_evidence.title }}</a></p>{% endif %}
   <p class="muted">{% trans 'Checked independently of the topic against the latest publication and the author record. This is the latest bibliographic evidence, not confirmation of current employment.' %}</p>
   {% if person.affiliation_conflict %}<p class="notice">{% trans 'Recent publication and author record disagree about the affiliation. This location is not treated as a verified match.' %}</p>{% endif %}
@@ -13,16 +13,25 @@
   <p><a href="{{ person.author_url }}" target="_blank" rel="noopener">{% trans 'Author source (OpenAlex)' %}</a> · <a href="{{ person.institution_url }}" target="_blank" rel="noopener">{% trans 'Institution source' %}</a>{% if person.website %} · <a href="{{ person.website }}" target="_blank" rel="noopener">{% trans 'Institution website' %}</a>{% endif %}{% if person.checked %} · {% blocktrans with date=person.checked %}Metadata consulted: {{ date }}{% endblocktrans %}{% endif %}</p>
   {% if person.umbrella %}<p class="muted">{% trans 'National umbrella organization: its headquarters do not establish the location of this author’s laboratory.' %}</p>{% endif %}
   {% if not person.location_checked %}<p class="muted">{% trans 'Detailed institution location could not be checked. Any country shown comes from the publication affiliation.' %}</p>{% endif %}
+  {% include 'summarizer/student_evidence.html' with evidence=person.official_sources %}
+  <h3>{% trans 'Why explore this contact?' %}</h3>
+  <p>{% trans 'The publications below support a connection to your topic. Author order is used to select readings, never to infer who can supervise you.' %}</p>
+  <p><strong>{{ person.profile.level }}</strong> · {% if person.profile.level == 'L3' %}{% trans 'Ask about introductory projects, prerequisites and day-to-day supervision.' %}{% elif person.profile.level == 'M1' %}{% trans 'Ask about a feasible project, training in the methods and the available supervision.' %}{% else %}{% trans 'Ask about the project scope, expected autonomy, supervision and possible funding.' %}{% endif %}</p>
   <h3>{% trans 'Read before writing' %}</h3>
-  <p class="muted">{% trans 'Suggested order and reading prompts based on titles, not a full-text review or an assessment of difficulty.' %}</p>
+  <p class="muted">{% trans 'First-author readings are prioritised; other contributions are labelled. Reading help uses the available abstract, or only the title when no abstract is available. It is not a full-text review.' %}</p>
   <ol>{% for paper in person.readings %}<li style="margin-bottom:12px">
-    {% if paper.url %}<a href="{{ paper.url }}" target="_blank" rel="noopener">{{ paper.title }}</a>{% else %}{{ paper.title }}{% endif %}{% if paper.year %} ({{ paper.year }}){% endif %}{% if paper.first_author %} · <strong>{% trans 'First author' %}</strong>{% endif %}
+    {% if paper.url %}<a href="{{ paper.url }}" target="_blank" rel="noopener">{{ paper.title }}</a>{% else %}{{ paper.title }}{% endif %}{% if paper.year %} ({{ paper.year }}){% endif %}{% if paper.first_author %} · <strong>{% trans 'First author' %}</strong>{% else %} · {% trans 'Coauthor — contribution to confirm' %}{% endif %}
+    <p class="meta">{% if paper.abstract %}{% trans 'Reading help based on the abstract' %}{% else %}{% trans 'Title only — methods and results not verified' %}{% endif %}</p>
+    {% if paper.introduction %}<p>{{ paper.introduction }}</p>{% endif %}
+    {% if paper.concepts %}<p><strong>{% trans 'Concepts to explore:' %}</strong> {{ paper.concepts|join:', ' }}</p>{% endif %}
+    {% for method in paper.methods %}<p><strong>{{ method.name }}</strong> — <q>{{ method.quote }}</q></p>{% endfor %}
+    {% if paper.questions %}<details><summary>{% trans 'Questions to guide your reading' %}</summary><ul>{% for question in paper.questions %}<li>{{ question }} <button type="button" class="btn btn-secondary" data-student-question="{% blocktrans with title=paper.title %}Concerning “{{ title }}”:{% endblocktrans %} {{ question }}">{% trans 'Add to my draft' %}</button></li>{% endfor %}</ul></details>{% endif %}
     {% if paper.why %}<p style="margin:4px 0">{{ paper.why }}</p>{% else %}<p class="muted">{% trans 'Start with the abstract, identify the method and note one specific question to ask.' %}</p>{% endif %}
   </li>{% endfor %}</ol>
   <details><summary>{% trans 'Prepare a first email' %}</summary>
     <p>{% trans 'Adapt this draft after reading. No message is sent. Add your actual skills and dates; do not claim a paper has been read unless you have read it.' %}</p>
-    <label style="display:block">{% trans 'Editable draft to copy' %}<textarea rows="11" style="width:100%;box-sizing:border-box">{{ person.draft }}</textarea></label>
-  </details>
+    <label style="display:block">{% trans 'Editable draft to copy' %}<textarea data-student-draft data-question-placeholder="{{ person.draft_prompt }}" data-question-closing="{{ person.draft_closing }}" rows="11" style="width:100%;box-sizing:border-box">{{ person.draft }}</textarea></label>
+  </details><p data-student-draft-status role="status" aria-live="polite" data-added="{% trans 'Question added to the editable draft below. Check it after reading before sending.' %}"></p>
   {% if not saved_item %}
   {% if person.saved %}<p>{% trans 'Saved to your private shortlist.' %} <a href="{% url 'students' %}#shortlist">{% trans 'View my shortlist' %}</a></p>
   {% endif %}<form method="post" action="{% url 'student_save' key=row.key %}" style="margin-top:16px">{% csrf_token %}<input type="hidden" name="candidate" value="{{ person.key }}"><button class="btn" type="submit">{% if person.saved %}{% trans 'Update my saved lead' %}{% else %}{% trans 'Save this lead' %}{% endif %}</button></form>

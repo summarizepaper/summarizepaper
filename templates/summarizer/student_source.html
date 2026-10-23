@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% trans 'Institutional source check' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}<div class="page"><h1>{% trans 'Institutional source check' %}</h1>
+{% if invalid %}<p class="error">{% trans 'Use an HTTPS page on the institution website or one of its subdomains.' %}</p>{% elif busy %}<p class="notice">{% trans 'Please wait thirty seconds before checking another source.' %}</p>{% elif conflict %}<p class="notice">{% trans 'The saved lead changed during this check. The evidence was not saved; reload and try again.' %}</p>{% else %}{% include 'summarizer/student_evidence.html' with evidence_open=True %}<p>{% trans 'The source check has been saved with this lead.' %}</p>{% endif %}
+<a href="{% url 'students' %}#lead-{{ item.pk }}">{% trans 'Back to my shortlist' %}</a></div>{% endblock %}

@@ -9067,3 +9067,265 @@ msgstr "Dernière affiliation datée dans la notice auteur :"
 
 msgid "Progress for %(name)s"
 msgstr "Suivi de %(name)s"
+
+msgid "Reminder date (on this site, optional)"
+msgstr "Date de rappel (sur ce site, facultatif)"
+
+msgid "Contributor to %(n)s matching paper"
+msgid_plural "Contributor to %(n)s matching papers"
+msgstr[0] "Participation à %(n)s article pertinent"
+msgstr[1] "Participation à %(n)s articles pertinents"
+
+msgid "First-author papers:"
+msgstr "Articles en premier auteur :"
+
+msgid "Why explore this contact?"
+msgstr "Pourquoi explorer cette piste ?"
+
+msgid ""
+"The publications below support a connection to your topic. Author order is "
+"used to select readings, never to infer who can supervise you."
+msgstr ""
+"Les publications ci-dessous établissent un lien avec votre sujet. L’ordre "
+"des auteurs sert à sélectionner les lectures, jamais à déduire qui peut vous"
+" encadrer."
+
+msgid ""
+"Ask about introductory projects, prerequisites and day-to-day supervision."
+msgstr ""
+"Demandez quels projets d’initiation sont possibles, les prérequis et "
+"l’encadrement au quotidien."
+
+msgid ""
+"Ask about a feasible project, training in the methods and the available "
+"supervision."
+msgstr ""
+"Discutez d’un projet réalisable, de la formation aux méthodes et de "
+"l’encadrement disponible."
+
+msgid ""
+"Ask about the project scope, expected autonomy, supervision and possible "
+"funding."
+msgstr ""
+"Discutez du périmètre du projet, de l’autonomie attendue, de l’encadrement "
+"et du financement éventuel."
+
+msgid ""
+"First-author readings are prioritised; other contributions are labelled. "
+"Reading help uses the available abstract, or only the title when no abstract"
+" is available. It is not a full-text review."
+msgstr ""
+"Les lectures en premier auteur sont prioritaires ; les autres contributions "
+"sont signalées. L’aide à la lecture repose sur le résumé disponible, ou "
+"seulement sur le titre si le résumé manque. Ce n’est pas une analyse du "
+"texte intégral."
+
+msgid "Coauthor — contribution to confirm"
+msgstr "Coauteur — contribution à confirmer"
+
+msgid "Reading help based on the abstract"
+msgstr "Aide à la lecture fondée sur le résumé"
+
+msgid "Title only — methods and results not verified"
+msgstr "Titre uniquement — méthodes et résultats non vérifiés"
+
+msgid "Concepts to explore:"
+msgstr "Notions à explorer :"
+
+msgid "Questions to guide your reading"
+msgstr "Questions pour guider votre lecture"
+
+msgid "Concerning “%(title)s”:"
+msgstr "À propos de « %(title)s » :"
+
+msgid "Add to my draft"
+msgstr "Ajouter à mon brouillon"
+
+msgid ""
+"Question added to the editable draft below. Check it after reading before "
+"sending."
+msgstr ""
+"Question ajoutée au brouillon modifiable ci-dessous. Vérifiez-la après "
+"lecture avant d’envoyer votre message."
+
+msgid "Filter by progress"
+msgstr "Filtrer par état de la démarche"
+
+msgid "Reminders due"
+msgstr "Rappels arrivés à échéance"
+
+msgid ""
+"Select two to four saved leads to compare their evidence and your progress."
+msgstr ""
+"Sélectionnez deux à quatre favoris pour comparer les sources et votre "
+"progression."
+
+msgid "Compare selected leads"
+msgstr "Comparer les pistes sélectionnées"
+
+msgid "Compare %(name)s"
+msgstr "Comparer %(name)s"
+
+msgid "Reminder due"
+msgstr "Rappel arrivé à échéance"
+
+msgid "Changes waiting to be saved…"
+msgstr "Modifications en attente d’enregistrement…"
+
+msgid "Progress, notes and reminder saved."
+msgstr "État, notes et rappel enregistrés."
+
+msgid "Save failed. Your changes are still here; retry before leaving."
+msgstr ""
+"Échec de l’enregistrement. Vos modifications sont conservées ici ; réessayez"
+" avant de quitter la page."
+
+msgid ""
+"This lead changed in another tab. Copy your notes, then reload before "
+"editing again."
+msgstr ""
+"Cette piste a été modifiée dans un autre onglet. Copiez vos notes, puis "
+"rechargez la page avant de reprendre."
+
+msgid ""
+"Changes are saved automatically. Reminders appear here on the chosen date; "
+"no email is sent."
+msgstr ""
+"Les modifications sont enregistrées automatiquement. Les rappels "
+"apparaissent ici à la date choisie ; aucun email n’est envoyé."
+
+msgid "Checking the institutional source…"
+msgstr "Vérification de la source institutionnelle…"
+
+msgid "Check an official profile or published offer"
+msgstr "Vérifier un profil officiel ou une offre publiée"
+
+msgid ""
+"Paste a page from the institution website linked above. We check its public "
+"structured data; a missing result does not mean the person or opportunity "
+"does not exist."
+msgstr ""
+"Collez une page du site de l’établissement indiqué ci-dessus. Nous vérifions"
+" ses données structurées publiques ; une absence de résultat ne signifie pas"
+" que la personne ou l’offre n’existe pas."
+
+msgid "Check source"
+msgstr "Vérifier la source"
+
+msgid "Institutional profile and published opportunities"
+msgstr "Profil institutionnel et offres publiées"
+
+msgid "Institutional pages consulted:"
+msgstr "Pages institutionnelles consultées le :"
+
+msgid "Institutional profile"
+msgstr "Profil institutionnel"
+
+msgid ""
+"The structured profile names this institution. This is supporting evidence, "
+"not a guarantee of current employment, eligibility to supervise or "
+"availability."
+msgstr ""
+"Le profil structuré mentionne cet établissement. C’est un indice "
+"supplémentaire, sans garantie d’emploi actuel, de droit à encadrer ou de "
+"disponibilité."
+
+msgid ""
+"The institutional profile does not confirm the bibliographic affiliation. "
+"Check for a move or a namesake before writing."
+msgstr ""
+"Le profil institutionnel ne confirme pas l’affiliation bibliographique. "
+"Vérifiez un éventuel changement d’établissement ou une homonymie avant "
+"d’écrire."
+
+msgid ""
+"No matching institutional profile was confirmed. The affiliation above "
+"remains bibliographic evidence only."
+msgstr ""
+"Aucun profil institutionnel correspondant n’a été confirmé. L’affiliation "
+"ci-dessus reste uniquement un indice bibliographique."
+
+msgid "Published opportunities — separate from spontaneous enquiries"
+msgstr "Offres publiées — distinctes des candidatures spontanées"
+
+msgid ""
+"Only structured advertisements found on the institution website are shown. "
+"These are not ranked by topic or location and are not verified as suitable "
+"for your level. Check the linked offer. Coverage is partial."
+msgstr ""
+"Seules les annonces structurées trouvées sur le site de l’établissement sont"
+" affichées. Elles ne sont pas classées par sujet ou localisation et leur "
+"adéquation à votre niveau n’est pas vérifiée. Consultez l’offre liée. La "
+"couverture est partielle."
+
+msgid "Deadline:"
+msgstr "Date limite :"
+
+msgid "Required level:"
+msgstr "Niveau demandé :"
+
+msgid "Funding:"
+msgstr "Financement :"
+
+msgid "Source consulted:"
+msgstr "Source consultée le :"
+
+msgid ""
+"No published student opportunity was confirmed in the pages checked. This is"
+" not evidence that no vacancy exists."
+msgstr ""
+"Aucune offre étudiante publiée n’a été confirmée dans les pages consultées. "
+"Cela ne signifie pas qu’aucune offre n’existe."
+
+msgid ""
+"Source check incomplete: some pages were unavailable or the crawl limit was "
+"reached."
+msgstr ""
+"Vérification partielle : certaines pages étaient indisponibles ou la limite "
+"de consultation a été atteinte."
+
+msgid "Institutional source check"
+msgstr "Vérification d’une source institutionnelle"
+
+msgid "Use an HTTPS page on the institution website or one of its subdomains."
+msgstr ""
+"Utilisez une page HTTPS du site de l’établissement ou de l’un de ses sous-"
+"domaines."
+
+msgid "Please wait thirty seconds before checking another source."
+msgstr ""
+"Veuillez patienter trente secondes avant de vérifier une autre source."
+
+msgid ""
+"The saved lead changed during this check. The evidence was not saved; reload"
+" and try again."
+msgstr ""
+"La piste enregistrée a changé pendant la vérification. Les sources n’ont pas"
+" été enregistrées ; rechargez la page et réessayez."
+
+msgid "The source check has been saved with this lead."
+msgstr "La vérification de cette source a été enregistrée avec cette piste."
+
+msgid "Back to my shortlist"
+msgstr "Retour à mes favoris"
+
+msgid "Compare saved leads"
+msgstr "Comparer mes pistes enregistrées"
+
+msgid "Select two to four distinct leads from your shortlist."
+msgstr "Sélectionnez deux à quatre pistes distinctes parmi vos favoris."
+
+msgid "Institution and location"
+msgstr "Établissement et localisation"
+
+msgid "Location needs verification"
+msgstr "Localisation à vérifier"
+
+msgid "Latest bibliographic evidence"
+msgstr "Dernier indice bibliographique"
+
+msgid "My progress"
+msgstr "Ma progression"
+
+msgid "Edit progress and notes"
+msgstr "Modifier l’état et les notes"

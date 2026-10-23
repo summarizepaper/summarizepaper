@@ -874,6 +874,8 @@ class StudentShortlist(models.Model):
         ('explore', 'To explore'), ('read', 'Paper read'),
         ('contacted', 'Contacted'), ('replied', 'Reply received')])
     notes = models.TextField(blank=True, default='')
+    remind_on = models.DateField(null=True, blank=True)
+    revision = models.PositiveIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

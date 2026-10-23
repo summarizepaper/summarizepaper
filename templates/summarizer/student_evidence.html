@@ -1,0 +1,12 @@
+{% load i18n %}
+<details{% if evidence_open %} open{% endif %}><summary>{% trans 'Institutional profile and published opportunities' %}</summary>
+{% if evidence.checked %}<p class="meta">{% trans 'Institutional pages consulted:' %} {{ evidence.checked }}</p>{% endif %}
+{% for profile in evidence.profiles %}
+<p><a href="{{ profile.url }}" target="_blank" rel="noopener">{% trans 'Institutional profile' %}</a> · {{ profile.role }} · {{ profile.institutions|join:', ' }}</p>
+{% if profile.agrees %}<p>{% trans 'The structured profile names this institution. This is supporting evidence, not a guarantee of current employment, eligibility to supervise or availability.' %}</p>{% else %}<p class="notice">{% trans 'The institutional profile does not confirm the bibliographic affiliation. Check for a move or a namesake before writing.' %}</p>{% endif %}
+{% empty %}<p class="muted">{% trans 'No matching institutional profile was confirmed. The affiliation above remains bibliographic evidence only.' %}</p>{% endfor %}
+<h4>{% trans 'Published opportunities — separate from spontaneous enquiries' %}</h4>
+<p class="muted">{% trans 'Only structured advertisements found on the institution website are shown. These are not ranked by topic or location and are not verified as suitable for your level. Check the linked offer. Coverage is partial.' %}</p>
+{% for offer in evidence.offers %}<section class="card"><h4><a href="{{ offer.url }}" target="_blank" rel="noopener">{{ offer.title }}</a></h4><p>{{ offer.description|truncatechars:800 }}</p><p>{% trans 'Deadline:' %} {{ offer.deadline|default:_('Not stated') }}</p><p>{% trans 'Required level:' %} {{ offer.level|default:_('Not stated') }}</p><p>{% trans 'Funding:' %} {{ offer.funding|default:_('Not stated') }}</p><p class="meta">{% trans 'Source consulted:' %} {{ offer.checked }}</p></section>{% empty %}<p>{% trans 'No published student opportunity was confirmed in the pages checked. This is not evidence that no vacancy exists.' %}</p>{% endfor %}
+{% if evidence.partial %}<p class="notice">{% trans 'Source check incomplete: some pages were unavailable or the crawl limit was reached.' %}</p>{% endif %}
+</details>

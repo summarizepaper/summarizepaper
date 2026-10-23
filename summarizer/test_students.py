@@ -205,15 +205,17 @@ class StudentTests(ToolsTestCase):
         row = self.row(pro)
         self.assertContains(self.client_for(pro).get('/fr/students/student-demo/'), 'Lire avant')
 
-    def test_only_explicit_first_author_papers_are_shown(self):
+    def test_first_author_readings_are_prioritised_and_coauthors_labelled(self):
         first = self.paper_data()
         middle = self.paper_data(title='Unrelated long collaboration')
         middle['id'] = 'W2'
         middle['authorships'][0]['author_position'] = 'middle'
         with mock.patch.object(students, 'institution_details', return_value=self.details()):
             found, _ = students.candidates([middle, first], self.profile)
-        self.assertEqual(found[0]['count'], 1)
-        self.assertEqual([p['id'] for p in found[0]['readings']], ['W1'])
+        self.assertEqual(found[0]['count'], 2)
+        self.assertEqual(found[0]['first_count'], 1)
+        self.assertEqual([p['id'] for p in found[0]['readings']], ['W1', 'W2'])
+        self.assertFalse(found[0]['readings'][1]['first_author'])
         self.assertTrue(found[0]['readings'][0]['first_author'])
 
     def test_new_affiliation_outside_topic_replaces_old_paris_institution(self):
@@ -321,3 +323,133 @@ class StudentAffiliationSourceTests(ToolsTestCase):
         self.assertEqual(record['source'], 'author_record')
         self.assertEqual([i['id'] for i in record['institutions']], ['https://openalex.org/I9'])
         self.assertEqual(record['date'], '2026')
+
+
+class StudentWorkflowTests(ToolsTestCase):
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(students, "latest_affiliations", side_effect=self.latest)
+        patch.start()
+        self.addCleanup(patch.stop)
+    latest = StudentTests.latest
+    profile = StudentTests.profile
+    paper_data = StudentTests.paper_data
+    details = StudentTests.details
+    candidate = StudentTests.candidate
+    def test_autosave_revision_prevents_lost_updates_and_reminders_are_private(self):
+        user = self.user('workflow', paid=True)
+        item = StudentShortlist.objects.create(user=user, candidate_key='one', snapshot=self.candidate())
+        client = self.client_for(user)
+        url = '/en/students/shortlist/%d/' % item.pk
+        fields = {'status': 'contacted', 'notes': 'Private draft', 'remind_on': '2027-01-10', 'revision': 0}
+        response = client.post(url, fields, HTTP_ACCEPT='application/json')
+        self.assertEqual(response.json(), {'revision': 1})
+        self.assertEqual(client.post(url, dict(fields, notes='Stale'), HTTP_ACCEPT='application/json').status_code, 409)
+        item.refresh_from_db()
+        self.assertEqual(item.notes, 'Private draft')
+        self.assertEqual(item.remind_on.isoformat(), '2027-01-10')
+        self.assertEqual(client.post(url, dict(fields, revision='bad'), HTTP_ACCEPT='application/json').status_code, 400)
+        other = self.client_for(self.user('outsider', paid=True))
+        self.assertEqual(other.post(url, fields, HTTP_ACCEPT='application/json').status_code, 404)
+        self.assertEqual(client.post(url, dict(fields, revision=1, remind_on='invalid'), HTTP_ACCEPT='application/json').status_code, 400)
+        self.assertContains(client.get('/en/students/'), 'Changes are saved automatically.')
+
+    def test_comparison_filters_due_and_ownership(self):
+        user = self.user('compare', paid=True)
+        client = self.client_for(user)
+        first = StudentShortlist.objects.create(user=user, candidate_key='one', snapshot=dict(self.candidate(), name='Private One'),
+                                                remind_on=timezone.localdate(), status='contacted')
+        second = StudentShortlist.objects.create(user=user, candidate_key='two', snapshot=dict(self.candidate(), name='Private Two'))
+        own = '/en/students/compare/?lead=%d&lead=%d' % (first.pk, second.pk)
+        self.assertContains(client.get(own), 'Private One')
+        other = self.client_for(self.user('othercompare', paid=True))
+        self.assertEqual(other.get(own).status_code, 404)
+        self.assertEqual(client.get('/en/students/compare/?lead=%d&lead=%d' % (first.pk, first.pk)).status_code, 400)
+        self.assertEqual(client.get('/en/students/compare/?lead=not-a-number&lead=1').status_code, 400)
+        self.assertNotContains(client.get('/en/students/?status=contacted&due=1'), 'Private Two')
+        self.assertContains(client.get('/en/students/?status=contacted&due=1'), 'Reminder due')
+
+    def test_source_import_is_owned_scoped_and_preserves_notes(self):
+        user = self.user('sources', paid=True)
+        client = self.client_for(user)
+        item = StudentShortlist.objects.create(user=user, candidate_key='one', snapshot=self.candidate(), notes='Keep')
+        url = '/en/students/shortlist/%d/source/' % item.pk
+        self.assertEqual(client.post(url, {'url': 'https://evil.test/profile'}).status_code, 400)
+        evidence = {'profiles': [], 'offers': [], 'checked': '2026-10-23', 'partial': False}
+        with mock.patch.object(students.student_sources, 'inspect', return_value=evidence) as inspect:
+            self.assertEqual(client.post(url, {'url': 'https://example.edu/profile'}).status_code, 200)
+            self.assertEqual(client.post(url, {'url': 'https://example.edu/profile'}).status_code, 429)
+        item.refresh_from_db()
+        self.assertEqual(item.notes, 'Keep')
+        self.assertEqual(item.revision, 1)
+        self.assertEqual(item.snapshot['official_sources']['checked'], '2026-10-23')
+        self.assertEqual(inspect.call_count, 1)
+        other = self.client_for(self.user('source-other', paid=True))
+        self.assertEqual(other.post(url, {'url': 'https://example.edu/'}).status_code, 404)
+
+    def test_reading_methods_require_literal_evidence_and_keep_first_authors(self):
+        person = self.candidate()
+        person['readings'][0]['abstract'] = 'We use optical interferometry to detect astrometric signals.'
+        answer = {'candidates': [{'key': person['key'], 'readings': [{'id': 'W1', 'why': 'Relevant',
+            'concepts': ['Astrometry'], 'questions': ['How is the signal measured?'],
+            'methods': [{'name': 'Interferometry', 'quote': 'optical interferometry to detect'},
+                        {'name': 'Invented', 'quote': 'a completely invented method'}]}]}]}
+        with mock.patch.object(students.generated, 'chat_json', return_value=answer):
+            students.reading_notes([person], self.profile, 'en')
+        self.assertEqual(len(person['readings'][0]['methods']), 1)
+        self.assertEqual(person['readings'][0]['questions'], ['How is the signal measured?'])
+
+
+class StudentPublicSourceTests(ToolsTestCase):
+    def test_institution_domain_boundary_and_private_ips(self):
+        from . import student_sources as public
+        for url in ('https://example.edu.evil.test/a', 'http://example.edu/a', 'https://user:pw@example.edu/a',
+                    'https://example.edu:444/a', 'https://[invalid'):
+            self.assertFalse(public.official(url, 'https://example.edu'))
+        self.assertTrue(public.official('https://staff.example.edu/a', 'https://www.example.edu'))
+        self.assertTrue(public.official('https://example.edu/a', 'http://example.edu/'))
+        for address in ('127.0.0.1', '10.0.0.1', '169.254.169.254', '::1', '::ffff:127.0.0.1'):
+            with mock.patch.object(public.socket, 'getaddrinfo', return_value=[(0, 0, 0, '', (address, 443))]), \
+                 mock.patch.object(public, 'PinnedHTTPS') as connect:
+                with self.assertRaises(public.Unavailable):
+                    public.fetch('https://example.edu/', 'https://example.edu')
+                connect.assert_not_called()
+
+    def test_redirect_is_revalidated_and_connection_is_pinned(self):
+        from . import student_sources as public
+        response = mock.Mock(status=302)
+        response.getheader.return_value = 'https://127.0.0.1/private'
+        with mock.patch.object(public.socket, 'getaddrinfo', return_value=[(0, 0, 0, '', ('93.184.216.34', 443))]), \
+             mock.patch.object(public, 'PinnedHTTPS') as connect:
+            connect.return_value.getresponse.return_value = response
+            with self.assertRaises(public.Unavailable):
+                public.fetch('https://example.edu/', 'https://example.edu')
+            connect.assert_called_once_with('example.edu', '93.184.216.34')
+            connect.return_value.close.assert_called_once()
+
+    def test_structured_profiles_and_offers_are_not_invented_or_expired(self):
+        from . import student_sources as public
+        data = {'@graph': [
+            {'@type': 'Person', 'name': 'Alex Example', 'worksFor': {'name': 'Other University'}, 'jobTitle': 'Researcher'},
+            {'@type': 'Person', 'name': 'Namesake Different', 'worksFor': {'name': 'Example University'}},
+            {'@type': 'JobPosting', 'title': 'PhD on exomoons', 'validThrough': '2099-01-01', 'educationRequirements': 'Master'},
+            {'@type': 'JobPosting', 'title': 'PhD expired', 'validThrough': '2000-01-01'},
+            {'@type': 'JobPosting', 'title': 'Accountant'},
+            {'@type': 'JobPosting', 'title': 'PhD invalid date', 'validThrough': '2026-99-99'}]}
+        page = public.Page('<script type="application/ld+json">'+json.dumps(data)+'</script>')
+        profiles, offers = public.records(page, 'https://example.edu/jobs', {'name': 'Alex Example', 'institution': 'Example University'})
+        self.assertEqual(len(profiles), 1)
+        self.assertFalse(profiles[0]['agrees'])
+        self.assertEqual(len(offers), 1)
+        self.assertEqual(offers[0]['level'], 'Master')
+        self.assertEqual(offers[0]['funding'], '')
+        self.assertEqual(public.records(public.Page('<p>PhD vacancies</p>'), 'https://example.edu/', {'name': 'Alex', 'institution': 'Example'})[1], [])
+
+    def test_crawl_has_a_four_page_limit_and_never_follows_external_links(self):
+        from . import student_sources as public
+        page = public.Page(''.join('<a href="/people/%d">Profile</a>' % i for i in range(20))+'<a href="https://evil.test/jobs">Jobs</a>')
+        with mock.patch.object(public, 'fetch', return_value=(page, 'https://example.edu/')) as fetch:
+            evidence = public.inspect({'name': 'Alex Example', 'institution': 'Example', 'website': 'https://example.edu/'})
+        self.assertEqual(fetch.call_count, 4)
+        self.assertTrue(evidence['partial'])
+        self.assertTrue(all(call.args[0].startswith('https://example.edu') for call in fetch.call_args_list))
