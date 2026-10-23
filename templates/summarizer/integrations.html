@@ -22,6 +22,8 @@
     <li><strong>Notion, Obsidian</strong>: {% trans 'the Markdown file holds the paper, its key points and its summary: import it in Notion, or drop it in your Obsidian vault.' %}</li>
   </ul>
 
+  <p class="notice">{% trans 'No API key is needed to import a RIS file into Zotero. It contains the reference and the original abstract, when available. The direct connection below adds a separate note with the AI summary and key points.' %}</p>
+
   <h2>{% trans 'Send to Zotero with the summary' %} <span class="badge-premium">Premium</span></h2>
   <p>{% trans 'One click on a paper or a collection writes the papers into your Zotero library, each with a note holding its key points and summary, tagged SummarizePaper.' %}</p>
   {% if anonymous %}
@@ -33,15 +35,15 @@
     <p>{% blocktrans with id=account.library_id %}Connected to the Zotero library {{ id }}.{% endblocktrans %}</p>
     <form method="post">{% csrf_token %}<button class="btn btn-ghost" name="action" value="disconnect">{% trans 'Disconnect' %}</button></form>
   {% else %}
-    {% if error %}<p class="error">{% trans 'Zotero did not accept this key: check the user ID, and that the key may write to your library.' %}</p>{% endif %}
+    {% if error %}<p class="error" role="alert">{% if error_code == 'user_id' %}{% trans 'Enter your numeric Zotero user ID, not your username. You can find it on the API Keys page.' %}{% elif error_code == 'api_key' %}{% trans 'Copy the API key exactly as Zotero provides it, without extra characters.' %}{% else %}{% trans 'Zotero did not accept this key: check the user ID, and that the key may write to your library.' %}{% endif %}</p>{% endif %}
     <ol>
       <li>{% blocktrans %}Open <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener">zotero.org/settings/keys</a> and copy <em>Your userID for use in API calls</em>.{% endblocktrans %}</li>
       <li>{% trans 'Click "Create new private key", tick "Allow library access" and "Allow write access", save, and copy the key.' %}</li>
     </ol>
     <form method="post">
       {% csrf_token %}
-      <p><label>{% trans 'Zotero user ID' %}<br><input type="text" name="library_id" inputmode="numeric" required></label></p>
-      <p><label>{% trans 'API key' %}<br><input type="text" name="api_key" autocomplete="off" required></label></p>
+      <p><label>{% trans 'Zotero user ID' %}<br><input type="text" name="library_id" value="{{ library_id }}" inputmode="numeric" pattern="[0-9]+" maxlength="40" aria-describedby="zotero-id-help" required></label><br><small id="zotero-id-help">{% trans 'Numbers only, for example 1234567. This is different from your Zotero username.' %}</small></p>
+      <p><label>{% trans 'API key' %}<br><input type="password" name="api_key" autocomplete="off" spellcheck="false" maxlength="100" required></label></p>
       <p><button class="btn" type="submit">{% trans 'Connect' %}</button></p>
     </form>
   {% endif %}

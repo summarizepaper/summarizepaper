@@ -355,6 +355,35 @@ class CollectionTests(ToolsTestCase):
 
 
 class ExportTests(ToolsTestCase):
+    def test_zotero_username_is_not_silently_converted_to_a_user_id(self):
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.exports.check_zotero') as check:
+            for username in ('ExampleUser', 'Example123'):
+                response = client.post('/en/integrations/', {'library_id': username, 'api_key': 'dummySecretForTest'})
+                self.assertContains(response, 'numeric Zotero user ID, not your username')
+                self.assertNotContains(response, 'dummySecretForTest')
+            check.assert_not_called()
+        self.assertFalse(ZoteroAccount.objects.exists())
+
+    def test_zotero_key_is_masked_and_invalid_characters_are_not_silently_removed(self):
+        client = self.client_for(self.user(paid=True))
+        self.assertContains(client.get('/en/integrations/'), 'type="password" name="api_key"')
+        with mock.patch('summarizer.exports.check_zotero') as check:
+            response = client.post('/en/integrations/', {'library_id': '123', 'api_key': 'dummy&SecretForTest'})
+            self.assertContains(response, 'Copy the API key exactly')
+            self.assertNotContains(response, 'dummy&amp;SecretForTest')
+            check.assert_not_called()
+
+    def test_ris_import_needs_no_connection_and_contains_original_abstract(self):
+        paper = self.paper()
+        with mock.patch('summarizer.exports.requests.get') as get:
+            response = Client().get('/en/export/2101.00001v1/ris/')
+        self.assertContains(response, 'AB  - '+paper.abstract)
+        self.assertNotContains(response, 'Long summary of the clouds.')
+        self.assertFalse(ZoteroAccount.objects.exists())
+        get.assert_not_called()
+        self.assertContains(Client().get('/en/integrations/'), 'No API key is needed to import a RIS file')
+
     def test_paper_exports_and_page_tools(self):
         self.paper()
         ris = Client().get('/en/export/2101.00001v1/ris/')

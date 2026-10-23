@@ -14,6 +14,7 @@ from django.shortcuts import redirect, render
 from django.utils.html import escape
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
+from django.views.decorators.debug import sensitive_post_parameters
 
 from . import access, generated, keypoints, sources
 from .models import AnnouncedPaper, ArxivPaper, CollectionPaper, SummaryPaper, ZoteroAccount
@@ -266,24 +267,32 @@ def check_zotero(library_id, api_key):
     return str(info.get('userID')) == str(library_id) and bool(info.get('access', {}).get('user', {}).get('write'))
 
 
+@sensitive_post_parameters('api_key')
 def zotero_settings(request):
     if not request.user.is_authenticated:
         return render(request, 'summarizer/integrations.html', {'anonymous': True})
     paid = access.has_tool(request.user, 'zotero')
     account = ZoteroAccount.objects.filter(user=request.user).first()
     error = False
+    error_code = ''
+    library_id = ''
     if request.method == 'POST' and paid:
         if request.POST.get('action') == 'disconnect':
             ZoteroAccount.objects.filter(user=request.user).delete()
             return redirect('/%s/integrations/' % get_language())
-        library_id = re.sub(r'\D', '', request.POST.get('library_id', ''))[:40]
-        api_key = re.sub(r'[^A-Za-z0-9]', '', request.POST.get('api_key', ''))[:100]
-        if library_id and api_key and check_zotero(library_id, api_key):
+        library_id = request.POST.get('library_id', '').strip()
+        api_key = request.POST.get('api_key', '').strip()
+        if not re.fullmatch(r'[0-9]{1,40}', library_id):
+            error_code = 'user_id'
+        elif not re.fullmatch(r'[A-Za-z0-9]{1,100}', api_key):
+            error_code = 'api_key'
+        elif check_zotero(library_id, api_key):
             ZoteroAccount.objects.update_or_create(user=request.user, defaults={'library_id': library_id, 'api_key': api_key})
             return redirect('/%s/integrations/?saved=1' % get_language())
         error = True
     return render(request, 'summarizer/integrations.html', {
-        'paid': paid, 'account': account, 'error': error, 'saved': request.GET.get('saved') == '1'})
+        'paid': paid, 'account': account, 'error': error, 'error_code': error_code,
+        'library_id': library_id[:40], 'saved': request.GET.get('saved') == '1'})
 
 
 @require_POST
