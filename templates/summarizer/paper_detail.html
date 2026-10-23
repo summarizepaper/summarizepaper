@@ -1,0 +1,277 @@
+{% load i18n index dash_slash seo %}
+{% get_current_language as LANGUAGE_CODE %}
+<div id="paper-detail" data-paper="{{ arxiv_id }}" data-lang="{{ language }}" data-public="{{ public|yesno:'1,0' }}"
+ data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
+ data-ai="{% trans 'AI -' %}" data-error="{% trans 'Connection interrupted. Please try again.' %}">
+
+
+
+  {% if paper.title %}
+    <div class="title"><h2>{{ paper.title }}</h2></div>
+  {% endif %}
+    <div class="subtitle">
+      {% if paper.authors.all %}
+        <p><b>{% trans 'Authors:' %}</b>
+          {% for author in paper.authors.all %}
+            {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% endif %}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+    </div>
+    <div class="paper-meta">
+    {% if paper.journal_ref %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</div>
+    </div>
+    {% endif %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}{{ arxiv_id|paper_ref }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi and not arxiv_id|is_external %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category|category_label }}){% endif %}</div>
+    </div>
+    {% if paper.comments %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-comment"></i> {{ paper.comments }}</div>
+    </div>
+    {% endif %}
+    {% if paper.license %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
+    </div>
+    {% else %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% if arxiv_id|is_external %}{% trans 'not stated (all rights reserved)' %}{% else %}<a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a>{% endif %}</div>
+    </div>
+    {% endif %}
+    </div>
+  {% include 'summarizer/source_scope.html' %}
+  <div class="message-box" id="results">
+    <h1 class="message-header">{% if arxiv_id|is_external %}{% trans 'Results of the summarizing process for the paper:' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'Results of the summarizing process for the arXiv paper:' %} {{ arxiv_id|dash_slash }}{% endif %}</h1>
+
+    <ul class="message-tabs">
+      <li class="active" onclick="switchTab(0)">{% trans 'Comprehensive Summary' %}</li>
+      <li onclick="switchTab(1)">{% trans 'Key points' %}</li>
+      <li onclick="switchTab(2)">{% trans "Layman's Summary" %}</li>
+      <li onclick="switchTab(3)">{% trans 'Blog article' %}</li>
+    </ul>
+    <div class="message-content">
+      <div class="message-tab">{% if sumpaper.summary %}{{ sumpaper.summary }}{% else %}{% trans 'The summary is not ready yet' %}{% endif %}</div>
+      <div class="message-tab" style="display:none;">
+        {% if sumpaper.notes %}
+        <ul style="list-style: none;padding-left: 20px; text-indent: -10px;">
+        {% for note in notes %}
+          <li>{{ note|keypoint }}</li>
+        {% endfor %}
+        </ul>
+        {% else %}{% trans 'The key points are not ready yet' %}{% endif %}
+      </div>
+      <div class="message-tab" style="display:none;white-space: pre-line;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
+      <div class="message-tab" style="display:none;">{% if sumpaper.blog %}{{ sumpaper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
+    </div>
+
+    <div class="results-footer">
+    <div>
+    {% if paper.updated %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Created on' %} {{ paper.updated|date:"d M. Y" }}</div>
+    </div>
+    {% endif %}
+    {% if sumlang %}
+    <div class="info-block" style="margin-top:4px;">
+      <div class="info-text"> {% trans 'Available in other languages:' %}
+          {% for l in sumlang %}<a href="/{{ l }}/arxiv-id/{{ arxiv_id }}">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    </div>
+    <form id="download-form" action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="local_date" id="localDateInput">
+      <input type="submit" id="submitButton" value="{% trans 'Download as pdf' %}" name="download_pdf" class="small-button">
+      <span id="spinner" class="fa fa-spinner fa-spin" style="display: none;"></span>
+    </form>
+    </div>
+  </div>
+
+
+
+  {% if keywords %}
+    <div class="keywords">
+      <span class="label">{% trans 'AI-generated keywords:' %}
+      {% for kw in keywords %}
+        <span class="keyword">{{ kw }}</span>
+      {% endfor %}
+      </span>
+    </div>
+  {% endif %}
+  {% if notes %}
+  <div class="key-points-container">
+  <div class="key-points-header">
+    <h3>{% trans 'AI-generated Key Points' %}</h3>
+
+  </div>
+  <div class="key-points-body">
+    <ul>
+      {% for point in notes2 %}
+      <li>{{ point|keypoint }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="paper-resources">
+    {% trans 'Also access our AI generated:' %}
+      <a href="#results" onclick="switchTab(0)">{% trans 'Comprehensive summary' %}</a>,
+      <a href="#results" onclick="switchTab(2)">{% trans 'Lay summary' %}</a>,
+      <a href="#results" onclick="switchTab(3)">{% trans 'Blog-like article' %}</a>;
+      {% trans ' or ask questions about this paper to our' %} <a href="#assistant">{% trans 'AI assistant' %}</a>.
+  </div>
+</div>
+  {% else %}
+    {% if sumlang %}
+    <div class="info-block langs-available" style="margin-bottom:24px">
+        <span style="font-weight: bold;">{% trans 'Summaries already available in other languages:' %}</span>
+        {% for l in sumlang %}
+            <a href="/{{ l }}/arxiv-id/{{ arxiv_id }}" style="margin-left: 10px;">{{ l }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+  {% endif %}
+  {% endif %}
+    <div class="paper-details">
+    {% if paper.abstract %}
+      <p><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
+    {% endif %}
+    </div>
+    {% if paper.published_arxiv %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-clock"></i> {% if arxiv_id|is_external %}{% trans 'Published on' %}{% else %}{% trans 'Submitted to arXiv on' %}{% endif %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
+    </div>
+    {% endif %}
+    <div class="info-block">
+      <div class="info-text"><i class="fas fa-quote-right"></i> <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow">{% trans 'Cite this paper (BibTeX)' %}</a></div>
+    </div>
+    {% include 'summarizer/paper_tools.html' %}
+
+  <div class="chatbot-container" id="assistant">
+    <div class="chatbot-header">
+      <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
+      <p><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>
+      {% if not public %}
+      <p style="margin-top:6px"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
+      {% endif %}
+    </div>
+    <div class="chatbot-body">
+      {% include 'summarizer/chat_figures.html' with figure_paper=arxiv_id %}
+      <div class="chatbot-messages" data-empty="{% trans 'Ask anything about this paper.' %}">{% if chathistory %}
+          {% for chat in chathistory %}
+            <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
+            <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
+          {% endfor %}
+        {% endif %}</div>
+      <form class="chatbot-form">
+        <input type="text" maxlength="6000" placeholder="{% trans 'Type your question here' %}">
+        <button type="submit" id="send-btn">{% trans 'Send' %}</button>
+      </form>
+      <div id="loading-spinner" style="display: none;text-align:right;">
+      <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
+    </div>
+    </div>
+  </div>
+  <a id="chatbot-toggle" href="#">{% trans 'AI assistant instructions?' %}</a>
+  <div class="chatbot-instructions" style="display: none;">
+    <p>{% trans 'Welcome to our AI assistant! Here are some important things to keep in mind:' %}</p>
+    <ol>
+        <li>{% trans 'The assistant will only answer questions related to this specific paper.' %}</li>
+        <li>{% trans 'Please note that this is not a bot for casual chatting.' %}</li>
+        <li>{% trans 'If you want the answer in a language other than the language you chose for navigating the website, simply add "TRANSLATE IN LANGUAGE L" at the end of your query (replace "LANGUAGE L" with the language of your choice).' %}</li>
+        <li>{% trans 'For example, you could ask "Can you extract the most important aspect of the paper? TRANSLATE IN SPANISH".' %}</li>
+        {% if not request.user.is_authenticated %}
+        <li>{% trans 'If you want to keep the history of your questions/answers you should create an account.' %}</li>
+        {% endif %}
+    </ol>
+  </div>
+
+
+  <div class="vote-bar">
+    <p id="totvote">{% trans 'Assess the quality of the AI-generated content by voting' %}
+      <span id="popover-link"><i class="fas fa-question-circle"></i></span>
+    </p>
+    <div class="vote-actions">
+      <form action="{% url 'vote' paper.arxiv_id %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
+        <button type="submit" name="direction" value="up" class="vote-btn up" aria-label="+1"><i class="fa fa-thumbs-up"></i></button>
+      </form>
+      <span class="vote-score">{% trans 'Score:' %} <span id="vote-total">{{ total_votes }}</span></span>
+      <form action="{% url 'vote' paper.arxiv_id %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="paper_id" value="{{ paper.arxiv_id }}">
+        <button type="submit" name="direction" value="down" class="vote-btn down" aria-label="-1"><i class="fa fa-thumbs-down"></i></button>
+      </form>
+    </div>
+    <div id="popover">
+      <p><strong>{% trans 'Why do we need votes?' %}</strong></p>
+      <p>{% trans 'Votes are used to determine whether we need to re-run our summarizing tools. If the count reaches -10, our tools can be restarted.' %}</p>
+    </div>
+  </div>
+  <p class="inline-error" id="vote-message"{% if not error_message %} hidden{% endif %}>{{ error_message }}</p>
+
+
+  {% if not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog or toolong or total_votes < -9 or user.is_staff %}
+  <div class="rerun">
+  <div>
+    {% if toolong %}
+    <p>{% trans 'The previous summary was created more than a year ago and can be re-run (if necessary) by clicking on the Run button below.' %}</p>
+    {% elif total_votes < -9 %}
+    <p>{% trans 'The summaries have many downvotes and can be re-run with our tools if necessary by clicking on the Run button below.' %}</p>
+    {% elif not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog %}
+    <p>{% trans 'Some bits of the article are not summarized yet, you can re-run the summarizing process by clicking on the Run button below.' %}</p>
+    {% elif user.is_staff %}
+    <p>{% trans 'Hi, because you are a staff member you can Run the AI tools!' %}</p>
+    {% endif %}
+    </div>
+  <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" value="{% trans 'Run' %}" name="run_button">
+  </form>
+  {% if not public %}
+  <p class="warn-text" style="margin:14px auto 0;max-width:600px"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of this specific paper does not allow us to build upon its content and the summarizing tools will be run using the paper metadata rather than the full article. However, it still does a good job, and you can also try our tools on papers with more open licenses.' %}</small></p>
+  {% endif %}
+  </div>
+  {% endif %}
+
+  {% if relpapers %}
+  <section class="latest-papers" id="closest">
+    <h2>{% trans 'Similar papers summarized with our AI tools' %}</h2>
+    <div class="paper-list">
+      {% for paper in relpapers %}
+        <div class="paper">
+          <div class="score">{{ scores|index:forloop.counter0 }}%</div>
+          <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.to_paper.arxiv_id }}" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:80 }}</a>
+          <div class="category">{{ paper.to_paper.category }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="tree-cta">
+      <p>{% trans 'Navigate through even more similar papers through a ' %}</p>
+      <a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}" class="btn btn-ghost"><i class="fas fa-project-diagram"></i> {% trans 'tree representation' %}</a>
+    </div>
+      </section>
+  {% endif %}
+
+  <div class="center closest-search">
+    <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
+      {% csrf_token %}
+      <input type="submit" class="ghost-submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
+      <p>
+      <span class="beta">Beta</span>
+      <span id="popover-link2">
+        <i class="fas fa-question-circle"></i>
+      </span></p>
+    </form>
+    <div id="popover2">
+      <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
+      <p>{% trans 'By clicking on the button above, our algorithm compares the title and abstract of this paper with all the papers of the same arXiv category that we have summarized, and finds the closest ones. You can rerun it from time to time: the results improve as our database grows.' %}</p>
+    </div>
+  </div>
+  <div class="disclaimer">
+    <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
+  </div>
+
+</div>

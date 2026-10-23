@@ -126,7 +126,7 @@ class ChatFiguresTests(TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, 'data-paper="2401.04088v1" data-title="Example paper"')
         from pathlib import Path
-        for template in ['chat.html', 'arxividpage.html']:
+        for template in ['chat.html', 'paper_detail.html']:
             self.assertIn("include 'summarizer/chat_figures.html'", (Path('templates/summarizer') / template).read_text())
 
     def test_mathml_is_replaced_once_by_its_tex_source(self):

@@ -6,8 +6,8 @@ const {createHarness, element} = require('./chat-rendering-helper.cjs');
 
 for (const template of ['chat', 'arxividpage']) {
   test(`${template}: streamed and final model output only use the safe Markdown renderer`, () => {
-    const source = fs.readFileSync(`templates/summarizer/${template}.html`, 'utf8');
-    const handler = source.match(/socketl\.addEventListener\("message", function\(event\) \{([\s\S]*?)\n\s*\}\);/);
+    const source = fs.readFileSync(template === 'chat' ? 'templates/summarizer/chat.html' : 'static/summarizer/js/paper-ready.js', 'utf8');
+    const handler = template === 'arxividpage' ? source.match(/function receive\(event\) \{([\s\S]*?)\n    \}/) : source.match(/socketl\.addEventListener\("message", function\(event\) \{([\s\S]*?)\n\s*\}\);/);
     assert.ok(handler, 'Exercise the actual chat message handler');
     const elements = [];
     const {SPChat} = createHarness();
@@ -19,6 +19,8 @@ for (const template of ['chat', 'arxividpage']) {
       window: {SPChatFigures}, SPChatFigures,
       SPChat,
       chatbotMessages: {appendChild(node) {elements.push(node);}},
+      messages: {appendChild(node) {elements.push(node);}},
+      root: {dataset: {ai: 'AI -'}}, scroll() {}, finish() {},
       document: {createElement: element, getElementById: element, querySelector: () => null},
       MathJax: {typeset() {}}, scrollToBottom() {},
     };

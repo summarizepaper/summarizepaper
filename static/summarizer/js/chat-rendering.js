@@ -96,12 +96,16 @@
     append: function (element, delta, label) {render(element, (raw.get(element) || '') + delta, label);},
     typeset: typeset
   };
-  document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('[data-chat-markdown]').forEach(function (element) {
+  function init(root) {
+    (root || document).querySelectorAll('[data-chat-markdown]').forEach(function (element) {
       // History is ignored by MathJax until its original text has been parsed as Markdown.
+      if (element.dataset.markdownMounted) return;
+      element.dataset.markdownMounted = '1';
       var body = element.querySelector('.chat-answer');
       render(element, body.textContent, element.dataset.chatLabel);
       typeset(element);
     });
-  });
+  }
+  window.SPChat.init = init;
+  document.addEventListener('DOMContentLoaded', function () {init(document);});
 })();

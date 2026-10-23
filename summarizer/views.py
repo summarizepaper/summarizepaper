@@ -888,7 +888,7 @@ def waiting_details(arxiv_id):
     return None
 
 
-def arxividpage(request, arxiv_id, error_message=None, cat=None):
+def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False):
     arxiv_id = arxiv_id.strip()
     
 
@@ -934,7 +934,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
     paid = access.is_paid(request.user)
 
-    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid}
+    from . import synthesis
+    known_paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid,
+                          'source_scope': synthesis.license_scope(known_paper)}
 
     print('jk')
     regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
@@ -968,7 +971,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
     page_running = cache.get(utils.run_group(arxiv_id, lang))
     print('page_running',page_running)
-    if page_running:
+    if page_running and not _fragment:
         print('in page_running')
         # Page is already running, do not start it again
         stuff_for_frontend.update({
@@ -999,6 +1002,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             print('ok close')
             tree = request.POST.get('tree', '1')
             print('tree',tree)
+            cache.delete(synthesis.cache_key(utils.run_group(arxiv_id, lang)))
             access.grant_run(request.session, arxiv_id, 'close')
             stuff_for_frontend.update({
                 'close':True,
@@ -1088,9 +1092,11 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
 
                 #arxiv_id=arxiv_id.replace('--','/')
 
+                cache.delete(synthesis.cache_key(utils.run_group(arxiv_id, lang)))
                 access.grant_run(request.session, arxiv_id, 'run')
                 stuff_for_frontend.update({
                     'run':True,
+                    'waiting': waiting_details(arxiv_id),
                 })
             else:
                 #refusal is 'robot' (runs too close together) or 'toomany' (daily limit)
@@ -1219,6 +1225,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                 for pap in relpapers:
                     scores.append(similar.percent(pap.score))
 
+            if sumpaper and sumpaper.blog:
+                sumpaper.blog = utils.clean_blog_html(sumpaper.blog)
             stuff_for_frontend.update({
                 'paper':paper,
                 'structured_data':paper_structured_data(paper, sumpaper, lang),
@@ -1280,6 +1288,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
                     'exist':exist,
                     'public':public,
                     'details':arxiv_dict,
+                    'source_scope': 'full_text_allowed' if public else 'abstract_license',
                     'cc_format':cc_format
                 })
 
@@ -1287,7 +1296,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None):
             'alpaper':alpaper,
         })
 
-        return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+        return render(request, "summarizer/paper_detail.html" if _fragment else "summarizer/arxividpage.html", stuff_for_frontend)
 
 
 

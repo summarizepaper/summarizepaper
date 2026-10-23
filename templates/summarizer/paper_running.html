@@ -1,0 +1,25 @@
+{% load i18n dash_slash %}
+<section class="synthesis-live" id="synthesis-live" data-paper="{{ arxiv_id }}" data-lang="{{ language }}"
+ data-command="{% if close %}start_close_task{% elif run %}start_background_task{% endif %}" data-tree="{% if close %}{{ treeval }}{% endif %}"
+ data-state="{% url 'synthesis_state' arxiv_id %}" data-fragment="{% url 'synthesis_fragment' arxiv_id %}"
+ data-canonical="{% url 'arxividpage' arxiv_id %}" data-tree-url="{% url 'tree' arxiv_id %}#closest"
+ data-retry="{% trans 'Connection interrupted. Please try again.' %}">
+<h1>{% if close %}{% trans 'Running our tool to find closest papers' %}{% elif LANGUAGE_CODE == 'fr' %}Votre synthèse prend forme{% else %}Your synthesis is taking shape{% endif %}</h1>
+<h2 id="live-title"{% if not waiting.title %} hidden{% endif %}>{{ waiting.title }}</h2>
+<p>{{ arxiv_id|paper_ref }}{% if waiting.authors %} · {{ waiting.authors }}{% endif %}</p>
+{% if not close %}<p class="muted">{% trans 'The summary is usually ready in 1 to 2 minutes. This page updates by itself.' %}</p>{% endif %}
+{% if not close %}{% include 'summarizer/source_scope.html' %}{% endif %}
+<p class="live-status" id="live-status" role="status">{% if LANGUAGE_CODE == 'fr' %}Préparation… Les sections apparaissent ci-dessous dès qu’elles sont prêtes.{% else %}Preparing… Sections appear below as soon as they are ready.{% endif %}</p>
+<progress id="live-progress" max="100" value="1" aria-label="{% trans 'Progress' %}"></progress>
+<button type="button" id="live-retry" hidden>{% trans 'Try again' %}</button>
+{% if not close %}
+<div class="message-box" id="results">
+<ul class="message-tabs" role="tablist">
+{% for label in '1234' %}<li{% if forloop.first %} class="active"{% endif %} role="presentation"><button type="button" role="tab" id="live-tab-{{ forloop.counter0 }}" aria-controls="live-panel-{{ forloop.counter0 }}" aria-selected="{{ forloop.first|yesno:'true,false' }}" data-live-tab="{{ forloop.counter0 }}">{% if forloop.counter == 1 %}{% trans 'Comprehensive Summary' %}{% elif forloop.counter == 2 %}{% trans 'Key points' %}{% elif forloop.counter == 3 %}{% trans "Layman's Summary" %}{% else %}{% trans 'Blog article' %}{% endif %}</button></li>{% endfor %}
+</ul>
+<div class="message-content">
+{% for label in '1234' %}<div class="message-tab" role="tabpanel" id="live-panel-{{ forloop.counter0 }}" aria-labelledby="live-tab-{{ forloop.counter0 }}"{% if not forloop.first %} hidden style="display:none"{% endif %}><p class="muted">{% if LANGUAGE_CODE == 'fr' %}En attente de génération…{% else %}Waiting for generation…{% endif %}</p></div>{% endfor %}
+</div>
+</div>
+{% endif %}
+</section>

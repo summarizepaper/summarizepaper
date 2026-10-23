@@ -18,6 +18,8 @@
     return /^(?:\d{4}\.\d{4,5}|[a-z.-]+--\d{7})$/i.test(id) ? id + 'v1' : id;
   }
   function mount(box) {
+    if (box.dataset.figuresMounted) return;
+    box.dataset.figuresMounted = "1";
     var select = box.querySelector('select');
     var picker = box.querySelector('.chat-figures-picker');
     var status = box.querySelector('.chat-figures-status');
@@ -155,7 +157,7 @@
     dialog.querySelector('.chat-figure-close').addEventListener('click', close);
     dialog.addEventListener('close', function () {if (opener && opener.isConnected) opener.focus();});
     if (selected) new MutationObserver(function () {refresh(false);}).observe(selected, {childList: true, subtree: true});
-    window.SPChatFigures = {render: function (element, items, result) {
+    window.SPChatFigures.render = function (element, items, result) {
       if (result === 'not_requested' || !result) return;
       var section = node('div'); section.className = 'chat-visual-evidence';
       if (result !== 'ready') {
@@ -173,8 +175,10 @@
       }
       element.appendChild(section);
       typeset(section);
-    }};
+    };
     refresh();
   }
-  document.querySelectorAll('.chat-figures').forEach(mount);
+  window.SPChatFigures = window.SPChatFigures || {};
+  window.SPChatFigures.init = function (root) {(root || document).querySelectorAll('.chat-figures').forEach(mount);};
+  window.SPChatFigures.init(document);
 })();

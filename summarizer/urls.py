@@ -1,12 +1,14 @@
 from django.urls import path, re_path
 from . import (views, search_filters, saved_searches, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               changes, chat_figures, library, missed, presskit, questions, reading, refcheck, scoops, slides, teams, trends)
+               synthesis, changes, chat_figures, library, missed, presskit, questions, reading, refcheck, scoops, slides, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
 
 
 urlpatterns = [
+    path("paper-live/<str:arxiv_id>/", synthesis.state, name="synthesis_state"),
+    path("paper-live/<str:arxiv_id>/detail/", synthesis.fragment, name="synthesis_fragment"),
     path('', views.summarize, name='summarize'),
     path('robots.txt/', views.robots_txt),
     #path('arxiv-id/(?P<arxiv_id>[\w\-/]+v\d+)/', views.arxividpage, name="arxividpage"),

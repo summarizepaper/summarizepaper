@@ -1,3 +1,4 @@
+from . import synthesis
 from channels.generic.websocket import AsyncWebsocketConsumer,WebsocketConsumer
 from channels.layers import get_channel_layer
 import json
@@ -174,6 +175,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({'message': message}))
 
     async def send_message_now(self,message):
+        synthesis.remember(self.arxiv_group_name, 'progress', dict(message))
         print('in sendmesnow',message)
 
         await self.channel_layer.group_send(
@@ -189,6 +191,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #await asyncio.sleep(20)
 
     async def send_message_arxiv(self,arxiv_dict):
+        synthesis.remember(self.arxiv_group_name, 'metadata', arxiv_dict)
 
         print('in sendmesarxiv',arxiv_dict)
 
@@ -201,24 +204,37 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
     async def send_message_sum(self,sum):
+        synthesis.remember(self.arxiv_group_name, 'summary', sum)
         await self.channel_layer.group_send(
             self.arxiv_group_name, {"type": "progress_sum_update", "message": sum}
         )
 
     async def send_message_notes(self,notes):
+        synthesis.remember(self.arxiv_group_name, 'notes', notes)
         await self.channel_layer.group_send(
             self.arxiv_group_name, {"type": "progress_notes_update", "message": notes}
         )
 
     async def send_message_laysum(self,laysum):
+        synthesis.remember(self.arxiv_group_name, 'lay_summary', laysum)
         await self.channel_layer.group_send(
             self.arxiv_group_name, {"type": "progress_laysum_update", "message": laysum}
         )
 
     async def send_message_blog(self,blog):
+        blog = utils.clean_blog_html(blog)
+        synthesis.remember(self.arxiv_group_name, 'blog', blog)
         await self.channel_layer.group_send(
             self.arxiv_group_name, {"type": "progress_blog_update", "message": blog}
         )
+
+    async def send_source(self, scope):
+        synthesis.remember(self.arxiv_group_name, 'source_scope', scope)
+        await self.channel_layer.group_send(self.arxiv_group_name, {
+            'type': 'progress_source_update', 'message': scope})
+
+    async def progress_source_update(self, event):
+        await self.send(text_data=json.dumps(event))
 
     async def createindexwithsources(self,arxiv_id,details_paper,data):
         url = 'https://arxiv.org/pdf/'+arxiv_id+'.pdf'
@@ -322,6 +338,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
         print('pubbbllllliiiiiiccccc',public)
+        await self.send_source('full_text_allowed' if public else 'abstract_license')
         active=1
         if active==1:
             print('active....')
@@ -354,6 +371,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
                 text_source='abstract'
 
+            await self.send_source('full_text' if text_source != 'abstract' else
+                                   ('abstract_unavailable' if public else 'abstract_license'))
             message["progress"] = 30
             if language == 'fr':
                 message["loading_message"] = "Indexation de l'article..."
@@ -595,6 +614,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             return
         else:
             # Page is not running, start it now and update the status in the cache
+            cache.delete(synthesis.cache_key(self.arxiv_group_name))
             cache.set(self.arxiv_group_name+'-close', True)
             #print('get',cache.get(self.arxiv_group_name))
        
@@ -652,6 +672,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             return
         else:
             # Page is not running, start it now and update the status in the cache
+            cache.delete(synthesis.cache_key(self.arxiv_group_name))
             cache.set(self.arxiv_group_name, True)
             print('get',cache.get(self.arxiv_group_name))
         #if self.arxiv_group_name in self.sendmessages_running:
@@ -872,9 +893,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         message["progress"] = 100
         if l == 'fr':
-            message["loading_message"] = "L'article est maintenant traité - Regardez les résultats ci-dessous"
+            message["loading_message"] = "La synthèse est prête."
         else:
-            message["loading_message"] = "The paper is now summarized - Look at the results down below"
+            message["loading_message"] = "Your synthesis is ready."
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
@@ -899,6 +920,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         # Join room group
         await self.channel_layer.group_add(self.arxiv_group_name, self.channel_name)
         await self.accept()
+        if cache.get(self.arxiv_group_name) or cache.get(self.arxiv_group_name + '-close'):
+            await self.send(text_data=json.dumps({'type': 'synthesis_snapshot',
+                'state': synthesis.snapshot(self.arxiv_id, self.language)}))
         print('conn')
 
         #message = {
@@ -1087,7 +1111,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         print('closed')
-        cache.set(self.arxiv_group_name, False)
+        # A departing viewer must not release the background generation lock.
 
         await self.send(text_data=json.dumps({
             'type': 'disconnect',
