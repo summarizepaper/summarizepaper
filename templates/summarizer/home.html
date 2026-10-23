@@ -3,6 +3,7 @@
 {% get_current_language as LANGUAGE_CODE %}
 {% block title %}{% trans 'AI Research Companion & Paper Summaries | SummarizePaper' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
 <meta name="description" content="{% trans 'Understand research papers, follow new discoveries and check references with SummarizePaper. Free AI summaries and daily digests; specialist research tools with Premium.' %}">
 <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/">
 <link rel="alternate" hreflang="en" href="https://www.summarizepaper.com/en/">

@@ -4,6 +4,7 @@
 
 {% block title %}{% blocktrans %}{{ name }} this week{% endblocktrans %} | SummarizePaper{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% blocktrans %}The weekly letter on {{ name }}: what is new in research, from the latest arXiv papers.{% endblocktrans %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{{ topic }}/" />
 {% endblock %}

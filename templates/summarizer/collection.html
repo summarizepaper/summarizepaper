@@ -4,7 +4,8 @@
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{{ collection.name }} | {% trans 'My collections' %}{% endblock %}
-{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
 <div class="page" style="max-width:1100px">

@@ -4,6 +4,7 @@
 
 {% block title %}{{ letter.title }} | {% blocktrans with name=topic_name %}{{ name }} this week{% endblocktrans %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{{ letter.dek|truncatechars:158 }}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/" />
   {% if other_lang %}

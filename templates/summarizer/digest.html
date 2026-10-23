@@ -5,6 +5,7 @@
 
 {% block title %}{% trans 'Daily digest of arXiv, bioRxiv and medRxiv papers by email' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% trans 'Every morning, the new arXiv, bioRxiv and medRxiv papers in your fields with a 2-sentence plain-language summary. Free.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/digest/" />
 <style>

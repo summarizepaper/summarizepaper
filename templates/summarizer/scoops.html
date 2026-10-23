@@ -5,6 +5,7 @@
 
 {% block title %}{% trans 'Scoop watch' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% trans 'Describe the project you are working on: every day, we compare it with the new papers on arXiv, bioRxiv and medRxiv, and email you when one comes close, with what it shares with your project and what stays yours.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/scoops/" />
 {% endblock %}

@@ -5,6 +5,7 @@
 
 {% block title %}{% trans 'Citation alerts' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% trans 'Get an email when new papers cite your papers, on arXiv or in journals, with what they say about them: building on them, confirming them or questioning them.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/citations/" />
 {% endblock %}

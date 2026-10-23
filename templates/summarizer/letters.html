@@ -4,6 +4,7 @@
 
 {% block title %}{% trans 'Weekly science letters from arXiv' %}{% endblock %}
 {% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% trans 'Every week, the new research in AI, space, quantum physics, biology, climate and economics, told like a magazine article from the latest arXiv papers.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/" />
 {% endblock %}

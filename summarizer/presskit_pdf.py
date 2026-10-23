@@ -8,6 +8,7 @@ from django.utils.translation import gettext as _
 from fpdf import FPDF
 
 from . import sources
+from .latex_pdf import prose_html
 
 
 class PressPDF(FPDF):
@@ -48,7 +49,16 @@ def document(paper, row, editorial=None):
             return
         pdf.set_font('Brief', style, size)
         pdf.set_text_color(*color)
-        pdf.multi_cell(0, 5.4 if size <= 11 else 7.5, value, new_x='LMARGIN', new_y='NEXT', link=link)
+        math_prose = prose_html(value) if not link else None
+        if math_prose is None:
+            pdf.multi_cell(0, 5.4 if size <= 11 else 7.5, value, new_x='LMARGIN', new_y='NEXT', link=link)
+        else:
+            # Only escaped text and our own sub/sup tags enter the offline HTML renderer.
+            if style:
+                tag = 'b' if style == 'B' else 'i'
+                math_prose = '<%s>%s</%s>' % (tag, math_prose, tag)
+            pdf.write_html(math_prose, font_family='Brief')
+            pdf.set_x(pdf.l_margin)
         pdf.ln(2)
 
     def heading(value):
