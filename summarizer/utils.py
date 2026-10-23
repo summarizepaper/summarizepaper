@@ -1775,11 +1775,13 @@ ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=20)
 async def get_arxiv_metadata(arxiv_id):
     """The Atom record is required; a separate license-service failure is not fatal."""
     from django.core.cache import cache
+    # Sync views call this through asyncio.run inside asgiref's thread-sensitive thread, where
+    # cache.aget would submit back onto that blocked thread; a plain worker thread avoids it.
     if sources.is_external(arxiv_id):
         return await asyncio.to_thread(sources.in_thread, sources.metadata_list, arxiv_id)
     identifier = arxiv_id.replace('--', '/')
     key = 'arxiv-metadata-v2:' + identifier
-    cached = await cache.aget(key)
+    cached = await asyncio.to_thread(cache.get, key)
     if cached is not None:
         return cached
     base = re.sub(r'v\d+$', '', identifier)
@@ -1796,7 +1798,7 @@ async def get_arxiv_metadata(arxiv_id):
                       if re.sub(r'v\d+$', '', e.findtext('a:id', '', ns).split('/abs/')[-1]) == base), None)
         if entry is None:
             return [0, [], [], '', '', '', '', '', '', '', '', '', '', data]
-        license_value = await cache.aget('arxiv-license:' + base) or ''
+        license_value = await asyncio.to_thread(cache.get, 'arxiv-license:' + base) or ''
         if not license_value:
             try:
                 async with session.get('https://oaipmh.arxiv.org/oai', params={
@@ -1806,7 +1808,7 @@ async def get_arxiv_metadata(arxiv_id):
                         license_root = ElementTree.fromstring(await response.text())
                         license_value = license_root.findtext('.//{http://arxiv.org/OAI/arXiv/}license', '') or ''
                         if license_value:
-                            await cache.aset('arxiv-license:' + base, license_value, 86400)
+                            await asyncio.to_thread(cache.set, 'arxiv-license:' + base, license_value, 86400)
             except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError):
                 pass  # Unknown license stays restricted; metadata remains usable.
     authors = [a.findtext('a:name', '', ns) for a in entry.findall('a:author', ns)]
@@ -1818,5 +1820,5 @@ async def get_arxiv_metadata(arxiv_id):
               category.get('term', '') if category is not None else '', entry.findtext('a:updated', '', ns),
               entry.findtext('a:published', '', ns), entry.findtext('arxiv:journal_ref', '', ns),
               entry.findtext('arxiv:comment', '', ns), license_value, data]
-    await cache.aset(key, result, 900 if license_value else 60)
+    await asyncio.to_thread(cache.set, key, result, 900 if license_value else 60)
     return result
