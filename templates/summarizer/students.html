@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% block title %}{% trans 'Find a research placement' %}{% endblock %}
-{% block extra_head_tags %}{% include 'summarizer/mathjax.html' %}<style>
+{% block extra_head_tags %}<script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<style>
 .student-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
 .student-form-field label{display:block;font-weight:600;margin-bottom:6px}
 .student-form-field input,.student-form-field select,.student-form-field textarea{box-sizing:border-box;width:100%;min-width:0}
@@ -34,8 +34,8 @@
   {% if searches %}<section class="section-card"><h2>{% trans 'Your searches' %}</h2><ul>{% for search in searches %}<li><a href="{% url 'student_result' key=search.key %}">{{ search.data.title|default:_('Research placement search') }}</a> · {{ search.created|date:'j F Y H:i' }} · {{ search.get_status_display }}</li>{% endfor %}</ul></section>{% endif %}
   <section id="shortlist" style="scroll-margin-top:90px"><h2>{% trans 'My private shortlist' %}</h2>
     {% for item in shortlist %}
-      {% include 'summarizer/student_card.html' with person=item.snapshot saved_item=True %}
-      <form class="card section-card" method="post" action="{% url 'student_shortlist_update' pk=item.pk %}">{% csrf_token %}{{ item.form.as_p }}<button class="btn" type="submit">{% trans 'Save my notes' %}</button> <button class="btn btn-secondary" type="submit" name="action" value="remove">{% trans 'Remove from shortlist' %}</button></form>
+      <section>{% include 'summarizer/student_card.html' with person=item.snapshot saved_item=True %}
+      <form id="lead-{{ item.pk }}" style="scroll-margin-top:90px" class="card section-card" method="post" action="{% url 'student_shortlist_update' pk=item.pk %}" data-student-shortlist data-unsaved="{% trans 'Unsaved changes — click Save progress and notes.' %}" data-saving="{% trans 'Saving…' %}">{% csrf_token %}<h3>{% blocktrans with name=item.snapshot.name %}Progress for {{ name }}{% endblocktrans %}</h3>{{ item.form.as_p }}<p data-student-save-status role="status" aria-live="polite">{% if saved_pk == item.pk %}{% trans 'Progress and notes saved.' %}{% else %}{% trans 'Changes are saved only when you click Save progress and notes.' %}{% endif %}</p><button class="btn" type="submit" data-student-save>{% trans 'Save progress and notes' %}</button> <button class="btn btn-secondary" type="submit" name="action" value="remove">{% trans 'Remove from shortlist' %}</button></form></section>
     {% empty %}<p class="muted">{% trans 'Save a lead from a search to keep its sources, reading suggestions and your private notes here.' %}</p>{% endfor %}
   </section>
 </div>

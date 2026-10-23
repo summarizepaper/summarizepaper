@@ -8908,3 +8908,162 @@ msgid ""
 msgstr ""
 "Organisme national : son siège ne permet pas de localiser le laboratoire de "
 "cet auteur."
+
+msgid ""
+"Saved with the previous method: author order and latest affiliation need to "
+"be checked again. Refresh the search before contacting this person."
+msgstr ""
+"Piste enregistrée avec l’ancienne méthode : l’ordre des auteurs et la "
+"dernière affiliation doivent être revérifiés. Actualisez la recherche avant "
+"de contacter cette personne."
+
+
+msgid "Latest affiliation found in a publication:"
+msgstr "Dernière affiliation trouvée dans une publication :"
+
+
+msgid ""
+"Checked independently of the topic against the latest publication and the "
+"author record. This is the latest bibliographic evidence, not confirmation "
+"of current employment."
+msgstr ""
+"Vérification indépendante du sujet, à partir de la publication la plus "
+"récente et de la notice auteur. Il s’agit de la dernière trace "
+"bibliographique trouvée, pas d’une confirmation du poste actuel."
+
+
+msgid ""
+"Recent publication and author record disagree about the affiliation. This "
+"location is not treated as a verified match."
+msgstr ""
+"La publication récente et la notice auteur indiquent des affiliations "
+"différentes. Cette localisation n’est pas considérée comme une "
+"correspondance vérifiée."
+
+
+msgid "Historical affiliation from the saved search; not reverified."
+msgstr "Ancienne affiliation de la recherche enregistrée, non revérifiée."
+
+
+msgid "First author"
+msgstr "Premier auteur"
+
+
+msgid "Update my saved lead"
+msgstr "Actualiser ma piste enregistrée"
+
+
+msgid "Unsaved changes — click Save progress and notes."
+msgstr ""
+"Modifications non enregistrées — cliquez sur « Enregistrer l’état et les "
+"notes »."
+
+
+msgid "Changes are saved only when you click Save progress and notes."
+msgstr ""
+"Les changements sont conservés uniquement après un clic sur « Enregistrer "
+"l’état et les notes »."
+
+
+msgid "Progress and notes saved."
+msgstr "État et notes enregistrés."
+
+
+msgid "Save progress and notes"
+msgstr "Enregistrer l’état et les notes"
+
+
+msgid ""
+"This saved search predates first-author selection and latest-affiliation "
+"checks. Refresh it to obtain updated contacts; your notes are kept."
+msgstr ""
+"Cette recherche précède la sélection en premier auteur et la vérification "
+"des dernières affiliations. Actualisez-la pour obtenir des contacts mis à "
+"jour ; vos notes sont conservées."
+
+
+msgid "Refresh this search"
+msgstr "Actualiser cette recherche"
+
+
+msgid "PhD position"
+msgstr "thèse"
+
+
+msgid "Subject: %(kind)s enquiry — %(level)s — %(topic)s"
+msgstr "Objet : candidature spontanée — %(kind)s — %(level)s — %(topic)s"
+
+
+msgid "starting %(date)s"
+msgstr "à partir du %(date)s"
+
+
+msgid "for %(months)s months"
+msgstr "pour %(months)s mois"
+
+
+msgid ""
+"Hello %(name)s,\n"
+"\n"
+"I am currently studying at %(level)s level and seeking %(kind)s opportunities on %(topic)s%(timing)s."
+msgstr ""
+"Bonjour %(name)s,\n"
+"\n"
+"Actuellement en %(level)s, je recherche une possibilité de %(kind)s sur le thème suivant : %(topic)s%(timing)s."
+
+
+msgid ""
+"Your first-author publication “%(title)s” caught my attention. [After "
+"reading, add one specific point that interests you and a question about the "
+"method or results.]"
+msgstr ""
+"Votre publication en premier auteur « %(title)s » a retenu mon attention. "
+"[Après lecture, ajoutez ici un point précis qui vous intéresse et une "
+"question sur la méthode ou les résultats.]"
+
+
+msgid ""
+"I noticed the publication “%(title)s”. [Check the authorship and, after "
+"reading, add a specific point of interest and a question.]"
+msgstr ""
+"J’ai repéré la publication « %(title)s ». [Vérifiez l’ordre des auteurs et, "
+"après lecture, ajoutez un point précis qui vous intéresse et une question.]"
+
+
+msgid "My skills and interests: %(skills)s."
+msgstr "Mes compétences et centres d’intérêt : %(skills)s."
+
+
+msgid ""
+"Are there possible %(kind)s opportunities on this topic at %(institution)s, "
+"or could you suggest the appropriate person to contact? I would be happy to "
+"send my CV and discuss how my background might fit."
+msgstr ""
+"Existe-t-il des possibilités de %(kind)s sur ce sujet dans votre "
+"établissement (%(institution)s), ou pourriez-vous m’indiquer la personne à "
+"contacter ? Je serais heureux de vous transmettre mon CV et d’échanger "
+"brièvement sur l’adéquation de mon parcours."
+
+
+msgid ""
+"Thank you for your time.\n"
+"\n"
+"Kind regards,\n"
+"[Your name, programme and university]"
+msgstr ""
+"Merci pour votre temps.\n"
+"\n"
+"Bien cordialement,\n"
+"[Votre nom, votre formation et votre université]"
+
+
+msgid "First author of %(n)s matching paper"
+msgid_plural "First author of %(n)s matching papers"
+msgstr[0] "Premier auteur de %(n)s article sur le sujet"
+msgstr[1] "Premier auteur de %(n)s articles sur le sujet"
+
+msgid "Latest affiliation dated in the author record:"
+msgstr "Dernière affiliation datée dans la notice auteur :"
+
+msgid "Progress for %(name)s"
+msgstr "Suivi de %(name)s"

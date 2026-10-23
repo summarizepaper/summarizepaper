@@ -1,9 +1,14 @@
 {% load i18n %}
 <article class="card section-card">
   <h2 style="margin-top:0">{{ person.name }}</h2>
+  {% if person.outdated %}<p class="notice">{% trans 'Saved with the previous method: author order and latest affiliation need to be checked again. Refresh the search before contacting this person.' %}</p>{% endif %}
   <p><strong>{{ person.institution }}</strong>{% if person.city %} · {{ person.city }}{% endif %}{% if person.region and person.region != person.city %} · {{ person.region }}{% endif %}{% if person.country %} · {{ person.country }}{% endif %}</p>
   {% if not person.location_match %}<p class="notice">{% trans 'Alternative location: outside the requested area or location not verified.' %}</p>{% endif %}
-  <p class="meta">{% blocktrans count n=person.count %}Affiliated author on {{ n }} matching publication{% plural %}Affiliated author on {{ n }} matching publications{% endblocktrans %}{% if person.affiliation_year %} · {% blocktrans with year=person.affiliation_year %}Most recent affiliation evidence: {{ year }}{% endblocktrans %}{% endif %}</p>
+  {% if not person.outdated %}<p class="meta">{% blocktrans count n=person.count %}First author of {{ n }} matching paper{% plural %}First author of {{ n }} matching papers{% endblocktrans %}</p>
+  {% if person.affiliation_evidence %}<p>{% if person.affiliation_source == 'author_record' %}{% trans 'Latest affiliation dated in the author record:' %}{% else %}{% trans 'Latest affiliation found in a publication:' %}{% endif %} {{ person.affiliation_date }} · <a href="{{ person.affiliation_evidence.url }}" target="_blank" rel="noopener">{{ person.affiliation_evidence.title }}</a></p>{% endif %}
+  <p class="muted">{% trans 'Checked independently of the topic against the latest publication and the author record. This is the latest bibliographic evidence, not confirmation of current employment.' %}</p>
+  {% if person.affiliation_conflict %}<p class="notice">{% trans 'Recent publication and author record disagree about the affiliation. This location is not treated as a verified match.' %}</p>{% endif %}
+  {% else %}<p class="muted">{% trans 'Historical affiliation from the saved search; not reverified.' %}</p>{% endif %}
   <p class="muted">{% trans 'Potential spontaneous enquiry. No vacancy, availability, supervision eligibility or funding has been verified. Confirm the current affiliation on the institution website before writing.' %}</p>
   <p><a href="{{ person.author_url }}" target="_blank" rel="noopener">{% trans 'Author source (OpenAlex)' %}</a> · <a href="{{ person.institution_url }}" target="_blank" rel="noopener">{% trans 'Institution source' %}</a>{% if person.website %} · <a href="{{ person.website }}" target="_blank" rel="noopener">{% trans 'Institution website' %}</a>{% endif %}{% if person.checked %} · {% blocktrans with date=person.checked %}Metadata consulted: {{ date }}{% endblocktrans %}{% endif %}</p>
   {% if person.umbrella %}<p class="muted">{% trans 'National umbrella organization: its headquarters do not establish the location of this author’s laboratory.' %}</p>{% endif %}
@@ -11,7 +16,7 @@
   <h3>{% trans 'Read before writing' %}</h3>
   <p class="muted">{% trans 'Suggested order and reading prompts based on titles, not a full-text review or an assessment of difficulty.' %}</p>
   <ol>{% for paper in person.readings %}<li style="margin-bottom:12px">
-    {% if paper.url %}<a href="{{ paper.url }}" target="_blank" rel="noopener">{{ paper.title }}</a>{% else %}{{ paper.title }}{% endif %}{% if paper.year %} ({{ paper.year }}){% endif %}
+    {% if paper.url %}<a href="{{ paper.url }}" target="_blank" rel="noopener">{{ paper.title }}</a>{% else %}{{ paper.title }}{% endif %}{% if paper.year %} ({{ paper.year }}){% endif %}{% if paper.first_author %} · <strong>{% trans 'First author' %}</strong>{% endif %}
     {% if paper.why %}<p style="margin:4px 0">{{ paper.why }}</p>{% else %}<p class="muted">{% trans 'Start with the abstract, identify the method and note one specific question to ask.' %}</p>{% endif %}
   </li>{% endfor %}</ol>
   <details><summary>{% trans 'Prepare a first email' %}</summary>
@@ -20,6 +25,6 @@
   </details>
   {% if not saved_item %}
   {% if person.saved %}<p>{% trans 'Saved to your private shortlist.' %} <a href="{% url 'students' %}#shortlist">{% trans 'View my shortlist' %}</a></p>
-  {% else %}<form method="post" action="{% url 'student_save' key=row.key %}" style="margin-top:16px">{% csrf_token %}<input type="hidden" name="candidate" value="{{ person.key }}"><button class="btn" type="submit">{% trans 'Save this lead' %}</button></form>{% endif %}
+  {% endif %}<form method="post" action="{% url 'student_save' key=row.key %}" style="margin-top:16px">{% csrf_token %}<input type="hidden" name="candidate" value="{{ person.key }}"><button class="btn" type="submit">{% if person.saved %}{% trans 'Update my saved lead' %}{% else %}{% trans 'Save this lead' %}{% endif %}</button></form>
   {% endif %}
 </article>

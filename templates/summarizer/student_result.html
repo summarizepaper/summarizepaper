@@ -5,6 +5,7 @@
 {% block content %}
 <div class="page"><header class="page-header"><p><a href="{% url 'students' %}">← {% trans 'Find a research placement' %}</a></p><h1>{{ result.title|default:_('Research placement search') }}</h1></header>
 {% if result %}
+  <form method="post" action="{% url 'student_refresh' key=row.key %}" class="section-card">{% csrf_token %}{% if result.outdated %}<p class="notice">{% trans 'This saved search predates first-author selection and latest-affiliation checks. Refresh it to obtain updated contacts; your notes are kept.' %}</p>{% endif %}<button class="btn btn-secondary" type="submit">{% trans 'Refresh this search' %}</button></form>
   <section class="card section-card"><h2>{% trans 'Your criteria' %}</h2><p>{{ result.profile.level }} · {% if result.profile.kind == 'phd' %}{% trans 'PhD' %}{% else %}{% trans 'Research internship' %}{% endif %}</p><p>{{ result.profile.topic }}</p>
   <p>{% if result.profile.country %}{{ result.profile.country }}{% endif %}{% if result.profile.city %} · {{ result.profile.city }}{% endif %}{% if not result.profile.country and not result.profile.city %}{% trans 'Any location' %}{% endif %}</p>
   {% if result.profile.start %}<p>{% trans 'Desired start date (optional)' %} : {{ result.profile.start }}</p>{% endif %}{% if result.profile.duration %}<p>{% blocktrans with n=result.profile.duration %}Desired duration: {{ n }} months{% endblocktrans %}</p>{% endif %}{% if result.profile.skills %}<p>{{ result.profile.skills }}</p>{% endif %}

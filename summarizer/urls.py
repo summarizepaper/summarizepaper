@@ -76,6 +76,7 @@ urlpatterns = [
     path("refcheck/", refcheck.refcheck_page, name="refcheck"),
     path("students/", students.page, name="students"),
     path("students/shortlist/<int:pk>/", students.shortlist_update, name="student_shortlist_update"),
+    path("students/<str:key>/refresh/", students.refresh, name="student_refresh"),
     path("students/<str:key>/save/", students.save, name="student_save"),
     path("students/<str:key>/", students.result, name="student_result"),
     path("teams/", teams.teams_page, name="teams"),
