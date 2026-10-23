@@ -36,6 +36,7 @@ class TeamsEvidenceTests(ToolsTestCase):
             kept = teams.relevant_papers('Detecting exomoons', papers)
         self.assertEqual([w['id'] for w in kept], ['W1'])
         self.assertEqual(json.loads(chat.call_args.args[0])['topic'], 'Detecting exomoons')
+        self.assertIn('json', chat.call_args.kwargs['system'].lower())
         with mock.patch.object(generated, 'chat_json', return_value={'relevant_ids': 'W1'}):
             with self.assertRaises(generated.GenerationError):
                 teams.relevant_papers('Detecting exomoons', papers)
