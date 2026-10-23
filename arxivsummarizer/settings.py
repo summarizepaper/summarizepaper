@@ -38,7 +38,7 @@ OPENALEX_API_KEY = os.getenv('OPENALEX_API_KEY', '')
 SECRETSG = os.getenv('SECRETSG')
 SECRETCMTA = os.getenv('SECRETCMTA')
 
-DEFAULT_FROM_EMAIL = 'contact@summarizepaper.com'
+DEFAULT_FROM_EMAIL = 'SummarizePaper <contact@summarizepaper.com>'
 # MX lookups before emailing an address (summarizer/mailcheck.py); tests turn them off
 MAILCHECK_DNS = sys.argv[1:2] != ['test']
 
