@@ -1,7 +1,7 @@
 """Closest papers, from one embedding of each paper's title and abstract.
 
 Every summarized paper gets a single normalized vector. The closest papers are
-the ones of the same arXiv category with the highest cosine similarity, which
+the ones with the highest cosine similarity (within the same category for arXiv), which
 works for every paper, whatever its license. PaperScore.score keeps a distance
 (lower is closer): 1 - cosine similarity.
 """
@@ -13,6 +13,7 @@ import requests
 from django.conf import settings
 
 from .models import ArxivPaper, PaperEmbedding, PaperScore
+from . import sources
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +60,29 @@ def ensure(paper):
 
 
 def _base(arxiv_id):
-    return re.sub(r'v\d+$', '', arxiv_id)
+    return arxiv_id if sources.is_external(arxiv_id) else re.sub(r'v\d+$', '', arxiv_id)
+
+
+def candidate_category(paper):
+    """External providers' subject labels cannot be matched to arXiv categories."""
+    return None if sources.is_external(paper.arxiv_id) or not paper.category else paper.category
 
 
 def closest(paper, k=CLOSEST, candidates=None):
-    """[(arxiv_id, distance)] of the k closest papers of the same category, one version per paper."""
+    """Rank indexed papers by title/abstract similarity, one version per paper.
+
+    DOI and other external papers search across providers: their category may be
+    a journal's subject, bioRxiv label, or empty rather than an arXiv code.
+    """
     ensure(paper)
     own = PaperEmbedding.objects.get(arxiv_id=paper.arxiv_id)
     query = np.frombuffer(own.vector, dtype=np.float32)
     if candidates is None:
-        rows = PaperEmbedding.objects.filter(category=own.category, model=MODEL).values_list('arxiv_id', 'vector')
+        rows = PaperEmbedding.objects.filter(model=MODEL)
+        category = candidate_category(paper)
+        if category is not None:
+            rows = rows.filter(category=category)
+        rows = rows.values_list('arxiv_id', 'vector')
         candidates = [(aid, np.frombuffer(vec, dtype=np.float32)) for aid, vec in rows]
     own_base = _base(paper.arxiv_id)
     candidates = [(aid, vec) for aid, vec in candidates if _base(aid) != own_base]

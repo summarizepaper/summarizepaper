@@ -7,7 +7,7 @@
 {% block title %} {% trans 'SummarizePaper Tree - Discovering Connections between Research Papers using AI' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our website, SummarizePaper, leverages the power of artificial intelligence to help you explore and navigate the vast landscape of research papers. With our interactive visual tool, you can easily discover connections between related papers, visualize how they are connected, and explore the relationships between topics. Whether you are a researcher, student, or simply curious about the latest advancements in a field, SummarizePaper can help you make sense of the complex web of information in the world of academia.' %}" />
-  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/tree" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/tree/{{ arxiv_id }}/" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.3/d3.min.js"></script>
 
   {% include 'summarizer/mathjax.html' %}
@@ -69,7 +69,7 @@
   </div>
   {% endif %}
   <div class="info-block">
-    <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}arXiv: {{ arxiv_id|dash_slash }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
+    <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}{{ arxiv_id|paper_ref }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
   </div>
   {% if paper.comments %}
   <div class="info-block">
@@ -80,7 +80,7 @@
   <div class="info-block">
     <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
   </div>
-  {% else %}
+  {% elif not arxiv_id|is_external %}
   <div class="info-block">
     <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a></div>
   </div>
@@ -92,7 +92,7 @@
   </div>
   {% if paper.published_arxiv %}
   <div class="info-block">
-    <div class="info-text"><i class="fas fa-clock"></i> {% trans 'Submitted to arXiv on' %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
+    <div class="info-text"><i class="fas fa-clock"></i> {% if arxiv_id|is_external %}{% trans 'Published on' %}{% else %}{% trans 'Submitted to arXiv on' %}{% endif %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
   </div>
   {% endif %}
 
@@ -110,6 +110,7 @@
         </div>
   </div>
   <div id="graph"></div>
+  {% if not relpapers %}<p class="message">{% trans "No related papers are available yet. Try the search below; results depend on the papers indexed in our database." %}</p>{% endif %}
   <div class="center" style="margin-bottom:20px;">
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
@@ -123,7 +124,7 @@
     </form>
     <div id="popover2">
       <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
-      <p>{% trans 'By clicking on the button above, our algorithm compares the title and abstract of this paper with all the papers of the same arXiv category that we have summarized, and finds the closest ones. You can rerun it from time to time: the results improve as our database grows.' %}</p>
+      <p>{% trans 'We compare the title and abstract with papers indexed in our database. For arXiv papers, we search within the same category; for DOI and other sources, we search across sources and subjects. You can rerun the search as our database grows.' %}</p>
     </div>
   </div>
   {% else %}
@@ -200,7 +201,7 @@ var tooltip = d3.select("body")
 
 
 // Define the data for the graph
-var data = JSON.parse('{{ relpapers_json|escapejs }}');
+var data = JSON.parse('{{ relpapers_json|default:'[]'|escapejs }}');
 //console.log(data)
 
 function drawGraph() {

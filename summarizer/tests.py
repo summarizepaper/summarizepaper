@@ -976,6 +976,52 @@ class SimilarPapersTests(TestCase):
         self.assertEqual(PaperScore.objects.count(), 6)
         self.assertIn('3 papers to embed', out.getvalue())
 
+    def test_doi_without_other_papers_in_its_category_searches_across_sources(self):
+        from summarizer import similar
+        main = self.paper('doi_10.64898--2026.03.25.714121', 'galaxy galaxy', 'biorxiv.microbiology')
+        near = self.paper('2401.00002v1', 'galaxy galaxy', 'astro-ph.GA')
+        self.paper('2401.00002v2', 'galaxy galaxy', 'astro-ph.GA')
+        far = self.paper('doi_10.1234--planet', 'planet planet', 'Physics')
+        with mock.patch('summarizer.similar.embed', side_effect=self.fake_embed):
+            similar.store(list(ArxivPaper.objects.all()))
+            found = similar.find_and_store(main.arxiv_id)
+        self.assertEqual(len(found), 2)
+        self.assertTrue(found[0][0].startswith('2401.00002'))
+        self.assertEqual(found[1][0], far.arxiv_id)
+        page = Client().get('/fr/tree/%s/' % main.arxiv_id)
+        self.assertContains(page, near.title)
+        self.assertContains(page, 'DOI: 10.64898/2026.03.25.714121')
+        self.assertNotContains(page, 'arXiv: doi_')
+        self.assertEqual(len(_json.loads(page.context['relpapers_json'])), 3)
+
+    def test_empty_category_and_doi_version_suffix_are_supported(self):
+        from summarizer import similar
+        main = self.paper('doi_10.1234--examplev1', 'galaxy', '')
+        other = self.paper('doi_10.1234--examplev2', 'galaxy', 'Astronomy')
+        with mock.patch('summarizer.similar.embed', side_effect=self.fake_embed):
+            similar.store([main, other])
+            found = similar.find_and_store(main.arxiv_id)
+        self.assertEqual([aid for aid, _ in found], [other.arxiv_id])
+
+    def test_rescore_command_uses_cross_source_candidates_for_doi(self):
+        from io import StringIO
+        from django.core.management import call_command
+        from summarizer import similar
+        from summarizer.models import PaperScore
+        main = self.paper('doi_10.1234--galaxy', 'galaxy', 'Astronomy')
+        other = self.paper('2401.00002v1', 'galaxy', 'astro-ph.GA')
+        for paper in (main, other):
+            SummaryPaper.objects.create(paper=paper, lang='en', summary='Done')
+        with mock.patch('summarizer.similar.embed', side_effect=self.fake_embed):
+            call_command('embed_papers', '--rescore', stdout=StringIO())
+        self.assertTrue(PaperScore.objects.filter(from_paper=main, to_paper=other).exists())
+
+    def test_tree_without_neighbors_renders_valid_empty_data(self):
+        main = self.paper('doi_10.1234--galaxy', 'galaxy', 'Astronomy')
+        response = Client().get('/fr/tree/%s/' % main.arxiv_id)
+        self.assertContains(response, 'Aucun article proche')
+        self.assertContains(response, "JSON.parse('[]')")
+
 
 class ReactivationTests(TestCase):
     def inactive(self, username, email, days_ago=100):

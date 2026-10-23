@@ -32,14 +32,18 @@ class Command(BaseCommand):
             return
 
         by_category = defaultdict(list)
+        all_candidates = []
         for aid, category, vector in PaperEmbedding.objects.filter(model=similar.MODEL).values_list('arxiv_id', 'category', 'vector'):
-            by_category[category].append((aid, np.frombuffer(vector, dtype=np.float32)))
+            candidate = (aid, np.frombuffer(vector, dtype=np.float32))
+            by_category[category].append(candidate)
+            all_candidates.append(candidate)
         papers = list(ArxivPaper.objects.filter(summarypaper__isnull=False).distinct().only('arxiv_id', 'category'))
         self.stdout.write('%d closest-papers lists to recompute' % len(papers))
         if dry_run:
             return
         for n, paper in enumerate(papers, 1):
-            candidates = by_category.get(paper.category or '', [])
+            category = similar.candidate_category(paper)
+            candidates = all_candidates if category is None else by_category.get(category, [])
             if any(aid == paper.arxiv_id for aid, _ in candidates):
                 similar.save_closest(paper, similar.closest(paper, candidates=candidates))
             if n % 1000 == 0:
