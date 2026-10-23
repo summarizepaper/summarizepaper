@@ -73,6 +73,7 @@
     <p class="muted">{% trans 'Add at least two papers to find their open questions.' %}</p>
   {% else %}
     {% if open %}
+    {% if open.empty %}<p class="notice" role="status">{% trans 'No sufficiently supported open question was identified in the material available for these papers. This does not mean the field has no open questions. Try adding more papers or fuller summaries.' %}</p>{% endif %}
     <ul class="item-list">
       {% for q in open.questions %}
       <li class="card">
@@ -94,6 +95,7 @@
     {% endif %}
     <div class="item-actions"><button type="button" class="btn btn-sm btn-ghost" id="questions-again">{% trans 'Write it again' %}</button></div>
     {% else %}
+    {% if questions.status == 'failed' %}<p class="error" role="alert">{% trans 'The previous analysis could not be completed. You can try again below; your collection is unchanged.' %}</p>{% endif %}
     <p>{% blocktrans with n=compare_max %}Reads the limitations, discussions and future work of the first {{ n }} papers (their abstract and our summary when their license does not let us read more). It takes about a minute.{% endblocktrans %}</p>
     <button type="button" class="btn" id="questions-go">{% trans 'Find the open questions' %}</button>
     {% endif %}
@@ -170,14 +172,21 @@ window.addEventListener('DOMContentLoaded', function () {
   var qStatus = document.getElementById('questions-status');
   var qPanel = document.getElementById('questions-working');
   var qGo = document.getElementById('questions-go');
+  function questionsFailed() {
+    qStatus.textContent = t.failed;
+    qPanel.hidden = true;
+    if (qGo) { qGo.hidden = false; qGo.disabled = false; }
+    if (qAgain) qAgain.disabled = false;
+  }
   function findQuestions(again) {
     qStatus.textContent = '';
+    qPanel.hidden = false;
     SP.post(base + '/collections/{{ collection.pk }}/questions/', {again: again ? '1' : '0'}).then(function (json) {
-      if (json.status === 'premium') return qStatus.textContent = t.premium;
-      if (!json.id) return qStatus.textContent = t.failed;
+      if (json.status === 'premium') { questionsFailed(); qStatus.textContent = t.premium; return; }
+      if (!json.id) return questionsFailed();
       if (qGo) qGo.hidden = true;
-      SP.track(qPanel, json.id, function () { location.reload(); });
-    });
+      SP.track(qPanel, json.id, function () { location.reload(); }, questionsFailed);
+    }).catch(questionsFailed);
   }
   if (qGo) qGo.addEventListener('click', function () { qGo.disabled = true; qPanel.dataset.started = ''; findQuestions(false); });
   var qAgain = document.getElementById('questions-again');

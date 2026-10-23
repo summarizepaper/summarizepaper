@@ -1033,6 +1033,62 @@ class ConferenceTests(ToolsTestCase):
 
 
 class QuestionsTests(ToolsTestCase):
+    def questions_fixture(self):
+        user = self.user(paid=True)
+        collection = Collection.objects.create(user=user, name='Questions test')
+        for aid in ('2101.00001v1', '2101.00002v1'):
+            self.paper(aid)
+            CollectionPaper.objects.create(collection=collection, arxiv_id=aid, title='Example', authors='Ann Lee')
+        return self.client_for(user), collection
+
+    def test_no_supported_question_is_saved_as_an_honest_empty_result(self):
+        client, collection = self.questions_fixture()
+        url = '/en/collections/%d/questions/' % collection.pk
+        with mock.patch('summarizer.questions.paper_block', return_value='Abstract only'), \
+             mock.patch('summarizer.generated.chat_json', return_value={'questions': [], 'projects': []}) as chat:
+            client.post(url)
+            row = Generated.objects.get(kind='questions')
+            self.assertEqual(row.status, 'done')
+            self.assertTrue(row.data()['empty'])
+            self.assertEqual(row.data()['papers_read'], 2)
+            client.post(url)
+            self.assertEqual(chat.call_count, 1)
+        page = client.get('/en/collections/%d/' % collection.pk)
+        self.assertContains(page, 'No sufficiently supported open question')
+        self.assertContains(page, 'id="questions-again"')
+
+    def test_malformed_response_is_retried_once_then_failure_can_be_retried(self):
+        client, collection = self.questions_fixture()
+        url = '/en/collections/%d/questions/' % collection.pk
+        with mock.patch('summarizer.questions.paper_block', return_value='Text'), \
+             mock.patch('summarizer.generated.chat_json', return_value={'questions': None}) as chat:
+            client.post(url)
+        row = Generated.objects.get(kind='questions')
+        self.assertEqual(row.status, 'failed')
+        self.assertEqual(chat.call_count, 2)
+        page = client.get('/en/collections/%d/' % collection.pk)
+        self.assertContains(page, 'previous analysis could not be completed')
+        self.assertContains(page, 'id="questions-go"')
+        with mock.patch('summarizer.questions.paper_block', return_value='Text'), \
+             mock.patch('summarizer.generated.chat_json', return_value={'questions': [], 'projects': []}):
+            client.post(url)
+        row.refresh_from_db()
+        self.assertEqual(row.status, 'done')
+
+    def test_invalid_json_retries_and_malformed_citations_cannot_crash_or_be_invented(self):
+        client, collection = self.questions_fixture()
+        answer = {'questions': [None, {'question': None},
+                  {'question': 'Why?', 'papers': [{'id': 'bad'}, None, '2101.00001v1', 'made-up', '2101.00001v1']}],
+                  'projects': [{'title': 'No source', 'papers': ['made-up']}]}
+        with mock.patch('summarizer.questions.paper_block', return_value='Text'), \
+             mock.patch('summarizer.generated.chat_json', side_effect=[json.JSONDecodeError('bad', '', 0), answer]) as chat:
+            client.post('/en/collections/%d/questions/' % collection.pk)
+        row = Generated.objects.get(kind='questions')
+        self.assertEqual(row.status, 'done')
+        self.assertEqual(chat.call_count, 2)
+        self.assertEqual([p['arxiv_id'] for p in row.data()['questions'][0]['papers']], ['2101.00001v1'])
+        self.assertEqual(row.data()['projects'], [])
+
     def test_reads_closing_sections_and_groups_questions(self):
         user = self.user(paid=True)
         self.paper()  # CC BY

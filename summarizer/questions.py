@@ -7,6 +7,7 @@ questions of the whole collection, groups the ones several papers share, says
 which papers raise each one, and suggests projects that would answer them.
 Written once per set of papers and language, like the comparison table.
 """
+import json
 import re
 
 from django.contrib.auth.decorators import login_required
@@ -51,32 +52,54 @@ def write(collection_pk, lang):
         blocks = '\n\n'.join(paper_block(r) for r in rows)
         generated.release_connection()
         generated.progress(pk, 'write')
-        answer = generated.chat_json(
+        prompt = (
             'From the %d papers above, gather the open questions of this field for a researcher looking for what to work '
             'on: problems the authors say remain open, limitations of their methods or data, results that disagree '
-            'between papers, and assumptions nobody tested. Group the ones several papers share. Write in %s; no '
+            'between papers, and assumptions nobody tested. Group the ones several papers share. Return at most '
+            '12 questions and 3 projects. Only include questions supported by the supplied papers; if no supported '
+            'question can be identified, return {"questions": [], "projects": []}. Never invent one just to fill '
+            'the list. Keep the JSON field names exactly as specified, in English. Write the values in %s; no '
             'LaTeX, no markdown, never write paper IDs in the texts. Then suggest 3 research projects that would '
             'answer some of them. Answer with a JSON object {"questions": [{"question": "the open question in one '
             'sentence", "kind": "open_problem|limitation|disagreement|untested", "detail": "why it is open, 1 or 2 '
             'sentences", "papers": ["ids of the papers that raise it"], "next_step": "a concrete first step to address '
             'it"}], "projects": [{"title": "...", "idea": "2 or 3 sentences", "papers": ["ids it builds on"]}]}.'
-            % (len(rows), generated.language_name(lang)), paid=True, max_tokens=6000, system=blocks)
+            % (len(rows), generated.language_name(lang)))
+        # Retry malformed output once; an honest empty list is a valid outcome.
+        for attempt in range(2):
+            try:
+                instruction = prompt + (' Your previous response had an invalid structure. Return exactly an object '
+                    'with arrays named questions and projects; use empty arrays when nothing is supported.' if attempt else '')
+                answer = generated.chat_json(instruction, paid=True, max_tokens=6000, system=blocks)
+                if (not isinstance(answer.get('questions'), list)
+                        or not isinstance(answer.get('projects', []), list)):
+                    raise ValueError('invalid questions structure')
+                break
+            except (json.JSONDecodeError, ValueError):
+                if attempt:
+                    raise generated.GenerationError('invalid open questions response') from None
         known = {r.arxiv_id: {'arxiv_id': r.arxiv_id, 'title': r.title, 'authors': r.authors} for r in rows}
 
         def papers(ids):
-            return [known[i] for i in dict.fromkeys(ids if isinstance(ids, list) else []) if i in known]
-        questions = [{'question': str(q.get('question', '')).strip(),
+            safe_ids = [i for i in ids if isinstance(i, str)] if isinstance(ids, list) else []
+            return [known[i] for i in dict.fromkeys(safe_ids) if i in known]
+
+        def text(value):
+            return value.strip() if isinstance(value, str) else ''
+
+        questions = [{'question': text(q.get('question')),
                       'kind': q.get('kind') if q.get('kind') in KINDS else 'open_problem',
-                      'detail': str(q.get('detail', '')).strip(), 'next_step': str(q.get('next_step', '')).strip(),
+                      'detail': text(q.get('detail')), 'next_step': text(q.get('next_step')),
                       'papers': papers(q.get('papers'))}
-                     for q in answer.get('questions', []) if isinstance(q, dict) and str(q.get('question', '')).strip()]
-        if not questions:
-            raise generated.GenerationError('no open question')
+                     for q in answer['questions'] if isinstance(q, dict) and text(q.get('question'))]
+        questions = [q for q in questions if q['papers']]
         questions.sort(key=lambda q: -len(q['papers']))  # the questions several papers share first
-        projects = [{'title': str(p.get('title', '')).strip(), 'idea': str(p.get('idea', '')).strip(),
+        projects = [{'title': text(p.get('title')), 'idea': text(p.get('idea')),
                      'papers': papers(p.get('papers'))}
-                    for p in answer.get('projects', []) if isinstance(p, dict) and str(p.get('title', '')).strip()][:5]
-        return {'questions': questions[:20], 'projects': projects}
+                    for p in answer.get('projects', []) if isinstance(p, dict) and text(p.get('title'))][:5]
+        projects = [p for p in projects if p['papers']] if questions else []
+        return {'questions': questions[:20], 'projects': projects, 'empty': not questions,
+                'papers_read': len(rows)}
     return work
 
 
