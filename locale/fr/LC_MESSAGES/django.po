@@ -7707,6 +7707,9 @@ msgstr "Publication annoncée à une date future"
 msgid "Withdrawal declared on arXiv by the authors"
 msgstr "Retrait annoncé sur arXiv par les auteurs"
 
+msgid "Not stated"
+msgstr "Non précisé"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

@@ -15,7 +15,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.translation import get_language
+from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
@@ -128,6 +128,29 @@ def paper_block(row):
         'Summary: %s\n' % summary if summary else '')
 
 
+def comparison_missing_label(lang):
+    with override(lang):
+        return str(_('Not stated'))
+
+
+def comparison_data(table, lang):
+    """Translate exact missing-value markers without rewriting cached scientific content."""
+    label = comparison_missing_label(lang)
+
+    def cell(value):
+        if isinstance(value, str) and re.fullmatch(r'not\s+stated[.!]?', value.strip(), re.I):
+            return label
+        return value
+
+    result = dict(table)
+    result['rows'] = [dict(row, **{code: cell(row.get(code, '')) for code, _ in COLUMNS})
+                      for row in table.get('rows', [])]
+    for field in ('agreements', 'disagreements', 'gaps'):
+        if field in table:
+            result[field] = [cell(value) for value in table[field]]
+    return result
+
+
 def write_comparison(collection_pk, lang):
     def work(pk):
         generated.progress(pk, 'read')
@@ -138,11 +161,11 @@ def write_comparison(collection_pk, lang):
         answer = generated.chat_json(
             'Compare the %d papers above for a researcher writing a literature review. Write in %s. For every paper, '
             'fill each column in one or two short sentences, with key numbers when the paper gives them; write '
-            '"not stated" when it does not. Then say where the papers agree, where they disagree or report '
+            '%s when it does not. Then say where the papers agree, where they disagree or report '
             'different results, and which questions none of them addresses. No LaTeX, no markdown, never write paper '
             'IDs in the texts. Answer with a JSON object {"rows": [{"id": "paper id", "question": "...", '
             '"method": "...", "data": "...", "results": "...", "limitations": "..."}], "agreements": ["..."], '
-            '"disagreements": ["..."], "gaps": ["..."]}.' % (len(rows), generated.language_name(lang)),
+            '"disagreements": ["..."], "gaps": ["..."]}.' % (len(rows), generated.language_name(lang), json.dumps(comparison_missing_label(lang), ensure_ascii=False)),
             paid=True, max_tokens=8000, system=blocks)
         table = []
         for item in answer.get('rows', []):
@@ -153,7 +176,7 @@ def write_comparison(collection_pk, lang):
             raise generated.GenerationError('empty comparison')
         lists = {k: [str(x).strip() for x in answer.get(k, []) if str(x).strip()][:8]
                  for k in ('agreements', 'disagreements', 'gaps')}
-        return dict(lists, rows=table)
+        return comparison_data(dict(lists, rows=table), lang)
     return work
 
 
@@ -213,7 +236,7 @@ def collection_page(request, pk):
     questions = Generated.objects.filter(kind='questions', key=comparison_key(collection), lang=lang).first() if paid else None
     return render(request, 'summarizer/collection.html', {
         'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid),
-        'comparison': comparison, 'table': comparison.data() if comparison and comparison.status == 'done' else None,
+        'comparison': comparison, 'table': comparison_data(comparison.data(), lang) if comparison and comparison.status == 'done' else None,
         'columns': COLUMNS, 'compare_max': COMPARE_MAX, 'compare_steps': COMPARE_STEPS, 'message': request.GET.get('m'),
         'chat_ids': ','.join(p.arxiv_id for p in papers[:CHAT_MAX]), 'chat_max': CHAT_MAX,
         'questions': questions, 'open': questions.data() if questions and questions.status == 'done' else None,
@@ -269,7 +292,7 @@ def collection_export(request, pk, fmt):
         out = io.StringIO()
         writer = csv.writer(out)
         writer.writerow(['Identifier', 'Title'] + [str(label) for _, label in COLUMNS])
-        for line in row.data()['rows']:
+        for line in comparison_data(row.data(), lang)['rows']:
             writer.writerow([exports.bare_ref(line['arxiv_id']), line['title']] + [line[c] for c, _ in COLUMNS])
         response = HttpResponse('﻿' + out.getvalue(), content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % filename
