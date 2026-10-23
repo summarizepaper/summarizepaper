@@ -7386,6 +7386,33 @@ msgstr ""
 "Seul le résumé était disponible pour ce kit. Lisez l’article complet avant "
 "de rédiger."
 
+msgid ""
+"Prepare a factual press kit with verified quotes, limitations and questions "
+"for the authors."
+msgstr ""
+"Préparez un kit presse factuel avec des citations vérifiées, les limites de "
+"l’étude et des questions pour les auteurs."
+
+msgid ""
+"Prepare slides with figures, strengths, limitations and discussion "
+"questions, then edit or export them."
+msgstr ""
+"Préparez des diapositives avec les figures, les points forts, les limites et"
+" des questions de discussion, puis modifiez-les ou exportez-les."
+
+msgid "Choose a paper"
+msgstr "Choisir un article"
+
+msgid ""
+"For a new paper, open its summary page and choose this tool in “Tools for "
+"this paper”."
+msgstr ""
+"Pour un nouvel article, ouvrez sa page de résumé puis choisissez cet outil "
+"dans « Outils pour cet article »."
+
+msgid "Recent papers"
+msgstr "Articles récents"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

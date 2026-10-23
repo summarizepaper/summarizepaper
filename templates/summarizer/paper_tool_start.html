@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{{ tool_name }} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+<meta name="description" content="{{ description }}">
+<link rel="canonical" href="https://www.summarizepaper.com{{ request.path }}">
+{% endblock %}
+{% block content %}
+<div class="page" style="max-width:800px">
+  <header class="page-header">
+    <span class="eyebrow">Premium</span>
+    <h1>{{ tool_name }}</h1>
+    <p class="lead">{{ description }}</p>
+  </header>
+  <section class="card section-card">
+    <h2>{% trans 'Choose a paper' %}</h2>
+    <form method="get">
+      <label for="tool-paper-query">{% trans 'Title, keywords, author, or a DOI' %}</label>
+      <input id="tool-paper-query" name="q" type="search" required maxlength="500" placeholder="arXiv:2303.08774 · 10.1038/s41586-023-06221-2" style="width:100%;margin:10px 0 14px">
+      <button class="btn" type="submit">{% trans 'Search' %}</button>
+    </form>
+    <p class="muted">{% trans 'For a new paper, open its summary page and choose this tool in “Tools for this paper”.' %}</p>
+  </section>
+  {% if recent_papers %}
+  <section class="section-card">
+    <h2>{% trans 'Recent papers' %}</h2>
+    <ul>{% for paper in recent_papers %}<li style="margin:.75rem 0"><a href="{% url tool_route paper.arxiv_id %}">{{ paper.title }}</a></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

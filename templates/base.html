@@ -79,8 +79,8 @@
       </button>
       <ul class="nav-links">
         <li class="nav-dropdown">
-          <button type="button" aria-haspopup="true" aria-expanded="false">{% trans 'Tools' %} <i class="fas fa-chevron-down" style="font-size:10px"></i></button>
-          <div class="nav-menu">
+          <button type="button" aria-haspopup="true" aria-expanded="false" aria-controls="tools-menu">{% trans 'Tools' %} <i class="fas fa-chevron-down" style="font-size:10px"></i></button>
+          <div class="nav-menu" id="tools-menu">
             <a href="/{{LANGUAGE_CODE}}/tools/"><strong>{% trans 'All the tools' %}</strong></a>
             <a href="/{{LANGUAGE_CODE}}/chat">{% trans 'Chat with Papers' %}</a>
             <a href="/{{LANGUAGE_CODE}}/digest/">{% trans 'Daily digest' %}</a>
@@ -90,6 +90,8 @@
             <a href="/{{LANGUAGE_CODE}}/collections/">{% trans 'My collections' %}</a>
             <a href="/{{LANGUAGE_CODE}}/missed/">{% trans 'What did I miss?' %}</a>
             <a href="/{{LANGUAGE_CODE}}/refcheck/">{% trans 'Bibliography check' %}</a>
+            <a href="{% url 'presskit_home' %}">{% trans 'Press kit' %}</a>
+            <a href="{% url 'slides_home' %}">{% trans 'Journal club' %}</a>
             <a href="/{{LANGUAGE_CODE}}/citations/">{% trans 'Citation alerts' %}</a>
             <a href="/{{LANGUAGE_CODE}}/scoops/">{% trans 'Scoop watch' %}</a>
             <a href="/{{LANGUAGE_CODE}}/teams/">{% trans 'Who works on it?' %}</a>
@@ -180,11 +182,27 @@
         btn.setAttribute('aria-expanded', menu.classList.toggle('open'));
       });
     });
-    document.addEventListener('click', function () {
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('.lang-switch, .nav-dropdown')) return;
       menus.forEach(function (menu) {
         menu.classList.remove('open');
         menu.querySelector('button').setAttribute('aria-expanded', 'false');
       });
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key !== 'Escape') return;
+      var openMenu = document.querySelector('.lang-switch.open, .nav-dropdown.open');
+      if (openMenu) {
+        openMenu.classList.remove('open');
+        var button = openMenu.querySelector('button');
+        button.setAttribute('aria-expanded', 'false');
+        button.focus();
+      } else if (links.classList.contains('active')) {
+        links.classList.remove('active');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.innerHTML = '<i class="fas fa-bars"></i>';
+        toggle.focus();
+      }
     });
 
     var here = location.pathname.replace(/\/$/, '');

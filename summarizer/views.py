@@ -1367,6 +1367,31 @@ def bibtex(request, arxiv_id):
     return response
 
 
+@require_GET
+def paper_tool_start(request, tool):
+    """A discoverable entry point; generation still requires the existing explicit action."""
+    title, description = {
+        'presskit': (_('Press kit'), _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),
+        'slides': (_('Journal club'), _('Prepare slides with figures, strengths, limitations and discussion questions, then edit or export them.')),
+    }[tool]
+    query = request.GET.get('q', '').strip()[:500]
+    if query:
+        key = unified_search.arxiv_identifier(query)
+        if key is None and (sources.is_external(query.lower()) or sources.clean_doi(query)):
+            key = library.canonical_id(query)
+        if key:
+            if not sources.is_external(key):
+                key = unified_search.arxiv_identifier(key.replace('--', '/')) or key
+            if ArxivPaper.objects.filter(arxiv_id=key).exists():
+                return redirect(reverse(tool, args=(key,)))
+            return redirect(reverse('arxividpage', args=(key,)) + '#tools')
+        return redirect(reverse('search_results') + '?' + urlencode({'q': query, 'src': 'all'}))
+    return render(request, 'summarizer/paper_tool_start.html', {
+        'tool_name': title, 'description': description, 'tool_route': tool,
+        'recent_papers': ArxivPaper.objects.exclude(title__isnull=True).exclude(title='').order_by('-created')[:6],
+    })
+
+
 def tools(request):
     """Every tool for researchers, by step of research."""
     groups = [
@@ -1383,12 +1408,13 @@ def tools(request):
             ('trends/', 'chart-line', _('Rising topics'), False, _('The terms that rise on arXiv week after week, field by field.')),
         ]),
         (_('Write and submit'), [
+            ('press-kit/', 'newspaper', _('Press kit'), True, _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),
             ('missed/', 'search', _('What did I miss?'), True, _('The papers close to your draft that it does not cite.')),
             ('refcheck/', 'tasks', _('Bibliography check'), True, _('Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.')),
             ('integrations/', 'book', _('Zotero, Notion, Obsidian'), False, _('BibTeX, RIS and Markdown exports, and papers sent to Zotero with their summary.')),
         ]),
         (_('Present and meet'), [
-            ('faq/#journal-club', 'chalkboard-teacher', _('Journal club'), True, _('Slides of any paper, with its figures when its license allows it, its strengths and limits, and questions. From the tools of each paper page.')),
+            ('journal-club/', 'chalkboard-teacher', _('Journal club'), True, _('Prepare slides with figures, strengths, limitations and discussion questions, then edit or export them.')),
             ('conference/', 'calendar-alt', _('Conference companion'), True, _('The talks of a conference program that matter for your research, and the people to meet.')),
         ]),
     ]

@@ -988,7 +988,8 @@ class ToolsPageTests(ToolsTestCase):
         page = Client().get('/en/tools/')
         for name in ('Scoop watch', 'Bibliography check', 'Who works on it?', 'Conference companion', 'Journal club'):
             self.assertContains(page, name)
-        self.assertContains(page, '/en/faq/#journal-club')
+        self.assertContains(page, '/en/journal-club/')
+        self.assertContains(page, '/en/press-kit/')
         self.assertContains(Client().get('/fr/tools/'), 'Veille anti-scoop')
         self.assertContains(Client().get('/en/faq/'), 'id="scoops"')
 
