@@ -661,13 +661,12 @@ Earlier work found no clouds at all \citet[see][]{pre,again}.
         with mock.patch('summarizer.refcheck.arxiv_records', return_value={'2101.00001': record}), \
              mock.patch('summarizer.refcheck.openalex_works', return_value={'10.1000/retracted': {'retracted': True, 'abstract': ''}}), \
              mock.patch('summarizer.refcheck.s2_published', return_value={}), \
-             mock.patch('summarizer.refcheck.by_title', return_value=('', '')) as by_title, \
+             mock.patch('summarizer.bibliography.Resolver.resolve', return_value=None), \
              mock.patch('summarizer.refcheck.crossref_fields', return_value={'journal': 'MNRAS & Co', 'year': '2021', 'doi': '10.1093/mnras/x1'}), \
              mock.patch('summarizer.generated.chat_json', return_value=verdicts) as chat:
             result = refcheck.check(self.BIB, self.TEX, 'en')
-        by_title.assert_called_once_with('A book with no identifier')
         kinds = {p['key']: [i['kind'] for i in p['issues']] for p in result['problems']}
-        self.assertEqual(kinds, {'retracted': ['retracted'], 'pre': ['published', 'old_version'],
+        self.assertEqual(kinds, {'retracted': ['unknown', 'retracted'], 'pre': ['published', 'old_version'],
                                  'again': ['duplicate', 'published'], 'nothing': ['unknown']})
         self.assertEqual(result['problems'][0]['key'], 'retracted')  # serious problems first
         self.assertIn('journal = {MNRAS \\& Co}', result['fixed_bib'])
@@ -686,7 +685,7 @@ Earlier work found no clouds at all \citet[see][]{pre,again}.
         with mock.patch('summarizer.refcheck.check', return_value=result) as check:
             r = client.post('/en/refcheck/', {'bibtext': '@misc{a, title={T}}'})
         self.assertEqual(check.call_args[0][1], '')
-        self.assertContains(client.get(r['Location']), 'No problem found')
+        self.assertContains(client.get(r['Location']), 'No discrepancy detected')
         self.assertEqual(client.get(r['Location'] + 'bib/').content, b'@article{a,\n}')
         self.assertEqual(self.client_for(self.user('other', paid=True)).get(r['Location']).status_code, 404)
 

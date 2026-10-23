@@ -3,7 +3,8 @@
 From a BibTeX file, and optionally the LaTeX source that cites it:
 
 1. Each entry is identified: its DOI, its arXiv id, or, for the entries with
-   neither, a title search in OpenAlex (only kept when the titles match).
+   neither, a conservative Crossref/ADS/OpenAlex cascade using titles, authors and locators.
+   Matched metadata is compared field by field; an unresolved entry is never called incorrect.
 2. Retracted papers come from OpenAlex (is_retracted, fed by Retraction Watch);
    papers withdrawn from arXiv from their arXiv comment.
 3. A preprint cited as such may have been published since: arXiv's own DOI and
@@ -30,12 +31,12 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, digest, generated, sources
+from . import access, bibliography, digest, generated, sources
 from .models import Generated
 
 MAX_UPLOAD = 5 * 1024 * 1024
 MAX_ENTRIES = 400
-TITLE_SEARCHES = 40  # entries with no identifier looked up by title, one OpenAlex search each
+TITLE_SEARCHES = 40  # bounded cascades for entries without identifiers; remaining entries are disclosed
 OPENALEX_BATCH = 50
 ARXIV_BATCH = 100
 S2_BATCH = 'https://api.semanticscholar.org/graph/v1/paper/batch'
@@ -49,7 +50,7 @@ LEVELS = ('error', 'warning', 'info')
 LIMITED = contextvars.ContextVar('openalex_limited', default=False)  # set when OpenAlex calls were skipped
 STEPS = [
     ('read', _('Reading your references')),
-    ('identify', _('Finding each paper on arXiv, OpenAlex and Semantic Scholar')),
+    ('identify', _('Matching references with Crossref, NASA ADS and OpenAlex')),
     ('published', _('Looking for retractions and for preprints published since')),
     ('claims', _('An AI checks each citation against the abstract of the cited paper')),
 ]
@@ -242,11 +243,12 @@ def crossref_fields(doi):
     return {k: v for k, v in fields.items() if v}
 
 
-def with_fields(entry, fields):
-    """The entry's BibTeX written again, as @article, with these fields set (the others kept)."""
-    merged = {k: v for k, v in entry['fields'].items() if k not in ('archiveprefix', 'primaryclass', 'howpublished')}
+def with_fields(entry, fields, kind=None, published=False):
+    """Rewrite only reviewed fields, preserving the key and the remaining source fields."""
+    merged = {k: v for k, v in entry['fields'].items()
+              if not published or k not in ('archiveprefix', 'primaryclass', 'howpublished')}
     merged.update(fields)
-    lines = ['@article{%s,' % entry['key']]
+    lines = ['@%s{%s,' % (kind or entry['type'], entry['key'])]
     lines += ['  %s = {%s},' % (name, re.sub(r'(?<!\\)&', r'\\&', value) if name == 'journal' else value)
               for name, value in merged.items()]
     return '\n'.join(lines) + '\n}'
@@ -306,13 +308,28 @@ def check(bib, tex, lang, step=lambda name: None):
     ids = {}
     for entry in entries:
         ids[entry['key']] = identify(entry)
-    searched = 0
+    def openalex_allowed():
+        allowed = sources.tool_search_allowed()
+        if not allowed:
+            LIMITED.set(True)
+        return allowed
+    resolver = bibliography.Resolver(openalex_allowed)
+    metadata, skipped, searched = {}, set(), 0
     for entry in entries:
         arxiv, version, doi = ids[entry['key']]
-        if not arxiv and not doi and entry['fields'].get('title') and searched < TITLE_SEARCHES:
-            searched += 1
-            doi, arxiv = by_title(plain(entry['fields']['title']))
-            ids[entry['key']] = (arxiv, '', doi)
+        matched = None
+        if doi:
+            matched = resolver.resolve(entry, doi)
+        elif not arxiv:
+            if searched < TITLE_SEARCHES:
+                searched += 1
+                matched = resolver.resolve(entry)
+            else:
+                skipped.add(entry['key'])
+        step('identify')  # heartbeat while a long bibliography is resolved
+        if matched:
+            metadata[entry['key']] = matched
+            ids[entry['key']] = (arxiv or matched.get('arxiv', ''), version, doi or matched['doi'])
     records = arxiv_records([a for a, _, _ in ids.values() if a])
     step('published')
     works = openalex_works([d for _, _, d in ids.values() if d] +
@@ -331,8 +348,11 @@ def check(bib, tex, lang, step=lambda name: None):
                 issues.append({'kind': 'duplicate', 'level': 'warning', 'other': seen[ref]})
             elif ref:
                 seen.setdefault(ref, entry['key'])
-        if not arxiv and not doi:
-            issues.append({'kind': 'unknown', 'level': 'info'})
+        matched = metadata.get(entry['key'])
+        if not matched and not record:
+            issues.append({'kind': 'unknown', 'level': 'info',
+                           'reason': 'limit' if entry['key'] in skipped or resolver.limited else
+                                     'unavailable' if resolver.unavailable else 'no_match'})
         if arxiv and record is None:
             issues.append({'kind': 'arxiv_missing', 'level': 'warning', 'arxiv': arxiv})
         if record and re.search(r'\bwithdrawn\b', record.get('comment', ''), re.I):
@@ -344,13 +364,28 @@ def check(bib, tex, lang, step=lambda name: None):
                 break
         if record and published and is_preprint_entry(entry) and published != doi:
             fields = crossref_fields(published)
-            corrected[entry['key']] = with_fields(entry, fields)
+            corrected[entry['key']] = with_fields(entry, fields, 'article', published=True)
             issues.append({'kind': 'published', 'level': 'warning', 'doi': published,
                            'journal': fields.get('journal') or record.get('journal_ref', ''), 'bibtex': corrected[entry['key']]})
+        changes = bibliography.differences(entry, matched) if matched else []
+        if changes:
+            fields = {c['field']: c['after'] for c in changes if c['field'] != 'type'}
+            if matched['doi']:
+                fields['doi'] = matched['doi']
+            kind = matched['type'] if any(c['field'] == 'type' for c in changes) else entry['type']
+            if kind == 'book' and matched['fields'].get('isbn') and not entry['fields'].get('isbn'):
+                fields['isbn'] = matched['fields']['isbn']
+            corrected[entry['key']] = with_fields(entry, fields, kind)
+            issues.append({'kind': 'metadata', 'level': 'warning', 'changes': changes,
+                           'source': matched['source'], 'url': matched['url'], 'bibtex': corrected[entry['key']]})
         if record and version and record.get('version') and int(version[1:]) < int(record['version']):
             issues.append({'kind': 'old_version', 'level': 'info', 'cited': version, 'latest': 'v%s' % record['version']})
         items.append({'key': entry['key'], 'title': title, 'arxiv': arxiv, 'doi': doi or published, 'issues': issues,
-                      'abstract': (record or {}).get('abstract') or works.get(doi, {}).get('abstract', '')})
+                      'abstract': (record or {}).get('abstract') or works.get(doi, {}).get('abstract', ''),
+                      'source': matched['source'] if matched else 'arXiv' if record else '',
+                      'source_url': matched['url'] if matched else 'https://arxiv.org/abs/' + arxiv if record else '',
+                      'verification': 'incorrect' if changes else 'published' if any(i['kind'] == 'published' for i in issues) else
+                                      'identified' if matched or record else 'unverified'})
 
     claims = []
     if tex:
@@ -380,6 +415,11 @@ def check(bib, tex, lang, step=lambda name: None):
         'claims_checked': len(claims), 'with_tex': bool(tex),
         'counts': {level: sum(any(x['level'] == level for x in i['issues']) for i in items) for level in LEVELS},
         'fixed_bib': fixed_bib if corrected else '', 'corrected': len(corrected), 'limited': LIMITED.get(),
+        'summary': {status: sum(i['verification'] == status for i in items)
+                    for status in ('incorrect', 'published', 'identified', 'unverified')},
+        'identified': [{k: i[k] for k in ('key', 'title', 'source', 'source_url')} for i in items if i['verification'] == 'identified' and not i['issues']],
+        'sources_unavailable': sorted(resolver.unavailable), 'lookup_limited': resolver.limited or bool(skipped),
+        'metadata_checked': len(metadata),
     }
 
 

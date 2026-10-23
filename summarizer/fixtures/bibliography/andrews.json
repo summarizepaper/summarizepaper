@@ -1,0 +1,301 @@
+{
+  "crossref": [
+    {
+      "publisher": "Annual Reviews",
+      "published-print": {
+        "date-parts": [
+          [
+            2020,
+            8,
+            18
+          ]
+        ]
+      },
+      "DOI": "10.1146/annurev-astro-031220-010302",
+      "type": "journal-article",
+      "page": "483-528",
+      "title": [
+        "Observations of Protoplanetary Disk Structures"
+      ],
+      "volume": "58",
+      "author": [
+        {
+          "given": "Sean M.",
+          "family": "Andrews"
+        }
+      ],
+      "container-title": [
+        "Annual Review of Astronomy and Astrophysics"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2020,
+            8,
+            18
+          ]
+        ]
+      },
+      "published": {
+        "date-parts": [
+          [
+            2020,
+            8,
+            18
+          ]
+        ]
+      }
+    }
+  ],
+  "openalex": [
+    {
+      "id": "https://openalex.org/W2998834512",
+      "doi": "https://doi.org/10.1146/annurev-astro-031220-010302",
+      "display_name": "Observations of Protoplanetary Disk Structures",
+      "publication_year": 2020,
+      "primary_location": {
+        "source": {
+          "display_name": "Annual Review of Astronomy and Astrophysics"
+        }
+      },
+      "type": "review",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Sean M. Andrews"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "58",
+        "issue": "1",
+        "first_page": "483",
+        "last_page": "528"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1146/annurev-astro-031220-010302"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/2001.05007"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.2001.05007"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W3098056896",
+      "doi": "https://doi.org/10.17863/cam.15738",
+      "display_name": "A multi-wavelength analysis for interferometric (sub-)mm observations of protoplanetary disks: radial constraints on the dust properties and the disk structure",
+      "publication_year": 2015,
+      "primary_location": {
+        "source": {
+          "display_name": "Figshare"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Marco Tazzari"
+          }
+        },
+        {
+          "author": {
+            "display_name": "L. Testi"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Barbara Ercolano"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Antonella Natta"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Andrea Isella"
+          }
+        },
+        {
+          "author": {
+            "display_name": "C. J. Chandler"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": null,
+        "issue": null,
+        "first_page": null,
+        "last_page": null
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://figshare.com/articles/journal_contribution/Multiwavelength_analysis_for_interferometric_sub-_mm_observations_of_protoplanetary_disks_Radial_constraints_on_the_dust_properties_and_the_disk_structure/26227736"
+        },
+        {
+          "landing_page_url": "https://www.repository.cam.ac.uk/handle/1810/269504"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.1512.05679"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.17863/cam.15738"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.25916/sut.26227736"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.25916/sut.26227736.v1"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W2168336164",
+      "doi": "https://doi.org/10.1088/2041-8205/758/1/l19",
+      "display_name": "POLARIMETRIC IMAGING OF LARGE CAVITY STRUCTURES IN THE PRE-TRANSITIONAL PROTOPLANETARY DISK AROUND PDS 70: OBSERVATIONS OF THE DISK*",
+      "publication_year": 2012,
+      "primary_location": {
+        "source": {
+          "display_name": "The Astrophysical Journal Letters"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Jun Hashimoto"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Ruobing Dong"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Tomoyuki Kudo"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Mitsuhiko Honda"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Melissa K. McClure"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Zhaohuan Zhu"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "758",
+        "issue": "1",
+        "first_page": "L19",
+        "last_page": "L19"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1088/2041-8205/758/1/l19"
+        },
+        {
+          "landing_page_url": "https://handle.uba.uva.nl/personal/pure/en/publications/polarimetric-imaging-of-large-cavity-structures-in-the-pretransitional-protoplanetary-disk-around-pds-70-observations-of-the-disk(27a8785f-e1b9-48f2-8ce8-251dbac75539).html"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/1208.2075"
+        },
+        {
+          "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.754.7499"
+        },
+        {
+          "landing_page_url": "http://hdl.handle.net/2060/20120016564"
+        },
+        {
+          "landing_page_url": "http://hdl.handle.net/2060/20130012045"
+        },
+        {
+          "landing_page_url": "http://edoc.mpg.de/660923"
+        },
+        {
+          "landing_page_url": "https://dare.uva.nl/personal/pure/en/publications/polarimetric-imaging-of-large-cavity-structures-in-the-pretransitional-protoplanetary-disk-around-pds-70-observations-of-the-disk(27a8785f-e1b9-48f2-8ce8-251dbac75539).html"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.1208.2075"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W2943231952",
+      "doi": "https://doi.org/10.3847/1538-4357/ab1f64",
+      "display_name": "Effects of Ringed Structures and Dust Size Growth on Millimeter Observations of Protoplanetary Disks",
+      "publication_year": 2019,
+      "primary_location": {
+        "source": {
+          "display_name": "The Astrophysical Journal"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Ya-Ping 平 Li 李亚"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Hui 晖 Li 李"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Luca Ricci"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Shengtai 台 Li 李胜"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Tilman Birnstiel"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Andrea Isella"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "878",
+        "issue": "1",
+        "first_page": "39",
+        "last_page": "39"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.3847/1538-4357/ab1f64"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/1905.01285"
+        },
+        {
+          "landing_page_url": "https://www.osti.gov/biblio/1544705"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.1905.01285"
+        }
+      ]
+    }
+  ]
+}

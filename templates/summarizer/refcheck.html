@@ -20,6 +20,7 @@
   {% if anonymous or not paid %}
     <h2>{% trans 'What is checked' %}</h2>
     <ul class="tool-features">
+      <li>{% trans 'Titles, years, journals, volumes, pages and article/book types compared with matching Crossref, NASA ADS and OpenAlex records, including references without a DOI or arXiv identifier.' %}</li>
       <li>{% trans 'Retracted papers (from Retraction Watch, through OpenAlex) and papers withdrawn from arXiv.' %}</li>
       <li>{% trans 'Preprints you cite as preprints that have been published in a journal since: we give the corrected BibTeX entry, with the journal, volume, pages and DOI, and a corrected .bib file to download.' %}</li>
       <li>{% trans 'arXiv versions older than the latest one, and the same paper cited under two keys.' %}</li>

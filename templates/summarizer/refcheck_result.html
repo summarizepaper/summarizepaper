@@ -14,10 +14,17 @@
   </header>
 
   {% if result %}
+    {% if not result.summary %}<p class="notice">{% trans 'This report predates the extended metadata checks. Run a new check to compare titles, years, journals, volumes, pages and entry types.' %} <a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Run a new check' %}</a></p>{% endif %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this check: retractions and titles were not checked for some references. Run it again tomorrow for a complete check.' %}</p>{% endif %}
-    <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference checked.{% plural %}{{ n }} references checked.{% endblocktrans %}
+    <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference analysed.{% plural %}{{ n }} references analysed.{% endblocktrans %}
       {% if result.counts.error %}<span class="importance high">{% blocktrans count n=result.counts.error %}{{ n }} serious problem{% plural %}{{ n }} serious problems{% endblocktrans %}</span>{% endif %}
       {% if result.counts.warning %}<span class="importance medium">{% blocktrans count n=result.counts.warning %}{{ n }} to fix{% plural %}{{ n }} to fix{% endblocktrans %}</span>{% endif %}</p>
+    {% if result.summary %}
+    <p class="muted">{% blocktrans count n=result.metadata_checked %}Publisher or catalogue metadata compared for {{ n }} reference.{% plural %}Publisher or catalogue metadata compared for {{ n }} references.{% endblocktrans %}
+      {% blocktrans count n=result.summary.unverified %}{{ n }} unresolved reference: this does not mean it is incorrect.{% plural %}{{ n }} unresolved references: this does not mean they are incorrect.{% endblocktrans %}</p>
+    {% endif %}
+    {% if result.lookup_limited %}<p class="notice">{% trans 'The lookup limit was reached. Some references could not be checked; no conclusion is drawn about their validity.' %}</p>{% endif %}
+    {% if result.sources_unavailable %}<p class="notice">{% trans 'Some sources did not respond:' %} {{ result.sources_unavailable|join:', ' }}. {% trans 'Unresolved references can be checked again later.' %}</p>{% endif %}
     {% if result.fixed_bib %}
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{{ row.key }}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
     {% endif %}
@@ -31,19 +38,34 @@
         <div style="margin-top:8px">
           {% if issue.kind == 'retracted' %}<span class="importance high">{% trans 'Retracted' %}</span> {% trans 'This paper has been retracted. Remove it, or cite it as retracted.' %}
           {% elif issue.kind == 'withdrawn' %}<span class="importance high">{% trans 'Withdrawn' %}</span> {% trans 'Withdrawn from arXiv by its authors:' %} <em>{{ issue.detail }}</em>
-          {% elif issue.kind == 'published' %}<span class="importance medium">{% trans 'Published since' %}</span> {% blocktrans with journal=issue.journal %}Cited as a preprint, but published in {{ journal }}.{% endblocktrans %} <a href="https://doi.org/{{ issue.doi }}" target="_blank" rel="noopener">{{ issue.doi }}</a>
+          {% elif issue.kind == 'published' %}<span class="importance medium">{% trans 'Final publication available' %}</span> {% blocktrans with journal=issue.journal %}Cited as a preprint, but published in {{ journal }}.{% endblocktrans %} <a href="https://doi.org/{{ issue.doi }}" target="_blank" rel="noopener">{{ issue.doi }}</a>
             <details style="margin-top:6px"><summary>{% trans 'Corrected entry' %}</summary><pre class="bibtex">{{ issue.bibtex }}</pre></details>
           {% elif issue.kind == 'duplicate' %}<span class="importance medium">{% trans 'Duplicate' %}</span> {% blocktrans with other=issue.other %}The same paper as <code>{{ other }}</code>.{% endblocktrans %}
-          {% elif issue.kind == 'arxiv_missing' %}<span class="importance medium">{% trans 'Not found' %}</span> {% blocktrans with id=issue.arxiv %}arXiv does not know {{ id }}: check the identifier.{% endblocktrans %}
+          {% elif issue.kind == 'arxiv_missing' %}<span class="importance medium">{% trans 'Not found' %}</span> {% blocktrans with id=issue.arxiv %}The arXiv record for {{ id }} could not be verified. Check the identifier or try again later.{% endblocktrans %}
           {% elif issue.kind == 'old_version' %}<span class="importance low">{% trans 'Older version' %}</span> {% blocktrans with cited=issue.cited latest=issue.latest %}You cite {{ cited }}; the latest version is {{ latest }}.{% endblocktrans %}
-          {% elif issue.kind == 'unknown' %}<span class="importance low">{% trans 'Not checked' %}</span> {% trans 'No DOI or arXiv identifier, and no paper with this exact title found.' %}{% endif %}
+          {% elif issue.kind == 'metadata' %}<span class="importance medium">{% trans 'Reference to correct' %}</span>
+            <a href="{{ issue.url }}" target="_blank" rel="noopener">{% blocktrans with source=issue.source %}Record found in {{ source }}{% endblocktrans %}</a>
+            <ul>{% for change in issue.changes %}<li>
+              <strong>{% if change.field == 'title' %}{% trans 'Title' %}{% elif change.field == 'year' %}{% trans 'Year' %}{% elif change.field == 'journal' %}{% trans 'Journal' %}{% elif change.field == 'volume' %}{% trans 'Volume' %}{% elif change.field == 'pages' %}{% trans 'Pages' %}{% elif change.field == 'type' %}{% trans 'Entry type' %}{% endif %} :</strong>
+              <del>{{ change.before }}</del> → <ins>{{ change.after }}</ins>
+            </li>{% endfor %}</ul>
+            <details><summary>{% trans 'Suggested corrected entry — review before using' %}</summary><pre class="bibtex">{{ issue.bibtex }}</pre></details>
+          {% elif issue.kind == 'unknown' %}<span class="importance low">{% trans 'Reference unresolved' %}</span> {% trans 'No sufficiently reliable matching record was found in the sources consulted. This reference is not necessarily incorrect.' %}
+          {% endif %}
         </div>
         {% endfor %}
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="notice">{% trans 'No problem found in your references.' %}</p>
+    <p class="notice">{% trans 'No discrepancy detected in the fields we could compare.' %}</p>
+    {% endif %}
+
+    {% if result.identified %}
+    <details class="section-card"><summary>{% trans 'References identified without a detected discrepancy' %} ({{ result.identified|length }})</summary>
+      <p class="muted">{% trans 'Only fields supplied by the source can be compared. Identification does not independently verify every field or the absence of retractions.' %}</p>
+      <ul>{% for item in result.identified %}<li><code>{{ item.key }}</code> · <a href="{{ item.source_url }}" target="_blank" rel="noopener">{{ item.title }}</a> — {{ item.source }}</li>{% endfor %}</ul>
+    </details>
     {% endif %}
 
     {% if result.with_tex %}

@@ -1,0 +1,413 @@
+{
+  "crossref": [
+    {
+      "publisher": "Springer Netherlands",
+      "published-print": {
+        "date-parts": [
+          [
+            1973
+          ]
+        ]
+      },
+      "DOI": "10.1007/978-94-010-2585-0_13",
+      "type": "book-chapter",
+      "page": "155-164",
+      "title": [
+        "Black Holes in Binary Systems: Observational Appearances"
+      ],
+      "author": [
+        {
+          "given": "N. I.",
+          "family": "Shakura"
+        },
+        {
+          "given": "R. A.",
+          "family": "Sunyaev"
+        }
+      ],
+      "container-title": [
+        "X- and Gamma-Ray Astronomy"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            1973
+          ]
+        ]
+      },
+      "ISBN": [
+        "9789027703378",
+        "9789401025850"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            1973
+          ]
+        ]
+      }
+    },
+    {
+      "publisher": "Cambridge University Press (CUP)",
+      "published-print": {
+        "date-parts": [
+          [
+            1973
+          ]
+        ]
+      },
+      "DOI": "10.1017/s007418090010035x",
+      "type": "journal-article",
+      "page": "155-164",
+      "title": [
+        "Black Holes in Binary Systems: Observational Appearances"
+      ],
+      "volume": "55",
+      "author": [
+        {
+          "given": "N. I.",
+          "family": "Shakura"
+        },
+        {
+          "given": "R. A.",
+          "family": "Sunyaev"
+        }
+      ],
+      "published-online": {
+        "date-parts": [
+          [
+            2015,
+            8,
+            14
+          ]
+        ]
+      },
+      "container-title": [
+        "Symposium - International Astronomical Union"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            1973
+          ]
+        ]
+      },
+      "published": {
+        "date-parts": [
+          [
+            1973
+          ]
+        ]
+      }
+    },
+    {
+      "publisher": "Oxford University Press (OUP)",
+      "published-print": {
+        "date-parts": [
+          [
+            1976,
+            6,
+            1
+          ]
+        ]
+      },
+      "DOI": "10.1093/mnras/175.3.613",
+      "type": "journal-article",
+      "page": "613-632",
+      "title": [
+        "A Theory of the Instability of disk Accretion on to Black Holes and the Variability of Binary X-ray Sources, Galactic Nuclei and Quasars*"
+      ],
+      "volume": "175",
+      "author": [
+        {
+          "given": "N. I.",
+          "family": "Shakura"
+        },
+        {
+          "given": "R. A.",
+          "family": "Sunyaev"
+        }
+      ],
+      "container-title": [
+        "Monthly Notices of the Royal Astronomical Society"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            1976,
+            6,
+            1
+          ]
+        ]
+      },
+      "published": {
+        "date-parts": [
+          [
+            1976,
+            6,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "publisher": "Oxford University Press (OUP)",
+      "published-print": {
+        "date-parts": [
+          [
+            2018,
+            11,
+            1
+          ]
+        ]
+      },
+      "DOI": "10.1093/mnras/sty2165",
+      "type": "journal-article",
+      "page": "4273-4277",
+      "title": [
+        "Logarithmic potential for the gravitational field of Schwarzschild black holes"
+      ],
+      "volume": "480",
+      "author": [
+        {
+          "given": "N I",
+          "family": "Shakura"
+        },
+        {
+          "given": "G V",
+          "family": "Lipunova"
+        }
+      ],
+      "published-online": {
+        "date-parts": [
+          [
+            2018,
+            8,
+            8
+          ]
+        ]
+      },
+      "container-title": [
+        "Monthly Notices of the Royal Astronomical Society"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2018,
+            8,
+            8
+          ]
+        ]
+      },
+      "published": {
+        "date-parts": [
+          [
+            2018,
+            8,
+            8
+          ]
+        ]
+      }
+    }
+  ],
+  "ads": [
+    {
+      "bibcode": "1973A&A....24..337S",
+      "author": [
+        "Shakura, N. I.",
+        "Sunyaev, R. A."
+      ],
+      "doctype": "article",
+      "page": [
+        "337"
+      ],
+      "pub": "Astronomy and Astrophysics",
+      "title": [
+        "Black holes in binary systems. Observational appearance."
+      ],
+      "volume": "24",
+      "year": "1973",
+      "publisher": "EDP"
+    }
+  ],
+  "openalex": [
+    {
+      "id": "https://openalex.org/W2735818703",
+      "doi": null,
+      "display_name": "Black Holes in Binary Systems. Observational Appearance",
+      "publication_year": 1973,
+      "primary_location": {
+        "source": {
+          "display_name": ""
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Nikolay I. Shakura"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Р. А. Сюняев"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": null,
+        "issue": null,
+        "first_page": "155",
+        "last_page": "166"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://istina.msu.ru/publications/article/8814859/"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W2983298739",
+      "doi": null,
+      "display_name": "Reprint of 1973A&A....24..337S. Black holes in binary systems. Observational appearance.",
+      "publication_year": 1973,
+      "primary_location": {
+        "source": {
+          "display_name": ""
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Nikolay I. Shakura"
+          }
+        },
+        {
+          "author": {
+            "display_name": "R. Sunyaev"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "500",
+        "issue": null,
+        "first_page": "33",
+        "last_page": "51"
+      },
+      "locations": [
+        {
+          "landing_page_url": "http://ui.adsabs.harvard.edu/abs/1973A&A....24..337S/abstract"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W1601287066",
+      "doi": "https://doi.org/10.1017/s007418090010035x",
+      "display_name": "Black Holes in Binary Systems: Observational Appearances",
+      "publication_year": 1973,
+      "primary_location": {
+        "source": {
+          "display_name": "Symposium - International Astronomical Union"
+        }
+      },
+      "type": "conference-paper",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Nikolay I. Shakura"
+          }
+        },
+        {
+          "author": {
+            "display_name": "R. Sunyaev"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "55",
+        "issue": null,
+        "first_page": "155",
+        "last_page": "164"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1017/s007418090010035x"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W2011776546",
+      "doi": "https://doi.org/10.1086/504825",
+      "display_name": "A Compact Supermassive Binary Black Hole System",
+      "publication_year": 2006,
+      "primary_location": {
+        "source": {
+          "display_name": "The Astrophysical Journal"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "C. Rodriguez"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Greg B Taylor"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Robert T. Zavala"
+          }
+        },
+        {
+          "author": {
+            "display_name": "A. B. Peck"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Lindsey K. Pollack"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Roger W. Romani"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "646",
+        "issue": "1",
+        "first_page": "49",
+        "last_page": "60"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1086/504825"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/astro-ph/0604042"
+        },
+        {
+          "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.1006.8891"
+        },
+        {
+          "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.750.2121"
+        },
+        {
+          "landing_page_url": "http://oai.dtic.mil/oai/oai?&amp;verb=getRecord&amp;metadataPrefix=html&amp;identifier=ADA446245"
+        },
+        {
+          "landing_page_url": "http://cds.cern.ch/record/940467"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.astro-ph/0604042"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,449 @@
+{
+  "crossref": [
+    {
+      "publisher": "Cambridge University Press",
+      "published-print": {
+        "date-parts": [
+          [
+            2020,
+            1,
+            31
+          ]
+        ]
+      },
+      "DOI": "10.1017/9781108344227",
+      "type": "monograph",
+      "title": [
+        "Astrophysics of Planet Formation"
+      ],
+      "author": [
+        {
+          "given": "Philip J.",
+          "family": "Armitage"
+        }
+      ],
+      "published-online": {
+        "date-parts": [
+          [
+            2020,
+            1,
+            27
+          ]
+        ]
+      },
+      "issued": {
+        "date-parts": [
+          [
+            2020,
+            1,
+            27
+          ]
+        ]
+      },
+      "ISBN": [
+        "9781108344227",
+        "9781108420501"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2020,
+            1,
+            27
+          ]
+        ]
+      }
+    },
+    {
+      "publisher": "Cambridge University Press",
+      "published-print": {
+        "date-parts": [
+          [
+            2009,
+            12,
+            10
+          ]
+        ]
+      },
+      "DOI": "10.1017/cbo9780511802225",
+      "type": "monograph",
+      "title": [
+        "Astrophysics of Planet Formation"
+      ],
+      "author": [
+        {
+          "given": "Philip J.",
+          "family": "Armitage"
+        }
+      ],
+      "published-online": {
+        "date-parts": [
+          [
+            2012,
+            6,
+            5
+          ]
+        ]
+      },
+      "issued": {
+        "date-parts": [
+          [
+            2009,
+            12,
+            10
+          ]
+        ]
+      },
+      "ISBN": [
+        "9780521887458",
+        "9780511802225",
+        "9781107653085"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2009,
+            12,
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "publisher": "Springer Berlin Heidelberg",
+      "published-print": {
+        "date-parts": [
+          [
+            2019
+          ]
+        ]
+      },
+      "DOI": "10.1007/978-3-662-58687-7_1",
+      "type": "book-chapter",
+      "page": "1-150",
+      "title": [
+        "Physical Processes in Protoplanetary Disks"
+      ],
+      "author": [
+        {
+          "given": "Philip J.",
+          "family": "Armitage"
+        }
+      ],
+      "published-online": {
+        "date-parts": [
+          [
+            2019,
+            2,
+            3
+          ]
+        ]
+      },
+      "container-title": [
+        "Saas-Fee Advanced Course",
+        "From Protoplanetary Disks to Planet Formation"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2019
+          ]
+        ]
+      },
+      "ISBN": [
+        "9783662586860",
+        "9783662586877"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2019
+          ]
+        ]
+      }
+    },
+    {
+      "publisher": "Springer Berlin Heidelberg",
+      "published-print": {
+        "date-parts": [
+          [
+            2019
+          ]
+        ]
+      },
+      "DOI": "10.1007/978-3-662-58687-7",
+      "type": "book",
+      "title": [
+        "From Protoplanetary Disks to Planet Formation"
+      ],
+      "author": [
+        {
+          "given": "Philip J.",
+          "family": "Armitage"
+        },
+        {
+          "given": "Wilhelm",
+          "family": "Kley"
+        }
+      ],
+      "container-title": [
+        "Saas-Fee Advanced Course"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2019
+          ]
+        ]
+      },
+      "ISBN": [
+        "9783662586860",
+        "9783662586877"
+      ],
+      "published": {
+        "date-parts": [
+          [
+            2019
+          ]
+        ]
+      }
+    }
+  ],
+  "ads": [
+    {
+      "bibcode": "2010apf..book.....A",
+      "author": [
+        "Armitage, Philip J."
+      ],
+      "doctype": "book",
+      "isbn": [
+        "9780521887458"
+      ],
+      "pub": "Astrophysics of Planet Formation",
+      "title": [
+        "Astrophysics of Planet Formation"
+      ],
+      "year": "2010"
+    },
+    {
+      "bibcode": "2020apfs.book.....A",
+      "author": [
+        "Armitage, Philip J."
+      ],
+      "doctype": "book",
+      "isbn": [
+        "1108344224"
+      ],
+      "pub": "Astrophysics of planet formation",
+      "title": [
+        "Astrophysics of planet formation, Second Edition"
+      ],
+      "year": "2020"
+    },
+    {
+      "bibcode": "2013apf..book.....A",
+      "author": [
+        "Armitage, Philip J."
+      ],
+      "doctype": "book",
+      "pub": "Astrophysics of Planet Formation",
+      "title": [
+        "Astrophysics of Planet Formation"
+      ],
+      "year": "2013"
+    },
+    {
+      "bibcode": "2009apf..book.....A",
+      "author": [
+        "Armitage, Philip J."
+      ],
+      "doctype": "book",
+      "pub": "Astrophysics of Planet Formation",
+      "title": [
+        "Astrophysics of Planet Formation"
+      ],
+      "year": "2009"
+    },
+    {
+      "bibcode": "2010PhT....63l..63A",
+      "author": [
+        "Armitage, Philip J.",
+        "Valencia, Diana"
+      ],
+      "doctype": "article",
+      "doi": [
+        "10.1063/1.3529004"
+      ],
+      "page": [
+        "63"
+      ],
+      "pub": "Physics Today",
+      "title": [
+        "Astrophysics of Planet Formation"
+      ],
+      "volume": "63",
+      "year": "2010"
+    }
+  ],
+  "openalex": [
+    {
+      "id": "https://openalex.org/W1667131877",
+      "doi": "https://doi.org/10.1017/9781108344227",
+      "display_name": "Astrophysics of Planet Formation",
+      "publication_year": 2009,
+      "primary_location": {
+        "source": {
+          "display_name": "Cambridge University Press eBooks"
+        }
+      },
+      "type": "book",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Philip J. Armitage"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": null,
+        "issue": null,
+        "first_page": null,
+        "last_page": null
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1017/9781108344227"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.1017/cbo9780511802225"
+        },
+        {
+          "landing_page_url": "http://bvbr.bib-bvb.de:8991/F?func=service&amp;doc_library=BVB01&amp;local_base=BVB01&amp;doc_number=019003117&amp;sequence=000004&amp;line_number=0001&amp;func_code=DB_RECORDS&amp;service_type=MEDIA"
+        },
+        {
+          "landing_page_url": "http://digitool.hbz-nrw.de:1801/webclient/StreamGate?folder_id=0&amp;dvs=1406882873470~25"
+        },
+        {
+          "landing_page_url": "http://cds.cern.ch/record/1610028"
+        },
+        {
+          "landing_page_url": "http://cds.cern.ch/record/2709219"
+        },
+        {
+          "landing_page_url": "https://assets.cambridge.org/97805218/87458/frontmatter/9780521887458_frontmatter.pdf"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W4244855666",
+      "doi": "https://doi.org/10.1063/1.3529004",
+      "display_name": "Astrophysics of Planet Formation",
+      "publication_year": 2010,
+      "primary_location": {
+        "source": {
+          "display_name": "Physics Today"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Diana Valencia"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "63",
+        "issue": "12",
+        "first_page": "63",
+        "last_page": "63"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1063/1.3529004"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W177617132",
+      "doi": "https://doi.org/10.48550/arxiv.0902.3617",
+      "display_name": "Plasma Astrophysics Problems in Star and Planet Formation",
+      "publication_year": 2009,
+      "primary_location": {
+        "source": {
+          "display_name": "arXiv (Cornell University)"
+        }
+      },
+      "type": "preprint",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Ellen G. Zweibel"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Jeremy Goodman"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Hantao Ji"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Alex Lazarian"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": null,
+        "issue": null,
+        "first_page": null,
+        "last_page": null
+      },
+      "locations": [
+        {
+          "landing_page_url": "http://arxiv.org/abs/0902.3617"
+        },
+        {
+          "landing_page_url": "https://arxiv.org/pdf/0902.3617"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.0902.3617"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W7223247733",
+      "doi": "https://doi.org/10.56367/oag-052-12863",
+      "display_name": "Astronomy and astrophysics: Planet formation around multiple stars",
+      "publication_year": 2026,
+      "primary_location": {
+        "source": {
+          "display_name": "Open Access Government"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Nicolás Cuello"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "52",
+        "issue": "1",
+        "first_page": "262",
+        "last_page": "263"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.56367/oag-052-12863"
+        }
+      ]
+    }
+  ]
+}

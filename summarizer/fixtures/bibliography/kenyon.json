@@ -1,0 +1,266 @@
+{
+  "crossref": [
+    {
+      "publisher": "American Astronomical Society",
+      "published-print": {
+        "date-parts": [
+          [
+            2004,
+            10
+          ]
+        ]
+      },
+      "DOI": "10.1086/423697",
+      "type": "journal-article",
+      "page": "1916-1926",
+      "title": [
+        "The Size Distribution of Kuiper Belt Objects"
+      ],
+      "volume": "128",
+      "author": [
+        {
+          "given": "Scott J.",
+          "family": "Kenyon"
+        },
+        {
+          "given": "Benjamin C.",
+          "family": "Bromley"
+        }
+      ],
+      "container-title": [
+        "The Astronomical Journal"
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2004,
+            10
+          ]
+        ]
+      },
+      "published": {
+        "date-parts": [
+          [
+            2004,
+            10
+          ]
+        ]
+      }
+    }
+  ],
+  "ads": [
+    {
+      "bibcode": "2004AJ....128.1916K",
+      "author": [
+        "Kenyon, Scott J.",
+        "Bromley, Benjamin C."
+      ],
+      "doctype": "article",
+      "doi": [
+        "10.1086/423697",
+        "10.48550/arXiv.astro-ph/0406556"
+      ],
+      "page": [
+        "1916"
+      ],
+      "pub": "The Astronomical Journal",
+      "title": [
+        "The Size Distribution of Kuiper Belt Objects"
+      ],
+      "volume": "128",
+      "year": "2004",
+      "publisher": "IOP"
+    }
+  ],
+  "openalex": [
+    {
+      "id": "https://openalex.org/W2103528490",
+      "doi": "https://doi.org/10.1086/423697",
+      "display_name": "The Size Distribution of Kuiper Belt Objects",
+      "publication_year": 2004,
+      "primary_location": {
+        "source": {
+          "display_name": "The Astronomical Journal"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Scott J. Kenyon"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Benjamin C. Bromley"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "128",
+        "issue": "4",
+        "first_page": "1916",
+        "last_page": "1926"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1086/423697"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/astro-ph/0406556"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.astro-ph/0406556"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W2089361888",
+      "doi": "https://doi.org/10.1088/0004-6256/137/1/72",
+      "display_name": "THE SIZE DISTRIBUTION OF KUIPER BELT OBJECTS FORD≳ 10 km",
+      "publication_year": 2008,
+      "primary_location": {
+        "source": {
+          "display_name": "The Astronomical Journal"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Wesley C. Fraser"
+          }
+        },
+        {
+          "author": {
+            "display_name": "John J. Kavelaars"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "137",
+        "issue": "1",
+        "first_page": "72",
+        "last_page": "82"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1088/0004-6256/137/1/72"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/0810.2296"
+        },
+        {
+          "landing_page_url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.244.750"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.0810.2296"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W3036191601",
+      "doi": null,
+      "display_name": "The Size Distribution of Kuiper Belt Objects from a Deep HST/ACS Survey",
+      "publication_year": 2003,
+      "primary_location": {
+        "source": {
+          "display_name": "DPS"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "G. M. Bernstein"
+          }
+        },
+        {
+          "author": {
+            "display_name": "R. L. Allen"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Michael Ewart Brown"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Matthew J. Holman"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Renu Malhotra"
+          }
+        },
+        {
+          "author": {
+            "display_name": "David E. Trilling"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": null,
+        "issue": null,
+        "first_page": null,
+        "last_page": null
+      },
+      "locations": [
+        {
+          "landing_page_url": "http://ui.adsabs.harvard.edu/abs/2003DPS....35.4903B/abstract"
+        }
+      ]
+    },
+    {
+      "id": "https://openalex.org/W2005250422",
+      "doi": "https://doi.org/10.1088/0004-6256/146/2/36",
+      "display_name": "INITIAL PLANETESIMAL SIZES AND THE SIZE DISTRIBUTION OF SMALL KUIPER BELT OBJECTS",
+      "publication_year": 2013,
+      "primary_location": {
+        "source": {
+          "display_name": "The Astronomical Journal"
+        }
+      },
+      "type": "article",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Hilke E. Schlichting"
+          }
+        },
+        {
+          "author": {
+            "display_name": "Cesar I. Fuentes"
+          }
+        },
+        {
+          "author": {
+            "display_name": "David E. Trilling"
+          }
+        }
+      ],
+      "biblio": {
+        "volume": "146",
+        "issue": "2",
+        "first_page": "36",
+        "last_page": "36"
+      },
+      "locations": [
+        {
+          "landing_page_url": "https://doi.org/10.1088/0004-6256/146/2/36"
+        },
+        {
+          "landing_page_url": "http://arxiv.org/abs/1301.7433"
+        },
+        {
+          "landing_page_url": "https://authors.library.caltech.edu/41058/"
+        },
+        {
+          "landing_page_url": "https://doi.org/10.48550/arxiv.1301.7433"
+        }
+      ]
+    }
+  ]
+}

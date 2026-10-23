@@ -7764,6 +7764,148 @@ msgstr "Un fichier par champ"
 msgid "Remove file"
 msgstr "Retirer le fichier"
 
+#: templates/summarizer/refcheck_result.html:1
+msgid "Matching references with Crossref, NASA ADS and OpenAlex"
+msgstr "Recherche des références dans Crossref, NASA ADS et OpenAlex"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid ""
+"The lookup limit was reached. Some references could not be checked; no "
+"conclusion is drawn about their validity."
+msgstr ""
+"La limite de recherche a été atteinte. Certaines références n’ont pas pu "
+"être vérifiées ; aucune conclusion n’est tirée sur leur validité."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Some sources did not respond:"
+msgstr "Certaines sources n’ont pas répondu :"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Unresolved references can be checked again later."
+msgstr ""
+"Les références non résolues pourront être vérifiées à nouveau plus tard."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Reference to correct"
+msgstr "Référence à corriger"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Record found in %(source)s"
+msgstr "Notice retrouvée dans %(source)s"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Year"
+msgstr "Année"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Journal"
+msgstr "Revue"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Volume"
+msgstr "Volume"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Pages"
+msgstr "Pages"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Entry type"
+msgstr "Type d’entrée"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Suggested corrected entry — review before using"
+msgstr "Correction proposée — à relire avant utilisation"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Reference unresolved"
+msgstr "Référence non résolue"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid ""
+"No sufficiently reliable matching record was found in the sources consulted."
+" This reference is not necessarily incorrect."
+msgstr ""
+"Aucune correspondance suffisamment fiable n’a été retrouvée dans les sources"
+" consultées. Cette référence n’est pas nécessairement incorrecte."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "No discrepancy detected in the fields we could compare."
+msgstr ""
+"Aucune incohérence détectée dans les champs que nous avons pu comparer."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid ""
+"The arXiv record for %(id)s could not be verified. Check the identifier or "
+"try again later."
+msgstr ""
+"La notice arXiv de %(id)s n’a pas pu être vérifiée. Vérifiez l’identifiant "
+"ou réessayez plus tard."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "References identified without a detected discrepancy"
+msgstr "Références identifiées sans incohérence détectée"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid ""
+"Only fields supplied by the source can be compared. Identification does not "
+"independently verify every field or the absence of retractions."
+msgstr ""
+"Seuls les champs fournis par la source peuvent être comparés. "
+"L’identification ne vérifie pas indépendamment chaque champ ni l’absence de "
+"rétractation."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Final publication available"
+msgstr "Publication finale disponible"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid ""
+"This report predates the extended metadata checks. Run a new check to "
+"compare titles, years, journals, volumes, pages and entry types."
+msgstr ""
+"Ce rapport précède la vérification étendue des métadonnées. Lancez une "
+"nouvelle vérification pour comparer les titres, années, revues, volumes, "
+"pages et types d’entrée."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Run a new check"
+msgstr "Lancer une nouvelle vérification"
+
+#: templates/summarizer/refcheck_result.html:1
+msgid ""
+"Titles, years, journals, volumes, pages and article/book types compared with"
+" matching Crossref, NASA ADS and OpenAlex records, including references "
+"without a DOI or arXiv identifier."
+msgstr ""
+"Titres, années, revues, volumes, pages et types article/livre comparés aux "
+"notices correspondantes de Crossref, NASA ADS et OpenAlex, y compris pour "
+"les références sans DOI ni identifiant arXiv."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "%(n)s reference analysed."
+msgid_plural "%(n)s references analysed."
+msgstr[0] "%(n)s référence analysée."
+msgstr[1] "%(n)s références analysées."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "Publisher or catalogue metadata compared for %(n)s reference."
+msgid_plural "Publisher or catalogue metadata compared for %(n)s references."
+msgstr[0] ""
+"Métadonnées éditoriales ou de catalogue comparées pour %(n)s référence."
+msgstr[1] ""
+"Métadonnées éditoriales ou de catalogue comparées pour %(n)s références."
+
+#: templates/summarizer/refcheck_result.html:1
+msgid "%(n)s unresolved reference: this does not mean it is incorrect."
+msgid_plural ""
+"%(n)s unresolved references: this does not mean they are incorrect."
+msgstr[0] ""
+"%(n)s référence non résolue : cela ne signifie pas qu’elle est incorrecte."
+msgstr[1] ""
+"%(n)s références non résolues : cela ne signifie pas qu’elles sont "
+"incorrectes."
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."
