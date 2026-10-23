@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'What changed' %} | {{ title|truncatechars:70 }}{% endblock %}
 {% block extra_head_tags %}
-  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />
+  <style>.page .notice.comparison-limit { background:#fff8eb; color:#714b10; border:1px solid #ead09b; }</style>
+{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -23,16 +26,38 @@
     <p class="notice">{% trans 'This paper has only one version on arXiv so far.' %}</p>
     <p class="muted">{% trans 'Follow its citations from its page: you will also get an email when a new version comes out, with what changed.' %}</p>
   {% else %}
-    <form method="get" class="tool-row" style="margin-bottom:16px">
-      <label>{% trans 'From' %} <select name="from">{% for v in versions %}{% if v < latest %}<option value="{{ v }}"{% if v == old %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
-      <label>{% trans 'to' %} <select name="to">{% for v in versions %}{% if v > 1 %}<option value="{{ v }}"{% if v == new %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
+    <form method="get" class="tool-row" id="changes-versions" style="margin-bottom:16px">
+      <label>{% trans 'Older version' %} <select name="from">{% for v in versions %}{% if v < latest %}<option value="{{ v }}"{% if v == old %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
+      <label>{% trans 'Newer version' %} <select name="to">{% for v in versions %}{% if v > 1 %}<option value="{{ v }}"{% if v == new %} selected{% endif %}>v{{ v }}</option>{% endif %}{% endfor %}</select></label>
       <button class="btn btn-sm btn-ghost" type="submit">{% trans 'Compare' %}</button>
     </form>
+    {% if history %}
+    <details class="card section-card" id="changes-history" open>
+      <summary>{% trans 'Saved comparisons' %} ({{ history|length }})</summary>
+      <ul>{% for saved in history %}<li>
+        <a href="?from={{ saved.old }}&amp;to={{ saved.new }}"{% if saved.old == old and saved.new == new %} aria-current="page"{% endif %}>v{{ saved.old }} → v{{ saved.new }}</a>
+        · {% if saved.row.status == 'done' %}{% trans 'Ready' %}{% elif saved.row.status == 'pending' %}{% trans 'In progress' %}{% else %}{% trans 'Please try again' %}{% endif %}
+        · {{ saved.row.updated|date:'SHORT_DATETIME_FORMAT' }}
+      </li>{% endfor %}</ul>
+      <p class="muted">{% trans 'Comparisons are saved for each version pair and language. Opening a saved result does not generate it again.' %}</p>
+    </details>
+    {% endif %}
+    <aside class="notice{% if license_preview != 'allowed' %} comparison-limit{% endif %}" role="note" style="margin-bottom:20px">
+      <strong>{% trans 'What will be compared?' %}</strong>
+      {% if license_preview == 'restricted' %}
+        <p>{% trans "This paper's license does not allow us to read its full text. Only the titles, abstracts and authors' comments will be compared. Changes within the PDF, figures or results may be missed." %}</p>
+      {% elif license_preview == 'allowed' %}
+        <p>{% trans 'The license allows full-text analysis. We compare the text of both HTML versions when available. If either HTML version is missing, the comparison is limited to titles, abstracts and comments. PDF files and figure images are not compared.' %}</p>
+      {% else %}
+        <p>{% trans 'The license has not been verified yet. Full text will be compared only if the license permits it and both HTML versions are available; otherwise only titles, abstracts and comments will be used. PDF files and figure images are not compared.' %}</p>
+      {% endif %}
+    </aside>
     {% if result %}
     <section class="card section-card">
       <h2 style="margin-top:0">{% blocktrans with old=result.old new=result.new %}From v{{ old }} to v{{ new }}{% endblocktrans %}</h2>
       <p class="meta muted">{{ result.old_date }} → {{ result.new_date }}</p>
-      <p>{% if result.results_changed %}<span class="importance high">{% trans 'The results changed' %}</span>{% else %}<span class="importance low">{% trans 'Same main results' %}</span>{% endif %}</p>
+      <p>{% if not result.full_text %}<span class="importance">{% trans 'Limited comparison: abstracts and comments only' %}</span>{% elif result.results_changed %}<span class="importance high">{% trans 'The results changed' %}</span>{% else %}<span class="importance low">{% trans 'Same main results' %}</span>{% endif %}</p>
+      {% if result.source_scope == 'abstract_license' %}<p class="notice comparison-limit">{% trans 'Full text was not compared because its license does not permit it, or could not be verified.' %}</p>{% elif result.source_scope == 'abstract_unavailable' %}<p class="notice comparison-limit">{% trans 'The license permits reading, but at least one HTML version was unavailable. Full text was not compared.' %}</p>{% endif %}
       <p><strong>{{ result.verdict }}</strong></p>
       {% if result.new_comment %}<p class="muted">{% trans "The authors' comment:" %} <em>{{ result.new_comment }}</em></p>{% endif %}
       {% if result.changes %}
@@ -43,7 +68,7 @@
         {% endfor %}
       </ul>
       {% endif %}
-      {% if not result.full_text %}<p class="muted"><small>{% trans "This paper's license, or the lack of an HTML version, only lets us compare the abstracts and the authors' comments. Changes inside the paper may be missing." %}</small></p>{% endif %}
+      {% if not result.full_text and not result.source_scope %}<p class="muted"><small>{% trans "This paper's license, or the lack of an HTML version, only lets us compare the abstracts and the authors' comments. Changes inside the paper may be missing." %}</small></p>{% endif %}
       <p class="muted"><small>{% trans 'Written by AI from the two versions. Check in the paper before relying on it.' %}</small></p>
     </section>
     {% else %}
@@ -61,12 +86,22 @@
       var panel = document.getElementById('changes-working');
       function follow(id) {
         start.hidden = true;
-        SP.track(panel, id, function () { location.reload(); });
+        SP.track(panel, id, function () { location.assign('?from={{ old }}&to={{ new }}'); }, function () {
+          start.hidden = false;
+          document.getElementById('changes-go').disabled = false;
+        });
       }
       document.getElementById('changes-go').addEventListener('click', function () {
+        var button = this;
+        button.disabled = true;
+        panel.hidden = false;
         panel.dataset.started = '';
         SP.post('/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id|escapejs }}/start/', {from: {{ old }}, to: {{ new }}}).then(function (json) {
           if (json.id) follow(json.id);
+          else throw new Error('start failed');
+        }).catch(function () {
+          button.disabled = false;
+          panel.classList.add('is-failed');
         });
       });
       {% if row and row.status == 'pending' %}follow({{ row.pk }});{% endif %}
@@ -76,3 +111,5 @@
   {% endif %}
 </div>
 {% endblock %}
+
+{% block scripts %}<script defer src="{% static_v 'summarizer/js/changes.js' %}"></script>{% endblock %}

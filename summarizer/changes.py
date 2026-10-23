@@ -99,8 +99,18 @@ def arxiv_license(base):
 def can_read(base):
     """True when the paper's license lets us read its full text (the license is the same for every version):
     the license we stored when the paper was summarized, or the one arXiv gives."""
-    paper = ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v').exclude(license=None).first()
+    paper = (ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v')
+             .exclude(license=None).exclude(license='').first())
     return sources.is_open_license(paper.license if paper else arxiv_license(base))
+
+
+def license_preview(base):
+    """Use known licenses on page loads; never block the page on an OAI request."""
+    license = (ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v')
+               .exclude(license__isnull=True).exclude(license='')
+               .values_list('license', flat=True).first())
+    license = license or cache.get('arxiv-license:%s' % base)
+    return 'unknown' if not license else ('allowed' if sources.is_open_license(license) else 'restricted')
 
 
 def version_html(base, version):
@@ -139,6 +149,7 @@ def compare(base, old, new, lang, step=lambda name: None):
     """The comparison shown on the page and in the alerts."""
     before, after = version_record(base, old), version_record(base, new)
     full = can_read(base)
+    scope = 'full_text' if full else 'abstract_license'
     diff = ''
     if full:
         old_text, new_text = version_html(base, old), version_html(base, new)
@@ -147,6 +158,7 @@ def compare(base, old, new, lang, step=lambda name: None):
             diff = changed_paragraphs(old_text, new_text)
         else:
             full = False
+            scope = 'abstract_unavailable'
     step('write')
     material = '\n\n'.join('<version number="%d" date="%s">\nTitle: %s\nComment: %s\nAbstract: %s\n</version>' % (
         number, day(record), record['title'], record.get('comment', ''), record['abstract'])
@@ -157,7 +169,9 @@ def compare(base, old, new, lang, step=lambda name: None):
         'Above are two versions of the same arXiv paper: %s. Tell a researcher who read version %d what changed in '
         'version %d. Write in %s. List the changes that matter, most important first: changed results or numbers '
         '(give before and after), changed conclusions, method, data, an error fixed, figures, references, or only the '
-        'writing. Say plainly whether the main results changed. Do not invent changes you cannot see. No LaTeX, no '
+        'writing. Say plainly whether the main results changed. When only abstracts and comments are provided, '
+        'explicitly limit your verdict to those sources; never conclude that the full paper or its results are unchanged. '
+        'Do not invent changes you cannot see. No LaTeX, no '
         'markdown. Answer with a JSON object {"verdict": "one or two sentences", "results_changed": true|false, '
         '"changes": [{"kind": "results|conclusions|method|data|error_fix|figures|references|writing", "importance": '
         '"major|minor", "detail": "one or two sentences"}]}.' % (
@@ -170,7 +184,7 @@ def compare(base, old, new, lang, step=lambda name: None):
                 'detail': str(c.get('detail', '')).strip()}
                for c in answer.get('changes', []) if isinstance(c, dict) and str(c.get('detail', '')).strip()][:15]
     changes.sort(key=lambda c: c['importance'] != 'major')
-    return {'title': after['title'], 'old': old, 'new': new, 'full_text': full,
+    return {'title': after['title'], 'old': old, 'new': new, 'full_text': full, 'source_scope': scope,
             'old_date': day(before), 'new_date': day(after),
             'old_comment': before.get('comment', ''), 'new_comment': after.get('comment', ''),
             'verdict': str(answer.get('verdict', '')).strip(), 'results_changed': bool(answer.get('results_changed')),
@@ -304,7 +318,7 @@ def _versions(arxiv_id, request, ask_arxiv=True):
             pass
     if not latest:
         raise Http404
-    new = min(_number(request.GET.get('to') or request.POST.get('to'), latest), latest)
+    new = max(min(2, latest), min(_number(request.GET.get('to') or request.POST.get('to'), latest), latest))
     old = _number(request.GET.get('from') or request.POST.get('from'), new - 1)
     return base, latest, max(1, min(old, new - 1)), new
 
@@ -312,13 +326,27 @@ def _versions(arxiv_id, request, ask_arxiv=True):
 def changes_page(request, arxiv_id):
     paid = access.has_tool(request.user, 'changes')
     base, latest, old, new = _versions(arxiv_id, request, ask_arxiv=paid)
-    row = Generated.objects.filter(kind='changes', key=comparison_key(base, old, new),
-                                   lang=request.LANGUAGE_CODE).first() if paid and latest > 1 else None
+    rows = []
+    if paid and latest > 1:
+        prefix = base.replace('/', '--') + ':'
+        for saved in Generated.objects.filter(kind='changes', key__startswith=prefix,
+                                               lang=request.LANGUAGE_CODE).order_by('-updated'):
+            parts = saved.key[len(prefix):].split(':')
+            if len(parts) == 2 and all(p.isdigit() for p in parts):
+                a, b = map(int, parts)
+                if 1 <= a < b <= latest:
+                    rows.append({'row': saved, 'old': a, 'new': b})
+        if not request.GET.get('from') and not request.GET.get('to'):
+            recent = next((item for item in rows if item['row'].status in ('done', 'pending')), None)
+            if recent:
+                old, new = recent['old'], recent['new']
+    row = next((item['row'] for item in rows if (item['old'], item['new']) == (old, new)), None)
     title = ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v').values_list('title', flat=True).first()
     return render(request, 'summarizer/changes.html', {
         'arxiv_id': arxiv_id, 'base': base, 'site_base': base.replace('/', '--'), 'latest': latest, 'old': old,
         'new': new, 'versions': range(1, latest + 1), 'paid': paid, 'row': row, 'title': title or base,
-        'result': row.data() if row is not None and row.status == 'done' else None, 'steps': STEPS})
+        'result': row.data() if row is not None and row.status == 'done' else None, 'steps': STEPS,
+        'history': rows, 'license_preview': license_preview(base) if paid and latest > 1 else None})
 
 
 @require_POST
@@ -328,6 +356,8 @@ def changes_start(request, arxiv_id):
     base, latest, old, new = _versions(arxiv_id, request)
     if latest < 2:
         return JsonResponse({'status': 'one_version'})
+    if (str(old) != request.POST.get('from', str(old)) or str(new) != request.POST.get('to', str(new))):
+        return JsonResponse({'status': 'invalid_versions'}, status=400)
     lang = request.LANGUAGE_CODE
     row = generated.start('changes', comparison_key(base, old, new), lang, write(base, old, new, lang),
                           force=request.POST.get('again') == '1')

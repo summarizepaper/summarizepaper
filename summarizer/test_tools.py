@@ -691,6 +691,94 @@ Earlier work found no clouds at all \citet[see][]{pre,again}.
 
 
 class ChangesTests(ToolsTestCase):
+    def saved(self, old, new, lang='en', full=True):
+        return Generated.objects.create(kind='changes', key=changes.comparison_key('2101.00001', old, new),
+            lang=lang, status='done', content=json.dumps({'old': old, 'new': new, 'full_text': full,
+            'results_changed': False, 'verdict': 'Saved %s v%d-v%d' % (lang, old, new), 'changes': []}))
+
+    def test_history_keeps_each_pair_and_reopens_last_comparison(self):
+        self.paper()
+        client = self.client_for(self.user(paid=True))
+        first = self.saved(1, 2)
+        second = self.saved(2, 3)
+        self.saved(1, 3, lang='fr')
+        with mock.patch('summarizer.changes.latest_version', return_value=3), \
+             mock.patch('summarizer.changes.compare') as compare:
+            page = client.get('/en/changes/2101.00001v1/')
+            self.assertContains(page, 'Saved en v2-v3')
+            self.assertContains(page, '?from=1&amp;to=2')
+            self.assertNotContains(page, 'Saved fr')
+            self.assertEqual(len(page.context['history']), 2)
+            self.assertContains(client.get('/en/changes/2101.00001v1/?from=1&to=2'), 'Saved en v1-v2')
+            response = client.post('/en/changes/2101.00001v1/start/', {'from': 1, 'to': 2})
+            self.assertEqual(response.json()['id'], first.pk)
+            self.assertEqual(Generated.objects.filter(pk__in=[first.pk, second.pk], status='done').count(), 2)
+            compare.assert_not_called()
+
+    def test_selected_pair_controls_start_text_and_pending_resume(self):
+        self.paper()
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.changes.latest_version', return_value=3):
+            page = client.get('/en/changes/2101.00001v1/?from=2&to=3')
+            self.assertContains(page, 'Compare v2 with v3')
+            self.assertContains(page, 'changes.js')
+            row = Generated.objects.create(kind='changes', key=changes.comparison_key('2101.00001', 2, 3), lang='en')
+            page = client.get('/en/changes/2101.00001v1/')
+            self.assertEqual((page.context['old'], page.context['new']), (2, 3))
+            self.assertContains(page, 'follow(%d)' % row.pk)
+
+    def test_restricted_license_warning_precedes_generation_and_partial_badge_is_honest(self):
+        paper = self.paper()
+        paper.license = 'http://arxiv.org/licenses/nonexclusive-distrib/1.0/'
+        paper.save()
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.changes.latest_version', return_value=2), \
+             mock.patch('summarizer.changes.requests.get') as get:
+            page = client.get('/en/changes/2101.00001v1/')
+            self.assertContains(page, 'Only the titles, abstracts')
+            self.assertLess(page.content.index(b'Only the titles'), page.content.index(b'id="changes-go"'))
+            self.saved(1, 2, full=False)
+            page = client.get('/en/changes/2101.00001v1/')
+            self.assertContains(page, 'Limited comparison: abstracts and comments only')
+            self.assertNotContains(page, 'Same main results')
+            get.assert_not_called()
+
+    def test_unknown_license_preview_does_not_query_oai(self):
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.changes.latest_version', return_value=2), \
+             mock.patch('summarizer.changes.requests.get') as get:
+            self.assertContains(client.get('/en/changes/2101.00001v1/'), 'The license has not been verified yet')
+            get.assert_not_called()
+
+    def test_invalid_pair_cannot_start_generation(self):
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.changes.latest_version', return_value=3), \
+             mock.patch('summarizer.generated.start') as start:
+            for old, new in [(2, 2), (3, 2), (0, 3), (1, -1), (1, 9), ('x', 3)]:
+                self.assertEqual(client.post('/en/changes/2101.00001v1/start/', {'from': old, 'to': new}).status_code, 400)
+            start.assert_not_called()
+
+    def test_missing_html_is_distinguished_from_license_restriction(self):
+        self.paper()
+        with mock.patch('summarizer.changes.version_record', return_value=self.record(1, 'Abstract')), \
+             mock.patch('summarizer.changes.version_html', side_effect=[['Text'], []]), \
+             mock.patch('summarizer.generated.chat_json', return_value={'verdict': 'Limited', 'changes': []}):
+            result = changes.compare('2101.00001', 1, 2, 'en')
+        self.assertFalse(result['full_text'])
+        self.assertEqual(result['source_scope'], 'abstract_unavailable')
+
+    def test_partial_comparison_email_does_not_claim_unchanged_results(self):
+        from django.template.loader import render_to_string
+        item = {'title': 'Example', 'old': 1, 'new': 2, 'full_text': False, 'results_changed': False,
+                'verdict': 'Only the abstract was read.', 'changes': [], 'url': '/en/changes/example/'}
+        with translation.override('en'):
+            html = render_to_string('changes/email.html', {'items': [item], 'count': 1})
+            text = render_to_string('changes/email.txt', {'items': [item], 'count': 1})
+        for content in (html, text):
+            self.assertIn('Limited comparison: abstracts and comments only', content)
+            self.assertNotIn('Same main results', content)
+        self.assertIn('border-left:3px solid #ddd;', html)
+
     def record(self, version, abstract, comment=''):
         return {'arxiv_id': '2101.00001v%d' % version, 'title': 'Clouds on a hot planet', 'abstract': abstract,
                 'comment': comment, 'published': timezone.now(), 'updated': timezone.now(), 'authors': [],

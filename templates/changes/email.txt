@@ -1,5 +1,5 @@
 {% load i18n %}{% autoescape off %}{% for item in items %}== {{ item.title }} (v{{ item.old }} → v{{ item.new }}) ==
-{% if item.results_changed %}{% trans 'The results changed' %}{% else %}{% trans 'Same main results' %}{% endif %}. {{ item.verdict }}
+{% if not item.full_text %}{% trans "Limited comparison: abstracts and comments only" %}{% elif item.results_changed %}{% trans 'The results changed' %}{% else %}{% trans 'Same main results' %}{% endif %}. {{ item.verdict }}
 {% for c in item.changes|slice:":5" %}- {{ c.detail }}
 {% endfor %}{{ item.url }}
 

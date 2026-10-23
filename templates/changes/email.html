@@ -5,9 +5,9 @@
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
     <p style="margin:0 0 24px;color:#666;">{% blocktrans count n=count %}A paper you follow has a new version{% plural %}{{ n }} papers you follow have a new version{% endblocktrans %}</p>
     {% for item in items %}
-    <div style="border-left:3px solid {% if item.results_changed %}#dc2626{% else %}#ddd{% endif %};padding:4px 0 4px 12px;margin:0 0 18px;">
+    <div style="border-left:3px solid {% if item.full_text and item.results_changed %}#dc2626{% else %}#ddd{% endif %};padding:4px 0 4px 12px;margin:0 0 18px;">
       <a href="{{ item.url }}" style="color:#1a0dab;font-weight:bold;text-decoration:none;">{{ item.title }}</a>
-      <div style="color:#666;font-size:13px;">v{{ item.old }} → v{{ item.new }} · {% if item.results_changed %}<strong style="color:#991b1b">{% trans 'The results changed' %}</strong>{% else %}{% trans 'Same main results' %}{% endif %}</div>
+      <div style="color:#666;font-size:13px;">v{{ item.old }} → v{{ item.new }} · {% if not item.full_text %}{% trans "Limited comparison: abstracts and comments only" %}{% elif item.results_changed %}<strong style="color:#991b1b">{% trans 'The results changed' %}</strong>{% else %}{% trans 'Same main results' %}{% endif %}</div>
       <div style="font-size:14px;line-height:1.5;margin-top:4px;">{{ item.verdict }}</div>
       <ul style="font-size:14px;line-height:1.5;margin:6px 0 0;padding-left:18px;">{% for c in item.changes|slice:":5" %}<li>{{ c.detail }}</li>{% endfor %}</ul>
     </div>
