@@ -1773,144 +1773,50 @@ ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=20)
 
 
 async def get_arxiv_metadata(arxiv_id):
-    from . import sources
+    """The Atom record is required; a separate license-service failure is not fatal."""
+    from django.core.cache import cache
     if sources.is_external(arxiv_id):
         return await asyncio.to_thread(sources.in_thread, sources.metadata_list, arxiv_id)
-    print('aaa',arxiv_id)
-    if '--' in arxiv_id:
-        print('arxiv_id1',arxiv_id)
-        arxiv_id=arxiv_id.replace('--','/')
-        print('arxiv_id2',arxiv_id)
-
-
-    url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
-
+    identifier = arxiv_id.replace('--', '/')
+    key = 'arxiv-metadata-v2:' + identifier
+    cached = await cache.aget(key)
+    if cached is not None:
+        return cached
+    base = re.sub(r'v\d+$', '', identifier)
+    ns = {'a': 'http://www.w3.org/2005/Atom', 'arxiv': 'http://arxiv.org/schemas/atom'}
     async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
-        async with session.get(url) as response:
-            try:
-                print('in try arxiv',response.status)
-                if response.status != 200:
-                    print("in ! 200 arxiv")
-                    raise Exception(f"Failed to retrieve data: {response.text}")
-            except Exception as e:
-                print('in redirect arxiv')
+        async with session.get('https://export.arxiv.org/api/query', params={'id_list': identifier}) as response:
+            if response.status != 200:
+                raise sources.SourceUnavailable('arXiv metadata HTTP %s' % response.status)
             data = await response.text()
-
-    #response = requests.get(url)
-    #if response.status_code != 200:
-    #    raise Exception(f"Failed to retrieve data: {response.text}")
-
-    arxiv_id2= re.sub(r'v\d+$', '', arxiv_id)
-    print('2',arxiv_id2)  # need to remove v1 or v2 as license is not found otherwise
-    url2=f"https://oaipmh.arxiv.org/oai?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id2}&metadataPrefix=arXiv"
-
-    async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
-        async with session.get(url2) as response:
+        root = ElementTree.fromstring(data)
+        if root.tag != '{http://www.w3.org/2005/Atom}feed':
+            raise sources.SourceUnavailable('Invalid arXiv Atom response')
+        entry = next((e for e in root.findall('a:entry', ns)
+                      if re.sub(r'v\d+$', '', e.findtext('a:id', '', ns).split('/abs/')[-1]) == base), None)
+        if entry is None:
+            return [0, [], [], '', '', '', '', '', '', '', '', '', '', data]
+        license_value = await cache.aget('arxiv-license:' + base) or ''
+        if not license_value:
             try:
-                print('in try arxiv2',response.status)
-                if response.status != 200:
-                    print("in ! 200 arxiv2")
-                    raise Exception(f"Failed to retrieve data2: {response.text}")
-            except Exception as e:
-                print('in redirect arxiv2')
-            data2 = await response.text()
-
-    #response2 = requests.get(url2)
-
-    #data = response.text
-    print('data',data)
-
-    #data2 = response2.text
-    print('data2',data2)
-
-    # Parse the XML response
-    root = ElementTree.fromstring(data)
-
-    root2 = ElementTree.fromstring(data2)
-
-    # find and modify the value of an element
-
-    #arxiv = root2.find(".//{http://arxiv.org/OAI/arXiv/}arXiv")
-    ns = {'arxiv': 'http://arxiv.org/OAI/arXiv/'}
-    arxiv = root2.find('.//arxiv:arXiv', ns)
-    license_value=''
-
-    if arxiv is not None:
-        license_tag = arxiv.find('arxiv:license', ns)
-        #license_tag = arxiv.find('.//license')
-
-        if license_tag is not None:
-            license_value = license_tag.text
-            print(f"The license tag value is: {license_value}")
-        else:
-            #license_value=''
-            print("The license tag was not found.")
-
-    #for arxiv in root2.findall('.//{http://arxiv.org/OAI/arXiv/}arXiv'):
-    #    print('a',arxiv)
-    #    license_tag = arxiv.find('license').text
-    #    print(f"The value of the 'license' tag is: {license_tag}")
-
-
-
-    ns = {'ns0': 'http://www.w3.org/2005/Atom','ns1':'http://a9.com/-/spec/opensearch/1.1/','ns2':'http://arxiv.org/schemas/atom'} # add more as needed
-    tit=root.find('ns0:title', ns).text
-
-    # Extract the authors, title, and abstract
-
-    #check if exists
-    exist=0
-    authors=""
-    affiliation=""
-    link_hp=""
-    title=""
-    link_doi=""
-    abstract=""
-    cat=""
-    updated=""
-    published=""
-    journal_ref=""
-    comments=""
-
-    for entry in root.findall("ns0:entry",ns):
-        if entry.find("ns0:title",ns) is not None:
-            exist=1
-            print('exist',exist)
-
-
-    if exist == 1:
-        authors = []
-        affiliation = []
-        title = ""
-        abstract = ""
-        for entry in root.findall("ns0:entry",ns):
-            for author in entry.findall("ns0:author",ns):
-                authors.append(author.find("ns0:name",ns).text)
-                print('test')
-                if author.find("ns2:affiliation",ns) is not None:
-                    print('aff',author.find("ns2:affiliation",ns).text)
-                    affiliation.append(author.find("ns2:affiliation",ns).text)
-                else:
-                    affiliation.append('')
-
-            link_hp = entry.find("ns0:id",ns).text
-            title = entry.find("ns0:title",ns).text
-            link_doi = entry.find("ns0:link",ns).attrib['href']
-            abstract = entry.find("ns0:summary",ns).text
-            if entry.find("ns2:primary_category",ns) is not None:
-                cat = entry.find("ns2:primary_category",ns).attrib['term']
-            updated = entry.find("ns0:updated",ns).text
-            if entry.find("ns0:published",ns) is not None:
-                published = entry.find("ns0:published",ns).text
-            #print('kllll',entry.find("ns2:journal_ref",ns))
-            if entry.find("ns2:journal_ref",ns) is not None:
-                journal_ref = entry.find("ns2:journal_ref",ns).text
-            else:
-                journal_ref = ''
-            if entry.find("ns2:comment",ns) is not None:
-                comments = entry.find("ns2:comment",ns).text
-            else:
-                comments = ''
-
-
-    return [exist, authors, affiliation, link_hp, title, link_doi, abstract, cat, updated, published, journal_ref, comments,license_value,data]
+                async with session.get('https://oaipmh.arxiv.org/oai', params={
+                        'verb': 'GetRecord', 'identifier': 'oai:arXiv.org:' + base, 'metadataPrefix': 'arXiv'},
+                        timeout=aiohttp.ClientTimeout(total=8)) as response:
+                    if response.status == 200:
+                        license_root = ElementTree.fromstring(await response.text())
+                        license_value = license_root.findtext('.//{http://arxiv.org/OAI/arXiv/}license', '') or ''
+                        if license_value:
+                            await cache.aset('arxiv-license:' + base, license_value, 86400)
+            except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError):
+                pass  # Unknown license stays restricted; metadata remains usable.
+    authors = [a.findtext('a:name', '', ns) for a in entry.findall('a:author', ns)]
+    affiliation = [a.findtext('arxiv:affiliation', '', ns) for a in entry.findall('a:author', ns)]
+    doi = entry.findtext('arxiv:doi', '', ns)
+    category = entry.find('arxiv:primary_category', ns)
+    result = [1, authors, affiliation, entry.findtext('a:id', '', ns), entry.findtext('a:title', '', ns),
+              'https://doi.org/' + doi if doi else '', entry.findtext('a:summary', '', ns),
+              category.get('term', '') if category is not None else '', entry.findtext('a:updated', '', ns),
+              entry.findtext('a:published', '', ns), entry.findtext('arxiv:journal_ref', '', ns),
+              entry.findtext('arxiv:comment', '', ns), license_value, data]
+    await cache.aset(key, result, 900 if license_value else 60)
+    return result

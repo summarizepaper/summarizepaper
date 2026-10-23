@@ -4,7 +4,7 @@ import re
 from django import template
 from django.utils.safestring import mark_safe
 
-from summarizer import keypoints
+from summarizer import keypoints, summary_text
 
 register = template.Library()
 
@@ -28,3 +28,8 @@ def plaintext(value):
 def keypoint(value):
     """A key point as safe HTML: no markdown, short leading label in bold."""
     return mark_safe(keypoints.point_html(str(value or '')))
+
+
+@register.filter
+def lay_summary(value):
+    return mark_safe(summary_text.lay_html(value))

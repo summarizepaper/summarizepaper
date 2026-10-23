@@ -4,11 +4,11 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 function harness({fragmentOK = true, command = 'start_background_task'} = {}) {
-  const events = {}, requests = [], sockets = [], tabs = [], panels = [], analytics = [];
+  const events = {}, requests = [], sockets = [], tabs = [], panels = [], analytics = [], prose = [];
   const el = () => ({dataset:{}, style:{}, hidden:false, textContent:'', children:[],
-    classList:{add() {}}, addEventListener(t, fn) {this[t] = fn;},
+    classList:{add(name) {this[name] = true;}}, addEventListener(t, fn) {this[t] = fn;},
     setAttribute() {}, replaceChildren(...nodes) {this.children = nodes; this.textContent = '';},
-    appendChild(node) {this.children.push(node);}});
+    appendChild(node) {this.children.push(node);}, append(...nodes) {this.children.push(...nodes);}});
   const status = el(), retry = el(), progress = el(), page = el(), title = el();
   for (let i=0; i<4; i++) {tabs.push(Object.assign(el(), {dataset:{liveTab:String(i)}})); panels.push(el());}
   const scope = Object.assign(el(), {querySelector: () => el()});
@@ -24,7 +24,7 @@ function harness({fragmentOK = true, command = 'start_background_task'} = {}) {
     window:{umami:{track(name) {analytics.push(name);}}, scrollY:12, scrollTo() {}, addEventListener() {}},
     history:{state:null, replaceState(_,__,url) {replacedURL = url;}},
     SPPaper:{init() {inits++;}}, switchTab(i) {selected=i;},
-    DOMParser: class {parseFromString() {return {querySelector: () => detail};}},
+    DOMParser: class {parseFromString(html) {if(html==='<div/>')return {querySelector: () => detail}; prose.push(html); return {querySelectorAll:()=>[],body:{querySelectorAll:()=>[],childNodes:[{tagName:'OL'}]}};}},
     setTimeout(fn) {events.reconnect=fn; return 1;}, clearTimeout() {},
     setInterval(fn) {events.poll=fn; return 2;}, clearInterval() {},
     WebSocket: class {constructor() {sockets.push(this); this.sent=[];} send(data) {this.sent.push(JSON.parse(data));} close() {this.closed=true;}},
@@ -32,7 +32,7 @@ function harness({fragmentOK = true, command = 'start_background_task'} = {}) {
   };
   vm.runInNewContext(fs.readFileSync('static/summarizer/js/paper-live.js','utf8'),context);
   function emit(state) {sockets.at(-1).onmessage({data:JSON.stringify({type:'synthesis_snapshot',state})});}
-  return {box, status, progress, retry, page, panels, sockets, tabs, events, requests, emit, removedScripts, analytics,
+  return {box, status, progress, retry, page, panels, sockets, tabs, events, requests, emit, removedScripts, analytics, prose,
     fixed() {fragmentFailure=false;}, get inits(){return inits;}, get url(){return replacedURL;}, get selected(){return selected;}};
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -64,4 +64,16 @@ test('failed final fetch preserves partial results and the retry installs tools'
   const h=harness({fragmentOK:false}); h.emit({summary:'Keep this',progress:{progress:100}}); await settle();
   assert.equal(h.panels[0].textContent,'Keep this'); assert.equal(h.inits,0); assert.equal(h.retry.hidden,false);
   h.fixed(); h.retry.click(); await settle(); assert.equal(h.inits,1);
+});
+
+
+test('live lay summaries use the safe structured version, including after plain-text snapshots', () => {
+  const h=harness();
+  h.emit({lay_summary:'Résumé 1. Une idée.'});
+  assert.equal(h.panels[2].textContent,'Résumé 1. Une idée.');
+  h.emit({lay_summary:'Résumé 1. Une idée.',lay_summary_html:'<ol><li>Une idée.</li></ol>'});
+  assert.equal(h.panels[2].style.whiteSpace,'normal');
+  assert.equal(h.panels[2].classList['paper-lay-summary'],true);
+  assert.equal(h.panels[2].children[0].tagName,'OL');
+  assert.deepEqual(h.prose,['<ol><li>Une idée.</li></ol>']);
 });

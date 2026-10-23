@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n seo %}
 {% load dash_slash %}
 
 <!DOCTYPE html>
@@ -146,7 +146,7 @@
     </div>
     <div class="lay-summary">
         <h2>{% trans 'AI-generated Lay Summary' %}</h2>
-        <p>{{ sumpaper.lay_summary }}</p>
+        {{ sumpaper.lay_summary|lay_summary }}
     </div>
     <div class="blog">
         <h2>{% trans 'AI-generated Blog-like Article' %}</h2>

@@ -171,6 +171,12 @@
 .message-content { margin-top: 20px; }
 .message-tab { font-size: 16px; line-height: 1.75; color: #33333f; }
 .message-tab ul li { margin-bottom: 8px; }
+.message-tab .paper-key-points,.message-tab>ul,.message-tab ol{list-style-position:outside;padding-left:1.6em;margin:1em 0}
+.message-tab .paper-key-points,.message-tab>ul{list-style-type:disc}
+.message-tab ol{list-style-type:decimal}
+.message-tab .paper-key-points li,.paper-lay-summary li{padding-left:.3em;margin-bottom:.8em}
+.message-tab .paper-key-points li::marker{color:var(--accent,#5446c0)}
+.paper-lay-summary p{margin:0 0 1em}.paper-lay-summary h3{font-size:1.05em;margin:1.4em 0 .6em}
 .message-tab h1, .message-tab h2, .message-tab h3 { color: var(--text); }
 .results-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
 .results-footer .info-block { margin: 0; }
@@ -477,7 +483,7 @@
     </div>
     {% else %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% if arxiv_id|is_external %}{% trans 'not stated (all rights reserved)' %}{% else %}<a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a>{% endif %}</div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% trans 'not stated (all rights reserved)' %}</div>
     </div>
     {% endif %}
     <div class="paper-details">

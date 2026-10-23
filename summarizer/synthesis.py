@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_GET
 
-from . import sources, utils
+from . import sources, utils, summary_text
 from .models import ArxivPaper, SummaryPaper, PaperText
 
 
@@ -28,6 +28,8 @@ def snapshot(arxiv_id, lang):
         status = 'done'
     else:
         status = 'running' if running else 'idle'
+    if data.get('lay_summary'):
+        data['lay_summary_html'] = summary_text.lay_html(data['lay_summary'])
     return dict(data, status=status)
 
 

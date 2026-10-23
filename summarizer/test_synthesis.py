@@ -96,3 +96,119 @@ class SynthesisTests(TestCase):
         html = r.content.decode()
         self.assertIn('Abstract et métadonnées uniquement', html)
         self.assertLess(html.index('class="source-scope"'), html.index('name="run_button"'))
+
+
+class SummaryPresentationTests(TestCase):
+    def test_legacy_glued_heading_numbered_lists_paragraphs_and_definitions(self):
+        from .summary_text import lay_html
+        html = lay_html('Résumé 1. Des rochers apportent de l’eau.\n\n2. La vapeur voyage.\n\nDéfinitions :\n- **Vapeur :** De l’eau gazeuse.\n\nUn dernier paragraphe.')
+        soup = BeautifulSoup(html, 'html.parser')
+        self.assertEqual([li.get_text() for li in soup.select('ol > li')], ['Des rochers apportent de l’eau.', 'La vapeur voyage.'])
+        self.assertEqual(len(soup.select('ol')), 1)
+        self.assertEqual(soup.h3.get_text(), 'Définitions')
+        self.assertEqual(soup.select_one('ul strong').get_text(), 'Vapeur :')
+        self.assertEqual(soup.p.get_text(), 'Un dernier paragraphe.')
+        self.assertNotIn('Résumé 1.', soup.get_text())
+
+    def test_inline_numbering_does_not_split_decimals_or_execute_markup(self):
+        from .summary_text import lay_html
+        soup = BeautifulSoup(lay_html('Summary: 1. At 1.3 mm, $M_{\\oplus}$ is measured. 2. <img src=x onerror=bad()>'), 'html.parser')
+        self.assertEqual(len(soup.select('ol > li')), 2)
+        self.assertIn('1.3 mm', soup.li.get_text())
+        self.assertIn('$M_{\\oplus}$', soup.li.get_text())
+        self.assertIsNone(soup.img)
+
+    def test_existing_results_keep_bullets_and_format_lay_summary_without_arxiv(self):
+        paper = ArxivPaper.objects.create(arxiv_id='2607.11677v1', title='Public test')
+        SummaryPaper.objects.create(paper=paper, lang='fr', notes='- **Résultat :** Un point.\n- Une limite.',
+                                   lay_summary='Résumé 1. Une idée simple.\n2. Une autre idée.')
+        with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=AssertionError('should use stored paper')):
+            r = self.client.get('/fr/paper/2607.11677v1/')
+        self.assertEqual(r.status_code, 200)
+        soup = BeautifulSoup(r.content, 'html.parser')
+        self.assertEqual(len(soup.select('.paper-key-points > li')), 2)
+        self.assertEqual(len(soup.select('.paper-lay-summary ol > li')), 2)
+        self.assertNotIn('list-style: none', str(soup.select_one('.paper-key-points')))
+        self.assertNotIn('ASSUMED 1991-2003', r.content.decode())
+
+    def test_source_error_is_translated_in_french(self):
+        import asyncio
+        with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError):
+            r = self.client.get('/fr/paper/2607.99999v1/')
+        self.assertContains(r, 'Le service arXiv est temporairement indisponible.', status_code=503)
+        self.assertNotContains(r, 'arXiv is not responding', status_code=503)
+
+    def test_live_snapshot_and_socket_share_the_safe_lay_format(self):
+        from .consumers import HeadlessSummary
+        cache.clear()
+        consumer = HeadlessSummary('2607.11677v1', 'fr')
+        consumer.channel_layer = mock.Mock(group_send=mock.AsyncMock())
+        async_to_sync(consumer.send_message_laysum)('Résumé 1. Un résultat.\n2. Une limite.')
+        data = synthesis.snapshot('2607.11677v1', 'fr')
+        event = consumer.channel_layer.group_send.call_args.args[1]
+        self.assertEqual(event['html'], data['lay_summary_html'])
+        self.assertIn('<ol>', event['html'])
+
+
+class ArxivMetadataResilienceTests(TestCase):
+    ATOM = '''<feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom"><title>Query</title><entry>
+    <id>http://arxiv.org/abs/2607.11677v1</id><title>Paper title</title><summary>Public abstract</summary>
+    <updated>2026-07-01T00:00:00Z</updated><published>2026-07-01T00:00:00Z</published>
+    <author><name>Example</name></author><arxiv:primary_category term="astro-ph.EP"/>
+    </entry></feed>'''
+
+    def setUp(self):
+        cache.clear()
+
+    def response(self, body, status=200, error=None):
+        response = mock.Mock(status=status, text=mock.AsyncMock(return_value=body))
+        manager = mock.MagicMock()
+        manager.__aenter__ = mock.AsyncMock(return_value=response, side_effect=error)
+        manager.__aexit__ = mock.AsyncMock(return_value=False)
+        return manager
+
+    def session(self, responses):
+        session = mock.Mock(get=mock.Mock(side_effect=responses))
+        manager = mock.MagicMock()
+        manager.__aenter__ = mock.AsyncMock(return_value=session)
+        manager.__aexit__ = mock.AsyncMock(return_value=False)
+        return manager, session
+
+    def test_license_timeout_or_invalid_xml_does_not_hide_valid_metadata(self):
+        import asyncio
+        for oai in [self.response('', error=asyncio.TimeoutError()), self.response('<html>down'), self.response('', status=503)]:
+            cache.clear()
+            manager, session = self.session([self.response(self.ATOM), oai])
+            with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager):
+                data = async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
+            self.assertEqual(data[0], 1)
+            self.assertEqual(data[4], 'Paper title')
+            self.assertEqual(data[12], '')
+            self.assertFalse(utils.sources.is_open_license(data[12]))
+
+    def test_positive_records_are_cached_and_no_license_is_fabricated(self):
+        manager, session = self.session([self.response(self.ATOM), self.response('<oai/>')])
+        with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager) as connect:
+            first = async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
+            second = async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
+        self.assertEqual(first, second)
+        self.assertEqual(connect.call_count, 1)
+        self.assertEqual(first[12], '')
+
+    def test_primary_http_errors_stop_before_license_lookup_and_are_not_cached(self):
+        manager, session = self.session([self.response('<html>Rate limited</html>', status=429)])
+        with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager):
+            with self.assertRaises(utils.sources.SourceUnavailable):
+                async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
+        self.assertEqual(session.get.call_count, 1)
+        self.assertIsNone(cache.get('arxiv-metadata-v2:2607.11677v1'))
+
+    def test_known_license_can_be_reused_without_contacting_the_license_service(self):
+        license = 'https://creativecommons.org/licenses/by/4.0/'
+        cache.set('arxiv-license:2607.11677', license)
+        manager, session = self.session([self.response(self.ATOM)])
+        with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager):
+            result = async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
+        self.assertEqual(result[12], license)
+        self.assertTrue(utils.sources.is_open_license(result[12]))
+        self.assertEqual(session.get.call_count, 1)

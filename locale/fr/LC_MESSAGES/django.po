@@ -9402,3 +9402,8 @@ msgstr "Vérification des pages institutionnelles"
 
 msgid "Potential contacts: confirm the current position and availability before applying."
 msgstr "Contacts potentiels : confirmez le poste actuel et la disponibilité avant de candidater."
+
+msgid "arXiv is not responding right now. Please try again in a moment."
+msgstr ""
+"Le service arXiv est temporairement indisponible. Veuillez réessayer dans un"
+" instant."

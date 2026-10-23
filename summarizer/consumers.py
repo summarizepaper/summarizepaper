@@ -5,7 +5,7 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, keypoints, similar, sources
+from summarizer import access, assistant, keypoints, similar, sources, summary_text
 import logging
 
 logger = logging.getLogger(__name__)
@@ -218,7 +218,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
     async def send_message_laysum(self,laysum):
         synthesis.remember(self.arxiv_group_name, 'lay_summary', laysum)
         await self.channel_layer.group_send(
-            self.arxiv_group_name, {"type": "progress_laysum_update", "message": laysum}
+            self.arxiv_group_name, {"type": "progress_laysum_update", "message": laysum, "html": summary_text.lay_html(laysum)}
         )
 
     async def send_message_blog(self,blog):
@@ -544,7 +544,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
-        suma=[sum.replace(':\n', ''),laysum.replace(':\n', ''),notes,blog,kw]
+        suma=[sum,laysum,notes,blog,kw]
         return suma
 
     def updatesumpaper(self,arxiv_id,language,sumarray):
@@ -1080,6 +1080,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         await self.send(text_data=json.dumps({
             'type': 'progress_laysum_update',
+            'html': event.get('html'),
             'message': event['message']
         }))
 

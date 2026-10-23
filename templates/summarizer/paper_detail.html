@@ -38,7 +38,7 @@
     </div>
     {% else %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% if arxiv_id|is_external %}{% trans 'not stated (all rights reserved)' %}{% else %}<a href="http://arxiv.org/licenses/assumed-1991-2003/" target="_blank">ASSUMED 1991-2003</a>{% endif %}</div>
+      <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% trans 'not stated (all rights reserved)' %}</div>
     </div>
     {% endif %}
     </div>
@@ -56,14 +56,14 @@
       <div class="message-tab">{% if sumpaper.summary %}{{ sumpaper.summary }}{% else %}{% trans 'The summary is not ready yet' %}{% endif %}</div>
       <div class="message-tab" style="display:none;">
         {% if sumpaper.notes %}
-        <ul style="list-style: none;padding-left: 20px; text-indent: -10px;">
+        <ul class="paper-key-points">
         {% for note in notes %}
           <li>{{ note|keypoint }}</li>
         {% endfor %}
         </ul>
         {% else %}{% trans 'The key points are not ready yet' %}{% endif %}
       </div>
-      <div class="message-tab" style="display:none;white-space: pre-line;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
+      <div class="message-tab paper-lay-summary" style="display:none;">{% if sumpaper.lay_summary %}{{ sumpaper.lay_summary|lay_summary }}{% else %}{% trans "The Layman's summary is not ready yet" %}{% endif %}</div>
       <div class="message-tab" style="display:none;">{% if sumpaper.blog %}{{ sumpaper.blog|safe }}{% else %}{% trans 'The blog article is not ready yet' %}{% endif %}</div>
     </div>
 

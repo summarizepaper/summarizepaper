@@ -40,13 +40,14 @@
     switchTab(index);
     box.querySelectorAll('[data-live-tab]').forEach(function (tab) {tab.setAttribute('aria-selected', String(Number(tab.dataset.liveTab) === index));});
   }
-  function section(field, content) {
+  function section(field, content, html) {
     var index = fields.indexOf(field), panel = box.querySelector('#live-panel-' + index);
-    if (!panel || content == null || seen[field] === JSON.stringify(content)) return;
-    seen[field] = JSON.stringify(content); panel.replaceChildren();
-    if (field === 'blog') {var prose = safeProse(content); panel.append.apply(panel, Array.from(prose.childNodes));}
+    if (!panel || content == null || seen[field] === JSON.stringify([content, html])) return;
+    seen[field] = JSON.stringify([content, html]); panel.replaceChildren();
+    if (field === 'lay_summary' && html) {var formatted = safeProse(html); panel.style.whiteSpace = 'normal'; panel.classList.add('paper-lay-summary'); panel.append.apply(panel, Array.from(formatted.childNodes));}
+    else if (field === 'blog') {var prose = safeProse(content); panel.append.apply(panel, Array.from(prose.childNodes));}
     else if (field === 'notes') {
-      var ul = document.createElement('ul');
+      var ul = document.createElement('ul'); ul.className = 'paper-key-points';
       (Array.isArray(content) ? content : [content]).forEach(function (point) {var li = document.createElement('li'); var prose = safeProse(point); li.append.apply(li, Array.from(prose.childNodes)); ul.appendChild(li);});
       panel.appendChild(ul);
     } else {panel.textContent = String(content); panel.style.whiteSpace = 'pre-line';}
@@ -86,7 +87,7 @@
   }
   function update(state) {
     if (state.metadata && state.metadata.title) {var title = box.querySelector("#live-title"); title.textContent = state.metadata.title; title.hidden = false;}
-    fields.forEach(function (field) {if (state[field] != null) section(field, state[field]);});
+    fields.forEach(function (field) {if (state[field] != null) section(field, state[field], field === 'lay_summary' ? state.lay_summary_html : null);});
     if (state.source_scope) scope(state.source_scope);
     if (state.progress) {
       var p = state.progress;
@@ -111,7 +112,7 @@
       if (data.type === 'progress_text_update') {update({progress: data.message}); return;}
       if (data.type === 'progress_source_update') {scope(data.message); return;}
       var field = {progress_sum_update: 'summary', progress_notes_update: 'notes', progress_laysum_update: 'lay_summary', progress_blog_update: 'blog'}[data.type];
-      if (field) section(field, data.message);
+      if (field) section(field, data.message, data.html);
     };
     socket.onclose = function () {if (!complete) {snapshot(); reconnect = setTimeout(function () {connect();}, 3000);}};
   }

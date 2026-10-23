@@ -514,7 +514,8 @@ def arxiv_metadata_or_none(arxiv_id):
             return sources.metadata_list(arxiv_id)
         return asyncio.run(utils.get_arxiv_metadata(arxiv_id))
     # arXiv sometimes answers with an empty or non-XML body when it is rate limiting
-    except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError, sources.SourceUnavailable):
+    except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError, sources.SourceUnavailable) as error:
+        logger.warning('Paper metadata unavailable for %s (%s)', arxiv_id, type(error).__name__)
         return None
 
 
@@ -522,7 +523,7 @@ def arxiv_unavailable(request, arxiv_id):
     if sources.is_external(arxiv_id):
         message = _('The source of this paper is not responding right now. Please try again in a moment.')
     else:
-        message = 'arXiv is not responding right now. Please try again in a moment.'
+        message = _('arXiv is not responding right now. Please try again in a moment.')
     return render(request, 'summarizer/arxividpage.html', {'arxiv_id': arxiv_id, 'errormess': message}, status=503)
 
 
@@ -1180,24 +1181,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
             keywords=''
             notes2=''
             if sumpaper:
-                if (sumpaper.notes is not None) and (sumpaper.notes != "") and (sumpaper.notes != "['']") and (sumpaper.notes != 'Error: needs to be re-run'):
-                    print('nnnnnnoooottees',sumpaper.notes)
-                    try:
-                        notes = ast.literal_eval(sumpaper.notes)
-                        notes2=[]
-                        for note in notes:
-                            noteb=note.replace('•', '').strip()
-                            if noteb.startswith("-"):
-                                noteb = noteb[1:]
-                            notes2.append(noteb)
-                        #notes2 = [note.replace('•', '') for note in notes]
-
-                    except ValueError:
-                        # Handle the error by returning a response with an error message to the user
-                        return HttpResponse("Invalid input: 'notes' attribute is not a valid Python literal.")
-                else:
-                    notes=['Error: needs to be re-run']
-                    notes2=''
+                notes = utils.keypoints.stored_points(sumpaper.notes)
+                notes2 = notes
 
                 if (sumpaper.keywords is not None) and (sumpaper.keywords != "") and (sumpaper.keywords != "['']"):
                     print('keywords',sumpaper.keywords)
