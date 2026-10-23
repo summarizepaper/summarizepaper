@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, search_filters, saved_searches, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               changes, library, missed, presskit, questions, reading, refcheck, scoops, slides, teams, trends)
+               changes, chat_figures, library, missed, presskit, questions, reading, refcheck, scoops, slides, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -26,6 +26,7 @@ urlpatterns = [
     path("create-embed/", views.create_embed, name="create_embed"),
     path("about/", views.about, name="about"),
     path("chat/", views.chat, name="chat"),
+    path("paper-figures/<str:arxiv_id>/", chat_figures.gallery, name="paper_figures"),
     path("arxiv-api/", views.arxiv_api, name="arxiv_api"),
     path("faq/", views.faq, name="faq"),
     path("tools/", views.tools, name="tools"),

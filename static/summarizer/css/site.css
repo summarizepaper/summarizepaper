@@ -508,6 +508,24 @@ img { max-width: 100%; }
 .chat-answer code { font-size: .9em; }
 .chat-answer table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
 .chat-answer th, .chat-answer td { padding: .4rem .65rem; border: 1px solid var(--border); }
+.chat-figures { border-bottom: 1px solid var(--border); padding: 12px 20px; }
+.chat-figures summary { cursor: pointer; font-weight: 600; }
+.chat-figures-content { margin-top: 12px; }
+.chat-figures [hidden] { display: none !important; }
+.chat-figures-paper { max-width: 100%; width: 100%; margin: 6px 0; }
+.chat-figures-status.is-loading::before { content: ''; display: inline-block; width: 14px; height: 14px; margin-right: 8px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: chat-figure-spin .8s linear infinite; }
+.chat-figures-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); gap: 16px; max-height: 380px; overflow-y: auto; margin-top: 12px; }
+.chat-figures-grid figure { margin: 0; padding: 10px; border: 1px solid var(--border); border-radius: 8px; min-width: 0; }
+.chat-figure-thumb { display: block; width: 100%; padding: 0; border: 0; background: white; cursor: zoom-in; }
+.chat-figure-thumb img { width: 100%; height: 150px; object-fit: contain; }
+.chat-figures-grid figcaption { font-size: .85rem; line-height: 1.5; max-height: 100px; overflow-y: auto; margin: 8px 0; overflow-wrap: anywhere; }
+.chat-figure-dialog { width: min(1100px, 94vw); max-height: 90vh; max-height: 90dvh; padding: 20px; border: 1px solid var(--border); border-radius: 12px; overflow-y: auto; }
+.chat-figure-dialog::backdrop { background: rgb(15 23 42 / .65); }
+.chat-figure-close { display: block; margin-left: auto; }
+.chat-figure-enlarged { overflow-wrap: anywhere; }
+.chat-figure-enlarged img { display: block; max-width: 100%; height: auto; margin: 12px auto; }
+@keyframes chat-figure-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .chat-figures-status.is-loading::before { animation: none; } }
 .chatbot-form input[type="text"] {
   flex: 1;
   min-width: 0;

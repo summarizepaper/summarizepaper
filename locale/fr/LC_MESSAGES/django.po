@@ -7413,6 +7413,71 @@ msgstr ""
 msgid "Recent papers"
 msgstr "Articles récents"
 
+msgid "Loading figures…"
+msgstr "Chargement des figures…"
+
+msgid ""
+"No figures are available in this paper’s HTML version. Open the original "
+"paper to view them."
+msgstr ""
+"Aucune figure n’est disponible dans la version HTML de cet article. "
+"Consultez l’article original pour les voir."
+
+msgid ""
+"This paper’s license does not allow us to display its figures here. View "
+"them in the original paper."
+msgstr ""
+"La licence de cet article ne permet pas d’afficher ses figures ici. "
+"Consultez-les dans l’article original."
+
+msgid ""
+"Figures could not be loaded. You can retry without interrupting the chat."
+msgstr ""
+"Impossible de charger les figures. Vous pouvez réessayer sans interrompre la"
+" conversation."
+
+msgid "This paper is still being prepared. Try again in a moment."
+msgstr "Cet article est en cours de préparation. Réessayez dans un instant."
+
+msgid "Select a paper to view its figures."
+msgstr "Sélectionnez un article pour afficher ses figures."
+
+msgid "View in the original paper"
+msgstr "Voir dans l’article original"
+
+msgid "Ask about this figure"
+msgstr "Poser une question sur cette figure"
+
+msgid "About {figure} in the paper {paper} ({id}): "
+msgstr "À propos de {figure} dans l’article {paper} ({id}) : "
+
+msgid "Enlarge figure"
+msgstr "Agrandir la figure"
+
+msgid "This image could not be loaded. View it in the original paper."
+msgstr ""
+"Impossible de charger cette image. Consultez-la dans l’article original."
+
+msgid "Figures and plots"
+msgstr "Figures et graphiques"
+
+msgid ""
+"The assistant answers from the paper’s text and captions, not from image "
+"pixels. Check visual details in the original figure."
+msgstr ""
+"L’assistant s’appuie sur le texte et les légendes de l’article, sans "
+"analyser les pixels des images. Vérifiez les détails visuels dans la figure "
+"originale."
+
+msgid "Enlarged figure"
+msgstr "Figure agrandie"
+
+msgid "Try again"
+msgstr "Réessayer"
+
+msgid "Close"
+msgstr "Fermer"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

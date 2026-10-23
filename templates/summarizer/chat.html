@@ -197,6 +197,7 @@
     <p id="licencewarn" style="display: none;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
   </div>
   <div class="chatbot-body">
+    {% include 'summarizer/chat_figures.html' %}
     <div class="chatbot-messages">
       {% if chathistory %}
         {% for chat in chathistory %}

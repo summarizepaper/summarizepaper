@@ -496,6 +496,7 @@
       {% endif %}
     </div>
     <div class="chatbot-body">
+      {% include 'summarizer/chat_figures.html' with figure_paper=arxiv_id %}
       <div class="chatbot-messages" data-empty="{% trans 'Ask anything about this paper.' %}">{% if chathistory %}
           {% for chat in chathistory %}
             <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>

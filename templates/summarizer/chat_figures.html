@@ -1,0 +1,24 @@
+{% load i18n static_version %}
+<details class="chat-figures" data-paper="{{ figure_paper|default:'' }}" data-title="{% firstof paper.title details.title figure_paper %}" data-url="{% url 'paper_figures' 'PAPER_ID' %}"
+  data-loading="{% trans 'Loading figures…' %}" data-empty="{% trans 'No figures are available in this paper’s HTML version. Open the original paper to view them.' %}"
+  data-license="{% trans 'This paper’s license does not allow us to display its figures here. View them in the original paper.' %}"
+  data-error="{% trans 'Figures could not be loaded. You can retry without interrupting the chat.' %}"
+  data-pending="{% trans 'This paper is still being prepared. Try again in a moment.' %}"
+  data-none="{% trans 'Select a paper to view its figures.' %}" data-source="{% trans 'View in the original paper' %}"
+  data-ask="{% trans 'Ask about this figure' %}" data-question="{% trans 'About {figure} in the paper {paper} ({id}): ' %}"
+  data-enlarge="{% trans 'Enlarge figure' %}" data-image-error="{% trans 'This image could not be loaded. View it in the original paper.' %}">
+  <summary>{% trans 'Figures and plots' %}</summary>
+  <div class="chat-figures-content">
+    <label>{% trans 'Paper' %} <select class="chat-figures-paper"></select></label>
+    <p class="chat-figures-status muted" role="status" aria-live="polite"></p>
+    <button class="chat-figures-retry btn btn-sm" type="button" hidden>{% trans 'Try again' %}</button>
+    <a class="chat-figures-source" target="_blank" rel="noopener noreferrer" hidden></a>
+    <div class="chat-figures-grid"></div>
+    <p class="muted"><small>{% trans 'The assistant answers from the paper’s text and captions, not from image pixels. Check visual details in the original figure.' %}</small></p>
+  </div>
+  <dialog class="chat-figure-dialog" aria-label="{% trans 'Enlarged figure' %}">
+    <button class="chat-figure-close btn btn-sm" type="button">{% trans 'Close' %}</button>
+    <div class="chat-figure-enlarged"></div>
+  </dialog>
+</details>
+<script defer src="{% static_v 'summarizer/js/chat-figures.js' %}"></script>
