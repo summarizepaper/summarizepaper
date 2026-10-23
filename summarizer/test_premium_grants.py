@@ -98,6 +98,7 @@ class PremiumGrantTests(ToolsTestCase):
             self.assertEqual(client.get('/en/ai/%d/'%row.pk).status_code,404)
         self.assertEqual(client.get('/en/refcheck/private/bib/').status_code,404)
 
+    @override_settings(STRIPE_SECRET_KEY='sk_test', STRIPE_PRICE_MONTHLY='price_test')  # checkout is off without them
     def test_limited_grants_keep_global_quotas_and_allow_full_subscription_checkout(self):
         user=self.user();self.grant(user,'presskit',note='note interne privée');client=self.client_for(user)
         self.assertEqual(access.chat_quota_left(user,'not-used'),access.chat_messages_per_day()['user'])
