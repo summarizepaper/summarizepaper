@@ -77,7 +77,7 @@
     {% if sumlang %}
     <div class="info-block" style="margin-top:4px;">
       <div class="info-text"> {% trans 'Available in other languages:' %}
-          {% for l in sumlang %}<a href="/{{ l }}/arxiv-id/{{ arxiv_id }}">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% for l in sumlang %}<a href="/{{ l }}/paper/{{ arxiv_id }}/">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}
       </div>
     </div>
     {% endif %}
@@ -128,7 +128,7 @@
     <div class="info-block langs-available" style="margin-bottom:24px">
         <span style="font-weight: bold;">{% trans 'Summaries already available in other languages:' %}</span>
         {% for l in sumlang %}
-            <a href="/{{ l }}/arxiv-id/{{ arxiv_id }}" style="margin-left: 10px;">{{ l }}</a>{% if not forloop.last %}, {% endif %}
+            <a href="/{{ l }}/paper/{{ arxiv_id }}/" style="margin-left: 10px;">{{ l }}</a>{% if not forloop.last %}, {% endif %}
         {% endfor %}
     </div>
   {% endif %}
@@ -243,7 +243,7 @@
       {% for paper in relpapers %}
         <div class="paper">
           <div class="score">{{ scores|index:forloop.counter0 }}%</div>
-          <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.to_paper.arxiv_id }}" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:80 }}</a>
+          <a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.to_paper.arxiv_id }}/" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:80 }}</a>
           <div class="category">{{ paper.to_paper.category }}</div>
       </div>
       {% endfor %}

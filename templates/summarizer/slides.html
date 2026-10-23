@@ -12,7 +12,7 @@
   <header class="page-header no-print">
     <span class="eyebrow">{% trans 'Journal club' %} · Premium</span>
     <h1>{{ paper.title }}</h1>
-    <p class="lead">{{ authors }} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
+    <p class="lead">{{ authors }} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
 
   {% if paid %}

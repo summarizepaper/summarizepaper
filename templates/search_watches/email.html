@@ -1,4 +1,4 @@
 {% load i18n %}<h1>{% blocktrans with name=saved.name %}New matches for your saved search: {{ name }}{% endblocktrans %}</h1>
 <p>{% trans 'New matches among the latest indexed results. Read the source paper before relying on its findings.' %}</p>
-{% for paper in papers %}<article><h2><a href="{{ base_url }}/{{ saved.lang }}/arxiv-id/{{ paper.key }}/">{{ paper.title }}</a></h2><p>{{ paper.authors|join:", " }} · {{ paper.venue }} · {{ paper.published }}</p><p>{{ paper.abstract|striptags|truncatewords:55 }}</p></article>{% endfor %}
+{% for paper in papers %}<article><h2><a href="{{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/">{{ paper.title }}</a></h2><p>{{ paper.authors|join:", " }} · {{ paper.venue }} · {{ paper.published }}</p><p>{{ paper.abstract|striptags|truncatewords:55 }}</p></article>{% endfor %}
 <p><a href="{{ search_url }}">{% trans 'Open the search' %}</a> · <a href="{{ manage_url }}">{% trans 'Manage saved searches' %}</a> · <a href="{{ unsubscribe_url }}">{% trans 'Pause this watch' %}</a></p>

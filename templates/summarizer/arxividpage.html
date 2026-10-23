@@ -17,11 +17,11 @@
   {% else %}
   <meta name="description" content="{% if arxiv_id|is_external %}{% trans 'Easy-to-read summary of the paper' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'Easy-to-read summary of the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %} {% trans 'entitled ' %}{{ paper_title }}" />
   {% endif %}
-  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/paper/{{ arxiv_id }}/" />
   {% if sumpaper %}
-  <link rel="alternate" hreflang="{{ LANGUAGE_CODE }}" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/" />
+  <link rel="alternate" hreflang="{{ LANGUAGE_CODE }}" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/" />
   {% for other_lang in sumlang %}
-  <link rel="alternate" hreflang="{{ other_lang }}" href="https://www.summarizepaper.com/{{ other_lang }}/arxiv-id/{{ arxiv_id }}/" />
+  <link rel="alternate" hreflang="{{ other_lang }}" href="https://www.summarizepaper.com/{{ other_lang }}/paper/{{ arxiv_id }}/" />
   {% endfor %}
   {% else %}
   {# no summary in this language yet: a bare "Run" page, keep it out of search results #}
@@ -31,7 +31,7 @@
   <meta property="og:site_name" content="SummarizePaper" />
   <meta property="og:title" content="{{ paper_title|default:arxiv_id|oneline }}" />
   <meta property="og:description" content="{{ page_excerpt|plaintext|truncatechars:200 }}" />
-  <meta property="og:url" content="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/arxiv-id/{{ arxiv_id }}/" />
+  <meta property="og:url" content="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/paper/{{ arxiv_id }}/" />
   <meta property="og:image" content="https://www.summarizepaper.com{% static 'summarizer/images/logo.png' %}" />
   <meta name="twitter:card" content="summary" />
   {% if structured_data %}

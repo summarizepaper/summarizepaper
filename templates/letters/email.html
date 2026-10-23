@@ -8,7 +8,7 @@
     {% for section in sections %}
     <h2 style="font-size:20px;margin:24px 0 8px;">{{ section.heading }}</h2>
     <div style="font-size:16px;line-height:1.6;">{{ section.text|linebreaks }}</div>
-    {% if section.links %}<p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#666;">{% for p in section.links %}<a href="{{ base_url }}/{{ letter.lang }}/arxiv-id/{{ p.arxiv_id }}/" style="color:#1a0dab;">{{ p.title }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    {% if section.links %}<p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#666;">{% for p in section.links %}<a href="{{ base_url }}/{{ letter.lang }}/paper/{{ p.arxiv_id }}/" style="color:#1a0dab;">{{ p.title }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
     {% endfor %}
     {% if closing %}<div style="font-size:16px;line-height:1.6;border-top:1px solid #eee;margin-top:20px;padding-top:12px;">{{ closing|linebreaks }}</div>{% endif %}
     <p style="border-top:1px solid #eee;padding-top:16px;font-family:Arial,Helvetica,sans-serif;color:#888;font-size:12px;">

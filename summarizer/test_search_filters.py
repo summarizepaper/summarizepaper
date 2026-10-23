@@ -136,7 +136,7 @@ class SearchFilterPageTests(TestCase):
         self.assertContains(response, 'Research search results')
         self.assertContains(response, 'Search again without filters')
         response = self.client.get('/en/search-results/?q=1706.03762')
-        self.assertEqual(response['Location'], '/en/arxiv-id/1706.03762v1/')
+        self.assertEqual(response['Location'], '/en/paper/1706.03762v1/')
 
     def test_incompatible_arxiv_filter_reports_error(self):
         with mock.patch.object(unified_search, 'search') as search:

@@ -34,7 +34,7 @@
         <p>{{ topic.text }}</p>
         <div class="terms">{% for term in topic.terms %}<span>{{ term }}</span>{% endfor %}</div>
         {% if topic.papers %}
-        <ul>{% for p in topic.papers %}<li><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
+        <ul>{% for p in topic.papers %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
         {% endif %}
       </article>
     {% endfor %}

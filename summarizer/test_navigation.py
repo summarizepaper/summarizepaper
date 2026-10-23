@@ -39,9 +39,9 @@ class ToolNavigationTests(ToolsTestCase):
             self.assertRedirects(Client().get(base, {'q': '10.1234/example'}),
                                  base + paper.arxiv_id + '/', fetch_redirect_response=False)
             self.assertRedirects(Client().get(base, {'q': '2303.08774v2'}),
-                                 '/fr/arxiv-id/2303.08774v2/#tools', fetch_redirect_response=False)
+                                 '/fr/paper/2303.08774v2/#tools', fetch_redirect_response=False)
             self.assertRedirects(Client().get(base, {'q': '10.1234/new-paper'}),
-                                 '/fr/arxiv-id/doi_10.1234--new-paper/#tools', fetch_redirect_response=False)
+                                 '/fr/paper/doi_10.1234--new-paper/#tools', fetch_redirect_response=False)
 
     def test_title_search_is_encoded_and_cannot_redirect_to_an_external_site(self):
         for tool in ('press-kit', 'journal-club'):

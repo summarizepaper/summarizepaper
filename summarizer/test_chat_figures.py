@@ -122,7 +122,7 @@ class ChatFiguresTests(TestCase):
         self.assertIn('/fr/paper-figures/PAPER_ID/', html)
         empty = render_to_string('summarizer/chat_figures.html', {}, request)
         self.assertIn('data-paper="" data-title=""', empty)
-        page = self.client.get('/en/arxiv-id/2401.04088v1/')
+        page = self.client.get('/en/paper/2401.04088v1/')
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, 'data-paper="2401.04088v1" data-title="Example paper"')
         from pathlib import Path

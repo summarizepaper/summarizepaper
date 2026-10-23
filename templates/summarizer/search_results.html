@@ -85,7 +85,7 @@
     {% for paper in page_obj %}
     <div class="search-result card">
       <div class="search-result-title">
-        <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.key }}/">{{ paper.title }}</a>
+        <a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.key }}/">{{ paper.title }}</a>
       </div>
       <div class="search-result-authors">{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %}</div>
       {% if paper.abstract %}<p class="search-result-excerpt">{{ paper.abstract|striptags|truncatewords:40 }}</p>{% if paper.abstract|wordcount > 40 %}<details class="search-result-abstract"><summary>{% trans 'Read the full abstract' %}</summary><p>{{ paper.abstract|striptags }}</p></details>{% endif %}{% endif %}
@@ -98,7 +98,7 @@
         {% else %}
         <span class="search-result-access" title="{{ paper.license|default:_('No open license') }}">{% trans 'Summary from the abstract' %}</span>
         {% endif %}
-        {% if paper.arxiv_id and not paper.arxiv_result %}<span class="search-result-arxiv-id"><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.arxiv_id }}/">{% trans 'Also on arXiv' %}</a></span>{% endif %}
+        {% if paper.arxiv_id and not paper.arxiv_result %}<span class="search-result-arxiv-id"><a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.arxiv_id }}/">{% trans 'Also on arXiv' %}</a></span>{% endif %}
       </div>
     </div>
     {% endfor %}
@@ -108,7 +108,7 @@
     {% for paper in page_obj %}
     <div class="search-result card">
       <div class="search-result-title">
-        <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ paper.arxiv_id }}">{{ paper.title }}</a>
+        <a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.arxiv_id }}/">{{ paper.title }}</a>
       </div>
       <div class="search-result-authors">{{ paper.authors|join:", " }}</div>
       <div class="search-result-metadata">

@@ -11,7 +11,7 @@
   <header class="page-header">
     <span class="eyebrow">{% trans 'What changed' %} · Premium</span>
     <h1>{{ title }}</h1>
-    <p class="lead">arXiv: {{ base }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ site_base }}v{{ latest }}/">{% trans 'Summary page' %}</a> · <a href="https://arxiv.org/abs/{{ base }}" target="_blank" rel="noopener">arXiv</a></p>
+    <p class="lead">arXiv: {{ base }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ site_base }}v{{ latest }}/">{% trans 'Summary page' %}</a> · <a href="https://arxiv.org/abs/{{ base }}" target="_blank" rel="noopener">arXiv</a></p>
   </header>
 
   {% if not paid %}

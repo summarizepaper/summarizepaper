@@ -9,7 +9,7 @@ faq:
   - q: "Is SummarizePaper free?"
     a: "Yes. Reading existing summaries is unlimited and needs no account. Free users can start 10 new summaries a day; Premium costs €7 per month for the most capable model and no summary limit."
   - q: "Can I open the same paper in both?"
-    a: "Yes. Both work from the arXiv ID. On SummarizePaper, go to summarizepaper.com/en/arxiv-id/ followed by the ID. On alphaXiv, replace arxiv with alphaxiv in the paper's URL."
+    a: "Yes. Both work from the arXiv ID. On SummarizePaper, go to summarizepaper.com/en/paper/ followed by the ID. On alphaXiv, replace arxiv with alphaxiv in the paper's URL."
   - q: "Which one gives a summary in French?"
     a: "SummarizePaper writes every summary in English or French, including the lay summary. alphaXiv also offers AI overviews in several languages."
   - q: "Which one helps me follow new papers in my field?"
@@ -57,7 +57,7 @@ Key takeaways
 
 ## What SummarizePaper does better
 
-- **A complete summary on one page.** The detailed summary, key points and a lay summary anyone can understand are written in advance, so the page loads ready to read. See [an example](https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/).
+- **A complete summary on one page.** The detailed summary, key points and a lay summary anyone can understand are written in advance, so the page loads ready to read. See [an example](https://www.summarizepaper.com/en/paper/2302.13303v1/).
 - **Reading outside your field.** The lay summary and blog-style article explain the paper without jargon.
 - **French.** Every summary exists in English or French.
 - **A digest that comes to you.** The [daily digest](https://www.summarizepaper.com/en/digest/) emails up to 10 new papers every weekday from up to 5 arXiv categories you choose, with optional keywords, each with a two-sentence summary.

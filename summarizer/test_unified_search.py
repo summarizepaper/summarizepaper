@@ -75,7 +75,7 @@ class UnifiedSearchPageTests(TestCase):
             self.assertEqual(response['Location'], '/en/search-results/?q=black+holes&page=1&src=all')
             resolve.reset_mock()
             response = self.client.post('/fr/', {'arxiv_id': 'https://arxiv.org/pdf/1706.03762v2.pdf'})
-            self.assertEqual(response['Location'], '/fr/arxiv-id/1706.03762v2/')
+            self.assertEqual(response['Location'], '/fr/paper/1706.03762v2/')
             resolve.assert_not_called()
         self.assertNotContains(self.client.get('/en/'), 'name="src"')
 
@@ -163,7 +163,7 @@ class ScopedSearchPageTests(TestCase):
             response = self.client.post('/en/', {'arxiv_id': 'Quentin Kral', 'field': 'author'})
         self.assertIn('field=author', response['Location'])
         response = self.client.post('/en/', {'arxiv_id': '1706.03762', 'field': 'author'})
-        self.assertEqual(response['Location'], '/en/arxiv-id/1706.03762v1/')
+        self.assertEqual(response['Location'], '/en/paper/1706.03762v1/')
         rows = [{'key': str(i), 'title': 'Paper', 'authors': [], 'arxiv_result': True} for i in range(11)]
         with mock.patch.object(unified_search, 'search', return_value=(rows, False)) as search:
             response = self.client.get('/en/search-results/?q=Kral&field=author')

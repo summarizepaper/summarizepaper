@@ -797,14 +797,14 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
     ready = set(ready)
     for section, group in (('author', from_authors), ('paper', items)):
         for item in group:
-            item.url = tracked('%s/%s/arxiv-id/%s/?autorun=1' % (base_url, lang, item.arxiv_id), campaign,
+            item.url = tracked('%s/%s/paper/%s/?autorun=1' % (base_url, lang, item.arxiv_id), campaign,
                                'ready' if item.arxiv_id in ready else section)
             item.ready = item.arxiv_id in ready
             item.via = ', '.join((via or {}).get(item.arxiv_id, []))
             if paid:
                 item.more_url, item.less_url = ('%s/%s/digest/feedback/%s/' % (base_url, lang, feedback_token(subscription, item.arxiv_id, v))
                                                 for v in (1, -1))
-    syntheses = [dict(synthesis, notable=[dict(paper, url=tracked('%s/%s/arxiv-id/%s/?autorun=1' % (base_url, lang, paper['arxiv_id']),
+    syntheses = [dict(synthesis, notable=[dict(paper, url=tracked('%s/%s/paper/%s/?autorun=1' % (base_url, lang, paper['arxiv_id']),
                                                                   campaign, 'synthesis')) for paper in synthesis['notable']])
                  for synthesis in syntheses]
     context = {

@@ -556,7 +556,7 @@ selectedPapersList.addEventListener('click', function(event) {
     var removeSymbolElement = event.target.closest('li').querySelector('.remove-symbol');
     var id = removeSymbolElement.id;
     //console.log(id);
-    window.open('/arxiv-id/'+id, '_blank'); // open the URL in a new tab
+    window.open('/{{ LANGUAGE_CODE }}/paper/'+encodeURIComponent(id)+'/', '_blank');
     }
    }
 

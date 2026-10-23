@@ -70,7 +70,7 @@ class SynthesisTests(TestCase):
         SummaryPaper.objects.create(paper=self.paper, lang='fr', summary='Résumé prêt',
             notes='["Point"]', lay_summary='Simple', blog='<p onclick="bad()">Blog</p><script>bad()</script>')
         cache.set(self.group, True)
-        page = self.client.get('/fr/arxiv-id/2401.04088v1/')
+        page = self.client.get('/fr/paper/2401.04088v1/')
         self.assertContains(page, 'id="synthesis-live"')
         result = self.client.get('/fr/paper-live/2401.04088v1/detail/')
         self.assertEqual(result.status_code, 200)
@@ -92,7 +92,7 @@ class SynthesisTests(TestCase):
         metadata = [1, ['Author'], [''], 'https://arxiv.org/abs/2401.04088', 'Example', '',
                     'Abstract', 'cs.AI', '2024-01-01T00:00:00Z', '2024-01-01T00:00:00Z', '', '', self.paper.license]
         with mock.patch('summarizer.views.arxiv_metadata_or_none', return_value=metadata):
-            r = self.client.get('/fr/arxiv-id/2401.04088v1/')
+            r = self.client.get('/fr/paper/2401.04088v1/')
         html = r.content.decode()
         self.assertIn('Abstract et métadonnées uniquement', html)
         self.assertLess(html.index('class="source-scope"'), html.index('name="run_button"'))

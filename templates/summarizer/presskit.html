@@ -13,7 +13,7 @@
   <header class="page-header">
     <span class="eyebrow">{% trans 'Press kit' %} · Premium</span>
     <h1>{{ paper.title }}</h1>
-    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %}{% if paper.authors.count %} · {% endif %}{{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
+    <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %}{% if paper.authors.count %} · {% endif %}{{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
 
   {% if paid %}{% csrf_token %}{% endif %}
@@ -26,7 +26,7 @@
     {{ editorial.text|linebreaks }}
     <p class="muted">{% trans 'Editorial context written by AI from abstracts, not independent scientific validation. The kit and its verified quotes rely on the source paper, not on this letter.' %}</p>
     {% if editorial.others %}<details><summary>{% trans 'Other papers in this selection' %}</summary>
-      <ul>{% for p in editorial.others %}<li><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
+      <ul>{% for p in editorial.others %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
     </details>{% endif %}
     <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ editorial.letter.topic }}/{{ editorial.letter.day|date:'Y-m-d' }}/">{% trans 'Read the full letter' %} →</a></p>
   </section>
@@ -122,7 +122,7 @@
       <p class="muted">{% trans 'These researchers are not listed as coauthors in our metadata. Their independence, affiliations and possible conflicts of interest still need to be checked.' %}</p>
       <ul>
         {% for e in kit.experts %}
-        <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}){% endif %} — <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ e.arxiv_id }}/">{{ e.title }}</a></li>
+        <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}){% endif %} — <a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a></li>
         {% endfor %}
       </ul>
       {% else %}

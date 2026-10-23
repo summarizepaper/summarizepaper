@@ -238,15 +238,15 @@ class MetadataTests(TestCase):
 class PaperPageTests(TestCase):
     def test_home_form_opens_a_doi(self):
         r = Client().post('/en/', {'arxiv_id': 'https://doi.org/10.1093/mnras/stad1234'})
-        self.assertRedirects(r, '/en/arxiv-id/%s/' % MNRAS_KEY, fetch_redirect_response=False)
+        self.assertRedirects(r, '/en/paper/%s/' % MNRAS_KEY, fetch_redirect_response=False)
         r = Client().post('/en/', {'arxiv_id': '10.48550/arXiv.2301.03702'})
-        self.assertRedirects(r, '/en/arxiv-id/2301.03702/', fetch_redirect_response=False)
+        self.assertRedirects(r, '/en/paper/2301.03702/', fetch_redirect_response=False)
         r = Client().post('/en/', {'arxiv_id': 'black holes', 'src': 'open'})
         self.assertRedirects(r, '/en/search-results/?q=black+holes&page=1&src=open', fetch_redirect_response=False)
 
     def test_page_of_a_journal_paper(self):
         with mock.patch('summarizer.sources.fetch', return_value=journal_paper()):
-            r = Client().get('/en/arxiv-id/%s/' % MNRAS_KEY)
+            r = Client().get('/en/paper/%s/' % MNRAS_KEY)
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'Galaxy quenching time-scales')
         self.assertContains(r, 'DOI: ' + MNRAS)
@@ -256,19 +256,19 @@ class PaperPageTests(TestCase):
 
     def test_a_closed_doi_with_an_arxiv_version_goes_to_the_arxiv_page(self):
         with mock.patch('summarizer.sources.fetch', return_value=journal_paper(license='', arxiv_id='2301.03702')):
-            r = Client().get('/en/arxiv-id/%s/' % MNRAS_KEY)
-        self.assertRedirects(r, '/en/arxiv-id/2301.03702/', fetch_redirect_response=False)
+            r = Client().get('/en/paper/%s/' % MNRAS_KEY)
+        self.assertRedirects(r, '/en/paper/2301.03702/', fetch_redirect_response=False)
 
     def test_upper_case_and_bad_keys(self):
-        r = Client().get('/en/arxiv-id/DOI_10.1093--MNRAS--stad1234/')
-        self.assertRedirects(r, '/en/arxiv-id/%s/' % MNRAS_KEY, fetch_redirect_response=False)
-        self.assertEqual(Client().get('/en/arxiv-id/doi_%3Cscript%3E/').status_code, 404)
+        r = Client().get('/en/paper/DOI_10.1093--MNRAS--stad1234/')
+        self.assertRedirects(r, '/en/paper/%s/' % MNRAS_KEY, fetch_redirect_response=False)
+        self.assertEqual(Client().get('/en/paper/doi_%3Cscript%3E/').status_code, 404)
 
     def test_unknown_and_unavailable(self):
         with mock.patch('summarizer.sources.fetch', return_value=None):
-            self.assertContains(Client().get('/en/arxiv-id/doi_10.1--nothing/'), 'No paper was found with this identifier')
+            self.assertContains(Client().get('/en/paper/doi_10.1--nothing/'), 'No paper was found with this identifier')
         with mock.patch('summarizer.sources.fetch', side_effect=sources.SourceUnavailable('down')):
-            self.assertEqual(Client().get('/en/arxiv-id/doi_10.1--other/').status_code, 503)
+            self.assertEqual(Client().get('/en/paper/doi_10.1--other/').status_code, 503)
 
     def test_open_search(self):
         results = [{'key': MNRAS_KEY, 'title': 'Galaxy quenching', 'authors': ['Ann Lee'], 'more_authors': False,
@@ -277,9 +277,9 @@ class PaperPageTests(TestCase):
             r = Client().get('/en/search-results/', {'q': 'quenching', 'src': 'open'})
             Client().get('/en/search-results/', {'q': 'quenching', 'src': 'open', 'page': 2})
         search.assert_called_once()  # the second page comes from the cache
-        self.assertContains(r, '/en/arxiv-id/%s/' % MNRAS_KEY)
+        self.assertContains(r, '/en/paper/%s/' % MNRAS_KEY)
         self.assertContains(r, 'Full text summarized')
-        self.assertContains(r, 'href="/en/arxiv-id/2301.03702/">Also on arXiv')
+        self.assertContains(r, 'href="/en/paper/2301.03702/">Also on arXiv')
         cache.clear()
         with mock.patch('summarizer.sources.search', side_effect=sources.SourceUnavailable('down')):
             r = Client().get('/en/search-results/', {'q': 'quenching', 'src': 'open'})
@@ -457,7 +457,7 @@ class PipelineTests(TestCase):
         self.assertIn('Published in: Monthly Notices', stored.text)
         self.assertIn('Galaxies stop forming stars.', stored.text)
         self.assertEqual(SummaryPaper.objects.get(paper=paper, lang='en').summary, 'Summary.')
-        page = Client().get('/en/arxiv-id/%s/' % MNRAS_KEY)
+        page = Client().get('/en/paper/%s/' % MNRAS_KEY)
         self.assertContains(page, 'Summary.')
         self.assertContains(page, 'DOI: ' + MNRAS)
         self.assertContains(page, 'Cite this paper')
@@ -487,7 +487,7 @@ class PipelineTests(TestCase):
         self.assertEqual(live['status'], 'done')
         self.assertEqual(PaperText.objects.get(arxiv_id=MNRAS_KEY).source, 'abstract')
         self.assertIn('We reconstruct colours.', book.call_args.args[2])
-        self.assertContains(Client().get('/en/arxiv-id/%s/' % MNRAS_KEY), 'CC BY-NC-ND')
+        self.assertContains(Client().get('/en/paper/%s/' % MNRAS_KEY), 'CC BY-NC-ND')
 
 
 class ToolsWithOtherSourcesTests(TestCase):

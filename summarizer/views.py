@@ -1,7 +1,7 @@
 # Create your views here.
 from django.shortcuts import render, redirect, HttpResponseRedirect, get_object_or_404
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 import requests
 import time
 import re
@@ -835,7 +835,7 @@ def paper_structured_data(paper, sumpaper, lang):
         'headline': title[:110],
         'name': title,
         'identifier': sources.label(paper.arxiv_id).split(': ', 1)[-1],
-        'url': 'https://www.summarizepaper.com/%s/arxiv-id/%s/' % (lang, paper.arxiv_id),
+        'url': 'https://www.summarizepaper.com/%s/paper/%s/' % (lang, paper.arxiv_id),
         'sameAs': arxiv_url,
         'inLanguage': lang,
         'author': [{'@type': 'Person', 'name': a.name} for a in paper.authors.all()[:20]],
@@ -886,6 +886,20 @@ def waiting_details(arxiv_id):
     if paper and paper.title:
         return {'title': paper.title, 'abstract': paper.abstract or '', 'authors': ''}
     return None
+
+
+def legacy_paper_url(request, arxiv_id, error_message=None, cat=None):
+    """Keep bookmarks and old emails working without losing POST bodies or queries."""
+    if cat is not None:
+        arxiv_id = cat + '--' + arxiv_id
+    kwargs = {'arxiv_id': arxiv_id}
+    if error_message is not None:
+        kwargs['error_message'] = error_message
+    url = reverse('arxividpage', kwargs=kwargs)
+    query = request.META.get('QUERY_STRING', '')
+    if query:
+        url += '?' + query
+    return HttpResponsePermanentRedirect(url, preserve_request=request.method not in ('GET', 'HEAD'))
 
 
 def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False):
@@ -1325,7 +1339,7 @@ def vote(request, paper_id):
                 'already': already,
             })
         if already:
-            return redirect('/' + lang + '/arxiv-id/' + paper_id + '/vote#totvote')
+            return redirect('/' + lang + '/paper/' + paper_id + '/vote/#totvote')
 
     return redirect('arxividpage', arxiv_id=paper_id)
 

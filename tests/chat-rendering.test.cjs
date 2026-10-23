@@ -38,7 +38,7 @@ test('unsafe Markdown links and tracking images never become executable links or
   const link = html('[Paper](https://arxiv.org/abs/2101.00001)');
   assert.ok(link.includes('href="https://arxiv.org/abs/2101.00001"'));
   assert.ok(link.includes('rel="nofollow noopener noreferrer"'));
-  assert.ok(html('[Source](/en/arxiv-id/2101.00001v1/)').includes('<a '));
+  assert.ok(html('[Source](/en/paper/2101.00001v1/)').includes('<a '));
 });
 
 test('LaTeX survives Markdown unchanged, including underscores, stars, tags and multiline display', () => {

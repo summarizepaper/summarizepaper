@@ -35,7 +35,7 @@
 {% if paper_history %}
 <ul class="history-list">
 {% for h in paper_history %}
-  <li class="history-item"><a href="/{{LANGUAGE_CODE}}/arxiv-id/{{ h.arxiv_id }}" class="card">
+  <li class="history-item"><a href="/{{LANGUAGE_CODE}}/paper/{{ h.arxiv_id }}/" class="card">
     <span class="t">{% if h.title %}{{ h.title }}{% else %}{{ h.arxiv_id }}{% endif %}</span>
     <span class="meta"><code>{{ h.arxiv_id }}</code> · {{ h.date|date:"j F Y" }}</span>
   </a></li>

@@ -43,7 +43,7 @@
         <thead><tr><th>{% trans 'Paper' %}</th>{% for code, label in columns %}<th>{{ label }}</th>{% endfor %}</tr></thead>
         <tbody>
           {% for row in table.rows %}
-          <tr><td><a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ row.arxiv_id }}/">{{ row.title }}</a></td>
+          <tr><td><a href="/{{ LANGUAGE_CODE }}/paper/{{ row.arxiv_id }}/">{{ row.title }}</a></td>
             <td>{{ row.question }}</td><td>{{ row.method }}</td><td>{{ row.data }}</td><td>{{ row.results }}</td><td>{{ row.limitations }}</td></tr>
           {% endfor %}
         </tbody>
@@ -81,7 +81,7 @@
         {% if q.detail %}<p style="margin:0">{{ q.detail }}</p>{% endif %}
         {% if q.next_step %}<p style="margin:6px 0 0"><strong>{% trans 'First step:' %}</strong> {{ q.next_step }}</p>{% endif %}
         {% if q.papers %}<div class="meta" style="margin-top:6px">{% blocktrans count n=q.papers|length %}Raised by:{% plural %}Raised by {{ n }} papers:{% endblocktrans %}
-          {% for p in q.papers %}<a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/">{{ p.title|truncatechars:70 }}</a>{% if p.authors %} ({{ p.authors|truncatechars:40 }}){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+          {% for p in q.papers %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title|truncatechars:70 }}</a>{% if p.authors %} ({{ p.authors|truncatechars:40 }}){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
       </li>
       {% endfor %}
     </ul>
@@ -107,7 +107,7 @@
   <ul class="item-list">
     {% for p in papers %}
     <li class="card">
-      <a href="/{{ LANGUAGE_CODE }}/arxiv-id/{{ p.arxiv_id }}/"><strong>{{ p.title|default:p.arxiv_id }}</strong></a>
+      <a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/"><strong>{{ p.title|default:p.arxiv_id }}</strong></a>
       <div class="meta">{{ p.authors }} · {{ p.arxiv_id|paper_ref }}</div>
       <form method="post" class="item-actions">
         {% csrf_token %}

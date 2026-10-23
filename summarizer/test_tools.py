@@ -364,7 +364,7 @@ class ExportTests(ToolsTestCase):
         self.assertIn('# Clouds on a hot planet', md)
         self.assertIn('## Summary', md)
         self.assertEqual(Client().get('/en/export/2101.00001v1/pdf/').status_code, 404)
-        page = Client().get('/en/arxiv-id/2101.00001v1/')
+        page = Client().get('/en/paper/2101.00001v1/')
         self.assertContains(page, '<meta name="citation_title" content="Clouds on a hot planet" />', html=False)
         self.assertContains(page, '<meta name="citation_arxiv_id" content="2101.00001" />', html=False)
         self.assertContains(page, 'id="tools"')
@@ -463,7 +463,7 @@ class CitationTests(ToolsTestCase):
         self.assertIn('1 new citation', mail.outbox[0].subject)
         html = mail.outbox[0].alternatives[0][0]
         self.assertIn('Confirms the thick clouds.', html)
-        self.assertIn('/en/arxiv-id/2201.00003/', html)
+        self.assertIn('/en/paper/2201.00003/', html)
         followed.refresh_from_db()
         self.assertEqual(followed.pending, '')
         with mock.patch('summarizer.citations.fetch', return_value=self.citing('c1', 'c2', 'c3', 'c4')):

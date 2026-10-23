@@ -330,7 +330,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
             notes = stances(followed.title, dict(list(new.items())[:MAX_PER_EMAIL]), lang)
             items = []
             for pid, c in list(new.items())[:MAX_PER_EMAIL]:
-                link = ('%s/%s/arxiv-id/%s/' % (base_url, lang, c['arxiv_id'].replace('/', '--'))) if c['arxiv_id'] else \
+                link = ('%s/%s/paper/%s/' % (base_url, lang, c['arxiv_id'].replace('/', '--'))) if c['arxiv_id'] else \
                     ('https://doi.org/%s' % c['doi'] if c['doi'] else
                      'https://ui.adsabs.harvard.edu/abs/%s/abstract' % pid[4:] if pid.startswith('ads:') else
                      'https://www.semanticscholar.org/paper/%s' % pid)

@@ -338,7 +338,7 @@ class DigestTests(TestCase):
         self.assertEqual(message.to, ['r@example.com'])
         self.assertIn('Une comète active.', message.body)
         self.assertIn('Strings.', message.body)  # blurb missing from the model answer -> abstract
-        self.assertIn('/fr/arxiv-id/hep-th--9901001v2/?autorun=1', message.alternatives[0][0])
+        self.assertIn('/fr/paper/hep-th--9901001v2/?autorun=1', message.alternatives[0][0])
         self.assertIn('List-Unsubscribe', message.extra_headers)
         self.assertEqual(DigestDelivery.objects.count(), 2)
         # the abstract fallback is not stored, so the model is asked again next time
@@ -642,12 +642,12 @@ class AutorunTests(TestCase):
 
     def test_autorun_script_only_without_summary(self):
         marker = 'arriving from the daily digest'
-        self.assertContains(Client().get('/en/arxiv-id/2101.00005v1/?autorun=1'), marker)
-        self.assertNotContains(Client().get('/en/arxiv-id/2101.00005v1/'), marker)
+        self.assertContains(Client().get('/en/paper/2101.00005v1/?autorun=1'), marker)
+        self.assertNotContains(Client().get('/en/paper/2101.00005v1/'), marker)
         SummaryPaper.objects.create(paper=self.paper, lang='en', summary='Done.')
-        self.assertNotContains(Client().get('/en/arxiv-id/2101.00005v1/?autorun=1'), marker)
+        self.assertNotContains(Client().get('/en/paper/2101.00005v1/?autorun=1'), marker)
         # a summary in another language does not count
-        self.assertContains(Client().get('/fr/arxiv-id/2101.00005v1/?autorun=1'), marker)
+        self.assertContains(Client().get('/fr/paper/2101.00005v1/?autorun=1'), marker)
 
 
 class DigestSharedWorkTests(TestCase):
@@ -1100,7 +1100,7 @@ class ArxivTimeoutTests(TestCase):
     def test_slow_arxiv_gives_503_instead_of_hanging(self):
         import asyncio
         with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError()):
-            self.assertEqual(Client().get('/en/arxiv-id/2401.99999v1/').status_code, 503)
+            self.assertEqual(Client().get('/en/paper/2401.99999v1/').status_code, 503)
             self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
 
     def test_non_xml_arxiv_answer_gives_503(self):
@@ -1127,9 +1127,9 @@ class VoteTests(TestCase):
     def test_form_vote_redirects(self):
         c = Client(HTTP_HOST='localhost')
         r = c.post('/en/vote/2101.00003v1/', {'direction': 'down'})
-        self.assertRedirects(r, '/en/arxiv-id/2101.00003v1/', fetch_redirect_response=False)
+        self.assertRedirects(r, '/en/paper/2101.00003v1/', fetch_redirect_response=False)
         r = c.post('/en/vote/2101.00003v1/', {'direction': 'down'})
-        self.assertRedirects(r, '/en/arxiv-id/2101.00003v1/vote#totvote', fetch_redirect_response=False)
+        self.assertRedirects(r, '/en/paper/2101.00003v1/vote/#totvote', fetch_redirect_response=False)
 
 
 class GuideTests(TestCase):
@@ -1942,9 +1942,9 @@ class RunLockPerLanguageTests(TestCase):
                                       abstract='Stars form in clusters.', authors=json.dumps(['Ann Lee', 'Bob Ray']))
         cache.set('ar_2610.22462v1_en', True)
         try:
-            page = Client().get('/fr/arxiv-id/2610.22462v1/?autorun=1')
+            page = Client().get('/fr/paper/2610.22462v1/?autorun=1')
             self.assertContains(page, 'arriving from the daily digest')  # free to start the French summary
-            waiting = Client().get('/en/arxiv-id/2610.22462v1/?autorun=1')
+            waiting = Client().get('/en/paper/2610.22462v1/?autorun=1')
             self.assertContains(waiting, 'The environments forming stars')  # waiting page shows the paper
             self.assertContains(waiting, 'Ann Lee, Bob Ray')
             self.assertContains(waiting, 'usually ready in 1 to 2 minutes')

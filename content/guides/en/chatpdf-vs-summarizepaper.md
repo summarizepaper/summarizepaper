@@ -57,7 +57,7 @@ Key takeaways
 
 ## What SummarizePaper does better
 
-- **No download, no upload.** Type the arXiv ID or search the home page; if someone already summarized the paper, the [summary page](https://www.summarizepaper.com/en/arxiv-id/2302.13303v1/) opens immediately.
+- **No download, no upload.** Type the arXiv ID or search the home page; if someone already summarized the paper, the [summary page](https://www.summarizepaper.com/en/paper/2302.13303v1/) opens immediately.
 - **A summary you do not have to ask for.** The page is structured the same way for every paper, including a lay summary anyone can understand.
 - **Something you can keep and share.** Each summary is a public page with the BibTeX entry and a PDF export, not a chat that disappears in your history.
 - **Following the field.** The [daily digest](https://www.summarizepaper.com/en/digest/) emails up to 10 new papers every weekday from the arXiv categories you choose.

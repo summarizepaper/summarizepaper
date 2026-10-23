@@ -150,7 +150,7 @@ def markdown_entry(meta, lang):
         lines.append('**arXiv:** [%s](https://arxiv.org/abs/%s)  ' % (ref, ref))
     if meta['date']:
         lines.append('**Date:** %s  ' % meta['date'])
-    lines.append('**Summary page:** https://www.summarizepaper.com/%s/arxiv-id/%s/' % (lang, meta['arxiv_id']))
+    lines.append('**Summary page:** https://www.summarizepaper.com/%s/paper/%s/' % (lang, meta['arxiv_id']))
     lines.append('')
     row = summary_of(meta['arxiv_id'], lang)
     if row is not None and row.notes:
@@ -217,7 +217,7 @@ def zotero_item(meta, lang):
     if row is not None:
         points = ''.join('<li>%s</li>' % escape(p) for p in keypoints.stored_points(row.notes))
         note = ('<h1>SummarizePaper</h1>%s<h2>Summary</h2><p>%s</p>'
-                '<p><a href="https://www.summarizepaper.com/%s/arxiv-id/%s/">summarizepaper.com</a></p>') % (
+                '<p><a href="https://www.summarizepaper.com/%s/paper/%s/">summarizepaper.com</a></p>') % (
             '<h2>Key points</h2><ul>%s</ul>' % points if points else '', escape(row.summary), lang, meta['arxiv_id'])
     return item, note
 

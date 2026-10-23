@@ -37,7 +37,7 @@ class HomepageTests(TestCase):
         SummaryPaper.objects.create(paper=empty, lang='en', summary='')
         response = self.client.get('/en/')
         self.assertEqual(response.context['example_paper'].paper_id, paper.pk)
-        self.assertContains(response, 'href="/en/arxiv-id/1706.03762v1/"')
+        self.assertContains(response, 'href="/en/paper/1706.03762v1/"')
         response = self.client.get('/fr/')
         self.assertIsNone(response.context['example_paper'])
         self.assertContains(response, 'href="#paper-example"')
@@ -50,14 +50,14 @@ class HomepageTests(TestCase):
 
     def test_existing_search_routes_are_preserved(self):
         response = self.client.post('/fr/', {'arxiv_id': '1706.03762v1'})
-        self.assertEqual(response['Location'], '/fr/arxiv-id/1706.03762v1/')
+        self.assertEqual(response['Location'], '/fr/paper/1706.03762v1/')
         with mock.patch('summarizer.views.sources.resolve', return_value=None):
             response = self.client.post('/en/', {'arxiv_id': 'stellar formation', 'src': 'open'})
         self.assertIn('src=open', response['Location'])
         self.assertIn('q=stellar+formation', response['Location'])
         with mock.patch('summarizer.views.sources.resolve', return_value=('doi', 'doi_10.1234_example')):
             response = self.client.post('/en/', {'arxiv_id': '10.1234/example'})
-        self.assertEqual(response['Location'], '/en/arxiv-id/doi_10.1234_example/')
+        self.assertEqual(response['Location'], '/en/paper/doi_10.1234_example/')
 
     def test_signup_links_retain_tool_destination(self):
         for lang in ('en', 'fr'):
@@ -90,9 +90,9 @@ class HomepageTests(TestCase):
     def test_result_event_requires_a_stored_result(self):
         paper = ArxivPaper.objects.create(arxiv_id='2101.00001v1', title='A paper', abstract='A',
                                           license='http://creativecommons.org/licenses/by/4.0/')
-        self.assertNotContains(self.client.get('/en/arxiv-id/2101.00001v1/'), 'data-funnel-view="paper_result_view"')
+        self.assertNotContains(self.client.get('/en/paper/2101.00001v1/'), 'data-funnel-view="paper_result_view"')
         SummaryPaper.objects.create(paper=paper, summary='Completed summary', lang='en')
-        self.assertContains(self.client.get('/en/arxiv-id/2101.00001v1/'), 'data-funnel-view="paper_result_view"')
+        self.assertContains(self.client.get('/en/paper/2101.00001v1/'), 'data-funnel-view="paper_result_view"')
 
     def test_digest_activation_is_emitted_only_after_a_valid_save(self):
         self.client.force_login(User.objects.create_user('reader', 'reader@example.com', 'pass'))

@@ -40,7 +40,7 @@ class SummarizedPaperSitemap(Sitemap):
                 .order_by('id'))
 
     def location(self, item):
-        return '/%s/arxiv-id/%s/' % (item.lang, item.paper.arxiv_id)
+        return '/%s/paper/%s/' % (item.lang, item.paper.arxiv_id)
 
     def lastmod(self, item):
         return item.updated

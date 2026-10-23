@@ -183,7 +183,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
         lang = matches[0].project.lang
         projects = {}
         for match in sorted(matches, key=lambda m: (OVERLAPS.index(m.overlap), -m.similarity))[:MAX_PER_EMAIL]:
-            match.url = '%s/%s/arxiv-id/%s/?autorun=1' % (base_url, lang, match.arxiv_id)
+            match.url = '%s/%s/paper/%s/?autorun=1' % (base_url, lang, match.arxiv_id)
             projects.setdefault(match.project, []).append(match)
         context = {'projects': list(projects.items()), 'count': len(matches),
                    'high': sum(m.overlap == 'high' for m in matches), 'more': max(0, len(matches) - MAX_PER_EMAIL),
