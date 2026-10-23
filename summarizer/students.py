@@ -98,6 +98,20 @@ def institution_details(identifier):
     return data
 
 
+def umbrella(institution, details=None):
+    return (institution.get('type') == 'government' or (details or {}).get('type') == 'government'
+            or normalized(institution.get('display_name') or '') in {
+                'cnrs', 'centre national de la recherche scientifique'})
+
+
+def publication_location(person):
+    if person.get('umbrella'):
+        person['city'], person['region'], person['location_checked'] = '', '', False
+        if (person.get('profile') or {}).get('city'):
+            person['location_match'] = False
+    return person
+
+
 def location_matches(profile, institution, details):
     geo = (details or {}).get('geo') or {}
     country = normalized(profile.get('country', ''))
@@ -109,6 +123,8 @@ def location_matches(profile, institution, details):
         elif normalized(geo.get('country') or '') != country:
             return False
     city = normalized(profile.get('city', ''))
+    if city and umbrella(institution, details):
+        return False  # an umbrella organization's headquarters is not the author's laboratory
     city = {'londres': 'london', 'geneve': 'geneva'}.get(city, city)
     return not city or city in {normalized(geo.get('city') or ''), normalized(geo.get('region') or '')}
 
@@ -158,7 +174,7 @@ def candidates(papers, profile, step=lambda name: None):
             'institution_url': iid, 'website': safe_url((info or {}).get('homepage_url')),
             'city': geo.get('city') or '', 'region': geo.get('region') or '',
             'country': geo.get('country') or inst.get('country_code') or '',
-            'umbrella': inst.get('type') == 'government',
+            'umbrella': umbrella(inst, info),
             'location_match': matches, 'location_checked': bool(info),
             'affiliation_year': max((w.get('publication_date') or '')[:4] for w in listed),
             'count': len(listed), 'readings': [dict(teams.title_data(w), id=w['id']) for w in listed[:READINGS]],
@@ -166,6 +182,7 @@ def candidates(papers, profile, step=lambda name: None):
         })
     found.sort(key=lambda p: (not p['location_match'], p['umbrella'], -p['count'], p['name'].casefold()))
     for person in found:
+        publication_location(person)
         for paper in person['readings']:
             paper['url'] = safe_url(paper['url'])
     # One person may have several joint affiliations: show them once.
@@ -233,6 +250,7 @@ def draft(person, lang):
 
 def context_cards(people, lang, saved):
     for person in people:
+        publication_location(person)
         person['draft'] = draft(person, lang)
         person['saved'] = person['key'] in saved
     return people
@@ -261,6 +279,7 @@ def page(request):
         saved = StudentShortlist.objects.filter(user=request.user)
         for item in saved:
             item.form = ShortlistForm(instance=item, auto_id='shortlist_%d_%%s' % item.pk)
+            publication_location(item.snapshot)
             item.snapshot['draft'] = draft(item.snapshot, translation.get_language())
     return render(request, 'summarizer/students.html', {'form': form, 'paid': paid, 'searches': searches,
                                                        'shortlist': saved, 'error': error, 'per_day': PER_DAY})

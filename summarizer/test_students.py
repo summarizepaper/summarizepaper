@@ -42,6 +42,20 @@ class StudentTests(ToolsTestCase):
             found, _ = students.candidates([self.paper_data(country='US')], self.profile)
         self.assertEqual(found, [])
 
+    def test_national_headquarters_are_not_the_researchers_city(self):
+        paper = self.paper_data()
+        paper['authorships'][0]['institutions'][0].update(display_name='Centre National de la Recherche Scientifique', type='government')
+        with mock.patch.object(students, 'institution_details', return_value=self.details()):
+            self.assertEqual(students.candidates([paper], self.profile)[0], [])
+            found, _ = students.candidates([paper], dict(self.profile, mobility='open'))
+        self.assertEqual(found[0]['city'], '')
+        self.assertFalse(found[0]['location_match'])
+        self.assertFalse(found[0]['location_checked'])
+        # Previously saved snapshots must not display a headquarters as a laboratory either.
+        found[0]['city'] = 'Paris'
+        students.context_cards(found, 'en', set())
+        self.assertEqual(found[0]['city'], '')
+
     def test_alternatives_are_explicit_and_homonyms_stay_separate(self):
         papers = [self.paper_data(), self.paper_data('A2', 'I2', 'US')]
         papers[1]['id'] = 'W2'
