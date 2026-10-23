@@ -4,7 +4,7 @@
 
 {% block title %}{% trans 'Who works on it?' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Describe a research topic: we find the groups that published the most on it in the last two years, their lead researchers, their key papers and their approach. To find a postdoc, collaborators, competitors or referees.' %}" />
+  <meta name="description" content="{% trans 'Describe a research topic: we find the institutions represented in matching papers from the last two years, their authors and the evidence for their approaches. To find a postdoc, collaborators, competitors or referees.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/teams/" />
 {% endblock %}
 
@@ -13,16 +13,16 @@
   <header class="page-header">
     <span class="eyebrow">Premium</span>
     <h1>{% trans 'Who works on it?' %}</h1>
-    <p class="lead">{% trans 'Describe a research topic: we find the groups that published the most on it in the last two years, in journals and on preprint servers, with their lead researchers, their key papers and their approach.' %}</p>
+    <p class="lead">{% trans 'Describe a research topic: we find the institutions represented in matching papers from the last two years, in journals and on preprint servers, with their authors, supporting papers and approaches.' %}</p>
   </header>
 
   {% if anonymous or not paid %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'We write several searches from your topic and run them on OpenAlex, which knows the papers of journals and preprint servers with the institutions of their authors.' %}</li>
-      <li>{% trans 'We keep the papers really about your topic, and group them by institution.' %}</li>
-      <li>{% trans 'For each group: its number of papers and citations, the people who sign them (and how often they sign last, often the head of the group), and its most cited papers.' %}</li>
-      <li>{% trans 'An AI says what each group focuses on and how, and sums up the landscape.' %}</li>
+      <li>{% trans 'We check topical relevance and group matching papers by all declared affiliations. An institution is not necessarily one research team.' %}</li>
+      <li>{% trans 'For each institution: matching papers and citations, plus authors linked to their supporting papers. Author order is not used to infer leadership.' %}</li>
+      <li>{% trans 'An AI summarizes only the themes and methods evidenced by the selected titles, without attributing a research program to an entire institution.' %}</li>
     </ol>
     <ul class="tool-features">
       <li>{% trans 'To find a postdoc or a lab for a PhD, collaborators, the competing teams, or referees to suggest to a journal.' %}</li>
@@ -31,7 +31,7 @@
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
     {% else %}
-      <div class="upsell"><p>{% trans 'Know who matters on your topic, in a minute.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+      <div class="upsell"><p>{% trans 'Explore publications and authors on your topic.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% endif %}
   {% else %}
     {% if error == 'empty' %}<p class="error">{% trans 'Describe the topic in a few words at least.' %}</p>

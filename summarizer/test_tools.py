@@ -1018,20 +1018,21 @@ class TeamsTests(ToolsTestCase):
         def embed(texts):
             return np.array([[1.0, 0.0]] + [[0.0, 1.0] if 'Protein' in t else [1.0, 0.0] for t in texts[1:]], dtype=np.float32)
         with mock.patch('summarizer.teams.works', return_value=found) as works, \
-             mock.patch('summarizer.teams.MIN_CLOSE', 1), \
              mock.patch('summarizer.similar.embed', side_effect=embed), \
-             mock.patch('summarizer.generated.chat_json', side_effect=[plan, notes]):
+             mock.patch('summarizer.generated.chat_json', side_effect=[plan, {'relevant_ids': ['W1', 'W2', 'W4']}, notes]):
             result = teams.find('exomoons', 'en')
         self.assertEqual(works.call_count, 2)
         self.assertEqual(result['papers'], 3)  # protein folding is about something else
-        self.assertEqual([g['institution'] for g in result['groups']], ['Paris', 'Leiden'])
+        self.assertEqual([g['institution'] for g in result['groups']][:2], ['Paris', 'Leiden'])
         paris = result['groups'][0]
         self.assertEqual(paris['papers'], 2)
         self.assertEqual(paris['citations'], 13)
-        self.assertEqual(paris['people'][0], {'name': 'Ann Lee', 'papers': 2, 'last': 0})  # 'Lee, Ann' is the same person
+        self.assertEqual({k: paris['people'][0][k] for k in ('name', 'papers')}, {'name': 'Ann Lee', 'papers': 2})  # 'Lee, Ann' is the same person
         self.assertEqual(paris['focus'], 'Exomoon searches.')
         self.assertEqual(result['landscape'], 'Two groups.')
-        self.assertNotIn('Inst3', [g['institution'] for g in result['groups']])  # middle authors of a huge paper
+        self.assertIn('Inst3', [g['institution'] for g in teams.group([found[3]])])  # no guessed leadership filter
+        self.assertEqual(len(paris['people'][0]['titles']), 2)
+        self.assertEqual(result['version'], teams.RESULT_VERSION)
 
     def test_page_is_premium_and_starts_from_a_project(self):
         self.assertContains(self.client_for(self.user()).get('/en/teams/'), 'Discover Premium')

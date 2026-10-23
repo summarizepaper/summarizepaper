@@ -1430,7 +1430,7 @@ def tools(request):
             ('digest/', 'envelope', _('Daily digest'), False, _('The new arXiv, bioRxiv and medRxiv papers of your fields, ranked for you, every morning.')),
             ('scoops/', 'user-secret', _('Scoop watch'), True, _('Describe your project in progress: we email you the day a new paper comes close to it.')),
             ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they say about them, and what changed when they get a new version.')),
-            ('teams/', 'users', _('Who works on it?'), True, _('The groups that publish the most on a topic, their lead researchers and their approach.')),
+            ('teams/', 'users', _('Who works on it?'), True, _('Institutions and authors publishing on your topic, with supporting papers and methods.')),
             ('trends/', 'chart-line', _('Rising topics'), False, _('The terms that rise on arXiv week after week, field by field.')),
         ]),
         (_('Write and submit'), [

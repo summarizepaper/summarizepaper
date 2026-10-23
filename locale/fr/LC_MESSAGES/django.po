@@ -8371,3 +8371,143 @@ msgstr[1] "%(n)s nouvelles citations"
 
 #~ msgid "The 10-yrs old summary is not ready yet"
 #~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
+
+msgid ""
+"Describe a research topic: we find the institutions represented in matching "
+"papers from the last two years, their authors and the evidence for their "
+"approaches. To find a postdoc, collaborators, competitors or referees."
+msgstr ""
+"Décrivez un sujet de recherche : nous identifions les institutions présentes"
+" dans les articles pertinents des deux dernières années, leurs auteurs et "
+"les méthodes étayées par ces travaux. Pour explorer de futures "
+"collaborations, un laboratoire ou des rapporteurs potentiels."
+
+
+msgid ""
+"Describe a research topic: we find the institutions represented in matching "
+"papers from the last two years, in journals and on preprint servers, with "
+"their authors, supporting papers and approaches."
+msgstr ""
+"Décrivez un sujet de recherche : découvrez les institutions présentes dans "
+"les articles pertinents des deux dernières années, publiés ou en "
+"prépublication, avec leurs auteurs, les articles justificatifs et leurs "
+"méthodes."
+
+
+msgid ""
+"We check topical relevance and group matching papers by all declared "
+"affiliations. An institution is not necessarily one research team."
+msgstr ""
+"Nous vérifions la pertinence des articles et les regroupons selon toutes les"
+" affiliations déclarées. Une institution ne correspond pas nécessairement à "
+"une seule équipe."
+
+
+msgid ""
+"For each institution: matching papers and citations, plus authors linked to "
+"their supporting papers. Author order is not used to infer leadership."
+msgstr ""
+"Pour chaque institution : articles pertinents et citations, ainsi que les "
+"auteurs reliés aux articles qui justifient leur présence. L’ordre des "
+"auteurs ne sert pas à désigner un responsable d’équipe."
+
+
+msgid ""
+"An AI summarizes only the themes and methods evidenced by the selected "
+"titles, without attributing a research program to an entire institution."
+msgstr ""
+"Une IA résume uniquement les thèmes et méthodes étayés par les titres "
+"sélectionnés, sans attribuer un programme scientifique à une institution "
+"entière."
+
+
+msgid "Explore publications and authors on your topic."
+msgstr "Explorez les publications et les auteurs sur votre sujet."
+
+
+msgid ""
+"Institutions and authors publishing on your topic, with supporting papers "
+"and methods."
+msgstr ""
+"Institutions et auteurs publiant sur votre sujet, avec les articles "
+"justificatifs et leurs méthodes."
+
+
+msgid ""
+"From %(n)s papers on this topic published since %(year)s (OpenAlex). All "
+"affiliations declared in the publication metadata are counted; totals across"
+" institutions overlap."
+msgstr ""
+"À partir de %(n)s articles sur ce sujet publiés depuis %(year)s (OpenAlex). "
+"Toutes les affiliations déclarées dans les métadonnées sont prises en compte"
+" ; un article peut figurer dans plusieurs institutions."
+
+
+msgid ""
+"These are publication affiliations, not identified research teams. A "
+"national organization such as CNRS can include several independent "
+"laboratories. Author order does not establish who leads a team."
+msgstr ""
+"Ces regroupements correspondent aux affiliations des publications, pas à des"
+" équipes identifiées. Un organisme national comme le CNRS peut réunir "
+"plusieurs laboratoires indépendants. L’ordre des auteurs ne permet pas de "
+"désigner un responsable d’équipe."
+
+
+msgid ""
+"Topical relevance was checked for the 120 closest candidate papers. This is "
+"a partial view, not an exhaustive ranking."
+msgstr ""
+"La pertinence a été vérifiée pour les 120 articles candidats les plus "
+"proches. Cette vue est partielle et ne constitue pas un classement "
+"exhaustif."
+
+
+msgid ""
+"This saved search uses the previous grouping method. Its inferred "
+"descriptions and people ranking are hidden. Run a new search to obtain "
+"stricter topical matches and the papers supporting each person."
+msgstr ""
+"Cette recherche enregistrée utilise l’ancienne méthode de regroupement. Les "
+"descriptions déduites et le classement des personnes sont masqués. Relancez "
+"une recherche pour obtenir une sélection plus stricte et les articles "
+"justifiant chaque personne affichée."
+
+
+msgid "Themes in the selected papers:"
+msgstr "Thèmes des articles sélectionnés :"
+
+
+msgid "Authors affiliated on these papers:"
+msgstr "Auteurs affiliés dans ces articles :"
+
+
+msgid ""
+"Up to five authors, ordered by the number of matching papers, then "
+"alphabetically. These are not recommendations or identified team leaders."
+msgstr ""
+"Jusqu’à cinq auteurs, classés par nombre d’articles pertinents, puis par "
+"ordre alphabétique. Cette liste ne constitue ni une recommandation ni une "
+"identification des responsables d’équipe."
+
+
+msgid "Most cited matching papers with this affiliation"
+msgstr "Articles pertinents les plus cités avec cette affiliation"
+
+
+msgid "Papers from the saved search"
+msgstr "Articles de la recherche enregistrée"
+
+
+msgid ""
+"We found no recent paper with sufficiently clear evidence for this topic and"
+" its affiliations. Try other words."
+msgstr ""
+"Aucun article récent ne présente un lien suffisamment clair avec ce sujet et"
+" ses affiliations. Essayez d’autres termes."
+
+
+msgid "%(n)s matching paper"
+msgid_plural "%(n)s matching papers"
+msgstr[0] "%(n)s article pertinent"
+msgstr[1] "%(n)s articles pertinents"

@@ -16,18 +16,30 @@
   {% if result %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this search: some papers are missing. Run it again tomorrow for a complete map.' %}</p>{% endif %}
     {% if result.groups %}
-    <p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). An author is counted at their first affiliation.{% endblocktrans %}</p>
-    {% if result.landscape %}<section class="card section-card"><p style="margin:0">{{ result.landscape }}</p></section>{% endif %}
+    {% if result.version == result_version %}<p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). All affiliations declared in the publication metadata are counted; totals across institutions overlap.{% endblocktrans %}</p>{% endif %}
+    <p class="notice">{% trans 'These are publication affiliations, not identified research teams. A national organization such as CNRS can include several independent laboratories. Author order does not establish who leads a team.' %}</p>
+    {% if result.truncated %}<p class="notice">{% trans 'Topical relevance was checked for the 120 closest candidate papers. This is a partial view, not an exhaustive ranking.' %}</p>{% endif %}
+    {% if result.version != result_version %}<p class="notice">{% trans 'This saved search uses the previous grouping method. Its inferred descriptions and people ranking are hidden. Run a new search to obtain stricter topical matches and the papers supporting each person.' %}</p>{% endif %}
+    {% if result.version == result_version and result.landscape %}<section class="card section-card"><p style="margin:0">{{ result.landscape }}</p></section>{% endif %}
     <ul class="item-list">
       {% for g in result.groups %}
       <li class="card">
         <p style="margin:0 0 4px"><strong>{{ g.institution }}</strong>{% if g.country %} · {{ g.country }}{% endif %}</p>
         <div class="meta">{% blocktrans count n=g.papers %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% blocktrans count n=g.citations %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}</div>
-        {% if g.focus %}<p style="margin:8px 0 0"><strong>{% trans 'Focus:' %}</strong> {{ g.focus }}</p>{% endif %}
+        {% if result.version == result_version %}
+        {% if g.focus %}<p style="margin:8px 0 0"><strong>{% trans 'Themes in the selected papers:' %}</strong> {{ g.focus }}</p>{% endif %}
         {% if g.approach %}<p style="margin:4px 0 0"><strong>{% trans 'Approach:' %}</strong> {{ g.approach }}</p>{% endif %}
-        <p style="margin:8px 0 0"><strong>{% trans 'People:' %}</strong>
-          {% for p in g.people %}{{ p.name }} ({{ p.papers }}{% if p.last %}, {% blocktrans count n=p.last %}last author {{ n }} time{% plural %}last author {{ n }} times{% endblocktrans %}{% endif %}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
-        <details style="margin-top:6px"><summary>{% trans 'Their most cited papers on it' %}</summary>
+        <p style="margin:8px 0 0"><strong>{% trans 'Authors affiliated on these papers:' %}</strong></p>
+        <p class="muted"><small>{% trans 'Up to five authors, ordered by the number of matching papers, then alphabetically. These are not recommendations or identified team leaders.' %}</small></p>
+        <ul>
+          {% for p in g.people %}<li>
+            <details><summary>{{ p.name }} — {% blocktrans count n=p.papers %}{{ n }} matching paper{% plural %}{{ n }} matching papers{% endblocktrans %}</summary>
+              <ul>{% for t in p.titles %}<li>{% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.year %} ({{ t.year }}){% endif %}</li>{% endfor %}</ul>
+            </details>
+          </li>{% endfor %}
+        </ul>
+        {% endif %}
+        <details style="margin-top:6px"><summary>{% if result.version == result_version %}{% trans 'Most cited matching papers with this affiliation' %}{% else %}{% trans 'Papers from the saved search' %}{% endif %}</summary>
           <ul>{% for t in g.titles %}<li>{% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.year %} ({{ t.year }}){% endif %}</li>{% endfor %}</ul>
         </details>
       </li>
@@ -35,7 +47,7 @@
     </ul>
     <p class="muted"><small>{% trans 'From the paper metadata of OpenAlex, which can be incomplete (affiliations, homonyms). Check before contacting anyone.' %}</small></p>
     {% else %}
-    <p class="notice">{% trans 'We found no recent paper on this topic. Try other words.' %}</p>
+    <p class="notice">{% trans 'We found no recent paper with sufficiently clear evidence for this topic and its affiliations. Try other words.' %}</p>
     {% endif %}
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The search failed. Please try again.' %}</p>
