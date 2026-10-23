@@ -9,6 +9,8 @@ Configuration (Heroku config vars):
   STRIPE_WEBHOOK_SECRET    whsec_... of the endpoint /stripe/webhook/
   STRIPE_PRICE_MONTHLY     price_... of the monthly price
   STRIPE_PRICE_YEARLY      price_... of the yearly price (optional)
+  STRIPE_PRICE_MONTHLY_USD price_... of the fixed USD monthly price (optional)
+  STRIPE_PRICE_YEARLY_USD  price_... of the fixed USD yearly price (optional)
 """
 import datetime
 import logging
@@ -27,6 +29,7 @@ from django.utils import timezone
 from django.utils.translation import get_language, gettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
 
 from . import access
 from .models import SiteSettings, UserPlan
@@ -36,6 +39,34 @@ logger = logging.getLogger(__name__)
 
 def billing_enabled():
     return bool(settings.STRIPE_SECRET_KEY and settings.STRIPE_PRICE_MONTHLY)
+
+
+def price_id(currency, period='monthly'):
+    name = 'STRIPE_PRICE_' + period.upper() + ('_USD' if currency == 'usd' else '')
+    return getattr(settings, name, '')
+
+
+def currencies():
+    return ['eur', 'usd'] if price_id('usd') else ['eur']
+
+
+def selected_currency(request):
+    """An explicit choice wins over geography; language never determines currency."""
+    available = currencies()
+    explicit = request.GET.get('currency', '').lower()
+    if explicit in available:
+        request.session['billing_currency'] = explicit
+        return explicit
+    saved = request.session.get('billing_currency')
+    if saved in available:
+        return saved
+    # Heroku appends the connecting proxy as the final forwarded address.
+    hops = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')
+    edge = hops[-1].strip() if hops[-1].strip() else request.META.get('REMOTE_ADDR', '')
+    if (access._is_cloudflare(edge) and request.META.get('HTTP_CF_IPCOUNTRY', '').upper() == 'US'
+            and 'usd' in available):
+        return 'usd'
+    return 'eur'
 
 
 def _stripe():
@@ -74,15 +105,18 @@ def price_label(price_id):
     return label or None
 
 
+@never_cache
 def premium(request):
+    currency = selected_currency(request)
     plan = _latest_plan(request.user) if request.user.is_authenticated else None
     paid = access.is_paid(request.user)
     # This marker requires server-side Premium access, never just ?success=1.
     activated = bool(paid and request.session.pop('premium_checkout_pending', False))
     return render(request, 'summarizer/premium.html', {
         'billing_enabled': billing_enabled(),
-        'monthly_price': price_label(settings.STRIPE_PRICE_MONTHLY),
-        'yearly_price': price_label(settings.STRIPE_PRICE_YEARLY),
+        'monthly_price': price_label(price_id(currency)),
+        'yearly_price': price_label(price_id(currency, 'yearly')),
+        'billing_currency': currency, 'billing_currencies': currencies(),
         'is_paid': paid,
         'premium_activated': activated,
         'plan': plan,
@@ -107,12 +141,18 @@ def checkout(request):
     if access.is_paid(request.user):
         return redirect('premium')
     period = request.POST.get('period', 'monthly')
-    if period not in ('monthly', 'yearly') or (period == 'yearly' and not settings.STRIPE_PRICE_YEARLY):
+    currency = request.POST.get('currency', selected_currency(request)).lower()
+    if currency not in currencies():
+        return HttpResponseBadRequest('invalid billing currency')
+    if period not in ('monthly', 'yearly') or not price_id(currency, period):
         return HttpResponseBadRequest('invalid billing period')
-    price = settings.STRIPE_PRICE_YEARLY if period == 'yearly' else settings.STRIPE_PRICE_MONTHLY
+    price = price_id(currency, period)
+    request.session['billing_currency'] = currency
     plan = _latest_plan(request.user)
     params = {
         'mode': 'subscription',
+        'currency': currency,
+        'adaptive_pricing': {'enabled': False},
         'line_items': [{'price': price, 'quantity': 1}],
         'client_reference_id': str(request.user.id),
         'success_url': _absolute(request, 'premium/') + '?success=1',

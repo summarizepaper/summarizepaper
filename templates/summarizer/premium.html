@@ -58,6 +58,7 @@
 
   {% for message in messages %}<p class="notice" role="alert" data-funnel-view="checkout_error">{{ message }}</p>{% endfor %}
   {% if checkout_cancelled %}<p class="notice">{% trans "Payment cancelled. You can choose a subscription again below." %}</p>{% endif %}
+  {% if not is_paid %}{% include 'summarizer/currency_selector.html' %}{% endif %}
   <div class="plans">
     <div class="plan card highlight">
       <h2>{% trans 'Premium' %}</h2>
@@ -75,7 +76,8 @@
         <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next=/{{ LANGUAGE_CODE }}/premium/" data-funnel="premium_signup">{% trans 'Create a free account to subscribe' %}</a>
         <p><small>{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/premium/">{% trans 'Log in' %}</a></small></p>
       {% else %}
-        <form method="post" data-funnel="checkout_start" action="/{{ LANGUAGE_CODE }}/premium/checkout/">{% csrf_token %}
+        <form method="post" data-funnel="checkout_start" data-currency="{{ billing_currency }}" action="/{{ LANGUAGE_CODE }}/premium/checkout/">{% csrf_token %}
+          <input type="hidden" name="currency" value="{{ billing_currency }}">
           {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
           <button type="submit" class="btn" name="period" value="monthly">{% trans 'Subscribe monthly' %}</button>
           {% if yearly_price %}

@@ -8067,6 +8067,9 @@ msgstr "Réessayer"
 msgid "Newer version"
 msgstr "Version récente"
 
+msgid "Billing currency"
+msgstr "Devise de facturation"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

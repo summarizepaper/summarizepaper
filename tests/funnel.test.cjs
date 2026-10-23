@@ -58,3 +58,10 @@ test('a home search sends no research query', () => {
   handlers.submit({target: {dataset: {funnel: 'home_search_submit'}, elements: {arxiv_id: {value: 'private research topic'}}}});
   assert.equal(JSON.stringify(events[0]), '{"name":"home_search_submit","data":{}}');
 });
+test('checkout records only a supported billing currency alongside the period', () => {
+  const {events, handlers} = run('/en/premium/');
+  handlers.submit({target: {dataset: {funnel: 'checkout_start', currency: 'usd'}}, submitter: {value: 'monthly'}});
+  assert.equal(JSON.stringify(events.at(-1)), '{"name":"checkout_start","data":{"period":"monthly","currency":"usd"}}');
+  handlers.submit({target: {dataset: {funnel: 'checkout_start', currency: 'private@example.com'}}, submitter: {value: 'monthly'}});
+  assert.equal(JSON.stringify(events.at(-1)), '{"name":"checkout_start","data":{"period":"monthly"}}');
+});

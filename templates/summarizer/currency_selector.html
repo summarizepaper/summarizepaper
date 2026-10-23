@@ -1,0 +1,8 @@
+{% load i18n %}
+{% if billing_currencies|length > 1 %}
+<form method="get" class="currency-selector" style="display:flex;gap:8px;align-items:center;justify-content:center;margin:12px 0;flex-wrap:wrap">
+  <span>{% trans 'Billing currency' %}</span>
+  <button type="submit" name="currency" value="eur" class="btn btn-sm btn-ghost" aria-pressed="{% if billing_currency == 'eur' %}true{% else %}false{% endif %}">EUR (€)</button>
+  <button type="submit" name="currency" value="usd" class="btn btn-sm btn-ghost" aria-pressed="{% if billing_currency == 'usd' %}true{% else %}false{% endif %}">USD (US$)</button>
+</form>
+{% endif %}

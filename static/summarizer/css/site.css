@@ -968,3 +968,10 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .citation-dialog textarea[hidden], .citation-dialog [hidden] { display: none; }
 .citation-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .citation-dialog:not([open]) { display: none; }
+
+/* The selected billing currency stays explicit before Checkout. */
+.currency-selector button[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}

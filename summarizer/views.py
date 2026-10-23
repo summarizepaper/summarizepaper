@@ -47,6 +47,7 @@ from xml.etree import ElementTree
 import asyncio
 import aiohttp
 from django.views.decorators.http import require_GET
+from django.views.decorators.cache import never_cache
 from django.http import JsonResponse
 from django.utils.safestring import mark_safe
 import logging
@@ -311,6 +312,7 @@ def open_search_results(request, query, kind, page_num, filter_context=None):
         **(filter_context or {}), 'query': query, 'search': results, 'page_obj': page_obj, 'src': 'open', 'kind': kind, 'failed': failed})
 
 
+@never_cache
 def summarize(request):
     stuff_for_frontend = {}
     lang = get_language()
@@ -320,7 +322,7 @@ def summarize(request):
         arxiv_id = request.POST.get('arxiv_id', '').strip()
         if not arxiv_id:
             return render(request, 'summarizer/home.html', {
-                **homepage.context(), 'field': request.POST.get('field', 'all'), 'error': _('Enter a paper link, DOI or research topic.')})
+                **homepage.context(request), 'field': request.POST.get('field', 'all'), 'error': _('Enter a paper link, DOI or research topic.')})
 
         identifier = unified_search.arxiv_identifier(arxiv_id)
         if identifier:
@@ -423,7 +425,7 @@ def summarize(request):
             #return HttpResponseRedirect(reverse('arxividpage', args=(arxiv_id,)))
 
     activated = request.GET.get('activated', False)
-    stuff_for_frontend.update(homepage.context())
+    stuff_for_frontend.update(homepage.context(request))
     stuff_for_frontend['activated'] = activated
 
 

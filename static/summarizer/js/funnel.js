@@ -20,7 +20,9 @@
     if (!form.dataset.funnel || event.defaultPrevented) return;
     if (form.dataset.funnel === 'home_search_submit' && !form.elements.arxiv_id.value.trim()) return;
     var period = event.submitter && event.submitter.value;
-    track(form.dataset.funnel, period === 'monthly' || period === 'yearly' ? {period: period} : {});
+    var data = period === 'monthly' || period === 'yearly' ? {period: period} : {};
+    if (form.dataset.funnel === 'checkout_start' && ['eur', 'usd'].includes(form.dataset.currency)) data.currency = form.dataset.currency;
+    track(form.dataset.funnel, data);
   });
   document.querySelectorAll('[data-funnel-view]').forEach(function (element) {
     track(element.dataset.funnelView);

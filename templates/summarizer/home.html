@@ -105,7 +105,7 @@
 <section class="home-section container" aria-labelledby="premium-title">
   <div class="home-premium">
     <div><p class="home-kicker">{% trans 'For the research you do every day' %}</p><h2 id="premium-title">{% trans 'Go further with Premium' %}</h2><p>{% trans 'Check your bibliography, find related work missing from your draft, and monitor research close to your project.' %}</p><ul><li>{% trans 'Bibliography Check and What Did I Miss?' %}</li><li>{% trans 'Scoop Watch and a digest ranked for your research' %}</li><li>{% trans 'Our most capable model and no daily summary limit' %}</li></ul></div>
-    <div class="home-premium-action">{% if home_price %}<p class="home-price">{{ home_price }}</p>{% endif %}<a class="btn btn-lg" href="{% url 'premium' %}" data-funnel="premium_click" data-placement="offer">{% trans 'See Premium tools' %}</a><p class="home-fine">{% trans 'Cancel anytime in one click' %}<br>{% trans 'Payments handled by Stripe' %}</p></div>
+    <div class="home-premium-action">{% include 'summarizer/currency_selector.html' %}{% if home_price %}<p class="home-price">{{ home_price }}</p>{% endif %}<a class="btn btn-lg" href="{% url 'premium' %}" data-funnel="premium_click" data-placement="offer">{% trans 'See Premium tools' %}</a><p class="home-fine">{% trans 'Cancel anytime in one click' %}<br>{% trans 'Payments handled by Stripe' %}</p></div>
   </div>
 </section>
 
