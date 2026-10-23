@@ -118,6 +118,13 @@ class SummaryPresentationTests(TestCase):
         self.assertIn('$M_{\\oplus}$', soup.li.get_text())
         self.assertIsNone(soup.img)
 
+    def test_glued_definitions_heading_from_the_reported_paper(self):
+        from .summary_text import lay_html
+        soup = BeautifulSoup(lay_html('Résumé 1. Une idée.\n\nDéfinitions - Étoile : du gaz chaud.\n- Planète : un astre.'), 'html.parser')
+        self.assertEqual(soup.h3.get_text(), 'Définitions')
+        self.assertEqual(len(soup.select('ul > li')), 2)
+        self.assertEqual(soup.select_one('ul > li strong').get_text(), 'Étoile :')
+
     def test_existing_results_keep_bullets_and_format_lay_summary_without_arxiv(self):
         paper = ArxivPaper.objects.create(arxiv_id='2607.11677v1', title='Public test')
         SummaryPaper.objects.create(paper=paper, lang='fr', notes='- **Résultat :** Un point.\n- Une limite.',

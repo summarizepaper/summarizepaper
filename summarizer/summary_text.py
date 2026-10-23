@@ -5,7 +5,7 @@ from django.utils.html import escape
 from . import keypoints
 
 PREFIX = re.compile(r'^\s*(?:résumé|summary)\s*(?::\s*|\n\s*|(?=\d+[.)]\s))', re.I)
-DEFINITIONS = re.compile(r'^\s*(d[ée]finitions?|definitions?)\s*:\s*(.*)$', re.I)
+DEFINITIONS = re.compile(r'^\s*(d[ée]finitions?|definitions?)\s*(?::\s*|(?=[-•*+–]\s)|$)(.*)$', re.I)
 ITEM = re.compile(r'^\s*(?:(\d{1,2})[.)]|([-•*+–]))\s+(.+)$')
 
 
