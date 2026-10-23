@@ -510,6 +510,8 @@
 {% endblock %}
 
 {% block scripts %}
+{% include 'summarizer/citation_dialog.html' %}
+<script src="{% static_v 'summarizer/js/citation.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-tools.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-ready.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-live.js' %}"></script>

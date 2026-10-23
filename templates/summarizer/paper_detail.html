@@ -144,7 +144,7 @@
     </div>
     {% endif %}
     <div class="info-block">
-      <div class="info-text"><i class="fas fa-quote-right"></i> <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow">{% trans 'Cite this paper (BibTeX)' %}</a></div>
+      <div class="info-text"><i class="fas fa-quote-right"></i> <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog">{% trans 'Cite this paper (BibTeX)' %}</a></div>
     </div>
     {% include 'summarizer/paper_tools.html' %}
 

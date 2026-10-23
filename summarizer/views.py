@@ -1372,7 +1372,8 @@ def bibtex(request, arxiv_id):
     get_object_or_404(ArxivPaper, arxiv_id=arxiv_id)
     meta = exports.paper_meta(arxiv_id)
     response = HttpResponse(exports.bibtex_entry(meta), content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = 'inline; filename="%s.bib"' % exports.file_name(arxiv_id)
+    disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+    response['Content-Disposition'] = '%s; filename="%s.bib"' % (disposition, exports.file_name(arxiv_id))
     return response
 
 

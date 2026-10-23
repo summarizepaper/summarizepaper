@@ -594,6 +594,12 @@ class BibtexTests(TestCase):
         self.assertIn('title={A Constraint on the Amount of Hydrogen},', body)
         self.assertIn('eprint={2303.11544},', body)
         self.assertIn('url={https://arxiv.org/abs/2303.11544}', body)
+        inline = Client().get('/en/bibtex/2303.11544v1/')
+        download = Client().get('/en/bibtex/2303.11544v1/?download=1')
+        self.assertTrue(inline['Content-Disposition'].startswith('inline;'))
+        self.assertTrue(download['Content-Disposition'].startswith('attachment;'))
+        self.assertEqual(inline.content, download.content)
+
 
 
 from summarizer import utils as summarizer_utils

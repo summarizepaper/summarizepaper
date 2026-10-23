@@ -28,7 +28,7 @@
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'Export' %}</span>
-    <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow">BibTeX</a> ·
+    <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog">BibTeX</a> ·
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/ris/" rel="nofollow">RIS (Zotero, Mendeley, EndNote)</a> ·
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow">Markdown (Notion, Obsidian)</a> ·
     <button type="button" class="link-button" id="zotero-go">{% trans 'Send to Zotero with its summary' %}</button>

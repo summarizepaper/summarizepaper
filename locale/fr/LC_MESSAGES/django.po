@@ -7946,6 +7946,35 @@ msgstr ""
 "Ces accès débloquent uniquement les outils indiqués ci-dessus. Vous pouvez "
 "toujours souscrire au Premium complet."
 
+#: templates/summarizer/citation_dialog.html:1
+msgid "Loading citation…"
+msgstr "Chargement de la référence…"
+
+#: templates/summarizer/citation_dialog.html:1
+msgid "The citation could not be loaded. Please try again."
+msgstr "La référence n’a pas pu être chargée. Réessayez."
+
+#: templates/summarizer/citation_dialog.html:1
+msgid "Citation copied."
+msgstr "Référence copiée."
+
+#: templates/summarizer/citation_dialog.html:1
+msgid "Copy unavailable. Select the reference and copy it manually."
+msgstr ""
+"Copie indisponible. Sélectionnez la référence et copiez-la manuellement."
+
+#: templates/summarizer/citation_dialog.html:1
+msgid "BibTeX reference"
+msgstr "Référence BibTeX"
+
+#: templates/summarizer/citation_dialog.html:1
+msgid "Copy reference"
+msgstr "Copier la référence"
+
+#: templates/summarizer/citation_dialog.html:1
+msgid "Download .bib"
+msgstr "Télécharger le .bib"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

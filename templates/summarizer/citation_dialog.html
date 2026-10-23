@@ -1,0 +1,14 @@
+{% load i18n %}
+<dialog id="citation-dialog" class="citation-dialog" aria-labelledby="citation-title"
+        data-loading="{% trans 'Loading citation…' %}" data-failed="{% trans 'The citation could not be loaded. Please try again.' %}"
+        data-copied="{% trans 'Citation copied.' %}" data-copy-failed="{% trans 'Copy unavailable. Select the reference and copy it manually.' %}">
+  <div class="citation-heading"><h2 id="citation-title">{% trans 'Cite this paper (BibTeX)' %}</h2>
+    <button type="button" class="btn btn-sm btn-ghost" data-citation-close aria-label="{% trans 'Close' %}">×</button></div>
+  <p data-citation-status role="status" aria-live="polite"></p>
+  <textarea data-citation-text readonly spellcheck="false" aria-label="{% trans 'BibTeX reference' %}" hidden></textarea>
+  <div class="citation-actions">
+    <button type="button" class="btn btn-sm" data-citation-copy disabled>{% trans 'Copy reference' %}</button>
+    <a class="btn btn-sm btn-ghost" data-citation-download>{% trans 'Download .bib' %}</a>
+    <button type="button" class="btn btn-sm btn-ghost" data-citation-retry hidden>{% trans 'Try again' %}</button>
+  </div>
+</dialog>
