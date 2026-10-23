@@ -341,7 +341,9 @@ if 'ON_HEROKU' in os.environ:
     #Daphne serves every request from one process: a small connection pool instead of
     #opening a new SSL connection to Postgres for each request (CONN_MAX_AGE must stay 0)
     DATABASES = {'default': dj_database_url.config(conn_max_age=0, ssl_require=True)}
-    DATABASES['default'].setdefault('OPTIONS', {})['pool'] = {'min_size': 2, 'max_size': 8, 'timeout': 20}
+    #essential-1 allows 20 connections: 12 here, the rest for the hourly job, release phase and admin.
+    #A request that gets none within 5 s fails alone, instead of holding a thread for 20 s (see threadwatch.py)
+    DATABASES['default'].setdefault('OPTIONS', {})['pool'] = {'min_size': 2, 'max_size': 12, 'timeout': 5}
 
     #Heroku's router tells us whether the visitor used https
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

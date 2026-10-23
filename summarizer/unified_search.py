@@ -82,7 +82,7 @@ def search(query, field='all', source='all', kind='', filters=None, page=1):
         arxiv_provider = partial(arxiv_results, **arxiv_kwargs) if arxiv_kwargs else arxiv_results
         arxiv_allowed = (source != 'open' and kind not in ('journals', 'reviews') and
                          not any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')))
-        arxiv_job = pool.submit(_fetch, arxiv_provider, query, field) if arxiv_allowed else None
+        arxiv_job = pool.submit(sources.closing(_fetch), arxiv_provider, query, field) if arxiv_allowed else None
         kwargs = {}
         if kind:
             kwargs['kind'] = kind
@@ -91,7 +91,7 @@ def search(query, field='all', source='all', kind='', filters=None, page=1):
         if page != 1:
             kwargs['page'] = page
         other_provider = partial(sources.search, **kwargs) if kwargs else sources.search
-        other_job = pool.submit(_fetch, other_provider, query, field) if source != 'arxiv' else None
+        other_job = pool.submit(sources.closing(_fetch), other_provider, query, field) if source != 'arxiv' else None
         arxiv, arxiv_failed = arxiv_job.result() if arxiv_job else ([], False)
         other, other_failed = other_job.result() if other_job else ([], False)
     results, seen = [], set()

@@ -24,6 +24,7 @@ it (see is_open_license); otherwise the summary is written from the abstract.
 Metadata is kept in ExternalPaper and refreshed at most once a day.
 """
 import datetime
+import functools
 import hashlib
 import json
 import logging
@@ -91,12 +92,22 @@ class SourceUnavailable(Exception):
 
 def in_thread(function, *args):
     """Run a lookup in a worker thread (asyncio.to_thread): its slow downloads hold neither the event loop
-    nor Channels' single thread for database calls, and its database connection is closed afterwards."""
+    nor Channels' single thread for database calls, and its database connection is closed afterwards.
+
+    Every function run in a thread we start ourselves (asyncio.to_thread, a ThreadPoolExecutor) must go through
+    this when it may touch the database, even indirectly (a search remembers papers, an AI call counts its
+    tokens): Django gives a connection back to the pool only when its thread closes it, and the pool holds 8.
+    Worker threads that kept theirs blocked the whole site once a day."""
     from django.db import connections
     try:
         return function(*args)
     finally:
         connections.close_all()
+
+
+def closing(function):
+    """function, run through in_thread: for pool.map(closing(f), items) and pool.submit(closing(f), ...)."""
+    return functools.partial(in_thread, function)
 
 
 # --- keys --------------------------------------------------------------------

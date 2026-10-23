@@ -630,7 +630,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('clossseeee')
         message["progress"] = 50
         await self.send_message_now(message)
-        await asyncio.to_thread(similar.find_and_store, v)
+        await asyncio.to_thread(sources.in_thread, similar.find_and_store, v)
 
         #await asyncio.sleep(10.)
         
@@ -889,7 +889,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
-        await asyncio.to_thread(similar.find_and_store, v)
+        await asyncio.to_thread(sources.in_thread, similar.find_and_store, v)
 
         message["progress"] = 100
         if l == 'fr':

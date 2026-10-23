@@ -210,7 +210,7 @@ def render_pptx(pages, arxiv_id, license_label, title):
     urls = list(dict.fromkeys(p['figure']['url'] for p in pages if p.get('figure')))
     try:
         with ThreadPoolExecutor(max_workers=4) as pool:
-            images = dict(zip(urls, pool.map(figure_bytes, urls)))
+            images = dict(zip(urls, pool.map(sources.closing(figure_bytes), urls)))
     except ExportError:
         raise ExportError(_('A figure could not be included. Please try the PowerPoint export again later.'))
     presentation = Presentation()

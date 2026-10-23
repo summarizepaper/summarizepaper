@@ -182,7 +182,7 @@ def complete(found, profile):
     if not found:
         return
     with ThreadPoolExecutor(max_workers=4) as pool:
-        records = list(pool.map(author_publications, [p['author_url'] for p in found]))
+        records = list(pool.map(sources.closing(author_publications), [p['author_url'] for p in found]))
     unique = {w['id']: w for record in records for w in record['works']}
     relevant = set()
     try:

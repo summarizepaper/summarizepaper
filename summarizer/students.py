@@ -212,7 +212,7 @@ def candidates(papers, profile, step=lambda name: None):
     selected = ordered[:MAX_AUTHORS]
     step('location')
     with ThreadPoolExecutor(max_workers=4) as pool:
-        latest = dict(zip(selected, pool.map(latest_affiliations, selected)))
+        latest = dict(zip(selected, pool.map(sources.closing(latest_affiliations), selected)))
     institutions = {i['id']: i for record in latest.values() if record for i in record['institutions']}
     institution_ids = list(institutions)
     country = normalized(profile.get('country', ''))
@@ -221,7 +221,7 @@ def candidates(papers, profile, step=lambda name: None):
         institution_ids.sort(key=lambda iid: institutions[iid].get('country_code') != code)
     with ThreadPoolExecutor(max_workers=4) as pool:
         checked_ids = institution_ids[:MAX_INSTITUTIONS]
-        details = dict(zip(checked_ids, pool.map(institution_details, checked_ids)))
+        details = dict(zip(checked_ids, pool.map(sources.closing(institution_details), checked_ids)))
     found = []
     for aid in selected:
         person, record = people[aid], latest[aid]
@@ -285,7 +285,7 @@ def enrich_readings(found):
             return ''
     needed = [key for key, paper in papers.items() if not paper.get('abstract')]
     with ThreadPoolExecutor(max_workers=4) as pool:
-        abstracts = dict(zip(needed, pool.map(abstract, needed)))
+        abstracts = dict(zip(needed, pool.map(sources.closing(abstract), needed)))
     for person in found:
         for paper in person['readings']:
             paper['abstract'] = paper.get('abstract') or abstracts.get(paper['id'], '')

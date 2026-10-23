@@ -23,7 +23,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, generated, missed, similar
+from . import access, generated, missed, similar, sources
 from .models import Generated, WatchedProject
 
 MAX_PROGRAM = 120000  # characters of the program read
@@ -102,7 +102,7 @@ def list_talks(piece):
 def find(program, interests, lang, step=lambda name: None):
     step('list')
     with ThreadPoolExecutor(PARALLEL) as pool:
-        listed = [t for found in pool.map(list_talks, chunks(normalize_accents(program))) for t in found]
+        listed = [t for found in pool.map(sources.closing(list_talks), chunks(normalize_accents(program))) for t in found]
     unique = {}
     for talk in listed:  # a talk cut between two pieces is listed twice
         unique.setdefault(talk['title'].lower(), talk)

@@ -1334,6 +1334,36 @@ class OpenAlexBudgetTests(ToolsTestCase):
             self.assertTrue(teams.find('exomoons', 'en')['limited'])
 
 
+class ThreadwatchTests(ToolsTestCase):
+    def test_worker_threads_give_their_connection_back(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from summarizer import sources
+        with mock.patch('django.db.connections.close_all') as close, ThreadPoolExecutor(2) as pool:
+            self.assertEqual(list(pool.map(sources.closing(lambda x: x * 2), [1, 2, 3])), [2, 4, 6])
+        self.assertEqual(close.call_count, 3)
+
+    def test_a_stuck_process_restarts_after_ten_minutes(self):
+        from summarizer import threadwatch
+        state = {'checks': 0, 'stuck_for': 0}
+        full = (12, 12, 12, 5)  # every connection in use, 5 requests waiting
+        with mock.patch('summarizer.threadwatch.pool_stats', return_value=full), \
+             mock.patch('summarizer.threadwatch.restart') as restart, \
+             self.assertLogs('summarizer.threadwatch', 'WARNING') as logs:
+            for _ in range(9):
+                threadwatch.tick(state)
+            restart.assert_not_called()
+            threadwatch.tick(state)
+        restart.assert_called_once()
+        self.assertIn('12/12 in use (max 12), 5 waiting', logs.output[-1])
+        self.assertIn('restarting', logs.output[-1])
+        state = {'checks': 0, 'stuck_for': 9}
+        with mock.patch('summarizer.threadwatch.pool_stats', return_value=(3, 6, 12, 0)), \
+             mock.patch('summarizer.threadwatch.restart') as restart:
+            threadwatch.tick(state)  # the pool has room again: the count starts over
+        restart.assert_not_called()
+        self.assertEqual(state['stuck_for'], 0)
+
+
 class AudioTests(ToolsTestCase):
     def test_clips_are_shared_and_joined(self):
         items = [DigestItem.objects.create(arxiv_id='2610.0000%dv1' % i, lang='en', title='Paper %d' % i, blurb='Blurb %d.' % i)
