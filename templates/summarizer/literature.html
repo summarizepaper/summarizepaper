@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Literature review' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Start from a research question: we search journals, preprints and arXiv, follow the references of the closest papers, and write an exploratory synthesis of 15 to 30 founding and recent papers grouped by approach, each finding cited.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/literature-review/" />
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <span class="eyebrow">Premium</span>
+    <h1>{% trans 'Literature review' %}</h1>
+    <p class="lead">{% trans 'Ask a research question. We look for the papers that answer it, find the founding and the recent ones, group them by approach and write a comparative synthesis that cites them.' %}</p>
+  </header>
+
+  {% if anonymous or not paid %}
+    <h2>{% trans 'How it works' %}</h2>
+    <ol class="tool-steps">
+      <li>{% trans 'We turn your question into its key concepts, their synonyms, and several literature searches.' %}</li>
+      <li>{% trans 'We run them on OpenAlex (journals, preprints and conference papers, open access or not) and on arXiv, by relevance and for the last three years, and look for reviews and the most cited works.' %}</li>
+      <li>{% trans 'We follow the references of the closest papers: the works many of them cite are the founding papers a keyword search misses.' %}</li>
+      <li>{% trans 'We rank the candidates by closeness to your question, an AI screens their abstracts, and we keep 15 to 30 papers, founding and recent.' %}</li>
+      <li>{% trans 'You get a synthesis by approach, a comparison table, where the papers agree and disagree, what they leave open, and the numbered references. Each finding shows the sentence of the abstract that supports it.' %}</li>
+    </ol>
+    <ul class="tool-features">
+      <li>{% trans 'To start on a new topic, prepare a proposal or the related-work section of a thesis.' %}</li>
+      <li>{% trans 'An exploratory synthesis, not a systematic review: the searches, sources and counts are shown so you can judge the coverage.' %}</li>
+      <li>{% trans 'Save the papers in a collection to compare them in a table or chat with them.' %}</li>
+    </ul>
+    {% if anonymous %}
+      {% include 'summarizer/tool_signup.html' with premium_tool=True %}
+    {% else %}
+      <div class="upsell"><p>{% trans 'Go from a question to the papers that answer it, grouped and cited.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    {% endif %}
+  {% else %}
+    {% if error == 'length' %}<p class="error">{% blocktrans with low=min_chars high=max_chars %}Write your question in {{ low }} to {{ high }} characters.{% endblocktrans %}</p>
+    {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} reviews a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
+    <form method="post" class="card section-card">
+      {% csrf_token %}
+      <p><label for="question"><strong>{% trans 'Your research question' %}</strong></label></p>
+      <p><textarea id="question" name="question" maxlength="{{ max_chars }}" required placeholder="{% trans 'e.g. What mechanisms explain the persistence of microplastics in marine sediments?' %}">{{ question }}</textarea></p>
+      <p class="muted"><small>{% trans 'In any language. A precise question (a phenomenon, a population, a setting) gives a more focused review than a topic.' %}</small></p>
+      <p><button class="btn" type="submit">{% trans 'Review the literature' %}</button></p>
+      <p class="muted"><small>{% blocktrans %}It takes 3 to 6 minutes. {{ per_day }} reviews a day.{% endblocktrans %}</small></p>
+    </form>
+
+    {% if reviews %}
+    <h2>{% trans 'Your reviews' %}</h2>
+    <ul class="item-list">
+      {% for r in reviews %}
+      <li class="card"><a href="/{{ LANGUAGE_CODE }}/literature-review/{{ r.key }}/">{% if r.status == 'done' %}{{ r.data.question|default:_('Review') }}{% elif r.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ r.created|date:"j F Y H:i" }}{% if r.status == 'done' %} · {% blocktrans count n=r.data.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}{% endif %}</div></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

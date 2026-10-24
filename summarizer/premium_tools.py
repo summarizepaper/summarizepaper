@@ -7,6 +7,7 @@ TOOL_CHOICES = (
     ('journal_club', _('Journal club')),
     ('refcheck', _('Bibliography check')),
     ('missed', _('What did I miss?')),
+    ('literature', _('Literature review')),
     ('scoops', _('Scoop watch')),
     ('conference', _('Conference companion')),
     ('teams', _('Who works on it?')),
@@ -27,5 +28,5 @@ GENERATED_TOOLS = {
     'slides': 'journal_club', 'slides_v2': 'journal_club',
     'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club',
     'compare': 'collections', 'questions': 'collections',
-    **{k: k for k in ('missed', 'zotero', 'refcheck', 'changes', 'teams', 'conference', 'students')},
+    **{k: k for k in ('missed', 'literature', 'zotero', 'refcheck', 'changes', 'teams', 'conference', 'students')},
 }

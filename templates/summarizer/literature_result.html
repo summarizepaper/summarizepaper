@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% if result.title %}{{ result.title }}{% else %}{% trans 'Literature review' %}{% endif %}{% endblock %}
+{% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="{% url 'literature' %}">← {% trans 'Literature review' %}</a></p>
+    <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Your question' %}{% endif %}</h1>
+    {% if result.question %}<p class="lead">{{ result.question }}</p>{% endif %}
+  </header>
+
+  {% if result %}
+    {% with c=result.coverage %}
+    <section class="card section-card lit-coverage" aria-labelledby="coverage-title">
+      <h2 id="coverage-title">{% trans 'How this review was searched' %}</h2>
+      <p>{% blocktrans with candidates=c.candidates screened=c.screened relevant=c.relevant included=c.included %}{{ candidates }} papers found, the {{ screened }} closest to the question screened on their abstract, {{ relevant }} judged relevant, {{ included }} included.{% endblocktrans %}
+        {% if c.years %}{% blocktrans with first=c.years.0 last=c.years.1 %}Published from {{ first }} to {{ last }}.{% endblocktrans %}{% endif %}
+        {% blocktrans with founding=c.labels.founding recent=c.labels.recent reviews=c.labels.review %}{{ founding }} founding papers, {{ recent }} from the last three years, {{ reviews }} reviews.{% endblocktrans %}
+        {% if c.findings %}{% blocktrans with quoted=c.quoted findings=c.findings %}{{ quoted }} of the {{ findings }} findings are backed by a sentence found word for word in an abstract.{% endblocktrans %}{% endif %}</p>
+      {% if c.thin %}<p class="notice" role="status">{% blocktrans with n=c.relevant %}Only {{ n }} clearly relevant papers were found: the question may be very narrow, or worded differently in the literature. Papers marked "peripheral" were added to reach 15; read their part of the synthesis with care.{% endblocktrans %}</p>{% endif %}
+      {% if c.limited %}<p class="notice" role="status">{% if 'budget' in c.limited %}{% trans 'Our daily search budget ran out during this review: some searches were not run.' %}{% endif %} {% if 'openalex' in c.limited %}{% trans 'OpenAlex did not answer some searches.' %}{% endif %} {% if 'arxiv' in c.limited %}{% trans 'arXiv did not answer some searches.' %}{% endif %} {% trans 'The coverage is narrower than usual; you can run the review again later.' %}</p>{% endif %}
+      <p class="muted"><small>{% trans 'An exploratory synthesis, not a systematic review: the papers are read from their abstracts, and papers that OpenAlex and arXiv do not index, or that our searches word differently, can be missing.' %}</small></p>
+      <details>
+        <summary>{% trans 'Searches and sources' %}</summary>
+        {% if c.include %}<p><strong>{% trans 'Inclusion:' %}</strong> {{ c.include }}</p>{% endif %}
+        {% if c.concepts %}<p><strong>{% trans 'Key concepts:' %}</strong> {{ c.concepts|join:", " }}</p>{% endif %}
+        <p><strong>{% trans 'Queries:' %}</strong></p>
+        <ul>{% for q in c.queries %}<li>{{ q }}</li>{% endfor %}</ul>
+        <ul>
+          <li>{% trans 'OpenAlex, by relevance:' %} {{ c.by_source.relevance|default:0 }}</li>
+          <li>{% trans 'OpenAlex, last three years:' %} {{ c.by_source.recent|default:0 }}</li>
+          <li>{% trans 'arXiv:' %} {{ c.by_source.arxiv|default:0 }}</li>
+          <li>{% trans 'OpenAlex, reviews:' %} {{ c.by_source.reviews|default:0 }}</li>
+          <li>{% trans 'OpenAlex, most cited:' %} {{ c.by_source.most_cited|default:0 }}</li>
+          <li>{% trans 'Cited by several of the closest papers:' %} {{ c.by_source.cited|default:0 }}</li>
+        </ul>
+        <p class="muted"><small>{% trans 'A paper found by several searches is counted in each.' %}</small></p>
+      </details>
+    </section>
+    {% endwith %}
+
+    {% if not result.papers %}
+      <p class="notice">{% trans 'No paper with an abstract was found for this question. Try wording it with the terms papers of the field use.' %}</p>
+    {% else %}
+      {% if result.overview %}
+      <h2>{% trans 'In short' %}</h2>
+      <p>{% for s in result.overview %}{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %} {% endfor %}</p>
+      {% endif %}
+
+      {% if result.themes %}
+      <h2>{% trans 'Approaches compared' %}</h2>
+      <div class="compare-wrap">
+        <table class="compare-table lit-table">
+          <thead><tr><th>{% trans 'Approach' %}</th><th>{% trans 'Papers' %}</th><th>{% trans 'Strengths' %}</th><th>{% trans 'Limits' %}</th></tr></thead>
+          <tbody>
+            {% for t in result.themes %}
+            <tr><td><a href="#theme-{{ forloop.counter }}">{{ t.name }}</a></td>
+              <td>{% include 'summarizer/literature_cites.html' with cites=t.papers %}</td>
+              <td>{{ t.strengths }}</td><td>{{ t.limits }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% for t in result.themes %}
+      <section class="lit-theme" id="theme-{{ forloop.counter }}">
+        <h3>{{ t.name }}</h3>
+        {% if t.summary %}<p>{{ t.summary }}</p>{% endif %}
+        {% if t.findings %}
+        <ul class="lit-findings">
+          {% for f in t.findings %}
+          <li>{{ f.text }} {% include 'summarizer/literature_cites.html' with cites=f.papers %}
+            {% if f.quote %}<blockquote class="key-sentence">« {{ f.quote }} » <small class="muted">[{{ f.quoted }}]</small></blockquote>
+            {% else %}<div class="muted"><small>{% trans 'No sentence of the cited abstracts states it word for word: check it in the papers.' %}</small></div>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if t.entries %}<p class="meta">{% for p in t.entries %}<a href="#ref-{{ p.n }}">[{{ p.n }}]</a> {{ p.title|truncatechars:80 }}{% if p.year %} ({{ p.year }}){% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+      </section>
+      {% endfor %}
+      {% endif %}
+
+      {% if result.consensus %}<h2>{% trans 'Where the papers agree' %}</h2>
+      <ul>{% for s in result.consensus %}<li>{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %}</li>{% endfor %}</ul>{% endif %}
+      {% if result.disagreements %}<h2>{% trans 'Where they disagree' %}</h2>
+      <ul>{% for s in result.disagreements %}<li>{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %}</li>{% endfor %}</ul>{% endif %}
+      {% if result.gaps %}<h2>{% trans 'What they leave open' %}</h2>
+      <ul>{% for s in result.gaps %}<li>{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %}</li>{% endfor %}</ul>{% endif %}
+
+      {% if result.coverage.unread %}
+      <h3>{% trans 'Often cited, not read' %}</h3>
+      <p class="muted">{% trans 'Several of the papers found cite these works, but OpenAlex has no abstract for them: they are not in the synthesis. Read them if they are not already known to you.' %}</p>
+      <ul>{% for p in result.coverage.unread %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.key }}/">{{ p.title }}</a> <span class="meta">{{ p.authors }}{% if p.year %} · {{ p.year }}{% endif %} · {% blocktrans with n=p.cocited %}cited by {{ n }} of the closest papers found{% endblocktrans %}</span></li>{% endfor %}</ul>
+      {% endif %}
+
+      <h2>{% trans 'References' %}</h2>
+      {% if message == 'saved' and collection %}<p class="notice" role="status">{% trans 'The papers are in a new collection:' %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/">{{ collection.name }}</a></p>
+      {% elif message == 'too_many' %}<p class="error">{% trans 'You have reached your number of collections. Delete one to save these papers.' %}</p>{% endif %}
+      <form method="post" class="item-actions">{% csrf_token %}
+        <button class="btn btn-sm btn-ghost" type="submit">{% trans 'Save these papers in a collection' %}</button>
+        <span class="muted"><small>{% trans 'to compare them in a table, find their open questions or chat with them' %}</small></span>
+      </form>
+      <ol class="item-list lit-references">
+        {% for p in result.papers %}
+        <li class="card" id="ref-{{ p.n }}">
+          <p style="margin:0 0 4px"><strong>[{{ p.n }}]</strong> <a href="/{{ LANGUAGE_CODE }}/paper/{{ p.key }}/"><strong>{{ p.title }}</strong></a></p>
+          <div class="meta">{{ p.authors }}{% if p.year %} · {{ p.year }}{% endif %}{% if p.venue %} · {{ p.venue }}{% endif %}{% if p.cited_by is not None %} · {% blocktrans count n=p.cited_by %}cited {{ n }} time{% plural %}cited {{ n }} times{% endblocktrans %}{% endif %}{% if p.doi %} · <a href="https://doi.org/{{ p.doi }}" rel="noopener" target="_blank">doi:{{ p.doi }}</a>{% else %} · {{ p.key|paper_ref }}{% endif %}</div>
+          <p style="margin:6px 0 0">
+            {% for label in p.labels %}<span class="importance {% if label == 'founding' %}high{% elif label == 'recent' %}medium{% else %}low{% endif %}">{% if label == 'founding' %}{% trans 'Founding' %}{% elif label == 'recent' %}{% trans 'Recent' %}{% else %}{% trans 'Review' %}{% endif %}</span> {% endfor %}
+            {% if p.peripheral %}<span class="importance low">{% trans 'Peripheral' %}</span>{% endif %}
+            {% if p.approach %}<span class="muted">{{ p.approach }}</span>{% endif %}
+          </p>
+        </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+  {% elif row.status == 'failed' %}
+    <p class="error">{% trans 'The review failed. Try again in a few minutes.' %}</p>
+  {% else %}
+    {% trans 'Reviewing the literature on your question' as working_title %}
+    {% trans 'usually 3 to 6 minutes' as working_time %}
+    {% include 'summarizer/working.html' with working_id='literature-working' working_steps=steps working_visible=True working_started=row.created %}
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      SP.track(document.getElementById('literature-working'), {{ row.pk }}, function () { location.reload(); });
+    });
+    </script>
+  {% endif %}
+</div>
+{% endblock %}

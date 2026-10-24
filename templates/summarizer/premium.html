@@ -99,6 +99,7 @@
         <li>{% trans 'A smarter digest: papers ranked by closeness to your research, authors you follow, a weekly synthesis of your fields, full summaries ready in advance, up to 5 digests' %}</li>
         <li>{% trans 'Your digest read aloud, to listen on the go' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/collections/">{% trans 'Comparison tables of your collections' %}</a>: {% trans 'question, method, data, results and limitations of each paper, where they agree and disagree, what is missing' %}, {% trans 'and the open questions they leave, with projects that would answer them' %}</li>
+        <li><a href="{% url 'literature' %}">{% trans 'Literature review' %}</a>: {% trans 'start from a research question and get 15 to 30 founding and recent papers grouped by approach, with a synthesis whose findings cite the abstracts' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>: {% trans 'the papers close to your draft that it does not cite, on arXiv and in journals' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Bibliography check' %}</a>: {% trans 'retracted papers, preprints published since, and citations the cited abstract does not support' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/citations/">{% trans 'Citation alerts' %}</a>: {% trans 'who cites your papers, and what they say about them' %}, {% trans 'and what changed when they get a new version' %}</li>

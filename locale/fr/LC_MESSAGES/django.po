@@ -9512,3 +9512,307 @@ msgstr ""
 
 #~ msgid "The 10-yrs old summary is not ready yet"
 #~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
+
+#: templates/summarizer/literature.html
+msgid "Literature review"
+msgstr "Revue de littérature"
+
+#: templates/summarizer/literature.html
+msgid "Start from a research question: we search journals, preprints and arXiv, follow the references of the closest papers, and write an exploratory synthesis of 15 to 30 founding and recent papers grouped by approach, each finding cited."
+msgstr "Partez d’une question de recherche : nous cherchons dans les revues, les prépublications et arXiv, suivons les références des articles les plus proches et rédigeons une synthèse exploratoire de 15 à 30 articles fondateurs et récents regroupés par approche, chaque résultat cité."
+
+#: templates/summarizer/literature.html
+msgid "Ask a research question. We look for the papers that answer it, find the founding and the recent ones, group them by approach and write a comparative synthesis that cites them."
+msgstr "Posez une question de recherche. Nous cherchons les articles qui y répondent, repérons les travaux fondateurs et récents, les regroupons par approche et rédigeons une synthèse comparative qui les cite."
+
+#: templates/summarizer/literature.html
+msgid "We turn your question into its key concepts, their synonyms, and several literature searches."
+msgstr "Nous traduisons votre question en concepts clés, avec leurs synonymes, et en plusieurs recherches bibliographiques."
+
+#: templates/summarizer/literature.html
+msgid "We run them on OpenAlex (journals, preprints and conference papers, open access or not) and on arXiv, by relevance and for the last three years, and look for reviews and the most cited works."
+msgstr "Nous les lançons sur OpenAlex (revues, prépublications et actes de conférence, en accès ouvert ou non) et sur arXiv, par pertinence et sur les trois dernières années, et cherchons les revues de littérature et les travaux les plus cités."
+
+#: templates/summarizer/literature.html
+msgid "We follow the references of the closest papers: the works many of them cite are the founding papers a keyword search misses."
+msgstr "Nous suivons les références des articles les plus proches : les travaux que beaucoup d’entre eux citent sont les articles fondateurs qu’une recherche par mots-clés manque."
+
+#: templates/summarizer/literature.html
+msgid "We rank the candidates by closeness to your question, an AI screens their abstracts, and we keep 15 to 30 papers, founding and recent."
+msgstr "Nous classons les candidats selon leur proximité avec votre question, une IA trie leurs résumés, et nous gardons 15 à 30 articles, fondateurs et récents."
+
+#: templates/summarizer/literature.html
+msgid "You get a synthesis by approach, a comparison table, where the papers agree and disagree, what they leave open, and the numbered references. Each finding shows the sentence of the abstract that supports it."
+msgstr "Vous obtenez une synthèse par approche, un tableau comparatif, les points d’accord et de désaccord, ce qui reste ouvert, et les références numérotées. Chaque résultat montre la phrase du résumé qui l’appuie."
+
+#: templates/summarizer/literature.html
+msgid "To start on a new topic, prepare a proposal or the related-work section of a thesis."
+msgstr "Pour aborder un nouveau sujet, préparer un projet ou l’état de l’art d’une thèse."
+
+#: templates/summarizer/literature.html
+msgid "An exploratory synthesis, not a systematic review: the searches, sources and counts are shown so you can judge the coverage."
+msgstr "Une synthèse exploratoire, pas une revue systématique : les recherches, les sources et les décomptes sont affichés pour que vous puissiez juger de la couverture."
+
+#: templates/summarizer/literature.html
+msgid "Save the papers in a collection to compare them in a table or chat with them."
+msgstr "Enregistrez les articles dans une collection pour les comparer dans un tableau ou discuter avec eux."
+
+#: templates/summarizer/literature.html
+msgid "Go from a question to the papers that answer it, grouped and cited."
+msgstr "Passez d’une question aux articles qui y répondent, regroupés et cités."
+
+#: templates/summarizer/literature.html
+#, python-format
+msgid "Write your question in %(low)s to %(high)s characters."
+msgstr "Rédigez votre question en %(low)s à %(high)s caractères."
+
+#: templates/summarizer/literature.html
+#, python-format
+msgid "You can run %(per_day)s reviews a day. Come back tomorrow."
+msgstr "Vous pouvez lancer %(per_day)s revues par jour. Revenez demain."
+
+#: templates/summarizer/literature.html
+msgid "Your research question"
+msgstr "Votre question de recherche"
+
+#: templates/summarizer/literature.html
+msgid "e.g. What mechanisms explain the persistence of microplastics in marine sediments?"
+msgstr "ex. : Quels mécanismes expliquent la persistance des microplastiques dans les sédiments marins ?"
+
+#: templates/summarizer/literature.html
+msgid "In any language. A precise question (a phenomenon, a population, a setting) gives a more focused review than a topic."
+msgstr "Dans n’importe quelle langue. Une question précise (un phénomène, une population, un milieu) donne une revue plus ciblée qu’un simple thème."
+
+#: templates/summarizer/literature.html
+msgid "Review the literature"
+msgstr "Lancer la revue de littérature"
+
+#: templates/summarizer/literature.html
+#, python-format
+msgid "It takes 3 to 6 minutes. %(per_day)s reviews a day."
+msgstr "Comptez 3 à 6 minutes. %(per_day)s revues par jour."
+
+#: templates/summarizer/literature.html
+msgid "Your reviews"
+msgstr "Vos revues"
+
+#: templates/summarizer/literature.html
+msgid "Review"
+msgstr "Revue"
+
+#: templates/summarizer/literature_result.html
+msgid "Your question"
+msgstr "Votre question"
+
+#: templates/summarizer/literature_result.html
+msgid "How this review was searched"
+msgstr "Comment cette revue a été construite"
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "%(candidates)s papers found, the %(screened)s closest to the question screened on their abstract, %(relevant)s judged relevant, %(included)s included."
+msgstr "%(candidates)s articles trouvés, les %(screened)s plus proches de la question triés sur leur résumé, %(relevant)s jugés pertinents, %(included)s retenus."
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "Published from %(first)s to %(last)s."
+msgstr "Publiés de %(first)s à %(last)s."
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "%(founding)s founding papers, %(recent)s from the last three years, %(reviews)s reviews."
+msgstr "%(founding)s articles fondateurs, %(recent)s des trois dernières années, %(reviews)s revues de littérature."
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "%(quoted)s of the %(findings)s findings are backed by a sentence found word for word in an abstract."
+msgstr "%(quoted)s des %(findings)s résultats sont appuyés par une phrase retrouvée mot pour mot dans un résumé."
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "Only %(n)s clearly relevant papers were found: the question may be very narrow, or worded differently in the literature. Papers marked \"peripheral\" were added to reach 15; read their part of the synthesis with care."
+msgstr "Seuls %(n)s articles clairement pertinents ont été trouvés : la question est peut-être très étroite, ou formulée autrement dans la littérature. Les articles marqués « périphérique » ont été ajoutés pour atteindre 15 ; lisez avec prudence la part de la synthèse qui s’appuie sur eux."
+
+#: templates/summarizer/literature_result.html
+msgid "Our daily search budget ran out during this review: some searches were not run."
+msgstr "Notre budget de recherche du jour s’est épuisé pendant cette revue : certaines recherches n’ont pas été lancées."
+
+#: templates/summarizer/literature_result.html
+msgid "OpenAlex did not answer some searches."
+msgstr "OpenAlex n’a pas répondu à certaines recherches."
+
+#: templates/summarizer/literature_result.html
+msgid "arXiv did not answer some searches."
+msgstr "arXiv n’a pas répondu à certaines recherches."
+
+#: templates/summarizer/literature_result.html
+msgid "The coverage is narrower than usual; you can run the review again later."
+msgstr "La couverture est plus étroite que d’habitude ; vous pouvez relancer la revue plus tard."
+
+#: templates/summarizer/literature_result.html
+msgid "An exploratory synthesis, not a systematic review: the papers are read from their abstracts, and papers that OpenAlex and arXiv do not index, or that our searches word differently, can be missing."
+msgstr "Une synthèse exploratoire, pas une revue systématique : les articles sont lus à partir de leur résumé, et ceux qu’OpenAlex et arXiv n’indexent pas, ou que nos recherches formulent autrement, peuvent manquer."
+
+#: templates/summarizer/literature_result.html
+msgid "Searches and sources"
+msgstr "Recherches et sources"
+
+#: templates/summarizer/literature_result.html
+msgid "A paper found by several searches is counted in each."
+msgstr "Un article trouvé par plusieurs recherches est compté dans chacune."
+
+#: templates/summarizer/literature_result.html
+msgid "No paper with an abstract was found for this question. Try wording it with the terms papers of the field use."
+msgstr "Aucun article avec résumé n’a été trouvé pour cette question. Essayez de la formuler avec les termes qu’emploient les articles du domaine."
+
+#: templates/summarizer/literature_result.html
+msgid "In short"
+msgstr "En bref"
+
+#: templates/summarizer/literature_result.html
+msgid "Approaches compared"
+msgstr "Approches comparées"
+
+#: templates/summarizer/literature_result.html
+msgid "Approach"
+msgstr "Approche"
+
+#: templates/summarizer/literature_result.html
+msgid "No sentence of the cited abstracts states it word for word: check it in the papers."
+msgstr "Aucune phrase des résumés cités ne l’énonce mot pour mot : vérifiez-le dans les articles."
+
+#: templates/summarizer/literature_result.html
+msgid "Where the papers agree"
+msgstr "Où les articles s’accordent"
+
+#: templates/summarizer/literature_result.html
+msgid "What they leave open"
+msgstr "Ce qu’ils laissent ouvert"
+
+#: templates/summarizer/literature_result.html
+msgid "The papers are in a new collection:"
+msgstr "Les articles sont dans une nouvelle collection :"
+
+#: templates/summarizer/literature_result.html
+msgid "You have reached your number of collections. Delete one to save these papers."
+msgstr "Vous avez atteint votre nombre de collections. Supprimez-en une pour enregistrer ces articles."
+
+#: templates/summarizer/literature_result.html
+msgid "Save these papers in a collection"
+msgstr "Enregistrer ces articles dans une collection"
+
+#: templates/summarizer/literature_result.html
+msgid "to compare them in a table, find their open questions or chat with them"
+msgstr "pour les comparer dans un tableau, trouver leurs questions ouvertes ou discuter avec eux"
+
+#: templates/summarizer/literature_result.html
+msgid "Founding"
+msgstr "Fondateur"
+
+#: templates/summarizer/literature_result.html
+msgid "Recent"
+msgstr "Récent"
+
+#: templates/summarizer/literature_result.html
+msgid "Peripheral"
+msgstr "Périphérique"
+
+#: templates/summarizer/literature_result.html
+msgid "The review failed. Try again in a few minutes."
+msgstr "La revue a échoué. Réessayez dans quelques minutes."
+
+#: templates/summarizer/literature_result.html
+msgid "Reviewing the literature on your question"
+msgstr "Revue de la littérature sur votre question"
+
+#: templates/summarizer/literature_result.html
+msgid "usually 3 to 6 minutes"
+msgstr "en général 3 à 6 minutes"
+
+#: summarizer/literature.py
+msgid "Turning your question into searches"
+msgstr "Traduction de votre question en recherches"
+
+#: summarizer/literature.py
+msgid "Searching OpenAlex and arXiv"
+msgstr "Recherche sur OpenAlex et arXiv"
+
+#: summarizer/literature.py
+msgid "Following the references of the closest papers"
+msgstr "Suivi des références des articles les plus proches"
+
+#: summarizer/literature.py
+msgid "Ranking the candidates and screening their abstracts"
+msgstr "Classement des candidats et tri de leurs résumés"
+
+#: summarizer/literature.py
+msgid "An AI groups the papers by approach and writes the synthesis"
+msgstr "Une IA regroupe les articles par approche et rédige la synthèse"
+
+#: summarizer/literature.py
+msgid "Checking each finding against the abstracts"
+msgstr "Vérification de chaque résultat dans les résumés"
+
+#: summarizer/views.py
+msgid "From a research question: 15 to 30 founding and recent papers, grouped by approach, with a referenced synthesis."
+msgstr "À partir d’une question de recherche : 15 à 30 articles fondateurs et récents, regroupés par approche, avec une synthèse référencée."
+
+#: templates/summarizer/premium.html
+msgid "start from a research question and get 15 to 30 founding and recent papers grouped by approach, with a synthesis whose findings cite the abstracts"
+msgstr "partez d’une question de recherche et obtenez 15 à 30 articles fondateurs et récents regroupés par approche, avec une synthèse dont chaque résultat cite les résumés"
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "cited %(n)s time"
+msgid_plural "cited %(n)s times"
+msgstr[0] "cité %(n)s fois"
+msgstr[1] "cité %(n)s fois"
+
+#: templates/summarizer/literature_result.html
+msgid "Often cited, not read"
+msgstr "Souvent cités, non lus"
+
+#: templates/summarizer/literature_result.html
+msgid "Several of the papers found cite these works, but OpenAlex has no abstract for them: they are not in the synthesis. Read them if they are not already known to you."
+msgstr "Plusieurs des articles trouvés citent ces travaux, mais OpenAlex n’en a pas le résumé : ils ne sont pas dans la synthèse. Lisez-les si vous ne les connaissez pas déjà."
+
+#: templates/summarizer/literature_result.html
+#, python-format
+msgid "cited by %(n)s of the closest papers found"
+msgstr "cité par %(n)s des articles les plus proches trouvés"
+
+#: templates/summarizer/literature_result.html
+msgid "Inclusion:"
+msgstr "Inclusion :"
+
+#: templates/summarizer/literature_result.html
+msgid "Key concepts:"
+msgstr "Concepts clés :"
+
+#: templates/summarizer/literature_result.html
+msgid "Queries:"
+msgstr "Requêtes :"
+
+#: templates/summarizer/literature_result.html
+msgid "OpenAlex, by relevance:"
+msgstr "OpenAlex, par pertinence :"
+
+#: templates/summarizer/literature_result.html
+msgid "OpenAlex, last three years:"
+msgstr "OpenAlex, trois dernières années :"
+
+#: templates/summarizer/literature_result.html
+msgid "OpenAlex, reviews:"
+msgstr "OpenAlex, revues de littérature :"
+
+#: templates/summarizer/literature_result.html
+msgid "OpenAlex, most cited:"
+msgstr "OpenAlex, les plus cités :"
+
+#: templates/summarizer/literature_result.html
+msgid "Cited by several of the closest papers:"
+msgstr "Cités par plusieurs des articles les plus proches :"
+
+#: templates/summarizer/literature_result.html
+msgid "arXiv:"
+msgstr "arXiv :"

@@ -823,6 +823,11 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .arxiv-picker-info .meta { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
 .arxiv-picker-results button { flex: none; }
 .link-button { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
+.lit-cite { font-size: 12px; margin-left: 2px; white-space: nowrap; text-decoration: none; }
+.lit-theme { margin-top: 24px; }
+.lit-findings li { margin-bottom: 10px; }
+.lit-coverage details { margin-top: 8px; }
+.lit-references li { scroll-margin-top: 80px; }
 .importance { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
 .importance.high { background: #fee2e2; color: #991b1b; }
 .importance.medium { background: #fef3c7; color: #92400e; }

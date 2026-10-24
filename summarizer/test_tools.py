@@ -1,7 +1,8 @@
 """Tests of the paper tools and Premium tools: reading levels, press kit, collections, exports, Zotero,
-'What did I miss?', citation alerts, audio digest, rising topics and weekly letters."""
+'What did I miss?', literature review, citation alerts, audio digest, rising topics and weekly letters."""
 import datetime
 import json
+import re
 from unittest import mock
 
 import numpy as np
@@ -11,7 +12,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, changes, citations, conference, digest, generated, letters, library, missed, presskit, questions, refcheck, scoops, slides, teams, trends, usage
+from summarizer import audio, changes, citations, conference, digest, generated, letters, library, literature, missed, presskit, questions, refcheck, scoops, slides, teams, trends, usage
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
@@ -463,6 +464,112 @@ class MissedTests(ToolsTestCase):
         self.assertEqual(find.call_args[0][0].strip(), ('word ' * 100).strip())
         self.assertContains(client.get(r['Location']), 'already cites every close paper')
         self.assertContains(client.get('/en/missed/'), 'Draft T')
+
+
+class LiteratureTests(ToolsTestCase):
+    FOUNDING = 'Burial below the oxic layer slows the degradation of plastic particles.'
+
+    def work(self, wid, title, year, cited=10, refs=(), kind='article', doi=None):
+        index = {}
+        for i, w in enumerate(('%s. %s' % (title, self.FOUNDING if wid == 'W100' else 'We study it in coastal cores.')).split()):
+            index.setdefault(w, []).append(i)
+        return {'id': 'https://openalex.org/' + wid, 'doi': 'https://doi.org/' + (doi or '10.1000/%s' % wid.lower()),
+                'display_name': title, 'authorships': [{'author': {'display_name': 'Ann Lee'}}],
+                'abstract_inverted_index': index, 'publication_date': '%d-05-01' % year,
+                'type': kind, 'cited_by_count': cited, 'locations': [],
+                'referenced_works': ['https://openalex.org/' + r for r in refs]}
+
+    def openalex(self, url, params=None, **kwargs):
+        filters = params.get('filter', '')
+        if 'openalex:' in filters:
+            self.assertEqual(sorted(filters[len('openalex:'):].split('|')), ['W100', 'W101'])
+            unread = dict(self.work('W101', 'Lost at sea', 2004, cited=7000), abstract_inverted_index=None)
+            return {'results': [self.work('W100', 'Plastic burial in sediments', 2005, cited=900), unread]}
+        if 'type:review' in filters:
+            return {'results': [self.work('W50', 'Microplastics in sediments: a review', 2022, kind='review')]}
+        self.assertNotIn('?', params.get('search', ''))
+        if params.get('sort'):
+            return {'results': [self.work('W1', 'Sediment microplastic sinks', 2012, cited=400)]}
+        if 'from_publication_date' in filters:
+            return {'results': [self.work('W7', 'Biofilms protect sediment microplastics', 2025)]}
+        return {'results': [self.work('W%d' % i, 'Microplastic persistence study %d' % i, 2015 + i, refs=['W100', 'W101'])
+                            for i in range(2, 6)] +
+                           [self.work('W9', 'Sediment burial preserves microplastics', 2023, cited=33,
+                                      doi='10.48550/arxiv.2301.00009')]}
+
+    def chat(self, prompt, paid=True, max_tokens=0, system=None, timeout=0):
+        if 'research question above' in prompt:
+            return {'question': 'What mechanisms explain microplastic persistence in marine sediments?',
+                    'title': 'Microplastics in sediments', 'queries': ['microplastic sediment?', 'plastic burial'],
+                    'include': 'Papers on why plastics last in sediments.', 'concepts': [{'concept': 'burial'}]}
+        if 'Rate each paper' in prompt:
+            ids = re.findall(r'<paper id="(p\d+)">\nTitle: ([^\n]*)', system)
+            return {'papers': [{'id': i, 'relevance': 0 if 'Galaxy' in t else 3, 'approach': 'cores'} for i, t in ids]}
+        self.assertIn('<paper n="1">\nTitle: Plastic burial in sediments', system)  # oldest first
+        return {'overview': [{'text': 'Burial matters.', 'papers': [1, 99]}],
+                'themes': [{'name': 'Burial', 'summary': 'S.', 'papers': [1, 2], 'strengths': 'a', 'limits': 'b',
+                            'findings': [{'text': 'Burial slows degradation.', 'papers': [1], 'quote': self.FOUNDING},
+                                         {'text': 'Made up.', 'papers': [2], 'quote': 'A sentence no abstract holds at all.'}]}],
+                'consensus': [], 'disagreements': [], 'gaps': [{'text': 'Deep sea.', 'papers': []}]}
+
+    def test_question_is_searched_snowballed_screened_and_synthesized_with_checked_quotes(self):
+        arxiv = [{'arxiv_id': '2301.00009v1', 'title': 'Sediment burial preserves\n microplastics', 'abstract': 'Cores show it.',
+                  'authors': ['Bo Wu'], 'published': timezone.now().replace(year=2023)},
+                 {'arxiv_id': '2301.00010v1', 'title': 'Galaxy clusters', 'abstract': 'Far away.', 'authors': ['X'],
+                  'published': timezone.now()}]
+
+        def embed(texts):
+            return np.array([[0.0, 1.0] if 'Galaxy' in t else [1.0, 0.0] for t in texts], dtype=np.float32)
+        with mock.patch('summarizer.sources._json', side_effect=self.openalex), \
+             mock.patch('summarizer.digest.arxiv_get', return_value=arxiv), \
+             mock.patch('summarizer.similar.embed', side_effect=embed), \
+             mock.patch('summarizer.generated.chat_json', side_effect=self.chat):
+            result = literature.review('Pourquoi les microplastiques persistent-ils dans les sédiments ?', 'fr')
+        papers = {p['key']: p for p in result['papers']}
+        merged = papers['2301.00009v1']  # the arXiv preprint and its OpenAlex record are one paper
+        self.assertEqual((merged['cited_by'], sorted(merged['found_by'])), (33, ['arxiv', 'relevance']))
+        self.assertNotIn('2301.00010v1', papers)  # screened out
+        self.assertEqual(result['papers'][0]['title'], 'Plastic burial in sediments')
+        self.assertIn('founding', result['papers'][0]['labels'])
+        self.assertIn('review', papers['doi_10.1000--w50']['labels'])
+        self.assertIn('recent', papers['doi_10.1000--w7']['labels'])
+        self.assertEqual(result['overview'][0]['papers'], [1])  # paper 99 does not exist
+        found, made_up = result['themes'][0]['findings']
+        self.assertEqual((found['quote'], found['quoted']), (self.FOUNDING, 1))
+        self.assertEqual(made_up['quote'], '')
+        coverage = result['coverage']
+        self.assertEqual((coverage['snowballed'], coverage['quoted'], coverage['findings']), (2, 1, 2))
+        self.assertEqual([p['title'] for p in coverage['unread']], ['Lost at sea'])  # no abstract: listed apart
+        self.assertNotIn('doi_10.1000--w101', papers)
+        self.assertTrue(coverage['thin'])
+        self.assertEqual(coverage['limited'], [])
+        self.assertEqual(result['title'], 'Microplastics in sediments')
+
+    def test_page_is_premium_has_a_quota_and_saves_a_collection(self):
+        self.assertContains(self.client_for(self.user()).get('/en/literature-review/'), 'Discover Premium')
+        client = self.client_for(self.user('pro', paid=True))
+        self.assertContains(client.post('/en/literature-review/', {'question': 'short'}), 'characters')
+        done = {'question': 'Why do microplastics persist?', 'title': 'Microplastics', 'coverage': {
+            'candidates': 40, 'screened': 30, 'relevant': 20, 'included': 1, 'labels': {}, 'limited': [], 'queries': ['q'],
+            'by_source': {'relevance': 40}}, 'overview': [], 'themes': [], 'consensus': [], 'disagreements': [], 'gaps': [],
+            'papers': [{'n': 1, 'key': 'doi_10.1000--w1', 'title': 'Sinks', 'authors': 'Ann Lee', 'year': 2012, 'venue': '',
+                        'doi': '10.1000/w1', 'cited_by': 4, 'labels': ['founding'], 'approach': '', 'peripheral': False}]}
+        with mock.patch('summarizer.literature.review', return_value=done) as review:
+            r = client.post('/en/literature-review/', {'question': ' Why do  microplastics persist? '})
+            self.assertEqual(review.call_args[0][:2], ('Why do microplastics persist?', 'en'))
+            page = client.get(r['Location'])
+            self.assertContains(page, 'How this review was searched')
+            self.assertContains(page, 'Founding')
+            saved = client.post(r['Location'])
+            self.assertEqual(list(CollectionPaper.objects.values_list('arxiv_id', 'collection__name')),
+                             [('doi_10.1000--w1', 'Microplastics')])
+            self.assertContains(client.get(saved['Location']), 'The papers are in a new collection')
+            for _ in range(literature.PER_DAY - 1):
+                client.post('/en/literature-review/', {'question': 'Another question on microplastics'})
+            self.assertContains(client.post('/en/literature-review/', {'question': 'One question too many today'}),
+                                'reviews a day')
+        self.assertEqual(Client().get('/en/literature-review/abc/').status_code, 302)
+        self.assertEqual(self.client_for(self.user('free2')).get(r['Location']).status_code, 404)
 
 
 class CitationTests(ToolsTestCase):

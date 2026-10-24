@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, search_filters, saved_searches, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, library, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
+               synthesis, changes, chat_figures, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -70,6 +70,8 @@ urlpatterns = [
     path("integrations/", exports.zotero_settings, name="integrations"),
     path("zotero/send/", exports.zotero_send, name="zotero_send"),
     path("missed/", missed.missed_page, name="missed"),
+    path("literature-review/", literature.literature_page, name="literature"),
+    path("literature-review/<str:key>/", literature.literature_result, name="literature_result"),
     path("missed/<str:key>/", missed.missed_result, name="missed_result"),
     path("citations/", citations.citations_page, name="citations"),
     path("scoops/", scoops.scoops_page, name="scoops"),

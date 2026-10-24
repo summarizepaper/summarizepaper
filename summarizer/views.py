@@ -1430,6 +1430,7 @@ def tools(request):
         ]),
         (_('Write and submit'), [
             ('press-kit/', 'newspaper', _('Press kit'), True, _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),
+            ('literature-review/', 'book-open', _('Literature review'), True, _('From a research question: 15 to 30 founding and recent papers, grouped by approach, with a referenced synthesis.')),
             ('missed/', 'search', _('What did I miss?'), True, _('The papers close to your draft that it does not cite.')),
             ('refcheck/', 'tasks', _('Bibliography check'), True, _('Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.')),
             ('integrations/', 'book', _('Zotero, Notion, Obsidian'), False, _('BibTeX, RIS and Markdown exports, and papers sent to Zotero with their summary.')),
