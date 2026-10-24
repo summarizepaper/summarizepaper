@@ -91,10 +91,130 @@
     }
   }
 
+  // Wording comes from the page (#chat-evidence-labels, translated); these are the fallbacks.
+  var EVIDENCE_LABELS = {
+    title: 'Where each claim comes from', count: '{found} of {total} claims found word for word in the paper',
+    checking: 'Checking each claim against the paper…', unavailable: 'This answer could not be checked against the paper.',
+    section: 'Section “{name}”', abstract: 'Abstract', paragraph: 'paragraph {n}', open: 'Open this passage on arXiv',
+    ref: 'Claim {n}: where it comes from',
+    verified: 'Passage found in the paper', not_found: 'Passage not found in the paper: check this claim',
+    visual: 'Read on the figure image', general: 'General knowledge, not from the paper',
+    unsupported: 'Not supported by the paper', numbers: 'Numbers the paper never states: {numbers}',
+    gapped: 'The extracted text interrupts this passage (page break, caption or link)'
+  };
+
+  function evidenceLabels() {
+    var element = document.getElementById('chat-evidence-labels'), labels = {};
+    Object.keys(EVIDENCE_LABELS).forEach(function (key) {
+      labels[key] = (element && element.dataset[key]) || EVIDENCE_LABELS[key];
+    });
+    return labels;
+  }
+
+  function evidenceLink(value) {
+    try {var u = new URL(value); return u.protocol === 'https:' && u.hostname === 'arxiv.org';} catch (_) {return false;}
+  }
+
+  var evidenceCount = 0;
+
+  // Text nodes of the answer a reader sees as prose: not code, not equations (raw or typeset).
+  function proseNodes(node, list) {
+    Array.prototype.forEach.call(node.childNodes || [], function (child) {
+      if (child.nodeType === 3) list.push(child);
+      else if (child.nodeType === 1 && !/^(CODE|PRE|MJX-)/i.test(child.tagName) &&
+               !/(^| )(chat-math|chat-claim-ref)( |$)/.test(child.className || '')) proseNodes(child, list);
+    });
+    return list;
+  }
+
+  /* [n] after the words that end the sentence making claim n; nothing when they are not found in one text node. */
+  function markClaim(body, anchor, n, target, box, label) {
+    var words = anchor.split(/\s+/).filter(Boolean).map(function (w) {return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');});
+    if (words.length < 2) return;
+    var pattern = new RegExp(words.join('\\s+'));
+    var nodes = proseNodes(body, []);
+    for (var i = 0; i < nodes.length; i++) {
+      var match = pattern.exec(nodes[i].nodeValue);
+      if (!match) continue;
+      var after = nodes[i].splitText(match.index + match[0].length);
+      var ref = document.createElement('sup'), link = document.createElement('a');
+      ref.className = 'chat-claim-ref';
+      link.href = '#' + target; link.textContent = '[' + n + ']'; link.title = label.replace('{n}', n);
+      link.addEventListener('click', function () {box.open = true;});
+      ref.appendChild(link);
+      after.parentNode.insertBefore(ref, after);
+      return;
+    }
+  }
+
+  /* The claims of an answer, each with the passage of the paper behind it (see summarizer/evidence.py).
+     data: {status: 'checking'|'done'|'unavailable', claims: [...]}. Claims are model output: text only. */
+  function evidence(element, data) {
+    var old = element.querySelector('.chat-evidence');
+    if (old) old.remove();
+    var body = element.querySelector('.chat-answer');
+    if (body && body.querySelectorAll) Array.prototype.forEach.call(body.querySelectorAll('.chat-claim-ref'), function (ref) {ref.remove();});
+    data = data || {};
+    var labels = evidenceLabels(), box;
+    function node(tag, className, text) {
+      var e = document.createElement(tag);
+      if (className) e.className = className;
+      if (text) e.textContent = text;
+      return e;
+    }
+    if (data.status === 'checking' || data.status === 'unavailable') {
+      box = node('p', 'chat-evidence chat-evidence-' + data.status, labels[data.status]);
+      element.appendChild(box);
+      return box;
+    }
+    var claims = Array.isArray(data.claims) ? data.claims.filter(function (c) {return c && typeof c.claim === 'string';}) : [];
+    if (!claims.length) return null;
+    var found = claims.filter(function (c) {return c.status === 'verified';}).length;
+    var papers = {};
+    claims.forEach(function (c) {if (c.paper) papers[c.paper] = true;});
+    var several = Object.keys(papers).length > 1;
+    box = node('details', 'chat-evidence');
+    box.open = true;
+    var summary = node('summary', '', labels.title + ' · ' + labels.count.replace('{found}', found).replace('{total}', claims.length));
+    var list = node('ol'), id = 'claims-' + (++evidenceCount);
+    claims.forEach(function (c, index) {
+      var status = labels.hasOwnProperty(c.status) ? c.status : 'unsupported';
+      var item = node('li', 'chat-claim chat-claim-' + status);
+      item.id = id + '-' + (index + 1);
+      item.appendChild(node('p', 'chat-claim-text', c.claim));
+      var where = [labels[status]];
+      if (c.section === 'Abstract') where.push(labels.abstract);
+      else if (c.section) where.push(labels.section.replace('{name}', c.section));
+      if (c.paragraph) where.push(labels.paragraph.replace('{n}', c.paragraph));
+      if (c.figure) where.push(c.figure);
+      if (several && c.paper) where.push(c.paper);
+      item.appendChild(node('p', 'chat-claim-where', where.join(' · ')));
+      if (c.quote) item.appendChild(node('blockquote', '', c.quote));
+      if (c.gapped) item.appendChild(node('p', 'chat-claim-note', labels.gapped));
+      if (Array.isArray(c.numbers_absent) && c.numbers_absent.length) {
+        item.appendChild(node('p', 'chat-claim-warning', labels.numbers.replace('{numbers}', c.numbers_absent.join(', '))));
+      }
+      if (c.link && evidenceLink(c.link)) {
+        var link = node('a', '', labels.open);
+        link.href = c.link; link.target = '_blank'; link.rel = 'nofollow noopener noreferrer';
+        item.appendChild(link);
+      }
+      list.appendChild(item);
+    });
+    box.append(summary, list);
+    element.appendChild(box);
+    if (body) claims.forEach(function (c, index) {
+      if (typeof c.anchor === 'string' && c.anchor) markClaim(body, c.anchor, index + 1, id + '-' + (index + 1), box, labels.ref);
+    });
+    typeset(box);
+    return box;
+  }
+
   window.SPChat = {
     render: render,
     append: function (element, delta, label) {render(element, (raw.get(element) || '') + delta, label);},
-    typeset: typeset
+    typeset: typeset,
+    evidence: evidence
   };
   function init(root) {
     (root || document).querySelectorAll('[data-chat-markdown]').forEach(function (element) {
@@ -103,6 +223,9 @@
       element.dataset.markdownMounted = '1';
       var body = element.querySelector('.chat-answer');
       render(element, body.textContent, element.dataset.chatLabel);
+      if (element.dataset.evidence) {
+        try {evidence(element, JSON.parse(element.dataset.evidence));} catch (_) {}
+      }
       typeset(element);
     });
   }

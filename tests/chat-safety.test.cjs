@@ -16,11 +16,14 @@ for (const template of ['chat', 'arxividpage']) {
     const context = {
       currentResponse: null,
       pendingFigures: null,
+      checking: {},
+      nudge: null,
+      finished: 0,
       window: {SPChatFigures}, SPChatFigures,
       SPChat,
       chatbotMessages: {appendChild(node) {elements.push(node);}},
       messages: {appendChild(node) {elements.push(node);}},
-      root: {dataset: {ai: 'AI -'}}, scroll() {}, finish() {},
+      root: {dataset: {ai: 'AI -'}}, scroll() {}, finish() {context.finished++;},
       document: {createElement: element, getElementById: element, querySelector: () => null},
       MathJax: {typeset() {}}, scrollToBottom() {},
     };
@@ -45,6 +48,28 @@ for (const template of ['chat', 'arxividpage']) {
     context.handle({data: JSON.stringify({message: 'A text-only answer'})});
     assert.equal(elements.length, 2);
     assert.equal(visualCalls.length, 1);
+
+    // an answer whose claims are checked next: a notice, then the claims, both as text
+    const finished = context.finished;
+    context.handle({data: JSON.stringify({message: 'Checked answer', evidence: 'checking', answer_id: 7})});
+    const answer = elements[2];
+    assert.equal(answer.querySelector('.chat-evidence').className, 'chat-evidence chat-evidence-checking');
+    if (template === 'arxividpage') assert.equal(context.finished, finished + 1, 'the next question does not wait for the check');
+    context.handle({data: JSON.stringify({message: 'Next answer', evidence: 'checking', answer_id: 8})});
+    context.handle({data: JSON.stringify({type: 'chat_evidence', status: 'done', answer_id: 7,
+      claims: [{claim: attack, status: 'verified', quote: 'We find lenses.', link: 'javascript:alert(1)'}]})});
+    const box = answer.querySelector('.chat-evidence');
+    assert.equal(box.tagName, 'details');
+    const claim = box.children[1].children[0];
+    assert.equal(claim.children[0].textContent, attack);
+    assert.ok(!claim.children.some(node => node.tagName === 'a'));
+    assert.equal(elements[3].querySelector('.chat-evidence').className, 'chat-evidence chat-evidence-checking');
+    context.handle({data: JSON.stringify({type: 'chat_evidence', status: 'unavailable', answer_id: 8})});
+    assert.equal(elements[3].querySelector('.chat-evidence').className, 'chat-evidence chat-evidence-unavailable');
+    // a late or repeated result has no answer to attach to
+    context.handle({data: JSON.stringify({type: 'chat_evidence', status: 'unavailable', answer_id: 7})});
+    assert.equal(answer.querySelector('.chat-evidence').tagName, 'details');
+    assert.equal(elements.length, 4);
   });
 }
 

@@ -9234,6 +9234,69 @@ msgid_plural "and %(n)s more authors"
 msgstr[0] "et %(n)s autre auteur"
 msgstr[1] "et %(n)s autres auteurs"
 
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Where each claim comes from"
+msgstr "D’où vient chaque affirmation"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "{found} of {total} claims found word for word in the paper"
+msgstr ""
+"{found} affirmations sur {total} retrouvées mot pour mot dans l’article"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Checking each claim against the paper…"
+msgstr "Vérification de chaque affirmation dans l’article…"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "This answer could not be checked against the paper."
+msgstr "Cette réponse n’a pas pu être vérifiée dans l’article."
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Section “{name}”"
+msgstr "Section « {name} »"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "paragraph {n}"
+msgstr "paragraphe {n}"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Open this passage on arXiv"
+msgstr "Ouvrir ce passage sur arXiv"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Passage found in the paper"
+msgstr "Passage retrouvé dans l’article"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Passage not found in the paper: check this claim"
+msgstr "Passage introuvable dans l’article : vérifiez cette affirmation"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Read on the figure image"
+msgstr "Lu sur l’image de la figure"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "General knowledge, not from the paper"
+msgstr "Connaissance générale, pas tirée de l’article"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Not supported by the paper"
+msgstr "Non étayé par l’article"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Claim {n}: where it comes from"
+msgstr "Affirmation {n} : d’où elle vient"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid "Numbers the paper never states: {numbers}"
+msgstr "Nombres que l’article n’indique nulle part : {numbers}"
+
+#: templates/summarizer/chat_evidence_labels.html
+msgid ""
+"The extracted text interrupts this passage (page break, caption or link)"
+msgstr ""
+"Le texte extrait interrompt ce passage (saut de page, légende ou lien)"
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

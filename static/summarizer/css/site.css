@@ -508,6 +508,26 @@ img { max-width: 100%; }
 .chat-answer code { font-size: .9em; }
 .chat-answer table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
 .chat-answer th, .chat-answer td { padding: .4rem .65rem; border: 1px solid var(--border); }
+/* the sources of an answer: each claim with the passage of the paper behind it */
+.chat-evidence { margin: .8rem 0 0; padding-top: .6rem; border-top: 1px solid var(--border); font-size: .9rem; }
+p.chat-evidence { color: var(--text-muted, #64748b); }
+.chat-evidence-checking::before { content: ''; display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: chat-figure-spin .8s linear infinite; }
+.chat-evidence summary { cursor: pointer; font-weight: 600; }
+.chat-evidence ol { margin: .5rem 0 0; padding-left: 1.3rem; }
+.chat-claim { margin: .6rem 0; }
+.chat-claim p { margin: 0; }
+.chat-claim-where { font-size: .8rem; color: var(--text-muted, #64748b); }
+.chat-claim-where::before { font-weight: 700; margin-right: .3rem; }
+.chat-claim-verified .chat-claim-where::before { content: '✓'; color: var(--success); }
+.chat-claim-not_found .chat-claim-where::before, .chat-claim-unsupported .chat-claim-where::before { content: '!'; color: var(--premium); }
+.chat-claim-not_found .chat-claim-where, .chat-claim-unsupported .chat-claim-where { color: var(--premium); }
+.chat-claim blockquote { margin: .3rem 0; padding: .4rem .7rem; border-left: 3px solid var(--accent); background: var(--bg); font-style: italic; overflow-wrap: anywhere; }
+.chat-claim-warning { font-size: .8rem; color: var(--premium); }
+.chat-claim-note { font-size: .8rem; color: var(--text-muted, #64748b); }
+.chat-claim a { font-size: .8rem; }
+.chat-claim { scroll-margin-top: 90px; }
+.chat-claim:target { background: var(--accent-soft); border-radius: var(--radius-sm); }
+.chat-claim-ref a { margin-left: 1px; font-size: .75em; text-decoration: none; }
 .chat-figures { border-bottom: 1px solid var(--border); padding: 12px 20px; }
 .chat-figures summary { cursor: pointer; font-weight: 600; }
 .chat-figures-content { margin-top: 12px; }

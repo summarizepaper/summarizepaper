@@ -1,0 +1,18 @@
+{% load i18n %}{# wording of the sources shown under each answer (SPChat.evidence in chat-rendering.js) #}
+<div id="chat-evidence-labels" hidden
+  data-title="{% trans 'Where each claim comes from' %}"
+  data-count="{% trans '{found} of {total} claims found word for word in the paper' %}"
+  data-checking="{% trans 'Checking each claim against the paper…' %}"
+  data-unavailable="{% trans 'This answer could not be checked against the paper.' %}"
+  data-section="{% trans 'Section “{name}”' %}"
+  data-abstract="{% trans 'Abstract' %}"
+  data-paragraph="{% trans 'paragraph {n}' %}"
+  data-ref="{% trans 'Claim {n}: where it comes from' %}"
+  data-open="{% trans 'Open this passage on arXiv' %}"
+  data-verified="{% trans 'Passage found in the paper' %}"
+  data-not_found="{% trans 'Passage not found in the paper: check this claim' %}"
+  data-visual="{% trans 'Read on the figure image' %}"
+  data-general="{% trans 'General knowledge, not from the paper' %}"
+  data-unsupported="{% trans 'Not supported by the paper' %}"
+  data-numbers="{% trans 'Numbers the paper never states: {numbers}' %}"
+  data-gapped="{% trans 'The extracted text interrupts this passage (page break, caption or link)' %}"></div>

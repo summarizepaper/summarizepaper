@@ -927,6 +927,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         #identity and paid status come from the session cookie, never from the client messages
         self.user = self.scope.get("user")
         self.hashed_ip = access.hash_ip(access.client_ip_from_scope(self.scope))
+        self.evidence_checks = set()  # running checks of answers (chat_evidence), kept until they end
         self.paid = await database_sync_to_async(access.is_paid)(self.user)
         # Join room group
         await self.channel_layer.group_add(self.arxiv_group_name, self.channel_name)
@@ -1035,13 +1036,18 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             async def send_figures(figures, status):
                 await self.send(text_data=json.dumps({'type': 'chat_figures', 'figures': figures, 'status': status}))
 
+            checks = []
             try:
                 chatbot_text = await assistant.answer(
                     arxiv_ids, self.language, message, paid, user=self.user, hashed_ip=self.hashed_ip,
-                    on_delta=send_delta, conversation_id=self.arxiv_id, on_figures=send_figures)
+                    on_delta=send_delta, conversation_id=self.arxiv_id, on_figures=send_figures,
+                    on_evidence=lambda answer_id, check: checks.append((answer_id, check)))
             except Exception:
                 logger.exception('Assistant failed for %s', self.arxiv_id)
                 chatbot_text = None
+                for _, check in checks:
+                    check.close()
+                checks = []
 
             if not chatbot_text:
                 if self.language == 'fr':
@@ -1050,8 +1056,21 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                     chatbot_text = "Something went wrong... Contact the administrators if it keeps on happening."
 
             await self.send(text_data=json.dumps({
-                'message': chatbot_text
+                'message': chatbot_text, **({'evidence': 'checking', 'answer_id': checks[0][0]} if checks else {})
             }))
+            # the answer is shown, then each of its claims with the passage of the paper behind it;
+            # the reader can ask the next question meanwhile
+            for answer_id, check in checks:
+                task = asyncio.create_task(self.send_evidence(answer_id, check))
+                self.evidence_checks.add(task)
+                task.add_done_callback(self.evidence_checks.discard)
+
+    async def send_evidence(self, answer_id, check):
+        result = await check  # stored with the answer even when the reader has left
+        try:
+            await self.send(text_data=json.dumps({'type': 'chat_evidence', 'answer_id': answer_id, **result}))
+        except Exception:
+            pass  # the page was closed: its history shows the sources
 
 
     async def progress_text_update(self, event):

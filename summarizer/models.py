@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -237,9 +239,18 @@ class AIassistant(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
     lang = models.CharField(max_length=10,default='en')
+    evidence = models.JSONField(blank=True, null=True)  # the claims of the answer and their passages (evidence.py)
 
     def __str__(self):
         return self.arxiv_id+' '+self.query
+
+    @property
+    def claims(self):
+        return (self.evidence or {}).get('claims') or []
+
+    @property
+    def evidence_json(self):
+        return json.dumps(self.evidence, ensure_ascii=False)
 
 
 class DigestSubscription(models.Model):

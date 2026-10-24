@@ -13,7 +13,7 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.utils.translation import get_language_info
 
-from .models import AIassistant, ArxivPaper, SummaryPaper
+from .models import AIassistant, ArxivPaper, PaperText, SummaryPaper
 from .paper_source import paper_text
 from . import sources, usage, chat_vision
 from .utils import ai_models, chat_params
@@ -102,8 +102,12 @@ def source_messages(context, instructions):
     ]
 
 
-def _paper_block(paper, budget):
-    """<paper> block with as much text as the budget allows."""
+def _paper_source(paper, budget):
+    """The <paper> block with as much text as the budget allows, and what an answer may quote from it.
+
+    'text' is the part of the block that is the paper's own words (never our summary of it), 'source' where it
+    was read: 'html', 'pdf'..., or 'abstract' when only the abstract was supplied (see evidence.py).
+    """
     authors = ', '.join(a.name for a in paper.authors.all()[:30])
     header = '%s\nTitle: %s\nAuthors: %s\n' % (sources.label(paper.arxiv_id), ' '.join((paper.title or '').split()), authors)
     if sources.is_external(paper.arxiv_id) and paper.journal_ref:
@@ -111,25 +115,39 @@ def _paper_block(paper, budget):
     # the rule the summary followed when it read the paper (see consumers.LoadingConsumer)
     open_license = sources.is_open_license(paper.license)
     if open_license:
-        body = paper_text(paper.arxiv_id)
+        body = text = paper_text(paper.arxiv_id)
+        source = PaperText.objects.filter(arxiv_id=paper.arxiv_id).values_list('source', flat=True).first() or 'abstract'
     else:
         body = 'Abstract: %s\n\n%s' % (paper.abstract or '', RESTRICTED_NOTE)
+        text, source = paper.abstract or '', 'abstract'
     if len(body) > budget:
         summary = SummaryPaper.objects.filter(paper=paper).exclude(summary='').values_list('summary', flat=True).first()
         if summary and len(summary) < budget:
             body = 'Abstract: %s\n\nDetailed summary: %s' % (paper.abstract or '', summary)
+            text, source = paper.abstract or '', 'abstract'
         else:
-            body = body[:budget]
-    return '<paper>\n%s\n%s\n</paper>' % (header, body)
+            body = text = body[:budget]
+    return {'arxiv_id': paper.arxiv_id, 'label': sources.label(paper.arxiv_id), 'text': text, 'source': source,
+            'block': '<paper>\n%s\n%s\n</paper>' % (header, body)}
 
 
-def build_context(arxiv_ids):
+def _paper_block(paper, budget):
+    return _paper_source(paper, budget)['block']
+
+
+def build_sources(arxiv_ids):
+    """(context given to the model, [_paper_source of each paper])."""
     papers = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=arxiv_ids).prefetch_related('authors')}
     ordered = [papers[i] for i in arxiv_ids if i in papers]
     if not ordered:
         raise AssistantError('unknown paper')
     budget = MAX_CONTEXT_CHARS // len(ordered)
-    return '\n\n'.join(_paper_block(p, budget) for p in ordered)
+    supplied = [_paper_source(p, budget) for p in ordered]
+    return '\n\n'.join(s['block'] for s in supplied), supplied
+
+
+def build_context(arxiv_ids):
+    return build_sources(arxiv_ids)[0]
 
 
 def conversation_history(arxiv_id, lang, user, hashed_ip):
@@ -147,11 +165,13 @@ def conversation_history(arxiv_id, lang, user, hashed_ip):
     return messages
 
 
-async def complete(messages, paid, max_tokens, on_delta=None, task='assistant', user_id=None):
+async def complete(messages, paid, max_tokens, on_delta=None, task='assistant', user_id=None, json_object=False):
     """Run a chat completion, streaming text pieces to on_delta; return the full text."""
     model_free, model_paid = await sync_to_async(ai_models)()
     payload = {'model': model_paid if paid else model_free, 'messages': messages, 'stream': True,
                'stream_options': {'include_usage': True}, **chat_params(paid, max_tokens)}
+    if json_object:
+        payload['response_format'] = {'type': 'json_object'}
     headers = {'Authorization': 'Bearer %s' % settings.OPENAI_KEY}
     parts = []
     timeout = aiohttp.ClientTimeout(total=300)
@@ -178,14 +198,17 @@ async def complete(messages, paid, max_tokens, on_delta=None, task='assistant', 
     return ''.join(parts).strip()
 
 
-async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_delta=None, conversation_id=None, on_figures=None):
+async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_delta=None, conversation_id=None,
+                 on_figures=None, on_evidence=None):
     """Answer a question about one or several papers and store the exchange.
 
     conversation_id keys the stored history (the page's room), it defaults to the first paper.
+    on_evidence, when given, is called with the stored answer's id and its check against the papers
+    (check_answer) as an awaitable: the caller shows the answer first and awaits the check after.
     """
     validate_question(question)
     conversation_id = conversation_id or arxiv_ids[0]
-    context = await sync_to_async(build_context)(arxiv_ids)
+    context, supplied = await sync_to_async(build_sources)(arxiv_ids)
     history = await sync_to_async(conversation_history)(conversation_id, lang, user, hashed_ip)
     language = get_language_info(lang)['name']
     messages = source_messages(context, INSTRUCTIONS.format(language=language))
@@ -207,10 +230,32 @@ async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_
         if on_figures:
             await on_figures([], 'unavailable')
         text = await complete(messages, paid, 1500, on_delta, user_id=user_id)
-    await sync_to_async(AIassistant.objects.create)(
+    row = await sync_to_async(AIassistant.objects.create)(
         arxiv_id=conversation_id, query=question, response=text, lang=lang, ip_address=hashed_ip,
         user=user if user is not None and user.is_authenticated else None)
+    if on_evidence is not None and text:
+        on_evidence(row.pk, check_answer(messages, text, supplied, lang, paid, user_id, row))
     return text
+
+
+async def check_answer(messages, text, supplied, lang, paid, user_id, row):
+    """Each claim of the answer with the passage of the paper that supports it (evidence.verify), stored with it.
+
+    The messages of the answer come first unchanged, so the papers are read at the cached rate.
+    Returns {'status': 'done', 'claims': [...]} or {'status': 'unavailable'}; never raises.
+    """
+    from . import evidence  # it reads quotes with presskit, which imports this module
+    task = {'role': 'system', 'content': evidence.prompt(get_language_info(lang)['name'])}
+    try:
+        raw = await complete(messages + [{'role': 'assistant', 'content': text}, task], paid, 2500,
+                             task='evidence', user_id=user_id, json_object=True)
+        result = {'status': 'done', 'claims': evidence.verify(json.loads(raw), supplied, text)}
+    except Exception:
+        logger.exception('Evidence check failed for %s', row.arxiv_id)
+        return {'status': 'unavailable'}
+    row.evidence = result
+    await sync_to_async(row.save)(update_fields=['evidence'])
+    return result
 
 
 async def detailed_summary(arxiv_id, lang, paid):

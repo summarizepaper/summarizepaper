@@ -44,7 +44,7 @@
     if (!form) return;
     var input = form.querySelector('input[type="text"]'), messages = root.querySelector('.chatbot-messages');
     var button = root.querySelector('#send-btn'), spinner = root.querySelector('#loading-spinner');
-    var socket = null, currentResponse = null, pendingFigures = null, busy = false;
+    var socket = null, currentResponse = null, pendingFigures = null, checking = {}, busy = false;
     var nudge = root.querySelector('#account-nudge');
     root.querySelectorAll('.chat-suggestions button').forEach(function (suggestion) {
       suggestion.addEventListener('click', function () {
@@ -55,11 +55,15 @@
     });
     function scroll() {messages.scrollTop = messages.scrollHeight;}
     function finish() {busy = false; button.disabled = false; spinner.style.display = 'none';}
-    function error() {if (busy) {var msg = document.createElement('p'); msg.textContent = root.dataset.error; messages.appendChild(msg);} finish(); socket = null; currentResponse = null; pendingFigures = null;}
+    function error() {if (busy) {var msg = document.createElement('p'); msg.textContent = root.dataset.error; messages.appendChild(msg);} finish(); socket = null; currentResponse = null; pendingFigures = null; checking = {};}
     function receive(event) {
       var data;
       try {data = JSON.parse(event.data);} catch (_) {return;}
       if (data.type === 'chat_figures') {pendingFigures = data; return;}
+      if (data.type === 'chat_evidence') {
+        if (checking[data.answer_id]) SPChat.evidence(checking[data.answer_id], data);
+        delete checking[data.answer_id]; return;
+      }
       if (data.type && data.type !== 'chat_delta') return;
       if (data.type !== 'chat_delta' && typeof data.message !== 'string') return;
       if (!currentResponse) {currentResponse = document.createElement('div'); currentResponse.className = 'chatbot-response'; messages.appendChild(currentResponse);}
@@ -67,6 +71,8 @@
       SPChat.render(currentResponse, data.message, root.dataset.ai);
       SPChat.typeset(currentResponse);
       if (pendingFigures && window.SPChatFigures) SPChatFigures.render(currentResponse, pendingFigures.figures, pendingFigures.status);
+      // the claims of the answer are then checked against the paper, while the reader goes on
+      if (data.evidence === 'checking') {checking[data.answer_id] = currentResponse; SPChat.evidence(currentResponse, {status: 'checking'});}
       currentResponse = null; pendingFigures = null; finish(); scroll();
       if (nudge) nudge.hidden = false;  // after a first answer: a free account keeps the conversation
     }

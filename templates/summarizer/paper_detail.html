@@ -144,10 +144,11 @@
     </div>
     <div class="chatbot-body">
       {% include 'summarizer/chat_figures.html' with figure_paper=arxiv_id %}
+      {% include 'summarizer/chat_evidence_labels.html' %}
       <div class="chatbot-messages" data-empty="{% trans 'Ask anything about this paper.' %}">{% if chathistory %}
           {% for chat in chathistory %}
             <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
-            <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
+            <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"{% if chat.claims %} data-evidence="{{ chat.evidence_json }}"{% endif %}><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
           {% endfor %}
         {% endif %}</div>
       <div class="chat-suggestions" aria-label="{% trans 'Suggested questions' %}">
