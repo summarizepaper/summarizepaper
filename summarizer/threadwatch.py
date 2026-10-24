@@ -26,7 +26,7 @@ CHECK = 60  # seconds
 REPORT_EVERY = 5  # checks: a log line every 5 minutes
 ALERT = 150  # threads; about 20 normally
 STUCK_THREADS = 200
-STUCK_MINUTES = 10
+STUCK_MINUTES = 3  # a stuck process serves only errors: restart it soon
 
 
 def where(frame):

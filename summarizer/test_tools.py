@@ -1463,21 +1463,21 @@ class ThreadwatchTests(ToolsTestCase):
             self.assertEqual(list(pool.map(sources.closing(lambda x: x * 2), [1, 2, 3])), [2, 4, 6])
         self.assertEqual(close.call_count, 3)
 
-    def test_a_stuck_process_restarts_after_ten_minutes(self):
+    def test_a_stuck_process_restarts_after_three_minutes(self):
         from summarizer import threadwatch
         state = {'checks': 0, 'stuck_for': 0}
         full = (12, 12, 12, 5)  # every connection in use, 5 requests waiting
         with mock.patch('summarizer.threadwatch.pool_stats', return_value=full), \
              mock.patch('summarizer.threadwatch.restart') as restart, \
              self.assertLogs('summarizer.threadwatch', 'WARNING') as logs:
-            for _ in range(9):
+            for _ in range(threadwatch.STUCK_MINUTES - 1):
                 threadwatch.tick(state)
             restart.assert_not_called()
             threadwatch.tick(state)
         restart.assert_called_once()
         self.assertIn('12/12 in use (max 12), 5 waiting', logs.output[-1])
         self.assertIn('restarting', logs.output[-1])
-        state = {'checks': 0, 'stuck_for': 9}
+        state = {'checks': 0, 'stuck_for': threadwatch.STUCK_MINUTES - 1}
         with mock.patch('summarizer.threadwatch.pool_stats', return_value=(3, 6, 12, 0)), \
              mock.patch('summarizer.threadwatch.restart') as restart:
             threadwatch.tick(state)  # the pool has room again: the count starts over
