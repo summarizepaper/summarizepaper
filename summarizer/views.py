@@ -12,7 +12,7 @@ from .forms import RegistrationForm
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, reading, similar, sources, exports
+from summarizer import access, accounts, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, reading, similar, sources, exports, insight, summary_text
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -1232,7 +1232,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                     scores.append(similar.percent(pap.score))
 
             if sumpaper and sumpaper.blog:
-                sumpaper.blog = utils.clean_blog_html(sumpaper.blog)
+                sumpaper.blog = summary_text.without_invented_references(
+                    utils.clean_blog_html(sumpaper.blog), [a.name for a in paper.authors.all()], paper.journal_ref, paper.comments)
+            paper_insight = insight.for_page(arxiv_id, lang) if sumpaper else None
             stuff_for_frontend.update({
                 'paper':paper,
                 'structured_data':paper_structured_data(paper, sumpaper, lang),
@@ -1255,6 +1257,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'reading_langs':reading.OUTPUT_LANGUAGES,
                 'reading_left':reading.quota_left(request),
                 'citation_meta':citation_meta(paper),
+                'insight':paper_insight,
+                'topic':keywords[0] if keywords else '',
             })
         else:
             print('nope')

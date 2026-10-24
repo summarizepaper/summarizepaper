@@ -5,7 +5,7 @@ import json
 import asyncio
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, keypoints, similar, sources, summary_text
+from summarizer import access, assistant, insight, keypoints, similar, sources, summary_text
 import logging
 
 logger = logging.getLogger(__name__)
@@ -509,7 +509,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 c=asyncio.create_task(self.send_message_now(message))
                 await c
 
-                c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, p, settings.OPENAI_KEY))
+                c=asyncio.create_task(utils.extract_blog_article(arxiv_id, language, sum, p, settings.OPENAI_KEY,
+                                                                   title=title, authors=authors or ()))
                 #roughblog = await c
                 blog = await c
                 print('roughblog:',blog)
@@ -880,6 +881,16 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c = asyncio.create_task(sync_to_async(self.updatesumpaper)(v,l,sum_dict))
         updatethesum = await c
         #print('testpap',testpaper)
+
+        message["progress"] = 92
+        if l == 'fr':
+            message["loading_message"] = "Structuration des résultats et vérification des passages"
+        else:
+            message["loading_message"] = "Structuring the findings and checking the passages"
+        c=asyncio.create_task(self.send_message_now(message))
+        await c
+
+        await asyncio.to_thread(sources.in_thread, insight.create, v, l, bool(p))
 
         message["progress"] = 95
         if l == 'fr':

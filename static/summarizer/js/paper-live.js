@@ -76,7 +76,8 @@
       document.getElementById('paper-page').replaceChildren(wrapper);
       complete = true; stop();
       history.replaceState(history.state, '', box.dataset.canonical + (box.dataset.tree === '1' ? '#closest' : location.hash));
-      SPPaper.init(); switchTab(selected);
+      // live tabs: summary, key points, lay summary, blog; the page: summary, lay summary, blog, abstract (key points sit above)
+      SPPaper.init(); switchTab([0, 0, 1, 2][selected] || 0);
       // Preserve the result-view funnel event that previously came from the final navigation.
       try {if (window.umami) Promise.resolve(window.umami.track('paper_result_view')).catch(function () {});} catch (_) {}
       if (window.SPChat) SPChat.typeset(wrapper);

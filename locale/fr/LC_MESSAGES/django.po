@@ -8156,222 +8156,6 @@ msgid_plural "%(n)s new citations"
 msgstr[0] "%(n)s nouvelle citation"
 msgstr[1] "%(n)s nouvelles citations"
 
-#~ msgid ""
-#~ "Searching arXiv and reading the closest papers… this takes one to three "
-#~ "minutes. The page updates by itself."
-#~ msgstr ""
-#~ "Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
-#~ " à trois minutes. La page se met à jour toute seule."
-
-#~ msgid "Writing… the page reloads by itself when the kit is ready."
-#~ msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
-
-#~ msgid "For researchers and students who read papers every day."
-#~ msgstr ""
-#~ "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
-
-#~ msgid "Home"
-#~ msgstr "Accueil"
-
-#~ msgid ""
-#~ "Find answers to commonly asked questions about our AI-powered arXiv paper "
-#~ "summarization service. Learn how our technology works, what types of papers "
-#~ "we summarize, and how to get started with our service."
-#~ msgstr ""
-#~ "Trouvez des réponses aux questions fréquemment posées sur notre service de "
-#~ "résumés d'articles arXiv alimenté par l'IA. Découvrez comment fonctionne "
-#~ "notre technologie, quels types de documents nous résumons et comment "
-#~ "démarrer avec notre service."
-
-#~ msgid ""
-#~ "This website is a platform that summarizes scientific papers from arXiv "
-#~ "using AI and allows you to interrogate our virtual assistant about the "
-#~ "content of all articles."
-#~ msgstr ""
-#~ "Ce site Web est une plateforme qui résume les articles scientifiques d'arXiv"
-#~ " en utilisant l'IA et vous permet d'interroger notre assistant virtuel sur "
-#~ "le contenu de tous les articles."
-
-#~ msgid ""
-#~ "The AI uses advanced machine learning algorithms to analyze and extract the "
-#~ "most important information from the papers, and present it in a condensed "
-#~ "and understandable format. It is using the latest engines from OpenAI, gpt3,"
-#~ " gpt3.5 and gpt4."
-#~ msgstr ""
-#~ "L'IA utilise des algorithmes avancés d'apprentissage automatique pour "
-#~ "analyser et extraire les informations les plus importantes des documents, et"
-#~ " les présenter dans un format condensé et compréhensible. Nous utilisons les"
-#~ " derniers moteurs d'OpenAI, gpt3, gpt3. 5 et gpt4."
-
-#~ msgid "How can I suggest a paper for summarization?"
-#~ msgstr "Comment puis-je suggérer un article pour le résumer avec vos outils ?"
-
-#~ msgid "Yes, this website is completely free to use."
-#~ msgstr "Oui, l'utilisation de ce site Web est entièrement gratuite."
-
-#~ msgid "What is the process of summarizing a paper?"
-#~ msgstr "Quel est le processus de synthèse d'un article ?"
-
-#~ msgid ""
-#~ "The process of summarizing a paper involves several steps, including text "
-#~ "pre-processing, feature extraction, and summarization using a series of "
-#~ "complex prompts. The AI uses a combination of natural language processing "
-#~ "and machine learning techniques to analyze the paper and generate a concise "
-#~ "summary."
-#~ msgstr ""
-#~ "Le processus de synthèse d'un article comporte plusieurs étapes, notamment "
-#~ "le prétraitement du texte, l'extraction des caractéristiques et la synthèse "
-#~ "à l'aide d'une série de prompts complexes. L'IA utilise une combinaison de "
-#~ "techniques de traitement du langage naturel et d'apprentissage automatique "
-#~ "pour analyser le document et générer un résumé concis."
-
-#~ msgid ""
-#~ "There is no limit to the number of papers you can summarize (but this may "
-#~ "change if it gets overloaded). You can use the platform as much as you need "
-#~ "to keep updated on the latest research developments."
-#~ msgstr ""
-#~ "Il n'y a pas de limite au nombre d'articles que vous pouvez résumer (mais "
-#~ "cela pourrait changer si l'outil devient surchargé). Vous pouvez utiliser la"
-#~ " plate-forme autant que nécessaire pour vous tenir au courant des derniers "
-#~ "développements de la recherche."
-
-#~ msgid "Go back"
-#~ msgstr "Revenir en arrière"
-
-#~ msgid ""
-#~ "Your account is not activated yet. Click the link in the activation email we"
-#~ " sent you."
-#~ msgstr ""
-#~ "Votre compte n'est pas encore activé. Cliquez sur le lien de l'email "
-#~ "d'activation que nous vous avons envoyé."
-
-#~ msgid ""
-#~ "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
-#~ "for ID numbers id:\"2211.04191\""
-#~ msgstr ""
-#~ "Entourez les termes de recherche contenant des espaces de guillemets: au: "
-#~ "\"John Doe\" , ou si vous recherchez des numéros d'identification "
-#~ "id:\"2211.04191\""
-
-#, fuzzy
-#~ msgid ""
-#~ "The license of \" + count + \" paper\" + privateIDsMsg + \" does not allow "
-#~ "us to build upon its content and the AI assistant only knows about the paper"
-#~ " metadata rather than the full article."
-#~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
-
-#, fuzzy
-#~ msgid ""
-#~ "The licenses of \" + count + \" papers\" + privateIDsMsg + \" do not allow "
-#~ "us to build upon their contents and the AI assistant only knows about the "
-#~ "papers\\"
-#~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
-
-#, fuzzy
-#~ msgid ""
-#~ "do not allow us to build upon their contents and the AI assistant only knows"
-#~ " about the papers\\"
-#~ msgstr ""
-#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
-#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
-#~ "que de l'article complet."
-
-#~ msgid "AIer"
-#~ msgstr "AIer"
-
-#~ msgid "Ourh with our cutting-edge technology."
-#~ msgstr "Ourh avec notre technologie de pointe."
-
-#~ msgid "The paper with an ID"
-#~ msgstr "Le papier avec l'ID"
-
-#~ msgid "was not found, try again!"
-#~ msgstr "n'a pas été trouvé, essayez à nouveau !"
-
-#~ msgid "Total number of votes:"
-#~ msgstr "Nombre total de votes :"
-
-#~ msgid ""
-#~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "
-#~ "AI-powered summarization service. Our cutting-edge technology uses machine "
-#~ "learning and natural language processing to deliver a high-quality summary "
-#~ "in just a few seconds. Try it out today!"
-#~ msgstr ""
-#~ "Obtenez un résumé rapide, précis et facile à lire de votre document arXiv "
-#~ "avec notre service de résumé alimenté par l'IA. Notre technologie de pointe "
-#~ "utilise l'apprentissage automatique et le traitement du langage naturel pour"
-#~ " fournir un résumé de haute qualité en quelques minutes seulement. Essayez-"
-#~ "le aujourd'hui !"
-
-#~ msgid ""
-#~ "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
-#~ "Summaries"
-#~ msgstr ""
-#~ "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des Résumés "
-#~ "Précis et Rapides"
-
-#~ msgid "More advanced Search?"
-#~ msgstr "Recherche avancée ?"
-
-#~ msgid "Enter arXiv ID: "
-#~ msgstr "Entrez un ID arXiv :"
-
-#~ msgid "Example:"
-#~ msgstr "Exemple :"
-
-#~ msgid "Submit"
-#~ msgstr "Envoyer"
-
-#~ msgid "You:"
-#~ msgstr "Vous :"
-
-#~ msgid "Our Promise"
-#~ msgstr "Notre promesse"
-
-#~ msgid ""
-#~ "At our website, we are committed to providing you with the highest quality "
-#~ "summaries of the latest research. We do our best to make sure that our AI "
-#~ "algorithms accurately reflect the key findings and conclusions of each "
-#~ "paper, so that you can stay informed and ahead of the curve in your field of"
-#~ " interest. "
-#~ msgstr ""
-#~ "Sur notre site Web, nous nous engageons à vous fournir des résumés de la "
-#~ "plus haute qualité des dernières recherches. Nous faisons tout notre "
-#~ "possible pour que nos algorithmes d'IA reflètent fidèlement les principaux "
-#~ "résultats et conclusions de chaque article, afin que vous puissiez rester "
-#~ "informé et prendre une longueur d'avance dans votre domaine d'intérêt."
-
-#~ msgid ""
-#~ "Yes, this website is completely free to use. There are no hidden fees or "
-#~ "charges."
-#~ msgstr ""
-#~ "Oui, l'utilisation de ce site Web est entièrement gratuite. Il n'y a pas de "
-#~ "frais cachés."
-
-#~ msgid ""
-#~ "Our website uses cookies to store information about user preferences and to "
-#~ "keep track of user activity on our site. This information is used to provide"
-#~ " a more personalized user experience and to improve the functionality of our"
-#~ " website."
-#~ msgstr ""
-#~ "Notre site Web utilise des cookies pour stocker des informations sur les "
-#~ "préférences des utilisateurs et pour suivre l'activité des utilisateurs sur "
-#~ "notre site. Ces informations sont utilisées pour offrir une expérience "
-#~ "utilisateur plus personnalisée et pour améliorer les fonctionnalités de "
-#~ "notre site Web."
-
-#~ msgid "10-yrs old Summary"
-#~ msgstr "Résumé pour un enfant de 10 ans"
-
-#~ msgid "The 10-yrs old summary is not ready yet"
-#~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"
-
 msgid ""
 "Describe a research topic: we find the institutions represented in matching "
 "papers from the last two years, their authors and the evidence for their "
@@ -8381,7 +8165,6 @@ msgstr ""
 " dans les articles pertinents des deux dernières années, leurs auteurs et "
 "les méthodes étayées par ces travaux. Pour explorer de futures "
 "collaborations, un laboratoire ou des rapporteurs potentiels."
-
 
 msgid ""
 "Describe a research topic: we find the institutions represented in matching "
@@ -8393,7 +8176,6 @@ msgstr ""
 "prépublication, avec leurs auteurs, les articles justificatifs et leurs "
 "méthodes."
 
-
 msgid ""
 "We check topical relevance and group matching papers by all declared "
 "affiliations. An institution is not necessarily one research team."
@@ -8401,7 +8183,6 @@ msgstr ""
 "Nous vérifions la pertinence des articles et les regroupons selon toutes les"
 " affiliations déclarées. Une institution ne correspond pas nécessairement à "
 "une seule équipe."
-
 
 msgid ""
 "For each institution: matching papers and citations, plus authors linked to "
@@ -8411,7 +8192,6 @@ msgstr ""
 "auteurs reliés aux articles qui justifient leur présence. L’ordre des "
 "auteurs ne sert pas à désigner un responsable d’équipe."
 
-
 msgid ""
 "An AI summarizes only the themes and methods evidenced by the selected "
 "titles, without attributing a research program to an entire institution."
@@ -8420,10 +8200,8 @@ msgstr ""
 "sélectionnés, sans attribuer un programme scientifique à une institution "
 "entière."
 
-
 msgid "Explore publications and authors on your topic."
 msgstr "Explorez les publications et les auteurs sur votre sujet."
-
 
 msgid ""
 "Institutions and authors publishing on your topic, with supporting papers "
@@ -8431,7 +8209,6 @@ msgid ""
 msgstr ""
 "Institutions et auteurs publiant sur votre sujet, avec les articles "
 "justificatifs et leurs méthodes."
-
 
 msgid ""
 "From %(n)s papers on this topic published since %(year)s (OpenAlex). All "
@@ -8441,7 +8218,6 @@ msgstr ""
 "À partir de %(n)s articles sur ce sujet publiés depuis %(year)s (OpenAlex). "
 "Toutes les affiliations déclarées dans les métadonnées sont prises en compte"
 " ; un article peut figurer dans plusieurs institutions."
-
 
 msgid ""
 "These are publication affiliations, not identified research teams. A "
@@ -8453,7 +8229,6 @@ msgstr ""
 "plusieurs laboratoires indépendants. L’ordre des auteurs ne permet pas de "
 "désigner un responsable d’équipe."
 
-
 msgid ""
 "Topical relevance was checked for the 120 closest candidate papers. This is "
 "a partial view, not an exhaustive ranking."
@@ -8461,7 +8236,6 @@ msgstr ""
 "La pertinence a été vérifiée pour les 120 articles candidats les plus "
 "proches. Cette vue est partielle et ne constitue pas un classement "
 "exhaustif."
-
 
 msgid ""
 "This saved search uses the previous grouping method. Its inferred "
@@ -8473,14 +8247,11 @@ msgstr ""
 "une recherche pour obtenir une sélection plus stricte et les articles "
 "justifiant chaque personne affichée."
 
-
 msgid "Themes in the selected papers:"
 msgstr "Thèmes des articles sélectionnés :"
 
-
 msgid "Authors affiliated on these papers:"
 msgstr "Auteurs affiliés dans ces articles :"
-
 
 msgid ""
 "Up to five authors, ordered by the number of matching papers, then "
@@ -8490,14 +8261,11 @@ msgstr ""
 "ordre alphabétique. Cette liste ne constitue ni une recommandation ni une "
 "identification des responsables d’équipe."
 
-
 msgid "Most cited matching papers with this affiliation"
 msgstr "Articles pertinents les plus cités avec cette affiliation"
 
-
 msgid "Papers from the saved search"
 msgstr "Articles de la recherche enregistrée"
-
 
 msgid ""
 "We found no recent paper with sufficiently clear evidence for this topic and"
@@ -8505,7 +8273,6 @@ msgid ""
 msgstr ""
 "Aucun article récent ne présente un lien suffisamment clair avec ce sujet et"
 " ses affiliations. Essayez d’autres termes."
-
 
 msgid "%(n)s matching paper"
 msgid_plural "%(n)s matching papers"
@@ -8515,99 +8282,75 @@ msgstr[1] "%(n)s articles pertinents"
 msgid "Find a research placement"
 msgstr "Trouver un stage ou une thèse"
 
-
 msgid "Checking relevance and publication affiliations"
 msgstr ""
 "Vérification de la pertinence et des affiliations dans les publications"
 
-
 msgid "Checking institution locations"
 msgstr "Vérification de la localisation des institutions"
-
 
 msgid "Preparing the reading suggestions"
 msgstr "Préparation des lectures conseillées"
 
-
 msgid "Your current level"
 msgstr "Votre niveau actuel"
-
 
 msgid "You are looking for"
 msgstr "Vous recherchez"
 
-
 msgid "Research internship"
 msgstr "Stage de recherche"
-
 
 msgid "research internship"
 msgstr "stage de recherche"
 
-
 msgid "PhD"
 msgstr "Thèse"
-
 
 msgid "Research topic"
 msgstr "Thème de recherche"
 
-
 msgid "Country (optional)"
 msgstr "Pays souhaité (facultatif)"
-
 
 msgid "City or region (optional)"
 msgstr "Ville ou région souhaitée (facultatif)"
 
-
 msgid "Geographical preference"
 msgstr "Préférence géographique"
-
 
 msgid "Only the requested location"
 msgstr "Uniquement la localisation demandée"
 
-
 msgid "Prefer this location; show other locations separately"
 msgstr "Privilégier cette localisation et signaler les autres possibilités"
-
 
 msgid "Desired start date (optional)"
 msgstr "Date de début souhaitée (facultatif)"
 
-
 msgid "Duration in months (optional)"
 msgstr "Durée en mois (facultatif)"
-
 
 msgid "Your skills and interests (optional)"
 msgstr "Vos compétences et centres d’intérêt (facultatif)"
 
-
 msgid "Progress"
 msgstr "État de la démarche"
-
 
 msgid "Private notes"
 msgstr "Notes privées"
 
-
 msgid "To explore"
 msgstr "À explorer"
-
 
 msgid "Paper read"
 msgstr "Article lu"
 
-
 msgid "Contacted"
 msgstr "Contacté"
 
-
 msgid "Reply received"
 msgstr "Réponse reçue"
-
 
 msgid ""
 "Hello,\n"
@@ -8626,17 +8369,14 @@ msgstr ""
 "\n"
 "Bien cordialement,"
 
-
 msgid ""
 "Alternative location: outside the requested area or location not verified."
 msgstr ""
 "Autre possibilité : hors de la zone demandée ou localisation non vérifiée."
 
-
 msgid "Most recent affiliation evidence: %(year)s"
 msgstr ""
 "Affiliation attestée le plus récemment dans les publications : %(year)s"
-
 
 msgid ""
 "Potential spontaneous enquiry. No vacancy, availability, supervision "
@@ -8647,22 +8387,17 @@ msgstr ""
 "d’encadrement ou possibilité de financement n’a été vérifiée. Confirmez "
 "l’affiliation actuelle sur le site de l’institution avant d’écrire."
 
-
 msgid "Author source (OpenAlex)"
 msgstr "Notice de l’auteur (OpenAlex)"
-
 
 msgid "Institution source"
 msgstr "Notice de l’institution"
 
-
 msgid "Institution website"
 msgstr "Site de l’institution"
 
-
 msgid "Metadata consulted: %(date)s"
 msgstr "Métadonnées consultées le %(date)s"
-
 
 msgid ""
 "Detailed institution location could not be checked. Any country shown comes "
@@ -8672,10 +8407,8 @@ msgstr ""
 " éventuellement affiché provient de l’affiliation indiquée dans les "
 "publications."
 
-
 msgid "Read before writing"
 msgstr "Lire avant d’écrire"
-
 
 msgid ""
 "Suggested order and reading prompts based on titles, not a full-text review "
@@ -8684,7 +8417,6 @@ msgstr ""
 "L’ordre et les pistes de lecture reposent sur les titres. Il ne s’agit pas "
 "d’une analyse du texte intégral ni d’une évaluation de la difficulté."
 
-
 msgid ""
 "Start with the abstract, identify the method and note one specific question "
 "to ask."
@@ -8692,10 +8424,8 @@ msgstr ""
 "Commencez par le résumé, repérez la méthode et notez une question précise à "
 "poser."
 
-
 msgid "Prepare a first email"
 msgstr "Préparer un premier email"
-
 
 msgid ""
 "Adapt this draft after reading. No message is sent. Add your actual skills "
@@ -8705,22 +8435,17 @@ msgstr ""
 "compétences réelles et vos dates ; n’affirmez avoir lu un article que si "
 "vous l’avez effectivement lu."
 
-
 msgid "Editable draft to copy"
 msgstr "Brouillon modifiable à copier"
-
 
 msgid "Saved to your private shortlist."
 msgstr "Piste enregistrée dans votre liste privée."
 
-
 msgid "View my shortlist"
 msgstr "Voir ma sélection"
 
-
 msgid "Save this lead"
 msgstr "Enregistrer cette piste"
-
 
 msgid ""
 "Explore potential research contacts for an internship or PhD, with "
@@ -8730,14 +8455,12 @@ msgstr ""
 "avec des publications justificatives, des lectures conseillées et une "
 "sélection privée."
 
-
 msgid ""
 "Explore potential contacts for a research internship or PhD, understand "
 "their connection to your topic and prepare your first enquiry."
 msgstr ""
 "Découvrez des contacts potentiels pour un stage de recherche ou une thèse, "
 "comprenez leur lien avec votre sujet et préparez votre premier contact."
-
 
 msgid ""
 "These are publication-based leads, not advertised vacancies. Affiliation "
@@ -8750,10 +8473,8 @@ msgstr ""
 " Vos dates, durée, niveau et compétences servent à préparer votre "
 "candidature ; leur adéquation doit être confirmée auprès de l’institution."
 
-
 msgid "Daily search limit reached. Please come back tomorrow."
 msgstr "La limite quotidienne de recherches est atteinte. Revenez demain."
-
 
 msgid ""
 "Up to %(per_day)s searches a day. We check recent publications and "
@@ -8765,44 +8486,34 @@ msgstr ""
 "personnes et trois lectures par personne. Cela peut prendre quelques "
 "minutes."
 
-
 msgid "Find potential contacts"
 msgstr "Trouver des contacts potentiels"
-
 
 msgid "From a topic to an informed enquiry"
 msgstr "Du sujet de recherche à une candidature préparée"
 
-
 msgid "Choose your level, topic and geographical preferences."
 msgstr "Précisez votre niveau, votre sujet et vos préférences géographiques."
-
 
 msgid "Explore authors with supporting publications and institution sources."
 msgstr ""
 "Découvrez des auteurs avec leurs publications justificatives et les sources "
 "sur leurs institutions."
 
-
 msgid "Read, save your leads and prepare a personal email."
 msgstr "Lisez, conservez vos pistes et préparez un email personnalisé."
-
 
 msgid "Research placement search"
 msgstr "Recherche de stage ou de thèse"
 
-
 msgid "My private shortlist"
 msgstr "Ma sélection privée"
-
 
 msgid "Save my notes"
 msgstr "Enregistrer mes notes"
 
-
 msgid "Remove from shortlist"
 msgstr "Retirer de ma sélection"
-
 
 msgid ""
 "Save a lead from a search to keep its sources, reading suggestions and your "
@@ -8811,18 +8522,14 @@ msgstr ""
 "Enregistrez une piste depuis une recherche pour retrouver ici ses sources, "
 "ses lectures conseillées et vos notes privées."
 
-
 msgid "Your criteria"
 msgstr "Vos critères"
-
 
 msgid "Any location"
 msgstr "Toutes les localisations"
 
-
 msgid "Desired duration: %(n)s months"
 msgstr "Durée souhaitée : %(n)s mois"
-
 
 msgid ""
 "Dates, duration, skills and level are preferences, not verified eligibility "
@@ -8831,7 +8538,6 @@ msgstr ""
 "Les dates, la durée, les compétences et le niveau sont des préférences. Leur"
 " compatibilité avec une candidature n’a pas été vérifiée."
 
-
 msgid ""
 "This search is partial: the search budget, candidate limit or missing "
 "institution metadata prevented a complete check."
@@ -8839,7 +8545,6 @@ msgstr ""
 "Cette recherche est partielle : le budget de recherche, la limite de "
 "candidats ou des métadonnées institutionnelles manquantes ont empêché une "
 "vérification complète."
-
 
 msgid ""
 "These leads come from recent publication affiliations, not a recruitment "
@@ -8852,7 +8557,6 @@ msgstr ""
 "d’encadrement et la disponibilité avant de candidater. Le nombre d’articles "
 "et l’ordre des auteurs ne mesurent pas la qualité d’encadrement."
 
-
 msgid ""
 "No sufficiently supported lead was found with these geographical criteria. "
 "Try a broader topic, country or region, or allow alternatives. No location "
@@ -8863,7 +8567,6 @@ msgstr ""
 "autorisez des alternatives. Aucun filtre géographique n’a été retiré "
 "automatiquement."
 
-
 msgid ""
 "The search failed. Your saved leads are unchanged. Please start a new "
 "search."
@@ -8871,23 +8574,18 @@ msgstr ""
 "La recherche a échoué. Vos pistes enregistrées sont conservées. Veuillez "
 "lancer une nouvelle recherche."
 
-
 msgid "Try a new search"
 msgstr "Lancer une nouvelle recherche"
-
 
 msgid "Finding publication-based research contacts"
 msgstr "Recherche de contacts à partir des publications"
 
-
 msgid "a few minutes"
 msgstr "quelques minutes"
-
 
 msgid "Looking for an internship or PhD? Explore research placement leads."
 msgstr ""
 "Vous cherchez un stage ou une thèse ? Explorez les pistes de candidature."
-
 
 msgid ""
 "Potential research contacts, supporting publications, reading suggestions "
@@ -8895,7 +8593,6 @@ msgid ""
 msgstr ""
 "Contacts scientifiques potentiels, publications justificatives, lectures "
 "conseillées et sélection privée."
-
 
 msgid "Affiliated author on %(n)s matching publication"
 msgid_plural "Affiliated author on %(n)s matching publications"
@@ -8917,10 +8614,8 @@ msgstr ""
 "dernière affiliation doivent être revérifiés. Actualisez la recherche avant "
 "de contacter cette personne."
 
-
 msgid "Latest affiliation found in a publication:"
 msgstr "Dernière affiliation trouvée dans une publication :"
-
 
 msgid ""
 "Checked independently of the topic against the latest publication and the "
@@ -8931,7 +8626,6 @@ msgstr ""
 "récente et de la notice auteur. Il s’agit de la dernière trace "
 "bibliographique trouvée, pas d’une confirmation du poste actuel."
 
-
 msgid ""
 "Recent publication and author record disagree about the affiliation. This "
 "location is not treated as a verified match."
@@ -8940,38 +8634,30 @@ msgstr ""
 "différentes. Cette localisation n’est pas considérée comme une "
 "correspondance vérifiée."
 
-
 msgid "Historical affiliation from the saved search; not reverified."
 msgstr "Ancienne affiliation de la recherche enregistrée, non revérifiée."
-
 
 msgid "First author"
 msgstr "Premier auteur"
 
-
 msgid "Update my saved lead"
 msgstr "Actualiser ma piste enregistrée"
-
 
 msgid "Unsaved changes — click Save progress and notes."
 msgstr ""
 "Modifications non enregistrées — cliquez sur « Enregistrer l’état et les "
 "notes »."
 
-
 msgid "Changes are saved only when you click Save progress and notes."
 msgstr ""
 "Les changements sont conservés uniquement après un clic sur « Enregistrer "
 "l’état et les notes »."
 
-
 msgid "Progress and notes saved."
 msgstr "État et notes enregistrés."
 
-
 msgid "Save progress and notes"
 msgstr "Enregistrer l’état et les notes"
-
 
 msgid ""
 "This saved search predates first-author selection and latest-affiliation "
@@ -8981,26 +8667,20 @@ msgstr ""
 "des dernières affiliations. Actualisez-la pour obtenir des contacts mis à "
 "jour ; vos notes sont conservées."
 
-
 msgid "Refresh this search"
 msgstr "Actualiser cette recherche"
-
 
 msgid "PhD position"
 msgstr "thèse"
 
-
 msgid "Subject: %(kind)s enquiry — %(level)s — %(topic)s"
 msgstr "Objet : candidature spontanée — %(kind)s — %(level)s — %(topic)s"
-
 
 msgid "starting %(date)s"
 msgstr "à partir du %(date)s"
 
-
 msgid "for %(months)s months"
 msgstr "pour %(months)s mois"
-
 
 msgid ""
 "Hello %(name)s,\n"
@@ -9011,7 +8691,6 @@ msgstr ""
 "\n"
 "Actuellement en %(level)s, je recherche une possibilité de %(kind)s sur le thème suivant : %(topic)s%(timing)s."
 
-
 msgid ""
 "Your first-author publication “%(title)s” caught my attention. [After "
 "reading, add one specific point that interests you and a question about the "
@@ -9021,7 +8700,6 @@ msgstr ""
 "[Après lecture, ajoutez ici un point précis qui vous intéresse et une "
 "question sur la méthode ou les résultats.]"
 
-
 msgid ""
 "I noticed the publication “%(title)s”. [Check the authorship and, after "
 "reading, add a specific point of interest and a question.]"
@@ -9029,10 +8707,8 @@ msgstr ""
 "J’ai repéré la publication « %(title)s ». [Vérifiez l’ordre des auteurs et, "
 "après lecture, ajoutez un point précis qui vous intéresse et une question.]"
 
-
 msgid "My skills and interests: %(skills)s."
 msgstr "Mes compétences et centres d’intérêt : %(skills)s."
-
 
 msgid ""
 "Are there possible %(kind)s opportunities on this topic at %(institution)s, "
@@ -9044,7 +8720,6 @@ msgstr ""
 "contacter ? Je serais heureux de vous transmettre mon CV et d’échanger "
 "brièvement sur l’adéquation de mon parcours."
 
-
 msgid ""
 "Thank you for your time.\n"
 "\n"
@@ -9055,7 +8730,6 @@ msgstr ""
 "\n"
 "Bien cordialement,\n"
 "[Votre nom, votre formation et votre université]"
-
 
 msgid "First author of %(n)s matching paper"
 msgid_plural "First author of %(n)s matching papers"
@@ -9400,8 +9074,12 @@ msgstr ""
 msgid "Checking institutional pages"
 msgstr "Vérification des pages institutionnelles"
 
-msgid "Potential contacts: confirm the current position and availability before applying."
-msgstr "Contacts potentiels : confirmez le poste actuel et la disponibilité avant de candidater."
+msgid ""
+"Potential contacts: confirm the current position and availability before "
+"applying."
+msgstr ""
+"Contacts potentiels : confirmez le poste actuel et la disponibilité avant de"
+" candidater."
 
 msgid "arXiv is not responding right now. Please try again in a moment."
 msgstr ""
@@ -9436,3 +9114,338 @@ msgid ""
 msgstr ""
 "Cette piste enregistrée ne contient pas de site institutionnel exploitable. "
 "Actualisez la recherche pour mettre à jour ses sources institutionnelles."
+
+msgid "Original paper"
+msgstr "Article original"
+
+msgid "Also in:"
+msgstr "Aussi en :"
+
+msgid "Actions on this paper"
+msgstr "Actions sur cet article"
+
+msgid "Ask a question"
+msgstr "Poser une question"
+
+msgid "Similar papers"
+msgstr "Articles similaires"
+
+msgid "Cite"
+msgstr "Citer"
+
+msgid "Follow this topic"
+msgstr "Suivre ce sujet"
+
+msgid "The essentials"
+msgstr "L’essentiel"
+
+msgid "Based on the abstract only: check the details in the original paper."
+msgstr ""
+"D’après l’abstract uniquement : vérifiez les détails dans l’article "
+"original."
+
+msgid "Findings"
+msgstr "Résultats"
+
+msgid "Result"
+msgstr "Résultat"
+
+msgid "Authors’ interpretation"
+msgstr "Interprétation des auteurs"
+
+msgid "See the passage in the paper"
+msgstr "Voir le passage dans l’article"
+
+msgid "Why it matters"
+msgstr "Portée"
+
+msgid ""
+"Written by AI from the paper. Passages are checked word for word against the"
+" text we analysed; the rest may contain errors."
+msgstr ""
+"Rédigé par une IA à partir de l’article. Les passages cités sont vérifiés "
+"mot pour mot dans le texte analysé ; le reste peut contenir des erreurs."
+
+msgid ""
+"Key points written by AI: they may contain errors, check them against the "
+"paper."
+msgstr ""
+"Points clés rédigés par une IA : ils peuvent contenir des erreurs, vérifiez-"
+"les dans l’article."
+
+msgid "Read further"
+msgstr "Pour aller plus loin"
+
+msgid "Original abstract"
+msgstr "Abstract original"
+
+msgid "Was this synthesis useful?"
+msgstr "Cette synthèse vous a-t-elle été utile ?"
+
+msgid "Suggested questions"
+msgstr "Questions suggérées"
+
+msgid "What is the main result, with its numbers?"
+msgstr "Quel est le résultat principal, avec ses chiffres ?"
+
+msgid "Main result"
+msgstr "Résultat principal"
+
+msgid "How was the study done: data, method and assumptions?"
+msgstr "Comment l’étude a-t-elle été menée : données, méthode et hypothèses ?"
+
+msgid "What are the limitations of this study?"
+msgstr "Quelles sont les limites de cette étude ?"
+
+msgid "What is new compared with earlier work?"
+msgstr "Qu’apporte-t-elle de nouveau par rapport aux travaux précédents ?"
+
+msgid "What is new"
+msgstr "Ce qui est nouveau"
+
+msgid "Keep this conversation"
+msgstr "Gardez cette conversation"
+
+msgid ""
+"a free account saves your questions and answers, your collections of papers "
+"and your alerts."
+msgstr ""
+"un compte gratuit conserve vos questions et réponses, vos collections "
+"d’articles et vos alertes."
+
+msgid ""
+"Group papers in collections to compare them, chat with them and export them."
+msgstr ""
+"Regroupez des articles en collections pour les comparer, les interroger et "
+"les exporter."
+
+msgid "Advanced tools"
+msgstr "Outils avancés"
+
+msgid ""
+"For researchers who follow a field closely: citation alerts, journal-club "
+"slides, version comparison and Zotero export."
+msgstr ""
+"Pour suivre un domaine de près : alertes de citations, diapositives de "
+"journal club, comparaison des versions et envoi vers Zotero."
+
+msgid "and %(n)s more author"
+msgid_plural "and %(n)s more authors"
+msgstr[0] "et %(n)s autre auteur"
+msgstr[1] "et %(n)s autres auteurs"
+
+#~ msgid ""
+#~ "Searching arXiv and reading the closest papers… this takes one to three "
+#~ "minutes. The page updates by itself."
+#~ msgstr ""
+#~ "Recherche sur arXiv et lecture des articles les plus proches… cela prend une"
+#~ " à trois minutes. La page se met à jour toute seule."
+
+#~ msgid "Writing… the page reloads by itself when the kit is ready."
+#~ msgstr "Rédaction… la page se recharge toute seule quand le kit est prêt."
+
+#~ msgid "For researchers and students who read papers every day."
+#~ msgstr ""
+#~ "Pour les chercheurs et étudiants qui lisent des articles tous les jours."
+
+#~ msgid "Home"
+#~ msgstr "Accueil"
+
+#~ msgid ""
+#~ "Find answers to commonly asked questions about our AI-powered arXiv paper "
+#~ "summarization service. Learn how our technology works, what types of papers "
+#~ "we summarize, and how to get started with our service."
+#~ msgstr ""
+#~ "Trouvez des réponses aux questions fréquemment posées sur notre service de "
+#~ "résumés d'articles arXiv alimenté par l'IA. Découvrez comment fonctionne "
+#~ "notre technologie, quels types de documents nous résumons et comment "
+#~ "démarrer avec notre service."
+
+#~ msgid ""
+#~ "This website is a platform that summarizes scientific papers from arXiv "
+#~ "using AI and allows you to interrogate our virtual assistant about the "
+#~ "content of all articles."
+#~ msgstr ""
+#~ "Ce site Web est une plateforme qui résume les articles scientifiques d'arXiv"
+#~ " en utilisant l'IA et vous permet d'interroger notre assistant virtuel sur "
+#~ "le contenu de tous les articles."
+
+#~ msgid ""
+#~ "The AI uses advanced machine learning algorithms to analyze and extract the "
+#~ "most important information from the papers, and present it in a condensed "
+#~ "and understandable format. It is using the latest engines from OpenAI, gpt3,"
+#~ " gpt3.5 and gpt4."
+#~ msgstr ""
+#~ "L'IA utilise des algorithmes avancés d'apprentissage automatique pour "
+#~ "analyser et extraire les informations les plus importantes des documents, et"
+#~ " les présenter dans un format condensé et compréhensible. Nous utilisons les"
+#~ " derniers moteurs d'OpenAI, gpt3, gpt3. 5 et gpt4."
+
+#~ msgid "How can I suggest a paper for summarization?"
+#~ msgstr "Comment puis-je suggérer un article pour le résumer avec vos outils ?"
+
+#~ msgid "Yes, this website is completely free to use."
+#~ msgstr "Oui, l'utilisation de ce site Web est entièrement gratuite."
+
+#~ msgid "What is the process of summarizing a paper?"
+#~ msgstr "Quel est le processus de synthèse d'un article ?"
+
+#~ msgid ""
+#~ "The process of summarizing a paper involves several steps, including text "
+#~ "pre-processing, feature extraction, and summarization using a series of "
+#~ "complex prompts. The AI uses a combination of natural language processing "
+#~ "and machine learning techniques to analyze the paper and generate a concise "
+#~ "summary."
+#~ msgstr ""
+#~ "Le processus de synthèse d'un article comporte plusieurs étapes, notamment "
+#~ "le prétraitement du texte, l'extraction des caractéristiques et la synthèse "
+#~ "à l'aide d'une série de prompts complexes. L'IA utilise une combinaison de "
+#~ "techniques de traitement du langage naturel et d'apprentissage automatique "
+#~ "pour analyser le document et générer un résumé concis."
+
+#~ msgid ""
+#~ "There is no limit to the number of papers you can summarize (but this may "
+#~ "change if it gets overloaded). You can use the platform as much as you need "
+#~ "to keep updated on the latest research developments."
+#~ msgstr ""
+#~ "Il n'y a pas de limite au nombre d'articles que vous pouvez résumer (mais "
+#~ "cela pourrait changer si l'outil devient surchargé). Vous pouvez utiliser la"
+#~ " plate-forme autant que nécessaire pour vous tenir au courant des derniers "
+#~ "développements de la recherche."
+
+#~ msgid "Go back"
+#~ msgstr "Revenir en arrière"
+
+#~ msgid ""
+#~ "Your account is not activated yet. Click the link in the activation email we"
+#~ " sent you."
+#~ msgstr ""
+#~ "Votre compte n'est pas encore activé. Cliquez sur le lien de l'email "
+#~ "d'activation que nous vous avons envoyé."
+
+#~ msgid ""
+#~ "Enclose search terms with spaces in quotes: au:\"John Doe\", or if looking "
+#~ "for ID numbers id:\"2211.04191\""
+#~ msgstr ""
+#~ "Entourez les termes de recherche contenant des espaces de guillemets: au: "
+#~ "\"John Doe\" , ou si vous recherchez des numéros d'identification "
+#~ "id:\"2211.04191\""
+
+#, fuzzy
+#~ msgid ""
+#~ "The license of \" + count + \" paper\" + privateIDsMsg + \" does not allow "
+#~ "us to build upon its content and the AI assistant only knows about the paper"
+#~ " metadata rather than the full article."
+#~ msgstr ""
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
+#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
+#~ "que de l'article complet."
+
+#, fuzzy
+#~ msgid ""
+#~ "The licenses of \" + count + \" papers\" + privateIDsMsg + \" do not allow "
+#~ "us to build upon their contents and the AI assistant only knows about the "
+#~ "papers\\"
+#~ msgstr ""
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
+#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
+#~ "que de l'article complet."
+
+#, fuzzy
+#~ msgid ""
+#~ "do not allow us to build upon their contents and the AI assistant only knows"
+#~ " about the papers\\"
+#~ msgstr ""
+#~ "La licence de l'article ne nous permet pas de nous appuyer sur son contenu "
+#~ "et l'assistant IA ne peut se servir que des métadonnées de l'article plutôt "
+#~ "que de l'article complet."
+
+#~ msgid "AIer"
+#~ msgstr "AIer"
+
+#~ msgid "Ourh with our cutting-edge technology."
+#~ msgstr "Ourh avec notre technologie de pointe."
+
+#~ msgid "The paper with an ID"
+#~ msgstr "Le papier avec l'ID"
+
+#~ msgid "was not found, try again!"
+#~ msgstr "n'a pas été trouvé, essayez à nouveau !"
+
+#~ msgid "Total number of votes:"
+#~ msgstr "Nombre total de votes :"
+
+#~ msgid ""
+#~ "Get a fast, accurate, and easy-to-read summary of your arXiv paper with our "
+#~ "AI-powered summarization service. Our cutting-edge technology uses machine "
+#~ "learning and natural language processing to deliver a high-quality summary "
+#~ "in just a few seconds. Try it out today!"
+#~ msgstr ""
+#~ "Obtenez un résumé rapide, précis et facile à lire de votre document arXiv "
+#~ "avec notre service de résumé alimenté par l'IA. Notre technologie de pointe "
+#~ "utilise l'apprentissage automatique et le traitement du langage naturel pour"
+#~ " fournir un résumé de haute qualité en quelques minutes seulement. Essayez-"
+#~ "le aujourd'hui !"
+
+#~ msgid ""
+#~ "AI-Powered arXiv Paper Summarization Service - Get Accurate and Fast Paper "
+#~ "Summaries"
+#~ msgstr ""
+#~ "Service de Résumé de Papiers arXiv alimenté par l'IA - Obtenez des Résumés "
+#~ "Précis et Rapides"
+
+#~ msgid "More advanced Search?"
+#~ msgstr "Recherche avancée ?"
+
+#~ msgid "Enter arXiv ID: "
+#~ msgstr "Entrez un ID arXiv :"
+
+#~ msgid "Example:"
+#~ msgstr "Exemple :"
+
+#~ msgid "Submit"
+#~ msgstr "Envoyer"
+
+#~ msgid "You:"
+#~ msgstr "Vous :"
+
+#~ msgid "Our Promise"
+#~ msgstr "Notre promesse"
+
+#~ msgid ""
+#~ "At our website, we are committed to providing you with the highest quality "
+#~ "summaries of the latest research. We do our best to make sure that our AI "
+#~ "algorithms accurately reflect the key findings and conclusions of each "
+#~ "paper, so that you can stay informed and ahead of the curve in your field of"
+#~ " interest. "
+#~ msgstr ""
+#~ "Sur notre site Web, nous nous engageons à vous fournir des résumés de la "
+#~ "plus haute qualité des dernières recherches. Nous faisons tout notre "
+#~ "possible pour que nos algorithmes d'IA reflètent fidèlement les principaux "
+#~ "résultats et conclusions de chaque article, afin que vous puissiez rester "
+#~ "informé et prendre une longueur d'avance dans votre domaine d'intérêt."
+
+#~ msgid ""
+#~ "Yes, this website is completely free to use. There are no hidden fees or "
+#~ "charges."
+#~ msgstr ""
+#~ "Oui, l'utilisation de ce site Web est entièrement gratuite. Il n'y a pas de "
+#~ "frais cachés."
+
+#~ msgid ""
+#~ "Our website uses cookies to store information about user preferences and to "
+#~ "keep track of user activity on our site. This information is used to provide"
+#~ " a more personalized user experience and to improve the functionality of our"
+#~ " website."
+#~ msgstr ""
+#~ "Notre site Web utilise des cookies pour stocker des informations sur les "
+#~ "préférences des utilisateurs et pour suivre l'activité des utilisateurs sur "
+#~ "notre site. Ces informations sont utilisées pour offrir une expérience "
+#~ "utilisateur plus personnalisée et pour améliorer les fonctionnalités de "
+#~ "notre site Web."
+
+#~ msgid "10-yrs old Summary"
+#~ msgstr "Résumé pour un enfant de 10 ans"
+
+#~ msgid "The 10-yrs old summary is not ready yet"
+#~ msgstr "Le résumé pour un enfant de 10 ans n'est pas encore prêt"

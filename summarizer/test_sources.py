@@ -439,8 +439,10 @@ class PipelineTests(TestCase):
              mock.patch('summarizer.utils.extract_simple_summary', mock.AsyncMock(return_value='Simple.')), \
              mock.patch('summarizer.utils.extract_blog_article', mock.AsyncMock(return_value='<p>Blog</p>')), \
              mock.patch('summarizer.utils.refine_blog_article', mock.AsyncMock(return_value='<p>Blog</p>')), \
-             mock.patch('summarizer.similar.find_and_store', return_value=[]):
+             mock.patch('summarizer.similar.find_and_store', return_value=[]), \
+             mock.patch('summarizer.insight.create') as structured:
             summarize_now(MNRAS_KEY, 'en')
+        self.assertEqual(structured.call_args.args[:2], (MNRAS_KEY, 'en'))
         read.assert_called_once_with('pdf', 'https://example.org/paper.pdf')
         paper = ArxivPaper.objects.get(arxiv_id=MNRAS_KEY)
         self.assertEqual(paper.title, 'Galaxy quenching time-scales')
@@ -479,8 +481,10 @@ class PipelineTests(TestCase):
              mock.patch('summarizer.utils.extract_simple_summary', mock.AsyncMock(return_value='Simple.')), \
              mock.patch('summarizer.utils.extract_blog_article', mock.AsyncMock(return_value='<p>B</p>')), \
              mock.patch('summarizer.utils.refine_blog_article', mock.AsyncMock(return_value='<p>B</p>')), \
-             mock.patch('summarizer.similar.find_and_store', return_value=[]):
+             mock.patch('summarizer.similar.find_and_store', return_value=[]), \
+             mock.patch('summarizer.insight.create') as structured:
             summarize_now(MNRAS_KEY, 'en')
+        self.assertEqual(structured.call_args.args[:2], (MNRAS_KEY, 'en'))
         read.assert_not_called()
         live = Client().get('/en/paper-live/%s/' % MNRAS_KEY).json()
         self.assertEqual(live['source_scope'], 'abstract_license')

@@ -46,7 +46,7 @@ def language_name(lang):
         return LANGUAGES.get(lang, 'English')
 
 
-def chat_json(prompt, paid=True, max_tokens=3000, system=None):
+def chat_json(prompt, paid=True, max_tokens=3000, system=None, timeout=300):
     """One chat completion that answers with a JSON object, returned as a dict."""
     model_free, model_paid = ai_models()
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': prompt}]
@@ -55,7 +55,7 @@ def chat_json(prompt, paid=True, max_tokens=3000, system=None):
         headers={'Authorization': 'Bearer %s' % settings.OPENAI_KEY},
         json={'model': model_paid if paid else model_free, 'messages': messages,
               'response_format': {'type': 'json_object'}, **chat_params(paid, max_tokens)},
-        timeout=300,
+        timeout=timeout,
     )
     response.raise_for_status()
     content = usage.record(response.json())['choices'][0]['message']['content']

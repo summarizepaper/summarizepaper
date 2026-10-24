@@ -1498,7 +1498,7 @@ async def extract_simple_summary(arxiv_id, language, keyp, p, api_key):
 
     return simple_sum#.rstrip().lstrip()
 
-async def extract_blog_article(arxiv_id, language, summary, p, api_key):
+async def extract_blog_article(arxiv_id, language, summary, p, api_key, title='', authors=()):
     model_free, model_paid = await sync_to_async(ai_models)()
     li = get_language_info(language)
     language2 = li['name']
@@ -1508,6 +1508,11 @@ async def extract_blog_article(arxiv_id, language, summary, p, api_key):
          Create a blog article of 600 to 900 words about this research paper: {}
          The article should be well-organized and easy to read. Use HTML: <h2> for headings, <h3> for subheadings, <p> for every paragraph, and <ul>/<li> for lists. No other tags, no markdown, no LaTeX.
     """.format(summary)
+    authors = [authors] if isinstance(authors, str) else list(authors or ())
+    # Given only the summary, the model used to invent the title, authors and journal of the paper
+    prompt5 += ("The paper is titled \"{}\" and written by {}. Name no other author, and no journal or conference: "
+                "the summary does not say where the paper is published. ").format(
+                    ' '.join((title or '').split()), ', '.join(authors[:6]) + (' et al.' if len(authors) > 6 else '') or 'its authors')
 
     prompt5b = """
     Create an HTML blog post summarizing and analyzing a research paper for a general audience. Provide an overview of the main findings and conclusions, highlighting their significance and relevance to the field. Use appropriate HTML tags such as headings, paragraphs, lists, and links. Include an analysis of the study's strengths, limitations, and potential implications for future research or practical applications. Follow standard formatting guidelines for citations and references. Write in an engaging style that is accessible to a general audience. Finally, please ensure that your HTML code is clean and valid, adhering to best practices for semantic markup and accessibility. Here is the research paper: {}

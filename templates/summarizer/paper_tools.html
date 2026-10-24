@@ -22,7 +22,9 @@
       <button type="button" class="btn btn-sm" id="collection-go">{% trans 'Add' %}</button>
       <span class="tool-status" id="collection-status"></span>
     {% else %}
-      <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}">{% trans 'Log in to save papers in collections' %}</a>
+      <span>{% trans 'Group papers in collections to compare them, chat with them and export them.' %}</span>
+      <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="paper_signup_save">{% trans 'Create a free account' %}</a>
+      <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
     {% endif %}
   </div>
 
@@ -30,37 +32,42 @@
     <span class="tool-label">{% trans 'Export' %}</span>
     <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog">BibTeX</a> ·
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/ris/" rel="nofollow">RIS (Zotero, Mendeley, EndNote)</a> ·
-    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow">Markdown (Notion, Obsidian)</a> ·
+    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow">Markdown (Notion, Obsidian)</a>
+  </div>
+
+  <div class="tools-advanced">
+  <h4>{% trans 'Advanced tools' %} <span class="badge-premium">Premium</span></h4>
+  <p class="tools-pitch">{% trans 'For researchers who follow a field closely: citation alerts, journal-club slides, version comparison and Zotero export.' %} {% if not paid %}<a href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="paper_premium_click">{% trans 'Discover Premium' %}</a>{% endif %}</p>
+
+  <div class="tool-row">
+    <span class="tool-label">Zotero</span>
     <button type="button" class="link-button" id="zotero-go">{% trans 'Send to Zotero with its summary' %}</button>
-    <span class="badge-premium">Premium</span>
     <span class="tool-status" id="zotero-status"></span>
   </div>
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'Citation alerts' %}</span>
     <button type="button" class="btn btn-sm btn-ghost" id="follow-go" data-following="{{ following|yesno:'1,0' }}">{% if following %}{% trans 'Stop following its citations' %}{% else %}{% trans 'Tell me who cites it' %}{% endif %}</button>
-    <span class="badge-premium">Premium</span>
     <span class="tool-status" id="follow-status"></span>
   </div>
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'Journal club' %}</span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id }}/" rel="nofollow">{% trans 'Slides to present it' %}</a>
-    <span class="badge-premium">Premium</span>
   </div>
 
   {% if not arxiv_id|is_external %}
   <div class="tool-row">
     <span class="tool-label">{% trans 'Versions' %}</span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id }}/" rel="nofollow">{% trans 'What changed between versions' %}</a>
-    <span class="badge-premium">Premium</span>
   </div>
   {% endif %}
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'For journalists' %}</span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id }}/" rel="nofollow">{% trans 'Press kit and hype check' %}</a>
-    <span class="badge-premium">Premium</span>
+  </div>
+
   </div>
 
   <div id="tools-text" hidden

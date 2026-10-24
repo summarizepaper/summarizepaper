@@ -341,7 +341,8 @@
 .tree-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; color: var(--text-muted); }
 .tree-cta p { margin: 0; }
 .closest-search { margin-top: 24px; flex-direction: column; }
-.closest-search form { display: flex; align-items: center; gap: 10px; }
+.closest-search form { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; max-width: 100%; }
+.closest-search input[type="submit"] { max-width: 100%; white-space: normal; }
 .closest-search form p { margin: 0; }
 .beta { padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 12px; font-weight: 600; }
 
@@ -375,6 +376,88 @@
 .star-icon { color: #f59e0b; font-size: 16px; }
 .highlight { color: #b45309; font-weight: 700; }
 .warning-sign { margin-right: 4px; color: #d97706; }
+
+/* ---------- Paper page: header, actions, essentials ---------- */
+.paper-head { margin-bottom: 20px; }
+.paper-eyebrow { margin: 0 0 10px; color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+.paper-title { margin: 0 0 14px; font-size: clamp(26px, 3.6vw, 36px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+.paper-authors { margin: 0 0 12px; color: var(--text); font-size: 15px; line-height: 1.6; }
+.paper-authors .affiliation { color: var(--text-muted); }
+.more-authors { display: inline; }
+.more-authors summary { display: inline; color: var(--accent); cursor: pointer; font-weight: 600; }
+.paper-meta .info-text { white-space: normal; }
+.paper-head .source-scope { margin: 14px 0 0; padding: 10px 14px; font-size: 14px; }
+.paper-head .source-scope strong { font-size: 13px; }
+
+.paper-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
+.paper-actions .action {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none;
+  transition: border-color .15s, background-color .15s;
+}
+.paper-actions .action:hover { border-color: #c7cbff; background: var(--accent-soft); }
+.paper-actions .action i { color: var(--accent); }
+
+.essentials {
+  margin: 0 0 24px; padding: 26px 28px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.essentials > h2 { margin: 0 0 14px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+.essentials h3 { margin: 22px 0 8px; font-size: 16px; }
+.essentials p { margin: 0 0 10px; font-size: 16px; line-height: 1.65; }
+.essentials .tldr { font-size: 19px; line-height: 1.5; font-weight: 600; color: var(--text); }
+.essentials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 28px; }
+.essentials .paper-key-points, .evidence-list { margin: 0; padding-left: 1.3em; }
+.essentials li { margin-bottom: 12px; font-size: 16px; line-height: 1.6; }
+.essentials li::marker { color: var(--accent); }
+.claim-kind { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; vertical-align: 1px; }
+.claim-result { background: #ecfdf5; color: #047857; }
+.claim-interpretation { background: #f5f3ff; color: #6d28d9; }
+.evidence { margin-top: 4px; }
+.evidence summary { color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; }
+.evidence blockquote { margin: 8px 0 0; padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--bg-soft); color: #33333f; font-size: 15px; font-style: italic; }
+.scope-note { color: #92400e !important; font-size: 14px !important; }
+.ai-note { margin: 16px 0 0 !important; color: var(--text-muted); font-size: 13px !important; }
+.essentials .keywords { margin: 18px 0 0; }
+
+/* ---------- Assistant suggestions and account nudge ---------- */
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 12px; }
+.chat-suggestions button {
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-soft);
+  color: var(--text); font: 600 13px var(--font); cursor: pointer;
+}
+.chat-suggestions button:hover { border-color: #c7cbff; background: var(--accent-soft); }
+.account-nudge { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border); background: var(--accent-soft); font-size: 14px; }
+.account-nudge[hidden] { display: none; }
+.account-nudge p { margin: 0; }
+
+/* ---------- Tools ---------- */
+.tools-advanced { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.tools-advanced h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 15px; }
+.tools-pitch { margin: 0 0 6px; color: var(--text-muted); font-size: 14px; }
+.tools-advanced .tool-row:first-of-type { border-top: 0; }
+
+/* ---------- Footer of the page ---------- */
+.vote-bar { margin-top: 16px; }
+.disclaimer { font-size: 13px; }
+
+@media (max-width: 600px) {
+  .essentials { padding: 20px; }
+  .essentials .tldr { font-size: 17px; }
+  .paper-actions {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; box-sizing: border-box; margin: 0; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    flex-wrap: nowrap; justify-content: space-around; gap: 2px;
+    background: rgba(255, 255, 255, .96); border-top: 1px solid var(--border); box-shadow: 0 -4px 16px rgba(0, 0, 0, .06);
+  }
+  .paper-actions .action { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; padding: 4px 2px; border: 0; background: none; font-size: 11px; text-align: center; line-height: 1.2; }
+  .paper-actions .action i { font-size: 16px; }
+  #paper-detail { padding-bottom: 72px; }
+  /* the on-screen keyboard would push the bar over the field being typed in */
+  body:has(:is(input, textarea, select):focus) .paper-actions { display: none; }
+  .chat-suggestions { padding: 0 16px 12px; }
+  .account-nudge { padding: 14px 16px; }
+}
 
 @media (max-width: 600px) {
   .main-content2 { padding-top: 24px; }

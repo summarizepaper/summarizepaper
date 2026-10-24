@@ -397,7 +397,8 @@ class ExportTests(ToolsTestCase):
         self.assertContains(page, '<meta name="citation_title" content="Clouds on a hot planet" />', html=False)
         self.assertContains(page, '<meta name="citation_arxiv_id" content="2101.00001" />', html=False)
         self.assertContains(page, 'id="tools"')
-        self.assertContains(page, 'Log in to save papers in collections')
+        self.assertContains(page, 'Group papers in collections')
+        self.assertContains(page, '/en/register/?next=/en/paper/2101.00001v1/')
 
     def test_zotero_connect_and_send(self):
         self.paper()

@@ -45,6 +45,14 @@
     var input = form.querySelector('input[type="text"]'), messages = root.querySelector('.chatbot-messages');
     var button = root.querySelector('#send-btn'), spinner = root.querySelector('#loading-spinner');
     var socket = null, currentResponse = null, pendingFigures = null, busy = false;
+    var nudge = root.querySelector('#account-nudge');
+    root.querySelectorAll('.chat-suggestions button').forEach(function (suggestion) {
+      suggestion.addEventListener('click', function () {
+        if (busy) return;
+        input.value = suggestion.dataset.question;
+        form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', {cancelable: true}));
+      });
+    });
     function scroll() {messages.scrollTop = messages.scrollHeight;}
     function finish() {busy = false; button.disabled = false; spinner.style.display = 'none';}
     function error() {if (busy) {var msg = document.createElement('p'); msg.textContent = root.dataset.error; messages.appendChild(msg);} finish(); socket = null; currentResponse = null; pendingFigures = null;}
@@ -60,6 +68,7 @@
       SPChat.typeset(currentResponse);
       if (pendingFigures && window.SPChatFigures) SPChatFigures.render(currentResponse, pendingFigures.figures, pendingFigures.status);
       currentResponse = null; pendingFigures = null; finish(); scroll();
+      if (nudge) nudge.hidden = false;  // after a first answer: a free account keeps the conversation
     }
     form.addEventListener('submit', function (event) {
       event.preventDefault(); var question = input.value.trim(); if (!question || busy) return;

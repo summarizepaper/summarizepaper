@@ -219,3 +219,78 @@ class ArxivMetadataResilienceTests(TestCase):
         self.assertEqual(result[12], license)
         self.assertTrue(utils.sources.is_open_license(result[12]))
         self.assertEqual(session.get.call_count, 1)
+
+
+class PaperReadingTests(TestCase):
+    TEXT = ('## Results\n\nWe measure a cooling rate of 3.2 K per hour in the inner disk. '
+            'This suggests that the disk is losing mass to the star.')
+
+    def setUp(self):
+        from .models import Author, PaperAuthor
+        self.paper = ArxivPaper.objects.create(arxiv_id='2401.05000v1', title='Cooling of a disk', abstract='A disk cools.',
+                                               license='http://creativecommons.org/licenses/by/4.0/')
+        PaperAuthor.objects.create(paper=self.paper, author=Author.objects.create(name='Ann Vries'), author_order=0)
+        SummaryPaper.objects.create(paper=self.paper, lang='en', summary='Long summary.', notes='["Point A", "Point B"]',
+                                    lay_summary='Simple.', keywords='disk cooling, accretion',
+                                    blog='<p>A recent paper by M. Smith et al., published in Nature Physics, studies disks. '
+                                         'It finds that disks cool.</p><p>Ann Vries et al. measure the rate.</p>')
+
+    def answer(self):
+        return {'tldr': 'The inner disk cools fast.', 'question': 'How fast do disks cool?', 'method': 'Simulations.',
+                'findings': [{'text': 'Cooling at 3.2 K per hour.', 'kind': 'result',
+                              'quote': 'We measure a cooling rate of 3.2 K per hour in the inner disk.'},
+                             {'text': 'Mass is lost.', 'kind': 'speculation', 'quote': 'An invented passage that is not in the paper at all.'}],
+                'limitations': [{'text': 'One disk only.', 'quote': ''}], 'significance': 'Disk models change.'}
+
+    def test_passages_are_kept_only_when_they_are_in_the_paper(self):
+        from . import insight
+        data = insight.structured(self.answer(), self.TEXT, False)
+        self.assertEqual(data['findings'][0]['quote'], 'We measure a cooling rate of 3.2 K per hour in the inner disk.')
+        self.assertEqual(data['findings'][1]['quote'], '')
+        self.assertEqual(data['findings'][1]['kind'], 'interpretation')
+
+    def test_new_synthesis_shows_the_reading_once_and_old_ones_keep_key_points(self):
+        from . import insight
+        from .models import Generated
+        page = BeautifulSoup(self.client.get('/en/paper/2401.05000v1/').content, 'html.parser')
+        self.assertEqual(page.h1.get_text(strip=True), 'Cooling of a disk')
+        self.assertEqual([li.get_text(strip=True) for li in page.select('.paper-key-points > li')], ['Point A', 'Point B'])
+        self.assertIn('predates the recording of its source', page.select_one('.source-scope').get_text())
+        with mock.patch('summarizer.generated.chat_json', return_value=self.answer()), \
+             mock.patch('summarizer.paper_source.paper_text', return_value=self.TEXT):
+            insight.create('2401.05000v1', 'en', False)
+        self.assertEqual(Generated.objects.get(kind='insight').status, 'done')
+        page = BeautifulSoup(self.client.get('/en/paper/2401.05000v1/').content, 'html.parser')
+        self.assertEqual(page.select_one('.tldr').get_text(), 'The inner disk cools fast.')
+        self.assertEqual(len(page.select('.evidence blockquote')), 1)
+        self.assertEqual(page.select_one('.claim-result').get_text(), 'Result')
+        self.assertNotIn('Point A', page.get_text())  # the reading replaces the key points, no repetition
+        self.assertIn('/en/search-results/?q=disk%20cooling', str(page.select_one('.paper-actions')))
+
+    def test_blogs_lose_invented_authors_and_journals_but_keep_the_rest(self):
+        page = BeautifulSoup(self.client.get('/en/paper/2401.05000v1/').content, 'html.parser')
+        blog = page.select('.message-tab')[2].get_text(' ')
+        self.assertNotIn('Smith', blog)
+        self.assertNotIn('Nature Physics', blog)
+        self.assertIn('It finds that disks cool.', blog)
+        self.assertIn('Ann Vries et al. measure the rate.', blog)
+
+    def test_blog_prompt_names_the_real_title_and_authors(self):
+        import json as _json
+        response = mock.Mock(status_code=200)
+        response.json.return_value = {'choices': [{'message': {'content': '<p>Blog</p>'}, 'finish_reason': 'stop'}],
+                                      'usage': {'prompt_tokens': 1, 'completion_tokens': 1}, 'model': 'm'}
+        with mock.patch('summarizer.utils.requests.post', return_value=response) as post:
+            async_to_sync(utils.extract_blog_article)('2401.05000v1', 'en', 'Summary.', False, 'key',
+                                                      title='Cooling of a disk', authors=['Ann Vries'])
+        prompt = _json.dumps(post.call_args.kwargs['json']['messages'])
+        self.assertIn('Cooling of a disk', prompt)
+        self.assertIn('Ann Vries', prompt)
+        self.assertIn('Name no other author', prompt)
+
+    def test_venue_check_keeps_real_journals_initials_and_figures(self):
+        from .summary_text import without_invented_references
+        html = ('<p>Gavin A. L. Coleman et Haworth ont publié leur étude dans MNRAS. Elle a été publiée dans MNRAS en 2020. '
+                'The results were published in a paper titled “Discs”. The results presented in Figure 2 hold.</p>')
+        out = without_invented_references(html, ['Gavin A. L. Coleman', 'Thomas J. Haworth'], '', 'accepted for publication in MNRAS')
+        self.assertEqual(BeautifulSoup(out, 'html.parser').get_text(), BeautifulSoup(html, 'html.parser').get_text())
