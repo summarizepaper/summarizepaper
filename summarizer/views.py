@@ -59,6 +59,11 @@ def robots_txt(request):
     lines = [
         "User-Agent: *",
         "Disallow: /admin",
+        # Every paper links to these with its own ?next=: crawlers fetched them by the hundred per minute
+        "Disallow: /*/login/",
+        "Disallow: /*/register/",
+        "Disallow: /*/logout/",
+        "Disallow: /google/",
         "Sitemap: https://www.summarizepaper.com/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")

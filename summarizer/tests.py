@@ -1274,6 +1274,14 @@ Read the **listings** <b>daily</b>.
         self.assertEqual(self.client.get('/en/guides/..%2Fsecret/').status_code, 404)
 
 
+class RobotsTests(TestCase):
+    def test_account_pages_are_kept_from_crawlers(self):
+        robots = self.client.get('/robots.txt').content.decode()
+        for path in ('/*/login/', '/*/register/', '/*/logout/', '/google/'):
+            self.assertIn('Disallow: ' + path, robots)
+        self.assertNotIn('Disallow: /*/paper/', robots)
+
+
 class GuideFileTests(TestCase):
     def test_every_guide_in_the_repo_parses(self):
         from summarizer import guides
