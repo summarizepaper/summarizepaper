@@ -264,16 +264,17 @@ def parse_feed(xml_text):
 _last_call = [0.0]
 
 
-def arxiv_get(params):
-    """One arXiv API query, spaced from the previous one and retried when arXiv asks us to slow down."""
+def arxiv_get(params, timeout=60, retry=True):
+    """One arXiv API query, spaced from the previous one and retried when arXiv asks us to slow down.
+    A page request passes a short timeout and no retry: Heroku cuts requests after 30 seconds."""
     error = None
-    for wait in RETRY_WAITS + (None,):
+    for wait in (RETRY_WAITS if retry else ()) + (None,):
         pause = _last_call[0] + SECONDS_BETWEEN_CALLS - time.monotonic()
         if pause > 0:
             time.sleep(pause)
         _last_call[0] = time.monotonic()
         try:
-            response = requests.get(ARXIV_API, params=params, timeout=60)
+            response = requests.get(ARXIV_API, params=params, timeout=timeout)
             if response.status_code == 200:
                 return parse_feed(response.text)
             error = 'HTTP %s: %s' % (response.status_code, response.text[:80])
@@ -514,10 +515,10 @@ def author_index(papers):
     return index
 
 
-def fetch_ids(ids):
+def fetch_ids(ids, **options):
     if not ids:
         return []
-    return arxiv_get({'id_list': ','.join(ids), 'max_results': len(ids)})
+    return arxiv_get({'id_list': ','.join(ids), 'max_results': len(ids)}, **options)
 
 
 # --- ranking -----------------------------------------------------------------

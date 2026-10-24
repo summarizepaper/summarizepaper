@@ -55,12 +55,12 @@ def base_id(arxiv_id):
     return match.group(1), int(match.group(2) or 0)
 
 
-def latest_version(base):
+def latest_version(base, **options):
     """The number of arXiv's latest version of a paper (0 when arXiv does not know it), cached a few hours."""
     key = 'arxiv-latest:%s' % base
     found = cache.get(key)
     if found is None:
-        papers = digest.fetch_ids([base])
+        papers = digest.fetch_ids([base], **options)
         found = base_id(papers[0]['arxiv_id'])[1] if papers else 0
         cache.set(key, found, 6 * 3600)
     return found
@@ -313,7 +313,8 @@ def _versions(arxiv_id, request, ask_arxiv=True):
     latest = max(shown, PaperVersion.objects.filter(arxiv_id=base).values_list('version', flat=True).first() or 0)
     if ask_arxiv:
         try:
-            latest = latest_version(base) or latest
+            # one short try: a slow arXiv used to hold the page past Heroku's 30 seconds (H12)
+            latest = latest_version(base, timeout=8, retry=False) or latest
         except digest.ArxivUnavailable:
             pass
     if not latest:

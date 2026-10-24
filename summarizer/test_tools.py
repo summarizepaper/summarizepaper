@@ -822,6 +822,19 @@ class ChangesTests(ToolsTestCase):
             lang=lang, status='done', content=json.dumps({'old': old, 'new': new, 'full_text': full,
             'results_changed': False, 'verdict': 'Saved %s v%d-v%d' % (lang, old, new), 'changes': []}))
 
+    def test_a_slow_arxiv_cannot_hold_the_page_past_heroku_limit(self):
+        import requests
+        from summarizer import digest
+        self.paper()
+        client = self.client_for(self.user(paid=True))
+        with mock.patch('summarizer.digest.requests.get', side_effect=requests.Timeout) as get, \
+             mock.patch('summarizer.digest.time.sleep') as sleep:
+            page = client.get('/en/changes/2101.00001v1/')
+        self.assertEqual(page.status_code, 200)  # the versions we know, without arXiv's answer
+        self.assertEqual(get.call_count, 1)
+        self.assertEqual(get.call_args.kwargs['timeout'], 8)
+        self.assertFalse([c for c in sleep.call_args_list if c.args[0] > digest.SECONDS_BETWEEN_CALLS])
+
     def test_history_keeps_each_pair_and_reopens_last_comparison(self):
         self.paper()
         client = self.client_for(self.user(paid=True))
