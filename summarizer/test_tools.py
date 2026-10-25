@@ -1485,6 +1485,45 @@ class ThreadwatchTests(ToolsTestCase):
         self.assertEqual(state['stuck_for'], 0)
 
 
+class LoadShedTests(TestCase):
+    def test_requests_past_the_limit_get_a_503_at_once(self):
+        import asyncio
+        from summarizer.loadshed import LoadShedder
+
+        async def run():
+            release = asyncio.Event()
+
+            async def app(scope, receive, send):
+                if scope['path'] == '/boom/':
+                    raise ValueError
+                await release.wait()
+                await send({'type': 'http.response.start', 'status': 200, 'headers': []})
+
+            shedder = LoadShedder(app, limit=2)
+
+            async def call(path):
+                sent = []
+
+                async def send(message):
+                    sent.append(message)
+                await shedder(({'type': 'http', 'path': path}), None, send)
+                return sent[0]['status'], dict(sent[0]['headers'])
+            running = [asyncio.create_task(call('/en/paper/%d/' % i)) for i in range(2)]
+            await asyncio.sleep(0)
+            with self.assertLogs('summarizer.loadshed', 'ERROR'):
+                status, headers = await call('/en/paper/3/')
+            self.assertEqual((status, headers[b'retry-after']), (503, b'5'))
+            static = asyncio.create_task(call('/static/site.css'))  # not counted
+            await asyncio.sleep(0)
+            self.assertFalse(static.done())
+            release.set()
+            self.assertEqual([await t for t in running + [static]][0][0], 200)
+            with self.assertRaises(ValueError):
+                await call('/boom/')
+            self.assertEqual(shedder.in_flight, 0)  # a failed request frees its place too
+        asyncio.run(run())
+
+
 class AudioTests(ToolsTestCase):
     def test_clips_are_shared_and_joined(self):
         items = [DigestItem.objects.create(arxiv_id='2610.0000%dv1' % i, lang='en', title='Paper %d' % i, blurb='Blurb %d.' % i)

@@ -32,11 +32,12 @@ application = ProtocolTypeRouter({
 print('joe')
 
 from summarizer import threadwatch
+from summarizer.loadshed import LoadShedder
 threadwatch.start()  # logs the threads of the web process (see threadwatch.py)
 
 application = ProtocolTypeRouter(
     {
-        "http": django_asgi_app,
+        "http": LoadShedder(django_asgi_app),  # a 503 at once past LIMIT requests in flight (see loadshed.py)
         "websocket": AllowedHostsOriginValidator(
             AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
         ),
