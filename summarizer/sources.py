@@ -271,8 +271,12 @@ def _strip_tags(text):
 def _date(value):
     """'2024-10-01', '2024-10', [2024, 10, 1] or a datetime string -> '2024-10-01' ('' when unknown)."""
     if isinstance(value, (list, tuple)):
-        parts = [int(p) for p in value[:3]] + [1] * (3 - len(value[:3]))
-        return '%04d-%02d-%02d' % tuple(parts) if value else ''
+        known = []
+        for part in value[:3]:  # Crossref gives [[None]] for records without a date (dataset components)
+            if part is None:
+                break
+            known.append(int(part))
+        return '%04d-%02d-%02d' % tuple(known + [1] * (3 - len(known))) if known else ''
     match = re.match(r'(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?', str(value or ''))
     if not match:
         return ''

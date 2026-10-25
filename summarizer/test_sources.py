@@ -184,6 +184,16 @@ class FullTextTests(TestCase):
 
 
 class MetadataTests(TestCase):
+    def test_a_crossref_record_without_a_date_is_read_without_one(self):
+        # 10.1088/1741-2552/ae4455/data2, a dataset component: Crossref gives "issued": [[null]]
+        work = {'message': {'type': 'component', 'title': ['Pretraining Data Volume'], 'published': None,
+                            'issued': {'date-parts': [[None]]}, 'container-title': []}}
+        with mock.patch('summarizer.sources._json', return_value=work):
+            paper = sources.fetch_crossref('10.1088/1741-2552/ae4455/data2')
+        self.assertEqual((paper['title'], paper['published']), ('Pretraining Data Volume', ''))
+        self.assertEqual(sources._date([2024, None]), '2024-01-01')
+        self.assertEqual(sources._date([2024, 3, 7]), '2024-03-07')
+
     def test_metadata_is_stored_and_reused_for_a_day(self):
         with mock.patch('summarizer.sources.fetch', return_value=journal_paper()) as fetch:
             self.assertEqual(sources.metadata(MNRAS_KEY)['title'], 'Galaxy quenching time-scales')
