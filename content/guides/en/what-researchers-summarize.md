@@ -43,7 +43,7 @@ Key numbers
 
 ## What is in this dataset?
 
-SummarizePaper publishes AI summaries of arXiv papers. Summaries are created on request, so the papers summarized show what people want to understand, not what arXiv publishes. Between February 2023 and 18 October 2026, the site recorded:
+SummarizePaper publishes AI summaries of research papers; this page counts the arXiv papers, which were the only source during most of the period (journals and other preprint servers were added in October 2026). Summaries are created on request, so the papers summarized show what people want to understand, not what arXiv publishes. Between February 2023 and 18 October 2026, the site recorded:
 
 | Measure | Count |
 |---|---|
