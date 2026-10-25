@@ -14,13 +14,13 @@ faq:
   - q: "Which alternative works with any PDF?"
     a: "ChatPDF, SciSummary and NotebookLM all work with PDFs you upload. SummarizePaper needs a paper with a public record (arXiv, a DOI, bioRxiv, medRxiv, HAL), and alphaXiv covers arXiv."
 sources:
-  - label: "Elicit pricing page (checked 2026-10-18)"
+  - label: "Elicit pricing page (checked 2026-10-25)"
     url: "https://elicit.com/pricing"
-  - label: "ChatPDF home page and FAQ (checked 2026-10-18)"
+  - label: "ChatPDF home page and FAQ (checked 2026-10-25)"
     url: "https://www.chatpdf.com/"
-  - label: "SciSummary plans (checked 2026-10-18)"
+  - label: "SciSummary plans (checked 2026-10-25)"
     url: "https://scisummary.com/"
-  - label: "NotebookLM usage limits, Google support (checked 2026-10-18)"
+  - label: "NotebookLM usage limits, Google support (checked 2026-10-25)"
     url: "https://support.google.com/notebooklm/answer/16213268"
   - label: "Scholarcy pricing page (checked 2026-10-18)"
     url: "https://www.scholarcy.com/pricing"
@@ -40,7 +40,7 @@ Key takeaways
 
 </div>
 
-<p class="note">Disclosure: this guide is written by the creator of SummarizePaper, one of the alternatives listed. Competitors' prices were checked on their own sites on 18 October 2026 where the site shows them; SummarizePaper's on 25 October 2026.</p>
+<p class="note">Disclosure: this guide is written by the creator of SummarizePaper, one of the alternatives listed. Prices were checked on each tool's own site on 25 October 2026 where the site shows them; Scholarcy's on 18 October 2026.</p>
 
 ## Why look for a Scholarcy alternative?
 
@@ -69,7 +69,7 @@ Key takeaways
 
 ### alphaXiv
 
-[alphaXiv](https://www.alphaxiv.org/) opens any arXiv paper with an AI overview, comments from other readers and audio. Replace `arxiv` with `alphaxiv` in a paper's URL to open it there.
+[alphaXiv](https://www.alphaxiv.org/) opens any arXiv paper with an AI overview, comments from other readers, an audio summary and AI chat. Replace `arxiv` with `alphaxiv` in a paper's URL to open it there.
 
 - **Better than Scholarcy for:** seeing what other researchers say about a paper.
 - **Worse for:** papers outside arXiv.

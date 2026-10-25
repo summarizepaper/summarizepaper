@@ -18,7 +18,7 @@ faq:
   - q: "Can I ask questions across several papers?"
     a: "Both can. ChatPDF lets you bring several PDFs into one chat. SummarizePaper's assistant answers from the full text of one or several papers, and its collections compare papers in a table."
 sources:
-  - label: "ChatPDF home page and FAQ (checked 2026-10-18)"
+  - label: "ChatPDF home page and FAQ (checked 2026-10-25)"
     url: "https://www.chatpdf.com/"
   - label: "SummarizePaper FAQ"
     url: "https://www.summarizepaper.com/en/faq/"
@@ -36,7 +36,7 @@ Key takeaways
 
 </div>
 
-<p class="note">Disclosure: this comparison is written by the creator of SummarizePaper. ChatPDF features were checked on its site on 18 October 2026; SummarizePaper's on 25 October 2026.</p>
+<p class="note">Disclosure: this comparison is written by the creator of SummarizePaper. Both sites were checked on 25 October 2026.</p>
 
 ## ChatPDF vs SummarizePaper at a glance
 

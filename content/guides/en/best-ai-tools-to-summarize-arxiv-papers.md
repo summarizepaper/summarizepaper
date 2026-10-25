@@ -16,11 +16,11 @@ faq:
   - q: "Is there an AI tool that summarizes arXiv papers in French or other languages?"
     a: "SummarizePaper writes every summary in English or French, and rewrites any summary in 16 languages and four reading levels, from a 12-year-old to an expert. alphaXiv also offers AI overviews in several languages."
 sources:
-  - label: "Elicit pricing page (checked 2026-10-18)"
+  - label: "Elicit pricing page (checked 2026-10-25)"
     url: "https://elicit.com/pricing"
-  - label: "SciSummary plans (checked 2026-10-18)"
+  - label: "SciSummary plans (checked 2026-10-25)"
     url: "https://scisummary.com/"
-  - label: "NotebookLM usage limits, Google support (checked 2026-10-18)"
+  - label: "NotebookLM usage limits, Google support (checked 2026-10-25)"
     url: "https://support.google.com/notebooklm/answer/16213268"
   - label: "alphaXiv"
     url: "https://www.alphaxiv.org/"
@@ -45,7 +45,7 @@ Key takeaways
 
 </div>
 
-<p class="note">Disclosure: this guide is written by the creator of SummarizePaper, one of the tools compared. Competitors' prices were checked on their own sites on 18 October 2026 where the site shows them; SummarizePaper's on 25 October 2026.</p>
+<p class="note">Disclosure: this guide is written by the creator of SummarizePaper, one of the tools compared. Prices and features were checked on each tool's own site on 25 October 2026 where the site shows them; Scholarcy's on 18 October 2026.</p>
 
 ## Which tool should you pick?
 
@@ -102,10 +102,10 @@ The right tool depends on the job, not on a ranking:
 
 ### alphaXiv
 
-[alphaXiv](https://www.alphaxiv.org/) adds a layer on top of arXiv: replace `arxiv` with `alphaxiv` in a paper's URL to open it there. Readers can comment on papers, and alphaXiv adds AI chat on the paper and AI-written overviews in several languages.
+[alphaXiv](https://www.alphaxiv.org/) adds a layer on top of arXiv: replace `arxiv` with `alphaxiv` in a paper's URL to open it there. Readers can comment on papers, and alphaXiv adds AI chat on the paper, AI-written overviews in several languages, audio summaries, the BibTeX entry and a Deep Research mode for literature searches.
 
 - **Strengths:** the discussion is the unique part; it works straight from any arXiv URL.
-- **Limits:** arXiv only; the overview is a starting point rather than a structured summary with lay version and BibTeX.
+- **Limits:** arXiv only; the overview is a starting point rather than a structured summary with a lay version.
 - **Price:** no paid plan listed on its site in October 2026.
 
 In detail: [alphaXiv vs SummarizePaper](https://www.summarizepaper.com/en/guides/alphaxiv-vs-summarizepaper/).

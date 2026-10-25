@@ -16,9 +16,9 @@ faq:
   - q: "Which one gives a summary in French or another language?"
     a: "SummarizePaper writes every summary in English or French, and rewrites it in 16 languages and four reading levels. alphaXiv also offers AI overviews in several languages."
   - q: "Which one helps me follow new papers in my field?"
-    a: "alphaXiv has a feed of trending papers and researchers to follow. SummarizePaper sends a free daily email digest of new arXiv, bioRxiv and medRxiv papers in the categories you choose, and with Premium, citation alerts, new-version alerts and a scoop watch on your project."
+    a: "alphaXiv lists papers to explore and researchers to follow. SummarizePaper sends a free daily email digest of new arXiv, bioRxiv and medRxiv papers in the categories you choose, and with Premium, citation alerts, new-version alerts and a scoop watch on your project."
 sources:
-  - label: "alphaXiv home page and paper pages (checked 2026-10-18)"
+  - label: "alphaXiv home page and paper pages (checked 2026-10-25)"
     url: "https://www.alphaxiv.org/"
   - label: "SummarizePaper FAQ"
     url: "https://www.summarizepaper.com/en/faq/"
@@ -30,14 +30,14 @@ sources:
 
 Key takeaways
 
-- **alphaXiv is a place to read and discuss arXiv papers**: a feed of trending papers, comments under each paper, an AI overview and AI tools on top.
+- **alphaXiv is a place to read and discuss arXiv papers**: papers to explore, comments under each paper, an AI overview, audio and chat on top, and a Deep Research mode.
 - **SummarizePaper is a research companion**: a complete summary page for arXiv, journal and preprint papers, an assistant whose every claim comes with the passage of the paper that supports it, and tools to follow your field, check a draft and review a research question.
 - **Use alphaXiv** to see what the community says about a paper. **Use SummarizePaper** to understand a paper quickly, check what the AI says against the paper, and for the work around your reading.
 - Both work from the arXiv ID, so nothing stops you from using both on the same paper.
 
 </div>
 
-<p class="note">Disclosure: this comparison is written by the creator of SummarizePaper. alphaXiv features were checked on its site on 18 October 2026; SummarizePaper's on 25 October 2026.</p>
+<p class="note">Disclosure: this comparison is written by the creator of SummarizePaper. Both sites were checked on 25 October 2026; alphaXiv's chat and languages come from its changelog.</p>
 
 ## alphaXiv vs SummarizePaper at a glance
 
@@ -45,19 +45,19 @@ Key takeaways
 |---|---|---|
 | Main idea | Discussion and AI layer on top of arXiv | Summary pages and research tools for papers from many sources |
 | Papers covered | arXiv | arXiv, journal articles (DOI), bioRxiv, medRxiv, HAL, Europe PMC, OSF preprints |
-| What you get on a paper | Abstract, AI overview, comments, audio | Detailed summary, key points, lay summary, structured reading, blog-style article, related papers, BibTeX, PDF export |
+| What you get on a paper | Abstract, AI overview, comments, audio summary, BibTeX, similar papers | Detailed summary, key points, lay summary, structured reading, blog-style article, related papers, BibTeX, PDF export |
 | Ask questions about a paper | Yes | Yes, from the full text and figures, on one or several papers |
 | See where each claim comes from | Not checked | Yes: each claim with the paper's own sentence, checked word for word, and a link to the passage |
 | Languages | Several languages for AI overviews | English and French, rewrites in 16 languages and 4 reading levels |
-| Following new papers | Trending feed, researchers to follow | Daily email digest (arXiv, bioRxiv, medRxiv), citation, version and scoop alerts, saved searches |
-| Research tools | Browser extension, MCP server | Draft and bibliography checks, literature review, journal club slides, press kits, conference companion, collections with comparison tables |
+| Following new papers | Papers to explore, researchers to follow, conference pages | Daily email digest (arXiv, bioRxiv, medRxiv), citation, version and scoop alerts, saved searches |
+| Research tools | Deep Research literature search, browser extension, MCP server | Draft and bibliography checks, literature review, journal club slides, press kits, conference companion, collections with comparison tables |
 | Community | Comments and discussion | None |
 | Price | No pricing listed | Free; Premium €7/month; Premium+ €14/month |
 
 ## What alphaXiv does better
 
 - **Discussion.** Each paper has a discussion space, so you can see questions and remarks from other readers. SummarizePaper has nothing comparable.
-- **Discovery.** The home page ranks trending papers with a one-sentence takeaway each, and lets you follow researchers. When we checked in October 2026, the trending papers were mostly machine learning.
+- **Discovery.** The home page lists papers to explore with a short summary and their view counts, lets you follow researchers and has pages for conferences such as NeurIPS. Most of what it surfaces is machine learning.
 - **Tooling for developers.** alphaXiv offers a browser extension and an MCP server to plug papers into AI assistants.
 
 ## What SummarizePaper does better
@@ -78,13 +78,13 @@ Key takeaways
 | Understand a paper outside your field | SummarizePaper (lay summary, reading levels) |
 | Read a journal article or a bioRxiv preprint | SummarizePaper |
 | See what other researchers think of a paper | alphaXiv |
-| Browse what is trending in machine learning this week | alphaXiv |
+| Browse what machine learning researchers are reading this week | alphaXiv |
 | Get new papers in your categories by email every morning | SummarizePaper |
 | Prepare a journal club or check a draft before submitting | SummarizePaper |
 
 ## Who SummarizePaper is not for
 
-If what you value is the conversation around a paper, or a social feed of trending work, alphaXiv is the better home. SummarizePaper has no comments and no social features: it is built for understanding papers, checking what an AI says about them and the research work around them.
+If what you value is the conversation around a paper, or a social feed of what others read, alphaXiv is the better home. SummarizePaper has no comments and no social features: it is built for understanding papers, checking what an AI says about them and the research work around them.
 
 For a wider comparison, including NotebookLM, Elicit and SciSpace, see [Best AI tools to summarize arXiv papers](https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/). If you are leaving Scholarcy, see [Scholarcy alternatives](https://www.summarizepaper.com/en/guides/scholarcy-alternatives/).
 
