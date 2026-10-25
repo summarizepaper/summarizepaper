@@ -128,7 +128,7 @@ def _premium_annotations():
     plan = UserPlan.objects.filter(user=OuterRef('pk')).order_by('-created', '-pk')
     return {'plan_paid': Subquery(plan.values('paid')[:1]),
             'plan_expires': Subquery(plan.values('expires')[:1]),
-            'gift_premium': Exists(_current_grants().filter(user=OuterRef('pk'), tool='all'))}
+            'gift_premium': Exists(_current_grants().filter(user=OuterRef('pk'), tool__in=('all', 'plus')))}
 
 
 def _premium_q():
@@ -153,7 +153,7 @@ class PremiumFilter(admin.SimpleListFilter):
 class UserPlanInline(StackedInline):
     model = UserPlan
     extra = 0
-    fields = ('payment_plan', 'paid', 'expires', 'canceling', 'stripe_customer_id', 'stripe_subscription_id', 'created')
+    fields = ('payment_plan', 'paid', 'tier', 'expires', 'canceling', 'stripe_customer_id', 'stripe_subscription_id', 'created')
     readonly_fields = ('created',)
     verbose_name = 'abonnement'
     verbose_name_plural = 'abonnements (le plus récent compte ; sans date de fin = Premium offert à vie)'
@@ -330,8 +330,8 @@ class GuideAdmin(ModelAdmin):
 
 @admin.register(UserPlan)
 class UserPlanAdmin(ModelAdmin):
-    list_display = ('user', 'payment_plan', 'paid', 'expires', 'canceling', 'created')
-    list_filter = ('paid', 'canceling')
+    list_display = ('user', 'payment_plan', 'paid', 'tier', 'expires', 'canceling', 'created')
+    list_filter = ('paid', 'tier', 'canceling')
     search_fields = ('user__username', 'user__email', 'stripe_customer_id', 'stripe_subscription_id')
     raw_id_fields = ('user',)
 

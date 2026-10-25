@@ -77,6 +77,12 @@
           {% blocktrans %}Premium gives you our most capable AI model for summaries and answers, no daily summary limit and {{ chat_paid }} questions per day to the assistant. It is billed monthly or yearly through Stripe; we never see your card details. You can cancel in one click with the "Manage my subscription" button on the <a href="/{{ LANGUAGE_CODE }}/premium/">Premium page</a>: Premium then stays active until the end of the period you paid for.{% endblocktrans %}
         </div>
       </details>
+      <details id="premium-plus">
+        <summary>{% trans "What is the difference between Premium and Premium+?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}Premium+ costs twice Premium and adds the tools that read the most for each use: the literature review from a research question, journal club slides, press kits, the conference companion and research placement leads. Everything else is in Premium. A Premium subscriber can move to Premium+ at any time on the <a href="/{{ LANGUAGE_CODE }}/premium/#compare">Premium page</a> and pays only the difference for the current period.{% endblocktrans %}
+        </div>
+      </details>
       <details>
         <summary>{% trans "How does the daily digest work?" %}</summary>
         <div class="answer">

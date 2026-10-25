@@ -98,6 +98,7 @@ urlpatterns = [
     path("premium/", billing.premium, name="premium"),
     path("premium/checkout/", billing.checkout, name="premium_checkout"),
     path("premium/portal/", billing.portal, name="premium_portal"),
+    path("premium/change/", billing.change_plan, name="premium_change"),
     #path('login/', auth_views.LoginView.as_view(), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('login/email/', accounts.email_login, name='email_login'),

@@ -11,6 +11,12 @@ Configuration (Heroku config vars):
   STRIPE_PRICE_YEARLY      price_... of the yearly price (optional)
   STRIPE_PRICE_MONTHLY_USD price_... of the fixed USD monthly price (optional)
   STRIPE_PRICE_YEARLY_USD  price_... of the fixed USD yearly price (optional)
+  STRIPE_PRICE_PLUS_...    the same four for Premium+ (premium_tools.PLUS_TOOLS), twice the price;
+                           without STRIPE_PRICE_PLUS_MONTHLY only Premium is sold
+
+A subscription's tier (UserPlan.tier) is read from its price at each webhook. A
+subscriber switches between Premium and Premium+ on the premium page (change_plan):
+an upgrade is invoiced at once for the rest of the period, a downgrade is credited.
 """
 import datetime
 import logging
@@ -41,9 +47,22 @@ def billing_enabled():
     return bool(settings.STRIPE_SECRET_KEY and settings.STRIPE_PRICE_MONTHLY)
 
 
-def price_id(currency, period='monthly'):
-    name = 'STRIPE_PRICE_' + period.upper() + ('_USD' if currency == 'usd' else '')
+TIERS = ('premium', 'plus')
+
+
+def price_id(currency, period='monthly', tier='premium'):
+    name = 'STRIPE_PRICE_' + ('PLUS_' if tier == 'plus' else '') + period.upper() + ('_USD' if currency == 'usd' else '')
     return getattr(settings, name, '')
+
+
+def plus_enabled():
+    return billing_enabled() and bool(price_id('eur', tier='plus'))
+
+
+def tier_of_price(price):
+    """'plus' for a Premium+ price id, else 'premium'."""
+    plus = {price_id(c, p, 'plus') for c in ('eur', 'usd') for p in ('monthly', 'yearly')} - {''}
+    return 'plus' if price in plus else 'premium'
 
 
 def currencies():
@@ -105,29 +124,80 @@ def price_label(price_id):
     return label or None
 
 
+def features():
+    """Every tool and what each offer gives of it, by step of research: [(group, [(name, path, free, premium,
+    plus)])], a value being True, False or a short text. Paths are relative to /<lang>/."""
+    readings = SiteSettings.current().free_readings_per_day
+    chat = access.chat_messages_per_day()
+    runs = access.runs_per_day()
+    unlimited = _('Unlimited')
+    return [
+        (_('Read papers faster'), [
+            (_('Summaries, key points, lay summary and blog article'), '', _('%d new per day') % runs, unlimited, unlimited),
+            (_('AI model'), '', _('Standard'), _('Most capable'), _('Most capable')),
+            (_('Chat with papers'), 'chat', _('%d questions per day') % chat['user'], _('%d questions per day') % chat['paid'],
+             _('%d questions per day') % chat['paid']),
+            (_('Rewrites for another reader or language'), '', _('%d per day') % readings, unlimited, unlimited),
+            (_('Collections'), 'collections/', _('3 of 20 papers'), _('100 of 200 papers'), _('100 of 200 papers')),
+            (_('Comparison tables and open questions of a collection'), 'collections/', False, True, True),
+            (_('BibTeX, RIS and Markdown exports'), 'integrations/', True, True, True),
+            (_('Papers sent to Zotero with their summary'), 'integrations/', False, True, True),
+        ]),
+        (_('Follow your field'), [
+            (_('Daily digest'), 'digest/', _('One digest'), _('Up to 5, ranked for you, read aloud'),
+             _('Up to 5, ranked for you, read aloud')),
+            (_('Weekly letters'), 'letters/', _('On the web'), _('On the web and by email'), _('On the web and by email')),
+            (_('Rising topics'), 'trends/', _('The top ones'), _('All, field by field'), _('All, field by field')),
+            (_('Saved searches with email alerts'), 'saved-searches/', '1', '5', '5'),
+            (_('Citation and version alerts'), 'citations/', False, True, True),
+            (_('Scoop watch'), 'scoops/', False, True, True),
+            (_('Who works on it?'), 'teams/', False, True, True),
+        ]),
+        (_('Write and submit'), [
+            (_('What did I miss?'), 'missed/', False, True, True),
+            (_('Bibliography check'), 'refcheck/', False, True, True),
+            (_('Literature review from a research question'), 'literature-review/', False, False, True),
+        ]),
+        (_('Present, meet and apply'), [
+            (_('Journal club slides'), 'journal-club/', False, False, True),
+            (_('Press kit and hype check'), 'press-kit/', False, False, True),
+            (_('Conference companion'), 'conference/', False, False, True),
+            (_('Find a research placement'), 'students/', False, False, True),
+        ]),
+    ]
+
+
 @never_cache
 def premium(request):
     currency = selected_currency(request)
     plan = _latest_plan(request.user) if request.user.is_authenticated else None
     paid = access.is_paid(request.user)
+    plus = access.is_plus(request.user)
     # This marker requires server-side Premium access, never just ?success=1.
     activated = bool(paid and request.session.pop('premium_checkout_pending', False))
     return render(request, 'summarizer/premium.html', {
         'billing_enabled': billing_enabled(),
         'monthly_price': price_label(price_id(currency)),
         'yearly_price': price_label(price_id(currency, 'yearly')),
+        'plus_enabled': plus_enabled(),
+        'plus_monthly_price': price_label(price_id(currency, tier='plus')),
+        'plus_yearly_price': price_label(price_id(currency, 'yearly', 'plus')),
         'billing_currency': currency, 'billing_currencies': currencies(),
-        'is_paid': paid,
+        'is_paid': paid, 'is_plus': plus,
+        'features': features(),
         'premium_activated': activated,
         'plan': plan,
         'tool_grants': list(access.active_grants(request.user)),
         'subscription_active': bool(plan and plan.paid and (plan.expires is None or plan.expires >= timezone.now())),
+        # a running Stripe subscription can move between Premium and Premium+ (change_plan)
+        'can_switch': bool(plus_enabled() and plan and plan.stripe_subscription_id and access.current_plan(request.user) == plan),
         'can_manage': bool(plan and plan.stripe_customer_id),
         'runs_per_day': access.runs_per_day(),
         'chat_free': access.chat_messages_per_day()['user'],
         'chat_paid': access.chat_messages_per_day()['paid'],
         'readings_free': SiteSettings.current().free_readings_per_day,
         'success': request.GET.get('success') == '1',
+        'changed': request.GET.get('changed') if request.GET.get('changed') in TIERS else None,
         'checkout_cancelled': request.GET.get('cancelled') == '1',
     })
 
@@ -141,12 +211,13 @@ def checkout(request):
     if access.is_paid(request.user):
         return redirect('premium')
     period = request.POST.get('period', 'monthly')
+    tier = request.POST.get('tier', 'premium')
     currency = request.POST.get('currency', selected_currency(request)).lower()
     if currency not in currencies():
         return HttpResponseBadRequest('invalid billing currency')
-    if period not in ('monthly', 'yearly') or not price_id(currency, period):
+    if tier not in TIERS or period not in ('monthly', 'yearly') or not price_id(currency, period, tier):
         return HttpResponseBadRequest('invalid billing period')
-    price = price_id(currency, period)
+    price = price_id(currency, period, tier)
     request.session['billing_currency'] = currency
     plan = _latest_plan(request.user)
     params = {
@@ -187,6 +258,34 @@ def portal(request):
     return redirect(session.url, permanent=False)
 
 
+@login_required
+@require_POST
+def change_plan(request):
+    """Move a running subscription to Premium+ or back to Premium, same currency and period."""
+    tier = request.POST.get('tier')
+    plan = access.current_plan(request.user)
+    if tier not in TIERS or not plus_enabled() or plan is None or not plan.stripe_subscription_id or plan.tier == tier:
+        return redirect('premium')
+    try:
+        subscription = _stripe().Subscription.retrieve(plan.stripe_subscription_id)
+        item = subscription['items']['data'][0]
+        period = 'yearly' if item['price']['recurring']['interval'] == 'year' else 'monthly'
+        new = price_id(item['price']['currency'], period, tier)
+        if not new:
+            return redirect('premium')
+        updated = _stripe().Subscription.modify(
+            subscription['id'], items=[{'id': item['id'], 'price': new}],
+            # an upgrade is paid now for the rest of the period; a downgrade is credited on the next invoice
+            proration_behavior='always_invoice' if tier == 'plus' else 'create_prorations',
+            payment_behavior='error_if_incomplete')
+    except stripe.error.StripeError:
+        logger.exception('Could not change the plan of %s', plan.stripe_subscription_id)
+        messages.error(request, _('Your plan could not be changed. Your card was not charged; please try again.'))
+        return redirect('premium')
+    sync_subscription(updated)
+    return redirect(reverse('premium') + '?changed=' + tier)
+
+
 def _period_end(subscription):
     # newer Stripe API versions moved the period from the subscription to its items
     end = subscription.get('current_period_end')
@@ -213,6 +312,8 @@ def sync_subscription(subscription, user=None):
     plan.stripe_customer_id = subscription['customer']
     # past_due keeps access while Stripe retries the card; expires still bounds it
     plan.paid = subscription['status'] in ('active', 'trialing', 'past_due')
+    items = (subscription.get('items') or {}).get('data') or []
+    plan.tier = tier_of_price((items[0].get('price') or {}).get('id')) if items else 'premium'
     plan.expires = _period_end(subscription)
     plan.canceling = bool(subscription.get('cancel_at_period_end') or subscription.get('cancel_at'))
     plan.save()

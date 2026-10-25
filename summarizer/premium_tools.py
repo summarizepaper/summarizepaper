@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 TOOL_CHOICES = (
     ('all', _('Full Premium')),
+    ('plus', _('Full Premium+')),
     ('presskit', _('Press kit')),
     ('journal_club', _('Journal club')),
     ('refcheck', _('Bibliography check')),
@@ -23,6 +24,9 @@ TOOL_CHOICES = (
     ('reading', _('Reading levels')),
 )
 TOOL_KEYS = frozenset(k for k, _ in TOOL_CHOICES)
+# The tools that read the most for each use (whole papers, whole programs, dozens of abstracts, long answers):
+# Premium+ only, at twice the price of Premium. A grant of one of them still opens it alone.
+PLUS_TOOLS = frozenset({'literature', 'students', 'conference', 'presskit', 'journal_club'})
 GENERATED_TOOLS = {
     'presskit': 'presskit', 'presskit_status': 'presskit',
     'slides': 'journal_club', 'slides_v2': 'journal_club',

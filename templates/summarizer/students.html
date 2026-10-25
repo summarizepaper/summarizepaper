@@ -11,7 +11,7 @@
 </style><meta name="description" content="{% trans 'Explore potential research contacts for an internship or PhD, with publication evidence, reading suggestions and a private shortlist.' %}"><link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/students/">{% if request.user.is_authenticated %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
 {% block content %}
 <div class="page">
-  <header class="page-header"><span class="eyebrow">Premium</span><h1>{% trans 'Find a research placement' %}</h1>
+  <header class="page-header"><span class="eyebrow">Premium+</span><h1>{% trans 'Find a research placement' %}</h1>
     <p class="lead">{% trans 'Explore potential contacts for a research internship or PhD, understand their connection to your topic and prepare your first enquiry.' %}</p>
   </header>
   <p class="notice">{% trans 'These are publication-based leads, not advertised vacancies. Affiliation metadata does not prove a current position or a right to supervise. Dates, duration, level and skills help prepare your enquiry; their compatibility must be confirmed with the institution.' %}</p>
@@ -28,7 +28,7 @@
   {% else %}
     <section class="card section-card"><h2>{% trans 'From a topic to an informed enquiry' %}</h2>
       <ol><li>{% trans 'Choose your level, topic and geographical preferences.' %}</li><li>{% trans 'Explore authors with supporting publications and institution sources.' %}</li><li>{% trans 'Read, save your leads and prepare a personal email.' %}</li></ol>
-      {% if not request.user.is_authenticated %}{% include 'summarizer/tool_signup.html' with premium_tool=True %}{% else %}<a href="{% url 'premium' %}" class="btn">{% trans 'Discover Premium' %}</a>{% endif %}
+      {% if not request.user.is_authenticated %}{% include 'summarizer/tool_signup.html' with plus_tool=True %}{% else %}<a href="{% url 'premium' %}#plus" class="btn">{% trans 'Discover Premium+' %}</a>{% endif %}
     </section>
   {% endif %}
   {% if searches %}<section class="section-card"><h2>{% trans 'Your searches' %}</h2><ul>{% for search in searches %}<li><a href="{% url 'student_result' key=search.key %}">{{ search.data.title|default:_('Research placement search') }}</a> · {{ search.created|date:'j F Y H:i' }} · {{ search.get_status_display }}</li>{% endfor %}</ul></section>{% endif %}

@@ -187,6 +187,59 @@ class BillingTests(TestCase):
         self.assertFalse(access.is_paid(self.user))
         self.assertEqual(UserPlan.objects.filter(user=self.user).count(), 1)
 
+    def plus_subscription(self, price):
+        subscription = self.subscription('active')
+        subscription['items']['data'][0].update(id='si_1', price={'id': price, 'currency': 'eur', 'recurring': {'interval': 'month'}})
+        return subscription
+
+    @override_settings(STRIPE_PRICE_PLUS_MONTHLY='price_pm')
+    def test_the_stripe_price_sets_the_tier_and_premium_plus_alone_opens_the_costliest_tools(self):
+        self.post_event(self.event('customer.subscription.created', self.plus_subscription('price_pm')))
+        self.assertEqual(UserPlan.objects.get(user=self.user).tier, 'plus')
+        self.assertTrue(access.has_tool(self.user, 'literature') and access.has_tool(self.user, 'missed'))
+        self.post_event(self.event('customer.subscription.updated', self.plus_subscription('price_m')))
+        self.assertEqual(UserPlan.objects.get(user=self.user).tier, 'premium')
+        self.assertTrue(access.has_tool(self.user, 'missed'))
+        for tool in ('literature', 'students', 'conference', 'presskit', 'journal_club'):
+            self.assertFalse(access.has_tool(self.user, tool), tool)
+        c = Client(); c.force_login(self.user)
+        self.assertContains(c.get('/en/literature-review/'), 'Discover Premium+')
+
+    @override_settings(STRIPE_PRICE_PLUS_MONTHLY='price_pm')
+    def test_a_premium_subscriber_upgrades_to_premium_plus_and_pays_the_difference_now(self):
+        self.post_event(self.event('customer.subscription.created', self.plus_subscription('price_m')))
+        c = Client(); c.force_login(self.user)
+        with mock.patch('summarizer.billing.price_label', return_value=None):
+            self.assertContains(c.get('/en/premium/'), 'Upgrade to Premium+')
+        with mock.patch('stripe.Subscription.retrieve', return_value=self.plus_subscription('price_m')), \
+             mock.patch('stripe.Subscription.modify', return_value=self.plus_subscription('price_pm')) as modify:
+            r = c.post('/en/premium/change/', {'tier': 'plus'})
+        self.assertEqual(r['Location'], '/en/premium/?changed=plus')
+        self.assertEqual(modify.call_args.kwargs['items'], [{'id': 'si_1', 'price': 'price_pm'}])
+        self.assertEqual(modify.call_args.kwargs['proration_behavior'], 'always_invoice')
+        self.assertTrue(access.is_plus(self.user))
+        with mock.patch('summarizer.billing.price_label', return_value=None):
+            page = c.get(r['Location'])
+        self.assertContains(page, 'Welcome to Premium+')
+        self.assertContains(page, 'Switch to Premium')
+        with mock.patch('stripe.Subscription.modify') as modify:
+            c.post('/en/premium/change/', {'tier': 'plus'})  # already Premium+: nothing to do
+        modify.assert_not_called()
+
+    def test_premium_plus_checkout_needs_its_prices(self):
+        c = Client(); c.force_login(self.user)
+        self.assertEqual(c.post('/en/premium/checkout/', {'period': 'monthly', 'tier': 'plus'}).status_code, 400)
+        with override_settings(STRIPE_PRICE_PLUS_MONTHLY='price_pm'), \
+             mock.patch('stripe.checkout.Session.create', return_value=mock.Mock(url='https://checkout.stripe.com/x')) as create:
+            c.post('/en/premium/checkout/', {'period': 'monthly', 'tier': 'plus'})
+        self.assertEqual(create.call_args.kwargs['line_items'][0]['price'], 'price_pm')
+
+    def test_the_premium_page_compares_every_tool_in_the_three_offers(self):
+        with mock.patch('summarizer.billing.price_label', return_value=None):
+            page = Client().get('/fr/premium/')
+        for text in ('Premium+', 'Revue de littérature', 'Trouver un stage ou une thèse', 'Recherches enregistrées avec alertes'):
+            self.assertContains(page, text)
+
     def test_checkout_completed(self):
         session = {'id': 'cs_1', 'object': 'checkout.session', 'mode': 'subscription',
                    'client_reference_id': str(self.user.id), 'subscription': 'sub_1'}

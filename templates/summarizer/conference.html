@@ -12,7 +12,7 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <span class="eyebrow">Premium</span>
+    <span class="eyebrow">Premium+</span>
     <h1>{% trans 'Conference companion' %}</h1>
     <p class="lead">{% trans 'Paste the program of a conference, or give its PDF: among hundreds of talks and posters, we find the ones that matter for your research, say why, and list the people to meet.' %}</p>
   </header>
@@ -26,9 +26,9 @@
       <li>{% trans 'You get your own program, and the list of the people to meet.' %}</li>
     </ol>
     {% if anonymous %}
-      {% include 'summarizer/tool_signup.html' with premium_tool=True %}
+      {% include 'summarizer/tool_signup.html' with plus_tool=True %}
     {% else %}
-      <div class="upsell"><p>{% trans 'Do not miss the talk that mattered.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+      <div class="upsell"><p>{% trans 'Do not miss the talk that mattered.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p></div>
     {% endif %}
   {% else %}
     {% if error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>

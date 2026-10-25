@@ -1,6 +1,8 @@
 {% load i18n %}
 <div class="card section-card tool-signup">
-  {% if premium_tool %}
+  {% if plus_tool %}
+  <p><strong>{% trans 'This tool is part of Premium+.' %}</strong> {% trans 'Create a free account, then subscribe to Premium+ from your account. You can cancel in one click.' %}</p>
+  {% elif premium_tool %}
   <p><strong>{% trans 'This tool is part of Premium.' %}</strong> {% trans 'Create a free account, then subscribe to Premium from your account. You can cancel in one click.' %}</p>
   {% else %}
   <p><strong>{% trans 'Free with an account.' %}</strong> {% trans 'Create a free account in a few seconds to use it.' %}</p>
@@ -8,6 +10,7 @@
   <div class="item-actions">
     <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}">{% trans 'Create a free account' %}</a>
     <a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}">{% trans 'Log in' %}</a>
-    {% if premium_tool %}<a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See what Premium includes' %}</a>{% endif %}
+    {% if plus_tool %}<a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'See what Premium+ includes' %}</a>
+    {% elif premium_tool %}<a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See what Premium includes' %}</a>{% endif %}
   </div>
 </div>

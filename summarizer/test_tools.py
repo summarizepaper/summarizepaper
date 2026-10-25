@@ -33,10 +33,11 @@ class ToolsTestCase(TestCase):
             p.start()
             self.addCleanup(p.stop)
 
-    def user(self, name='ann', paid=False):
+    def user(self, name='ann', paid=False, tier='plus'):
+        """paid: a running subscription, Premium+ unless tier='premium' (which does not open PLUS_TOOLS)."""
         user = User.objects.create_user(name, email='%s@example.com' % name, password='x')
         if paid:
-            UserPlan.objects.create(user=user, paid=True)
+            UserPlan.objects.create(user=user, paid=True, tier=tier)
         return user
 
     def client_for(self, user):

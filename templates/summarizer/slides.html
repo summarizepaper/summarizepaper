@@ -10,7 +10,7 @@
 {% block content %}
 <div class="page deck-page">
   <header class="page-header no-print">
-    <span class="eyebrow">{% trans 'Journal club' %} · Premium</span>
+    <span class="eyebrow">{% trans 'Journal club' %} · Premium+</span>
     <h1>{{ paper.title }}</h1>
     <p class="lead">{{ authors }} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
@@ -37,7 +37,7 @@
   {% if not paid %}
   <div class="upsell">
     <p><strong>{% trans 'Your journal club presentation, ready in a minute.' %}</strong> {% trans 'About ten slides with the figures of the paper when its license allows it, what to say on each one, the strengths and limits of the paper, and questions to start the discussion. Present it full screen or save it as PDF.' %}</p>
-    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
   </div>
   {% elif deck %}
     <div class="deck-toolbar no-print">

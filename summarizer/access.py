@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.db.models import Q
 
 from .models import AIassistant, PaperHistory, SiteSettings, UserPlan, PremiumGrant
-from .premium_tools import TOOL_KEYS
+from .premium_tools import PLUS_TOOLS, TOOL_KEYS
 
 # https://www.cloudflare.com/ips/ - requests coming from these addresses are
 # Cloudflare edges, so their CF-Connecting-IP header is trustworthy.
@@ -91,21 +91,34 @@ def active_grants(user):
     return PremiumGrant.objects.filter(user=user, active=True).filter(Q(expires__isnull=True) | Q(expires__gte=timezone.now()))
 
 
-def is_paid(user):
-    """Full Premium only. A tool grant must never lift global AI quotas or block checkout."""
+def current_plan(user):
+    """The user's subscription when it is paid and running, else None."""
     if user is None or not user.is_authenticated or not getattr(user, 'is_active', True):
-        return False
+        return None
     plan = UserPlan.objects.filter(user=user).order_by('created', 'pk').last()
     if plan and plan.paid and (plan.expires is None or plan.expires >= timezone.now()):
-        return True
-    return active_grants(user).filter(tool='all').exists()
+        return plan
+    return None
+
+
+def is_paid(user):
+    """Full Premium or Premium+ only. A tool grant must never lift global AI quotas or block checkout."""
+    return current_plan(user) is not None or active_grants(user).filter(tool__in=('all', 'plus')).exists()
+
+
+def is_plus(user):
+    """Premium+: a Premium+ subscription or a full Premium+ grant."""
+    plan = current_plan(user)
+    return (plan is not None and plan.tier == 'plus') or active_grants(user).filter(tool='plus').exists()
 
 
 def has_tool(user, tool):
     """Authorization shared by pages, generation, status APIs, downloads and jobs."""
     if tool not in TOOL_KEYS:
         return False  # typos and unregistered scopes cannot grant access
-    return is_paid(user) or active_grants(user).filter(tool=tool).exists()
+    if active_grants(user).filter(tool=tool).exists():
+        return True
+    return is_plus(user) if tool in PLUS_TOOLS else is_paid(user)
 
 
 def run_quota(user, hashed_ip):

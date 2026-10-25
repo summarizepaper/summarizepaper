@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from summarizer import access, billing, generated
 from summarizer.models import Generated, PremiumGrant, UserPlan
-from summarizer.premium_tools import GENERATED_TOOLS, TOOL_KEYS
+from summarizer.premium_tools import GENERATED_TOOLS, PLUS_TOOLS, TOOL_KEYS
 from summarizer.test_tools import ToolsTestCase
 
 
@@ -18,7 +18,7 @@ class PremiumGrantTests(ToolsTestCase):
 
     def test_every_tool_grant_is_isolated_from_full_premium_and_other_tools(self):
         user=self.user()
-        for tool in TOOL_KEYS - {'all'}:
+        for tool in TOOL_KEYS - {'all', 'plus'}:
             with self.subTest(tool=tool):
                 grant=self.grant(user,tool)
                 self.assertTrue(access.has_tool(user,tool))
@@ -26,8 +26,12 @@ class PremiumGrantTests(ToolsTestCase):
                 for other in TOOL_KEYS - {tool}:
                     self.assertFalse(access.has_tool(user,other))
                 grant.delete()
-        self.grant(user,'all')
-        self.assertTrue(access.is_paid(user))
+        full=self.grant(user,'all')
+        self.assertTrue(access.is_paid(user)); self.assertFalse(access.is_plus(user))
+        self.assertTrue(all(access.has_tool(user,tool) for tool in TOOL_KEYS - PLUS_TOOLS))
+        self.assertFalse(any(access.has_tool(user,tool) for tool in PLUS_TOOLS))  # full Premium is not Premium+
+        full.delete(); self.grant(user,'plus')
+        self.assertTrue(access.is_paid(user)); self.assertTrue(access.is_plus(user))
         self.assertTrue(all(access.has_tool(user,tool) for tool in TOOL_KEYS))
         self.assertFalse(access.has_tool(user,'typo'))
         self.assertFalse(access.has_tool(AnonymousUser(),'presskit'))

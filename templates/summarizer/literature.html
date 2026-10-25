@@ -11,7 +11,7 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <span class="eyebrow">Premium</span>
+    <span class="eyebrow">Premium+</span>
     <h1>{% trans 'Literature review' %}</h1>
     <p class="lead">{% trans 'Ask a research question. We look for the papers that answer it, find the founding and the recent ones, group them by approach and write a comparative synthesis that cites them.' %}</p>
   </header>
@@ -31,9 +31,9 @@
       <li>{% trans 'Save the papers in a collection to compare them in a table or chat with them.' %}</li>
     </ul>
     {% if anonymous %}
-      {% include 'summarizer/tool_signup.html' with premium_tool=True %}
+      {% include 'summarizer/tool_signup.html' with plus_tool=True %}
     {% else %}
-      <div class="upsell"><p>{% trans 'Go from a question to the papers that answer it, grouped and cited.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+      <div class="upsell"><p>{% trans 'Go from a question to the papers that answer it, grouped and cited.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p></div>
     {% endif %}
   {% else %}
     {% if error == 'length' %}<p class="error">{% blocktrans with low=min_chars high=max_chars %}Write your question in {{ low }} to {{ high }} characters.{% endblocktrans %}</p>

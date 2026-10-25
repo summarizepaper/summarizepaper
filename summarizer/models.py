@@ -47,6 +47,8 @@ class UserPlan(models.Model):
     expires = models.DateTimeField(blank=True, null=True)
     #the subscriber cancelled: still paid until `expires`, not renewed after
     canceling = models.BooleanField(default=False)
+    #which subscription: Premium+ also opens premium_tools.PLUS_TOOLS; set from the Stripe price (billing.sync_subscription)
+    tier = models.CharField(max_length=10, default='premium', choices=(('premium', 'Premium'), ('plus', 'Premium+')))
     stripe_customer_id = models.CharField(max_length=100, blank=True, default='')
     stripe_subscription_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -58,7 +60,7 @@ class PremiumGrant(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='premium_grants', verbose_name='utilisateur')
     tool = models.CharField('accès accordé', max_length=32, choices=TOOL_CHOICES,
-                           help_text='Premium complet ouvre tous les outils. Sinon, seul l’outil choisi est débloqué.')
+                           help_text='Premium+ complet ouvre tous les outils ; Premium complet tous sauf ceux de Premium+. Sinon, seul l’outil choisi est débloqué.')
     active = models.BooleanField('actif', default=True, help_text='Décochez pour révoquer cet accès offert.')
     expires = models.DateTimeField('date de fin', blank=True, null=True,
                                   help_text='Facultatif : sans date, l’accès reste valable jusqu’à sa révocation.')

@@ -20,13 +20,13 @@
   <div class="sources-grid tools-grid">
     {% for tool in group.tools %}
     <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/{{ tool.path }}">
-      <h3><i class="fas fa-{{ tool.icon }}"></i> {{ tool.name }}{% if tool.premium %} <span class="badge-premium">Premium</span>{% endif %}</h3>
+      <h3><i class="fas fa-{{ tool.icon }}"></i> {{ tool.name }}{% if tool.premium %} <span class="badge-premium">{% if tool.premium == 'plus' %}Premium+{% else %}Premium{% endif %}</span>{% endif %}</h3>
       <p>{{ tool.text }}</p>
     </a>
     {% endfor %}
   </div>
   {% endfor %}
 
-  <div class="upsell" style="margin-top:32px"><p>{% trans 'The tools marked Premium are all included in one subscription, cancelable in one click.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  <div class="upsell" style="margin-top:32px"><p>{% trans 'The tools marked Premium are included in Premium; those marked Premium+, which read the most for you, in Premium+, which also includes all of Premium. Cancelable in one click.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#compare">{% trans 'Compare the offers' %}</a></p></div>
 </div>
 {% endblock %}

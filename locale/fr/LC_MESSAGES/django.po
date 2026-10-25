@@ -9855,3 +9855,305 @@ msgstr ""
 #: templates/summarizer/home.html
 msgid "Start from a question"
 msgstr "Partir d’une question"
+
+#: templates/summarizer/premium.html
+msgid "You are Premium+."
+msgstr "Vous êtes Premium+."
+
+#: templates/summarizer/premium.html
+msgid "Welcome to Premium+: every tool is open to you now."
+msgstr ""
+"Bienvenue dans Premium+ : tous les outils vous sont maintenant ouverts."
+
+#: templates/summarizer/premium.html
+msgid ""
+"You are back on Premium. The unused part of Premium+ will be credited on your"
+" next invoice."
+msgstr ""
+"Vous êtes revenu à Premium. La part non utilisée de Premium+ sera créditée "
+"sur votre prochaine facture."
+
+#: templates/summarizer/premium.html
+msgid "To read papers and follow your field."
+msgstr "Pour lire des articles et suivre votre domaine."
+
+#: templates/summarizer/premium.html
+msgid "For researchers who follow a field closely and prepare their papers."
+msgstr ""
+"Pour les chercheurs qui suivent un domaine de près et préparent leurs "
+"articles."
+
+#: templates/summarizer/premium.html
+msgid "Your plan"
+msgstr "Votre offre"
+
+#: templates/summarizer/premium.html
+msgid "Switch to Premium"
+msgstr "Passer à Premium"
+
+#: templates/summarizer/premium.html
+msgid "A smarter digest, read aloud, and the weekly letters by email"
+msgstr ""
+"Un digest plus intelligent, lu à voix haute, et les lettres hebdomadaires par"
+" email"
+
+#: templates/summarizer/premium.html
+msgid "Comparison tables and open questions of your collections"
+msgstr "Tableaux comparatifs et questions ouvertes de vos collections"
+
+#: templates/summarizer/premium.html
+msgid "Citation and version alerts, scoop watch, who works on a topic"
+msgstr ""
+"Alertes de citations et de versions, veille anti-scoop, qui travaille sur un "
+"sujet"
+
+#: templates/summarizer/premium.html
+msgid "What did I miss? and the bibliography check before you submit"
+msgstr ""
+"What did I miss? et la vérification de bibliographie avant de soumettre"
+
+#: templates/summarizer/premium.html
+msgid "Premium+"
+msgstr "Premium+"
+
+#: templates/summarizer/premium.html
+msgid "Everything in Premium, plus the tools that read the most for you."
+msgstr "Tout Premium, plus les outils qui lisent le plus pour vous."
+
+#: templates/summarizer/premium.html
+msgid "Upgrade to Premium+"
+msgstr "Passer à Premium+"
+
+#: templates/summarizer/premium.html
+msgid ""
+"You pay the difference for the rest of your current period, then the Premium+"
+" price."
+msgstr ""
+"Vous payez la différence pour le reste de la période en cours, puis le prix "
+"de Premium+."
+
+#: templates/summarizer/premium.html
+msgid "Everything in Premium"
+msgstr "Tout Premium"
+
+#: templates/summarizer/premium.html
+msgid ""
+"15 to 30 founding and recent papers on your question, grouped by approach, "
+"with a cited synthesis"
+msgstr ""
+"15 à 30 articles fondateurs et récents sur votre question, regroupés par "
+"approche, avec une synthèse citée"
+
+#: templates/summarizer/premium.html
+msgid ""
+"slides with the figures of the paper, its strengths and limits, and questions"
+" for the discussion"
+msgstr ""
+"des slides avec les figures de l’article, ses forces et ses limites, et des "
+"questions pour la discussion"
+
+#: templates/summarizer/premium.html
+msgid "PDF brief, source-checked quotes, hype check and outside-comment leads"
+msgstr ""
+"fiche PDF, citations vérifiées à la source, contrôle du battage et pistes "
+"d’experts extérieurs"
+
+#: templates/summarizer/premium.html
+msgid ""
+"the talks of a program that matter for your research, and the people to meet"
+msgstr ""
+"les présentations d’un programme qui comptent pour votre recherche, et les "
+"personnes à rencontrer"
+
+#: templates/summarizer/premium.html
+msgid ""
+"potential contacts with their recent papers, readings and a private shortlist"
+msgstr ""
+"des contacts possibles avec leurs articles récents, des lectures et une liste"
+" privée"
+
+#: templates/summarizer/premium.html
+msgid "Everything in each offer"
+msgstr "Tout ce que contient chaque offre"
+
+#: templates/summarizer/premium.html
+msgid "Tool"
+msgstr "Outil"
+
+#: templates/summarizer/premium.html
+msgid "Included"
+msgstr "Inclus"
+
+#: templates/summarizer/premium.html
+msgid "Not included"
+msgstr "Non inclus"
+
+#: summarizer/billing.py
+msgid "Unlimited"
+msgstr "Illimité"
+
+#: summarizer/billing.py
+msgid "Summaries, key points, lay summary and blog article"
+msgstr "Résumés, points clés, résumé vulgarisé et article de blog"
+
+#: summarizer/billing.py
+#, python-format
+msgid "%d new per day"
+msgstr "%d nouveaux par jour"
+
+#: summarizer/billing.py
+msgid "AI model"
+msgstr "Modèle d’IA"
+
+#: summarizer/billing.py
+msgid "Standard"
+msgstr "Standard"
+
+#: summarizer/billing.py
+msgid "Most capable"
+msgstr "Le plus performant"
+
+#: summarizer/billing.py
+#, python-format
+msgid "%d questions per day"
+msgstr "%d questions par jour"
+
+#: summarizer/billing.py
+msgid "Rewrites for another reader or language"
+msgstr "Réécritures pour un autre lecteur ou une autre langue"
+
+#: summarizer/billing.py
+#, python-format
+msgid "%d per day"
+msgstr "%d par jour"
+
+#: summarizer/billing.py
+msgid "3 of 20 papers"
+msgstr "3 de 20 articles"
+
+#: summarizer/billing.py
+msgid "100 of 200 papers"
+msgstr "100 de 200 articles"
+
+#: summarizer/billing.py
+msgid "Comparison tables and open questions of a collection"
+msgstr "Tableaux comparatifs et questions ouvertes d’une collection"
+
+#: summarizer/billing.py
+msgid "BibTeX, RIS and Markdown exports"
+msgstr "Exports BibTeX, RIS et Markdown"
+
+#: summarizer/billing.py
+msgid "Papers sent to Zotero with their summary"
+msgstr "Articles envoyés dans Zotero avec leur résumé"
+
+#: summarizer/billing.py
+msgid "One digest"
+msgstr "Un digest"
+
+#: summarizer/billing.py
+msgid "Up to 5, ranked for you, read aloud"
+msgstr "Jusqu’à 5, classés pour vous, lus à voix haute"
+
+#: summarizer/billing.py
+msgid "On the web"
+msgstr "Sur le site"
+
+#: summarizer/billing.py
+msgid "On the web and by email"
+msgstr "Sur le site et par email"
+
+#: summarizer/billing.py
+msgid "The top ones"
+msgstr "Les principaux"
+
+#: summarizer/billing.py
+msgid "All, field by field"
+msgstr "Tous, domaine par domaine"
+
+#: summarizer/billing.py
+msgid "Saved searches with email alerts"
+msgstr "Recherches enregistrées avec alertes par email"
+
+#: summarizer/billing.py
+msgid "Citation and version alerts"
+msgstr "Alertes de citations et de versions"
+
+#: summarizer/billing.py
+msgid "Literature review from a research question"
+msgstr "Revue de littérature à partir d’une question"
+
+#: summarizer/billing.py
+msgid "Present, meet and apply"
+msgstr "Présenter, rencontrer et postuler"
+
+#: summarizer/billing.py
+msgid "Journal club slides"
+msgstr "Slides de journal club"
+
+#: summarizer/billing.py
+msgid ""
+"Your plan could not be changed. Your card was not charged; please try again."
+msgstr ""
+"Votre offre n’a pas pu être changée. Votre carte n’a pas été débitée ; "
+"réessayez."
+
+#: summarizer/premium_tools.py
+msgid "Full Premium+"
+msgstr "Premium+ complet"
+
+#: templates/summarizer/tool_signup.html
+msgid "This tool is part of Premium+."
+msgstr "Cet outil fait partie de Premium+."
+
+#: templates/summarizer/tool_signup.html
+msgid ""
+"Create a free account, then subscribe to Premium+ from your account. You can "
+"cancel in one click."
+msgstr ""
+"Créez un compte gratuit, puis abonnez-vous à Premium+ depuis votre compte. "
+"Vous pouvez résilier en un clic."
+
+#: templates/summarizer/tool_signup.html
+msgid "See what Premium+ includes"
+msgstr "Voir ce que comprend Premium+"
+
+#: templates/summarizer/literature.html
+msgid "Discover Premium+"
+msgstr "Découvrir Premium+"
+
+#: templates/summarizer/tools.html
+msgid ""
+"The tools marked Premium are included in Premium; those marked Premium+, "
+"which read the most for you, in Premium+, which also includes all of Premium."
+" Cancelable in one click."
+msgstr ""
+"Les outils marqués Premium sont inclus dans Premium ; ceux marqués Premium+, "
+"qui lisent le plus pour vous, dans Premium+, qui comprend aussi tout Premium."
+" Résiliable en un clic."
+
+#: templates/summarizer/tools.html
+msgid "Compare the offers"
+msgstr "Comparer les offres"
+
+#: templates/summarizer/faq.html
+msgid "What is the difference between Premium and Premium+?"
+msgstr "Quelle différence entre Premium et Premium+ ?"
+
+#: templates/summarizer/faq.html
+#, python-format
+msgid ""
+"Premium+ costs twice Premium and adds the tools that read the most for each "
+"use: the literature review from a research question, journal club slides, "
+"press kits, the conference companion and research placement leads. Everything"
+" else is in Premium. A Premium subscriber can move to Premium+ at any time on"
+" the <a href=\"/%(LANGUAGE_CODE)s/premium/#compare\">Premium page</a> and "
+"pays only the difference for the current period."
+msgstr ""
+"Premium+ coûte deux fois Premium et ajoute les outils qui lisent le plus à "
+"chaque utilisation : la revue de littérature à partir d’une question, les "
+"slides de journal club, les dossiers de presse, le compagnon de conférence et"
+" les pistes de stages de recherche. Tout le reste est dans Premium. Un abonné"
+" Premium peut passer à Premium+ à tout moment sur la <a "
+"href=\"/%(LANGUAGE_CODE)s/premium/#compare\">page Premium</a> et ne paie que "
+"la différence pour la période en cours."

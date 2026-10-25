@@ -31,7 +31,7 @@
     {% if section.links %}<ul class="letter-papers">
       {% for p in section.links %}<li>
         <a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title }}</a>
-        {% if p.presskit_id %}<a class="letter-kit-link" data-funnel="letter_presskit_click" href="/{{ LANGUAGE_CODE }}/press-kit/{{ p.presskit_id }}/?letter={{ letter.pk }}">{% trans 'Prepare a press kit' %} <small>Premium →</small></a>{% endif %}
+        {% if p.presskit_id %}<a class="letter-kit-link" data-funnel="letter_presskit_click" href="/{{ LANGUAGE_CODE }}/press-kit/{{ p.presskit_id }}/?letter={{ letter.pk }}">{% trans 'Prepare a press kit' %} <small>Premium+ →</small></a>{% endif %}
       </li>{% endfor %}
     </ul>{% endif %}
   {% endfor %}

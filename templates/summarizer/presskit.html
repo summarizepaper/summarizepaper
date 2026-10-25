@@ -11,7 +11,7 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <span class="eyebrow">{% trans 'Press kit' %} · Premium</span>
+    <span class="eyebrow">{% trans 'Press kit' %} · Premium+</span>
     <h1>{{ paper.title }}</h1>
     <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %}{% if paper.authors.count %} · {% endif %}{{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
@@ -35,7 +35,7 @@
   {% if not paid %}
   <div class="upsell">
     <p><strong>{% trans 'A press kit for every paper: arXiv, journals and preprints.' %}</strong> {% trans 'What is really new, a hype check (peer review, sample size, claims that go beyond the results), key sentences quoted word for word, questions to ask the authors, researchers who work on the same topic but did not sign the paper, and a glossary.' %}</p>
-    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
   </div>
   {% elif kit %}
     <div id="kit-start" class="presskit-actions"{% if row.status == 'pending' %} hidden{% endif %}>
