@@ -1427,6 +1427,8 @@ def tools(request):
             ('students/', 'graduation-cap', _('Find a research placement'), True, _('Potential research contacts, supporting publications, reading suggestions and a private shortlist.')),
             ('teams/', 'users', _('Who works on it?'), True, _('Institutions and authors publishing on your topic, with supporting papers and methods.')),
             ('trends/', 'chart-line', _('Rising topics'), False, _('The terms that rise on arXiv week after week, field by field.')),
+            ('letters/', 'feather-alt', _('Weekly letters'), False, _('Each week, an article per theme (AI, space, health...) on the papers that matter, for curious readers; by email with Premium.')),
+            ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search and get an email when new papers match it: one with a free account, five with Premium.')),
         ]),
         (_('Write and submit'), [
             ('press-kit/', 'newspaper', _('Press kit'), True, _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),
