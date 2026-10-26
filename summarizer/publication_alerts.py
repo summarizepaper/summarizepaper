@@ -96,14 +96,40 @@ def check(now, limit=MAX_CHECKED_PER_DAY):
     return queued
 
 
+def items_of(alerts, base_url, lang):
+    """The queued alerts as email items, in the active language."""
+    from .collection_tools import NOTICE_LABELS
+    return [{'title': a.title or a.arxiv_id, 'kind': a.kind, 'journal': a.journal, 'doi': a.doi,
+             'label': str(NOTICE_LABELS.get(a.kind, ('', ''))[0]),
+             'url': '%s/%s/paper/%s/' % (base_url, lang, a.paper or a.arxiv_id.replace('/', '--'))} for a in alerts]
+
+
+def bundle_section(user, base_url, lang):
+    """The queued alerts as a section of the user's digest (see digest_bundle), in the active language."""
+    alerts = list(PublicationAlert.objects.filter(user=user, emailed=False))
+    if not alerts or not access.has_tool(user, 'citations'):
+        return None
+    items = []
+    for item in items_of(alerts, base_url, lang):
+        if item['kind'] == 'published':
+            label = (translation.gettext('Published in %(journal)s') % {'journal': item['journal']} if item['journal']
+                     else translation.gettext('Published in a journal'))
+        else:
+            label = item['label']
+        items.append({'title': item['title'], 'url': item['url'], 'label': label, 'note': ''})
+    return {'title': translation.gettext('Published, retracted or corrected'), 'items': items, 'more': 0,
+            'manage_url': '%s/%s/citations/' % (base_url, lang),
+            'commit': lambda: PublicationAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(emailed=True)}
+
+
 def send_alerts(now, budget, base_url=digest.BASE_URL):
     """One email per user with the alerts queued. Returns the emails sent."""
     from django.contrib.auth.models import User
-    from .collection_tools import NOTICE_LABELS
+    from . import digest_bundle
     suppressed = mailcheck.suppressed()
     sent = 0
     for user in User.objects.filter(pk__in=list(PublicationAlert.objects.filter(emailed=False)
-                                                 .values_list('user_id', flat=True).distinct())):
+                                                 .values_list('user_id', flat=True).distinct())).exclude(pk__in=digest_bundle.bundled_users()):
         if sent >= budget:
             break
         alerts = list(PublicationAlert.objects.filter(user=user, emailed=False))
@@ -112,9 +138,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
             continue
         lang = user.digests.values_list('lang', flat=True).first() or 'en'
         with translation.override(lang):
-            items = [{'title': a.title or a.arxiv_id, 'kind': a.kind, 'journal': a.journal, 'doi': a.doi,
-                      'label': str(NOTICE_LABELS.get(a.kind, ('', ''))[0]),
-                      'url': '%s/%s/paper/%s/' % (base_url, lang, a.paper or a.arxiv_id.replace('/', '--'))} for a in alerts]
+            items = items_of(alerts, base_url, lang)
             context = {'items': items, 'count': len(items), 'base_url': base_url,
                        'manage_url': '%s/%s/citations/' % (base_url, lang)}
             subject = render_to_string('publications/subject.txt', context).strip()

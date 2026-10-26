@@ -168,26 +168,54 @@ def check_due(now, limit=MAX_CHECKS_PER_RUN):
     return done
 
 
+def pending(user, base_url):
+    """(lang, email context, commit) of the close papers not emailed yet to this user, or None."""
+    matches = list(ScoopMatch.objects.filter(project__user=user, emailed=False).select_related('project'))
+    if not matches:
+        return None
+    lang = matches[0].project.lang
+    projects = {}
+    for match in sorted(matches, key=lambda m: (OVERLAPS.index(m.overlap), -m.similarity))[:MAX_PER_EMAIL]:
+        match.url = '%s/%s/paper/%s/?autorun=1' % (base_url, lang, match.arxiv_id)
+        projects.setdefault(match.project, []).append(match)
+    context = {'projects': list(projects.items()), 'count': len(matches),
+               'high': sum(m.overlap == 'high' for m in matches), 'more': max(0, len(matches) - MAX_PER_EMAIL),
+               'manage_url': '%s/%s/scoops/' % (base_url, lang), 'base_url': base_url}
+    return lang, context, lambda: ScoopMatch.objects.filter(pk__in=[m.pk for m in matches]).update(emailed=True)
+
+
+def bundle_section(user, base_url):
+    """The close papers as a section of the user's digest (see digest_bundle), in the active language."""
+    if not access.has_tool(user, 'scoops'):
+        return None
+    found = pending(user, base_url)
+    if found is None:
+        return None
+    _, context, commit = found
+    return {'title': translation.gettext('Close to your projects'), 'manage_url': context['manage_url'],
+            'more': context['more'], 'commit': commit,
+            'items': [{'group': project.title, 'title': m.title, 'url': m.url, 'note': m.shared,
+                       'label': translation.gettext('Strong overlap') if m.overlap == 'high' else translation.gettext('Partial overlap')}
+                      for project, matches in context['projects'] for m in matches]}
+
+
 def send_alerts(now, budget, base_url=digest.BASE_URL):
     """Email up to `budget` users their new close papers; returns how many emails were sent."""
     from django.contrib.auth.models import User
+    from . import digest_bundle
     suppressed = mailcheck.suppressed()
+    bundled = digest_bundle.bundled_users()
     waiting = ScoopMatch.objects.filter(emailed=False).values_list('project__user_id', flat=True).distinct()
     sent = 0
-    for user in User.objects.filter(pk__in=list(waiting)):
+    for user in User.objects.filter(pk__in=list(waiting)).exclude(pk__in=bundled):
         if sent >= budget:
             break
         if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'scoops'):
             continue
-        matches = list(ScoopMatch.objects.filter(project__user=user, emailed=False).select_related('project'))
-        lang = matches[0].project.lang
-        projects = {}
-        for match in sorted(matches, key=lambda m: (OVERLAPS.index(m.overlap), -m.similarity))[:MAX_PER_EMAIL]:
-            match.url = '%s/%s/paper/%s/?autorun=1' % (base_url, lang, match.arxiv_id)
-            projects.setdefault(match.project, []).append(match)
-        context = {'projects': list(projects.items()), 'count': len(matches),
-                   'high': sum(m.overlap == 'high' for m in matches), 'more': max(0, len(matches) - MAX_PER_EMAIL),
-                   'manage_url': '%s/%s/scoops/' % (base_url, lang), 'base_url': base_url}
+        found = pending(user, base_url)
+        if found is None:
+            continue
+        lang, context, commit = found
         with translation.override(lang):
             subject = render_to_string('scoops/subject.txt', context).strip()
             text = render_to_string('scoops/email.txt', context)
@@ -199,7 +227,7 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
         except Exception:
             logger.exception('Scoop alert to %s failed', user.username)
             continue
-        ScoopMatch.objects.filter(pk__in=[m.pk for m in matches]).update(emailed=True)
+        commit()
         sent += 1
     return sent
 

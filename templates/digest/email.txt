@@ -1,4 +1,5 @@
 {% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
+{{ categories_label }}{% if edition_url and total %} - {% blocktrans count counter=total %}{{ count }} of {{ counter }} paper shown{% plural %}{{ count }} of {{ counter }} papers shown{% endblocktrans %}: {{ edition_url }}{% endif %}
 
 {% if listen_url %}{% trans 'Listen to this digest' %}: {{ listen_url }}
 
@@ -7,23 +8,29 @@
 {% endfor %}{% trans 'All the rising topics' %}: {{ trends_url }}
 
 {% endif %}{% for synthesis in syntheses %}{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}
-{% for trend in synthesis.trends %}* {{ trend.title }}. {{ trend.text }}
+{% for trend in synthesis.trends %}* {{ trend.title }}. {{ trend.text }}{% for paper in trend.papers %}
+  - {{ paper.title }}: {{ paper.url }}{% endfor %}
 {% endfor %}{% if synthesis.notable %}{% trans 'Papers to watch:' %}
-{% for paper in synthesis.notable %}- {{ paper.title }}: {{ paper.url }}
+{% for paper in synthesis.notable %}- {{ paper.title }}: {{ paper.url }}{% if paper.why %}
+  {{ paper.why }}{% endif %}
 {% endfor %}{% endif %}
 {% endfor %}{% if from_authors %}{% trans 'From the authors you follow' %}
 
 {% for item in from_authors %}{{ item.title }}
 {{ item.authors }}{% if item.via %} ({% blocktrans with names=item.via %}you follow {{ names }}{% endblocktrans %}){% endif %}
-{{ item.blurb }}
-{% trans 'Read the summary:' %} {{ item.url }}
-
+{% include 'digest/item.txt' %}
 {% endfor %}{% if items %}{% trans 'In your categories' %}
 
 {% endif %}{% endif %}{% for item in items %}{{ item.title }}
 {{ item.authors }}
-{{ item.blurb }}
-{% trans 'Read the summary:' %} {{ item.url }}
+{% include 'digest/item.txt' %}
+{% endfor %}{% if edition_url and more %}{% blocktrans count counter=more %}See the {{ counter }} other paper of your categories, ranked, with why each one is there{% plural %}See the {{ counter }} other papers of your categories, ranked, with why each one is there{% endblocktrans %}: {{ edition_url }}
+
+{% endif %}{% for section in sections %}== {{ section.title }} ==
+{% for entry in section.items %}- {{ entry.title }}{% if entry.label %} ({{ entry.label }}){% endif %}{% if entry.note %}
+  {{ entry.note }}{% endif %}
+  {{ entry.url }}
+{% endfor %}{% trans 'Manage' %}: {{ section.manage_url }}
 
 {% endfor %}{% if teaser is not None %}{% if teaser.title %}{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: {{ title }}. Premium digests open with the trends of the week in your fields.{% endblocktrans %}{% else %}{% trans 'Premium digests rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}{% endif %}
 {% trans 'Discover Premium' %}: {{ premium_url }}

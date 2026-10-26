@@ -11842,3 +11842,262 @@ msgid "%(n)s software, data set or method they share"
 msgid_plural "%(n)s software, data sets and methods they share"
 msgstr[0] "%(n)s logiciel, jeu de données ou méthode qu’ils partagent"
 msgstr[1] "%(n)s logiciels, jeux de données et méthodes qu’ils partagent"
+
+msgid "%(count)s of %(counter)s paper shown"
+msgid_plural "%(count)s of %(counter)s papers shown"
+msgstr[0] "%(count)s article affiché sur %(counter)s"
+msgstr[1] "%(count)s articles affichés sur %(counter)s"
+
+msgid "see them all, ranked"
+msgstr "les voir tous, classés"
+
+msgid "From:"
+msgstr "D’après :"
+
+msgid "See the %(counter)s other paper of your categories, ranked, with why each one is there"
+msgid_plural "See the %(counter)s other papers of your categories, ranked, with why each one is there"
+msgstr[0] "Voir l’autre article de vos catégories, classé, avec la raison de sa présence"
+msgstr[1] "Voir les %(counter)s autres articles de vos catégories, classés, avec la raison de la présence de chacun"
+
+msgid "and %(counter)s more"
+msgid_plural "and %(counter)s more"
+msgstr[0] "et %(counter)s autre"
+msgstr[1] "et %(counter)s autres"
+
+msgid "Manage"
+msgstr "Gérer"
+
+msgid "Why:"
+msgstr "Pourquoi :"
+
+msgid "Your research alerts"
+msgstr "Vos alertes de recherche"
+
+msgid "New paper by %(top_author)s: %(top_title)s (and %(counter)s more)"
+msgid_plural "New paper by %(top_author)s: %(top_title)s (and %(counter)s more)"
+msgstr[0] "Nouvel article de %(top_author)s : %(top_title)s (et %(counter)s autre)"
+msgstr[1] "Nouvel article de %(top_author)s : %(top_title)s (et %(counter)s autres)"
+
+msgid "New paper by %(top_author)s: %(top_title)s"
+msgstr "Nouvel article de %(top_author)s : %(top_title)s"
+
+msgid "Your week of research: %(top_title)s"
+msgid_plural "Your week of research: %(top_title)s and %(others)s more"
+msgstr[0] "Votre semaine de recherche : %(top_title)s"
+msgstr[1] "Votre semaine de recherche : %(top_title)s et %(others)s autres"
+
+msgid "%(top_title)s"
+msgid_plural "%(top_title)s and %(others)s more new papers"
+msgstr[0] "%(top_title)s"
+msgstr[1] "%(top_title)s et %(others)s autres nouveaux articles"
+
+msgid "Give an ORCID iD (0000-0002-1825-0097) or an arXiv author identifier (lecun_y_1)."
+msgstr "Indiquez un identifiant ORCID (0000-0002-1825-0097) ou un identifiant d’auteur arXiv (lecun_y_1)."
+
+msgid "ORCID or arXiv did not answer. Please try again in a minute."
+msgstr "ORCID ou arXiv n’a pas répondu. Réessayez dans une minute."
+
+msgid "No paper was found for this identifier."
+msgstr "Aucun article n’a été trouvé pour cet identifiant."
+
+msgid "%(counter)s of your papers read."
+msgid_plural "%(counter)s of your papers read."
+msgstr[0] "%(counter)s de vos articles lu."
+msgstr[1] "%(counter)s de vos articles lus."
+
+msgid "Their categories, your latest papers as reference papers and your frequent co-authors were added below. Check them, then save."
+msgstr "Leurs catégories, vos derniers articles comme articles de référence et vos co-auteurs fréquents ont été ajoutés ci-dessous. Vérifiez-les, puis enregistrez."
+
+msgid "Their categories were added below. Check them, then save."
+msgstr "Leurs catégories ont été ajoutées ci-dessous. Vérifiez-les, puis enregistrez."
+
+msgid "Your latest emails, with every paper ranked:"
+msgstr "Vos derniers emails, avec tous les articles classés :"
+
+msgid "Start from your publications (optional)"
+msgstr "Partir de vos publications (facultatif)"
+
+msgid "Your ORCID iD or arXiv author identifier: your categories, your latest papers and your frequent co-authors are suggested from your own papers."
+msgstr "Votre identifiant ORCID ou d’auteur arXiv : vos catégories, vos derniers articles et vos co-auteurs fréquents sont proposés à partir de vos propres articles."
+
+msgid "Your arXiv author identifier is in the address of your arXiv author page: arxiv.org/a/<code>lecun_y_1</code>."
+msgstr "Votre identifiant d’auteur arXiv figure dans l’adresse de votre page d’auteur arXiv : arxiv.org/a/<code>lecun_y_1</code>."
+
+msgid "Find a category"
+msgstr "Trouver une catégorie"
+
+msgid "e.g. galaxies, cs.LG, number theory"
+msgstr "ex. galaxies, cs.LG, number theory"
+
+msgid "Whole words, plural included (<code>comet</code> finds “comets”, not “cometary”). <code>\"debris disk\"</code> finds those words together, as written. <code>-review</code> leaves out the papers that use the word. With a research profile (Premium), keywords raise the papers that use them instead of leaving out the others."
+msgstr "Mots entiers, pluriel compris (<code>comet</code> trouve « comets », pas « cometary »). <code>\"debris disk\"</code> trouve ces mots ensemble, tels qu’écrits. <code>-review</code> écarte les articles qui emploient ce mot. Avec un profil de recherche (Premium), les mots-clés font monter les articles qui les emploient au lieu d’écarter les autres."
+
+msgid "For researchers: contribution, method, main result"
+msgstr "Pour chercheurs : contribution, méthode, résultat principal"
+
+msgid "In plain language, 2 sentences"
+msgstr "En langage simple, 2 phrases"
+
+msgid "How many papers"
+msgstr "Combien d’articles"
+
+msgid "The %(n)s best papers"
+msgstr "Les %(n)s meilleurs articles"
+
+msgid "Every paper very close to my research (strict)"
+msgstr "Tous les articles très proches de mes recherches (strict)"
+
+msgid "Every paper close to my research (normal)"
+msgstr "Tous les articles proches de mes recherches (normal)"
+
+msgid "Every paper somewhat close to my research (broad)"
+msgstr "Tous les articles assez proches de mes recherches (large)"
+
+msgid "With a research profile, an email can hold every paper above a closeness threshold rather than a fixed number (50 at most; the others are on its web page, where each paper shows its closeness)."
+msgstr "Avec un profil de recherche, un email peut contenir tous les articles au-dessus d’un seuil de proximité plutôt qu’un nombre fixe (50 au plus ; les autres sont sur sa page web, où chaque article indique sa proximité)."
+
+msgid "Put my scoop, citation, new version and publication alerts in this digest, instead of separate emails"
+msgstr "Mettre mes alertes de scoop, de citation, de nouvelle version et de publication dans ce digest, plutôt que dans des emails séparés"
+
+msgid "Time zone:"
+msgstr "Fuseau horaire :"
+
+msgid "change"
+msgstr "modifier"
+
+msgid "What you would have received"
+msgstr "Ce que vous auriez reçu"
+
+msgid "From the latest arXiv announcement, with the settings of this form, saved or not. It changes as you edit them."
+msgstr "D’après la dernière annonce arXiv, avec les réglages de ce formulaire, enregistrés ou non. L’aperçu change à mesure que vous les modifiez."
+
+msgid "Choose a category to see it."
+msgstr "Choisissez une catégorie pour le voir."
+
+msgid "Many previews in a few minutes: the next one comes a bit later."
+msgstr "Beaucoup d’aperçus en quelques minutes : le suivant arrive un peu plus tard."
+
+msgid "No announcement is stored yet."
+msgstr "Aucune annonce n’est encore enregistrée."
+
+msgid "%(counter)s paper of your categories and keywords in the week to %(day)s."
+msgid_plural "%(counter)s papers of your categories and keywords in the week to %(day)s."
+msgstr[0] "%(counter)s article de vos catégories et mots-clés dans la semaine jusqu’au %(day)s."
+msgstr[1] "%(counter)s articles de vos catégories et mots-clés dans la semaine jusqu’au %(day)s."
+
+msgid "%(counter)s paper of your categories and keywords on %(day)s."
+msgid_plural "%(counter)s papers of your categories and keywords on %(day)s."
+msgstr[0] "%(counter)s article de vos catégories et mots-clés le %(day)s."
+msgstr[1] "%(counter)s articles de vos catégories et mots-clés le %(day)s."
+
+msgid "%(counter)s is close enough to your research."
+msgid_plural "%(counter)s are close enough to your research."
+msgstr[0] "%(counter)s est assez proche de vos recherches."
+msgstr[1] "%(counter)s sont assez proches de vos recherches."
+
+msgid "Without a research profile or votes yet, the email shows a varied selection, papers posted in your categories first."
+msgstr "Sans profil de recherche ni votes pour l’instant, l’email montre une sélection variée, les articles publiés dans vos catégories d’abord."
+
+msgid "Your research profile is taken into account once saved."
+msgstr "Votre profil de recherche est pris en compte une fois enregistré."
+
+msgid "closeness %(score)s"
+msgstr "proximité %(score)s"
+
+msgid "No paper: loosen the keywords or the threshold."
+msgstr "Aucun article : assouplissez les mots-clés ou le seuil."
+
+msgid "Saved in “%(name)s”."
+msgstr "Enregistré dans « %(name)s »."
+
+msgid "Open the collection"
+msgstr "Ouvrir la collection"
+
+msgid "This paper is already in “%(name)s”."
+msgstr "Cet article est déjà dans « %(name)s »."
+
+msgid "You have as many collections as your plan allows."
+msgstr "Vous avez autant de collections que votre formule le permet."
+
+msgid "This paper could not be found. Please try again later."
+msgstr "Cet article est introuvable. Réessayez plus tard."
+
+msgid "Choose a collection:"
+msgstr "Choisissez une collection :"
+
+msgid "Or a new collection:"
+msgstr "Ou une nouvelle collection :"
+
+msgid "e.g. To read, Thesis chapter 2"
+msgstr "ex. À lire, Thèse chapitre 2"
+
+msgid "Create and save"
+msgstr "Créer et enregistrer"
+
+msgid "Your digest of %(date)s"
+msgstr "Votre digest du %(date)s"
+
+msgid "%(shown)s papers were in the email, out of %(counter)s paper of these announcements. Here they all are, ranked as the email was, with why each one is there."
+msgid_plural "%(shown)s papers were in the email, out of %(counter)s papers of these announcements. Here they all are, ranked as the email was, with why each one is there."
+msgstr[0] "%(shown)s articles étaient dans l’email, sur %(counter)s article de ces annonces. Les voici tous, classés comme dans l’email, avec la raison de la présence de chacun."
+msgstr[1] "%(shown)s articles étaient dans l’email, sur %(counter)s articles de ces annonces. Les voici tous, classés comme dans l’email, avec la raison de la présence de chacun."
+
+msgid "Your digest sends the papers of closeness %(t)s or more."
+msgstr "Votre digest envoie les articles de proximité %(t)s ou plus."
+
+msgid "The papers of this email are no longer kept: the list of an email stays available for two weeks."
+msgstr "Les articles de cet email ne sont plus conservés : la liste d’un email reste disponible deux semaines."
+
+msgid "Filter by a word, an author, an identifier"
+msgstr "Filtrer par un mot, un auteur, un identifiant"
+
+msgid "Posted in my categories only (no cross-lists)"
+msgstr "Publiés dans mes catégories seulement (sans cross-lists)"
+
+msgid "Not in the email"
+msgstr "Absents de l’email"
+
+msgid "in your email"
+msgstr "dans votre email"
+
+msgid "Cosine similarity between the paper and the closest part of your profile or of the papers you liked"
+msgstr "Similarité cosinus entre l’article et la partie la plus proche de votre profil ou des articles que vous avez aimés"
+
+msgid "Abstract page"
+msgstr "Page du résumé"
+
+msgid "Close to your reference paper “%(title)s”"
+msgstr "Proche de votre article de référence « %(title)s »"
+
+msgid "Close to your research profile: “%(text)s”"
+msgstr "Proche de votre profil de recherche : « %(text)s »"
+
+msgid "Close to a paper you liked: “%(title)s”"
+msgstr "Proche d’un article que vous avez aimé : « %(title)s »"
+
+msgid "Close to a paper you opened: “%(title)s”"
+msgstr "Proche d’un article que vous avez ouvert : « %(title)s »"
+
+msgid "Keywords: %(terms)s"
+msgstr "Mots-clés : %(terms)s"
+
+msgid "Cross-listed in %(category)s from %(primary)s"
+msgstr "Cross-list dans %(category)s depuis %(primary)s"
+
+msgid "Contribution"
+msgstr "Contribution"
+
+msgid "An author you follow"
+msgstr "Un auteur que vous suivez"
+
+msgid "Close to your projects"
+msgstr "Proches de vos projets"
+
+msgid "New citations of the papers you follow"
+msgstr "Nouvelles citations des articles que vous suivez"
+
+msgid "New versions of the papers you follow"
+msgstr "Nouvelles versions des articles que vous suivez"
+
+msgid "Published, retracted or corrected"
+msgstr "Publiés, rétractés ou corrigés"

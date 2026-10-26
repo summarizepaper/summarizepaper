@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Save to a collection' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page" style="max-width:640px">
+  <h1>{% trans 'Save to a collection' %}</h1>
+  <p><strong>{% if item %}{{ item.title }}{% else %}{{ arxiv_id }}{% endif %}</strong></p>
+  {% if status == 'added' %}<p class="notice">{% blocktrans with name=chosen.name %}Saved in “{{ name }}”.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ chosen.pk }}/">{% trans 'Open the collection' %}</a></p>
+  {% elif status == 'already' or status == 'duplicate' %}<p class="notice">{% blocktrans with name=chosen.name %}This paper is already in “{{ name }}”.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ chosen.pk }}/">{% trans 'Open the collection' %}</a></p>
+  {% elif status == 'full' %}<p class="error">{% trans 'This collection is full.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>
+  {% elif status == 'too_many' %}<p class="error">{% trans 'You have as many collections as your plan allows.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>
+  {% elif status %}<p class="error">{% trans 'This paper could not be found. Please try again later.' %}</p>{% endif %}
+  {% if status != 'added' %}
+  <form method="post">
+    {% if collections %}
+    <p>{% trans 'Choose a collection:' %}</p>
+    {% for c in collections %}<p><button type="submit" class="btn btn-ghost" name="collection" value="{{ c.pk }}" {% if c.has %}disabled{% endif %}>{{ c.name }}{% if c.has %} ✓{% endif %}</button></p>{% endfor %}
+    {% endif %}
+    <p><label for="name">{% trans 'Or a new collection:' %}</label>
+    <input type="text" id="name" name="name" maxlength="120" placeholder="{% trans 'e.g. To read, Thesis chapter 2' %}"></p>
+    <p><button type="submit" class="btn" name="collection" value="new">{% trans 'Create and save' %}</button></p>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

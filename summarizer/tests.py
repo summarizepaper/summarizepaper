@@ -391,7 +391,9 @@ class DigestTests(TestCase):
         self.assertEqual(message.to, ['r@example.com'])
         self.assertIn('Une comète active.', message.body)
         self.assertIn('Strings.', message.body)  # blurb missing from the model answer -> abstract
-        self.assertIn('/fr/paper/hep-th--9901001v2/?autorun=1', message.alternatives[0][0])
+        # links go through the digest, which counts them, then on to the paper
+        link = re.search(r'https://www.summarizepaper.com(/fr/digest/open/[^/]+/)', message.alternatives[0][0]).group(1)
+        self.assertIn('/fr/paper/hep-th--9901001v2/?autorun=1', Client().get(link)['Location'])
         self.assertIn('List-Unsubscribe', message.extra_headers)
         self.assertEqual(DigestDelivery.objects.count(), 2)
         # the abstract fallback is not stored, so the model is asked again next time
@@ -1887,15 +1889,16 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7)
         sent, _ = self.run_digest()
         html = mail.outbox[0].alternatives[0][0]
-        self.assertIn('utm_source=digest&amp;utm_medium=email&amp;utm_campaign=daily&amp;utm_content=paper', html)
+        first = re.search(r'href="https://www.summarizepaper.com(/en/digest/open/[^/]+/)"', html).group(1)
+        self.assertIn('utm_source=digest&utm_medium=email&utm_campaign=daily&utm_content=r1', Client().get(first)['Location'])
         links = re.findall(r'href="https://www.summarizepaper.com(/en/digest/feedback/[^/]+/)"', html)
         self.assertEqual(len(links), 6)  # more and less for each of the 3 papers
         token = digest.feedback_token(sub, '2610.00002v1', 1)  # the galaxy paper
         url = '/en/digest/feedback/%s/' % token
         self.assertContains(Client().get(url), 'More papers like this')
-        self.assertFalse(DigestFeedback.objects.exists())  # a link checker following the link does not vote
+        self.assertFalse(DigestFeedback.objects.filter(source='vote').exists())  # a link checker following the link does not vote
         self.assertContains(Client().post(url), 'Thank you')
-        self.assertEqual(DigestFeedback.objects.get().value, 1)
+        self.assertEqual(DigestFeedback.objects.get(source='vote').value, 1)
         self.assertContains(Client().post('/en/digest/feedback/forged/'), 'This link is invalid.')
         self.papers.update({p['arxiv_id']: p for p in [
             fake_paper('2610.00006v1', 'astro-ph.EP', 'Hot planet winds', day=1),
@@ -1912,7 +1915,7 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         body = mail.outbox[0].body
         self.assertIn('This week in astro-ph.EP: Rings everywhere.', body)
         self.assertIn('/en/premium/?utm_source=digest&utm_medium=email&utm_campaign=daily&utm_content=premium-teaser', body)
-        self.assertNotIn('More like this', body + mail.outbox[0].alternatives[0][0])
+        self.assertIn('More like this', mail.outbox[0].alternatives[0][0])  # votes rank free digests too
         self.papers['2610.00008v1'] = fake_paper('2610.00008v1', 'astro-ph.EP', 'Fresh', day=1)
         self.run_digest(now=MONDAY + datetime.timedelta(days=1))
         self.assertNotIn('Premium', mail.outbox[1].body)  # not every day
@@ -1923,7 +1926,7 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         self.run_digest()
         message = mail.outbox[0]
         self.assertIn('Dust & gas <in> discs', message.body)
-        self.assertIn('?autorun=1&utm_source=digest', message.body)
+        self.assertIn('/en/digest/open/', message.body)
         self.assertIn('Dust &amp; gas &lt;in&gt; discs', message.alternatives[0][0])
 
 

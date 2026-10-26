@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% blocktrans with date=edition.sent|date:"j F Y" %}Your digest of {{ date }}{% endblocktrans %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />
+<style>
+  .edition .filters { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; margin: 0 0 16px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); }
+  .edition .filters input[type="search"] { flex: 1 1 220px; margin: 0; }
+  .edition .filters label { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; margin: 0; }
+  .edition ol { list-style: none; padding: 0; margin: 0; }
+  .edition li { border-top: 1px solid var(--border); padding: 14px 0; }
+  .edition .rank { display: inline-block; min-width: 2.2em; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .edition .title { font-weight: 600; font-size: 17px; }
+  .edition .meta { color: var(--text-muted); font-size: 13px; margin: 4px 0; }
+  .edition .ident { font-family: ui-monospace, Menlo, monospace; }
+  .edition .why { color: var(--accent); font-size: 14px; margin: 4px 0; }
+  .edition .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); font-size: 12px; font-weight: 600; }
+  .edition .score { font-variant-numeric: tabular-nums; }
+  .edition .below { opacity: .65; }
+  .edition dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 10px; margin: 6px 0; font-size: 15px; }
+  .edition dt { color: var(--text-muted); font-weight: 600; }
+  .edition dd { margin: 0; }
+  .edition .actions { font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+  .edition details summary { cursor: pointer; color: var(--text-muted); font-size: 14px; }
+  .edition details p { font-size: 15px; line-height: 1.55; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page edition">
+  <header class="page-header">
+    <h1>{% blocktrans with date=edition.sent|date:"j F Y" %}Your digest of {{ date }}{% endblocktrans %}{% if subscription.name %} · {{ subscription.name }}{% endif %}</h1>
+    <p class="lead">{% for code, label in categories %}{{ label }} <small class="muted">({{ code }})</small>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    {% if not expired %}
+    <p class="muted">{% blocktrans count counter=total %}{{ shown }} papers were in the email, out of {{ counter }} paper of these announcements. Here they all are, ranked as the email was, with why each one is there.{% plural %}{{ shown }} papers were in the email, out of {{ counter }} papers of these announcements. Here they all are, ranked as the email was, with why each one is there.{% endblocktrans %}
+    {% if threshold %}{% blocktrans with t=threshold|floatformat:2 %}Your digest sends the papers of closeness {{ t }} or more.{% endblocktrans %}{% endif %}</p>
+    {% endif %}
+  </header>
+  {% if expired %}
+  <p class="notice">{% trans 'The papers of this email are no longer kept: the list of an email stays available for two weeks.' %}</p>
+  {% else %}
+  <div class="filters">
+    <input type="search" data-filter-text placeholder="{% trans 'Filter by a word, an author, an identifier' %}" aria-label="{% trans 'Filter by a word, an author, an identifier' %}">
+    <label><input type="checkbox" data-filter-primary> {% trans 'Posted in my categories only (no cross-lists)' %}</label>
+    <label><input type="checkbox" data-filter-new> {% trans 'Not in the email' %}</label>
+    <span class="muted" data-filter-count></span>
+  </div>
+  <ol>
+  {% for row in rows %}
+    <li data-paper data-primary="{{ row.primary|yesno:'1,0' }}" data-in-email="{{ row.in_email|yesno:'1,0' }}" {% if threshold and row.score is not None and row.score < threshold %}class="below"{% endif %}>
+      <span class="rank">{{ row.rank }}.</span> <a class="title" href="{{ row.url }}">{{ row.title }}</a>
+      {% if row.in_email %}<span class="badge">{% trans 'in your email' %}</span>{% endif %}
+      <div class="meta">{{ row.authors }} · <span class="ident">{{ row.ident }}</span>{% if row.category %} · {{ row.category }}{% endif %}{% if row.score is not None %} · <span class="score" title="{% trans 'Cosine similarity between the paper and the closest part of your profile or of the papers you liked' %}">{% blocktrans with score=row.score|floatformat:2 %}closeness {{ score }}{% endblocktrans %}</span>{% endif %}</div>
+      {% if row.reasons %}<div class="why">{{ row.reasons|join:" · " }}</div>{% endif %}
+      {% if row.points %}<dl>{% for label, text in row.points %}<dt>{{ label }}</dt><dd>{{ text }}</dd>{% endfor %}</dl>
+      {% elif row.blurb %}<p>{{ row.blurb }}</p>{% endif %}
+      <details><summary>{% trans 'Abstract' %}</summary><p>{{ row.abstract }}</p></details>
+      <div class="actions">
+        <a href="{{ row.url }}">{% trans 'Full AI summary and questions' %} &rarr;</a>
+        {% if row.abs_url %}<a href="{{ row.abs_url }}" rel="noopener">{% trans 'Abstract page' %}</a>{% endif %}
+        {% if row.pdf_url %}<a href="{{ row.pdf_url }}" rel="noopener">PDF</a>{% endif %}
+        <a href="{{ row.save_url }}">&#128278; {% trans 'Save to a collection' %}</a>
+        <a href="{{ row.more_url }}">&#128077; {% trans 'More like this' %}</a>
+        <a href="{{ row.less_url }}">&#128078; {% trans 'Less like this' %}</a>
+      </div>
+    </li>
+  {% endfor %}
+  </ol>
+  {% endif %}
+  <p class="muted"><a href="/{{ LANGUAGE_CODE }}/digest/?d={{ subscription.pk }}">{% trans 'Your digest settings' %}</a></p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    var text = document.querySelector('[data-filter-text]');
+    if (!text) { return; }
+    var primary = document.querySelector('[data-filter-primary]');
+    var fresh = document.querySelector('[data-filter-new]');
+    var count = document.querySelector('[data-filter-count]');
+    var rows = Array.prototype.slice.call(document.querySelectorAll('[data-paper]'));
+    function apply() {
+      var wanted = text.value.trim().toLowerCase();
+      var shown = 0;
+      rows.forEach(function (row) {
+        var hit = (!wanted || row.textContent.toLowerCase().indexOf(wanted) !== -1) &&
+          (!primary.checked || row.dataset.primary === '1') && (!fresh.checked || row.dataset.inEmail === '0');
+        row.hidden = !hit;
+        shown += hit ? 1 : 0;
+      });
+      count.textContent = shown + ' / ' + rows.length;
+    }
+    [text, primary, fresh].forEach(function (el) { el.addEventListener('input', apply); el.addEventListener('change', apply); });
+    apply();
+  }());
+</script>
+{% endblock %}

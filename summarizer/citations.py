@@ -310,52 +310,33 @@ def due_users(now):
     return [uid for uid in queued if uid not in recent]
 
 
-def send_alerts(now, budget, base_url=digest.BASE_URL):
-    """Email up to `budget` users their new citations; returns how many emails were sent."""
-    from django.contrib.auth.models import User
-    suppressed = mailcheck.suppressed()
-    sent = 0
-    for user in User.objects.filter(pk__in=due_users(now)):
-        if sent >= budget:
-            break
-        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'citations'):
+def pending(user, base_url, lang):
+    """(email context, commit(now)) of the new citations not emailed yet to this user, or None."""
+    papers, archive, delivered = [], [], {}
+    followed_rows = list(FollowedPaper.objects.filter(user=user).exclude(pending='').exclude(pending='[]'))
+    for followed in followed_rows:
+        cached = CitationCache.objects.filter(arxiv_id=followed.arxiv_id).first()
+        citing = json.loads(cached.citing or '{}') if cached else {}
+        new = {pid: citing[pid] for pid in json.loads(followed.pending) if pid in citing}
+        if not new:
             continue
-        lang = user.digests.values_list('lang', flat=True).first() or 'en'
-        papers, archive, delivered = [], [], {}
-        followed_rows = list(FollowedPaper.objects.filter(user=user).exclude(pending='').exclude(pending='[]'))
-        for followed in followed_rows:
-            cached = CitationCache.objects.filter(arxiv_id=followed.arxiv_id).first()
-            citing = json.loads(cached.citing or '{}') if cached else {}
-            new = {pid: citing[pid] for pid in json.loads(followed.pending) if pid in citing}
-            if not new:
-                continue
-            delivered[followed.pk] = list(new)
-            notes = stances(followed.title, dict(list(new.items())[:MAX_PER_EMAIL]), lang)
-            items = []
-            for pid, c in new.items():
-                link = ('%s/%s/paper/%s/' % (base_url, lang, c['arxiv_id'].replace('/', '--'))) if c['arxiv_id'] else \
-                    ('https://doi.org/%s' % c['doi'] if c['doi'] else
-                     'https://ui.adsabs.harvard.edu/abs/%s/abstract' % pid[4:] if pid.startswith('ads:') else
-                     'https://www.semanticscholar.org/paper/%s' % pid)
-                items.append(dict(c, url=link, **notes.get(pid, {'stance': '', 'note': ''})))
-            papers.append({'followed': followed, 'items': items[:MAX_PER_EMAIL], 'more': max(0, len(new) - MAX_PER_EMAIL)})
-            archive.append({'arxiv_id': followed.arxiv_id, 'title': followed.title, 'items': items})
-        if not papers:
-            continue
-        context = {'papers': papers, 'count': sum(len(p['items']) + p['more'] for p in papers),
-                   'manage_url': '%s/%s/citations/' % (base_url, lang), 'base_url': base_url}
-        with translation.override(lang):
-            subject = render_to_string('citations/subject.txt', context).strip()
-            text = render_to_string('citations/email.txt', context)
-            html = render_to_string('citations/email.html', context)
-        message = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email])
-        message.attach_alternative(html, 'text/html')
-        try:
-            if not message.send():
-                continue
-        except Exception:
-            logger.exception('Citation alert to %s failed', user.username)
-            continue
+        delivered[followed.pk] = list(new)
+        notes = stances(followed.title, dict(list(new.items())[:MAX_PER_EMAIL]), lang)
+        items = []
+        for pid, c in new.items():
+            link = ('%s/%s/paper/%s/' % (base_url, lang, c['arxiv_id'].replace('/', '--'))) if c['arxiv_id'] else \
+                ('https://doi.org/%s' % c['doi'] if c['doi'] else
+                 'https://ui.adsabs.harvard.edu/abs/%s/abstract' % pid[4:] if pid.startswith('ads:') else
+                 'https://www.semanticscholar.org/paper/%s' % pid)
+            items.append(dict(c, url=link, **notes.get(pid, {'stance': '', 'note': ''})))
+        papers.append({'followed': followed, 'items': items[:MAX_PER_EMAIL], 'more': max(0, len(new) - MAX_PER_EMAIL)})
+        archive.append({'arxiv_id': followed.arxiv_id, 'title': followed.title, 'items': items})
+    if not papers:
+        return None
+    context = {'papers': papers, 'count': sum(len(p['items']) + p['more'] for p in papers),
+               'manage_url': '%s/%s/citations/' % (base_url, lang), 'base_url': base_url}
+
+    def commit(now):
         with transaction.atomic():
             CitationAlertHistory.objects.get_or_create(user=user, sent=now, defaults={
                 'lang': lang, 'count': context['count'], 'papers': archive})
@@ -369,6 +350,56 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
                 current.pending = json.dumps(pending) if pending else ''
                 current.save(update_fields=['known', 'pending'])
             CitationAlertLog.objects.update_or_create(user=user, defaults={'sent': now})
+    return context, commit
+
+
+STANCE_LABELS = {'builds_on': 'builds on it', 'supports': 'supports it', 'questions': 'questions it', 'mentions': 'mentions it'}
+
+
+def bundle_section(user, base_url, lang, now):
+    """The new citations as a section of the user's digest (see digest_bundle), in the active language."""
+    if not access.has_tool(user, 'citations'):
+        return None
+    found = pending(user, base_url, lang)
+    if found is None:
+        return None
+    context, commit = found
+    return {'title': translation.gettext('New citations of the papers you follow'), 'manage_url': context['manage_url'],
+            'more': sum(p['more'] for p in context['papers']), 'commit': lambda: commit(now),
+            'items': [{'group': p['followed'].title or p['followed'].arxiv_id, 'title': c['title'], 'url': c['url'],
+                       'label': translation.gettext(STANCE_LABELS[c['stance']]) if c.get('stance') in STANCE_LABELS else '',
+                       'note': c.get('note', '')} for p in context['papers'] for c in p['items']]}
+
+
+def send_alerts(now, budget, base_url=digest.BASE_URL):
+    """Email up to `budget` users their new citations; returns how many emails were sent."""
+    from django.contrib.auth.models import User
+    from . import digest_bundle
+    suppressed = mailcheck.suppressed()
+    sent = 0
+    for user in User.objects.filter(pk__in=due_users(now)).exclude(pk__in=digest_bundle.bundled_users()):
+        if sent >= budget:
+            break
+        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'citations'):
+            continue
+        lang = user.digests.values_list('lang', flat=True).first() or 'en'
+        found = pending(user, base_url, lang)
+        if found is None:
+            continue
+        context, commit = found
+        with translation.override(lang):
+            subject = render_to_string('citations/subject.txt', context).strip()
+            text = render_to_string('citations/email.txt', context)
+            html = render_to_string('citations/email.html', context)
+        message = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email])
+        message.attach_alternative(html, 'text/html')
+        try:
+            if not message.send():
+                continue
+        except Exception:
+            logger.exception('Citation alert to %s failed', user.username)
+            continue
+        commit(now)
         sent += 1
     return sent
 

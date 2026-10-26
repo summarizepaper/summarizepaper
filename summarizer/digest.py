@@ -39,9 +39,9 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
-from . import access, audio, mailcheck, similar, sources, usage
-from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestFeedback, DigestItem,
-                     DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
+from . import access, arxiv_taxonomy, audio, mailcheck, similar, sources, usage
+from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestEdition, DigestFeedback,
+                     DigestItem, DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -63,12 +63,15 @@ MAX_SYNTHESES_PER_EMAIL = 5
 SYNTHESIS_MIN_PAPERS = 5
 SYNTHESIS_MAX_PAPERS = 600
 SYNTHESIS_MAX_BLURBS = 150
+NOTABLE_SHORTLIST = 15
 
 # CloudMailin sends at most 20 emails/hour on our plan; keep room for account emails.
 # Subscribers left over are sent in the next hourly runs (see DigestSubscription.CATCH_UP_HOURS).
 MAX_EMAILS_PER_RUN = 15
 WEEK = datetime.timedelta(days=7)
-KEEP_DAYS = 10  # announced papers kept for weekly digests and syntheses
+KEEP_DAYS = 10  # announcements a run reads, for weekly digests and syntheses
+PAGE_DAYS = 14  # announced papers kept, for the web page of a weekly digest
+EDITION_DAYS = 90  # what a digest email showed, for the click statistics
 RSS = 'https://rss.arxiv.org/atom/'
 ARCHIVES = ['astro-ph', 'cond-mat', 'cs', 'econ', 'eess', 'gr-qc', 'hep-ex', 'hep-lat', 'hep-ph', 'hep-th', 'math',
             'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'q-bio', 'q-fin', 'quant-ph', 'stat']
@@ -85,7 +88,23 @@ RETRY_WAITS = (10, 30, 90)  # arXiv answers 429 "Rate exceeded" when busy
 EMBED_BATCH = 256
 UNSUBSCRIBE_SALT = 'digest-unsubscribe'
 FEEDBACK_SALT = 'digest-feedback'
-FEEDBACK_WEIGHTS = (0.5, 0.3)  # pull of liked papers, push of disliked ones, on the profile vector
+EDITION_SALT = 'digest-edition'
+OPEN_SALT = 'digest-open'
+SAVE_SALT = 'digest-save'
+PROFILE_VERSION = 'parts-v1'  # profile_vector holds one row per profile paragraph and reference paper
+PROFILE_PARTS = 5
+PROFILE_CACHE = 'digest-profile:%s'  # embeddings of a profile, shared by the previews and the saved digest
+MAX_FEEDBACK = 60  # latest votes and clicks a ranking reads
+LIKE_WEIGHTS = {'vote': 0.9, 'click': 0.75}  # a liked or opened paper counts a bit less than the profile
+DISLIKE_WEIGHT = 0.5
+KEYWORD_BOOST = 0.04  # per keyword found (2 at most), with a profile
+DIVERSITY = 0.15
+DIVERSE_POOL = 200
+DIVERSE_TOP = 60
+# cosine similarity (text-embedding-3-small, 512 dimensions) a paper needs in a 'threshold' digest
+THRESHOLDS = {'high': 0.55, 'medium': 0.48, 'low': 0.42}
+THRESHOLD_MAX_EMAIL = 50  # the others are on the digest's web page
+POINTS = ('contribution', 'method', 'result')
 LOCK_KEY = 'digest-run-lock'
 SENDING_KEY = 'digest-sending:%s'
 HEALTH_KEY = 'digest-health:%s:%s'  # one alert per problem and day
@@ -119,39 +138,6 @@ BIO_CATEGORIES = [
                  'Surgery', 'Toxicology', 'Transplantation', 'Urology']),
 ]
 
-# Categories offered in the form; any valid arXiv category code is accepted too.
-CATEGORIES = [
-    ('astro-ph.CO', 'Cosmology and Nongalactic Astrophysics'),
-    ('astro-ph.EP', 'Earth and Planetary Astrophysics'),
-    ('astro-ph.GA', 'Astrophysics of Galaxies'),
-    ('astro-ph.HE', 'High Energy Astrophysical Phenomena'),
-    ('astro-ph.IM', 'Instrumentation and Methods for Astrophysics'),
-    ('astro-ph.SR', 'Solar and Stellar Astrophysics'),
-    ('cond-mat.mtrl-sci', 'Materials Science'),
-    ('cond-mat.stat-mech', 'Statistical Mechanics'),
-    ('cs.AI', 'Artificial Intelligence'),
-    ('cs.CL', 'Computation and Language'),
-    ('cs.CR', 'Cryptography and Security'),
-    ('cs.CV', 'Computer Vision'),
-    ('cs.LG', 'Machine Learning'),
-    ('cs.RO', 'Robotics'),
-    ('cs.SE', 'Software Engineering'),
-    ('econ.GN', 'General Economics'),
-    ('eess.SP', 'Signal Processing'),
-    ('gr-qc', 'General Relativity and Quantum Cosmology'),
-    ('hep-ph', 'High Energy Physics - Phenomenology'),
-    ('hep-th', 'High Energy Physics - Theory'),
-    ('math.NA', 'Numerical Analysis'),
-    ('math.PR', 'Probability'),
-    ('physics.ao-ph', 'Atmospheric and Oceanic Physics'),
-    ('physics.bio-ph', 'Biological Physics'),
-    ('physics.optics', 'Optics'),
-    ('q-bio.NC', 'Neurons and Cognition'),
-    ('q-bio.QM', 'Quantitative Methods'),
-    ('q-fin.ST', 'Statistical Finance'),
-    ('quant-ph', 'Quantum Physics'),
-    ('stat.ML', 'Machine Learning (Statistics)'),
-]
 TIMEZONES = {tz for tz in zoneinfo.available_timezones() if '/' in tz and not tz.startswith(('Etc/', 'SystemV/', 'US/'))} | {'UTC'}
 CATEGORY_RE = re.compile(r'^[a-z\-]+(\.[A-Za-z\-]+)?$')
 BIO_CODES = {sources.category_code(server, name): (server, name) for server, names in BIO_CATEGORIES for name in names}
@@ -192,20 +178,6 @@ def clean_references(text):
         if ref and ref not in found:
             found.append(ref)
     return found[:MAX_REFERENCES]
-
-
-def reference_texts(refs):
-    """Title and abstract of the reference papers of a research profile, from arXiv and the other sources."""
-    texts = [paper_text(p) for p in fetch_ids([r for r in refs if not sources.is_external(r)])]
-    for key in (r for r in refs if sources.is_external(r)):
-        try:
-            paper = sources.metadata(key)
-        except sources.SourceUnavailable:
-            logger.warning('Reference %s of a research profile could not be read', key)
-            continue
-        if paper:
-            texts.append(paper_text(paper))
-    return texts
 
 
 def clean_authors(text):
@@ -530,10 +502,7 @@ def paper_text(paper):
 def ensure_vectors(papers):
     """{arxiv_id: vector} for these papers, embedding only the ones never seen before."""
     ids = [p['arxiv_id'] for p in papers]
-    vectors = {}
-    for start in range(0, len(ids), 1000):
-        for aid, vec in DigestVector.objects.filter(arxiv_id__in=ids[start:start + 1000]).values_list('arxiv_id', 'vector'):
-            vectors[aid] = np.frombuffer(vec, dtype=np.float32)
+    vectors = stored_vectors(ids)
     missing = [p for p in papers if p['arxiv_id'] not in vectors]
     for start in range(0, len(missing), EMBED_BATCH):
         batch = missing[start:start + EMBED_BATCH]
@@ -548,44 +517,205 @@ def ensure_vectors(papers):
     return vectors
 
 
-def profile_vector(subscription):
-    """Embedding of the research profile and reference papers, recomputed only when they change."""
+def stored_vectors(ids):
+    """{arxiv_id: vector} of the papers already embedded; pages use only these, never the model."""
+    vectors = {}
+    for start in range(0, len(ids), 1000):
+        for aid, vec in DigestVector.objects.filter(arxiv_id__in=ids[start:start + 1000]).values_list('arxiv_id', 'vector'):
+            vectors[aid] = np.frombuffer(vec, dtype=np.float32)
+    return vectors
+
+
+class Keywords:
+    """The keywords of a digest: 'comet, "debris disk", -simulation'.
+
+    A term matches whole words, with or without a plural 's'; a quoted term matches as written; a term
+    after '-' leaves out the papers that use it.
+    """
+
+    def __init__(self, text):
+        self.include, self.exclude = [], []
+        for raw in re.findall(r'-?\s*"[^"]+"|[^,"]+', text or ''):
+            term = raw.strip()
+            negative = term.startswith('-')
+            term = term[1:].strip() if negative else term
+            exact = len(term) > 1 and term[0] == term[-1] == '"'
+            term = term.strip('"').strip()
+            pattern = keyword_pattern(term, exact)
+            if pattern is not None:
+                (self.exclude if negative else self.include).append((term, pattern))
+
+    def __bool__(self):
+        return bool(self.include or self.exclude)
+
+    def excluded(self, paper):
+        text = paper['title'] + ' ' + paper['abstract']
+        return any(pattern.search(text) for _, pattern in self.exclude)
+
+    def matches(self, paper):
+        """(score, [terms found]): mentions in the title and abstract, a title mention counting more."""
+        text = paper['title'] + ' ' + paper['abstract']
+        score, found = 0, []
+        for term, pattern in self.include:
+            count = len(pattern.findall(text))
+            if count:
+                found.append(term)
+                score += count + 3 * bool(pattern.search(paper['title']))
+        return score, found
+
+
+def keyword_pattern(term, exact=False):
+    words = re.findall(r'[^\s\-]+', term.lower())
+    if not words:
+        return None
+    parts = [re.escape(w) for w in words]
+    last = words[-1]
+    if not exact and re.fullmatch(r'[a-z]{3,}', last):
+        if len(last) > 4 and last.endswith('s') and not last.endswith(('ss', 'is', 'us')):
+            last = last[:-1]
+        parts[-1] = re.escape(last) + '(?:s|es)?'
+    return re.compile(r'(?<![a-z0-9])' + r'[\s\-]+'.join(parts) + r'(?![a-z0-9])', re.I)
+
+
+def profile_parts(text):
+    """The paragraphs of a research profile, each embedded on its own (a researcher may have several subjects)."""
+    parts = [p.strip() for p in re.split(r'\n+', text or '') if len(p.split()) >= 4]
+    if not parts and (text or '').strip():
+        parts = [text.strip()]
+    return parts[:PROFILE_PARTS]
+
+
+def reference_entries(refs):
+    """[(reference, title and abstract, title)] of the reference papers of a research profile."""
+    entries = [(p['arxiv_id'], paper_text(p), p['title']) for p in fetch_ids([r for r in refs if not sources.is_external(r)])]
+    for key in (r for r in refs if sources.is_external(r)):
+        try:
+            paper = sources.metadata(key)
+        except sources.SourceUnavailable:
+            logger.warning('Reference %s of a research profile could not be read', key)
+            continue
+        if paper:
+            entries.append((key, paper_text(paper), paper['title']))
+    return entries
+
+
+def reference_texts(refs):
+    """Title and abstract of the reference papers of a research profile, from arXiv and the other sources."""
+    return [text for _, text, _ in reference_entries(refs)]
+
+
+def short(text, length=70):
+    text = re.sub(r'\s+', ' ', text or '').strip()
+    return text if len(text) <= length else text[:length].rsplit(' ', 1)[0] + '…'
+
+
+def profile_matrix(subscription, save=True, quick=False):
+    """(rows, labels): one embedding per paragraph of the research profile and per reference paper,
+    recomputed only when they change. A paper is scored by the closest row, so a researcher with
+    two subjects is not given the average of both.
+
+    save=False leaves the subscription as it is (a preview of settings not saved yet); quick leaves out
+    reference papers not embedded yet, which take arXiv calls a page cannot wait for.
+    """
     text = subscription.profile.strip()
     refs = subscription.reference_list()[:MAX_REFERENCES]
     if not text and not refs:
-        return None
-    key = hashlib.sha256(json.dumps([similar.MODEL, text, refs]).encode()).hexdigest()
-    if subscription.profile_key == key and subscription.profile_vector:
-        return np.frombuffer(bytes(subscription.profile_vector), dtype=np.float32)
+        return None, []
+    key = hashlib.sha256(json.dumps([PROFILE_VERSION, similar.MODEL, text, refs]).encode()).hexdigest()
+    if subscription.profile_key == key and subscription.profile_vector and subscription.profile_labels:
+        labels = json.loads(subscription.profile_labels)
+        return np.frombuffer(bytes(subscription.profile_vector), dtype=np.float32).reshape(len(labels), -1), labels
+    cached = cache.get(PROFILE_CACHE % key)
+    if cached is None and quick:
+        refs = []
+        cached = cache.get(PROFILE_CACHE % hashlib.sha256(json.dumps([PROFILE_VERSION, similar.MODEL, text, refs]).encode()).hexdigest())
+        if not text:
+            return None, []
+    if cached is not None:
+        rows, labels = np.frombuffer(cached[0], dtype=np.float32).reshape(len(cached[1]), -1), cached[1]
+        if save and subscription.pk:
+            subscription.profile_vector, subscription.profile_key = cached[0], key
+            subscription.profile_labels = json.dumps(labels)
+            subscription.save(update_fields=['profile_vector', 'profile_key', 'profile_labels'])
+        return rows, labels
     try:
-        inputs = ([text] if text else []) + reference_texts(refs)
+        parts = profile_parts(text)
+        entries = reference_entries(refs)
+        inputs = parts + [t for _, t, _ in entries]
         if not inputs:
-            return None
-        vector = similar.embed(inputs).mean(axis=0)
+            return None, []
+        rows = similar.embed(inputs)
     except (ArxivUnavailable, requests.RequestException, KeyError, ValueError):
         logger.exception('Profile embedding failed for digest %s', subscription.pk)
-        return None
-    vector = (vector / np.linalg.norm(vector)).astype(np.float32)
-    subscription.profile_vector, subscription.profile_key = vector.tobytes(), key
-    subscription.save(update_fields=['profile_vector', 'profile_key'])
-    return vector
+        return None, []
+    rows = (rows / np.linalg.norm(rows, axis=1, keepdims=True)).astype(np.float32)
+    labels = ([{'kind': 'profile', 'text': short(p, 60)} for p in parts] +
+              [{'kind': 'reference', 'id': ref, 'title': short(title)} for ref, _, title in entries])
+    key = hashlib.sha256(json.dumps([PROFILE_VERSION, similar.MODEL, text, refs]).encode()).hexdigest()
+    cache.set(PROFILE_CACHE % key, (rows.tobytes(), labels), 86400)
+    if save and subscription.pk:
+        subscription.profile_vector, subscription.profile_key = rows.tobytes(), key
+        subscription.profile_labels = json.dumps(labels)
+        subscription.save(update_fields=['profile_vector', 'profile_key', 'profile_labels'])
+    return rows, labels
 
 
-def ranking_vector(subscription):
-    """The profile vector moved toward the papers marked "more like this" and away from "less like this"."""
-    base = profile_vector(subscription)
-    liked, disliked = [], []
-    for value, vector in subscription.feedback.exclude(vector=None).values_list('value', 'vector'):
-        (liked if value > 0 else disliked).append(np.frombuffer(bytes(vector), dtype=np.float32))
-    if base is None and not liked:
+class Ranking:
+    """How close a paper is to what its reader asked for: the closest part of the research profile, or the
+    closest paper they liked or opened (a little less). A paper closer to one they disliked goes down."""
+
+    def __init__(self, rows=None, labels=(), liked=(), liked_labels=(), liked_weights=(), disliked=()):
+        self.rows, self.labels = rows, list(labels)
+        self.liked = np.array(liked, dtype=np.float32) if len(liked) else None
+        self.liked_labels, self.liked_weights = list(liked_labels), np.array(liked_weights, dtype=np.float32)
+        self.disliked = np.array(disliked, dtype=np.float32) if len(disliked) else None
+
+    @property
+    def has_profile(self):
+        return self.rows is not None
+
+    def __bool__(self):
+        return self.rows is not None or self.liked is not None
+
+    def score(self, vector):
+        """(score, label of what the paper is closest to)."""
+        best, label = -1.0, None
+        if self.rows is not None and self.rows.shape[1] == vector.shape[0]:
+            sims = self.rows @ vector
+            i = int(np.argmax(sims))
+            best, label = float(sims[i]), self.labels[i]
+        if self.liked is not None and self.liked.shape[1] == vector.shape[0]:
+            sims = (self.liked @ vector) * self.liked_weights
+            i = int(np.argmax(sims))
+            if sims[i] > best:
+                best, label = float(sims[i]), self.liked_labels[i]
+        if self.disliked is not None and self.disliked.shape[1] == vector.shape[0]:
+            worst = float(np.max(self.disliked @ vector))
+            if worst > best:
+                best -= DISLIKE_WEIGHT * (worst - best)
+        return best, label
+
+
+def ranking_for(subscription, paid, save=True, quick=False):
+    """The Ranking of a digest: its research profile (Premium), and the papers its reader liked, disliked or opened."""
+    rows, labels = profile_matrix(subscription, save, quick) if paid else (None, [])
+    liked, liked_ids, weights, disliked = [], [], [], []
+    feedback = DigestFeedback.objects.filter(subscription_id=subscription.pk) if subscription.pk else DigestFeedback.objects.none()
+    for value, vector, source, arxiv_id in (feedback.exclude(vector=None).order_by('-created')
+                                            .values_list('value', 'vector', 'source', 'arxiv_id')[:MAX_FEEDBACK]):
+        vector = np.frombuffer(bytes(vector), dtype=np.float32)
+        if value > 0:
+            liked.append(vector)
+            liked_ids.append((arxiv_id, source))
+            weights.append(LIKE_WEIGHTS.get(source, LIKE_WEIGHTS['vote']))
+        else:
+            disliked.append(vector)
+    if rows is None and not liked:
         return None
-    vector = base.copy() if base is not None else np.zeros_like(liked[0])
-    if liked:
-        vector = vector + FEEDBACK_WEIGHTS[0] * np.mean(liked, axis=0) if base is not None else np.mean(liked, axis=0)
-    if disliked:
-        vector = vector - FEEDBACK_WEIGHTS[1] * np.mean(disliked, axis=0)
-    norm = np.linalg.norm(vector)
-    return (vector / norm).astype(np.float32) if norm else None
+    titles = dict(DigestItem.objects.filter(arxiv_id__in=[a for a, _ in liked_ids]).values_list('arxiv_id', 'title'))
+    liked_labels = [{'kind': 'liked' if source == 'vote' else 'opened', 'id': aid, 'title': short(titles.get(aid, aid))}
+                    for aid, source in liked_ids]
+    return Ranking(rows, labels, liked, liked_labels, weights, disliked)
 
 
 def candidates(subscription, papers, already_sent, days=None, categories=None, exclude=()):
@@ -595,40 +725,81 @@ def candidates(subscription, papers, already_sent, days=None, categories=None, e
             and wanted.intersection(p['categories']) and (days is None or p['announced'] in days)]
 
 
+def rank_papers(subscription, papers, already_sent, days=None, categories=None, ranking=None, vectors=None, exclude=()):
+    """Every paper of this digest, best first, each with why it is there:
+    [{'paper', 'score', 'closest', 'keywords', 'primary'}].
+
+    Keywords leave papers out ('-term') and, without a research profile, keep only the papers that use one
+    of them; with a profile they raise the papers that use them instead. Papers are then ordered by
+    closeness to the profile and to the papers liked or opened; without any, papers whose primary category
+    is followed come first. The first ones are picked one by one, each a bit less likely when it is very
+    close to one already picked, so that ten papers do not tell the same story.
+    """
+    keywords = Keywords(subscription.keywords)
+    wanted = set(categories or subscription.category_list())
+    vectors = vectors or {}
+    profiled = ranking is not None and ranking.has_profile
+    entries = []
+    for paper in candidates(subscription, papers, already_sent, days, categories, exclude):
+        if keywords.excluded(paper):
+            continue
+        matched, found = keywords.matches(paper)
+        if keywords.include and not found and not profiled:
+            continue
+        score, closest = None, None
+        vector = vectors.get(paper['arxiv_id'])
+        if ranking and vector is not None:
+            score, closest = ranking.score(vector)
+            if profiled and found:
+                score += KEYWORD_BOOST * min(2, len(found))
+        entries.append({'paper': paper, 'score': score, 'closest': closest, 'keywords': found, 'matched': matched,
+                        'primary': bool(paper['categories']) and paper['categories'][0] in wanted})
+    if ranking:
+        entries.sort(key=lambda e: (e['score'] is not None, e['score'] or 0, e['primary'], e['matched'],
+                                    e['paper']['arxiv_id']), reverse=True)
+    else:
+        entries.sort(key=lambda e: (e['matched'], e['primary'], e['paper']['arxiv_id']), reverse=True)
+    return diversify(entries, vectors, bool(ranking))
+
+
+def diversify(entries, vectors, ranked):
+    """The first DIVERSE_TOP entries picked one by one: by score minus DIVERSITY times the closeness to the
+    papers already picked (ranked), or, without scores, among the best by keywords and primary category:
+    first the paper closest to the heart of the batch, then each time the one least like those picked."""
+    head = [e for e in entries[:DIVERSE_POOL] if e['paper']['arxiv_id'] in vectors]
+    if len(head) < 3:
+        return entries
+    matrix = np.array([vectors[e['paper']['arxiv_id']] for e in head], dtype=np.float32)
+    closest = np.zeros(len(head), dtype=np.float32)
+    base = np.array([e['score'] or 0 for e in head], dtype=np.float32) if ranked else None
+    tiers = [(e['matched'], e['primary']) for e in head]
+    centrality = matrix @ (matrix.mean(axis=0))
+    left, picked = list(range(len(head))), []
+    while left and len(picked) < DIVERSE_TOP:
+        if ranked:
+            i = max(left, key=lambda j: base[j] - DIVERSITY * closest[j])
+        else:
+            top = max(tiers[j] for j in left)
+            i = min((j for j in left if tiers[j] == top), key=lambda j: (closest[j], -centrality[j]))
+        picked.append(i)
+        left.remove(i)
+        closest = np.maximum(closest, matrix @ matrix[i])
+    chosen = [head[i] for i in picked]
+    ids = {e['paper']['arxiv_id'] for e in chosen}
+    return chosen + [e for e in entries if e['paper']['arxiv_id'] not in ids]
+
+
 def select_papers(subscription, papers, already_sent, days=None, limit=PAPERS_PER_EMAIL, categories=None,
                   profile=None, vectors=None, exclude=()):
-    """The best new papers for this digest.
+    """The best new papers for this digest (see rank_papers); profile is a Ranking."""
+    return [e['paper'] for e in rank_papers(subscription, papers, already_sent, days, categories, profile, vectors,
+                                            exclude)[:limit]]
 
-    Keywords filter. With a research profile, papers are ranked by closeness to it; without one,
-    papers whose primary category is followed come before cross-lists, and the most central papers
-    of the batch (closest to the average of all of them) first.
-    """
-    keywords = subscription.keyword_list()
-    wanted = set(categories or subscription.category_list())
-    found = candidates(subscription, papers, already_sent, days, categories, exclude)
-    vectors = vectors or {}
-    reference = profile
-    if reference is None and vectors:
-        known = [vectors[p['arxiv_id']] for p in found if p['arxiv_id'] in vectors]
-        if known:
-            centroid = np.mean(known, axis=0)
-            reference = centroid / (np.linalg.norm(centroid) or 1)
-    scored = []
-    for paper in found:
-        score = 0
-        if keywords:
-            text = (paper['title'] + ' ' + paper['abstract']).lower()
-            score = sum(text.count(k) for k in keywords) + 3 * sum(k in paper['title'].lower() for k in keywords)
-            if score == 0:
-                continue
-        closeness = -1.0
-        if reference is not None and paper['arxiv_id'] in vectors:
-            closeness = float(vectors[paper['arxiv_id']] @ reference)
-        primary = bool(paper['categories']) and paper['categories'][0] in wanted
-        key = (closeness, primary, score) if profile is not None else (score, primary, closeness)
-        scored.append((key, paper['arxiv_id'], paper))
-    scored.sort(key=lambda s: s[:2], reverse=True)
-    return [paper for *_, paper in scored[:limit]]
+
+def above_threshold(entries, volume):
+    """The entries at least as close as the volume a Premium digest chose ('high', 'medium', 'low')."""
+    floor = THRESHOLDS[volume]
+    return [e for e in entries if e['score'] is not None and e['score'] >= floor]
 
 
 def author_papers(subscription, index, already_sent, days):
@@ -647,16 +818,34 @@ def author_papers(subscription, index, already_sent, days):
 # --- shared content ------------------------------------------------------------
 
 def write_blurbs(papers, lang):
-    """One short plain-language summary per paper, a single model call per batch of 10."""
+    """Per paper, a single model call per batch of 10: {'summary': 2 plain-language sentences, 'points': what a
+    researcher of the field wants (contribution, method, result)}."""
     language = 'French' if lang == 'fr' else 'English'
     listing = '\n\n'.join('ID: %s\nTitle: %s\nAbstract: %s' % (p['arxiv_id'], p['title'], p['abstract']) for p in papers)
     prompt = (
-        'For each paper below, write a 2-sentence summary in %s that a curious non-specialist can '
-        'understand: what was done and why it matters. No jargon, no LaTeX. '
-        'Answer with a JSON object {"summaries": [{"id": "...", "summary": "..."}]}.\n\n%s' % (language, listing))
-    content = _chat(prompt, ai_models()[0], False, 2500)
-    return {item['id']: item['summary'].strip() for item in json.loads(content).get('summaries', [])
-            if isinstance(item, dict) and item.get('id') and item.get('summary')}
+        'For each paper below, write in %s:\n'
+        '- "summary": 2 sentences that a curious non-specialist can understand: what was done and why it matters. '
+        'No jargon.\n'
+        '- for a researcher of the field, who knows its vocabulary: "contribution": what is new, in one precise '
+        'sentence; "method": the approach, data, sample or instrument, in one short sentence; "result": the main '
+        'result, with its key number when the abstract gives one, in one short sentence.\n'
+        'Use only what the abstract says: write "" for a part it does not give. No LaTeX, no hype.\n'
+        'Answer with a JSON object {"summaries": [{"id": "...", "summary": "...", "contribution": "...", '
+        '"method": "...", "result": "..."}]}.\n\n%s' % (language, listing))
+    content = _chat(prompt, ai_models()[0], False, 4500)
+    found = {}
+    for item in json.loads(content).get('summaries', []):
+        if isinstance(item, dict) and item.get('id') and item.get('summary'):
+            found[item['id']] = {'summary': str(item['summary']).strip(),
+                                 'points': {k: str(item.get(k) or '').strip() for k in POINTS}}
+    return found
+
+
+def blurb_parts(answer):
+    """(summary, points JSON) from an answer of write_blurbs (a bare string is a summary alone)."""
+    if isinstance(answer, str):
+        return answer.strip(), '{}'
+    return answer['summary'], json.dumps({k: v for k, v in answer.get('points', {}).items() if v})
 
 
 def _chat(prompt, model, paid, max_tokens):
@@ -672,10 +861,10 @@ def _chat(prompt, model, paid, max_tokens):
 
 
 def ensure_items(papers, lang):
-    """Return {arxiv_id: DigestItem}, generating the missing blurbs."""
+    """Return {arxiv_id: DigestItem}, generating the missing blurbs (and the points of items written before them)."""
     ids = [p['arxiv_id'] for p in papers]
     items = {i.arxiv_id: i for i in DigestItem.objects.filter(arxiv_id__in=ids, lang=lang)}
-    missing = [p for p in papers if p['arxiv_id'] not in items]
+    missing = [p for p in papers if p['arxiv_id'] not in items or not items[p['arxiv_id']].points]
     for start in range(0, len(missing), 10):
         batch = missing[start:start + 10]
         try:
@@ -684,15 +873,23 @@ def ensure_items(papers, lang):
             logger.exception('Blurb generation failed, falling back to abstracts')
             blurbs = {}
         for paper in batch:
+            answer = blurbs.get(paper['arxiv_id'])
+            summary, points = blurb_parts(answer) if answer else ('', '')
+            old = items.get(paper['arxiv_id'])
+            if old is not None:
+                if answer:  # an item written before the points: they are added once (or '{}' when the model had none)
+                    old.points = points
+                    old.save(update_fields=['points'])
+                continue
             item = DigestItem(
                 arxiv_id=paper['arxiv_id'], lang=lang, title=paper['title'],
                 authors=', '.join(paper['authors'][:6]) + (' et al.' if len(paper['authors']) > 6 else ''),
                 categories=','.join(paper['categories']), published=paper['published'],
-                blurb=blurbs.get(paper['arxiv_id'], ''))
+                blurb=summary, points=points)
             if item.blurb:
                 # stored once and reused by every subscriber; get_or_create in case two runs overlap
                 item, _ = DigestItem.objects.get_or_create(arxiv_id=item.arxiv_id, lang=lang, defaults={
-                    f: getattr(item, f) for f in ('title', 'authors', 'categories', 'published', 'blurb')})
+                    f: getattr(item, f) for f in ('title', 'authors', 'categories', 'published', 'blurb', 'points')})
             else:
                 # not stored, so the next subscriber or run tries the model again
                 item.blurb = paper['abstract'][:400].rsplit(' ', 1)[0] + '…'
@@ -723,8 +920,33 @@ def presummarize(arxiv_ids, lang, budget):
             logger.exception('Summary of %s for the digest failed', arxiv_id)
 
 
+def notable_shortlist(category, lang, day, week):
+    """The papers of the week the model may call notable, chosen by what can be counted rather than by titles:
+    how many research profiles of the digests following the category they come close to, whether a rising
+    topic of their archive cites them, and how many categories they were posted in."""
+    from . import trends  # trends imports this module
+    vectors = stored_vectors([p['arxiv_id'] for p in week])
+    profiles = []
+    for rows, labels in (DigestSubscription.objects.filter(active=True, categories__contains=category)
+                         .exclude(profile_labels='').values_list('profile_vector', 'profile_labels')):
+        count = len(json.loads(labels))
+        if rows and count:
+            profiles.append(np.frombuffer(bytes(rows), dtype=np.float32).reshape(count, -1))
+    _, topics = trends.latest(archive_of(category), lang, since=day - WEEK)
+    rising = {p.get('arxiv_id') for t in topics for p in t.get('papers', [])}
+    scored = []
+    for paper in week:
+        vector = vectors.get(paper['arxiv_id'])
+        interest = 0 if vector is None else sum(
+            1 for rows in profiles if rows.shape[1] == vector.shape[0] and float(np.max(rows @ vector)) >= THRESHOLDS['medium'])
+        scored.append(((interest, paper['arxiv_id'] in rising, len(paper['categories'])), paper))
+    scored.sort(key=lambda s: s[0], reverse=True)
+    return [paper for _, paper in scored[:NOTABLE_SHORTLIST]]
+
+
 def category_synthesis(category, lang, day, papers):
-    """{'trends': [...], 'notable': [...]} for the last 7 days of a category, written once per language and day."""
+    """{'trends': [...], 'notable': [...]} for the last 7 days of a category, written once per language and day.
+    Each trend cites the papers it is drawn from, and each notable paper says why, so a reader can check them."""
     existing = CategorySynthesis.objects.filter(category=category, lang=lang, day=day).first()
     if existing:
         return json.loads(existing.content)
@@ -733,29 +955,40 @@ def category_synthesis(category, lang, day, papers):
     if len(week) < SYNTHESIS_MIN_PAPERS:
         return None
     by_id = {p['arxiv_id']: p for p in week}
+    shortlist = notable_shortlist(category, lang, day, week)
     # the 2-sentence summaries already written for subscribers say more than titles
     blurbs = dict(DigestItem.objects.filter(arxiv_id__in=list(by_id), lang=lang)
                   .values_list('arxiv_id', 'blurb')[:SYNTHESIS_MAX_BLURBS])
     language = 'French' if lang == 'fr' else 'English'
     prompt = (
         'Here are the %d papers announced on %s in the category %s over the last 7 days (ID | title, '
-        'and a short summary for some of them). '
+        'and a short summary for some of them), then a shortlist of papers with their abstracts. '
         'In %s, write for a researcher of this field: the 3 to 5 main trends or topics of the week, each with a '
-        'short title and 2 sentences, and the IDs of the 3 papers most likely to matter. Be concrete, no hype, no LaTeX, '
-        'and never write paper IDs in the trend texts: they are read by people. '
-        'Answer with a JSON object {"trends": [{"title": "...", "text": "..."}], "notable": ["ID", ...]}.\n\n%s'
+        'short title, 2 sentences and the IDs of the 2 or 3 papers of the list it is drawn from; then pick from '
+        'the shortlist only the 3 papers most likely to matter, each with one sentence saying why, from its abstract. '
+        'Be concrete, no hype, no LaTeX, and never write paper IDs in the texts: they are read by people. '
+        'Answer with a JSON object {"trends": [{"title": "...", "text": "...", "papers": ["ID", ...]}], '
+        '"notable": [{"id": "ID", "why": "..."}]}.\n\nPapers:\n%s\n\nShortlist:\n%s'
         % (len(week), SERVER_NAMES.get(archive_of(category), 'arXiv'), category_name(category), language, '\n'.join(
             '%s | %s%s' % (p['arxiv_id'], p['title'], ' | ' + blurbs[p['arxiv_id']] if p['arxiv_id'] in blurbs else '')
-            for p in week)))
+            for p in week), '\n\n'.join('%s | %s\n%s' % (p['arxiv_id'], p['title'], short(p['abstract'], 700))
+                                          for p in shortlist)))
+    allowed = {p['arxiv_id'] for p in shortlist}
     try:
-        answer = json.loads(_chat(prompt, ai_models()[1], True, 3000))
+        answer = json.loads(_chat(prompt, ai_models()[1], True, 3500))
         content = {
             'category': category_name(category),
-            'trends': [{'title': str(t['title']).strip(), 'text': str(t['text']).strip()}
+            'trends': [{'title': str(t['title']).strip(), 'text': str(t['text']).strip(),
+                        'papers': [{'arxiv_id': aid, 'title': by_id[aid]['title']}
+                                   for aid in dict.fromkeys(t.get('papers') or []) if isinstance(aid, str) and aid in by_id][:3]}
                        for t in answer.get('trends', [])[:5] if isinstance(t, dict) and t.get('title') and t.get('text')],
-            'notable': [{'arxiv_id': aid, 'title': by_id[aid]['title']}
-                        for aid in answer.get('notable', [])[:3] if isinstance(aid, str) and aid in by_id],
+            'notable': [],
         }
+        for pick in answer.get('notable', []):
+            aid, why = (pick.get('id'), str(pick.get('why') or '').strip()) if isinstance(pick, dict) else (pick, '')
+            if isinstance(aid, str) and aid in allowed and aid not in [n['arxiv_id'] for n in content['notable']]:
+                content['notable'].append({'arxiv_id': aid, 'title': by_id[aid]['title'], 'why': why})
+        content['notable'] = content['notable'][:3]
     except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
         logger.exception('Synthesis of %s failed', category)
         return None
@@ -784,49 +1017,128 @@ def feedback_token(subscription, arxiv_id, value):
     return signing.dumps([subscription.pk, arxiv_id, value], salt=FEEDBACK_SALT, compress=True)
 
 
+def edition_token(edition):
+    return signing.dumps([edition.subscription_id, edition.pk], salt=EDITION_SALT)
+
+
+def open_token(subscription, edition, arxiv_id, rank, target):
+    return signing.dumps([subscription.pk, edition.pk if edition else None, arxiv_id, rank, target],
+                         salt=OPEN_SALT, compress=True)
+
+
+def save_token(subscription, arxiv_id):
+    return signing.dumps([subscription.pk, arxiv_id], salt=SAVE_SALT, compress=True)
+
+
 def tracked(url, campaign, content):
     """Link with the UTM tags Umami reports on, to see which parts of the digest get clicked."""
     return '%s%sutm_source=digest&utm_medium=email&utm_campaign=%s&utm_content=%s' % (
         url, '&' if '?' in url else '?', campaign, content)
 
 
+def source_links(arxiv_id):
+    """(identifier shown, abstract page, PDF or None) of a paper at its source."""
+    if sources.is_external(arxiv_id):
+        doi = sources.key_doi(arxiv_id) if arxiv_id.startswith('doi_') else ''
+        return ('doi:%s' % doi if doi else arxiv_id), ('https://doi.org/%s' % doi if doi else None), None
+    plain = arxiv_id.replace('--', '/')
+    return 'arXiv:%s' % plain, 'https://arxiv.org/abs/%s' % plain, 'https://arxiv.org/pdf/%s' % plain
+
+
+def category_label(code):
+    """'astro-ph.EP' -> 'Earth and Planetary Astrophysics', 'biorxiv.cell-biology' -> 'Cell Biology'."""
+    return arxiv_taxonomy.NAMES.get(code) or category_name(code)
+
+
+def reasons(entry, wanted=()):
+    """Why a paper is in a digest, in the active language: ['Close to your reference paper “…”', 'Keywords: …']."""
+    from django.utils.translation import gettext as _
+    if not entry:
+        return []
+    found, closest = [], entry.get('closest') or {}
+    kind = closest.get('kind')
+    if kind == 'reference':
+        found.append(_('Close to your reference paper “%(title)s”') % {'title': closest.get('title')})
+    elif kind == 'profile':
+        found.append(_('Close to your research profile: “%(text)s”') % {'text': closest.get('text')})
+    elif kind == 'liked':
+        found.append(_('Close to a paper you liked: “%(title)s”') % {'title': closest.get('title')})
+    elif kind == 'opened':
+        found.append(_('Close to a paper you opened: “%(title)s”') % {'title': closest.get('title')})
+    if entry.get('keywords'):
+        found.append(_('Keywords: %(terms)s') % {'terms': ', '.join(entry['keywords'])})
+    categories = entry['paper']['categories']
+    if categories and not entry.get('primary'):
+        followed = [c for c in categories if c in set(wanted)]
+        found.append(_('Cross-listed in %(category)s from %(primary)s') % {
+            'category': followed[0] if followed else '', 'primary': categories[0]})
+    return found
+
+
 def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready=(), now=None, paid=False, via=None,
-             teaser=None, listen_url=None, rising=()):
+             teaser=None, listen_url=None, rising=(), edition=None, entries=None, sections=()):
+    """entries: {arxiv_id: entry of rank_papers}, to say why each paper is there; sections: alerts sent with it."""
     lang = subscription.lang
     campaign = 'weekly' if subscription.frequency == 'weekly' else 'daily'
     unsubscribe_url = '%s/%s/digest/unsubscribe/%s/' % (base_url, lang, unsubscribe_token(subscription))
     ready = set(ready)
-    for section, group in (('author', from_authors), ('paper', items)):
-        for item in group:
-            item.url = tracked('%s/%s/paper/%s/?autorun=1' % (base_url, lang, item.arxiv_id), campaign,
-                               'ready' if item.arxiv_id in ready else section)
+    entries = entries or {}
+    wanted = subscription.category_list()
+
+    def opened(item, rank, target):
+        return '%s/%s/digest/open/%s/' % (base_url, lang, open_token(subscription, edition, item.arxiv_id, rank, target))
+
+    with translation.override(lang):
+        for rank, item in enumerate(list(from_authors) + list(items), 1):
+            item.rank = rank
+            item.url = opened(item, rank, 'summary')
+            item.ident, abs_url, pdf_url = source_links(item.arxiv_id)
+            item.abs_url = opened(item, rank, 'abs') if abs_url else None
+            item.pdf_url = opened(item, rank, 'pdf') if pdf_url else None
+            item.save_url = '%s/%s/digest/save/%s/' % (base_url, lang, save_token(subscription, item.arxiv_id))
             item.ready = item.arxiv_id in ready
             item.via = ', '.join((via or {}).get(item.arxiv_id, []))
-            if paid:
-                item.more_url, item.less_url = ('%s/%s/digest/feedback/%s/' % (base_url, lang, feedback_token(subscription, item.arxiv_id, v))
-                                                for v in (1, -1))
-    syntheses = [dict(synthesis, notable=[dict(paper, url=tracked('%s/%s/paper/%s/?autorun=1' % (base_url, lang, paper['arxiv_id']),
-                                                                  campaign, 'synthesis')) for paper in synthesis['notable']])
-                 for synthesis in syntheses]
-    context = {
-        'subscription': subscription,
-        'items': items,
-        'from_authors': from_authors,
-        'count': len(items) + len(from_authors),
-        'syntheses': syntheses,
-        'paid': paid,
-        'teaser': teaser,
-        'listen_url': listen_url,
-        'rising': rising,
-        'trends_url': tracked('%s/%s/trends/' % (base_url, lang), campaign, 'rising'),
-        'premium_url': tracked('%s/%s/premium/' % (base_url, lang), campaign, 'premium-teaser'),
-        'weekly': campaign == 'weekly',
-        'base_url': base_url,
-        'manage_url': '%s/%s/digest/?d=%s' % (base_url, lang, subscription.pk),
-        'unsubscribe_url': unsubscribe_url,
-        'date': now or timezone.now(),
-    }
-    with translation.override(lang):
+            categories = [c for c in item.categories.split(',') if c]
+            item.category = categories[0] if categories else ''
+            item.reasons = reasons(entries.get(item.arxiv_id), wanted)
+            points = json.loads(item.points or '{}') if subscription.level == 'expert' else {}
+            item.point_list = [(label, points[key]) for key, label in (
+                ('contribution', translation.gettext('Contribution')), ('method', translation.gettext('Method')),
+                ('result', translation.gettext('Result'))) if points.get(key)]
+            item.more_url, item.less_url = ('%s/%s/digest/feedback/%s/' % (base_url, lang, feedback_token(subscription, item.arxiv_id, v))
+                                            for v in (1, -1))
+        link = lambda aid: tracked('%s/%s/paper/%s/?autorun=1' % (base_url, lang, aid), campaign, 'synthesis')
+        syntheses = [dict(synthesis, notable=[dict(paper, url=link(paper['arxiv_id'])) for paper in synthesis['notable']],
+                          trends=[dict(trend, papers=[dict(paper, url=link(paper['arxiv_id'])) for paper in trend.get('papers', [])])
+                                  for trend in synthesis['trends']])
+                     for synthesis in syntheses]
+        first = (list(from_authors) + list(items) or [None])[0]
+        context = {
+            'subscription': subscription,
+            'items': items,
+            'from_authors': from_authors,
+            'count': len(items) + len(from_authors),
+            'top_title': short(first.title, 70) if first else '',
+            'top_author': first.via.split(', ')[0] if first is not None and from_authors and first.via else '',
+            'categories_label': ', '.join(category_label(c) for c in wanted),
+            'total': edition.candidates if edition else 0,
+            'edition_url': tracked('%s/%s/digest/e/%s/' % (base_url, lang, edition_token(edition)), campaign, 'edition')
+            if edition else None,
+            'sections': sections,
+            'syntheses': syntheses,
+            'paid': paid,
+            'teaser': teaser,
+            'listen_url': listen_url,
+            'rising': rising,
+            'trends_url': tracked('%s/%s/trends/' % (base_url, lang), campaign, 'rising'),
+            'premium_url': tracked('%s/%s/premium/' % (base_url, lang), campaign, 'premium-teaser'),
+            'weekly': campaign == 'weekly',
+            'base_url': base_url,
+            'manage_url': '%s/%s/digest/?d=%s' % (base_url, lang, subscription.pk),
+            'unsubscribe_url': unsubscribe_url,
+            'date': now or timezone.now(),
+        }
+        context['more'] = max(0, context['total'] - context['count'])
         subject = render_to_string('digest/subject.txt', context).strip()
         text = render_to_string('digest/email.txt', context)
         html = render_to_string('digest/email.html', context)
@@ -864,7 +1176,6 @@ class Plan:
         self.synthesis = paid and (self.weekly or local.weekday() == 0)
         self.teaser = not paid and (self.weekly or local.weekday() == 0)
         self.authors = subscription.author_list()[:MAX_AUTHORS] if paid else []
-        self.ranked = paid  # by profile, reference papers and "more/less like this" feedback, when there are any
 
     def batches(self, days):
         """The stored announcements not sent yet: the last one for a daily digest, the week's for a weekly one."""
@@ -891,8 +1202,9 @@ def due_plans(now, only_user=None):
     # without Premium (or after it ended) only the first digest of an account is sent
     plans = [Plan(s, paid[s.user_id], now) for s in subscriptions if paid[s.user_id] or s.pk == first[s.user_id]]
     if not only_user:
-        # Premium first, then longest-waiting, and no more than the mail provider allows per hour
-        plans.sort(key=lambda p: (not p.paid, p.subscription.last_sent or p.subscription.created))
+        # Premium first, then the ones about to miss their slot, then longest-waiting, and no more than the mail
+        # provider allows per hour (a digest left out still has its web page, see DigestEdition)
+        plans.sort(key=lambda p: (not p.paid, -p.subscription.hours_late(now), p.subscription.last_sent or p.subscription.created))
         if len(plans) > MAX_EMAILS_PER_RUN:
             logger.warning('%d digests due, sending %d this hour', len(plans), MAX_EMAILS_PER_RUN)
             plans = plans[:MAX_EMAILS_PER_RUN]
@@ -908,16 +1220,20 @@ def upcoming_plans(now, current):
 
 
 def choose(plan, days, papers, index):
-    """(papers by followed authors, other papers, {arxiv_id: followed names}) for one digest."""
+    """(papers by followed authors, other papers, {arxiv_id: followed names}, every ranked entry) for one digest."""
     subscription = plan.subscription
     already = set(DigestDelivery.objects.filter(subscription=subscription).values_list('arxiv_id', flat=True))
     from_authors, via = author_papers(subscription, index, already, days) if plan.authors else ([], {})
     from_authors = from_authors[:plan.limits['papers']]
-    profile = ranking_vector(subscription) if plan.ranked else None
+    ranking = ranking_for(subscription, plan.paid)
     vectors = ensure_vectors(candidates(subscription, papers, already, days, plan.categories))
-    chosen = select_papers(subscription, papers, already, days, plan.limits['papers'] - len(from_authors),
-                           plan.categories, profile, vectors, exclude={p['arxiv_id'] for p in from_authors})
-    return from_authors, chosen, via
+    entries = rank_papers(subscription, papers, already, days, plan.categories, ranking, vectors,
+                          exclude={p['arxiv_id'] for p in from_authors})
+    if plan.paid and subscription.volume in THRESHOLDS and ranking is not None and ranking.has_profile:
+        chosen = above_threshold(entries, subscription.volume)[:THRESHOLD_MAX_EMAIL - len(from_authors)]
+    else:
+        chosen = entries[:plan.limits['papers'] - len(from_authors)]
+    return from_authors, [e['paper'] for e in chosen], via, entries
 
 
 def run(base_url=BASE_URL, dry_run=False, only_user=None, stdout=None, now=None):
@@ -994,7 +1310,7 @@ def _run(base_url, dry_run, only_user, stdout, now):
             break
         batches = plan.batches(days)
         if batches:
-            from_authors, chosen, _ = choose(plan, batches, papers, index)
+            from_authors, chosen, _, _ = choose(plan, batches, papers, index)
             presummarize([p['arxiv_id'] for p in from_authors + chosen][:PRESUMMARIZED], plan.subscription.lang, budget)
     return sent
 
@@ -1002,12 +1318,15 @@ def _run(base_url, dry_run, only_user, stdout, now):
 def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dry_run=False, new_syntheses=True,
             audio_budget=None):
     """Choose, write and send one digest from these announcements; True if it was sent."""
+    from . import digest_bundle
     subscription = plan.subscription
     if not cache.add(SENDING_KEY % subscription.pk, True, 600):
         return False  # the same digest is being sent by a preview or another run
     try:
-        from_authors, chosen, via = choose(plan, batches, papers, index)
-        if not chosen and not from_authors:
+        from_authors, chosen, via, entries = choose(plan, batches, papers, index)
+        bundled = plan.paid and subscription.bundle_alerts and not dry_run
+        sections = digest_bundle.collect(subscription.user, subscription.lang, base_url, now) if bundled else []
+        if not chosen and not from_authors and not sections:
             return False
         items = ensure_items(from_authors + chosen, subscription.lang)
         author_items = [items[p['arxiv_id']] for p in from_authors]
@@ -1036,13 +1355,20 @@ def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dr
             if plan.synthesis:
                 from . import trends  # trends reads the archive list of this module
                 rising = trends.for_digest(plan.categories, subscription.lang, plan.today)
+        edition = DigestEdition.objects.create(
+            subscription=subscription, sent=now, days=','.join(str(d) for d in sorted(batches)),
+            papers=json.dumps(all_ids), candidates=len(entries) + len(author_items))
         try:
             send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
                      paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None,
-                     listen_url=listen_url, rising=rising)
+                     listen_url=listen_url, rising=rising, edition=edition,
+                     entries={e['paper']['arxiv_id']: e for e in entries}, sections=sections)
         except Exception:
             logger.exception('Digest email to %s failed', subscription.user.username)
+            edition.delete()
             return False
+        for section in sections:
+            section['commit']()
         DigestDelivery.objects.bulk_create(
             [DigestDelivery(subscription=subscription, arxiv_id=aid) for aid in all_ids], ignore_conflicts=True)
         subscription.last_sent = now
@@ -1099,8 +1425,9 @@ def start_preview(subscription_pk):
 
 
 def cleanup(days=30):
-    """Forget the papers and embeddings too old to appear in a digest again."""
-    AnnouncedPaper.objects.filter(announced__lt=timezone.now().date() - datetime.timedelta(days=KEEP_DAYS)).delete()
+    """Forget the papers and embeddings too old to appear in a digest or on its web page again."""
+    AnnouncedPaper.objects.filter(announced__lt=timezone.now().date() - datetime.timedelta(days=PAGE_DAYS)).delete()
+    DigestEdition.objects.filter(sent__lt=timezone.now() - datetime.timedelta(days=EDITION_DAYS)).delete()
     return DigestVector.objects.filter(created__lt=timezone.now() - timezone.timedelta(days=days)).delete()[0]
 
 
@@ -1147,6 +1474,21 @@ def digest_page(request):
                 start_preview(subscription.pk)
                 state = 'sent'
             return redirect('/%s/digest/?d=%s&preview=%s' % (get_language(), subscription.pk, state))
+        if request.POST.get('action') == 'import':
+            from . import digest_web
+            draft = digest_web.preview_subscription(request, subscription, paid)
+            draft.pk = subscription.pk if subscription else None
+            draft.name = request.POST.get('name', '').strip()[:80]
+            draft.authors = ', '.join(clean_authors(request.POST.get('authors', ''))) if paid else ''
+            for field in ('send_hour', 'weekday'):
+                setattr(draft, field, _int(request.POST.get(field), 7 if field == 'send_hour' else 0, 0, 23 if field == 'send_hour' else 4))
+            draft.timezone = request.POST['timezone'] if request.POST.get('timezone') in TIMEZONES else 'Europe/Paris'
+            draft.bundle_alerts = paid and request.POST.get('bundle_alerts') == '1'
+            found = digest_web.import_publications(request.POST.get('identity', ''))
+            if 'error' not in found:
+                digest_web.apply_import(draft, found, paid)
+            return render(request, 'summarizer/digest.html', dict(_digest_context(request, draft, digests, paid), imported=found,
+                                                                  identity=request.POST.get('identity', '')))
         categories = clean_categories(request.POST.getlist('categories') + request.POST.get('other', '').split(','),
                                       lim['categories'])
         if not categories:
@@ -1161,7 +1503,10 @@ def digest_page(request):
         subscription.send_hour = _int(request.POST.get('send_hour'), 7, 0, 23)
         if request.POST.get('timezone') in TIMEZONES:
             subscription.timezone = request.POST['timezone']
+        subscription.level = 'general' if request.POST.get('level') == 'general' else 'expert'
         if paid:  # kept as they are when Premium has ended, and used again if it comes back
+            subscription.volume = request.POST.get('volume') if request.POST.get('volume') in dict(DigestSubscription.VOLUMES) else 'top'
+            subscription.bundle_alerts = request.POST.get('bundle_alerts') == '1'
             subscription.name = request.POST.get('name', '').strip()[:80]
             subscription.profile = request.POST.get('profile', '').strip()[:2000]
             subscription.reference_papers = ', '.join(clean_references(request.POST.get('reference_papers', '')))
@@ -1190,8 +1535,8 @@ def hour_label(hour):
 def _digest_context(request, subscription, digests, paid, error=False):
     lim = limits(paid)
     chosen = subscription.category_list() if subscription else []
-    known = {code for code, _ in CATEGORIES} | set(BIO_CODES)
-    configured = bool(not error and subscription and
+    known = set(arxiv_taxonomy.NAMES) | set(BIO_CODES)
+    configured = bool(not error and subscription and subscription.pk and
                       request.session.get('digest_configured') == subscription.pk)
     if configured:
         request.session.pop('digest_configured')
@@ -1202,7 +1547,12 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'paid': paid,
         'can_create': len(digests) < lim['digests'],
         'inactive_digests': [] if paid else digests[1:],
-        'categories': CATEGORIES,
+        'taxonomy': arxiv_taxonomy.GROUPS,
+        'chosen_labels': [(c, category_label(c)) for c in chosen],
+        'editions': [(e, edition_token(e)) for e in DigestEdition.objects.filter(subscription=subscription)[:8]]
+        if subscription and subscription.pk else [],
+        'volumes': DigestSubscription.VOLUMES,
+        'thresholds': THRESHOLDS,
         'bio_categories': [(SERVER_NAMES[server], [(sources.category_code(server, n), n) for n in names])
                            for server, names in BIO_CATEGORIES],
         'chosen': chosen,
@@ -1253,7 +1603,7 @@ def feedback(request, token):
     done = False
     if subscription is not None and request.method == 'POST' and value in (1, -1):
         DigestFeedback.objects.update_or_create(subscription=subscription, arxiv_id=arxiv_id,
-                                                defaults={'value': value, 'vector': paper_vector(arxiv_id)})
+                                                defaults={'value': value, 'source': 'vote', 'vector': paper_vector(arxiv_id)})
         done = True
     return render(request, 'summarizer/digest_feedback.html', {
         'subscription': subscription, 'item': item, 'value': value, 'done': done})

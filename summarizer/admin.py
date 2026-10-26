@@ -20,7 +20,8 @@ from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationFo
 from unfold.widgets import UnfoldAdminTextareaWidget
 
 from . import activity, guides, usage
-from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestFeedback,
+from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestClick,
+                     DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, UserPlan, PremiumGrant, Vote)
@@ -220,8 +221,8 @@ class GrantedToolFilter(admin.SimpleListFilter):
 class DigestInline(StackedInline):
     model = DigestSubscription
     extra = 0
-    fields = ('name', 'categories', 'keywords', 'profile', 'reference_papers', 'authors', 'lang', 'frequency', 'weekday',
-              'send_hour', 'timezone', 'active', 'last_sent')
+    fields = ('name', 'categories', 'keywords', 'profile', 'reference_papers', 'authors', 'lang', 'level', 'volume',
+              'bundle_alerts', 'frequency', 'weekday', 'send_hour', 'timezone', 'active', 'last_sent')
     readonly_fields = ('last_sent',)
 
 
@@ -422,7 +423,7 @@ class DigestSubscriptionAdmin(ModelAdmin):
     list_filter = ('active', 'frequency', 'lang')
     search_fields = ('user__username', 'user__email', 'categories', 'name')
     raw_id_fields = ('user',)
-    exclude = ('profile_vector', 'profile_key')
+    exclude = ('profile_vector', 'profile_key', 'profile_labels')
 
 
 @admin.register(ArxivBatch)
@@ -440,10 +441,25 @@ class AnnouncedPaperAdmin(ModelAdmin):
 
 @admin.register(DigestFeedback)
 class DigestFeedbackAdmin(ModelAdmin):
-    list_display = ('subscription', 'arxiv_id', 'value', 'created')
-    list_filter = ('value',)
+    list_display = ('subscription', 'arxiv_id', 'value', 'source', 'created')
+    list_filter = ('value', 'source')
     search_fields = ('arxiv_id', 'subscription__user__username')
     exclude = ('vector',)
+
+
+@admin.register(DigestEdition)
+class DigestEditionAdmin(ModelAdmin):
+    list_display = ('subscription', 'sent', 'days', 'candidates')
+    raw_id_fields = ('subscription',)
+    search_fields = ('subscription__user__username',)
+
+
+@admin.register(DigestClick)
+class DigestClickAdmin(ModelAdmin):
+    list_display = ('subscription', 'arxiv_id', 'rank', 'target', 'burst', 'created')
+    list_filter = ('target', 'burst')
+    raw_id_fields = ('subscription', 'edition')
+    search_fields = ('arxiv_id', 'subscription__user__username')
 
 
 @admin.register(DigestItem)

@@ -4,7 +4,8 @@
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
-    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }} &middot; {{ subscription.categories }}</p>
+    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }}</p>
+    <p style="margin:-16px 0 24px;color:#888;font-size:13px;">{{ categories_label }}{% if edition_url and total %} &middot; {% blocktrans count counter=total %}{{ count }} of {{ counter }} paper shown{% plural %}{{ count }} of {{ counter }} papers shown{% endblocktrans %} &middot; <a href="{{ edition_url }}" style="color:#4f46e5;">{% trans 'see them all, ranked' %}</a>{% endif %}</p>
     {% if listen_url %}
     <p style="margin:0 0 16px;"><a href="{{ listen_url }}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">&#127911; {% trans 'Listen to this digest' %}</a></p>
     {% endif %}
@@ -21,12 +22,12 @@
     <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-bottom:16px;">
       <p style="margin:0 0 10px;font-size:16px;font-weight:bold;">{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}</p>
       {% for trend in synthesis.trends %}
-      <p style="margin:0 0 8px;line-height:1.5;"><strong>{{ trend.title }}.</strong> {{ trend.text }}</p>
+      <p style="margin:0 0 8px;line-height:1.5;"><strong>{{ trend.title }}.</strong> {{ trend.text }}{% if trend.papers %}<br><span style="font-size:13px;color:#666;">{% trans 'From:' %} {% for paper in trend.papers %}<a href="{{ paper.url }}" style="color:#1a0dab;">{{ paper.title|truncatechars:70 }}</a>{% if not forloop.last %} &middot; {% endif %}{% endfor %}</span>{% endif %}</p>
       {% endfor %}
       {% if synthesis.notable %}
       <p style="margin:10px 0 4px;color:#666;font-size:13px;">{% trans 'Papers to watch:' %}</p>
       {% for paper in synthesis.notable %}
-      <p style="margin:0 0 4px;font-size:14px;">&bull; <a href="{{ paper.url }}" style="color:#1a0dab;">{{ paper.title }}</a></p>
+      <p style="margin:0 0 4px;font-size:14px;">&bull; <a href="{{ paper.url }}" style="color:#1a0dab;">{{ paper.title }}</a>{% if paper.why %}<br><span style="color:#666;font-size:13px;">{{ paper.why }}</span>{% endif %}</p>
       {% endfor %}
       {% endif %}
     </div>
@@ -37,6 +38,19 @@
     {% if items %}<p style="margin:16px 0 0;font-size:16px;font-weight:bold;">{% trans 'In your categories' %}</p>{% endif %}
     {% endif %}
     {% for item in items %}{% include 'digest/item.html' %}{% endfor %}
+    {% if edition_url and more %}
+    <p style="margin:8px 0 16px;"><a href="{{ edition_url }}" style="color:#4f46e5;font-weight:bold;">{% blocktrans count counter=more %}See the {{ counter }} other paper of your categories, ranked, with why each one is there{% plural %}See the {{ counter }} other papers of your categories, ranked, with why each one is there{% endblocktrans %} &rarr;</a></p>
+    {% endif %}
+    {% for section in sections %}
+    <div style="border-top:2px solid #eee;margin-top:16px;padding-top:16px;">
+      <p style="margin:0 0 8px;font-size:16px;font-weight:bold;">{{ section.title }}</p>
+      {% for entry in section.items %}
+      {% ifchanged entry.group %}{% if entry.group %}<p style="margin:8px 0 4px;color:#666;font-size:13px;">{{ entry.group }}</p>{% endif %}{% endifchanged %}
+      <p style="margin:0 0 8px;font-size:14px;line-height:1.45;">&bull; <a href="{{ entry.url }}" style="color:#1a0dab;">{{ entry.title }}</a>{% if entry.label %} <span style="color:#16a34a;font-size:13px;">({{ entry.label }})</span>{% endif %}{% if entry.note %}<br><span style="color:#555;">{{ entry.note }}</span>{% endif %}</p>
+      {% endfor %}
+      <p style="margin:0;font-size:13px;">{% if section.more %}{% blocktrans count counter=section.more %}and {{ counter }} more{% plural %}and {{ counter }} more{% endblocktrans %} &middot; {% endif %}<a href="{{ section.manage_url }}" style="color:#888;">{% trans 'Manage' %}</a></p>
+    </div>
+    {% endfor %}
     {% if teaser is not None %}
     <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-top:8px;">
       {% if teaser.title %}<p style="margin:0 0 8px;">{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: <strong>{{ title }}</strong>. Premium digests open with the trends of the week in your fields.{% endblocktrans %}</p>

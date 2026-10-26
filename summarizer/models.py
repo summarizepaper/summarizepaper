@@ -291,6 +291,9 @@ class ChatConversation(models.Model):
 class DigestSubscription(models.Model):
     """Email of new arXiv papers in the categories a user follows (Premium users may have several)."""
     FREQUENCIES = [('daily', 'Every weekday'), ('weekly', 'Once a week')]
+    LEVELS = [('expert', 'Researcher'), ('general', 'Plain language')]
+    # 'top': the best papers up to the plan's limit; the others (Premium, with a profile): every paper at least this close
+    VOLUMES = [('top', 'Best papers'), ('high', 'Strict'), ('medium', 'Normal'), ('low', 'Broad')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='digests')
     name = models.CharField(max_length=80, blank=True, default='')
     categories = models.CharField(max_length=1500)  # comma-separated, e.g. "astro-ph.EP,cs.LG,biorxiv.neuroscience"
@@ -306,6 +309,10 @@ class DigestSubscription(models.Model):
     authors = models.CharField(max_length=1000, blank=True, default='')  # comma-separated full names
     profile_vector = models.BinaryField(blank=True, null=True)  # embedding of profile + reference papers
     profile_key = models.CharField(max_length=64, blank=True, default='')  # hash of what profile_vector was made from
+    profile_labels = models.TextField(blank=True, default='')  # JSON: what each row of profile_vector stands for
+    level = models.CharField(max_length=10, choices=LEVELS, default='expert')
+    volume = models.CharField(max_length=10, choices=VOLUMES, default='top')
+    bundle_alerts = models.BooleanField(default=False)  # Premium: scoop, citation, version and publication alerts come in it
     active = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -336,6 +343,15 @@ class DigestSubscription(models.Model):
             return False
         return self.last_sent is None or self.last_sent < slot_start
 
+    def hours_late(self, now):
+        """Hours since this digest's local send time today (0 to 23)."""
+        from zoneinfo import ZoneInfo
+        try:
+            tz = ZoneInfo(self.timezone)
+        except Exception:
+            tz = ZoneInfo('UTC')
+        return (now.astimezone(tz).hour - self.send_hour) % 24
+
     def category_list(self):
         return [c for c in (x.strip() for x in self.categories.split(',')) if c]
 
@@ -361,6 +377,7 @@ class DigestItem(models.Model):
     categories = models.CharField(max_length=300, blank=True, default='')
     published = models.DateTimeField(blank=True, null=True)
     blurb = models.TextField()
+    points = models.TextField(blank=True, default='')  # JSON {"contribution", "method", "result"} for researchers
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -416,15 +433,44 @@ class AnnouncedPaper(models.Model):
 
 
 class DigestFeedback(models.Model):
-    """"More like this" (+1) or "less like this" (-1) on a paper of a Premium digest, steering its ranking."""
+    """"More like this" (+1) or "less like this" (-1) on a paper of a digest, or a click on it (+1), steering its ranking."""
+    SOURCES = [('vote', 'More or less like this'), ('click', 'Opened from the email')]
     subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='feedback')
     arxiv_id = models.CharField(max_length=100)
     value = models.SmallIntegerField()
+    source = models.CharField(max_length=10, choices=SOURCES, default='vote')
     vector = models.BinaryField(blank=True, null=True)  # the paper's embedding, kept after DigestVector is cleaned up
     created = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ('subscription', 'arxiv_id')
+
+
+class DigestEdition(models.Model):
+    """One digest email: the announcements it covered and the papers it showed, in order, for its web page."""
+    subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='editions')
+    sent = models.DateTimeField(db_index=True)
+    days = models.CharField(max_length=200)  # comma-separated ISO dates of the announcements
+    papers = models.TextField(default='[]')  # JSON list of the arxiv_ids in the email, in order
+    candidates = models.PositiveIntegerField(default=0)  # papers of its categories that matched (keywords included)
+
+    class Meta:
+        ordering = ('-sent',)
+
+    def day_list(self):
+        import datetime
+        return [datetime.date.fromisoformat(d) for d in self.days.split(',') if d]
+
+
+class DigestClick(models.Model):
+    """A link of a digest email followed, with the paper's rank in it, to measure how good the ranking is."""
+    subscription = models.ForeignKey(DigestSubscription, on_delete=models.CASCADE, related_name='clicks')
+    edition = models.ForeignKey(DigestEdition, on_delete=models.SET_NULL, null=True, blank=True, related_name='clicks')
+    arxiv_id = models.CharField(max_length=100)
+    rank = models.PositiveSmallIntegerField(default=0)  # 1 = first paper of the email, 0 = outside the ranked list
+    target = models.CharField(max_length=10, default='summary')  # summary, abs, pdf
+    burst = models.BooleanField(default=False)  # one of many links opened within seconds: a mail scanner, not a reader
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
 class CategorySynthesis(models.Model):

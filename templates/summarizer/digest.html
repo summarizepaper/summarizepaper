@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -27,6 +27,24 @@
   .digest .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #34a853; color: #fff; font-size: 12px; font-weight: 600; vertical-align: middle; }
   .digest textarea { width: 100%; min-height: 90px; }
   .digest .form-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+  .digest .cat-search { margin: 0 0 10px; }
+  .digest .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; min-height: 8px; }
+  .digest .chips span { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); font-size: 13px; }
+  .digest .help { color: var(--text-muted); font-size: 14px; margin: 4px 0 0; }
+  .digest .help code { font-size: 13px; }
+  .digest .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  @media (min-width: 1100px) { .digest .layout { grid-template-columns: minmax(0, 1fr) 380px; } .digest .try { position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow: auto; } }
+  .digest .try { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--bg-soft); }
+  .digest .try h2 { font-size: 17px; margin: 0 0 4px; }
+  .digest .try ol { padding-left: 20px; margin: 8px 0 0; }
+  .digest .try li { margin: 0 0 10px; font-size: 14px; line-height: 1.4; }
+  .digest .try .why { color: var(--accent); font-size: 13px; }
+  .digest .try[aria-busy="true"] .try-body { opacity: .5; }
+  .digest .editions { margin: 0 0 20px; }
+  .digest .editions a { margin-right: 12px; white-space: nowrap; }
+  .digest .import-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .digest .import-row input { flex: 1 1 240px; }
+  .digest details.tz summary { cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -55,31 +73,59 @@
     {% if digests|length > 1 or paid and digests %}
     <nav class="tabs">
       {% for d in digests %}<a href="?d={{ d.pk }}" {% if d == subscription %}class="current"{% endif %}>{{ d.name|default:d.categories|truncatechars:40 }}</a>{% endfor %}
-      {% if can_create %}<a href="?d=new" {% if not subscription %}class="current"{% endif %}>+ {% trans 'New digest' %}</a>{% endif %}
+      {% if can_create %}<a href="?d=new" {% if not subscription.pk %}class="current"{% endif %}>+ {% trans 'New digest' %}</a>{% endif %}
     </nav>
     {% endif %}
     {% if inactive_digests %}<p class="notice">{% trans 'Without Premium, only your first digest is sent. Your other digests are kept and start again if you subscribe.' %}</p>{% endif %}
     {% if subscription and not subscription.active %}<p class="notice">{% trans 'Your digest is paused. Save the form to resume it.' %}</p>{% endif %}
     {% if error %}<p class="error">{% trans 'Choose at least one category.' %}</p>{% endif %}
-    <form method="post">{% csrf_token %}
+    {% if imported %}
+      {% if imported.error == 'format' %}<p class="error">{% trans 'Give an ORCID iD (0000-0002-1825-0097) or an arXiv author identifier (lecun_y_1).' %}</p>
+      {% elif imported.error == 'unavailable' %}<p class="error">{% trans 'ORCID or arXiv did not answer. Please try again in a minute.' %}</p>
+      {% elif imported.error %}<p class="error">{% trans 'No paper was found for this identifier.' %}</p>
+      {% else %}<p class="notice">{% blocktrans count counter=imported.papers %}{{ counter }} of your papers read.{% plural %}{{ counter }} of your papers read.{% endblocktrans %} {% if paid %}{% trans 'Their categories, your latest papers as reference papers and your frequent co-authors were added below. Check them, then save.' %}{% else %}{% trans 'Their categories were added below. Check them, then save.' %}{% endif %}</p>{% endif %}
+    {% endif %}
+    {% if editions %}
+    <p class="editions muted">{% trans 'Your latest emails, with every paper ranked:' %}
+      {% for edition, token in editions %}<a href="/{{ LANGUAGE_CODE }}/digest/e/{{ token }}/">{{ edition.sent|date:"j M" }}</a>{% endfor %}</p>
+    {% endif %}
+    <div class="layout">
+    <form method="post" id="digest-form" data-try-url="/{{ LANGUAGE_CODE }}/digest/try/">{% csrf_token %}
       <input type="hidden" name="digest" value="{{ subscription.pk|default:'new' }}">
       {% if paid %}
       <p><label for="name">{% trans 'Name of this digest (optional)' %}</label>
       <input type="text" id="name" name="name" maxlength="80" value="{{ subscription.name }}" placeholder="{% trans 'e.g. Thesis, Side project' %}"></p>
       {% endif %}
       <fieldset>
-        <legend>{% blocktrans %}Categories (up to {{ max_categories }}){% endblocktrans %}</legend>
-        <div class="cats">
-          {% for code, label in categories %}
-          <label><input type="checkbox" name="categories" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
-          {% endfor %}
+        <legend>{% trans 'Start from your publications (optional)' %}</legend>
+        <p><label for="identity">{% trans 'Your ORCID iD or arXiv author identifier: your categories, your latest papers and your frequent co-authors are suggested from your own papers.' %}</label></p>
+        <div class="import-row">
+          <input type="text" id="identity" name="identity" value="{{ identity }}" placeholder="0000-0002-1825-0097 / lecun_y_1">
+          <button type="submit" class="btn btn-ghost" name="action" value="import" formnovalidate>{% trans 'Import' %}</button>
         </div>
+        <p class="help">{% blocktrans %}Your arXiv author identifier is in the address of your arXiv author page: arxiv.org/a/<code>lecun_y_1</code>.{% endblocktrans %}</p>
+      </fieldset>
+      <fieldset>
+        <legend>{% blocktrans %}Categories (up to {{ max_categories }}){% endblocktrans %}</legend>
+        <div class="chips" data-chips aria-live="polite">{% for code, label in chosen_labels %}<span>{{ label }}</span>{% endfor %}</div>
+        <p class="cat-search"><label for="cat-search">{% trans 'Find a category' %}</label>
+        <input type="search" id="cat-search" placeholder="{% trans 'e.g. galaxies, cs.LG, number theory' %}" autocomplete="off"></p>
+        {% for group, codes in taxonomy %}
+        <details class="bio-cats" data-cat-group {% for code, name in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
+          <summary>{{ group }}</summary>
+          <div class="cats">
+            {% for code, label in codes %}
+            <label><input type="checkbox" name="categories" data-label="{{ label }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
+            {% endfor %}
+          </div>
+        </details>
+        {% endfor %}
         {% for server, codes in bio_categories %}
-        <details class="bio-cats" {% for code, name in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
+        <details class="bio-cats" data-cat-group {% for code, name in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
           <summary>{% blocktrans %}{{ server }} preprints (biology and medicine){% endblocktrans %}</summary>
           <div class="cats">
             {% for code, name in codes %}
-            <label><input type="checkbox" name="categories" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ name }}</label>
+            <label><input type="checkbox" name="categories" data-label="{{ name }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ name }}</label>
             {% endfor %}
           </div>
         </details>
@@ -90,7 +136,15 @@
       <fieldset>
         <legend>{% trans 'Keywords (optional)' %}</legend>
         <p><label for="keywords">{% trans 'Only papers mentioning at least one of these words, comma-separated:' %}</label>
-        <input type="text" id="keywords" name="keywords" value="{{ subscription.keywords }}" placeholder="exoplanet, debris disk"></p>
+        <input type="text" id="keywords" name="keywords" value="{{ subscription.keywords }}" placeholder='exoplanet, "debris disk", -review'></p>
+        <p class="help">{% blocktrans %}Whole words, plural included (<code>comet</code> finds “comets”, not “cometary”). <code>"debris disk"</code> finds those words together, as written. <code>-review</code> leaves out the papers that use the word. With a research profile (Premium), keywords raise the papers that use them instead of leaving out the others.{% endblocktrans %}</p>
+      </fieldset>
+      <fieldset>
+        <legend>{% trans 'Summaries' %}</legend>
+        <div class="radios">
+        <label><input type="radio" name="level" value="expert" {% if subscription.level != 'general' %}checked{% endif %}> {% trans 'For researchers: contribution, method, main result' %}</label>
+        <label><input type="radio" name="level" value="general" {% if subscription.level == 'general' %}checked{% endif %}> {% trans 'In plain language, 2 sentences' %}</label>
+        </div>
       </fieldset>
       <fieldset class="premium-box" {% if not paid %}disabled{% endif %}>
         <legend><span class="badge">Premium</span> {% trans 'Your research' %}</legend>
@@ -102,6 +156,12 @@
         <p><input type="text" id="reference_papers" name="reference_papers" value="{{ subscription.reference_papers }}" placeholder="2310.01234, 10.1093/mnras/stad1234"></p>
         <p><label for="authors">{% blocktrans %}Authors to follow, in any category (up to {{ max_authors }}, comma-separated):{% endblocktrans %}</label>
         <input type="text" id="authors" name="authors" value="{{ subscription.authors }}" placeholder="Sara Seager, Yann LeCun"></p>
+        <p><label for="volume">{% trans 'How many papers' %}</label>
+        <select id="volume" name="volume">
+          {% for value, label in volumes %}<option value="{{ value }}" {% if value == subscription.volume %}selected{% endif %}>{% if value == 'top' %}{% blocktrans with n=premium.papers %}The {{ n }} best papers{% endblocktrans %}{% elif value == 'high' %}{% trans 'Every paper very close to my research (strict)' %}{% elif value == 'medium' %}{% trans 'Every paper close to my research (normal)' %}{% else %}{% trans 'Every paper somewhat close to my research (broad)' %}{% endif %}</option>{% endfor %}
+        </select></p>
+        <p class="help">{% trans 'With a research profile, an email can hold every paper above a closeness threshold rather than a fixed number (50 at most; the others are on its web page, where each paper shows its closeness).' %}</p>
+        <p><label class="inline"><input type="checkbox" name="bundle_alerts" value="1" {% if subscription.bundle_alerts %}checked{% endif %}> {% trans 'Put my scoop, citation, new version and publication alerts in this digest, instead of separate emails' %}</label></p>
         <p class="muted">{% trans 'You also get a synthesis of the week in your categories (in the weekly digest, or on Mondays), and the full AI summary of your 3 best papers is ready before you open the email.' %}</p>
       </fieldset>
       <fieldset>
@@ -127,10 +187,13 @@
         <select id="send_hour" name="send_hour">
           {% for h, label in hours %}<option value="{{ h }}" {% if h == send_hour %}selected{% endif %}>{{ label }}</option>{% endfor %}
         </select></p>
+        <details class="tz">
+        <summary>{% trans 'Time zone:' %} <span data-tz-label>{{ timezone|default:"Europe/Paris" }}</span> ({% trans 'change' %})</summary>
         <p><label for="timezone">{% trans 'Time zone' %}</label>
         <select id="timezone" name="timezone">
           {% for tz in timezones %}<option value="{{ tz }}" {% if tz == timezone %}selected{% endif %}>{{ tz }}</option>{% endfor %}
         </select></p>
+        </details>
         {% if not timezone %}
         <script>
           // first visit: preselect the time zone of this browser
@@ -139,16 +202,24 @@
             var select = document.getElementById('timezone');
             if (tz && select.querySelector('option[value="' + tz + '"]')) { select.value = tz; }
             else { select.value = 'Europe/Paris'; }
+            document.querySelector('[data-tz-label]').textContent = select.value;
           })();
         </script>
         {% endif %}
       </fieldset>
       <div class="form-actions">
-      <button type="submit" class="btn btn-lg">{% if subscription %}{% trans 'Save' %}{% else %}{% trans 'Start my digest' %}{% endif %}</button>
-      {% if subscription and subscription.active %}<button type="submit" class="btn btn-ghost" name="action" value="preview" formnovalidate>{% trans 'Send me a preview now' %}</button>{% endif %}
-      {% if subscription and digests|length > 1 %}<button type="submit" class="btn btn-ghost" name="action" value="delete" formnovalidate onclick="return confirm('{% trans 'Delete this digest?' %}')">{% trans 'Delete this digest' %}</button>{% endif %}
+      <button type="submit" class="btn btn-lg">{% if subscription.pk %}{% trans 'Save' %}{% else %}{% trans 'Start my digest' %}{% endif %}</button>
+      {% if subscription.pk and subscription.active %}<button type="submit" class="btn btn-ghost" name="action" value="preview" formnovalidate>{% trans 'Send me a preview now' %}</button>{% endif %}
+      {% if subscription.pk and digests|length > 1 %}<button type="submit" class="btn btn-ghost" name="action" value="delete" formnovalidate onclick="return confirm('{% trans 'Delete this digest?' %}')">{% trans 'Delete this digest' %}</button>{% endif %}
       </div>
     </form>
+    <aside class="try" id="digest-try" aria-live="polite">
+      <h2>{% trans 'What you would have received' %}</h2>
+      <p class="muted">{% trans 'From the latest arXiv announcement, with the settings of this form, saved or not. It changes as you edit them.' %}</p>
+      <div class="try-body" data-try-body><p class="muted">{% trans 'Choose a category to see it.' %}</p></div>
+    </aside>
+    </div>
   {% endif %}
 </div>
 {% endblock %}
+{% block scripts %}<script defer src="{% static_v 'summarizer/js/digest.js' %}"></script>{% endblock %}

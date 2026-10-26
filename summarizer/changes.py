@@ -241,11 +241,49 @@ def check_versions(now, limit=MAX_CHECKED_PER_DAY):
     return new
 
 
+def ready_items(alerts, base_url, lang, comparisons):
+    """(items, waiting): the comparisons of these alerts, written within the budget `comparisons` (a one-element
+    list); waiting is True when some are left for the next runs."""
+    items, waiting = [], False
+    for alert in alerts:
+        key = comparison_key(alert.arxiv_id, alert.old, alert.new)
+        row = Generated.objects.filter(kind='changes', key=key, lang=lang).first()
+        if row is None or row.status != 'done':
+            if comparisons[0] <= 0:
+                waiting = True
+                continue
+            comparisons[0] -= 1
+            row = generated.run_now('changes', key, lang, write(alert.arxiv_id, alert.old, alert.new, lang))
+        if row.status == 'done':
+            items.append(dict(row.data(), url='%s/%s/changes/%sv%d/?from=%d' % (
+                base_url, lang, alert.arxiv_id.replace('/', '--'), alert.new, alert.old)))
+    return items, waiting
+
+
+def bundle_section(user, base_url, lang):
+    """The new versions of followed papers as a section of the user's digest (see digest_bundle)."""
+    alerts = list(VersionAlert.objects.filter(user=user, emailed=False))
+    if not alerts or not access.has_tool(user, 'changes'):
+        return None
+    items, waiting = ready_items(alerts, base_url, lang, [MAX_COMPARISONS_PER_RUN])
+    if waiting or not items:
+        return None  # in the next digest, with all of them
+    return {'title': translation.gettext('New versions of the papers you follow'), 'more': 0,
+            'manage_url': '%s/%s/citations/' % (base_url, lang),
+            'commit': lambda: VersionAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(emailed=True),
+            'items': [{'title': '%s (v%s → v%s)' % (i.get('title', ''), i.get('old', ''), i.get('new', '')), 'url': i['url'],
+                       'label': translation.gettext('The results changed') if i.get('results_changed') else
+                       translation.gettext('Same main results'), 'note': i.get('verdict', '')} for i in items]}
+
+
 def send_alerts(now, budget, base_url=digest.BASE_URL):
-    """Write the comparisons the queued alerts need (a few per run), then email them. Returns the emails sent."""
+    """Write the comparisons the queued alerts need (a few per run), then email them. Returns the emails sent.
+    The alerts of a user whose digest carries them are left for it (see digest_bundle)."""
     from django.contrib.auth.models import User
-    comparisons = MAX_COMPARISONS_PER_RUN
+    from . import digest_bundle
+    comparisons = [MAX_COMPARISONS_PER_RUN]
     suppressed = mailcheck.suppressed()
+    bundled = digest_bundle.bundled_users()
     sent = 0
     for user in User.objects.filter(pk__in=list(VersionAlert.objects.filter(emailed=False)
                                                  .values_list('user_id', flat=True).distinct())):
@@ -256,20 +294,8 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
             VersionAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(emailed=True)
             continue
         lang = user.digests.values_list('lang', flat=True).first() or 'en'
-        items, waiting = [], False
-        for alert in alerts:
-            key = comparison_key(alert.arxiv_id, alert.old, alert.new)
-            row = Generated.objects.filter(kind='changes', key=key, lang=lang).first()
-            if row is None or row.status != 'done':
-                if comparisons <= 0:
-                    waiting = True
-                    continue
-                comparisons -= 1
-                row = generated.run_now('changes', key, lang, write(alert.arxiv_id, alert.old, alert.new, lang))
-            if row.status == 'done':
-                items.append(dict(row.data(), url='%s/%s/changes/%sv%d/?from=%d' % (
-                    base_url, lang, alert.arxiv_id.replace('/', '--'), alert.new, alert.old)))
-        if waiting or not items:
+        items, waiting = ready_items(alerts, base_url, lang, comparisons)
+        if waiting or not items or user.pk in bundled:
             continue  # the rest of the comparisons are written in the next runs, then one email has them all
         context = {'items': items, 'count': len(items), 'base_url': base_url,
                    'manage_url': '%s/%s/citations/' % (base_url, lang)}
