@@ -26,7 +26,20 @@
 .recent-conversations { margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .recent-conversations summary { cursor: pointer; font-weight: 600; }
 .recent-conversations ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-.recent-conversations a { display: block; color: var(--text); text-decoration: none; }
+.recent-conversations li { display: flex; gap: 10px; align-items: flex-start; }
+.recent-conversations a { display: block; flex: 1; min-width: 0; color: var(--text); text-decoration: none; }
+.conversation-actions { display: flex; gap: 4px; flex: none; }
+.conversation-actions button { padding: 4px 6px; border: 0; border-radius: 6px; background: none; color: var(--text-muted); cursor: pointer; }
+.conversation-actions button:hover { background: var(--bg-soft, #f4f4f5); color: var(--text); }
+.result-item { padding-right: 84px; }
+.result-add { position: absolute; top: 10px; right: 10px; padding: 4px 12px; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--accent); font: 600 12px var(--font); cursor: pointer; }
+.result-add:disabled { border-color: var(--border); color: var(--text-muted); cursor: default; }
+.result-abstract { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.result-item.expanded .result-abstract { display: block; }
+.result-more { padding: 0; border: 0; background: none; color: var(--accent); font: 12px var(--font); cursor: pointer; }
+#selected-papers li[draggable="true"] { cursor: grab; }
+#selected-papers li.dragging { opacity: .5; }
+#selected-papers li.drop-before { box-shadow: 0 -3px 0 var(--accent); }
 .recent-conversations a:hover strong { color: var(--accent); }
 .recent-conversations small { color: var(--text-muted); }
 
@@ -82,7 +95,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 #add-paper:hover { background: var(--bg-soft); }
 
 .chat-page .chatbot-container { margin-top: 24px; }
-.chat-page .chatbot-body .chatbot-messages { height: auto; min-height: 220px; max-height: 70vh; }
+.chat-page .chatbot-body .chatbot-messages { height: auto; min-height: 120px; max-height: 70vh; }
 .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 12px; }
 .chat-suggestions[hidden], .chat-suggestions span[hidden] { display: none; }
 .chat-suggestions span { display: contents; }
@@ -113,7 +126,13 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 <div class="chat-page" id="chat-page"
   data-lang="{{ LANGUAGE_CODE }}" data-room="{{ room }}" data-max="{{ max_nb_paper }}"
   data-api="{% url 'arxiv_api' %}" data-sources-url="{% url 'chat_sources' %}"
-  data-quota-url="{% url 'chat_quota' %}" data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
+  data-quota-url="{% url 'chat_quota' %}" data-share-url="{% url 'chat_share' %}"
+  data-delete-url="{% url 'chat_delete' 'ROOM' %}" data-rename-url="{% url 'chat_rename' 'ROOM' %}"
+  data-delete-confirm="{% trans 'Delete this conversation? Its questions and answers, and its shared link if any, will be gone.' %}"
+  data-rename-prompt="{% trans 'Name of this conversation (empty: its first question)' %}"
+  data-share-until="{% trans 'This link works until {date}.' %}"
+  data-more="{% trans 'Show the abstract' %}" data-less="{% trans 'Hide the abstract' %}"
+  data-move-up="{% trans 'Move up' %}" data-drag="{% trans 'Drag to reorder' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
   data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
   data-export-url="{% url 'chat_export' 'FMT' %}" data-references-url="{% url 'chat_references' 'PAPER_ID' %}"
   data-ai="{% trans 'AI -' %}" data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
@@ -175,8 +194,12 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   <summary>{% trans 'Your recent conversations' %}</summary>
   <ul>
     {% for c in conversations %}
-    <li><a href="?c={{ c.room|urlencode }}&amp;ids={{ c.ids|urlencode }}"><strong>{{ c.question|default:c.title|truncatechars:110 }}</strong>
-      <small>{{ c.date|date:"SHORT_DATE_FORMAT" }} · {% blocktrans count n=c.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {{ c.title|truncatechars:70 }}</small></a></li>
+    <li data-room="{{ c.room }}"><a href="?c={{ c.room|urlencode }}&amp;ids={{ c.ids|urlencode }}"><strong>{{ c.name|default:c.question|default:c.title|truncatechars:110 }}</strong>
+      <small>{{ c.date|date:"SHORT_DATE_FORMAT" }} · {% blocktrans count n=c.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {{ c.title|truncatechars:70 }}</small></a>
+      <span class="conversation-actions">
+        <button type="button" data-rename="{{ c.name }}" title="{% trans 'Rename' %}" aria-label="{% trans 'Rename' %}"><i class="fas fa-pen"></i></button>
+        <button type="button" data-delete title="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"><i class="fas fa-trash-alt"></i></button>
+      </span></li>
     {% endfor %}
   </ul>
   {% if not request.user.is_authenticated %}<p class="chat-note"><small>{% trans 'Without an account, your conversations are kept for this connection only. A free account keeps them on all your devices.' %}</small></p>{% endif %}
@@ -237,7 +260,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   <div class="chatbot-body">
     {% include 'summarizer/chat_figures.html' %}
     {% include 'summarizer/chat_evidence_labels.html' %}
-    <div class="chatbot-messages" aria-live="polite">{% for chat in chathistory %}{% if chat.kind == 'table' %}
+    <div class="chatbot-messages" aria-live="polite" data-empty="{% trans 'Ask a question about the selected papers, or pick a suggestion below. Each claim of the answer comes with the passage of the paper behind it.' %}">{% for chat in chathistory %}{% if chat.kind == 'table' %}
       <div class="chatbot-message">{% if chat.user %}{{ chat.user }} -{% else %}{% trans 'You -' %}{% endif %} {% trans 'Comparison table' %}: {{ chat.query }}</div>
       <div class="chatbot-response chat-table-block" data-table="{{ chat.evidence_json }}"></div>{% else %}
       <div class="chatbot-message">{% if chat.user %}{{ chat.user }} -{% else %}{% trans 'You -' %}{% endif %} {{ chat.query }}</div>
@@ -283,7 +306,8 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
       <button type="button" id="new-conversation"><i class="fas fa-plus"></i> {% trans 'New conversation' %}</button>
     </div>
     <div class="share-box" id="share-box"{% if not share %} hidden{% endif %}>
-      <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %}</p>
+      <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %}
+        <span id="share-expires">{% if share.expires %}{% blocktrans with date=share.expires|date:"DATE_FORMAT" %}This link works until {{ date }}.{% endblocktrans %}{% endif %}</span></p>
       <div class="share-row">
         <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}" value="{% if share %}{{ request.scheme }}://{{ request.get_host }}{% url 'chat_shared' share.token %}{% endif %}">
         <button type="button" id="share-copy">{% trans 'Copy' %}</button>

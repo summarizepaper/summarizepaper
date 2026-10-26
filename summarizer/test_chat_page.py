@@ -12,7 +12,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.test import Client, TransactionTestCase, override_settings
 
 from summarizer import access, activity, assistant, chat_page, chat_table, evidence
-from summarizer.models import AIassistant, ArxivPaper, ChatShare, PaperText
+from summarizer.models import AIassistant, ArxivPaper, ChatConversation, ChatShare, PaperText
 from summarizer.routing import websocket_urlpatterns
 from summarizer.test_tools import ToolsTestCase
 
@@ -128,6 +128,14 @@ class SourcesTests(TransactionTestCase):  # the answers run in a thread of their
         self.assertEqual(sent[0]['papers'][0]['arxiv_id'], '2101.00001v2')
         self.assertEqual(list(AIassistant.objects.order_by('pk').values_list('papers', flat=True)),
                          ['2101.00001v2', '2101.00001v2,2101.00002v1'])
+
+    def test_papers_chosen_for_the_question_come_last_so_the_rest_stays_cached(self):
+        PaperText.objects.filter(arxiv_id='2101.00001v2').update(text='## Intro\n\n' + 'Long clouds text. ' * 5000)
+        with mock.patch.object(assistant, 'MAX_CONTEXT_CHARS', 2 * assistant.HEADER_CHARS + 5000):
+            context, supplied = assistant.build_sources(['2101.00001v2', '2101.00002v1'], 'How thick are the clouds?')
+        self.assertEqual([s['arxiv_id'] for s in supplied], ['2101.00001v2', '2101.00002v1'])  # as asked
+        self.assertIn('selected', supplied[0]['left_out'])
+        self.assertLess(context.index('arXiv: 2101.00002v1'), context.index('arXiv: 2101.00001v2'))
 
     def test_history_is_only_about_the_same_papers(self):
         AIassistant.objects.create(arxiv_id='room', lang='en', ip_address='a', query='Old', response='About A',
@@ -374,6 +382,38 @@ class PageTests(ToolsTestCase):
         page = Client().get('/en/chat/')
         self.assertNotContains(page, 'id="search-source"')
         self.assertContains(page, 'data-example=')
+
+    def test_a_conversation_can_be_named_and_deleted_by_its_owner_only(self):
+        room = 'abcdef0123456789'
+        AIassistant.objects.create(arxiv_id=room, lang='en', ip_address=LOCAL_IP, query='First question?', response='A',
+                                   papers='2101.00001v1,2101.00002v1')
+        stranger = self.client_for(self.user('stranger'))
+        self.assertEqual(stranger.post('/en/chat/conversation/%s/rename/' % room, {'title': 'Mine'}).status_code, 404)
+        self.assertEqual(Client().post('/en/chat/conversation/%s/rename/' % room, {'title': '  Clouds   review '}).json()['title'], 'Clouds review')
+        self.assertEqual(Client().get('/en/chat/').context['conversations'][0]['name'], 'Clouds review')
+        self.assertContains(Client().get('/en/chat/'), 'Clouds review')
+        Client().post('/en/chat/conversation/%s/rename/' % room, {'title': ''})
+        self.assertFalse(ChatConversation.objects.exists())
+        url = Client().post('/en/chat/share/', {'room': room}).json()['url']
+        self.assertEqual(stranger.post('/en/chat/conversation/%s/delete/' % room).status_code, 404)
+        self.assertEqual(Client().post('/en/chat/conversation/%s/delete/' % room).json(), {'status': 'done'})
+        self.assertFalse(AIassistant.objects.filter(active=True).exists())
+        self.assertEqual(Client().get(url.split('testserver', 1)[1]).status_code, 404)  # the shared link stops
+        self.assertEqual(Client().get('/en/chat/').context['conversations'], [])
+        self.assertNotContains(Client().get('/en/chat/?c=' + room), 'First question?')
+
+    def test_a_shared_link_expires(self):
+        room = 'abcdef0123456789'
+        AIassistant.objects.create(arxiv_id=room, lang='en', ip_address=LOCAL_IP, query='Q?', response='A', papers='2101.00001v1')
+        data = Client().post('/en/chat/share/', {'room': room}).json()
+        link = ChatShare.objects.get()
+        self.assertEqual(data['expires'], link.expires.date().isoformat())
+        self.assertEqual((link.expires - link.upto).days, chat_page.SHARE_DAYS)
+        path = data['url'].split('testserver', 1)[1]
+        self.assertEqual(Client().get(path).status_code, 200)
+        link.expires = link.upto - datetime.timedelta(seconds=1)
+        link.save()
+        self.assertEqual(Client().get(path).status_code, 404)
 
     def test_the_arxiv_relay_takes_several_ids(self):
         with mock.patch('summarizer.views.requests.get') as get:

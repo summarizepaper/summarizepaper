@@ -94,7 +94,7 @@
         var first = authors.length ? (authors[0].getElementsByTagName('name')[0] || {}).textContent || '' : '';
         return {id: id.indexOf('/abs/') >= 0 ? canonical(id.split('/abs/')[1]) : '', title: text('title'),
                 author: first.trim() + (authors.length > 1 ? ' et al.' : ''), published: text('published').slice(0, 10),
-                label: text('label'), venue: text('venue')};
+                label: text('label'), venue: text('venue'), summary: text('summary')};
       }).filter(function (paper) {return paper.id && paper.title;});
     });
   }
@@ -129,24 +129,38 @@
     example.addEventListener('click', function () {paperId.value = example.dataset.id; paperId.focus();});
   });
 
+  // a search result: its title, authors and source, its abstract on demand, and Add
   function resultItem(paper) {
-    var item = node('button', 'paper-item');
-    item.type = 'button';
+    var item = node('div', 'paper-item result-item');
     item.dataset.id = paper.id;
+    var add = node('button', 'result-add', T.add);
+    add.type = 'button';
+    add.addEventListener('click', function () {
+      var result = addPaper(paper);
+      if (result === 'full') note(searchNote, T.fullSelection, 'error');
+    });
+    item.appendChild(add);
     item.appendChild(node('strong', '', paper.title));
     if (paper.author) item.appendChild(node('small', '', T.firstAuthor + ' ' + paper.author));
     var venue = /^(arXiv|OpenAlex|Crossref|Europe PMC)?$/.test(paper.venue || '') ? '' : paper.venue;  // a journal, not a source
     item.appendChild(node('small', '', [T.published + ' ' + day(paper.published), venue, paper.label].filter(Boolean).join(' · ')));
-    item.classList.toggle('active', !!find(paper.id));
-    item.addEventListener('click', function () {
-      var result = addPaper(paper);
-      if (result === 'full') note(searchNote, T.fullSelection, 'error');
-    });
+    if (paper.summary) {
+      item.appendChild(node('p', 'result-abstract', paper.summary));
+      var more = node('button', 'result-more', T.more);
+      more.type = 'button';
+      more.addEventListener('click', function () {more.textContent = item.classList.toggle('expanded') ? T.less : T.more;});
+      item.appendChild(more);
+    }
+    mark(item);
     return item;
   }
-  function markResults() {
-    searchResults.querySelectorAll('.paper-item').forEach(function (item) {item.classList.toggle('active', !!find(item.dataset.id));});
+  function mark(item) {
+    var chosen = !!find(item.dataset.id), add = item.querySelector('.result-add');
+    item.classList.toggle('active', chosen);
+    add.disabled = chosen;
+    add.textContent = chosen ? T.added : T.add;
   }
+  function markResults() {searchResults.querySelectorAll('.result-item').forEach(mark);}
 
   // an arXiv id without version gives the latest version: arXiv answers with it
   function addById(value, quiet) {
@@ -187,6 +201,16 @@
     ingest(entry);
     selectionChanged();
     return 'added';
+  }
+
+  var dragged = null;
+  // entry goes just before target in the selection
+  function move(entry, target) {
+    if (!target || entry === target) return;
+    selected.splice(selected.indexOf(entry), 1);
+    selected.splice(selected.indexOf(target), 0, entry);
+    selected.forEach(function (e) {list.appendChild(e.item);});
+    selectionChanged();
   }
 
   function removePaper(id) {
@@ -242,6 +266,10 @@
       pdf.setAttribute('data-pdf-panel', '');
       actions.appendChild(pdf);
     }
+    var up = node('button', 'move-up', '↑ ' + T.moveUp);
+    up.type = 'button';
+    up.addEventListener('click', function () {move(entry, selected[selected.indexOf(entry) - 1]);});
+    actions.appendChild(up);
     var refs = node('button', '', T.references);
     refs.type = 'button';
     refs.addEventListener('click', function () {references(entry);});
@@ -255,6 +283,14 @@
     remove.appendChild(node('i', 'fas fa-times'));
     remove.addEventListener('click', function () {removePaper(entry.id);});
     item.appendChild(remove);
+    // the order of the papers is the order of the answers and of the table's rows
+    item.draggable = true;
+    item.title = T.drag;
+    item.addEventListener('dragstart', function (event) {dragged = entry; item.classList.add('dragging'); event.dataTransfer.effectAllowed = 'move';});
+    item.addEventListener('dragend', function () {dragged = null; item.classList.remove('dragging');});
+    item.addEventListener('dragover', function (event) {if (dragged && dragged !== entry) {event.preventDefault(); item.classList.add('drop-before');}});
+    item.addEventListener('dragleave', function () {item.classList.remove('drop-before');});
+    item.addEventListener('drop', function (event) {event.preventDefault(); item.classList.remove('drop-before'); if (dragged) move(dragged, entry);});
     return item;
   }
 
@@ -335,6 +371,7 @@
   var sourcesTimer = null;
   function selectionChanged() {
     nopap.hidden = selected.length > 0;
+    selected.forEach(function (e, i) {e.item.querySelector('.move-up').hidden = i === 0;});
     footer.hidden = selected.length === 0;
     count.textContent = selected.length ? selected.length + '/' + MAX : '';
     var ids = selected.map(function (e) {return e.id;}).join(',');
@@ -727,6 +764,28 @@
   }
 
   tools.share(root, function () {return room;});
+
+  // the recent conversations: rename (an empty name goes back to the first question) and delete
+  var recent = root.querySelector('.recent-conversations');
+  if (recent) recent.addEventListener('click', function (event) {
+    var button = event.target.closest('button'), line = button && button.closest('li');
+    if (!line) return;
+    var url = function (pattern) {return pattern.replace('ROOM', encodeURIComponent(line.dataset.room));};
+    if (button.hasAttribute('data-delete')) {
+      if (!confirm(T.deleteConfirm)) return;
+      tools.post(root, url(T.deleteUrl)).then(function () {
+        line.remove();
+        if (!recent.querySelector('li')) recent.remove();
+      }).catch(function () {alert(T.error);});
+    } else if (button.hasAttribute('data-rename')) {
+      var name = prompt(T.renamePrompt, button.dataset.rename);
+      if (name === null) return;
+      tools.post(root, url(T.renameUrl), {title: name}).then(function (data) {
+        button.dataset.rename = data.title;
+        if (data.title) line.querySelector('strong').textContent = data.title;
+      }).catch(function () {alert(T.error);});
+    }
+  });
 
   // --- the export of the conversation -------------------------------------------
 

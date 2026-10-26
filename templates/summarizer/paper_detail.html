@@ -6,6 +6,7 @@
  data-sources-url="{% url 'chat_sources' %}" data-quota-url="{% url 'chat_quota' %}"
  data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
  data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
+ data-share-until="{% trans 'This link works until {date}.' %}"
  data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}" data-ask-again="{% trans 'Ask again' %}"
  data-sources="{% trans 'Sources' %}" data-stopped="{% trans 'Stopped.' %}"
  data-export-general="{% trans 'general knowledge' %}" data-export-not-found="{% trans 'passage not found: check' %}"
@@ -177,7 +178,7 @@
         <button type="button" id="share-conversation"{% if not chathistory %} disabled{% endif %}><i class="fas fa-share-alt"></i> {% trans 'Share' %}</button>
       </div>
       <div class="share-box" id="share-box" hidden>
-        <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %}</p>
+        <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %} <span id="share-expires"></span></p>
         <div class="share-row">
           <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}">
           <button type="button" id="share-copy">{% trans 'Copy' %}</button>

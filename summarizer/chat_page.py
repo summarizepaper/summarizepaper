@@ -2,11 +2,12 @@
 
 A conversation is a room (a random id the page keeps in its URL, ?c=) holding the questions, answers and
 comparison tables of one reader; opening the URL again shows it to that reader only (account, else IP), with
-the papers it was last about. Its owner can share it: a public, read-only page of the conversation as it was
-when shared. Besides the page, the endpoints the page script calls: what the assistant will read of each
+the papers it was last about. Its owner can name it, delete it, or share it: a public, read-only page of the
+conversation as it was when shared, for SHARE_DAYS days. Besides the page, the endpoints the page script calls: what the assistant will read of each
 selected paper, the references of a paper to add one in a click, and the BibTeX, RIS or Markdown of the
 selection.
 """
+import datetime
 import logging
 import re
 import secrets
@@ -23,7 +24,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from . import access, assistant, citations, exports, sources
-from .models import AIassistant, ArxivPaper, ChatShare
+from .models import AIassistant, ArxivPaper, ChatConversation, ChatShare
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ S2_REFERENCES = 'https://api.semanticscholar.org/graph/v1/paper/%s/references'
 MAX_REFERENCES = 100
 REFERENCES_SECONDS = 24 * 3600
 S2_RETRY_SECONDS = 1.5
+SHARE_DAYS = 90  # a shared link works this long after its last sharing
+MAX_NAME_CHARS = 120
 TABLE_COLUMNS = [('question', _('Question')), ('data', _('Data')), ('method', _('Method')),
                  ('sample', _('Sample size and scale')), ('results', _('Main results')),
                  ('limitations', _('Limitations'))]
@@ -64,7 +67,9 @@ def recent_conversations(request, current=''):
             found[row.arxiv_id]['question'] = row.query  # rows come newest first: this ends as the first question
     titles = dict(ArxivPaper.objects.filter(arxiv_id__in={c['papers'][0] for c in found.values()})
                   .values_list('arxiv_id', 'title'))
+    names = dict(owned(ChatConversation.objects.filter(room__in=found), request).values_list('room', 'title'))
     for item in found.values():
+        item['name'] = names.get(item['room'], '')
         item['title'] = ' '.join((titles.get(item['papers'][0]) or item['papers'][0]).split())
         item['ids'] = ','.join(item['papers'])
     return [found[room] for room in order]
@@ -258,8 +263,10 @@ def share(request):
                          user=request.user if request.user.is_authenticated else None,
                          ip_address=None if request.user.is_authenticated else access.hash_ip(access.client_ip(request)))
     link.upto = timezone.now()
+    link.expires = link.upto + datetime.timedelta(days=SHARE_DAYS)
     link.save()
-    return JsonResponse({'url': request.build_absolute_uri('/%s/chat/shared/%s/' % (get_language(), link.token))})
+    return JsonResponse({'url': request.build_absolute_uri('/%s/chat/shared/%s/' % (get_language(), link.token)),
+                         'expires': link.expires.date().isoformat()})
 
 
 @require_POST
@@ -274,6 +281,8 @@ def shared(request, token):
     """The public page of a shared conversation: its questions (never who asked), answers with their sources,
     tables, and the papers to go on with."""
     link = get_object_or_404(ChatShare, token=token, active=True)
+    if link.expires and link.expires < timezone.now():
+        raise Http404
     rows = AIassistant.objects.filter(arxiv_id=link.room, active=True, created__lte=link.upto)
     rows = rows.filter(user=link.user) if link.user_id else rows.filter(user=None, ip_address=link.ip_address)
     rows = list(rows.order_by('created'))
@@ -289,3 +298,37 @@ def shared(request, token):
         'continue_ids': ','.join(ids[-assistant.MAX_PAPERS:]), 'first_question': rows[0].query,
         'preview': ' '.join(preview.split())[:300],  # what a link preview (Open Graph) shows
     })
+
+
+def owned_room(request, room):
+    """The visitor's exchanges of a chat page conversation (404 when they have none there)."""
+    if not ROOM_RE.match(room):
+        raise Http404
+    rows = owned(AIassistant.objects.filter(arxiv_id=room, active=True), request)
+    if not rows.exists():
+        raise Http404
+    return rows
+
+
+@require_POST
+def delete_conversation(request, room):
+    """Delete a conversation of the visitor: its exchanges leave their history and its shared link stops."""
+    owned_room(request, room).update(active=False)
+    owned(ChatShare.objects.filter(room=room, active=True), request).update(active=False)
+    owned(ChatConversation.objects.filter(room=room), request).delete()
+    return JsonResponse({'status': 'done'})
+
+
+@require_POST
+def rename_conversation(request, room):
+    """Name a conversation of the visitor; an empty name goes back to its first question."""
+    owned_room(request, room)
+    title = ' '.join(request.POST.get('title', '').split())[:MAX_NAME_CHARS]
+    names = owned(ChatConversation.objects.filter(room=room), request)
+    if not title:
+        names.delete()
+    elif not names.update(title=title):
+        ChatConversation.objects.create(room=room, title=title,
+                                        user=request.user if request.user.is_authenticated else None,
+                                        ip_address=None if request.user.is_authenticated else access.hash_ip(access.client_ip(request)))
+    return JsonResponse({'status': 'done', 'title': title})

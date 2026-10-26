@@ -10684,3 +10684,48 @@ msgstr "Par exemple :"
 #: templates/summarizer/chat.html
 msgid "a PubMed, PMC or HAL link"
 msgstr "un lien PubMed, PMC ou HAL"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Delete this conversation? Its questions and answers, and its shared link if "
+"any, will be gone."
+msgstr ""
+"Supprimer cette conversation ? Ses questions et réponses, et son lien de "
+"partage s’il y en a un, disparaîtront."
+
+#: templates/summarizer/chat.html
+msgid "Name of this conversation (empty: its first question)"
+msgstr "Nom de cette conversation (vide : sa première question)"
+
+#: templates/summarizer/chat.html
+msgid "This link works until {date}."
+msgstr "Ce lien fonctionne jusqu’au {date}."
+
+#: templates/summarizer/chat.html
+msgid "This link works until %(date)s."
+msgstr "Ce lien fonctionne jusqu’au %(date)s."
+
+#: templates/summarizer/chat.html
+msgid "Show the abstract"
+msgstr "Afficher le résumé"
+
+#: templates/summarizer/chat.html
+msgid "Hide the abstract"
+msgstr "Masquer le résumé"
+
+#: templates/summarizer/chat.html
+msgid "Move up"
+msgstr "Monter"
+
+#: templates/summarizer/chat.html
+msgid "Drag to reorder"
+msgstr "Glisser pour réordonner"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Ask a question about the selected papers, or pick a suggestion below. Each "
+"claim of the answer comes with the passage of the paper behind it."
+msgstr ""
+"Posez une question sur les articles sélectionnés, ou choisissez une "
+"suggestion ci-dessous. Chaque affirmation de la réponse sera accompagnée du "
+"passage de l’article qui l’étaye."

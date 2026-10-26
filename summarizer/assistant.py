@@ -379,7 +379,10 @@ def build_sources(arxiv_ids, question=''):
     budgets = share([len(r[0]) + HEADER_CHARS for r in readable], MAX_CONTEXT_CHARS)
     supplied = [_paper_source(p, max(b - HEADER_CHARS, 0), tags.get(p.arxiv_id, ''), r, question)
                 for p, b, r in zip(ordered, budgets, readable)]
-    return '\n\n'.join(s['block'] for s in supplied), supplied
+    # the papers whose passages depend on the question come last: the others, the same from one question to the
+    # next, stay the start of the prompt, which OpenAI bills at the cached rate when it repeats
+    stable = sorted(supplied, key=lambda s: 'selected' in s['left_out'])
+    return '\n\n'.join(s['block'] for s in stable), supplied
 
 
 def build_context(arxiv_ids):

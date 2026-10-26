@@ -72,18 +72,23 @@
     return grow;
   }
 
+  // the text of an answer a reader sees as prose: not code, equations or links
+  function proseTexts(parent, list) {
+    Array.prototype.forEach.call(parent.childNodes || [], function (child) {
+      if (child.nodeType === 3) list.push(child);
+      else if (child.nodeType === 1 && !/^(CODE|PRE|A|MJX-CONTAINER)$/i.test(child.tagName) &&
+               !/(^| )chat-math( |$)/.test(child.className || '')) proseTexts(child, list);
+    });
+    return list;
+  }
+
   // [Smith et al. 2021] in an answer becomes a link to the paper's page, its title shown on hover
   function linkTags(element, papers) {
     var body = element.querySelector('.chat-answer');
     var known = (papers || []).filter(function (p) {return p.tag && p.url;});
     if (!body || !known.length) return;
     var pattern = new RegExp(known.map(function (p) {return p.tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');}).join('|'), 'g');
-    var walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {acceptNode: function (n) {
-      return n.parentElement.closest('code, pre, .chat-math, mjx-container, a') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
-    }});
-    var texts = [];
-    while (walker.nextNode()) texts.push(walker.currentNode);
-    texts.forEach(function (text) {
+    proseTexts(body, []).forEach(function (text) {
       var value = text.nodeValue, last = 0, match, parts = [];
       pattern.lastIndex = 0;
       while ((match = pattern.exec(value))) {
@@ -99,7 +104,7 @@
       if (!parts.length) return;
       parts.push(document.createTextNode(value.slice(last)));
       parts.forEach(function (part) {text.parentNode.insertBefore(part, text);});
-      text.remove();
+      text.parentNode.removeChild(text);
     });
   }
 
@@ -126,6 +131,11 @@
       post(root, labels.shareUrl, {room: room()}).then(function (data) {
         url.value = data.url;
         stop.dataset.token = data.url.split('/shared/')[1].replace(/\/$/, '');
+        var until = box.querySelector('#share-expires');
+        if (until && data.expires) {
+          until.textContent = labels.shareUntil.replace('{date}', new Date(data.expires + 'T00:00:00Z')
+            .toLocaleDateString(document.documentElement.lang || undefined, {year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'}));
+        }
         box.hidden = false;
         url.select();
       }).catch(function () {alert(labels.shareFailed);}).then(function () {button.disabled = false;});

@@ -268,11 +268,24 @@ class ChatShare(models.Model):
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
     ip_address = models.TextField(blank=True, null=True)  # the owner without an account, as AIassistant keeps it
     upto = models.DateTimeField()
+    expires = models.DateTimeField(blank=True, null=True)  # the link stops working then; sharing again extends it
     created = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 
     def __str__(self):
         return '%s (%s)' % (self.token, self.room)
+
+
+class ChatConversation(models.Model):
+    """The name its owner gave to a chat page conversation (its room), shown in their recent conversations."""
+    room = models.CharField(max_length=100)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    ip_address = models.TextField(blank=True, null=True)  # the owner without an account, as AIassistant keeps it
+    title = models.CharField(max_length=120)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
 
 
 class DigestSubscription(models.Model):
