@@ -198,7 +198,8 @@ def fetch_references(arxiv_id):
     else OpenAlex; None when neither answers."""
     found = s2_references(arxiv_id)
     if not found:
-        found = openalex_references(arxiv_id) or found
+        fallback = openalex_references(arxiv_id)
+        found = fallback if fallback is not None else found  # an empty list: 'none found', not 'unavailable'
     if found is None:
         return None
     # a reference cannot be younger than the paper citing it (OpenAlex sometimes merges records)
