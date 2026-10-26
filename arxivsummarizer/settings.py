@@ -42,6 +42,8 @@ SECRETCMTA = os.getenv('SECRETCMTA')
 DEFAULT_FROM_EMAIL = 'SummarizePaper <contact@summarizepaper.com>'
 # MX lookups before emailing an address (summarizer/mailcheck.py); tests turn them off
 MAILCHECK_DNS = sys.argv[1:2] != ['test']
+# per-visitor request limits (access.throttled); off in the test suite, whose requests all come from one address
+THROTTLE = sys.argv[1:2] != ['test']
 
 #Premium subscriptions, see summarizer/billing.py
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')

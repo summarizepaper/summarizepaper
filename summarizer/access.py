@@ -140,6 +140,21 @@ def run_quota(user, hashed_ip):
     return True, None
 
 
+def throttled(name, request, per_minute):
+    """True when this visitor (account, else IP) already made per_minute requests of this kind this minute."""
+    from django.conf import settings
+    from django.core.cache import cache
+    if not settings.THROTTLE:
+        return False
+    who = 'u%s' % request.user.pk if request.user.is_authenticated else hash_ip(client_ip(request))[:16]
+    key = 'throttle:%s:%s:%d' % (name, who, int(timezone.now().timestamp()) // 60)
+    cache.add(key, 0, 120)
+    try:
+        return cache.incr(key) > per_minute
+    except ValueError:
+        return False
+
+
 def chat_quota_left(user, hashed_ip):
     if user is not None and user.is_superuser:
         return 1

@@ -64,6 +64,11 @@ def robots_txt(request):
         "Disallow: /*/register/",
         "Disallow: /*/logout/",
         "Disallow: /google/",
+        # Endless result pages (each carries its own window token) and downloads: scrapers fetched them by the
+        # thousand an hour on 25-26 October, each search costing OpenAlex and arXiv calls
+        "Disallow: /*/search-results/",
+        "Disallow: /*/export/",
+        "Disallow: /*/bibtex/",
         "Sitemap: https://www.summarizepaper.com/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
@@ -211,7 +216,16 @@ def logout_view(request):
     # Redirect the user to the login page or any other page of your choice
     return redirect('login')
 
+SEARCHES_PER_MINUTE = {'anonymous': 12, 'user': 30}  # result pages; a reader turns a few pages a minute
+
+
 def search_results(request):
+    if access.throttled('search', request, SEARCHES_PER_MINUTE['user' if request.user.is_authenticated else 'anonymous']):
+        # scrapers paged through searches by the thousand (25-26 October); a person never gets here
+        response = HttpResponse(_('Too many searches in a minute. Please wait a moment and try again.'), status=429,
+                                content_type='text/plain; charset=utf-8')
+        response['Retry-After'] = '60'
+        return response
     query = (request.GET.get('q') or '').strip()
     if query:
         identifier = unified_search.arxiv_identifier(query)

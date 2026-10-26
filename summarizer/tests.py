@@ -2063,3 +2063,26 @@ class RunLockPerLanguageTests(TestCase):
         run = HeadlessSummary('2610.22462v1', 'fr')
         self.assertEqual(run.arxiv_group_name, 'ar_2610.22462v1_fr')
         self.assertIsNotNone(run.channel_layer)
+
+
+@override_settings(THROTTLE=True)
+class SearchThrottleTests(TestCase):
+    """Scrapers paged through searches by the thousand an hour (25-26 October)."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def test_a_visitor_gets_a_429_past_the_searches_of_a_minute_and_crawlers_are_kept_off(self):
+        from summarizer.views import SEARCHES_PER_MINUTE
+        client = Client()
+        for _ in range(SEARCHES_PER_MINUTE['anonymous']):
+            self.assertEqual(client.get('/en/search-results/').status_code, 200)
+        refused = client.get('/en/search-results/?page=2')
+        self.assertEqual((refused.status_code, refused['Retry-After']), (429, '60'))
+        user = User.objects.create_user('reader', password='x')
+        client.force_login(user)  # an account has its own, larger allowance
+        self.assertEqual(client.get('/en/search-results/').status_code, 200)
+        robots = Client().get('/robots.txt').content.decode()
+        for rule in ('Disallow: /*/search-results/', 'Disallow: /*/export/', 'Disallow: /*/bibtex/'):
+            self.assertIn(rule, robots)
