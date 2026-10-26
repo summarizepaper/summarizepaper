@@ -145,6 +145,7 @@ UNFOLD = {
         "navigation": [
             {"title": "Pilotage", "items": [
                 {"title": "Tableau de bord", "icon": "dashboard", "link": reverse_lazy("admin:index")},
+                {"title": "Activité du jour", "icon": "timeline", "link": reverse_lazy("admin_activity")},
                 {"title": "Quotas et modèles IA", "icon": "tune",
                  "link": reverse_lazy("admin:summarizer_sitesettings_changelist")},
                 {"title": "Articles de blog", "icon": "article", "link": reverse_lazy("admin:summarizer_guide_changelist")},

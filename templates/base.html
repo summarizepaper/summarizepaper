@@ -99,6 +99,9 @@
         {% if request.user.is_authenticated %}
         <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
         {% endif %}
+        {% if request.user.is_staff %}
+        <li><a href="/admin/" class="nav-admin" title="Admin"><i class="fas fa-user-shield"></i> Admin</a></li>
+        {% endif %}
         <li class="lang-switch">
           <button type="button" aria-haspopup="true" aria-expanded="false">
             <i class="fas fa-globe"></i> {{ LANGUAGE_CODE|upper }} <i class="fas fa-chevron-down" style="font-size:10px"></i>

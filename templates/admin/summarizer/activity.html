@@ -1,0 +1,85 @@
+{% extends 'admin/base.html' %}
+{% load i18n unfold %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 class="font-semibold text-2xl text-important">{% if is_today %}Aujourd’hui, {% endif %}{% language "fr" %}{{ day|date:"l j F Y" }}{% endlanguage %}</h1>
+        <form method="get" class="flex flex-wrap items-center gap-2">
+            <a class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" href="?jour={{ previous|date:'Y-m-d' }}&type={{ kind }}{% if members %}&membres=1{% endif %}">← {{ previous|date:"d/m" }}</a>
+            <input type="date" name="jour" value="{{ day|date:'Y-m-d' }}" onchange="this.form.submit()"
+                   class="border border-base-200 rounded-default px-3 py-2 bg-white dark:bg-base-900 dark:border-base-700">
+            {% if next %}<a class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" href="?jour={{ next|date:'Y-m-d' }}&type={{ kind }}{% if members %}&membres=1{% endif %}">{{ next|date:"d/m" }} →</a>{% endif %}
+            {% if not is_today %}<a class="text-primary-600 dark:text-primary-500 px-2" href="?type={{ kind }}{% if members %}&membres=1{% endif %}">Aujourd’hui</a>{% endif %}
+            <input type="hidden" name="type" value="{{ kind }}">
+            {% if members %}<input type="hidden" name="membres" value="1">{% endif %}
+        </form>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {% for n in numbers %}
+            {% component "unfold/components/card.html" %}
+                <p class="text-subtle flex items-center gap-2"><span class="material-symbols-outlined" style="font-size:18px">{{ n.icon }}</span>{{ n.label }}</p>
+                <p class="font-semibold text-3xl text-important mt-1">{{ n.value }}</p>
+                <p class="text-subtle mt-1">veille {{ n.yesterday }} · moy. 7 j {{ n.week }}</p>
+                {% if n.note %}<p class="mt-1" {% if 'échec' in n.note %}style="color:#dc2626"{% endif %}>{{ n.note }}</p>{% endif %}
+            {% endcomponent %}
+        {% endfor %}
+    </div>
+
+    {% if watch.failed or watch.stuck %}
+        <div class="mb-6">
+            {% component "unfold/components/card.html" with title="À surveiller" %}
+                {% if watch.failed %}
+                    <p class="font-semibold mb-2" style="color:#dc2626">Outils en échec (24 h)</p>
+                    <ul class="flex flex-col gap-2 mb-4">
+                        {% for w in watch.failed %}
+                            <li><span class="text-subtle">{{ w.time|date:"d/m H:i" }}</span> · {% if w.href %}<a class="text-primary-600 dark:text-primary-500" href="{{ w.href }}">{{ w.tool }} · {{ w.key }}</a>{% else %}{{ w.tool }} · {{ w.key }}{% endif %}{% if w.who %} · <a class="text-primary-600 dark:text-primary-500" href="{{ w.who_url }}">{{ w.who }}</a>{% endif %}<br><span class="text-subtle">{{ w.detail }}</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if watch.stuck %}
+                    <p class="font-semibold mb-2">Bloqués « en cours » depuis plus de 15 min</p>
+                    <ul class="flex flex-col gap-2">
+                        {% for w in watch.stuck %}
+                            <li><span class="text-subtle">{{ w.time|date:"d/m H:i" }}</span> · {% if w.href %}<a class="text-primary-600 dark:text-primary-500" href="{{ w.href }}">{{ w.tool }} · {{ w.key }}</a>{% else %}{{ w.tool }} · {{ w.key }}{% endif %}{% if w.who %} · <a class="text-primary-600 dark:text-primary-500" href="{{ w.who_url }}">{{ w.who }}</a>{% endif %}{% if w.detail %} <span class="text-subtle">({{ w.detail }})</span>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endcomponent %}
+        </div>
+    {% endif %}
+
+    {% component "unfold/components/card.html" with title="Fil d’activité" %}
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+            <a href="?jour={{ day|date:'Y-m-d' }}{% if members %}&membres=1{% endif %}" class="rounded-default px-3 py-1 border {% if not kind %}border-primary-600 text-primary-600 dark:text-primary-500{% else %}border-base-200 dark:border-base-700{% endif %}">Tout</a>
+            {% for key, label in kinds %}
+                <a href="?jour={{ day|date:'Y-m-d' }}&type={{ key }}{% if members %}&membres=1{% endif %}" class="rounded-default px-3 py-1 border {% if kind == key %}border-primary-600 text-primary-600 dark:text-primary-500{% else %}border-base-200 dark:border-base-700{% endif %}">{{ label }}</a>
+            {% endfor %}
+            <a href="?jour={{ day|date:'Y-m-d' }}&type={{ kind }}{% if not members %}&membres=1{% endif %}" class="ml-auto text-primary-600 dark:text-primary-500">{% if members %}☑{% else %}☐{% endif %} Membres connectés seulement</a>
+        </div>
+        {% if events %}
+            <table class="w-full text-sm">
+                {% for e in events %}
+                    <tr class="border-t border-base-200 dark:border-base-800 align-top">
+                        <td class="py-2 pr-3 text-subtle whitespace-nowrap">{{ e.time|date:"H:i" }}</td>
+                        <td class="py-2 pr-3 whitespace-nowrap"><span class="flex items-center gap-1"{% if e.alert %} style="color:#dc2626"{% endif %}><span class="material-symbols-outlined" style="font-size:16px">{{ e.icon }}</span>{{ e.label }}</span></td>
+                        <td class="py-2 pr-3" style="word-break:break-word">
+                            {% if e.href %}<a class="text-primary-600 dark:text-primary-500" href="{{ e.href }}" target="_blank" rel="noopener">{{ e.text|truncatechars:160 }}</a>{% else %}{{ e.text|truncatechars:160 }}{% endif %}
+                            {% if e.detail %}<span class="text-subtle"{% if e.alert %} style="color:#dc2626"{% endif %}> · {{ e.detail }}</span>{% endif %}
+                        </td>
+                        <td class="py-2 text-right whitespace-nowrap">{% if e.who %}<a class="text-primary-600 dark:text-primary-500" href="{{ e.who_url }}">{{ e.who|truncatechars:32 }}</a>{% elif e.anonymous %}<span class="text-subtle">anonyme</span>{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+            {% if events|length >= feed_limit %}<p class="text-subtle mt-3">Les {{ feed_limit }} dernières actions seulement : filtrez par type pour voir le reste.</p>{% endif %}
+        {% else %}
+            <p class="text-subtle">Rien ce jour-là.</p>
+        {% endif %}
+    {% endcomponent %}
+{% endblock %}

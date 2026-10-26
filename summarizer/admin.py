@@ -1,3 +1,5 @@
+import datetime
+
 import requests
 from django import forms
 from django.conf import settings
@@ -8,7 +10,7 @@ from django.contrib.auth.models import Group, User
 from django.db import models
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -17,7 +19,7 @@ from unfold.admin import ModelAdmin, StackedInline
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from unfold.widgets import UnfoldAdminTextareaWidget
 
-from . import guides, usage
+from . import activity, guides, usage
 from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
@@ -50,6 +52,24 @@ def dashboard_callback(request, context):
     context['site_settings'] = cfg
     context['recent_users'] = User.objects.order_by('-date_joined')[:8]
     return context
+
+
+def activity_view(request):
+    """/admin/activite/: what happened on a given day (activity.py)."""
+    try:
+        day = datetime.date.fromisoformat(request.GET.get('jour', ''))
+    except ValueError:
+        day = activity.today()
+    kind = request.GET.get('type', '')
+    members = request.GET.get('membres') == '1'
+    context = dict(admin.site.each_context(request), title='Activité du %s' % day.strftime('%d/%m/%Y'),
+                   day=day, previous=day - datetime.timedelta(days=1),
+                   next=day + datetime.timedelta(days=1) if day < activity.today() else None,
+                   is_today=day == activity.today(), kind=kind, members=members,
+                   kinds=[(k, label) for k, (label, _) in activity.KINDS.items()],
+                   numbers=activity.numbers(day), events=activity.feed(day, kind, members),
+                   watch=activity.watch(), feed_limit=activity.FEED_LIMIT)
+    return render(request, 'admin/summarizer/activity.html', context)
 
 
 # --- site settings: quotas and AI models ---------------------------------
