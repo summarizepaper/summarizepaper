@@ -28,6 +28,7 @@
   <nav class="paper-actions" aria-label="{% trans 'Actions on this paper' %}">
     <a href="#assistant" class="action" data-funnel="paper_action_ask"><i class="fas fa-comments"></i> {% trans 'Ask a question' %}</a>
     <a href="{% if relpapers %}#closest{% else %}#closest-search{% endif %}" class="action" data-funnel="paper_action_similar"><i class="fas fa-project-diagram"></i> {% trans 'Similar papers' %}</a>
+    {% if not arxiv_id|is_external %}<a href="https://arxiv.org/pdf/{{ arxiv_id|dash_slash }}" target="_blank" rel="noopener" class="action" data-pdf-panel data-funnel="paper_action_pdf"><i class="fas fa-file-pdf"></i> {% trans 'View the PDF' %}</a>{% endif %}
     <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog" class="action" data-funnel="paper_action_cite"><i class="fas fa-quote-right"></i> {% trans 'Cite' %}</a>
     <a href="#tools" class="action" data-funnel="paper_action_save"><i class="fas fa-bookmark"></i> {% trans 'Save' %}</a>
     {% if topic %}<a href="/{{ LANGUAGE_CODE }}/search-results/?q={{ topic|urlencode }}" rel="nofollow" class="action" data-funnel="paper_action_follow"><i class="fas fa-bell"></i> {% trans 'Follow this topic' %}</a>{% endif %}
@@ -137,6 +138,7 @@
   <div class="chatbot-container" id="assistant">
     <div class="chatbot-header">
       <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
+      {% if not arxiv_id|is_external %}<p><a href="https://arxiv.org/pdf/{{ arxiv_id|dash_slash }}" target="_blank" rel="noopener" class="chat-pdf-link" data-pdf-panel><i class="fas fa-file-pdf"></i> {% trans 'Compare with the PDF' %}</a></p>{% endif %}
       <p><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>
       {% if not public %}
       <p style="margin-top:6px"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>

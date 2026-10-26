@@ -67,3 +67,13 @@ class PaperURLTests(TestCase):
                 self.assertIn(f'/paper/{key}/', alternate['href'])
             self.assertNotIn('/arxiv-id/', response.content.decode())
             self.assertEqual(SummarizedPaperSitemap().location(summary), f'/fr/paper/{key}/')
+
+    def test_the_pdf_panel_opens_the_arxiv_pdf_only(self):
+        for key, pdf in (('2401.04088v1', 'https://arxiv.org/pdf/2401.04088v1'),
+                         ('astro-ph--9604131v1', 'https://arxiv.org/pdf/astro-ph/9604131v1'),
+                         ('doi_10.1093--mnras--stad1234', None)):
+            paper = ArxivPaper.objects.create(arxiv_id=key, title='Example', abstract='Abstract')
+            SummaryPaper.objects.create(paper=paper, lang='fr', summary='Résumé', notes='[]')
+            soup = BeautifulSoup(self.client.get(f'/fr/paper/{key}/').content, 'html.parser')
+            links = {a['href'] for a in soup.select('a[data-pdf-panel]')}
+            self.assertEqual(links, {pdf} if pdf else set())

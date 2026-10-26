@@ -10144,3 +10144,21 @@ msgstr ""
 " Premium peut passer à Premium+ à tout moment sur la <a "
 "href=\"/%(LANGUAGE_CODE)s/premium/#compare\">page Premium</a> et ne paie que "
 "la différence pour la période en cours."
+
+msgid "View the PDF"
+msgstr "Voir le PDF"
+
+msgid "Compare with the PDF"
+msgstr "Comparer avec le PDF"
+
+msgid "Paper PDF"
+msgstr "PDF de l’article"
+
+msgid "Open in a new tab"
+msgstr "Ouvrir dans un nouvel onglet"
+
+msgid "Close the PDF"
+msgstr "Fermer le PDF"
+
+msgid "Resize the PDF"
+msgstr "Redimensionner le PDF"

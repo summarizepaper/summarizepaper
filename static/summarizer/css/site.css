@@ -1020,3 +1020,37 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
   border-color: var(--accent);
   color: #fff;
 }
+
+/* ---------- PDF beside the summary (pdf-panel.js) ---------- */
+.chat-pdf-link { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; }
+.pdf-panel { display: none; }
+@media (min-width: 1100px) {
+  /* the header keeps the whole width; the page under it makes room for the panel */
+  body.pdf-open .main-content, body.pdf-open .site-footer { padding-right: var(--pdf-width, 42vw); }
+  body.pdf-open .site-header { margin-right: calc(-1 * var(--pdf-width, 42vw)); }
+  body.pdf-open .pdf-panel {
+    display: flex; flex-direction: column;
+    position: fixed; top: 65px; right: 0; bottom: 0; z-index: 40;
+    width: var(--pdf-width, 42vw);
+    background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow);
+  }
+  .pdf-panel-head {
+    display: flex; align-items: center; gap: 8px;
+    height: 48px; padding: 0 8px 0 20px; border-bottom: 1px solid var(--border);
+  }
+  .pdf-panel-head strong { flex: 1; font-size: 15px; }
+  .pdf-panel-head a, .pdf-panel-head button {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border: 0; border-radius: var(--radius-sm);
+    background: transparent; color: var(--text-muted); font-size: 16px; cursor: pointer; text-decoration: none;
+  }
+  .pdf-panel-head a:hover, .pdf-panel-head button:hover { background: var(--bg-soft); color: var(--text); }
+  .pdf-panel iframe { flex: 1; width: 100%; border: 0; background: var(--bg-soft); }
+  .pdf-resize {
+    position: absolute; top: 0; bottom: 0; left: -4px; width: 8px;
+    cursor: col-resize; touch-action: none; z-index: 1;
+  }
+  .pdf-resize:hover, .pdf-resize:focus-visible, .pdf-panel.resizing .pdf-resize { background: var(--accent); opacity: .5; outline: none; }
+  .pdf-panel.resizing iframe { pointer-events: none; }
+  .pdf-panel.resizing, body:has(.pdf-panel.resizing) { cursor: col-resize; user-select: none; }
+}

@@ -604,6 +604,7 @@
 <script src="{% static_v 'summarizer/js/paper-tools.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-ready.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-live.js' %}"></script>
+<script src="{% static_v 'summarizer/js/pdf-panel.js' %}" data-title="{% trans 'Paper PDF' %}" data-new-tab="{% trans 'Open in a new tab' %}" data-close="{% trans 'Close the PDF' %}" data-resize="{% trans 'Resize the PDF' %}"></script>
 {% if request.GET.autorun == '1' and not sumpaper.summary and not run and not run2 %}
 <script>
   // arriving from the daily digest: start the summary as if the visitor clicked Run
