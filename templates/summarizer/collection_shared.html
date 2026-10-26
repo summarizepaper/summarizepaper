@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ collection.name }} | {% trans 'Shared collection' %}{% endblock %}
+{% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page collection-page">
+  <header class="page-header">
+    <p class="muted">{% trans 'Shared collection' %}</p>
+    <h1>{{ collection.name }}</h1>
+    <p class="lead">{% blocktrans count n=papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</p>
+  </header>
+
+  <div class="item-actions">
+    {% if request.user.is_authenticated %}
+    <form method="post" action="/{{ LANGUAGE_CODE }}/collections/shared/{{ token }}/copy/" class="inline-form">
+      {% csrf_token %}
+      <button class="btn" type="submit">{% trans 'Copy these papers into my collections' %}</button>
+    </form>
+    {% else %}
+    <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Create a free account to copy these papers' %}</a>
+    <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
+    {% endif %}
+  </div>
+
+  <h2>{% trans 'Papers' %}</h2>
+  <ul class="item-list">
+    {% for p in papers %}
+    <li class="card">
+      <a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/"><strong>{{ p.title|default:p.arxiv_id }}</strong></a>
+      <div class="meta">{{ p.authors|truncatechars:160 }} · {{ p.arxiv_id|paper_ref }}{% if p.facts.year %} · {{ p.facts.year }}{% endif %}{% if p.facts.venue %} · {{ p.facts.venue }}{% endif %}</div>
+      <div class="paper-badges">
+        {% for n in p.facts.notices %}<span class="importance {{ n.tone }}">{{ n.label }}</span>{% endfor %}
+        {% if p.facts.label %}<span class="importance {{ p.facts.tone }}">{{ p.facts.label }}</span>{% endif %}
+        {% if collection.share_notes and p.tags %}<span class="importance info">{{ p.tags }}</span>{% endif %}
+      </div>
+      {% if collection.share_notes and p.note %}<p class="shared-note">{{ p.note|linebreaksbr }}</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if table %}
+  <h2>{% trans 'Comparison table' %}</h2>
+  <p class="muted table-coverage">{% blocktrans with q=table.quoted f=table.filled %}{{ q }} of {{ f }} filled cells are backed by a passage of the paper.{% endblocktrans %}</p>
+  {% include 'summarizer/collection_table.html' %}
+  {% endif %}
+
+  {% if open and not open.empty %}
+  <h2>{% trans 'Open questions' %}</h2>
+  {% include 'summarizer/collection_questions.html' %}
+  {% endif %}
+</div>
+{% endblock %}

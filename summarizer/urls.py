@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, search_filters, saved_searches, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, chat_page, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
+               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -72,7 +72,13 @@ urlpatterns = [
     path("collections/", library.collections_page, name="collections"),
     path("collections/add/", library.add_to_collection, name="collection_add"),
     path("collections/<int:pk>/", library.collection_page, name="collection"),
-    path("collections/<int:pk>/compare/", library.compare_start, name="collection_compare"),
+    path("collections/<int:pk>/compare/", comparison.compare_start, name="collection_compare"),
+    path("collections/<int:pk>/refresh/", collection_tools.refresh_start, name="collection_refresh"),
+    path("collections/<int:pk>/suggest/", collection_tools.suggest_start, name="collection_suggest"),
+    path("collections/<int:pk>/zotero/", collection_tools.zotero_import_start, name="collection_zotero_import"),
+    path("collections/zotero/", collection_tools.zotero_collections, name="collection_zotero_list"),
+    path("collections/shared/<str:token>/", library.shared_page, name="collection_shared"),
+    path("collections/shared/<str:token>/copy/", library.shared_copy, name="collection_shared_copy"),
     path("collections/<int:pk>/questions/", questions.questions_start, name="collection_questions"),
     path("collections/<int:pk>/export/<str:fmt>/", library.collection_export, name="collection_export"),
     path("export/<str:arxiv_id>/<str:fmt>/", exports.export_paper, name="export_paper"),

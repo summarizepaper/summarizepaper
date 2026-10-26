@@ -1,0 +1,21 @@
+{% load i18n %}{# The open questions of a collection (questions.py) and the projects that would answer them. Pass: open. #}
+{% get_current_language as LANGUAGE_CODE %}
+<ul class="item-list">
+  {% for q in open.questions %}
+  <li class="card">
+    <span class="importance {% if q.kind == 'disagreement' %}high{% elif q.kind == 'open_problem' %}medium{% else %}low{% endif %}">{% if q.kind == 'disagreement' %}{% trans 'Papers disagree' %}{% elif q.kind == 'limitation' %}{% trans 'Limitation' %}{% elif q.kind == 'untested' %}{% trans 'Untested assumption' %}{% else %}{% trans 'Open problem' %}{% endif %}</span>
+    <p style="margin:8px 0 4px"><strong>{{ q.question }}</strong></p>
+    {% if q.detail %}<p style="margin:0">{{ q.detail }}</p>{% endif %}
+    {% if q.next_step %}<p style="margin:6px 0 0"><strong>{% trans 'First step:' %}</strong> {{ q.next_step }}</p>{% endif %}
+    {% if q.papers %}<div class="meta" style="margin-top:6px">{% blocktrans count n=q.papers|length %}Raised by:{% plural %}Raised by {{ n }} papers:{% endblocktrans %}
+      {% for p in q.papers %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title|truncatechars:70 }}</a>{% if p.authors %} ({{ p.authors|truncatechars:40 }}){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% if open.projects %}
+<h3>{% trans 'Projects that would answer them' %}</h3>
+<ul class="item-list">
+  {% for p in open.projects %}<li class="card"><strong>{{ p.title }}</strong><p style="margin:6px 0 0">{{ p.idea }}</p>
+    {% if p.papers %}<div class="meta" style="margin-top:6px">{% trans 'Builds on:' %} {% for x in p.papers %}{{ x.title|truncatechars:60 }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}</li>{% endfor %}
+</ul>
+{% endif %}

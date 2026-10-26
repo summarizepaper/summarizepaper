@@ -1,0 +1,8 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}<form method="post" class="item-actions">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add">
+  <input type="hidden" name="tab" value="missing">
+  <input type="hidden" name="ids" value="{{ s.ref }}">
+  <button class="btn btn-sm" type="submit">{% trans 'Add to the collection' %}</button>
+  <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/paper/{{ s.ref }}/">{% trans 'Open' %}</a>
+</form>

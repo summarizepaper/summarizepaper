@@ -623,6 +623,12 @@ class Collection(models.Model):
     """A user's folder of papers, to compare them, chat with them and export them."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='paper_collections')
     name = models.CharField(max_length=120)
+    template = models.CharField(max_length=20, default='general')  # the columns of the comparison table (library.TEMPLATES)
+    custom_columns = models.TextField(blank=True, default='')  # JSON [{"label": ..., "hint": ...}], after the template's
+    watch = models.BooleanField(default=False)  # its papers are followed: citation and version alerts (Premium)
+    share_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # read-only public link
+    share_expires = models.DateTimeField(blank=True, null=True)
+    share_notes = models.BooleanField(default=False)  # the shared page shows the owner's notes
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -634,11 +640,15 @@ class Collection(models.Model):
 
 
 class CollectionPaper(models.Model):
+    READING = [('', ''), ('to_read', 'To read'), ('read', 'Read'), ('key', 'Key paper')]
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='papers')
     arxiv_id = models.CharField(max_length=100)
     title = models.TextField(blank=True, default='')
     authors = models.TextField(blank=True, default='')
     note = models.TextField(blank=True, default='')
+    tags = models.CharField(max_length=300, blank=True, default='')  # comma-separated
+    reading = models.CharField(max_length=10, blank=True, default='', choices=READING)
+    selected = models.BooleanField(default=True)  # read by the comparison table, the open questions and the chat
     added = models.DateTimeField(auto_now_add=True)
 
     class Meta:

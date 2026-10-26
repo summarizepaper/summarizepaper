@@ -1,0 +1,31 @@
+{% load i18n %}{# A comparison table (comparison.display) with the source of each cell, then its findings. Pass: table. #}
+{% get_current_language as LANGUAGE_CODE %}
+<div class="compare-wrap">
+  <table class="compare-table">
+    <thead><tr><th scope="col">{% trans 'Paper' %}</th>{% for code, label in table.columns %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for row in table.rows %}
+      <tr id="row-{{ row.n }}">
+        <th scope="row"><span class="row-n">{{ row.n }}</span> <a href="/{{ LANGUAGE_CODE }}/paper/{{ row.arxiv_id }}/">{{ row.title }}</a>
+          {% if row.source == 'abstract' %}<div class="meta">{% trans 'Abstract and our summary' %}</div>{% endif %}</th>
+        {% for c in row.cells %}
+        <td{% if c.missing %} class="cell-missing"{% endif %}>{{ c.text }}
+          {% if c.quote %}
+          <details class="cell-source">
+            <summary>{% trans 'Source' %}{% if c.section %} · {{ c.section|truncatechars:40 }}{% endif %}</summary>
+            <blockquote>{{ c.quote }}</blockquote>
+            {% if c.numbers %}<p class="cell-warning">{% blocktrans with n=c.numbers|join:", " %}Not in this passage: {{ n }}{% endblocktrans %}</p>{% endif %}
+            {% if c.link %}<a href="{{ c.link }}" target="_blank" rel="noopener">{% trans 'Open in the paper' %}</a>{% endif %}
+          </details>
+          {% elif not c.missing and table.version > 1 %}
+          <span class="cell-unchecked">{% trans 'Not checked against the paper' %}</span>
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if table.missing %}<p class="muted">{% blocktrans with t=table.missing|join:"; " %}No row could be written for: {{ t }}.{% endblocktrans %}</p>{% endif %}
+{% include 'summarizer/collection_findings.html' %}

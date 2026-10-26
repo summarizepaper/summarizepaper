@@ -10729,3 +10729,875 @@ msgstr ""
 "Posez une question sur les articles sélectionnés, ou choisissez une "
 "suggestion ci-dessous. Chaque affirmation de la réponse sera accompagnée du "
 "passage de l’article qui l’étaye."
+
+#, python-format
+msgid "%(n)s read by the analyses and the chat"
+msgstr "%(n)s lus par les analyses et le chat"
+
+#: templates/summarizer/collection.html
+msgid "Chat with the selected papers"
+msgstr "Discuter avec les articles sélectionnés"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Exports keep your notes and tags. Filter by a tag to export only its papers."
+msgstr ""
+"Les exports gardent vos notes et vos étiquettes. Filtrez par étiquette pour "
+"n’exporter que ses articles."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "The chat takes the first %(n)s selected papers."
+msgstr "Le chat prend les %(n)s premiers articles sélectionnés."
+
+#, python-format
+msgid "%(n)s paper added."
+msgid_plural "%(n)s papers added."
+msgstr[0] "%(n)s article ajouté."
+msgstr[1] "%(n)s articles ajoutés."
+
+#, python-format
+msgid "%(n)s paper replaced by its newer version."
+msgid_plural "%(n)s papers replaced by their newer version."
+msgstr[0] "%(n)s article remplacé par sa version plus récente."
+msgstr[1] "%(n)s articles remplacés par leur version plus récente."
+
+#, python-format
+msgid "%(n)s was already in the collection."
+msgid_plural "%(n)s were already in the collection."
+msgstr[0] "%(n)s était déjà dans la collection."
+msgstr[1] "%(n)s étaient déjà dans la collection."
+
+#, python-format
+msgid "%(n)s identifier was not found."
+msgid_plural "%(n)s identifiers were not found."
+msgstr[0] "%(n)s identifiant n’a pas été trouvé."
+msgstr[1] "%(n)s identifiants n’ont pas été trouvés."
+
+#, python-format
+msgid "%(n)s entry has no arXiv identifier or DOI."
+msgid_plural "%(n)s entries have no arXiv identifier or DOI."
+msgstr[0] "%(n)s entrée n’a ni identifiant arXiv ni DOI."
+msgstr[1] "%(n)s entrées n’ont ni identifiant arXiv ni DOI."
+
+#: templates/summarizer/collection.html
+msgid "Adding the papers"
+msgstr "Ajout des articles"
+
+#: templates/summarizer/collection.html
+msgid "a few seconds per DOI"
+msgstr "quelques secondes par DOI"
+
+#: templates/summarizer/collection.html
+msgid "Share and settings"
+msgstr "Partage et réglages"
+
+#: templates/summarizer/collection.html
+msgid "Filter by title, author, note or tag"
+msgstr "Filtrer par titre, auteur, note ou étiquette"
+
+#: templates/summarizer/collection.html
+msgid "Filter the papers"
+msgstr "Filtrer les articles"
+
+#: templates/summarizer/collection.html
+msgid "Tag"
+msgstr "Étiquette"
+
+#: templates/summarizer/collection.html
+msgid "All tags"
+msgstr "Toutes les étiquettes"
+
+#: templates/summarizer/collection.html
+msgid "Reading status"
+msgstr "Statut de lecture"
+
+#: templates/summarizer/collection.html
+msgid "Any status"
+msgstr "Tous les statuts"
+
+#: templates/summarizer/collection.html
+msgid "No status"
+msgstr "Sans statut"
+
+#: templates/summarizer/collection.html
+msgid "Sort"
+msgstr "Trier"
+
+#: templates/summarizer/collection.html
+msgid "In the order added"
+msgstr "Dans l’ordre d’ajout"
+
+#: templates/summarizer/collection.html
+msgid "Most cited first"
+msgstr "Les plus cités d’abord"
+
+#: templates/summarizer/collection.html
+msgid "By title"
+msgstr "Par titre"
+
+msgid ""
+"{n} of {total} papers selected for the comparison table, the open questions "
+"and the chat."
+msgstr ""
+"{n} articles sur {total} sélectionnés pour le tableau comparatif, les "
+"questions ouvertes et le chat."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "Only the first %(n)s are read."
+msgstr "Seuls les %(n)s premiers sont lus."
+
+#, python-format
+msgid ""
+"%(n)s of %(total)s papers selected for the comparison table, the open "
+"questions and the chat."
+msgstr ""
+"%(n)s articles sur %(total)s sélectionnés pour le tableau comparatif, les "
+"questions ouvertes et le chat."
+
+#: templates/summarizer/collection.html
+msgid "Select"
+msgstr "Sélectionner"
+
+#: templates/summarizer/collection.html
+msgid "Select all"
+msgstr "Tout sélectionner"
+
+#: templates/summarizer/collection.html
+msgid "Select none"
+msgstr "Ne rien sélectionner"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "Only “%(label)s”"
+msgstr "Seulement « %(label)s »"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "Only the tag “%(t)s”"
+msgstr "Seulement l’étiquette « %(t)s »"
+
+#: templates/summarizer/collection.html
+msgid "Apply"
+msgstr "Appliquer"
+
+#: templates/summarizer/collection.html
+msgid "Check where they were published, their citations and new versions"
+msgstr ""
+"Vérifier où ils ont été publiés, leurs citations et leurs nouvelles versions"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "Last checked on %(d)s."
+msgstr "Dernière vérification le %(d)s."
+
+#: templates/summarizer/collection.html
+msgid "Checking the papers"
+msgstr "Vérification des articles"
+
+#: templates/summarizer/collection.html
+msgid "one to three minutes"
+msgstr "une à trois minutes"
+
+#: templates/summarizer/collection.html
+msgid "No paper matches these filters."
+msgstr "Aucun article ne correspond à ces filtres."
+
+#: templates/summarizer/collection.html
+msgid "Read by the comparison table, the open questions and the chat"
+msgstr "Lu par le tableau comparatif, les questions ouvertes et le chat"
+
+#: templates/summarizer/collection.html
+msgid "Selected for the analyses"
+msgstr "Sélectionné pour les analyses"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "Version %(v)s is out: what changed"
+msgstr "La version %(v)s est sortie : ce qui a changé"
+
+#: templates/summarizer/collection.html
+msgid "Tags, separated by commas"
+msgstr "Étiquettes, séparées par des virgules"
+
+#: templates/summarizer/collection.html
+msgid "Tags"
+msgstr "Étiquettes"
+
+#: templates/summarizer/collection.html
+msgid "Your note: what you take from it, where you would cite it"
+msgstr "Votre note : ce que vous en retenez, où vous le citeriez"
+
+#: templates/summarizer/collection.html
+msgid ""
+"No paper yet. Add some below, or from any paper page with “Save to a "
+"collection”."
+msgstr ""
+"Aucun article pour l’instant. Ajoutez-en ci-dessous, ou depuis la page de "
+"n’importe quel article avec « Enregistrer dans une collection »."
+
+#: templates/summarizer/collection.html
+msgid ""
+"arXiv identifiers, DOIs or links, separated by spaces or new lines, or a "
+"BibTeX or RIS list pasted here"
+msgstr ""
+"Identifiants arXiv, DOI ou liens, séparés par des espaces ou des retours à la"
+" ligne, ou une liste BibTeX ou RIS collée ici"
+
+#: templates/summarizer/collection.html
+msgid "Or a BibTeX or RIS file:"
+msgstr "Ou un fichier BibTeX ou RIS :"
+
+#: templates/summarizer/collection.html
+msgid "From Zotero"
+msgstr "Depuis Zotero"
+
+#: templates/summarizer/collection.html
+msgid "Premium imports a whole Zotero collection."
+msgstr "Premium importe une collection Zotero entière."
+
+#: templates/summarizer/collection.html
+msgid "Connect your Zotero library to import one of its collections"
+msgstr ""
+"Connectez votre bibliothèque Zotero pour importer l’une de ses collections"
+
+#: templates/summarizer/collection.html
+msgid "Choose a Zotero collection"
+msgstr "Choisir une collection Zotero"
+
+#: templates/summarizer/collection.html
+msgid "Zotero collection"
+msgstr "Collection Zotero"
+
+#: templates/summarizer/collection.html
+msgid "Import"
+msgstr "Importer"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Premium fills the same columns for every selected paper, each cell with the "
+"passage of the paper that supports it, then says where the papers agree, "
+"where they disagree, and what none of them addresses. Columns for clinical "
+"studies, machine learning, observations or theory, or your own. Exported as a"
+" spreadsheet."
+msgstr ""
+"Premium remplit les mêmes colonnes pour chaque article sélectionné, chaque "
+"case avec le passage de l’article qui l’appuie, puis dit où les articles "
+"s’accordent, où ils divergent et ce qu’aucun n’aborde. Colonnes pour les "
+"études cliniques, l’apprentissage automatique, les observations ou la "
+"théorie, ou les vôtres. Exporté en tableur."
+
+#: templates/summarizer/collection.html
+msgid "Columns:"
+msgstr "Colonnes :"
+
+#: templates/summarizer/collection.html
+msgid "Template"
+msgstr "Modèle"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Your own columns, one per line: “Label: what to look for”, or the label "
+"alone."
+msgstr ""
+"Vos propres colonnes, une par ligne : « Intitulé : ce qu’il faut chercher », "
+"ou l’intitulé seul."
+
+#: templates/summarizer/collection.html
+msgid "Sample size: number of participants or objects studied"
+msgstr "Taille de l’échantillon : nombre de participants ou d’objets étudiés"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Eight columns at most in all. A table written with other columns stays here "
+"until you update it."
+msgstr ""
+"Huit colonnes au plus en tout. Un tableau écrit avec d’autres colonnes reste "
+"ici tant que vous ne le mettez pas à jour."
+
+#: templates/summarizer/collection.html
+msgid "Save the columns"
+msgstr "Enregistrer les colonnes"
+
+#: templates/summarizer/collection.html
+msgid "Select at least two papers to compare them."
+msgstr "Sélectionnez au moins deux articles pour les comparer."
+
+#: templates/summarizer/collection.html
+msgid "This table was written with other columns."
+msgstr "Ce tableau a été écrit avec d’autres colonnes."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "This table no longer matches the selected papers (+%(a)s, −%(r)s)."
+msgstr ""
+"Ce tableau ne correspond plus aux articles sélectionnés (+%(a)s, −%(r)s)."
+
+#: templates/summarizer/collection.html
+msgid "Update the table"
+msgstr "Mettre à jour le tableau"
+
+#: templates/summarizer/collection.html
+msgid "Only the new papers are read."
+msgstr "Seuls les nouveaux articles sont lus."
+
+#, python-format
+msgid "%(q)s of %(f)s filled cells are backed by a passage of the paper."
+msgstr "%(q)s cases remplies sur %(f)s s’appuient sur un passage de l’article."
+
+#, python-format
+msgid ""
+"%(t)s of %(n)s papers were read in their key sections, the others from their "
+"abstract and our summary."
+msgstr ""
+"%(t)s articles sur %(n)s ont été lus dans leurs sections clés, les autres à "
+"partir de leur résumé d’auteur et de notre synthèse."
+
+#: templates/summarizer/collection.html
+msgid ""
+"This table was written before cells had their sources: write it again to see "
+"them."
+msgstr ""
+"Ce tableau a été écrit avant que les cases aient leurs sources : réécrivez-le"
+" pour les voir."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid ""
+"The table reads the key sections of each selected paper when its license "
+"allows it, its abstract and our summary otherwise (%(n)s papers at most). "
+"Each cell comes with the passage of the paper that supports it. It takes one "
+"to three minutes."
+msgstr ""
+"Le tableau lit les sections clés de chaque article sélectionné quand sa "
+"licence le permet, sinon son résumé d’auteur et notre synthèse (%(n)s "
+"articles au plus). Chaque case vient avec le passage de l’article qui "
+"l’appuie. Cela prend une à trois minutes."
+
+#: templates/summarizer/collection.html
+msgid "Select at least two papers to find their open questions."
+msgstr ""
+"Sélectionnez au moins deux articles pour trouver leurs questions ouvertes."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "These questions no longer match the selected papers (+%(a)s, −%(r)s)."
+msgstr ""
+"Ces questions ne correspondent plus aux articles sélectionnés (+%(a)s, "
+"−%(r)s)."
+
+#: templates/summarizer/collection.html
+msgid "Write them again"
+msgstr "Les réécrire"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid ""
+"Reads the limitations, discussions and future work of the selected papers, "
+"%(n)s at most (their abstract and our summary when their license does not let"
+" us read more). It takes about a minute."
+msgstr ""
+"Lit les limites, discussions et perspectives des articles sélectionnés, %(n)s"
+" au plus (leur résumé d’auteur et notre synthèse quand leur licence ne nous "
+"permet pas d’en lire plus). Cela prend environ une minute."
+
+#: templates/summarizer/collection.html
+msgid "What the collection may be missing"
+msgstr "Ce qui manque peut-être à la collection"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Premium finds the papers that several papers of the collection cite, which a "
+"review is expected to know, and the papers closest to the collection as a "
+"whole. One click adds them."
+msgstr ""
+"Premium trouve les articles que plusieurs articles de la collection citent, "
+"qu’une revue est censée connaître, et les articles les plus proches de la "
+"collection dans son ensemble. Un clic les ajoute."
+
+#: templates/summarizer/collection.html
+msgid "Select papers first."
+msgstr "Sélectionnez d’abord des articles."
+
+#: templates/summarizer/collection.html
+msgid ""
+"From the selected papers: the papers several of them cite, which a review is "
+"expected to know, then the papers closest to the collection as a whole among "
+"those we have read."
+msgstr ""
+"À partir des articles sélectionnés : les articles que plusieurs d’entre eux "
+"citent, qu’une revue est censée connaître, puis les articles les plus proches"
+" de la collection dans son ensemble parmi ceux que nous avons lus."
+
+#: templates/summarizer/collection.html
+msgid "Cited by several papers of the collection"
+msgstr "Cités par plusieurs articles de la collection"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "cited by %(n)s paper of the collection"
+msgid_plural "cited by %(n)s papers of the collection"
+msgstr[0] "cité par %(n)s article de la collection"
+msgstr[1] "cité par %(n)s articles de la collection"
+
+#: templates/summarizer/collection.html
+msgid ""
+"No paper outside the collection is cited by two of its papers, or their "
+"references are not known."
+msgstr ""
+"Aucun article hors de la collection n’est cité par deux de ses articles, ou "
+"leurs références ne sont pas connues."
+
+#: templates/summarizer/collection.html
+msgid "Closest to the collection"
+msgstr "Les plus proches de la collection"
+
+#, python-format
+msgid "%(p)s%% similar"
+msgstr "similaire à %(p)s %%"
+
+#: templates/summarizer/collection.html
+msgid "No close paper was found among those we have read."
+msgstr "Aucun article proche n’a été trouvé parmi ceux que nous avons lus."
+
+#: templates/summarizer/collection.html
+msgid "Look again"
+msgstr "Chercher à nouveau"
+
+#: templates/summarizer/collection.html
+msgid "Find what is missing"
+msgstr "Trouver ce qui manque"
+
+#: templates/summarizer/collection.html
+msgid "Looking for what the collection is missing"
+msgstr "Recherche de ce qui manque à la collection"
+
+#: templates/summarizer/collection.html
+msgid "about a minute"
+msgstr "environ une minute"
+
+#: templates/summarizer/collection.html
+msgid "Share a read-only link"
+msgstr "Partager un lien en lecture seule"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid ""
+"Anyone with this link sees the papers, the comparison table and the open "
+"questions, never who made the collection, and can copy the papers into a "
+"collection of theirs. It works until %(d)s."
+msgstr ""
+"Toute personne ayant ce lien voit les articles, le tableau comparatif et les "
+"questions ouvertes, jamais qui a fait la collection, et peut copier les "
+"articles dans une de ses collections. Il fonctionne jusqu’au %(d)s."
+
+#: templates/summarizer/collection.html
+msgid "Your notes are shown."
+msgstr "Vos notes sont affichées."
+
+#: templates/summarizer/collection.html
+msgid "Shared link"
+msgstr "Lien partagé"
+
+#: templates/summarizer/collection.html
+msgid "Show my notes"
+msgstr "Afficher mes notes"
+
+#: templates/summarizer/collection.html
+msgid "Update the link for 90 more days"
+msgstr "Prolonger le lien de 90 jours"
+
+#: templates/summarizer/collection.html
+msgid ""
+"For a supervisor, co-authors or a journal club: they see the papers, the "
+"comparison table and the open questions, and can copy the papers into a "
+"collection of theirs. The link works for 90 days."
+msgstr ""
+"Pour un directeur de thèse, des co-auteurs ou un journal club : ils voient "
+"les articles, le tableau comparatif et les questions ouvertes, et peuvent "
+"copier les articles dans une de leurs collections. Le lien fonctionne 90 "
+"jours."
+
+#: templates/summarizer/collection.html
+msgid "Create a link"
+msgstr "Créer un lien"
+
+#: templates/summarizer/collection.html
+msgid "Watch the collection"
+msgstr "Suivre la collection"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Premium emails you when a paper of the collection is cited, with what the "
+"citing paper says of it, and when one gets a new arXiv version, with what "
+"changed."
+msgstr ""
+"Premium vous écrit quand un article de la collection est cité, avec ce qu’en "
+"dit l’article citant, et quand l’un d’eux a une nouvelle version sur arXiv, "
+"avec ce qui a changé."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid ""
+"Watched: you get an email when a paper of the collection is cited, and when "
+"one gets a new arXiv version. %(n)s paper is followed."
+msgid_plural ""
+"Watched: you get an email when a paper of the collection is cited, and when "
+"one gets a new arXiv version. %(n)s papers are followed."
+msgstr[0] ""
+"Suivie : vous recevez un e-mail quand un article de la collection est cité, "
+"et quand l’un d’eux a une nouvelle version sur arXiv. %(n)s article est "
+"suivi."
+msgstr[1] ""
+"Suivie : vous recevez un e-mail quand un article de la collection est cité, "
+"et quand l’un d’eux a une nouvelle version sur arXiv. %(n)s articles sont "
+"suivis."
+
+#, python-format
+msgid "%(n)s papers could not be followed: you follow %(m)s papers at most."
+msgstr ""
+"%(n)s articles n’ont pas pu être suivis : vous suivez %(m)s articles au plus."
+
+#: templates/summarizer/collection.html
+msgid ""
+"Papers added later are followed too. Stopping does not unfollow the papers: "
+"manage them on"
+msgstr ""
+"Les articles ajoutés ensuite sont suivis aussi. Arrêter ne cesse pas de "
+"suivre les articles : gérez-les sur"
+
+#: templates/summarizer/collection.html
+msgid "the citation alerts page"
+msgstr "la page des alertes de citations"
+
+#: templates/summarizer/collection.html
+msgid "Stop watching"
+msgstr "Ne plus suivre"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Get an email when a paper of the collection is cited, with what the citing "
+"paper says of it, and when one gets a new arXiv version, with what changed."
+msgstr ""
+"Recevez un e-mail quand un article de la collection est cité, avec ce qu’en "
+"dit l’article citant, et quand l’un d’eux a une nouvelle version sur arXiv, "
+"avec ce qui a changé."
+
+#: templates/summarizer/collection.html
+msgid "Watch this collection"
+msgstr "Suivre cette collection"
+
+#: templates/summarizer/collection.html
+msgid "Name"
+msgstr "Nom"
+
+#: templates/summarizer/collection.html
+msgid "Saved"
+msgstr "Enregistré"
+
+#: templates/summarizer/collection.html
+msgid "Remove this paper from the collection?"
+msgstr "Retirer cet article de la collection ?"
+
+#: templates/summarizer/collection.html
+msgid "Loading…"
+msgstr "Chargement…"
+
+#: templates/summarizer/collection.html
+msgid "Zotero is not reachable right now. Try again in a moment."
+msgstr "Zotero n’est pas joignable pour le moment. Réessayez dans un instant."
+
+#: templates/summarizer/collection.html
+msgid "Your Zotero library has no collection."
+msgstr "Votre bibliothèque Zotero n’a aucune collection."
+
+#: templates/summarizer/collection_shared.html
+msgid "Shared collection"
+msgstr "Collection partagée"
+
+#: templates/summarizer/collection_shared.html
+msgid "Copy these papers into my collections"
+msgstr "Copier ces articles dans mes collections"
+
+#: templates/summarizer/collection_shared.html
+msgid "Create a free account to copy these papers"
+msgstr "Créer un compte gratuit pour copier ces articles"
+
+#: templates/summarizer/collection_table.html
+msgid "Abstract and our summary"
+msgstr "Résumé d’auteur et notre synthèse"
+
+#: templates/summarizer/collection_table.html
+msgid "Source"
+msgstr "Source"
+
+#: templates/summarizer/collection_table.html
+#, python-format
+msgid "Not in this passage: %(n)s"
+msgstr "Absent de ce passage : %(n)s"
+
+#: templates/summarizer/collection_table.html
+msgid "Open in the paper"
+msgstr "Ouvrir dans l’article"
+
+#: templates/summarizer/collection_table.html
+msgid "Not checked against the paper"
+msgstr "Non vérifié dans l’article"
+
+#: templates/summarizer/collection_table.html
+#, python-format
+msgid "No row could be written for: %(t)s."
+msgstr "Aucune ligne n’a pu être écrite pour : %(t)s."
+
+#: templates/summarizer/collection_rows.html
+msgid "Rows of the table"
+msgstr "Lignes du tableau"
+
+#: templates/summarizer/collection_suggestion_add.html
+msgid "Add to the collection"
+msgstr "Ajouter à la collection"
+
+#: templates/summarizer/collections.html
+msgid ""
+"Save any paper in a collection from its page, in one click, or add papers by "
+"their arXiv identifier, DOI or link, or import a BibTeX or RIS file."
+msgstr ""
+"Enregistrez n’importe quel article dans une collection depuis sa page, en un "
+"clic, ou ajoutez des articles par leur identifiant arXiv, leur DOI ou leur "
+"lien, ou importez un fichier BibTeX ou RIS."
+
+#: templates/summarizer/collections.html
+msgid ""
+"Keep a note, tags and a reading status on each paper; sort and filter them by"
+" year, citations or tag."
+msgstr ""
+"Gardez une note, des étiquettes et un statut de lecture pour chaque article ;"
+" triez-les et filtrez-les par année, citations ou étiquette."
+
+#: templates/summarizer/collections.html
+msgid "Share a read-only link with a supervisor, co-authors or a journal club."
+msgstr ""
+"Partagez un lien en lecture seule avec un directeur de thèse, des co-auteurs "
+"ou un journal club."
+
+#: templates/summarizer/collections.html
+msgid ""
+"Export a whole collection, with your notes and tags, to BibTeX for LaTeX, to "
+"RIS for Zotero, Mendeley or EndNote, or to Markdown for Notion and Obsidian."
+msgstr ""
+"Exportez une collection entière, avec vos notes et étiquettes, en BibTeX pour"
+" LaTeX, en RIS pour Zotero, Mendeley ou EndNote, ou en Markdown pour Notion "
+"et Obsidian."
+
+#: templates/summarizer/collections.html
+msgid ""
+"a comparison table whose every cell comes with the passage of the paper that "
+"supports it, with columns for your field or your own, then where the papers "
+"agree, where they disagree and what none of them addresses, downloadable as a"
+" spreadsheet. Ideal to start a literature review."
+msgstr ""
+"un tableau comparatif dont chaque case vient avec le passage de l’article qui"
+" l’appuie, avec des colonnes pour votre domaine ou les vôtres, puis où les "
+"articles s’accordent, où ils divergent et ce qu’aucun n’aborde, "
+"téléchargeable en tableur. Idéal pour commencer une revue de littérature."
+
+#: templates/summarizer/collections.html
+msgid ""
+"the open questions of the collection, the papers it may be missing, where "
+"each paper was published and whether it was retracted, imports from Zotero, "
+"and an email when a paper of the collection is cited or updated."
+msgstr ""
+"les questions ouvertes de la collection, les articles qui lui manquent peut-"
+"être, où chaque article a été publié et s’il a été rétracté, les imports "
+"depuis Zotero, et un e-mail quand un article de la collection est cité ou mis"
+" à jour."
+
+#: templates/summarizer/collection.html
+msgid "Watched"
+msgstr "Suivie"
+
+#: templates/summarizer/collection.html
+msgid "Shared"
+msgstr "Partagée"
+
+#: templates/summarizer/collections.html
+msgid ""
+"a comparison table of each collection whose cells come with their source in "
+"the paper, the open questions, the papers it may be missing, retraction "
+"checks, citation and version alerts; up to 100 collections of 200 papers; and"
+" Zotero both ways."
+msgstr ""
+"un tableau comparatif de chaque collection dont les cases viennent avec leur "
+"source dans l’article, les questions ouvertes, les articles qui lui manquent "
+"peut-être, la détection des rétractations, les alertes de citations et de "
+"versions ; jusqu’à 100 collections de 200 articles ; et Zotero dans les deux "
+"sens."
+
+#: summarizer/comparison.py
+msgid ""
+"Reading the key sections of each paper when its license allows it, its "
+"abstract otherwise"
+msgstr ""
+"Lecture des sections clés de chaque article quand sa licence le permet, de "
+"son résumé d’auteur sinon"
+
+#: summarizer/comparison.py
+msgid "Filling the columns, with the passage of the paper behind each cell"
+msgstr ""
+"Remplissage des colonnes, avec le passage de l’article derrière chaque case"
+
+#: summarizer/comparison.py
+msgid "Comparing the papers: agreements, disagreements, gaps"
+msgstr "Comparaison des articles : accords, désaccords, lacunes"
+
+#: summarizer/comparison.py
+msgid "General"
+msgstr "Général"
+
+#: summarizer/comparison.py
+msgid "Clinical or biomedical study"
+msgstr "Étude clinique ou biomédicale"
+
+#: summarizer/comparison.py
+msgid "Machine learning"
+msgstr "Apprentissage automatique"
+
+#: summarizer/comparison.py
+msgid "Observation or experiment"
+msgstr "Observation ou expérience"
+
+#: summarizer/comparison.py
+msgid "Theory or modelling"
+msgstr "Théorie ou modélisation"
+
+#: summarizer/comparison.py
+msgid "Only my columns"
+msgstr "Seulement mes colonnes"
+
+#: summarizer/comparison.py
+msgid "Population"
+msgstr "Population"
+
+#: summarizer/comparison.py
+msgid "Intervention and comparator"
+msgstr "Intervention et comparateur"
+
+#: summarizer/comparison.py
+msgid "Design and sample size"
+msgstr "Plan d’étude et effectif"
+
+#: summarizer/comparison.py
+msgid "Outcomes and effect sizes"
+msgstr "Critères de jugement et tailles d’effet"
+
+#: summarizer/comparison.py
+msgid "Risk of bias and limitations"
+msgstr "Risque de biais et limites"
+
+#: summarizer/comparison.py
+msgid "Task"
+msgstr "Tâche"
+
+#: summarizer/comparison.py
+msgid "Datasets and benchmarks"
+msgstr "Jeux de données et benchmarks"
+
+#: summarizer/comparison.py
+msgid "Model or method"
+msgstr "Modèle ou méthode"
+
+#: summarizer/comparison.py
+msgid "Metrics and scores"
+msgstr "Métriques et scores"
+
+#: summarizer/comparison.py
+msgid "Baselines"
+msgstr "Références comparées"
+
+#: summarizer/comparison.py
+msgid "Limitations and compute"
+msgstr "Limites et calcul"
+
+#: summarizer/comparison.py
+msgid "Object or system studied"
+msgstr "Objet ou système étudié"
+
+#: summarizer/comparison.py
+msgid "Instrument and data"
+msgstr "Instrument et données"
+
+#: summarizer/comparison.py
+msgid "Analysis method"
+msgstr "Méthode d’analyse"
+
+#: summarizer/comparison.py
+msgid "Key measurements"
+msgstr "Mesures clés"
+
+#: summarizer/comparison.py
+msgid "Systematics and limitations"
+msgstr "Erreurs systématiques et limites"
+
+#: summarizer/comparison.py
+msgid "Framework and assumptions"
+msgstr "Cadre et hypothèses"
+
+#: summarizer/comparison.py
+msgid "Domain of validity"
+msgstr "Domaine de validité"
+
+#: summarizer/collection_tools.py
+msgid ""
+"Checking where each paper was published, and any retraction or correction"
+msgstr ""
+"Vérification de l’endroit où chaque article a été publié, et des "
+"rétractations ou corrections"
+
+#: summarizer/collection_tools.py
+msgid "Counting the citations"
+msgstr "Comptage des citations"
+
+#: summarizer/collection_tools.py
+msgid "Looking for newer arXiv versions"
+msgstr "Recherche de versions plus récentes sur arXiv"
+
+#: summarizer/collection_tools.py
+msgid "Reading the references of each paper"
+msgstr "Lecture des références de chaque article"
+
+#: summarizer/collection_tools.py
+msgid "Finding the papers closest to the collection"
+msgstr "Recherche des articles les plus proches de la collection"
+
+#: summarizer/collection_tools.py
+msgid "Looking up each paper"
+msgstr "Recherche de chaque article"
+
+#: summarizer/collection_tools.py
+msgid "Adding them to the collection"
+msgstr "Ajout à la collection"
+
+#: summarizer/collection_tools.py
+msgid "Removed"
+msgstr "Supprimé"
+
+#: summarizer/collection_tools.py
+msgid "Expression of concern"
+msgstr "Avertissement de l’éditeur"
+
+#: summarizer/collection_tools.py
+msgid "Correction published"
+msgstr "Correction publiée"
+
+#: summarizer/library.py
+msgid "To read"
+msgstr "À lire"
+
+#: templates/summarizer/collection.html
+msgid "Read"
+msgstr "Lu"
+
+#: summarizer/library.py
+msgid "Key paper"
+msgstr "Article clé"

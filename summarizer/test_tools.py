@@ -337,19 +337,20 @@ class CollectionTests(ToolsTestCase):
         collection = Collection.objects.create(user=user, name='Fusion')
         for aid in ('2101.00001v1', '2101.00002v1'):
             library.add_paper(collection, aid, True)
-        answer = {'rows': [{'id': '2101.00001v1', 'question': 'Q1', 'method': 'M1', 'data': 'D1', 'results': 'R1',
-                            'limitations': 'L1'},
-                           {'id': 'made-up', 'question': 'Q'}],
-                  'agreements': ['Both see clouds'], 'disagreements': [], 'gaps': ['No one looks at night']}
+        rows = {'rows': [{'id': '2101.00001v1', 'question': 'Q1', 'method': 'M1', 'data': 'D1', 'results': 'R1',
+                          'limitations': 'L1'},
+                         {'id': '2101.00002v1', 'question': 'Q2'}, {'id': 'made-up', 'question': 'Q'}]}
+        lists = {'agreements': ['Both see clouds'], 'disagreements': [], 'gaps': ['No one looks at night']}
         client = self.client_for(user)
-        with mock.patch('summarizer.generated.chat_json', return_value=answer) as chat:
+        with mock.patch('summarizer.paper_source.paper_text', return_value=''), \
+             mock.patch('summarizer.generated.chat_json', side_effect=[rows, lists]) as chat:
             self.assertEqual(client.post('/en/collections/%s/compare/' % collection.pk).status_code, 200)
-        self.assertIn('Long summary of the clouds.', chat.call_args[1]['system'])
+        self.assertIn('Long summary of the clouds.', chat.call_args_list[0][1]['system'])
         page = client.get('/en/collections/%s/' % collection.pk)
         self.assertContains(page, 'No one looks at night')
         self.assertContains(page, 'R1')
         csv = client.get('/en/collections/%s/export/csv/' % collection.pk).content.decode()
-        self.assertIn('2101.00001,Clouds on a hot planet,Q1,M1,D1,R1,L1', csv)
+        self.assertIn('2101.00001,Clouds on a hot planet,Q1,,M1,,D1,,R1,,L1,', csv)
         self.assertNotIn('made-up', csv)
         free = self.user('free')
         mine = Collection.objects.create(user=free, name='F')

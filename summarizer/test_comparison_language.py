@@ -22,7 +22,7 @@ class ComparisonLanguageTests(ToolsTestCase):
             'agreements':[], 'disagreements':[], 'gaps':[]}
 
     def test_cached_french_table_and_csv_are_localized_without_regeneration_or_data_mutation(self):
-        row=Generated.objects.create(kind='compare', key=library.comparison_key(self.collection),lang='fr',status='done',content=json.dumps(self.data))
+        row=Generated.objects.create(kind='compare', key='%s:0123456789abcdef' % self.collection.pk,lang='fr',status='done',content=json.dumps(self.data))
         base='/fr/collections/%s/' % self.collection.pk
         with mock.patch('summarizer.generated.chat_json') as llm:
             page=self.paid.get(base)
@@ -33,14 +33,16 @@ class ComparisonLanguageTests(ToolsTestCase):
             llm.assert_not_called()
         row.refresh_from_db()
         self.assertEqual(row.data(),self.data)
-        Generated.objects.create(kind='compare', key=library.comparison_key(self.collection),lang='en',status='done',content=json.dumps(self.data))
+        Generated.objects.create(kind='compare', key='%s:0123456789abcdef' % self.collection.pk,lang='en',status='done',content=json.dumps(self.data))
         self.assertNotContains(self.paid.get('/en/collections/%s/' % self.collection.pk),'Non précisé')
 
     def test_new_french_generation_requests_and_enforces_localized_missing_values(self):
         answer=dict(self.data,rows=[dict(self.data['rows'][0],id='2101.00001v1')])
-        with mock.patch('summarizer.generated.chat_json',return_value=answer) as llm:
+        with mock.patch('summarizer.paper_source.paper_text',return_value=''), \
+             mock.patch('summarizer.generated.chat_json',return_value=answer) as llm:
             self.paid.post('/fr/collections/%s/compare/' % self.collection.pk)
-        self.assertIn('"Non précisé"',llm.call_args.args[0])
-        row=Generated.objects.get(kind='compare')
-        self.assertEqual(row.data()['rows'][0]['method'],'Non précisé')
-        self.assertEqual(row.data()['rows'][0]['results'],self.data['rows'][0]['results'])
+        self.assertIn('"Non précisé"',llm.call_args_list[0].args[0])
+        cells=Generated.objects.get(kind='compare').data()['rows'][0]['cells']
+        self.assertEqual(cells['method']['text'],'Non précisé')
+        self.assertEqual(cells['data']['text'],'Non précisé')
+        self.assertEqual(cells['results']['text'],self.data['rows'][0]['results'])

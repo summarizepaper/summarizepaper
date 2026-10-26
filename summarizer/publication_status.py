@@ -126,6 +126,19 @@ def lookup(paper):
     return report
 
 
+NOTICES = ('retraction', 'withdrawal', 'removal', 'expression_of_concern', 'correction', 'erratum', 'corrigendum')
+
+
+def notices(work):
+    """[{type, doi}] of the retractions, corrections and expressions of concern Crossref links to an article."""
+    found = []
+    for update in work.get('updated-by') or []:
+        kind = str((update or {}).get('type') or '').lower().replace('-', '_').replace(' ', '_')
+        if kind in NOTICES:
+            found.append({'type': kind, 'doi': sources.clean_doi(str(update.get('DOI') or '')) or ''})
+    return found
+
+
 def apply_work(report, work):
     doi = sources.clean_doi(work.get('DOI', ''))
     journal = (work.get('container-title') or [''])[0]
@@ -133,7 +146,7 @@ def apply_work(report, work):
     if not doi or not journal or work.get('type') not in ('journal-article', 'proceedings-article') or not date:
         return False
     report.update(status='forthcoming' if date > timezone.now().date().isoformat()[:len(date)] else 'published',
-                  doi=doi, journal=journal, date=date)
+                  doi=doi, journal=journal, date=date, updates=notices(work))
     report['sources'].append({'name': 'Crossref', 'url': 'https://doi.org/' + doi,
                              'detail': journal + ' · ' + date, 'kind': 'publisher_metadata'})
     return True

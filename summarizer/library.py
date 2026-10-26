@@ -1,48 +1,45 @@
-"""Collections: folders of papers to compare, chat with and export.
+"""Collections: a researcher's folders of papers, to sort, annotate, compare, chat with, share and export.
 
-Everyone with an account gets a few small collections; Premium gets many,
-and the comparison table: one model call reads every paper of the collection
-(abstract and our summary) and fills the same columns for each, then says
-where they agree, where they disagree and what nobody has done yet.
+Everyone with an account gets a few collections, with notes, tags, a reading status, imports (identifiers,
+links, BibTeX, RIS), exports and a read-only link to share. Premium gets many more, the comparison table
+(comparison.py), the open questions (questions.py), what the collection may be missing, checks of where each
+paper was published (collection_tools.py), imports from Zotero, and alerts on new citations and versions of
+the papers of a collection it watches (citations.py, changes.py).
+
+The analyses and the chat read the selected papers of a collection (comparison.analysed). A paper is kept
+once, whatever its version: adding a newer version replaces the older one.
+
+comparison and collection_tools are imported where they are used: presskit imports this module, and evidence,
+which comparison uses, imports presskit.
 """
-import csv
-import hashlib
-import io
+import datetime
 import json
 import re
+import secrets
 
 import requests
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.translation import get_language, override
+from django.utils import timezone
+from django.utils.http import urlencode
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, digest, exports, generated, sources
-from .models import AnnouncedPaper, ArxivPaper, Collection, CollectionPaper, Generated, SummaryPaper
+from . import access, citations, digest, exports, generated, sources
+from .models import (AnnouncedPaper, ArxivPaper, CitationCache, Collection, CollectionPaper, FollowedPaper, Generated,
+                     ZoteroAccount)
 
 FREE = {'collections': 3, 'papers': 20}
 PREMIUM = {'collections': 100, 'papers': 200}
-COMPARE_MAX = 25  # papers read by one comparison
 CHAT_MAX = 10  # papers the chat page takes at once
-MAX_ADD = 50  # ids added at once (one arXiv query)
-SUMMARY_CHARS = 4000
-COMPARE_STEPS = [
-    ('read', _('Reading the papers and our summaries')),
-    ('compare', _('Filling the table and comparing the results')),
-]
-QUESTIONS_STEPS = [  # the steps of questions.write, kept here so this module does not import it
-    ('read', _('Reading the limitations, discussions and future work of each paper')),
-    ('write', _('An AI gathers the open questions and groups them')),
-]
-COLUMNS = [
-    ('question', _('Question')),
-    ('method', _('Method')),
-    ('data', _('Data')),
-    ('results', _('Main results')),
-    ('limitations', _('Limitations')),
-]
+MAX_ADD = 200  # ids added at once (one arXiv query)
+SYNC_ADD = 10  # more than this are added in the background: each DOI is one lookup
+MAX_UPLOAD = 2 * 1024 * 1024
+SHARE_DAYS = 90  # a shared link works this long after its last sharing
+READING = [('to_read', _('To read')), ('read', _('Read')), ('key', _('Key paper'))]
+ADD_RESULTS = ('added', 'updated', 'already', 'unknown', 'full', 'skipped')
 
 
 def limits(paid):
@@ -61,6 +58,62 @@ def canonical_id(text):
     match = digest.ARXIV_ID_RE.search(text.replace('--', '/'))
     return digest.site_id(match.group(1)) if match else None
 
+
+def version_of(arxiv_id):
+    """('2101.00001', 2) for '2101.00001v2'; (key, 0) for a paper without version or from another source."""
+    if sources.is_external(arxiv_id):
+        return arxiv_id, 0
+    match = re.match(r'^(.*?)(?:v(\d+))?$', arxiv_id)
+    return match.group(1), int(match.group(2) or 0)
+
+
+# --- reading pasted lists, BibTeX and RIS -------------------------------------------
+
+BIBTEX_ENTRY = re.compile(r'@\w+\s*[{(]')
+ARXIV_IN_TEXT = re.compile(r'(?:arxiv\.org/(?:abs|pdf)/|\barxiv\s*:\s*|eprint\s*=\s*[{"]\s*(?:arxiv:)?\s*)'
+                           r'((?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?/\d{7})(?:v\d+)?)', re.I)
+DOI_IN_TEXT = re.compile(r'(?:\bdoi\s*=\s*[{"]\s*|^DO\s+-\s+|doi\.org/|\bdoi:\s*)(10\.\d{4,9}/[^\s"{}]+)', re.I | re.M)
+
+
+def entry_ref(entry):
+    """The arXiv id, else the DOI, of one BibTeX or RIS entry; None when it has neither."""
+    match = ARXIV_IN_TEXT.search(entry)
+    if match:
+        return match.group(1)
+    match = DOI_IN_TEXT.search(entry)
+    return match.group(1).rstrip('.,;') if match else None
+
+
+def references_in(text):
+    """(the identifiers of a pasted or uploaded list, how many entries had none): BibTeX and RIS entries give
+    their arXiv id or DOI; anything else is read as ids and links separated by spaces, commas or new lines."""
+    if BIBTEX_ENTRY.search(text):
+        entries = [e for e in re.split(r'(?=@\w+\s*[{(])', text) if BIBTEX_ENTRY.match(e.strip())]
+        entries = [e for e in entries if not re.match(r'@(?:comment|string|preamble)\b', e.strip(), re.I)]
+    elif re.search(r'^TY  - ', text, re.M):
+        entries = [e for e in re.split(r'^ER  -.*$', text, flags=re.M) if e.strip()]
+    else:
+        return [t for t in re.split(r'[\s,;]+', text) if t], 0
+    refs = [entry_ref(e) for e in entries]
+    return [r for r in refs if r], sum(1 for r in refs if not r)
+
+
+def wanted_ids(texts):
+    """(canonical ids, MAX_ADD at most, without repeats; entries or words that are not papers)."""
+    ids, skipped = [], 0
+    for text in texts:
+        refs, missed = references_in(text)
+        skipped += missed
+        for ref in refs:
+            arxiv_id = canonical_id(ref)
+            if arxiv_id and arxiv_id not in ids:
+                ids.append(arxiv_id)
+            elif not arxiv_id:
+                skipped += 1
+    return ids[:MAX_ADD], skipped
+
+
+# --- adding papers -----------------------------------------------------------------
 
 def lookup_many(arxiv_ids):
     """{arxiv_id: (title, authors)} from our tables, then one arXiv query for the rest; unknown ids are left out."""
@@ -98,9 +151,22 @@ def lookup(arxiv_id):
     return lookup_many([arxiv_id]).get(arxiv_id)
 
 
+def kept_version(collection, arxiv_id):
+    """The paper of the collection that is this one in any version, or None."""
+    base = version_of(arxiv_id)[0]
+    return next((p for p in collection.papers.filter(arxiv_id__startswith=base) if version_of(p.arxiv_id)[0] == base), None)
+
+
 def add_paper(collection, arxiv_id, paid, found=None):
-    """'added', 'already', 'full' or 'unknown'. found: what lookup_many already knows."""
-    if collection.papers.filter(arxiv_id=arxiv_id).exists():
+    """'added', 'updated' (a newer version replaced the one kept), 'already', 'full' or 'unknown'.
+    found: what lookup_many already knows."""
+    kept = kept_version(collection, arxiv_id)
+    if kept is not None:
+        if version_of(arxiv_id)[1] > version_of(kept.arxiv_id)[1] > 0:
+            kept.arxiv_id = arxiv_id
+            kept.save(update_fields=['arxiv_id'])
+            collection.save(update_fields=['updated'])
+            return 'updated'
         return 'already'
     if collection.papers.count() >= limits(paid)['papers']:
         return 'full'
@@ -113,77 +179,58 @@ def add_paper(collection, arxiv_id, paid, found=None):
     return 'added'
 
 
-def comparison_key(collection):
-    ids = sorted(collection.papers.values_list('arxiv_id', flat=True))[:COMPARE_MAX]
-    return '%s:%s' % (collection.pk, hashlib.sha256(','.join(ids).encode()).hexdigest()[:16])
+def add_many(collection, ids, paid, step=None):
+    """{result: count} once these canonical ids are added (see add_paper); a watched collection follows them."""
+    known = lookup_many(ids)
+    if step:
+        step()
+    counts, added = {}, []
+    for arxiv_id in ids:
+        status = add_paper(collection, arxiv_id, paid, known)
+        counts[status] = counts.get(status, 0) + 1
+        if status in ('added', 'updated'):
+            added.append(arxiv_id)
+    if collection.watch and added and access.has_tool(collection.user, 'citations'):
+        counts['unfollowed'] = follow_papers(collection.user, added)
+    return counts
 
 
-def paper_block(row):
-    meta = exports.paper_meta(row.arxiv_id, row)
-    summaries = SummaryPaper.objects.filter(paper__arxiv_id=row.arxiv_id).exclude(summary__isnull=True) \
-        .exclude(summary='').exclude(summary__startswith='Error').values_list('summary', flat=True)
-    summary = max(summaries, key=len, default='')[:SUMMARY_CHARS]
-    return '<paper id="%s">\nTitle: %s\nAuthors: %s\nAbstract: %s\n%s</paper>' % (
-        row.arxiv_id, meta['title'], ', '.join(meta['authors'][:6]), meta['abstract'],
-        'Summary: %s\n' % summary if summary else '')
+def follow_papers(user, arxiv_ids):
+    """Follow these papers (citation alerts, and version alerts for arXiv papers); returns how many could not be
+    followed, past the most a user follows."""
+    room = citations.MAX_FOLLOWED - FollowedPaper.objects.filter(user=user).count()
+    new, missed = [], 0
+    for arxiv_id in arxiv_ids:
+        base = citations.base_id(arxiv_id)
+        if not base or FollowedPaper.objects.filter(user=user, arxiv_id=base).exists():
+            continue
+        if room <= 0:
+            missed += 1
+            continue
+        followed, created = citations.follow(user, base)
+        room -= 1
+        if created and followed.known == '' and not CitationCache.objects.filter(arxiv_id=base, checked__isnull=False).exists():
+            new.append(base)
+    if new:
+        generated.background(citations.refresh_new, new)
+    return missed
 
 
-def comparison_missing_label(lang):
-    with override(lang):
-        return str(_('Not stated'))
+def followed_count(user, collection):
+    bases = {citations.base_id(a) for a in collection.papers.values_list('arxiv_id', flat=True)}
+    return FollowedPaper.objects.filter(user=user, arxiv_id__in=[b for b in bases if b]).count()
 
 
-def comparison_data(table, lang):
-    """Translate exact missing-value markers without rewriting cached scientific content."""
-    label = comparison_missing_label(lang)
-
-    def cell(value):
-        if isinstance(value, str) and re.fullmatch(r'not\s+stated[.!]?', value.strip(), re.I):
-            return label
-        return value
-
-    result = dict(table)
-    result['rows'] = [dict(row, **{code: cell(row.get(code, '')) for code, _ in COLUMNS})
-                      for row in table.get('rows', [])]
-    for field in ('agreements', 'disagreements', 'gaps'):
-        if field in table:
-            result[field] = [cell(value) for value in table[field]]
-    return result
-
-
-def write_comparison(collection_pk, lang):
-    def work(pk):
-        generated.progress(pk, 'read')
-        rows = list(CollectionPaper.objects.filter(collection__pk=collection_pk)[:COMPARE_MAX])
-        blocks = '\n\n'.join(paper_block(r) for r in rows)
-        titles = {r.arxiv_id: r.title for r in rows}
-        generated.progress(pk, 'compare')
-        answer = generated.chat_json(
-            'Compare the %d papers above for a researcher writing a literature review. Write in %s. For every paper, '
-            'fill each column in one or two short sentences, with key numbers when the paper gives them; write '
-            '%s when it does not. Then say where the papers agree, where they disagree or report '
-            'different results, and which questions none of them addresses. No LaTeX, no markdown, never write paper '
-            'IDs in the texts. Answer with a JSON object {"rows": [{"id": "paper id", "question": "...", '
-            '"method": "...", "data": "...", "results": "...", "limitations": "..."}], "agreements": ["..."], '
-            '"disagreements": ["..."], "gaps": ["..."]}.' % (len(rows), generated.language_name(lang), json.dumps(comparison_missing_label(lang), ensure_ascii=False)),
-            paid=True, max_tokens=8000, system=blocks)
-        table = []
-        for item in answer.get('rows', []):
-            if isinstance(item, dict) and item.get('id') in titles:
-                table.append(dict({c: str(item.get(c, '')).strip() for c, _ in COLUMNS},
-                                  arxiv_id=item['id'], title=titles[item['id']]))
-        if not table:
-            raise generated.GenerationError('empty comparison')
-        lists = {k: [str(x).strip() for x in answer.get(k, []) if str(x).strip()][:8]
-                 for k in ('agreements', 'disagreements', 'gaps')}
-        return comparison_data(dict(lists, rows=table), lang)
-    return work
-
-
-# --- views -------------------------------------------------------------------
+# --- views -------------------------------------------------------------------------
 
 def _mine(request, pk):
     return get_object_or_404(Collection, pk=pk, user=request.user)
+
+
+def _page(collection, tab='', **params):
+    query = urlencode({k: v for k, v in params.items() if v})
+    return redirect('/%s/collections/%s/%s%s' % (get_language(), collection.pk, '?' + query if query else '',
+                                                  '#' + tab if tab else ''))
 
 
 def collections_page(request):
@@ -197,51 +244,191 @@ def collections_page(request):
         if name:
             collection = Collection.objects.create(user=request.user, name=name)
             return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
+    now = timezone.now()
+    for c in collections:
+        c.shared = bool(c.share_token and (c.share_expires is None or c.share_expires > now))
     return render(request, 'summarizer/collections.html', {
         'collections': collections, 'paid': paid, 'can_create': can_create, 'limits': limits(paid), 'premium': PREMIUM})
 
 
+def clean_tags(text):
+    tags = []
+    for tag in str(text or '').split(','):
+        tag = ' '.join(tag.split())[:40]
+        if tag and tag.lower() not in [t.lower() for t in tags]:
+            tags.append(tag)
+    return ', '.join(tags)[:300]
+
+
+def update_paper(collection, post):
+    """Change what the request sends of one paper: note, tags, reading status, selection. The paper, or None."""
+    paper = collection.papers.filter(arxiv_id=post.get('arxiv_id', '')).first()
+    if paper is None:
+        return None
+    fields = []
+    if 'note' in post:
+        paper.note = post['note'][:5000]
+        fields.append('note')
+    if 'tags' in post:
+        paper.tags = clean_tags(post['tags'])
+        fields.append('tags')
+    if 'reading' in post and post['reading'] in ('',) + tuple(code for code, _l in READING):
+        paper.reading = post['reading']
+        fields.append('reading')
+    if 'selected' in post:
+        paper.selected = post['selected'] in ('1', 'true', 'on')
+        fields.append('selected')
+    if fields:
+        paper.save(update_fields=fields)
+    return paper
+
+
+def select(collection, value):
+    """Select all papers, none, or those with a tag or a reading status."""
+    papers = collection.papers.all()
+    if value == 'all':
+        papers.update(selected=True)
+    elif value == 'none':
+        papers.update(selected=False)
+    elif value.startswith('tag:'):
+        tag = value[4:].strip().lower()
+        chosen = [p.pk for p in papers if tag in [t.strip().lower() for t in p.tags.split(',')]]
+        papers.update(selected=False)
+        papers.filter(pk__in=chosen).update(selected=True)
+    elif value.startswith('reading:'):
+        papers.update(selected=False)
+        papers.filter(reading=value[8:]).update(selected=True)
+
+
+def share(collection, notes):
+    if not collection.share_token:
+        collection.share_token = secrets.token_urlsafe(16)
+    collection.share_expires = timezone.now() + datetime.timedelta(days=SHARE_DAYS)
+    collection.share_notes = notes
+    collection.save(update_fields=['share_token', 'share_expires', 'share_notes', 'updated'])
+
+
+def shared_url(request, collection):
+    if not collection.share_token or (collection.share_expires and collection.share_expires < timezone.now()):
+        return ''
+    return request.build_absolute_uri('/%s/collections/shared/%s/' % (get_language(), collection.share_token))
+
+
 @login_required
 def collection_page(request, pk):
+    from . import collection_tools, comparison
     collection = _mine(request, pk)
     paid = access.has_tool(request.user, 'collections')
-    message = None
     if request.method == 'POST':
         action = request.POST.get('action')
+        fetch = request.headers.get('X-Requested-With') == 'fetch'
         if action == 'delete':
             collection.delete()
             return redirect('/%s/collections/' % get_language())
         if action == 'rename':
             collection.name = request.POST.get('name', '').strip()[:120] or collection.name
             collection.save(update_fields=['name', 'updated'])
-        elif action == 'remove':
+            return _page(collection, 'settings')
+        if action == 'remove':
             collection.papers.filter(arxiv_id=request.POST.get('arxiv_id')).delete()
-        elif action == 'note':
-            collection.papers.filter(arxiv_id=request.POST.get('arxiv_id')).update(note=request.POST.get('note', '')[:2000])
-        elif action == 'add':
-            ids = []
-            for text in re.split(r'[\s,;]+', request.POST.get('ids', '')):
-                arxiv_id = canonical_id(text) if text else None
-                if arxiv_id and arxiv_id not in ids:
-                    ids.append(arxiv_id)
-            ids = ids[:MAX_ADD]
-            known = lookup_many(ids)
-            added = [add_paper(collection, arxiv_id, paid, known) for arxiv_id in ids]
-            message = 'full' if 'full' in added else 'unknown' if 'unknown' in added else 'added' if added else 'unknown'
-            return redirect('/%s/collections/%s/?m=%s' % (get_language(), collection.pk, message))
-        return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
-    papers = list(collection.papers.all())
+            if fetch:
+                return JsonResponse({'status': 'removed'})
+            return _page(collection, 'papers')
+        if action in ('paper', 'note'):
+            paper = update_paper(collection, request.POST)
+            if fetch:
+                if paper is None:
+                    return JsonResponse({'status': 'unknown'}, status=404)
+                return JsonResponse({'status': 'saved', 'tags': paper.tags, 'selected': paper.selected,
+                                     'analysed': len(comparison.analysed(collection))})
+            return _page(collection, 'papers')
+        if action == 'select':
+            select(collection, request.POST.get('value', ''))
+            return _page(collection, request.POST.get('tab', 'papers'))
+        if action == 'columns':
+            template = request.POST.get('template', 'general')
+            collection.template = template if template in dict(comparison.TEMPLATE_CHOICES) else 'general'
+            collection.custom_columns = json.dumps(comparison.parse_custom(request.POST.get('custom', '')))
+            collection.save(update_fields=['template', 'custom_columns', 'updated'])
+            return _page(collection, 'table')
+        if action == 'watch':
+            if not access.has_tool(request.user, 'citations'):
+                return _page(collection, 'settings')
+            collection.watch = request.POST.get('value') == 'on'
+            collection.save(update_fields=['watch', 'updated'])
+            missed = follow_papers(request.user, list(collection.papers.values_list('arxiv_id', flat=True))) if collection.watch else 0
+            return _page(collection, 'settings', unfollowed=missed)
+        if action == 'share':
+            share(collection, request.POST.get('notes') == 'on')
+            return _page(collection, 'settings')
+        if action == 'unshare':
+            collection.share_token, collection.share_expires = '', None
+            collection.save(update_fields=['share_token', 'share_expires', 'updated'])
+            return _page(collection, 'settings')
+        if action == 'add':
+            texts = [request.POST.get('ids', '')]
+            upload = request.FILES.get('file')
+            if upload is not None and upload.size <= MAX_UPLOAD:
+                texts.append(upload.read().decode('utf-8', 'replace'))
+            ids, skipped = wanted_ids(texts)
+            if len(ids) > SYNC_ADD:
+                row = collection_tools.start_import(request, collection, ids, paid, skipped)
+                return _page(collection, 'papers', job=row.pk)
+            counts = add_many(collection, ids, paid)
+            counts['skipped'] = counts.get('skipped', 0) + skipped
+            if not ids and not skipped:
+                counts['unknown'] = 1
+            tab = request.POST.get('tab') if request.POST.get('tab') in ('papers', 'missing') else 'papers'
+            return _page(collection, tab, **counts)
+        return _page(collection)
+
     lang = get_language()
-    comparison = Generated.objects.filter(kind='compare', key=comparison_key(collection), lang=lang).first() if paid else None
-    questions = Generated.objects.filter(kind='questions', key=comparison_key(collection), lang=lang).first() if paid else None
-    return render(request, 'summarizer/collection.html', {
-        'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid),
-        'comparison': comparison, 'table': comparison_data(comparison.data(), lang) if comparison and comparison.status == 'done' else None,
-        'columns': COLUMNS, 'compare_max': COMPARE_MAX, 'compare_steps': COMPARE_STEPS, 'message': request.GET.get('m'),
-        'chat_ids': ','.join(p.arxiv_id for p in papers[:CHAT_MAX]), 'chat_max': CHAT_MAX,
-        'questions': questions, 'open': questions.data() if questions and questions.status == 'done' else None,
-        'questions_steps': QUESTIONS_STEPS,
-    })
+    papers = list(collection.papers.all())
+    chosen = comparison.analysed(collection)
+    meta_row = Generated.objects.filter(kind='collection_meta', key=collection_tools.meta_key(collection)).first()
+    meta = meta_row.data() if meta_row is not None and meta_row.content else {}
+    try:
+        meta_checked = datetime.datetime.fromisoformat(meta['checked_at'])
+    except (KeyError, TypeError, ValueError):
+        meta_checked = None
+    facts = collection_tools.facts(papers, meta.get('versions'))
+    for index, p in enumerate(papers):
+        p.order, p.facts = index, facts.get(p.arxiv_id, {})
+        p.tag_list = [t.strip() for t in p.tags.split(',') if t.strip()]
+    tags = sorted({t for p in papers for t in p.tag_list}, key=str.lower)
+
+    context = {
+        'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid), 'tags': tags,
+        'reading_choices': READING, 'analysed': chosen, 'compare_max': comparison.COMPARE_MAX,
+        'chat_ids': ','.join(p.arxiv_id for p in chosen[:CHAT_MAX]), 'chat_max': CHAT_MAX,
+        'added': {k: int(request.GET[k]) for k in ADD_RESULTS + ('unfollowed',) if request.GET.get(k, '').isdigit()},
+        'job': request.GET.get('job', ''), 'import_steps': collection_tools.IMPORT_STEPS,
+        'meta_row': meta_row, 'meta_checked': meta_checked, 'meta_steps': collection_tools.META_STEPS,
+        'can_follow': access.has_tool(request.user, 'citations'), 'max_followed': citations.MAX_FOLLOWED,
+        'followed': followed_count(request.user, collection) if collection.watch else 0,
+        'zotero': ZoteroAccount.objects.filter(user=request.user).exists(),
+        'can_zotero': access.has_tool(request.user, 'zotero'),
+        'share_url': shared_url(request, collection),
+        'templates': comparison.TEMPLATE_CHOICES,
+        'template_columns': [(code, [label for _c, label, _h in cols]) for code, cols in comparison.TEMPLATES.items()],
+        'custom_text': '\n'.join('%s: %s' % (c['label'], c['hint']) if c['hint'] else c['label']
+                                 for c in comparison.custom_columns(collection)),
+        'columns_now': [label for _c, label, _h in comparison.columns(collection)],
+        'compare_steps': comparison.STEPS, 'suggest_steps': collection_tools.SUGGEST_STEPS,
+        'questions_steps': [('read', _('Reading the limitations, discussions and future work of each paper')),
+                            ('write', _('An AI gathers the open questions and groups them'))],
+    }
+    if paid:
+        exact, shown = comparison.shown_result(collection, 'compare', lang)
+        context.update(comparison=exact, compare_shown=shown,
+                       table=comparison.display(shown.data(), lang) if shown is not None else None,
+                       compare_stale=comparison.staleness(collection, 'compare', shown, chosen))
+        exact, shown = comparison.shown_result(collection, 'questions', lang)
+        context.update(questions=exact, questions_shown=shown, open=shown.data() if shown is not None else None,
+                       questions_stale=comparison.staleness(collection, 'questions', shown, chosen))
+        suggest = Generated.objects.filter(kind='suggest', key=collection_tools.suggest_key(collection), lang=lang).first()
+        context.update(suggest=suggest, suggested=suggest.data() if suggest is not None and suggest.content else None)
+    return render(request, 'summarizer/collection.html', context)
 
 
 @require_POST
@@ -261,49 +448,86 @@ def add_to_collection(request):
         collection = Collection.objects.create(user=request.user, name=name)
     else:
         collection = _mine(request, wanted)
-    status = add_paper(collection, arxiv_id, paid)
-    return JsonResponse({'status': status, 'collection': collection.pk, 'name': collection.name,
-                         'url': '/%s/collections/%s/' % (get_language(), collection.pk)})
+    status = add_many(collection, [arxiv_id], paid)
+    status = next(iter(k for k in status if k in ADD_RESULTS), 'unknown')
+    return JsonResponse({'status': 'added' if status == 'updated' else status, 'collection': collection.pk,
+                         'name': collection.name, 'url': '/%s/collections/%s/' % (get_language(), collection.pk)})
 
 
-@login_required
-@require_POST
-def compare_start(request, pk):
-    collection = _mine(request, pk)
-    if not access.has_tool(request.user, 'collections'):
-        return JsonResponse({'status': 'premium'}, status=403)
-    if collection.papers.count() < 2:
-        return JsonResponse({'status': 'too_few'})
-    lang = get_language()
-    row = generated.start('compare', comparison_key(collection), lang, write_comparison(collection.pk, lang),
-                          user=request.user, force=request.POST.get('again') == '1')
-    return JsonResponse({'status': row.status, 'id': row.pk})
+def export_name(collection):
+    return re.sub(r'[^A-Za-z0-9_-]+', '-', collection.name).strip('-')[:60] or 'collection'
 
 
 @login_required
 def collection_export(request, pk, fmt):
+    """bib, ris, md: the papers (with a tag only, ?tag=), with their notes and tags; csv: the comparison table."""
+    from . import comparison
     collection = _mine(request, pk)
     lang = get_language()
-    filename = re.sub(r'[^A-Za-z0-9_-]+', '-', collection.name).strip('-')[:60] or 'collection'
+    filename = export_name(collection)
     if fmt == 'csv':
-        row = Generated.objects.filter(kind='compare', key=comparison_key(collection), lang=lang, status='done').first()
-        if row is None or not access.has_tool(request.user, 'collections'):
+        _exact, shown = comparison.shown_result(collection, 'compare', lang)
+        if shown is None or not access.has_tool(request.user, 'collections'):
             raise Http404
-        out = io.StringIO()
-        writer = csv.writer(out)
-        writer.writerow(['Identifier', 'Title'] + [str(label) for _, label in COLUMNS])
-        for line in comparison_data(row.data(), lang)['rows']:
-            writer.writerow([exports.bare_ref(line['arxiv_id']), line['title']] + [line[c] for c, _ in COLUMNS])
-        response = HttpResponse('﻿' + out.getvalue(), content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % filename
-        return response
-    metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in collection.papers.all()) if m]
-    return exports.export_many(metas, fmt, filename, lang)
+        return comparison.csv_response(shown.data(), lang, filename)
+    rows = list(collection.papers.all())
+    tag = request.GET.get('tag', '').strip().lower()
+    if tag:
+        rows = [r for r in rows if tag in [t.strip().lower() for t in r.tags.split(',')]]
+    metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in rows) if m]
+    notes = {p.arxiv_id: (p.note, p.tags) for p in rows}
+    return exports.export_many(metas, fmt, filename, lang, notes=notes)
 
 
 def paper_collections(user, arxiv_id):
-    """For the paper page: the user's collections, and whether each holds this paper."""
+    """For the paper page: the user's collections, and whether each holds this paper (in any version)."""
     if not user.is_authenticated:
         return []
-    inside = set(CollectionPaper.objects.filter(collection__user=user, arxiv_id=arxiv_id).values_list('collection_id', flat=True))
+    base = version_of(arxiv_id)[0]
+    inside = {c for c, aid in CollectionPaper.objects.filter(collection__user=user, arxiv_id__startswith=base)
+              .values_list('collection_id', 'arxiv_id') if version_of(aid)[0] == base}
     return [{'pk': c.pk, 'name': c.name, 'has': c.pk in inside} for c in Collection.objects.filter(user=user)]
+
+
+# --- the shared page ---------------------------------------------------------------
+
+def _shared(token):
+    collection = get_object_or_404(Collection, share_token=token) if token else None
+    if collection is None or (collection.share_expires and collection.share_expires < timezone.now()):
+        raise Http404
+    return collection
+
+
+def shared_page(request, token):
+    """The read-only page of a shared collection: its papers (the owner's notes when they chose to show them),
+    its comparison table and its open questions, never who made it."""
+    from . import collection_tools, comparison
+    collection = _shared(token)
+    lang = get_language()
+    papers = list(collection.papers.all())
+    facts = collection_tools.facts(papers)
+    for p in papers:
+        p.facts = facts.get(p.arxiv_id, {})
+    _exact, table = comparison.shown_result(collection, 'compare', lang)
+    _exact, questions = comparison.shown_result(collection, 'questions', lang)
+    return render(request, 'summarizer/collection_shared.html', {
+        'collection': collection, 'papers': papers, 'token': token,
+        'table': comparison.display(table.data(), lang) if table is not None else None,
+        'open': questions.data() if questions is not None else None,
+    })
+
+
+@login_required
+@require_POST
+def shared_copy(request, token):
+    """Make a collection of one's own with the papers of a shared one (not the owner's notes)."""
+    source = _shared(token)
+    paid = access.has_tool(request.user, 'collections')
+    if Collection.objects.filter(user=request.user).count() >= limits(paid)['collections']:
+        return redirect('/%s/collections/' % get_language())
+    collection = Collection.objects.create(user=request.user, name=source.name, template=source.template,
+                                           custom_columns=source.custom_columns)
+    for paper in source.papers.all()[:limits(paid)['papers']]:
+        CollectionPaper.objects.create(collection=collection, arxiv_id=paper.arxiv_id, title=paper.title,
+                                       authors=paper.authors, selected=paper.selected)
+    return redirect('/%s/collections/%s/' % (get_language(), collection.pk))

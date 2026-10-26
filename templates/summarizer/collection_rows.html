@@ -1,0 +1,1 @@
+{% load i18n %}{% if x.papers %} <span class="row-refs" title="{% trans 'Rows of the table' %}">[{% for n in x.papers %}<a href="#row-{{ n }}">{{ n }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}]</span>{% endif %}

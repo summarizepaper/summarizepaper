@@ -1,0 +1,7 @@
+{% load i18n %}{# Agreements, disagreements and gaps of a comparison table (comparison.display), each with the rows it rests on. #}
+{% if table.agreements %}<h3>{% trans 'Where they agree' %}</h3>
+<ul class="findings">{% for x in table.agreements %}<li>{{ x.text }}{% include 'summarizer/collection_rows.html' %}</li>{% endfor %}</ul>{% endif %}
+{% if table.disagreements %}<h3>{% trans 'Where they disagree' %}</h3>
+<ul class="findings">{% for x in table.disagreements %}<li>{{ x.text }}{% include 'summarizer/collection_rows.html' %}</li>{% endfor %}</ul>{% endif %}
+{% if table.gaps %}<h3>{% trans 'What none of them addresses' %}</h3>
+<ul class="findings">{% for x in table.gaps %}<li>{{ x.text }}{% include 'summarizer/collection_rows.html' %}</li>{% endfor %}</ul>{% endif %}

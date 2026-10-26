@@ -31,6 +31,7 @@ GENERATED_TOOLS = {
     'presskit': 'presskit', 'presskit_status': 'presskit',
     'slides': 'journal_club', 'slides_v2': 'journal_club',
     'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club',
-    'compare': 'collections', 'questions': 'collections',
+    'compare': 'collections', 'questions': 'collections', 'collection_meta': 'collections', 'suggest': 'collections',
+    'zotero_import': 'zotero',
     **{k: k for k in ('missed', 'literature', 'zotero', 'refcheck', 'changes', 'teams', 'conference', 'students')},
 }

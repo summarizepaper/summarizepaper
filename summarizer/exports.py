@@ -181,14 +181,38 @@ def export_paper(request, arxiv_id, fmt):
     raise Http404
 
 
-def export_many(metas, fmt, filename, lang):
+def with_note(entry, fmt, note, tags):
+    """A BibTeX, RIS or Markdown entry with the reader's note and tags (a collection's). BibTeX keeps them in
+    annote and keywords, which bibliography styles do not print."""
+    tags = [t.strip() for t in (tags or '').split(',') if t.strip()]
+    note = (note or '').strip()
+    if not (note or tags):
+        return entry
     if fmt == 'bib':
-        return _download('\n'.join(bibtex_entry(m) for m in metas), filename + '.bib', 'application/x-bibtex; charset=utf-8')
+        fields = ([',\n  keywords={%s}' % ', '.join(tags)] if tags else []) + \
+                 ([',\n  annote={%s}' % note.replace('{', '(').replace('}', ')')] if note else [])
+        body = entry.rstrip()
+        return body[:-1].rstrip() + ''.join(fields) + '\n}\n'
     if fmt == 'ris':
-        return _download('\n'.join(ris_entry(m) for m in metas), filename + '.ris',
+        lines = ['KW  - %s' % t for t in tags] + (['N1  - %s' % ' '.join(note.split())] if note else [])
+        return entry.replace('ER  - ', '\n'.join(lines + ['ER  - ']), 1)
+    extra = ['**Tags:** %s  ' % ', '.join(tags)] if tags else []
+    return entry.rstrip() + '\n\n' + '\n'.join(extra + (['## My note', '', note] if note else [])) + '\n'
+
+
+def export_many(metas, fmt, filename, lang, notes=None):
+    """notes: {arxiv_id: (note, tags)} to add to each entry."""
+    notes = notes or {}
+
+    def entries(write):
+        return [with_note(write(m), fmt, *notes.get(m['arxiv_id'], ('', ''))) for m in metas]
+    if fmt == 'bib':
+        return _download('\n'.join(entries(bibtex_entry)), filename + '.bib', 'application/x-bibtex; charset=utf-8')
+    if fmt == 'ris':
+        return _download('\n'.join(entries(ris_entry)), filename + '.ris',
                          'application/x-research-info-systems; charset=utf-8')
     if fmt == 'md':
-        return _download('\n\n---\n\n'.join(markdown_entry(m, lang) for m in metas), filename + '.md',
+        return _download('\n\n---\n\n'.join(entries(lambda m: markdown_entry(m, lang))), filename + '.md',
                          'text/markdown; charset=utf-8')
     raise Http404
 

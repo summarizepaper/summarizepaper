@@ -10,8 +10,9 @@ versions and language, and shared by every reader.
 Once a day, the hourly run reads the latest version of the papers that Premium
 users follow (citation alerts, see citations.py). A new version is compared
 with the previous one and emailed, with what changed, to their followers.
-Papers kept in collections are left out: a collection can hold 200 papers,
-and nobody asked to hear about each of them.
+Papers kept in collections are left out unless their owner watches the
+collection (library.follow_papers then follows each of them): a collection can
+hold 200 papers, and nobody asked to hear about each of them otherwise.
 """
 import difflib
 import logging

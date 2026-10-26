@@ -5,18 +5,20 @@ do (limitations, discussion, future work, conclusions) when the license lets us
 read the paper, and its abstract and our summary otherwise. It gathers the open
 questions of the whole collection, groups the ones several papers share, says
 which papers raise each one, and suggests projects that would answer them.
-Written once per set of papers and language, like the comparison table.
+It reads the papers the comparison table reads (comparison.analysed) and keeps their ids, so the page can
+say when the collection changed since. Written once per collection and language; written again on demand.
 """
 import json
 import re
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
-from . import access, generated, library, paper_source, sources
-from .models import ArxivPaper, CollectionPaper
+from . import access, comparison, generated, paper_source, sources
+from .models import ArxivPaper, Collection
 
 SECTION_RE = re.compile(r'^##\s*(?:[\dIVX.]+\s*)?.*(limitation|future|outlook|discussion|conclusion|open (?:question|problem)|'
                         r'caveat|perspective|summary)', re.I | re.M)
@@ -42,13 +44,13 @@ def paper_block(row):
         if text and len(text) > 3000:
             return '<paper id="%s">\nTitle: %s\nAbstract: %s\nSections on what is left open:\n%s\n</paper>' % (
                 row.arxiv_id, row.title, paper.abstract or '', closing_sections(text))
-    return library.paper_block(row)
+    return comparison.summary_block(row)
 
 
 def write(collection_pk, lang):
     def work(pk):
         generated.progress(pk, 'read')
-        rows = list(CollectionPaper.objects.filter(collection__pk=collection_pk)[:library.COMPARE_MAX])
+        rows = comparison.analysed(Collection.objects.get(pk=collection_pk))
         blocks = '\n\n'.join(paper_block(r) for r in rows)
         generated.release_connection()
         generated.progress(pk, 'write')
@@ -99,19 +101,19 @@ def write(collection_pk, lang):
                     for p in answer.get('projects', []) if isinstance(p, dict) and text(p.get('title'))][:5]
         projects = [p for p in projects if p['papers']] if questions else []
         return {'questions': questions[:20], 'projects': projects, 'empty': not questions,
-                'papers_read': len(rows)}
+                'papers_read': len(rows), 'ids': [r.arxiv_id for r in rows]}
     return work
 
 
 @login_required
 @require_POST
 def questions_start(request, pk):
-    collection = library._mine(request, pk)
+    collection = get_object_or_404(Collection, pk=pk, user=request.user)
     if not access.has_tool(request.user, 'collections'):
         return JsonResponse({'status': 'premium'}, status=403)
-    if collection.papers.count() < 2:
+    if len(comparison.analysed(collection)) < 2:
         return JsonResponse({'status': 'too_few'})
     lang = get_language()
-    row = generated.start('questions', library.comparison_key(collection), lang, write(collection.pk, lang),
-                          user=request.user, force=request.POST.get('again') == '1')
+    row = generated.start('questions', comparison.result_key(collection, 'questions'), lang, write(collection.pk, lang),
+                          user=request.user, force=request.POST.get('again') == '1' or request.POST.get('mode') in ('update', 'again'))
     return JsonResponse({'status': row.status, 'id': row.pk})
