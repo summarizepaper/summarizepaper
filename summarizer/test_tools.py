@@ -1525,6 +1525,41 @@ class LoadShedTests(TestCase):
         asyncio.run(run())
 
 
+class SearchCookieTests(TestCase):
+    def test_result_pages_reached_without_the_visitor_cookie_ask_for_it_before_django(self):
+        import asyncio
+        from summarizer.loadshed import LoadShedder
+
+        async def run():
+            reached = []
+
+            async def app(scope, receive, send):
+                reached.append(scope['path'])
+                await send({'type': 'http.response.start', 'status': 200, 'headers': [(b'content-type', b'text/html')]})
+                await send({'type': 'http.response.body', 'body': b'results'})
+            shedder = LoadShedder(app)
+
+            async def call(path, query, cookie=None):
+                sent = []
+
+                async def send(message):
+                    sent.append(message)
+                headers = [(b'cookie', cookie)] if cookie else []
+                await shedder({'type': 'http', 'path': path, 'query_string': query, 'headers': headers}, None, send)
+                return sent[0]['status'], dict(sent[0]['headers']), sent[-1]['body']
+            status, headers, body = await call('/en/search-results/', b'q=AI+fairness&page=2&window=abc')
+            self.assertEqual((status, reached), (200, []))  # Django never saw it
+            self.assertIn(b'sp=1', headers[b'set-cookie'])
+            self.assertIn(b'href="/en/search-results/?q=AI+fairness&amp;page=2&amp;window=abc"', body)
+            status, headers, body = await call('/en/search-results/', b'q=AI+fairness&page=2&window=abc', b'csrftoken=x; sp=1')
+            self.assertEqual((body, reached), (b'results', ['/en/search-results/']))
+            self.assertNotIn(b'set-cookie', headers)  # already known
+            status, headers, body = await call('/en/search-results/', b'q=AI+fairness')  # a new search always passes
+            self.assertEqual(body, b'results')
+            self.assertIn(b'sp=1', headers[b'set-cookie'])
+        asyncio.run(run())
+
+
 class AudioTests(ToolsTestCase):
     def test_clips_are_shared_and_joined(self):
         items = [DigestItem.objects.create(arxiv_id='2610.0000%dv1' % i, lang='en', title='Paper %d' % i, blurb='Blurb %d.' % i)
