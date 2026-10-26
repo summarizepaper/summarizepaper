@@ -33,7 +33,9 @@
 .search-container { display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: border-color .15s, box-shadow .15s; }
 .search-container:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .search-container label { color: var(--text-muted); }
-.search-container select { flex: none; width: auto; max-width: 150px; padding: 6px 4px; border: 0; border-right: 1px solid var(--border); border-radius: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text-muted); }
+.search-help { margin: 8px 0 0; font-size: 13px; line-height: 1.9; color: var(--text-muted); }
+.search-help button { margin: 0 2px; padding: 1px 9px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font: 12px var(--font); cursor: pointer; }
+.search-help button:hover { border-color: var(--accent); color: var(--accent); }
 #search { flex: 1; min-width: 0; padding: 12px 0; border: 0; outline: none; font: 15px var(--font); background: transparent; }
 .chat-note { margin: 8px 0 0; font-size: 14px; }
 .chat-note.error { color: var(--danger); }
@@ -100,7 +102,6 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   .chat-page { padding-top: 28px; }
   .columns-container { grid-template-columns: minmax(0, 1fr); }
   .column-card { padding: 18px; }
-  .search-container select { max-width: 92px; }
   .chat-tools, .table-builder { margin-left: 0; margin-right: 0; padding-left: 16px; padding-right: 16px; }
 }
   </style>
@@ -188,22 +189,30 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
       <form class="searchform" role="search" onsubmit="return false">
         <div class="search-container">
           <label for="search"><i class="fas fa-search"></i></label>
-          <select id="search-source" aria-label="{% trans 'Where to search' %}">
-            <option value="">arXiv</option>
-            <option value="open">{% trans 'Journals and preprints' %}</option>
-          </select>
-          <input type="search" id="search" placeholder="{% trans 'Search for papers' %}" autocomplete="off">
+          <input type="search" id="search" placeholder="{% trans 'Title, topic, method or author' %}" autocomplete="off" aria-describedby="search-help">
           <span id="spinner" hidden><i class="fas fa-spinner fa-spin"></i></span>
         </div>
+        <p class="search-help" id="search-help">{# the examples stay in English, the language of most papers: a translated query finds fewer #}{% trans 'arXiv, journals and preprint servers at once. For example:' %}
+          <button type="button" data-example="protein structure prediction AlphaFold">protein structure prediction AlphaFold</button>
+          <button type="button" data-example="hallucination in large language models">hallucination in large language models</button>
+          <button type="button" data-example="JWST exoplanet atmospheres">JWST exoplanet atmospheres</button>
+          <button type="button" data-example="Vaswani attention">Vaswani attention</button>
+        </p>
         <p class="chat-note error" id="search-note" hidden></p>
         <div id="search-results" aria-live="polite"></div>
       </form>
       <form class="add-paper-container" id="add-paper-form">
         <label for="paper-id">{% trans 'Add a paper directly' %}</label>
         <div class="add-paper-row">
-          <input type="text" id="paper-id" placeholder="{% trans 'arXiv ID or DOI (e.g. 2211.04191, 10.1093/mnras/stad1234)' %}">
+          <input type="text" id="paper-id" placeholder="{% trans 'arXiv ID, DOI or link' %}" aria-describedby="paper-id-help">
           <button type="submit" id="add-paper">{% trans 'Add' %}</button>
         </div>
+        <p class="search-help" id="paper-id-help">{% trans 'For example:' %}
+          <button type="button" data-id="2310.06825">2310.06825</button>
+          <button type="button" data-id="https://arxiv.org/abs/1706.03762">arxiv.org/abs/1706.03762</button>
+          <button type="button" data-id="10.1038/s41586-021-03819-2">10.1038/s41586-021-03819-2</button>
+          <button type="button" data-id="https://pubmed.ncbi.nlm.nih.gov/34265844/">{% trans 'a PubMed, PMC or HAL link' %}</button>
+        </p>
         <p class="chat-note" id="add-note" hidden></p>
       </form>
     </div>

@@ -780,6 +780,17 @@ def open_feed(request, search_query, id_list):
     return HttpResponse(sources.atom_feed(papers), content_type='application/atom+xml; charset=utf-8')
 
 
+def arxiv_reference(text):
+    """'https://arxiv.org/abs/2310.06825v2', 'arXiv:2310.06825', '2310.06825.pdf'... -> '2310.06825v2' / '2310.06825';
+    anything else unchanged (a DOI, a link to another source)."""
+    value = text.strip()
+    value = re.sub(r'^https?://(?:www\.|export\.)?arxiv\.org/(?:abs|pdf|html)/', '', value, flags=re.I)
+    value = re.sub(r'^arxiv:\s*', '', value, flags=re.I)
+    value = re.sub(r'\.pdf(?:[?#].*)?$', '', value, flags=re.I).split('?')[0].split('#')[0].rstrip('/')
+    value = value.replace('--', '/')
+    return value if ARXIV_ID_FULL.match(value) else text.strip()
+
+
 def arxiv_api(request):
     """Relay the chat page's arXiv lookups: arXiv sends no CORS header, so browsers block direct calls.
 
@@ -789,8 +800,20 @@ def arxiv_api(request):
     id_list = request.GET.get('id_list', '').strip()[:300]
     if bool(search_query) == bool(id_list):
         return HttpResponse('Give either search_query or id_list.', status=400, content_type='text/plain')
-    # several arXiv ids at once: one arXiv request for the chat page's restored selection
-    arxiv_ids = [i.strip().replace('--', '/') for i in id_list.split(',')] if id_list else []
+    if search_query and request.GET.get('src') == 'all':
+        # arXiv and the journals and preprints at once, as the search of the site does (the chat page)
+        try:
+            limit = min(max(int(request.GET.get('max_results', 10)), 1), 20)
+        except ValueError:
+            limit = 10
+        papers, failed = unified_search.search(search_query)
+        if failed and not papers:
+            return HttpResponse('The search is not reachable right now.', status=502, content_type='text/plain')
+        return HttpResponse(sources.atom_feed([dict(p, published=str(p.get('published') or '')[:10]) for p in papers[:limit]]),
+                            content_type='application/atom+xml; charset=utf-8')
+    # several arXiv ids at once: one arXiv request for the chat page's restored selection; an arXiv link or
+    # 'arXiv:2310.06825' is its id (without a version, arXiv answers with the latest)
+    arxiv_ids = [arxiv_reference(i) for i in id_list.split(',')] if id_list else []
     if arxiv_ids and len(arxiv_ids) <= 10 and all(ARXIV_ID_FULL.match(i) for i in arxiv_ids):
         id_list = ','.join(arxiv_ids)  # our URL form of old ids, from a collection's "chat with these"
     elif ',' in id_list:

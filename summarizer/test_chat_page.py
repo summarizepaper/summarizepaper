@@ -354,6 +354,27 @@ class PageTests(ToolsTestCase):
         staff.save()
         self.assertContains(self.client_for(staff).get('/admin/activite/'), 'Fiabilité de l’assistant')
 
+    def test_the_relay_searches_every_source_and_reads_arxiv_links(self):
+        rows = [{'key': '2101.00001v1', 'title': 'Clouds', 'authors': ['Ann Lee'], 'abstract': 'A.', 'venue': 'arXiv',
+                 'published': datetime.datetime(2021, 1, 4, 10, tzinfo=datetime.timezone.utc)},
+                {'key': 'doi_10.1--x', 'title': 'Journal clouds', 'authors': ['Bob Ray'], 'venue': 'Nature', 'published': '2022-03-01'}]
+        with mock.patch('summarizer.unified_search.search', return_value=(rows, False)) as search:
+            body = Client().get('/en/arxiv-api/?search_query=clouds&src=all').content.decode()
+        search.assert_called_once_with('clouds')
+        self.assertIn('/abs/2101.00001v1</id>', body)
+        self.assertIn('<published>2021-01-04T00:00:00Z</published>', body)
+        self.assertIn('<venue>Nature</venue>', body)
+        with mock.patch('summarizer.unified_search.search', return_value=([], True)):
+            self.assertEqual(Client().get('/en/arxiv-api/?search_query=clouds&src=all').status_code, 502)
+        from summarizer.views import arxiv_reference
+        for typed, found in (('https://arxiv.org/abs/2310.06825', '2310.06825'), ('arXiv:2310.06825v2', '2310.06825v2'),
+                             ('https://arxiv.org/pdf/hep-th/9901001v1.pdf', 'hep-th/9901001v1'),
+                             ('10.1038/s41586-021-03819-2', '10.1038/s41586-021-03819-2')):
+            self.assertEqual(arxiv_reference(typed), found)
+        page = Client().get('/en/chat/')
+        self.assertNotContains(page, 'id="search-source"')
+        self.assertContains(page, 'data-example=')
+
     def test_the_arxiv_relay_takes_several_ids(self):
         with mock.patch('summarizer.views.requests.get') as get:
             get.return_value = mock.Mock(content=b'<feed/>', raise_for_status=lambda: None)

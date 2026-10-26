@@ -1651,7 +1651,7 @@ msgstr ""
 
 #: templates/summarizer/chat.html:159
 msgid "Select papers to chat with"
-msgstr "Sélectionnez les papiers avec lesquels discuter"
+msgstr "Sélectionnez les articles avec lesquels discuter"
 
 #: templates/summarizer/chat.html:163
 msgid "Search for papers"
@@ -1667,7 +1667,7 @@ msgstr "Aucun article trouvé"
 
 #: templates/summarizer/chat.html:175
 msgid "Add a paper directly"
-msgstr "Ajouter un papier directement"
+msgstr "Ajouter un article directement"
 
 #: templates/summarizer/chat.html:178
 msgid "Arxiv ID (e.g. 2211.04191v1)"
@@ -1680,19 +1680,19 @@ msgstr "Ajouter"
 
 #: templates/summarizer/chat.html:182
 msgid "This ID does not exist"
-msgstr "Cet ID n'existe pas"
+msgstr "Cet identifiant n’existe pas"
 
 #: templates/summarizer/chat.html:183
 msgid "Paper added!"
-msgstr "Papier ajouté !"
+msgstr "Article ajouté !"
 
 #: templates/summarizer/chat.html:184
 msgid "Paper already added!"
-msgstr "Papier déjà ajouté !"
+msgstr "Article déjà ajouté !"
 
 #: templates/summarizer/chat.html:190
 msgid "Selected Papers"
-msgstr "Articles Sélectionnés"
+msgstr "Articles sélectionnés"
 
 #: templates/summarizer/chat.html:193
 msgid ""
@@ -10661,3 +10661,26 @@ msgid ""
 msgstr ""
 "L’assistant n’a que le résumé de cet article : il le dira quand une question"
 " demande davantage."
+
+#: templates/summarizer/chat.html
+msgid "Title, topic, method or author"
+msgstr "Titre, sujet, méthode ou auteur"
+
+#: templates/summarizer/chat.html
+msgid "arXiv, journals and preprint servers at once. For example:"
+msgstr "arXiv, revues et serveurs de prépublications à la fois. Par exemple :"
+
+
+
+
+#: templates/summarizer/chat.html
+msgid "arXiv ID, DOI or link"
+msgstr "Identifiant arXiv, DOI ou lien"
+
+#: templates/summarizer/chat.html
+msgid "For example:"
+msgstr "Par exemple :"
+
+#: templates/summarizer/chat.html
+msgid "a PubMed, PMC or HAL link"
+msgstr "un lien PubMed, PMC ou HAL"

@@ -1034,7 +1034,9 @@ def atom_feed(papers, base_url='https://www.summarizepaper.com'):
         entry = ElementTree.SubElement(feed, 'entry')
         ElementTree.SubElement(entry, 'id').text = '%s/abs/%s' % (base_url, paper['key'])
         ElementTree.SubElement(entry, 'title').text = paper['title']
-        ElementTree.SubElement(entry, 'summary').text = paper['abstract']
+        ElementTree.SubElement(entry, 'summary').text = paper.get('abstract') or ''
+        if paper.get('venue'):
+            ElementTree.SubElement(entry, 'venue').text = paper['venue']  # the journal, server or 'arXiv'
         ElementTree.SubElement(entry, 'published').text = '%sT00:00:00Z' % (paper['published'] or '1970-01-01')
         ElementTree.SubElement(entry, 'label').text = label(paper['key'])
         for name in paper['authors'][:20] or ['']:

@@ -12,7 +12,7 @@
   var $ = function (selector) {return root.querySelector(selector);};
   var tools = window.SPChatTools;
 
-  var search = $('#search'), searchSource = $('#search-source'), searchResults = $('#search-results');
+  var search = $('#search'), searchResults = $('#search-results');
   var searchNote = $('#search-note'), spinner = $('#spinner');
   var addForm = $('#add-paper-form'), paperId = $('#paper-id'), addNote = $('#add-note');
   var list = $('#selected-papers'), nopap = $('#nopap'), count = $('#selected-count'), footer = $('#selection-footer');
@@ -94,7 +94,7 @@
         var first = authors.length ? (authors[0].getElementsByTagName('name')[0] || {}).textContent || '' : '';
         return {id: id.indexOf('/abs/') >= 0 ? canonical(id.split('/abs/')[1]) : '', title: text('title'),
                 author: first.trim() + (authors.length > 1 ? ' et al.' : ''), published: text('published').slice(0, 10),
-                label: text('label')};
+                label: text('label'), venue: text('venue')};
       }).filter(function (paper) {return paper.id && paper.title;});
     });
   }
@@ -109,9 +109,8 @@
       return;
     }
     spinner.hidden = false;
-    var params = {search_query: query, max_results: 10};
-    if (searchSource.value) params.src = searchSource.value;
-    fetchFeed(params).then(function (papers) {
+    // arXiv and the journals and preprint servers at once, as the search of the site
+    fetchFeed({search_query: query, max_results: 10, src: 'all'}).then(function (papers) {
       if (seq !== searchSeq) return;
       searchResults.replaceChildren.apply(searchResults, papers.map(resultItem));
       if (!papers.length) note(searchNote, T.noneFound, 'error');
@@ -123,7 +122,12 @@
     });
   }
   search.addEventListener('input', function () {clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 400);});
-  searchSource.addEventListener('change', function () {if (search.value.trim().length >= 3) runSearch();});
+  $('#search-help').querySelectorAll('[data-example]').forEach(function (example) {
+    example.addEventListener('click', function () {search.value = example.dataset.example; runSearch();});
+  });
+  $('#paper-id-help').querySelectorAll('[data-id]').forEach(function (example) {
+    example.addEventListener('click', function () {paperId.value = example.dataset.id; paperId.focus();});
+  });
 
   function resultItem(paper) {
     var item = node('button', 'paper-item');
@@ -131,7 +135,8 @@
     item.dataset.id = paper.id;
     item.appendChild(node('strong', '', paper.title));
     if (paper.author) item.appendChild(node('small', '', T.firstAuthor + ' ' + paper.author));
-    item.appendChild(node('small', '', [T.published + ' ' + day(paper.published), paper.label].filter(Boolean).join(' · ')));
+    var venue = /^(arXiv|OpenAlex|Crossref|Europe PMC)?$/.test(paper.venue || '') ? '' : paper.venue;  // a journal, not a source
+    item.appendChild(node('small', '', [T.published + ' ' + day(paper.published), venue, paper.label].filter(Boolean).join(' · ')));
     item.classList.toggle('active', !!find(paper.id));
     item.addEventListener('click', function () {
       var result = addPaper(paper);
