@@ -836,6 +836,9 @@ class AIUsage(models.Model):
         if prices is None:
             prices = {p.model: p for p in AIPrice.objects.all()}
         price = prices.get(self.model)
+        if price is None:  # OpenAI answers with the dated snapshot: gpt-6-luna-2026-08-05 is priced as gpt-6-luna
+            price = next((prices[name] for name in sorted(prices, key=len, reverse=True)
+                          if self.model.startswith(name + '-')), None)
         if price is None:
             return None
         return (self.prompt_tokens * float(price.input_per_million) +

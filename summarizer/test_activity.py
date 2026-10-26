@@ -53,3 +53,9 @@ class ActivityTests(TestCase):
         self.assertNotContains(self.client.get('/fr/faq', follow=True), 'class="nav-admin"')
         self.client.force_login(self.staff)
         self.assertContains(self.client.get('/fr/faq', follow=True), 'class="nav-admin"')
+
+    def test_a_dated_model_is_priced_as_its_alias(self):
+        from summarizer.models import AIUsage
+        row = AIUsage(model='gpt-6-luna-2026-08-05', prompt_tokens=1_000_000, completion_tokens=1_000_000)
+        self.assertAlmostEqual(row.cost(), 0.60)  # the prices of the migration: $0.10 in, $0.50 out
+        self.assertIsNone(AIUsage(model='gpt-6-lunatic').cost())
