@@ -242,6 +242,10 @@ class AIassistant(models.Model):
     active = models.BooleanField(default=True)
     lang = models.CharField(max_length=10,default='en')
     evidence = models.JSONField(blank=True, null=True)  # the claims of the answer and their passages (evidence.py)
+    # the papers discussed (assistant.paper_set): a chat page conversation can change them along the way
+    papers = models.TextField(blank=True, null=True)
+    kind = models.CharField(max_length=10, default='answer', choices=[('answer', 'Answer'), ('table', 'Comparison table')])
+    cost = models.PositiveSmallIntegerField(default=1)  # questions of the daily quota it used (a table: one per paper)
 
     def __str__(self):
         return self.arxiv_id+' '+self.query

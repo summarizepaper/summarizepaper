@@ -204,15 +204,21 @@ class CheckAnswerTests(TransactionTestCase):
         row = AIassistant.objects.get()
         self.assertEqual((row.response, row.evidence), ('An answer.', None))
 
-    def test_the_summary_given_for_a_long_paper_is_never_a_source(self):
+    def test_a_long_paper_is_shortened_from_its_own_text_never_replaced_by_our_summary(self):
         context, supplied = assistant.build_sources(['2406.08919v3'])
-        self.assertEqual(supplied[0]['text'], TEXT)
-        with mock.patch.object(assistant, 'MAX_CONTEXT_CHARS', 100), \
-             mock.patch('summarizer.assistant.SummaryPaper.objects') as summaries:
-            summaries.filter.return_value.exclude.return_value.values_list.return_value.first.return_value = 'Short summary.'
+        self.assertEqual((supplied[0]['text'], supplied[0]['coverage'], supplied[0]['kind']), (TEXT, 100, 'full'))
+        self.assertIn('Text supplied: the full text', context)
+        with mock.patch.object(assistant, 'MAX_CONTEXT_CHARS', 2000 + 200):
             context, supplied = assistant.build_sources(['2406.08919v3'])
-        self.assertIn('Detailed summary: Short summary.', context)
-        self.assertEqual((supplied[0]['text'], supplied[0]['source']), ('We study lenses.', 'abstract'))
+        text = supplied[0]['text']
+        self.assertLessEqual(len(text), 200)
+        self.assertLess(supplied[0]['coverage'], 100)
+        self.assertEqual(supplied[0]['left_out'], ['shortened'])
+        # every section keeps its start, the conclusion (short) all of it, and cuts are marked
+        self.assertIn('## 4 Conclusion\n\nRubin will transform strong lensing science.', text)
+        self.assertIn(assistant.OMITTED, text)
+        self.assertIn('Text supplied: about %d%% of the text' % supplied[0]['coverage'], context)
+        self.assertNotIn('summary', context.lower())
 
 
 @override_settings(CHANNEL_LAYERS={'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}})

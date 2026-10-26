@@ -3,9 +3,10 @@ from channels.generic.websocket import AsyncWebsocketConsumer,WebsocketConsumer
 from channels.layers import get_channel_layer
 import json
 import asyncio
+import re
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, insight, keypoints, similar, sources, summary_text
+from summarizer import access, assistant, chat_table, insight, keypoints, similar, sources, summary_text
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,20 +29,27 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        paper_id = text_data_json['paper_id']
-        c = self.create_embeddings(paper_id)
-        licenseurl = await c
-
+        """Read a paper the chat page selected (its text, once), then tell the page its license.
+        The page waits for this answer before sending questions about the paper."""
+        try:
+            paper_id = json.loads(text_data)['paper_id']
+        except (ValueError, TypeError, KeyError):
+            return
+        if not isinstance(paper_id, str) or not re.match(r'^[\w.\-/]{1,100}$', paper_id):
+            return
+        try:
+            licenseurl = await self.create_embeddings(paper_id)
+        except Exception:
+            logger.exception('Could not read %s for the chat page', paper_id)
+            await self.send(text_data=json.dumps({'message': 'failed', 'paper_id': paper_id}))
+            return
         url = licenseurl
-        print('url',url)
-
         if url:
             cc_format = sources.license_label(url)
             public = sources.is_open_license(url)
         else:
             public=False
-            licenseurl="http://arxiv.org/licenses/assumed-1991-2003/" 
+            licenseurl="http://arxiv.org/licenses/assumed-1991-2003/"
             cc_format="ASSUMED 1991-2003"
 
         await self.send(text_data=json.dumps({
@@ -56,11 +64,12 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
         # Here you can put the code to create embeddings for the given paper ID
         # First check if embeddings already there
 
+        paper_id = paper_id.replace('/', '--')  # our form of old arXiv ids, as the stored texts use it
         if not await sync_to_async(utils.has_paper_text)(paper_id):
 
             print(f"Creating embeddings for paper {paper_id}...")
             #time.sleep(1)
-            url = 'https://arxiv.org/pdf/'+paper_id+'.pdf'
+            url = 'https://arxiv.org/pdf/'+paper_id.replace('--', '/')+'.pdf'
             book_path = None
 
             c=asyncio.create_task(utils.get_arxiv_metadata(paper_id))
@@ -928,6 +937,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         self.user = self.scope.get("user")
         self.hashed_ip = access.hash_ip(access.client_ip_from_scope(self.scope))
         self.evidence_checks = set()  # running checks of answers (chat_evidence), kept until they end
+        self.chat_task = None  # the answer or table being written, cancelled by a stop message
         self.paid = await database_sync_to_async(access.is_paid)(self.user)
         # Join room group
         await self.channel_layer.group_add(self.arxiv_group_name, self.channel_name)
@@ -1004,66 +1014,116 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 asyncio.create_task(self.sendclose(v,l,message))
 
         else:
-            message = data.get('message')
-            selectedpapers = data.get('selectedpapers', [])
-            try:
-                assistant.validate_question(message)
-            except assistant.AssistantError:
-                await self.invalid_chat_message()
+            if data.get('stop') is True:
+                if self.chat_task is not None:
+                    self.chat_task.cancel()
                 return
-            if not isinstance(selectedpapers, list) or len(selectedpapers) > 10 or any(
+            message = data.get('message')
+            table = data.get('table')
+            selectedpapers = data.get('selectedpapers', [])
+            columns = None
+            if table is not None:
+                columns = chat_table.clean_columns(table.get('columns') if isinstance(table, dict) else None)
+                if columns is None:
+                    await self.invalid_chat_message()
+                    return
+            else:
+                try:
+                    assistant.validate_question(message)
+                except assistant.AssistantError:
+                    await self.invalid_chat_message()
+                    return
+            if not isinstance(selectedpapers, list) or len(selectedpapers) > assistant.MAX_PAPERS or any(
                     not isinstance(p, str) or not p.strip() or len(p) > 100 for p in selectedpapers):
                 await self.invalid_chat_message()
                 return
 
-            if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) <= 0:
+            #the multi-paper chat page sends the papers to discuss, a paper page discusses its own paper
+            if selectedpapers:
+                arxiv_ids = list(dict.fromkeys(str(p).replace('/', '--') for p in selectedpapers))
+            else:
+                arxiv_ids = [self.arxiv_id]
+
+            if self.chat_task is not None and not self.chat_task.done():
+                await self.send(text_data=json.dumps({'type': 'chat_busy'}))
+                return
+            cost = len(arxiv_ids) if columns else 1  # a table reads each paper once: a question per paper
+            if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) < cost:
                 if self.language == 'fr':
                     limit_text = "Vous avez atteint la limite quotidienne de questions. Revenez demain ou passez au compte Premium."
                 else:
                     limit_text = "You have reached the daily question limit. Come back tomorrow or upgrade to Premium."
-                await self.send(text_data=json.dumps({'message': limit_text}))
-                return
-
-            #the multi-paper chat page sends the papers to discuss, a paper page discusses its own paper
-            if selectedpapers:
-                arxiv_ids = [str(p).replace('/', '--') for p in selectedpapers][:10]
-            else:
-                arxiv_ids = [self.arxiv_id]
-
-            async def send_delta(delta):
-                await self.send(text_data=json.dumps({'type': 'chat_delta', 'delta': delta}))
-
-            async def send_figures(figures, status):
-                await self.send(text_data=json.dumps({'type': 'chat_figures', 'figures': figures, 'status': status}))
-
-            checks = []
-            try:
-                chatbot_text = await assistant.answer(
-                    arxiv_ids, self.language, message, paid, user=self.user, hashed_ip=self.hashed_ip,
-                    on_delta=send_delta, conversation_id=self.arxiv_id, on_figures=send_figures,
-                    on_evidence=lambda answer_id, check: checks.append((answer_id, check)))
-            except Exception:
-                logger.exception('Assistant failed for %s', self.arxiv_id)
-                chatbot_text = None
-                for _, check in checks:
-                    check.close()
-                checks = []
-
-            if not chatbot_text:
-                if self.language == 'fr':
-                    chatbot_text = "Une erreur s'est produite. Contactez-nous si le problème persiste."
+                if columns:
+                    await self.send(text_data=json.dumps({'type': 'table_error', 'message': limit_text}))
                 else:
-                    chatbot_text = "Something went wrong... Contact the administrators if it keeps on happening."
+                    await self.send(text_data=json.dumps({'message': limit_text}))
+                return
+            # a task, so that a stop message is read while the answer streams
+            work = self.run_table(arxiv_ids, columns, paid) if columns else self.run_answer(arxiv_ids, message, paid)
+            self.chat_task = asyncio.create_task(work)
 
-            await self.send(text_data=json.dumps({
-                'message': chatbot_text, **({'evidence': 'checking', 'answer_id': checks[0][0]} if checks else {})
-            }))
-            # the answer is shown, then each of its claims with the passage of the paper behind it;
-            # the reader can ask the next question meanwhile
-            for answer_id, check in checks:
-                task = asyncio.create_task(self.send_evidence(answer_id, check))
-                self.evidence_checks.add(task)
-                task.add_done_callback(self.evidence_checks.discard)
+    async def send_sources(self, summary):
+        """What the assistant reads of each paper (assistant.supplied_summary), before it answers."""
+        await self.send(text_data=json.dumps({'type': 'chat_sources', **summary}))
+
+    async def run_answer(self, arxiv_ids, message, paid):
+        async def send_delta(delta):
+            await self.send(text_data=json.dumps({'type': 'chat_delta', 'delta': delta}))
+
+        async def send_figures(figures, status):
+            await self.send(text_data=json.dumps({'type': 'chat_figures', 'figures': figures, 'status': status}))
+
+        checks = []
+        try:
+            chatbot_text = await assistant.answer(
+                arxiv_ids, self.language, message, paid, user=self.user, hashed_ip=self.hashed_ip,
+                on_delta=send_delta, conversation_id=self.arxiv_id, on_figures=send_figures,
+                on_evidence=lambda answer_id, check: checks.append((answer_id, check)), on_sources=self.send_sources)
+        except asyncio.CancelledError:
+            for _, check in checks:
+                check.close()
+            await self.send(text_data=json.dumps({'type': 'chat_stopped'}))
+            return
+        except Exception:
+            logger.exception('Assistant failed for %s', self.arxiv_id)
+            chatbot_text = None
+            for _, check in checks:
+                check.close()
+            checks = []
+
+        if not chatbot_text:
+            if self.language == 'fr':
+                chatbot_text = "Une erreur s'est produite. Contactez-nous si le problème persiste."
+            else:
+                chatbot_text = "Something went wrong... Contact the administrators if it keeps on happening."
+
+        await self.send(text_data=json.dumps({
+            'message': chatbot_text, **({'evidence': 'checking', 'answer_id': checks[0][0]} if checks else {})
+        }))
+        # the answer is shown, then each of its claims with the passage of the paper behind it;
+        # the reader can ask the next question meanwhile
+        for answer_id, check in checks:
+            task = asyncio.create_task(self.send_evidence(answer_id, check))
+            self.evidence_checks.add(task)
+            task.add_done_callback(self.evidence_checks.discard)
+
+    async def run_table(self, arxiv_ids, columns, paid):
+        """The comparison table (chat_table): what each paper supplies, each row as it is filled, then all."""
+        async def send_row(index, row):
+            await self.send(text_data=json.dumps({'type': 'table_row', 'index': index, 'row': row}))
+
+        try:
+            table = await chat_table.build(arxiv_ids, columns, self.language, paid, user=self.user,
+                                           hashed_ip=self.hashed_ip, conversation_id=self.arxiv_id,
+                                           on_sources=self.send_sources, on_row=send_row)
+        except asyncio.CancelledError:
+            await self.send(text_data=json.dumps({'type': 'chat_stopped'}))
+            return
+        except Exception:
+            logger.exception('Comparison table failed for %s', self.arxiv_id)
+            await self.send(text_data=json.dumps({'type': 'table_error'}))
+            return
+        await self.send(text_data=json.dumps({'type': 'table_done', 'table': table}))
 
     async def send_evidence(self, answer_id, check):
         result = await check  # stored with the answer even when the reader has left

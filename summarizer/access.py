@@ -9,7 +9,7 @@ import hashlib
 import ipaddress
 
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from .models import AIassistant, PaperHistory, SiteSettings, UserPlan, PremiumGrant
 from .premium_tools import PLUS_TOOLS, TOOL_KEYS
@@ -161,11 +161,11 @@ def chat_quota_left(user, hashed_ip):
     since = timezone.now() - timezone.timedelta(days=1)
     if user is not None and user.is_authenticated:
         tier = "paid" if is_paid(user) else "user"
-        used = AIassistant.objects.filter(user=user, created__gte=since).count()
+        rows = AIassistant.objects.filter(user=user, created__gte=since)
     else:
         tier = "anonymous"
-        used = AIassistant.objects.filter(user=None, ip_address=hashed_ip, created__gte=since).count()
-    return chat_messages_per_day()[tier] - used
+        rows = AIassistant.objects.filter(user=None, ip_address=hashed_ip, created__gte=since)
+    return chat_messages_per_day()[tier] - (rows.aggregate(used=Sum("cost"))["used"] or 0)
 
 
 def grant_run(session, arxiv_id, kind):

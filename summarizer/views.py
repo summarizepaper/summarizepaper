@@ -789,9 +789,13 @@ def arxiv_api(request):
     id_list = request.GET.get('id_list', '').strip()[:300]
     if bool(search_query) == bool(id_list):
         return HttpResponse('Give either search_query or id_list.', status=400, content_type='text/plain')
-    if id_list and ARXIV_ID_FULL.match(id_list.replace('--', '/')):
-        id_list = id_list.replace('--', '/')  # our URL form of old ids, from a collection's "chat with these"
-    if request.GET.get('src') == 'open' or (id_list and not ARXIV_ID_FULL.match(id_list)):
+    # several arXiv ids at once: one arXiv request for the chat page's restored selection
+    arxiv_ids = [i.strip().replace('--', '/') for i in id_list.split(',')] if id_list else []
+    if arxiv_ids and len(arxiv_ids) <= 10 and all(ARXIV_ID_FULL.match(i) for i in arxiv_ids):
+        id_list = ','.join(arxiv_ids)  # our URL form of old ids, from a collection's "chat with these"
+    elif ',' in id_list:
+        return HttpResponse('Give at most 10 arXiv ids.', status=400, content_type='text/plain')
+    if request.GET.get('src') == 'open' or (id_list and not all(ARXIV_ID_FULL.match(i) for i in id_list.split(','))):
         answer = open_feed(request, search_query, id_list)
         if answer is not None:
             return answer
@@ -817,36 +821,6 @@ def arxiv_api(request):
         cache.set(cache_key, body, 600)
     return HttpResponse(body, content_type='application/atom+xml; charset=utf-8')
 
-
-def chat(request):
-    stuff_for_frontend = {}
-    lang = get_language()
-    li = get_language_info(lang)
-    language = li['name']
-
-
-    if 'ON_HEROKU' in os.environ:
-        onhero=True
-    else:
-        onhero=False
-
-    max_nb_paper = 10
-
-    client_ip = utils.get_client_ip(request)#request.META['REMOTE_ADDR']
-    #print('clientip',client_ip)
-    #print('clientip2',client_ip.encode('utf-8'))
-
-    # Check if this IP address has already voted on this post
-    hashed_ip_address = hashlib.sha256(client_ip.encode('utf-8')).hexdigest()
-    
-    stuff_for_frontend.update({
-        'onhero':onhero,
-        'language':lang,
-        'hashed_ip_address':hashed_ip_address,
-        'max_nb_paper':max_nb_paper,
-    })
-
-    return render(request, "summarizer/chat.html", stuff_for_frontend)
 
 def paper_structured_data(paper, sumpaper, lang):
     """schema.org JSON-LD for a paper page, already escaped for a <script> tag."""

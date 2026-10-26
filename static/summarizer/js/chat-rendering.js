@@ -3,6 +3,7 @@
   'use strict';
   var md = window.markdownit ? window.markdownit({html: false, breaks: true, linkify: false}) : null;
   var raw = new WeakMap();
+  var checked = new WeakMap();  // the claims of each answer once checked, for copies and exports
   var mathQueue = Promise.resolve();
 
   function mathAt(source, start) {
@@ -168,6 +169,7 @@
       return box;
     }
     var claims = Array.isArray(data.claims) ? data.claims.filter(function (c) {return c && typeof c.claim === 'string';}) : [];
+    checked.set(element, claims);
     if (!claims.length) return null;
     var found = claims.filter(function (c) {return c.status === 'verified';}).length;
     var papers = {};
@@ -214,7 +216,9 @@
     render: render,
     append: function (element, delta, label) {render(element, (raw.get(element) || '') + delta, label);},
     typeset: typeset,
-    evidence: evidence
+    evidence: evidence,
+    raw: function (element) {return raw.get(element) || '';},
+    claims: function (element) {return checked.get(element) || [];}
   };
   function init(root) {
     (root || document).querySelectorAll('[data-chat-markdown]').forEach(function (element) {

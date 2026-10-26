@@ -173,7 +173,7 @@ test('actual visual inputs appear inside the answer and enlarge with the gallery
 });
 
 test('both websocket handlers preserve figure metadata through the final answer', () => {
-  for (const path of ['templates/summarizer/chat.html', 'static/summarizer/js/paper-ready.js']) {
+  for (const path of ['static/summarizer/js/chat-page.js', 'static/summarizer/js/paper-ready.js']) {
     const template = fs.readFileSync(path, 'utf8');
     assert.match(template, /data\.type === 'chat_figures'/);
     assert.match(template, /SPChatFigures\.render\(currentResponse, pendingFigures\.figures, pendingFigures\.status\)/);

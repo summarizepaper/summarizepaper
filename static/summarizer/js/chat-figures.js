@@ -47,7 +47,7 @@
     }
     function question(figure, data) {
       close();
-      var input = box.closest('.chatbot-body').querySelector('.chatbot-form input');
+      var input = box.closest('.chatbot-body').querySelector('.chatbot-form textarea, .chatbot-form input');
       var prefix = box.dataset.question.replace('{figure}', figure.label.replace(/[:：]\s*$/, '')).replace('{paper}', data.title).replace('{id}', data.paper_id);
       var draft = questionPrefix && input.value.indexOf(questionPrefix) === 0 ? input.value.slice(questionPrefix.length) : input.value;
       questionPrefix = prefix;

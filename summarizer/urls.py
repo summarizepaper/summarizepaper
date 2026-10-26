@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from . import (views, search_filters, saved_searches, billing, conference, digest, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
+               synthesis, changes, chat_figures, chat_page, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -26,7 +26,10 @@ urlpatterns = [
     path("search-results/", views.search_results, name="search_results"),
     path("create-embed/", views.create_embed, name="create_embed"),
     path("about/", views.about, name="about"),
-    path("chat/", views.chat, name="chat"),
+    path("chat/", chat_page.page, name="chat"),
+    path("chat/sources/", chat_page.supplied, name="chat_sources"),
+    path("chat/export/<str:fmt>/", chat_page.export_selection, name="chat_export"),
+    path("chat/references/<str:arxiv_id>/", chat_page.references, name="chat_references"),
     path("paper-figures/<str:arxiv_id>/", chat_figures.gallery, name="paper_figures"),
     path("arxiv-api/", views.arxiv_api, name="arxiv_api"),
     path("faq/", views.faq, name="faq"),

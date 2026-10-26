@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load i18n %}
+{% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
 
@@ -13,119 +13,125 @@
   {% include 'summarizer/chat_rendering.html' %}
 
   <style>
-/* Ids and classes are used by the page script (search, selection, assistant): keep them. */
+/* Ids and classes are read by chat-page.js and chat-figures.js (#selected-papers li, .remove-symbol[id], strong). */
 .chat-page { max-width: 1120px; margin: 0 auto; padding: 48px 20px 0; }
+.chat-page [hidden] { display: none !important; }  /* the rules below set display on elements the script hides */
 .chat-page .page-header { margin-bottom: 28px; }
 .columns-container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-.separator { display: none; }
 .column-card { min-width: 0; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
 .column-title { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font-size: 17px; font-weight: 700; }
 .column-title .step { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; }
+.column-title .count { margin-left: auto; font-size: 13px; font-weight: 500; color: var(--text-muted); }
 
-.searchform { margin: 0; }
-.search-container {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: border-color .15s, box-shadow .15s;
-}
+.recent-conversations { margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.recent-conversations summary { cursor: pointer; font-weight: 600; }
+.recent-conversations ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.recent-conversations a { display: block; color: var(--text); text-decoration: none; }
+.recent-conversations a:hover strong { color: var(--accent); }
+.recent-conversations small { color: var(--text-muted); }
+
+.search-container { display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: border-color .15s, box-shadow .15s; }
 .search-container:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .search-container label { color: var(--text-muted); }
 .search-container select { flex: none; width: auto; max-width: 150px; padding: 6px 4px; border: 0; border-right: 1px solid var(--border); border-radius: 0; background: transparent; font: inherit; font-size: 13px; color: var(--text-muted); }
 #search { flex: 1; min-width: 0; padding: 12px 0; border: 0; outline: none; font: 15px var(--font); background: transparent; }
-#spinner { color: var(--text-muted); }
-#atleast p, #nonefound p { margin: 8px 0 0; }
-#atleast, #nonefound, #errID, #alID { color: var(--danger) !important; }
-#OKID { color: var(--success) !important; }
+.chat-note { margin: 8px 0 0; font-size: 14px; }
+.chat-note.error { color: var(--danger); }
+.chat-note.ok { color: var(--success); }
 
 #search-results { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 420px; overflow-y: auto; }
 #selected-papers { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; padding: 0; }
-.list-group-item, .paper-item {
-  position: relative;
-  display: block;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  text-decoration: none;
-  line-height: 1.45;
-  cursor: pointer;
-  transition: border-color .15s, background-color .15s;
-}
-.list-group-item:hover { border-color: #c7cbff; background: #fafaff; }
-.list-group-item.active { border-color: var(--accent); background: var(--accent-soft); }
-.list-group-item strong { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 600; }
-.list-group-item small { display: block; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
-.list-group-item br { display: none; }
-#selected-papers .list-group-item { padding-right: 72px; cursor: default; }
-/* the script sets an inline max-width and negative margin on this warning */
-#licencewarn { max-width: none !important; margin-top: 6px !important; }
-.remove-spinner-container { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: row-reverse; align-items: center; gap: 2px; white-space: nowrap; }
-.remove-symbol {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 15px;
-  filter: grayscale(1);
-  transition: background-color .15s, filter .15s;
-}
-.remove-symbol:hover { background: #fef2f2; filter: none; }
-.spinner-container { color: var(--text-muted); }
-.green-symbol { color: var(--success) !important; }
-.info-text { color: var(--text-muted); font-size: 12px; }
+.paper-item { position: relative; display: block; width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); text-align: left; font: inherit; line-height: 1.45; }
+button.paper-item { cursor: pointer; transition: border-color .15s, background-color .15s; }
+button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
+.paper-item.active { border-color: var(--accent); background: var(--accent-soft); }
+.paper-item strong { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 600; }
+.paper-item strong a { color: inherit; text-decoration: none; }
+.paper-item strong a:hover { color: var(--accent); }
+.paper-item small { display: block; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+#selected-papers .paper-item { padding-right: 48px; }
+.paper-item.failed { border-color: #fecaca; }
+.remove-symbol { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--text-muted); cursor: pointer; }
+.remove-symbol:hover { background: #fef2f2; color: var(--danger); }
+.paper-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.paper-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; background: var(--bg-soft, #f4f4f5); font-size: 12px; color: var(--text-muted); }
+.paper-badge.full { background: #f0fdf4; color: #166534; }
+.paper-badge.partial { background: #fffbeb; color: #92400e; }
+.paper-badge.abstract, .paper-badge.failed { background: #fef2f2; color: #991b1b; }
+.paper-badge.tag { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.paper-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: 13px; }
+.paper-actions a, .paper-actions button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; text-decoration: none; }
+.paper-actions a:hover, .paper-actions button:hover { text-decoration: underline; }
+.paper-references { margin-top: 8px; max-height: 260px; overflow-y: auto; border-top: 1px solid var(--border); padding-top: 8px; }
+.paper-references input { width: 100%; margin-bottom: 6px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font: 13px var(--font); }
+.paper-reference { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 13px; }
+.paper-reference button { flex: none; padding: 2px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font: 12px var(--font); cursor: pointer; }
+.paper-reference button:disabled { opacity: .5; cursor: default; }
+.selection-footer { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 14px; font-size: 13px; color: var(--text-muted); }
+.selection-footer a, .selection-footer button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; text-decoration: none; }
 #nopap { margin: 0; padding: 28px 16px; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-muted); text-align: center; font-size: 15px; line-height: 1.5; }
-#maxpapreached p { margin: 12px 0 0; color: var(--danger); }
 
 .add-paper-container { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
-.add-paper-container > p { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--text); }
+.add-paper-container > label { display: block; margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--text); }
 .add-paper-row { display: flex; gap: 8px; }
-.input-container { flex: 1; min-width: 0; }
-#paper-id {
-  width: 100%;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font: 15px var(--font);
-  outline: none;
-}
+#paper-id { flex: 1; min-width: 0; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font: 15px var(--font); outline: none; }
 #paper-id:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-#add-paper {
-  padding: 11px 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font: 600 15px var(--font);
-  cursor: pointer;
-}
+#add-paper { padding: 11px 18px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 600 15px var(--font); cursor: pointer; }
 #add-paper:hover { background: var(--bg-soft); }
-.add-paper-container #errID p, .add-paper-container #OKID p, .add-paper-container #alID p { margin: 8px 0 0; font-size: 14px; }
 
-#warnassistant {
-  margin: 0 0 20px;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
-  font-size: 15px;
-  font-weight: 500;
-}
-#warnassistant p { margin: 0; }
 .chat-page .chatbot-container { margin-top: 24px; }
-.chat-page #chatbot-toggle { margin-left: 4px; }
+.chat-page .chatbot-body .chatbot-messages { height: auto; min-height: 220px; max-height: 70vh; }
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 12px; }
+.chat-suggestions[hidden], .chat-suggestions span[hidden] { display: none; }
+.chat-suggestions span { display: contents; }
+.chat-suggestions button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-soft); color: var(--text); font: 600 13px var(--font); cursor: pointer; }
+.chat-suggestions button:hover { border-color: #c7cbff; background: var(--accent-soft); }
+.chat-reading { margin: 10px 0 0; font-size: 14px; color: var(--text-muted); }
+.chat-reading.warn { color: #92400e; }
+.chat-page .chatbot-form { align-items: flex-end; }
+.chat-page .chatbot-form textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 240px; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font: 15px/1.45 var(--font); resize: none; outline: none; }
+.chat-page .chatbot-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.chat-page .chatbot-form button { flex: none; }
+.chat-page .chatbot-form button:disabled { opacity: .45; cursor: default; }
+#stop-btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.chat-tools { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 0 24px 12px; font-size: 13px; }
+.chat-tools button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
+.chat-tools button:disabled { color: var(--text-muted); cursor: default; }
+.chat-tools .spacer { flex: 1; }
+.chat-answer-actions { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; }
+.chat-answer-actions button { padding: 0; border: 0; background: none; color: var(--text-muted); font: inherit; cursor: pointer; }
+.chat-answer-actions button:hover { color: var(--accent); }
+.chat-divider { margin: 12px 0; font-size: 12px; color: var(--text-muted); text-align: center; }
+.chat-stopped { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+.table-builder { margin: 0 24px 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg, #fafafa); }
+.table-builder[hidden] { display: none; }
+.table-builder p { margin: 0 0 8px; font-size: 14px; }
+.table-builder textarea { width: 100%; min-height: 120px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font: 14px/1.5 var(--font); }
+.table-builder .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
+.chat-table { overflow-x: auto; }
+.chat-table table { border-collapse: collapse; min-width: 100%; font-size: 13px; }
+.chat-table th, .chat-table td { padding: 8px 10px; border: 1px solid var(--border); vertical-align: top; text-align: left; }
+.chat-table th { background: var(--bg-soft, #f4f4f5); }
+.chat-table td.paper { min-width: 160px; }
+.chat-table td.paper small { display: block; color: var(--text-muted); }
+.chat-table td { min-width: 180px; }
+.chat-table .cell-pending { color: var(--text-muted); font-style: italic; }
+.chat-table .cell-empty { color: var(--text-muted); }
+.chat-table details { margin-top: 4px; font-size: 12px; }
+.chat-table summary { cursor: pointer; color: var(--text-muted); }
+.chat-table .cell-verified summary::before { content: '✓ '; color: var(--success); font-weight: 700; }
+.chat-table .cell-not_found summary { color: var(--premium); }
+.chat-table .cell-not_found summary::before { content: '! '; font-weight: 700; }
+.chat-table blockquote { margin: 4px 0; padding: 4px 8px; border-left: 3px solid var(--accent); background: var(--bg); font-style: italic; }
+.chat-table-lists h4 { margin: 12px 0 4px; font-size: 14px; }
+.chat-table-lists ul { margin: 0; padding-left: 1.2rem; }
 
 @media (max-width: 800px) {
   .chat-page { padding-top: 28px; }
   .columns-container { grid-template-columns: minmax(0, 1fr); }
   .column-card { padding: 18px; }
+  .chat-tools, .table-builder { margin-left: 0; margin-right: 0; padding-left: 16px; padding-right: 16px; }
 }
   </style>
 {% endblock %}
@@ -133,856 +139,185 @@
 {% block header_class %}{% endblock %}
 
 {% block content %}
-<div class="chat-page">
+<div class="chat-page" id="chat-page"
+  data-lang="{{ LANGUAGE_CODE }}" data-room="{{ room }}" data-max="{{ max_nb_paper }}"
+  data-api="{% url 'arxiv_api' %}" data-sources-url="{% url 'chat_sources' %}"
+  data-export-url="{% url 'chat_export' 'FMT' %}" data-references-url="{% url 'chat_references' 'PAPER_ID' %}"
+  data-ai="{% trans 'AI -' %}" data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
+  data-error="{% trans 'Connection interrupted. Please try again.' %}"
+  data-first-author="{% trans 'First author:' %}" data-published="{% trans 'Published:' %}"
+  data-reading="{% trans 'Reading the paper…' %}" data-failed="{% trans 'Could not be read: remove it or try again later' %}"
+  data-full="{% trans 'Full text' %}" data-partial="{% trans '{n}% of the text' %}"
+  data-partial-title="{% trans 'Too long to be read whole with the other papers. Left out: {parts}' %}"
+  data-left-references="{% trans 'the references' %}" data-left-appendices="{% trans 'the appendices' %}"
+  data-left-shortened="{% trans 'the end of the longest sections' %}"
+  data-abstract="{% trans 'Abstract only' %}" data-abstract-title="{% trans 'The full text could not be read' %}"
+  data-restricted="{% trans 'Abstract only (license)' %}" data-restricted-title="{% trans 'Its license does not allow us to read the full text' %}"
+  data-missing="{% trans 'Not read yet' %}" data-version="{% trans 'Version {v}' %}"
+  data-version-title="{% trans 'The version the assistant reads. An identifier typed without a version gives the latest one.' %}"
+  data-pdf="{% trans 'PDF' %}" data-paper-page="{% trans 'Summary page' %}" data-references="{% trans 'References' %}"
+  data-references-loading="{% trans 'Loading the references…' %}"
+  data-references-none="{% trans 'No reference with an arXiv id or a DOI was found for this paper.' %}"
+  data-references-unavailable="{% trans 'The references could not be loaded. Try again later.' %}"
+  data-references-filter="{% trans 'Filter the references' %}" data-add="{% trans 'Add' %}" data-added="{% trans 'Added' %}"
+  data-remove="{% trans 'Remove this paper' %}"
+  data-not-found="{% trans 'This ID does not exist' %}" data-already="{% trans 'Paper already added!' %}"
+  data-added-ok="{% trans 'Paper added!' %}" data-full-selection="{% blocktrans with n=max_nb_paper %}You can chat with at most {{ n }} papers at once.{% endblocktrans %}"
+  data-none-found="{% trans 'No papers found' %}" data-at-least="{% trans 'Enter at least 3 letters for the search to start' %}"
+  data-unreachable="{% trans 'The search is not reachable right now. Try again in a moment.' %}"
+  data-wait="{% trans 'Wait until every paper has been read.' %}"
+  data-select-first="{% trans 'Select at least one paper to ask questions.' %}"
+  data-reads-partial="{% trans 'Some papers are too long to be read whole together: the assistant reads part of them (see each paper). Ask about fewer papers to read more of each.' %}"
+  data-reads-abstract="{% trans 'For some papers the assistant only has the abstract (see each paper): it will say when a question needs more.' %}"
+  data-reads-missing="{% trans 'Not read yet, so left out of this answer:' %}"
+  data-papers-changed="{% trans 'The papers changed: the assistant no longer takes the earlier exchanges into account.' %}"
+  data-stopped="{% trans 'Stopped.' %}" data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}"
+  data-ask-again="{% trans 'Ask again' %}" data-sources="{% trans 'Sources' %}"
+  data-busy="{% trans 'Wait for the current answer, or stop it.' %}"
+  data-table-title="{% trans 'Comparison table' %}" data-table-paper="{% trans 'Paper' %}"
+  data-table-pending="{% trans 'Reading…' %}" data-table-missing="{% trans 'Not stated' %}"
+  data-table-unknown="{% trans 'Not in the text supplied' %}" data-table-error="{% trans 'Could not be read' %}"
+  data-table-failed="{% trans 'The table could not be built. Try again in a moment.' %}"
+  data-table-verified="{% trans 'Passage found in the paper' %}"
+  data-table-not-found="{% trans 'Passage not found in the paper: check this value' %}"
+  data-table-numbers="{% trans 'Numbers the paper never states: {numbers}' %}"
+  data-table-open="{% trans 'Open this passage on arXiv' %}" data-table-section="{% trans 'Section “{name}”' %}"
+  data-table-agreements="{% trans 'Agreements' %}" data-table-disagreements="{% trans 'Disagreements' %}"
+  data-table-gaps="{% trans 'What none of them addresses' %}"
+  data-table-csv="{% trans 'Download CSV' %}" data-table-markdown="{% trans 'Download Markdown' %}"
+  data-table-quote="{% trans 'Passage' %}" data-table-columns-invalid="{% trans 'Give 1 to 8 columns, one per line.' %}"
+  data-export-title="{% trans 'Conversation about research papers' %}" data-export-question="{% trans 'Question' %}"
+  data-export-answer="{% trans 'Answer' %}" data-export-papers="{% trans 'Papers' %}"
+  data-export-bibtex="{% trans 'BibTeX' %}" data-export-general="{% trans 'general knowledge' %}"
+  data-export-not-found="{% trans 'passage not found: check' %}" data-export-unsupported="{% trans 'not supported by the paper' %}">
 <header class="page-header">
   <h1>{% trans 'Chat with research papers' %}</h1>
   <p class="lead">{% trans 'Chat with one or several papers at once: arXiv papers, but also journal articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions in plain language; the assistant answers from the full text when the license allows it, from the abstract otherwise.' %}</p>
 </header>
 
-<div id="warnassistant" style="display:none;">
-  <p>
-    {% trans 'The AI assistant is now accessible below to start asking questions. You can keep on adding up to 10 papers to chat with.' %}
-  </p>
-</div>
+{% if conversations %}
+<details class="recent-conversations">
+  <summary>{% trans 'Your recent conversations' %}</summary>
+  <ul>
+    {% for c in conversations %}
+    <li><a href="?c={{ c.room|urlencode }}&amp;ids={{ c.ids|urlencode }}"><strong>{{ c.question|default:c.title|truncatechars:110 }}</strong>
+      <small>{{ c.date|date:"SHORT_DATE_FORMAT" }} · {% blocktrans count n=c.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {{ c.title|truncatechars:70 }}</small></a></li>
+    {% endfor %}
+  </ul>
+  {% if not request.user.is_authenticated %}<p class="chat-note"><small>{% trans 'Without an account, your conversations are kept for this connection only. A free account keeps them on all your devices.' %}</small></p>{% endif %}
+</details>
+{% endif %}
+
 <div class="columns-container">
     <div class="search-results-column column-card">
-      <h2 class="column-title"><span class="step">1</span>{% trans 'Select papers to chat with' %}</h2>      
-      <form class="searchform">
+      <h2 class="column-title"><span class="step">1</span>{% trans 'Select papers to chat with' %}</h2>
+      <form class="searchform" role="search" onsubmit="return false">
         <div class="search-container">
           <label for="search"><i class="fas fa-search"></i></label>
           <select id="search-source" aria-label="{% trans 'Where to search' %}">
             <option value="">arXiv</option>
             <option value="open">{% trans 'Journals and preprints' %}</option>
           </select>
-          <input type="text" id="search" placeholder="{% trans 'Search for papers' %}">
-          <div id="spinner" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i>
-          </div>
+          <input type="search" id="search" placeholder="{% trans 'Search for papers' %}" autocomplete="off">
+          <span id="spinner" hidden><i class="fas fa-spinner fa-spin"></i></span>
         </div>
-        <div id="atleast" style="display: none;color: red;"><p><small>{% trans 'Enter at least 3 letters for the search to start' %}</small></p></div>
-        <div id="nonefound" style="display: none;color: red;"><p><small>{% trans 'No papers found' %}</small></p></div>
-
-        <div class="list-group" id="search-results">
-
+        <p class="chat-note error" id="search-note" hidden></p>
+        <div id="search-results" aria-live="polite"></div>
+      </form>
+      <form class="add-paper-container" id="add-paper-form">
+        <label for="paper-id">{% trans 'Add a paper directly' %}</label>
+        <div class="add-paper-row">
+          <input type="text" id="paper-id" placeholder="{% trans 'arXiv ID or DOI (e.g. 2211.04191, 10.1093/mnras/stad1234)' %}">
+          <button type="submit" id="add-paper">{% trans 'Add' %}</button>
         </div>
-        <div class="add-paper-container">
-          <p>{% trans 'Add a paper directly' %}</p>
-          <div class="add-paper-row">
-          <div class="input-container">
-            <input type="text" id="paper-id" placeholder="{% trans 'arXiv ID or DOI (e.g. 2211.04191v1, 10.1093/mnras/stad1234)' %}">
-          </div>
-          <button type="button" id="add-paper">{% trans 'Add' %}</button>
-          </div>
-          <div id="errID" style="display: none;color: red;"><p>{% trans 'This ID does not exist' %}</p></div>
-          <div id="OKID" style="display: none;color: green;"><p>{% trans 'Paper added!' %}</p></div>
-          <div id="alID" style="display: none;color: red;"><p>{% trans 'Paper already added!' %}</p></div>
-        </div>
+        <p class="chat-note" id="add-note" hidden></p>
       </form>
     </div>
-    <div class="separator"></div>
     <div class="selected-papers-column column-card">
-      <h2 class="column-title"><span class="step">2</span>{% trans 'Selected Papers' %}</h2>    
-      <ul class="list-group" id="selected-papers">
-        <p id="nopap">
-          {% trans 'No papers selected yet. Search for papers to chat with using the search field on the left, or add a paper directly with its arXiv ID or DOI and the Add button.' %}
-        </p>      
-      </ul>
-      <div id='maxpapreached' style="display: none;"><p style="color:red;"><span class='warning-sign'>&#9888;</span>{% trans 'You have reached the limit of' %} {{ max_nb_paper }} {% trans 'papers you can interact with and cannot add more.' %}</p></div>
+      <h2 class="column-title"><span class="step">2</span>{% trans 'Selected Papers' %}<span class="count" id="selected-count"></span></h2>
+      <p id="nopap">{% trans 'No papers selected yet. Search for papers to chat with using the search field on the left, or add a paper directly with its arXiv ID or DOI and the Add button.' %}</p>
+      <ul id="selected-papers"></ul>
+      <div class="selection-footer" id="selection-footer" hidden>
+        <span>{% trans 'Export the selection:' %}</span>
+        <a data-export="bib" href="#">BibTeX</a><a data-export="ris" href="#">RIS</a><a data-export="md" href="#">Markdown</a>
+        <button type="button" id="clear-selection">{% trans 'Remove all' %}</button>
+      </div>
     </div>
 </div>
-<div id="assistant" style="display:none">
+
+<div id="assistant">
 <div class="chatbot-container">
   <div class="chatbot-header">
     <h3>{% trans 'Ask questions about selected papers to our AI assistant' %}</h3>
-    <p id="licencewarn" style="display: none;"><small><span class='warning-sign'>&#9888;</span>{% trans 'The license of the paper does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small></p>
+    <p id="chat-reading" class="chat-reading">{% trans 'Select at least one paper to ask questions.' %}</p>
   </div>
   <div class="chatbot-body">
     {% include 'summarizer/chat_figures.html' %}
     {% include 'summarizer/chat_evidence_labels.html' %}
-    <div class="chatbot-messages">
-      {% if chathistory %}
-        {% for chat in chathistory %}
-          <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
-          <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"{% if chat.claims %} data-evidence="{{ chat.evidence_json }}"{% endif %}><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
-        {% endfor %}
-      {% endif %}
+    <div class="chatbot-messages" aria-live="polite">{% for chat in chathistory %}{% if chat.kind == 'table' %}
+      <div class="chatbot-message">{% if chat.user %}{{ chat.user }} -{% else %}{% trans 'You -' %}{% endif %} {% trans 'Comparison table' %}: {{ chat.query }}</div>
+      <div class="chatbot-response chat-table-block" data-table="{{ chat.evidence_json }}"></div>{% else %}
+      <div class="chatbot-message">{% if chat.user %}{{ chat.user }} -{% else %}{% trans 'You -' %}{% endif %} {{ chat.query }}</div>
+      <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}" data-question="{{ chat.query }}" data-papers="{{ chat.papers|default:'' }}"{% if chat.claims %} data-evidence="{{ chat.evidence_json }}"{% endif %}><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>{% endif %}{% endfor %}</div>
+    <div class="chat-suggestions" id="chat-suggestions" aria-label="{% trans 'Suggested questions' %}" hidden>
+      <span data-papers="one">
+        <button type="button" data-question="{% trans 'What is the main result, with its numbers?' %}">{% trans 'Main result' %}</button>
+        <button type="button" data-question="{% trans 'How was the study done: data, method and assumptions?' %}">{% trans 'Method' %}</button>
+        <button type="button" data-question="{% trans 'What are the limitations of this study?' %}">{% trans 'Limitations' %}</button>
+        <button type="button" data-question="{% trans 'What is new compared with earlier work?' %}">{% trans 'What is new' %}</button>
+      </span>
+      <span data-papers="several">
+        <button type="button" data-question="{% trans 'What is the main result of each paper, with its numbers?' %}">{% trans 'Main result of each' %}</button>
+        <button type="button" data-question="{% trans 'Compare the data and methods of these papers. Are their results obtained under comparable conditions?' %}">{% trans 'Compare the methods' %}</button>
+        <button type="button" data-question="{% trans 'Where do these papers disagree or report different values? Give each paper’s value and the possible reasons.' %}">{% trans 'Disagreements' %}</button>
+        <button type="button" data-question="{% trans 'In what order were these papers written, and how does each build on or answer the others?' %}">{% trans 'How they relate' %}</button>
+        <button type="button" data-question="{% trans 'What question does none of these papers address?' %}">{% trans 'What is missing' %}</button>
+      </span>
+    </div>
+    <div class="table-builder" id="table-builder" hidden>
+      <p><strong>{% trans 'Comparison table' %}</strong> — {% trans 'one row per paper, each value with the passage of the paper behind it. Each paper is read on its own, so more of it is read than in an answer about all of them.' %}</p>
+      <label for="table-columns"><small>{% trans 'Columns, one per line:' %}</small></label>
+      <textarea id="table-columns" rows="6"></textarea>
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="table-build">{% trans 'Build the table' %}</button>
+        <button type="button" id="table-reset">{% trans 'Default columns' %}</button>
+        <span id="table-cost" data-text="{% trans 'Uses {n} questions of your daily quota (one per paper).' %}"></span>
+      </div>
+    </div>
+    <div class="chat-tools">
+      <button type="button" id="table-toggle" disabled><i class="fas fa-table"></i> {% trans 'Comparison table' %}</button>
+      <span class="spacer"></span>
+      <button type="button" id="export-conversation" disabled><i class="fas fa-file-download"></i> {% trans 'Export the conversation' %}</button>
+      <button type="button" id="new-conversation"><i class="fas fa-plus"></i> {% trans 'New conversation' %}</button>
     </div>
     <form class="chatbot-form">
-      <input type="text" maxlength="6000" placeholder="{% trans 'Type your question here' %}">
-      <button type="submit" id="send-btn">{% trans 'Send' %}</button>
+      <textarea maxlength="6000" rows="1" placeholder="{% trans 'Type your question here (Shift+Enter for a new line)' %}" aria-label="{% trans 'Your question' %}" disabled></textarea>
+      <button type="submit" id="send-btn" disabled>{% trans 'Send' %}</button>
+      <button type="button" id="stop-btn" hidden>{% trans 'Stop' %}</button>
     </form>
     <div id="loading-spinner" style="display: none;text-align:right;">
-    <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
-  </div>
+      <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
+    </div>
   </div>
 </div>
 <a id="chatbot-toggle" href="#">{% trans 'AI assistant instructions?' %}</a>
 <div class="chatbot-instructions" style="display: none;">
-  <p>{% trans 'Welcome to our AI assistant! Here are some important things to keep in mind:' %}</p>
   <ol>
-      <li>{% trans 'The assistant will only answer questions related to the specific papers selected above.' %}</li>
-      <li>{% trans 'Please note that this is not a bot for casual chatting.' %}</li>
-      <li>{% trans 'If you want the answer in a language other than the language you chose for navigating the website, simply add "TRANSLATE IN LANGUAGE L" at the end of your query (replace "LANGUAGE L" with the language of your choice).' %}</li>
-      <li>{% trans 'For example, you could ask "Can you extract the most important aspect of the papers? TRANSLATE IN SPANISH".' %}</li>
-      {% if not request.user.is_authenticated %}
-      <li>{% trans 'If you want to keep the history of your questions/answers you should create an account.' %}</li>
-      {% endif %}
+      <li>{% trans 'The assistant only answers questions about the selected papers. It reads their full text when the license allows it; each paper says what it reads.' %}</li>
+      <li>{% trans 'With several papers, each statement names its paper, such as [Smith et al. 2021]. Under each answer, every claim comes with the passage of the paper that supports it, or a warning when none was found.' %}</li>
+      <li>{% trans 'The comparison table reads each paper on its own and fills the same columns for all of them; you choose the columns.' %}</li>
+      <li>{% trans 'The assistant answers in the language of the site; ask in your question for another language.' %}</li>
+      <li>{% trans 'This page keeps your conversation in its address: bookmark it to come back to it.' %}{% if not request.user.is_authenticated %} {% trans 'A free account keeps your conversations on all your devices.' %}{% endif %}</li>
   </ol>
 </div>
 </div>
+{{ preset|json_script:"chat-preset" }}
+{{ table_columns|json_script:"chat-table-columns" }}
 </div>
 
 {% endblock %}
 
 {% block scripts %}
-
-<script>
-  const chatbotToggle = document.querySelector('#chatbot-toggle');
-  const chatbotInstructions = document.querySelector('.chatbot-instructions');
-
-  chatbotToggle.addEventListener('click', () => {
-    event.preventDefault();
-    chatbotInstructions.style.display = chatbotInstructions.style.display === 'none' ? 'block' : 'none';
-  });
-</script>
-
-<script>
-
-var paperLicenses = {};
-// Initialize the count and ID array
-var count = 0;
-var privateIDs = [];
-var licenceWarn = document.getElementById("licencewarn");
-
-
-  {% if onhero %}
-  //console.log('onhero');
-  var socket = new WebSocket('wss://' + window.location.host + '/ws/emb/');
-  {% else %}
-  //console.log('notonhero');
-  var socket = new WebSocket('ws://' + window.location.host + '/ws/emb/');
-  {% endif %}
-
-socket.onopen = function() {
-  console.log('WebSocket connected.');
-};
-
-socket.onmessage = function(event) {
-  var data = JSON.parse(event.data);
-  if (data.message === 'completed') {
-    var id2 = data.paper_id;
-    var selectedPaper = document.querySelector('.remove-symbol[id="' + id2 + '"]');
-    var listItem = selectedPaper.closest('li');
-    var publishedElement = listItem.querySelector('small:nth-of-type(2)');
-
-     // Create a new div element to hold the license information
-    var licenseDiv = document.createElement('div');
-    licenseDiv.classList.add('info-text');
-    licenseDiv.style.textAlign = 'left';
-
-    // Create and set the license text
-    
-    var licenseText = '<small><i class="fas fa-id-badge"></i> {% trans "License:" %} <a href="' + data.licenseurl + '" target="_blank">' + data.licensecc + '</a></small>';
-    licenseDiv.innerHTML = licenseText;
-
-    // Insert the new div element after the "Published" element
-    publishedElement.after(licenseDiv);
-      //  selectedPaper.innerHTML +='<div class="info-text" style="align:left"><i class="fas fa-id-badge"></i> {% trans "License:" %} <a href="'+data.licenseurl+'" target="_blank">'+data.licensecc+'</a></div>';
-
-    paperLicenses[id2] = {
-    licenseUrl: data.licenseurl,
-    licenseCc: data.licensecc,
-    publicLicense: data.publiclicense
-    };
-
-    /*for (const key in paperLicenses) {
-      console.log(key, paperLicenses[key]);
-    }*/
-
-    // Iterate through the paperLicenses object
-    if (paperLicenses[id2].publicLicense === false) {
-      count++;
-      privateIDs.push(id2);
-    }
-
-    //console.log(count+'g');
-    // Print the count and IDs
-    if (count > 0) {
-      var idString = privateIDs.join(', ');
-      var privateIDsMsg = " (" + idString + ")";
-      if (count == 1){
-        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of ' %}" + count + "{% trans ' paper' %}" + privateIDsMsg + " {% trans 'does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small>";
-      }else{
-        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The licenses of ' %}" + count + "{% trans ' papers' %}" + privateIDsMsg + " {% trans 'do not allow us to build upon their contents and the AI assistant only knows about the papers metadata rather than the full articles.' %}</small>";
-      }  
-      licenceWarn.innerHTML = warningMsg;
-      licenceWarn.style.display = "inline-block";
-      licenceWarn.style.maxWidth = "400px";
-      licenceWarn.style.marginTop = "-10px";
-
-      //console.log('There are ' + count + ' papers with private licenses: ' + idString);
-    } else {
-      //console.log('All papers have public licenses');
-      licenceWarn.style.display = "none";
-    }
-
-    //console.log(data.licenseurl+' '+data.licensecc+' '+data.publiclicense);
-
-    //selectedPaper.innerHTML += '<span class="green-symbol">&#10003;</span>';
-    setTimeout(function() {
-      selectedPaper.innerHTML += '<span class="green-symbol">&#10003;</span>';
-      selectedPaper.closest('.remove-spinner-container').querySelector('.spinner').style.display = 'none';
-      //spinner.style.display = 'none';
-    }, 1000);
-
-   
-  }
-};
-
-</script>
-<script>
-  var selectedPaperIds = [];
-
-// function to add a paper ID to the array
-function addSelectedPaperId(id) {
-  selectedPaperIds.push(id);
-  //console.log(selectedPaperIds);
-}
-
-// function to remove a paper ID from the array
-function removeSelectedPaperId(id) {
-  var index = selectedPaperIds.indexOf(id);
-  if (index > -1) {
-    selectedPaperIds.splice(index, 1);
-  }
-  //console.log(selectedPaperIds);
-}
-
-  function showSpinner() {
-  var spinner = document.querySelector('#spinner');
-  spinner.style.display = 'block';
-  //console.log('ok');
-}
-
-function hideSpinner() {
-  var spinner = document.querySelector('#spinner');
-  spinner.style.display = 'none';
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  var selectedPapers = [];
-  var maxNumberPapers = {{ max_nb_paper }};
-  //console.log(maxNumberPapers);
-  var searchInput = document.getElementById('search');
-  var searchResults = document.getElementById('search-results');
-  var paperIdInput = document.getElementById('paper-id');
-  var addPaperButton = document.getElementById('add-paper');
-  var selectedPapersList = document.getElementById('selected-papers');
-  var nopap = document.getElementById('nopap');
-  var assistant = document.getElementById('assistant');
-  var warnassistant = document.getElementById('warnassistant');
-  var maxpapreached = document.getElementById('maxpapreached');
-  var errID = document.getElementById('errID');
-  var OKID = document.getElementById('OKID');
-  var alID = document.getElementById('alID');
-  var atleast = document.getElementById("atleast");
-  var nonefound = document.getElementById("nonefound");
-
-  
-  // Event listener for search input
-// arXiv asks for at most one request every 3 s: wait until typing pauses, and ignore stale answers
-var searchTimer = null;
-var searchSeq = 0;
-searchInput.addEventListener('keyup', function() {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(runSearch, 400);
-});
-document.getElementById('search-source').addEventListener('change', function () {
-  if (searchInput.value.trim().length >= 3) runSearch();
-});
-
-function runSearch() {
-  var query = searchInput.value.trim();
-  errID.style.display = 'none';
-  OKID.style.display = 'none';
-  alID.style.display = 'none';
-  nonefound.style.display = "none";
-
-  if (query.length >= 3) {
-    atleast.style.display = "none";
-    showSpinner();
-    var seq = ++searchSeq;
-    var xhr = new XMLHttpRequest();
-    var source = document.getElementById('search-source').value;
-    xhr.open('GET', '{% url "arxiv_api" %}?search_query=' + encodeURIComponent(query) + '&max_results=10' + (source ? '&src=' + source : ''));
-    xhr.onload = function() {
-      if (seq !== searchSeq) return;
-      if (xhr.status === 200) {
-        var data = xhr.responseXML;
-        var entries = data.getElementsByTagName('entry');
-        searchResults.innerHTML = '';
-        if (entries.length != 0) {
-          for (var i = 0; i < entries.length; i++) {
-            var title = entries[i].getElementsByTagName('title')[0].textContent;
-            var author = entries[i].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
-            var dateString = entries[i].getElementsByTagName('published')[0].textContent;
-            //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
-            var year = dateString.substr(0, 4);
-            var month = dateString.substr(5, 2) - 1; // subtract 1 from the month since Date object uses 0-indexed months
-            var day = dateString.substr(8, 2);
-            var hour = dateString.substr(11, 2);
-            var minute = dateString.substr(14, 2);
-            var second = dateString.substr(17, 2);
-            var dateObj = new Date(Date.UTC(year, month, day, hour, minute, second)); // create a date object using UTC time
-            var published = dateObj.toLocaleString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}); 
-            //var idElement = entries[i].getElementsByTagName('id')[0];
-            //console.log(idElement);
-            id=entries[i].getElementsByTagName('id')[0].textContent.split('/abs/')[1]
-            //console.log(id);
-
-            var resultItem = document.createElement('a');
-            resultItem.classList.add('list-group-item', 'list-group-item-action', 'paper-item');
-            resultItem.setAttribute('data-id', id);
-            resultItem.innerHTML = '<strong>' + title + '</strong><br>' +
-                                    '<small>First Author: ' + author + '</small><br>' +
-                                    '<small>Published: ' + published + '</small>';
-            searchResults.appendChild(resultItem);
-            MathJax.typeset();
-          }
-        
-        } else {
-          searchResults.innerHTML = '';
-          nonefound.style.display = "";
-        }}
-    };
-    xhr.send();
-    setTimeout(function() {
-      hideSpinner();
-    }, 1000);
-    //hideSpinner();
-  } else {
-
-    searchResults.innerHTML = '';
-    if (query.length == 0) {
-      atleast.style.display = "none";
-      nonefound.style.display = "none";
-    }
-    else {
-      atleast.style.display = "";
-      nonefound.style.display = "none";
-    }
-
-    //console.log('aui');
-  }
-}
-
-selectedPapersList.addEventListener('click', function(event) {
-  if (event.target.classList.contains('remove-symbol')) {
-    var item = event.target.closest('.selected-papers');
-    var id2 = event.target.getAttribute('id');
-    var removeSymbolElement = event.target.closest('li').querySelector('.remove-symbol');
-    var id = removeSymbolElement.id;
-
-    //clean up the selectedpapers list
-    selectedPapers = selectedPapers.filter(function(paper) { return paper.id !== id; });
-    if(id2){
-      selectedPapersList.removeChild(item);
-    }
-    //console.log('id:', id);
-    var selectedPaper = document.querySelector('[data-id="' + id + '"]');
-    //console.log(selectedPaper);
-    if (selectedPaper) {
-      selectedPaper.classList.remove('active');
-    }   
-    removeSelectedPaperId(id);
-    
-
-    // Iterate through the paperLicenses object
-    if (paperLicenses[id].publicLicense === false) {
-      count--;
-      const index = privateIDs.indexOf(id);
-      if (index !== -1) {
-        privateIDs.splice(index, 1);
-      }
-    }
-
-
-    delete paperLicenses[id];
-
-    if (count > 0) {
-      var idString = privateIDs.join(', ');
-      var privateIDsMsg = " (" + idString + ")";
-      if (count == 1){
-        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The license of ' %}" + count + "{% trans ' paper' %}" + privateIDsMsg + " {% trans 'does not allow us to build upon its content and the AI assistant only knows about the paper metadata rather than the full article.' %}</small>";
-      }else{
-        var warningMsg = "<small><span class='warning-sign'>&#9888;</span>{% trans 'The licenses of ' %}" + count + "{% trans ' papers' %}" + privateIDsMsg + " {% trans 'do not allow us to build upon their contents and the AI assistant only knows about the papers metadata rather than the full articles.' %}</small>";
-      }      
-      licenceWarn.innerHTML = warningMsg;
-      licenceWarn.style.display = "inline-block";
-      licenceWarn.style.maxWidth = "400px";
-      licenceWarn.style.marginTop = "-10px";
-
-      //console.log('There are ' + count + ' papers with private licenses: ' + idString);
-    } else {
-      //console.log('All papers have public licenses');
-      licenceWarn.style.display = "none";
-    }
-
-    /*for (const key in paperLicenses) {
-      console.log('r:',key, paperLicenses[key]);
-    }*/
-
-    // Check if the list is empty
-    if (selectedPapersList.childElementCount === 1) {
-      nopap.style.display = 'block';
-      assistant.style.display = 'none';
-      warnassistant.style.display = 'none';
-    }
-    if(selectedPapersList.childElementCount<=maxNumberPapers){
-      //console.log('nope');
-      maxpapreached.style.display = 'none';
-
-    }
-   }
-   else {
-    if (event.target.closest('.info-text')) {
-      console.log('');
-
-    }else{
-    
-    //var id = event.target.getAttribute('id');
-    //var id = event.target.nextElementSibling.id;
-    var removeSymbolElement = event.target.closest('li').querySelector('.remove-symbol');
-    var id = removeSymbolElement.id;
-    //console.log(id);
-    window.open('/{{ LANGUAGE_CODE }}/paper/'+encodeURIComponent(id)+'/', '_blank');
-    }
-   }
-
-});
-
-searchResults.addEventListener('click', function(event) {
-  if (event.target.classList.contains('list-group-item')) {
-    event.preventDefault(); // Prevent the link from navigating to a new page
-    var id = event.target.getAttribute('data-id');
-    var title = event.target.getElementsByTagName('strong')[0].textContent;
-    var author = event.target.childNodes[2].textContent;
-    var published = event.target.childNodes[4].textContent;
-    //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
-    var alreadySelected = selectedPapers.some(function(paper) { // check if the paper has already been added to the list
-      return paper.id === id;
-    });
-    if (!alreadySelected && selectedPapersList.childElementCount<=maxNumberPapers) { 
-      if (selectedPapersList.childElementCount >= 1) {
-        nopap.style.display = 'none';
-        assistant.style.display = '';
-        warnassistant.style.display = '';
-      }
-    addSelectedPaperId(id);
-    selectedPapers.push({id: id, title: title, author: author, published: published});
-    event.target.classList.add('active');
-    var selectedPaperItem = document.createElement('li');
-    selectedPaperItem.classList.add('list-group-item','selected-papers', 'list-group-item-action', 'paper-item');
-    selectedPaperItem.innerHTML = '<strong>' + title + '</strong><br><small>' + author + '</small><br><small>' + published + '</small><div class="remove-spinner-container"><span class="remove-symbol" id="'+id+'">&#128465;</span><span class="spinner-container"><i class="fas fa-spinner fa-spin spinner"></i></span></div>';
-    
-    selectedPapersList.appendChild(selectedPaperItem);
-    var spinner = selectedPaperItem.querySelector('.spinner');
-    spinner.style.display = 'inline-block';
-    
-    /*need to start embeddings if do not exist*/
-
-    socket.send(JSON.stringify({'paper_id': id}));
-
-    }
-    if(selectedPapersList.childElementCount>maxNumberPapers){
-      //console.log('nope');
-      maxpapreached.style.display = '';
-
-    }
-  } else if (event.target.parentElement.classList.contains('list-group-item')) {
-    event.preventDefault(); // Prevent the link from navigating to a new page
-    var id = event.target.parentElement.getAttribute('data-id');
-    var title = event.target.parentElement.getElementsByTagName('strong')[0].textContent;
-    var author = event.target.parentElement.childNodes[2].textContent;
-    var published = event.target.parentElement.childNodes[4].textContent;
-    //console.log('rr'+id+published);
-    var alreadySelected = selectedPapers.some(function(paper) { // check if the paper has already been added to the list
-      return paper.id === id;
-    });
-    if (!alreadySelected && selectedPapersList.childElementCount<=maxNumberPapers) { 
-      if (selectedPapersList.childElementCount >= 1) {
-        nopap.style.display = 'none';
-        assistant.style.display = '';
-        warnassistant.style.display = '';
-      }
-    addSelectedPaperId(id);
-    selectedPapers.push({id: id, title: title, author: author, published: published});
-    event.target.parentElement.classList.add('active');
-    var selectedPaperItem = document.createElement('li');
-    selectedPaperItem.classList.add('list-group-item','selected-papers', 'list-group-item-action', 'paper-item');
-    selectedPaperItem.innerHTML = '<strong>' + title + '</strong><br><small>' + author + '</small><br><small>' + published + '</small><div class="remove-spinner-container"><span class="remove-symbol" id="'+id+'">&#128465;</span><span class="spinner-container"><i class="fas fa-spinner fa-spin spinner"></i></span></div>';
-    
-    selectedPapersList.appendChild(selectedPaperItem);
-    var spinner = selectedPaperItem.querySelector('.spinner');
-    spinner.style.display = 'inline-block';
-    
-    /*need to start embeddings if do not exist*/
-
-    socket.send(JSON.stringify({'paper_id': id}));
-    }
-    if(selectedPapersList.childElementCount>maxNumberPapers){
-      //console.log('nope');
-      maxpapreached.style.display = '';
-
-    }
-  }
-  MathJax.typeset();
-});
-
-
-
-  addPaperButton.addEventListener('click', function() {
-    var id = paperIdInput.value.trim();
-    // an arXiv id gets its version; a DOI, a link or a key is looked up by the relay, which answers with our key
-    var arxivLike = /^(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?(\/|--)\d{7})(v\d+)?$/i.test(id);
-    if (arxivLike && !id.match(/v\d+$/)) {
-      id += 'v1';
-    }
-    if (id) {
-      try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', '{% url "arxiv_api" %}?id_list=' + encodeURIComponent(id));
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          //console.log('joe');
-          errID.style.display = 'none';
-          var data = xhr.responseXML;
-          var entries = data.getElementsByTagName('entry');
-          if (entries[0] && entries[0].getElementsByTagName('title')[0]){
-          var entryId = entries[0].getElementsByTagName('id')[0].textContent;
-          if (!arxivLike && entryId.indexOf('/abs/') > 0) {
-            id = entryId.split('/abs/')[1];
-          }
-
-          var title = entries[0].getElementsByTagName('title')[0].textContent;
-          var author = entries[0].getElementsByTagName('author')[0].getElementsByTagName('name')[0].textContent;
-          //var published = entries[0].getElementsByTagName('published')[0].textContent;
-          var dateString = entries[0].getElementsByTagName('published')[0].textContent;
-          //dateString = event.target.childNodes[4].textContent.replace('Published: ','');
-          var year = dateString.substr(0, 4);
-          var month = dateString.substr(5, 2) - 1; // subtract 1 from the month since Date object uses 0-indexed months
-          var day = dateString.substr(8, 2);
-          var hour = dateString.substr(11, 2);
-          var minute = dateString.substr(14, 2);
-          var second = dateString.substr(17, 2);
-          var dateObj = new Date(Date.UTC(year, month, day, hour, minute, second)); // create a date object using UTC time
-          var alreadySelected = selectedPapers.some(function(paper) { // check if the paper has already been added to the list
-            return paper.id === id;
-          });
-          if (!alreadySelected && selectedPapersList.childElementCount<=maxNumberPapers) { 
-            if (selectedPapersList.childElementCount >= 1) {
-              nopap.style.display = 'none';
-              assistant.style.display = '';
-              warnassistant.style.display = '';
-            }
-          var published = dateObj.toLocaleString(undefined, {year: 'numeric', month: 'long', day: 'numeric'}); 
-          addSelectedPaperId(id);
-          selectedPapers.push({id: id, title: title, author: author, published: published});
-          var selectedPaperItem = document.createElement('li');
-          selectedPaperItem.classList.add('list-group-item','selected-papers', 'list-group-item-action', 'paper-item');
-          selectedPaperItem.innerHTML = '<strong>' + title + '</strong><br><small>First author: ' + author + '</small><br><small>Published: ' + published + '</small><div class="remove-spinner-container"><span class="remove-symbol" id="'+id+'">&#128465;</span><span class="spinner-container"><i class="fas fa-spinner fa-spin spinner"></i></span></div>';
-          
-          selectedPapersList.appendChild(selectedPaperItem);
-          var spinner = selectedPaperItem.querySelector('.spinner');
-          spinner.style.display = 'inline-block';
-          OKID.style.display = '';
-          alID.style.display = 'none';
-          /*need to start embeddings if do not exist*/
-
-          socket.send(JSON.stringify({'paper_id': id}));
-          }
-          else{
-            alID.style.display = '';
-            errID.style.display = 'none';
-            OKID.style.display = 'none';
-          }
-          if(selectedPapersList.childElementCount>maxNumberPapers){
-            //console.log('nope');
-            maxpapreached.style.display = '';
-
-          }
-          MathJax.typeset();
-        }else{
-          errID.style.display = '';
-          OKID.style.display = 'none';
-          alID.style.display = 'none';
-        }
-        } else if (xhr.status === 400) {
-          // handle 400 Bad Request error
-          console.error('The ID does not exist');
-         }
-         else {
-          errID.style.display = '';
-          OKID.style.display = 'none';
-          alID.style.display = 'none';
-          //console.log('Request failed. Returned status of ' + xhr.status);
-        }
-      };
-      xhr.onerror = function() {
-        console.log('re');
-      };
-      try {
-
-      xhr.send();
-      } catch (error) {
-        console.log('hi');
-      }
-      } catch (error) {
-      console.log('ok');
-    }
-    }
-
-  });
-
-  // /chat/?ids=a,b,c (from a collection): add those papers one by one, spaced for arXiv
-  var preset = (new URLSearchParams(location.search).get('ids') || '').split(',').filter(Boolean).slice(0, maxNumberPapers);
-  function addNext() {
-    if (!preset.length) return;
-    if (socket.readyState !== WebSocket.OPEN) return setTimeout(addNext, 500);
-    paperIdInput.value = preset.shift();
-    addPaperButton.click();
-    setTimeout(addNext, 3500);
-  }
-  addNext();
-});
-</script>
-
-<script>
-
-  let currentResponse = null;
-let pendingFigures = null;
-const checking = {};
-function addTheListeners() {
-    //alert('ok');
-    if (socketl && (socketl.readyState === WebSocket.OPEN || socketl.readyState === WebSocket.CONNECTING)) {
-      //console.log('adding...')
-      socketl.addEventListener("open", function(event) {
-        //console.log("WebSocket connected");
-        connecting = false;
-        //alert(socketl+' '+socketl.readyState);
-      });
-  
-      socketl.addEventListener("message", function(event) {
-        //socketl.onmessage = function(event) {
-        //console.log('Received message:', event);
-        const data = JSON.parse(event.data);
-      if (data.type === 'chat_figures') {pendingFigures = data; return;}
-      if (data.type === 'chat_evidence') {
-        if (checking[data.answer_id]) SPChat.evidence(checking[data.answer_id], data);
-        delete checking[data.answer_id];
-        return;
-      }
-      // the answer streams in as chat_delta pieces, then arrives whole as {message}
-      if (data.type === 'chat_delta') {
-        if (!currentResponse) {
-          currentResponse = document.createElement('div');
-          currentResponse.classList.add('chatbot-response');
-          chatbotMessages.appendChild(currentResponse);
-          var loadingSpinner = document.getElementById("loading-spinner");
-          loadingSpinner.style.display = "none";
-        }
-        SPChat.append(currentResponse, data.delta, "{% trans 'AI -' %}");
-        scrollToBottom();
-        return;
-      }
-      if (data.message === undefined) {
-        return;
-      }
-      if (!currentResponse) {
-        currentResponse = document.createElement('div');
-        currentResponse.classList.add('chatbot-response');
-        chatbotMessages.appendChild(currentResponse);
-      }
-      SPChat.render(currentResponse, data.message, "{% trans 'AI -' %}");
-      SPChat.typeset(currentResponse);
-      if (pendingFigures && window.SPChatFigures) {
-        SPChatFigures.render(currentResponse, pendingFigures.figures, pendingFigures.status);
-      }
-      // each claim of the answer is then checked against the papers (chat_evidence)
-      if (data.evidence === 'checking') {
-        checking[data.answer_id] = currentResponse;
-        SPChat.evidence(currentResponse, {status: 'checking'});
-      }
-      pendingFigures = null;
-      currentResponse = null;
-      var blinkingSquare = document.querySelector(".blinking-square");
-      if (blinkingSquare) {
-        blinkingSquare.remove();
-      }
-      var loadingSpinner = document.getElementById("loading-spinner");
-      loadingSpinner.style.display = "none";
-      scrollToBottom();
-  
-  
-      });
-  
-      socketl.addEventListener("close", function(event) {
-        // If the WebSocket connection is closed, display an error message
-        var messagesContainer = document.querySelector(".chatbot-messages");
-        var errorMessage = document.createElement("div");
-        errorMessage.innerHTML = "{% trans 'Error: WebSocket connection closed (reload the page).' %}";
-        messagesContainer.appendChild(errorMessage);
-        console.log("WebSocket disconnected: ");
-      });
-  
-      socketl.addEventListener("error", function(event) {
-        console.error("WebSocket error: " + event);
-      });
-      isListenerAdded = true;
-  
-    } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
-      //console.log("WebSocket connecting 2...");
-      setTimeout(function() {
-        addTheListeners();
-        //console.log("wait 2");
-      }, 1000);
-    } else {
-      console.error("WebSocket is not open 2");
-    }
-  }
-  </script>
-  
-  <script>
-    const min = 100000000000000; // Minimum 15-digit number
-    const max = 999999999999999; // Maximum 15-digit number
-    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    //console.log(randomNumber); // Outputs a random integer with 15 digits
-    const randomString = randomNumber.toString();
-
-    const arxivRoomName = randomString;//"multiple";//selectedPaperIds;//JSON.parse(document.getElementById('arxiv_id').textContent);
-    const language = "{{ language }}"
-    //console.log(language);
-  
-    let isListenerAdded = false;
-  
-    const chatbotMessages = document.querySelector('.chatbot-messages');
-    const chatbotForm = document.querySelector('.chatbot-form');
-    const chatbotInput = chatbotForm.querySelector('input[type="text"]');
-  
-    var sendBtn = document.getElementById("send-btn");
-    let socketl=null;
-    let connecting = false;
-  
-    sendBtn.addEventListener('click', function(event) {
-      event.preventDefault();
-  
-      if (socketl === null) {
-        //console.log('connecting...')
-      {% if onhero %}
-      socketl = new WebSocket(
-          'wss://'
-          + window.location.host
-          + '/ws/arxivid/'
-          + arxivRoomName
-          + '/'
-          + language
-          + '/'
-      );
-      {% else %}
-      socketl = new WebSocket(
-          'ws://'
-          + window.location.host
-          + '/ws/arxivid/'
-          + arxivRoomName
-          + '/'
-          + language
-          + '/'
-      );
-      {% endif %}
-      connecting = true;
-    }
-  
-  
-  //chatbotForm.addEventListener('submit', function(event) {
-    //event.preventDefault();
-    //alert('ok');
-    var inputValue = chatbotInput.value.trim();
-    var messagesContainer = document.querySelector(".chatbot-messages");
-  
-    /*if (socketl.readyState !== WebSocket.OPEN) {
-      var errorMessage = document.createElement("div");
-      errorMessage.innerHTML = "{% trans 'Error: WebSocket connection closed. Reload the page.' %}";
-      messagesContainer.appendChild(errorMessage);
-      return;
-    }*/
-  
-    if (inputValue === "") {
-      return;
-    }
-  
-    const messagec = chatbotInput.value;
-    chatbotInput.value = '';
-    const chatbotMessage = document.createElement('div');
-    chatbotMessage.classList.add('chatbot-message');
-    chatbotMessage.innerText = "{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %} "+messagec;
-    const blinkingSquare = document.createElement('span');
-    blinkingSquare.classList.add('blinking-square');
-    chatbotMessage.appendChild(blinkingSquare);
-    chatbotMessages.appendChild(chatbotMessage);
-    //var messagesContainer = document.querySelector(".chatbot-messages");
-    var loadingSpinner = document.getElementById("loading-spinner");
-    loadingSpinner.style.display = "block";
-    MathJax.typeset();
-  
-    // Function to scroll the container to the bottom
-    /*function scrollToBottom() {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }*/
-  
-    // Scroll the container to the bottom
-    scrollToBottom();
-  
-    sendWebSocketMessage(messagec,selectedPaperIds,count);
-    //socketl.send(JSON.stringify({message: messagec}));
-  
-    if (!isListenerAdded) {
-      addTheListeners();
-    }
-  });
-  
-  </script>
-  
-  
-  <script>
-  
-  function sendWebSocketMessage(message2,selectedpapers,count) {
-    if (socketl && socketl.readyState === WebSocket.OPEN) {
-      //console.log('sending...')
-      socketl.send(JSON.stringify({message: message2, selectedpapers:selectedpapers, count:count}));
-    } else if (socketl && socketl.readyState === WebSocket.CONNECTING) {
-      //console.log("WebSocket connecting...");
-      setTimeout(function() {
-        sendWebSocketMessage(message2,selectedpapers,count);
-        //console.log("wait");
-      }, 1000);
-    } else {
-      console.error("WebSocket is not open");
-    }
-  }
-  
-  </script>
-  
-  <script>
-    // Define a function that scrolls to the bottom of the chatbot-messages div
-    function scrollToBottom() {
-      var messagesContainer = document.querySelector(".chatbot-messages");
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-  
-    // Call the scrollToBottom function when the page is fully loaded
-  window.addEventListener("load", scrollToBottom);
-  </script>
-
+<script defer src="{% static_v 'summarizer/js/chat-page.js' %}"></script>
+<script src="{% static_v 'summarizer/js/pdf-panel.js' %}" data-title="{% trans 'Paper PDF' %}" data-new-tab="{% trans 'Open in a new tab' %}" data-close="{% trans 'Close the PDF' %}" data-resize="{% trans 'Resize the PDF' %}"></script>
 {% endblock %}

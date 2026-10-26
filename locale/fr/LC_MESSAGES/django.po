@@ -10162,3 +10162,403 @@ msgstr "Fermer le PDF"
 
 msgid "Resize the PDF"
 msgstr "Redimensionner le PDF"
+
+#: templates/summarizer/chat.html
+msgid "Connection interrupted. Please try again."
+msgstr "Connexion interrompue. Veuillez réessayer."
+
+#: templates/summarizer/chat.html
+msgid "First author:"
+msgstr "Premier auteur :"
+
+#: templates/summarizer/chat.html
+msgid "Published:"
+msgstr "Publié :"
+
+#: templates/summarizer/chat.html
+msgid "Reading the paper…"
+msgstr "Lecture de l’article…"
+
+#: templates/summarizer/chat.html
+msgid "Could not be read: remove it or try again later"
+msgstr "Illisible : retirez-le ou réessayez plus tard"
+
+#: templates/summarizer/chat.html
+msgid "Full text"
+msgstr "Texte intégral"
+
+#: templates/summarizer/chat.html
+msgid "{n}%% of the text"
+msgstr "{n} %% du texte"
+
+#: templates/summarizer/chat.html
+msgid "Too long to be read whole with the other papers. Left out: {parts}"
+msgstr ""
+"Trop long pour être lu en entier avec les autres articles. Laissé de côté : "
+"{parts}"
+
+#: templates/summarizer/chat.html
+msgid "the references"
+msgstr "la bibliographie"
+
+#: templates/summarizer/chat.html
+msgid "the appendices"
+msgstr "les annexes"
+
+#: templates/summarizer/chat.html
+msgid "the end of the longest sections"
+msgstr "la fin des sections les plus longues"
+
+#: templates/summarizer/chat.html
+msgid "Abstract only"
+msgstr "Résumé seul"
+
+#: templates/summarizer/chat.html
+msgid "The full text could not be read"
+msgstr "Le texte intégral n’a pas pu être lu"
+
+#: templates/summarizer/chat.html
+msgid "Abstract only (license)"
+msgstr "Résumé seul (licence)"
+
+#: templates/summarizer/chat.html
+msgid "Its license does not allow us to read the full text"
+msgstr "Sa licence ne nous permet pas de lire le texte intégral"
+
+#: templates/summarizer/chat.html
+msgid "Not read yet"
+msgstr "Pas encore lu"
+
+#: templates/summarizer/chat.html
+msgid "Version {v}"
+msgstr "Version {v}"
+
+#: templates/summarizer/chat.html
+msgid ""
+"The version the assistant reads. An identifier typed without a version gives"
+" the latest one."
+msgstr ""
+"La version que lit l’assistant. Un identifiant saisi sans version donne la "
+"plus récente."
+
+#: templates/summarizer/chat.html
+msgid "PDF"
+msgstr "PDF"
+
+#: templates/summarizer/chat.html
+msgid "Loading the references…"
+msgstr "Chargement de la bibliographie…"
+
+#: templates/summarizer/chat.html
+msgid "No reference with an arXiv id or a DOI was found for this paper."
+msgstr ""
+"Aucune référence avec un identifiant arXiv ou un DOI n’a été trouvée pour "
+"cet article."
+
+#: templates/summarizer/chat.html
+msgid "The references could not be loaded. Try again later."
+msgstr "La bibliographie n’a pas pu être chargée. Réessayez plus tard."
+
+#: templates/summarizer/chat.html
+msgid "Filter the references"
+msgstr "Filtrer les références"
+
+#: templates/summarizer/chat.html
+msgid "Remove this paper"
+msgstr "Retirer cet article"
+
+#: templates/summarizer/chat.html
+msgid "Wait until every paper has been read."
+msgstr "Attendez que tous les articles aient été lus."
+
+#: templates/summarizer/chat.html
+msgid "Select at least one paper to ask questions."
+msgstr "Sélectionnez au moins un article pour poser des questions."
+
+#: templates/summarizer/chat.html
+msgid ""
+"Some papers are too long to be read whole together: the assistant reads part"
+" of them (see each paper). Ask about fewer papers to read more of each."
+msgstr ""
+"Certains articles sont trop longs pour être lus en entier ensemble : "
+"l’assistant en lit une partie (voir chaque article). Interrogez moins "
+"d’articles à la fois pour lire davantage de chacun."
+
+#: templates/summarizer/chat.html
+msgid ""
+"For some papers the assistant only has the abstract (see each paper): it "
+"will say when a question needs more."
+msgstr ""
+"Pour certains articles, l’assistant n’a que le résumé (voir chaque article) "
+": il le dira quand une question demande davantage."
+
+#: templates/summarizer/chat.html
+msgid "Not read yet, so left out of this answer:"
+msgstr "Pas encore lus, donc absents de cette réponse :"
+
+#: templates/summarizer/chat.html
+msgid ""
+"The papers changed: the assistant no longer takes the earlier exchanges into"
+" account."
+msgstr ""
+"Les articles ont changé : l’assistant ne tient plus compte des échanges "
+"précédents."
+
+#: templates/summarizer/chat.html
+msgid "Stopped."
+msgstr "Arrêté."
+
+#: templates/summarizer/chat.html
+msgid "Copy"
+msgstr "Copier"
+
+#: templates/summarizer/chat.html
+msgid "Copied"
+msgstr "Copié"
+
+#: templates/summarizer/chat.html
+msgid "Ask again"
+msgstr "Redemander"
+
+#: templates/summarizer/chat.html
+msgid "Wait for the current answer, or stop it."
+msgstr "Attendez la réponse en cours, ou arrêtez-la."
+
+#: templates/summarizer/chat.html
+msgid "Reading…"
+msgstr "Lecture…"
+
+#: templates/summarizer/chat.html
+msgid "Not in the text supplied"
+msgstr "Absent du texte fourni"
+
+#: templates/summarizer/chat.html
+msgid "Could not be read"
+msgstr "Illisible"
+
+#: templates/summarizer/chat.html
+msgid "The table could not be built. Try again in a moment."
+msgstr "Le tableau n’a pas pu être construit. Réessayez dans un instant."
+
+#: templates/summarizer/chat.html
+msgid "Passage not found in the paper: check this value"
+msgstr "Passage introuvable dans l’article : vérifiez cette valeur"
+
+#: templates/summarizer/chat.html
+msgid "Agreements"
+msgstr "Points d’accord"
+
+#: templates/summarizer/chat.html
+msgid "Disagreements"
+msgstr "Désaccords"
+
+#: templates/summarizer/chat.html
+msgid "Download CSV"
+msgstr "Télécharger en CSV"
+
+#: templates/summarizer/chat.html
+msgid "Download Markdown"
+msgstr "Télécharger en Markdown"
+
+#: templates/summarizer/chat.html
+msgid "Passage"
+msgstr "Passage"
+
+#: templates/summarizer/chat.html
+msgid "Give 1 to 8 columns, one per line."
+msgstr "Indiquez de 1 à 8 colonnes, une par ligne."
+
+#: templates/summarizer/chat.html
+msgid "Conversation about research papers"
+msgstr "Conversation sur des articles scientifiques"
+
+#: templates/summarizer/chat.html
+msgid "Answer"
+msgstr "Réponse"
+
+#: templates/summarizer/chat.html
+msgid "BibTeX"
+msgstr "BibTeX"
+
+#: templates/summarizer/chat.html
+msgid "general knowledge"
+msgstr "connaissance générale"
+
+#: templates/summarizer/chat.html
+msgid "passage not found: check"
+msgstr "passage introuvable : à vérifier"
+
+#: templates/summarizer/chat.html
+msgid "not supported by the paper"
+msgstr "non étayé par l’article"
+
+#: templates/summarizer/chat.html
+msgid "Your recent conversations"
+msgstr "Vos conversations récentes"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Without an account, your conversations are kept for this connection only. A "
+"free account keeps them on all your devices."
+msgstr ""
+"Sans compte, vos conversations ne sont conservées que pour cette connexion. "
+"Un compte gratuit les garde sur tous vos appareils."
+
+#: templates/summarizer/chat.html
+msgid "arXiv ID or DOI (e.g. 2211.04191, 10.1093/mnras/stad1234)"
+msgstr "Identifiant arXiv ou DOI (ex. 2211.04191, 10.1093/mnras/stad1234)"
+
+#: templates/summarizer/chat.html
+msgid "Export the selection:"
+msgstr "Exporter la sélection :"
+
+#: templates/summarizer/chat.html
+msgid "Remove all"
+msgstr "Tout retirer"
+
+#: templates/summarizer/chat.html
+msgid "What is the main result of each paper, with its numbers?"
+msgstr ""
+"Quel est le résultat principal de chaque article, chiffres à l’appui ?"
+
+#: templates/summarizer/chat.html
+msgid "Main result of each"
+msgstr "Résultat de chacun"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Compare the data and methods of these papers. Are their results obtained "
+"under comparable conditions?"
+msgstr ""
+"Compare les données et les méthodes de ces articles. Leurs résultats sont-"
+"ils obtenus dans des conditions comparables ?"
+
+#: templates/summarizer/chat.html
+msgid "Compare the methods"
+msgstr "Comparer les méthodes"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Where do these papers disagree or report different values? Give each paper’s"
+" value and the possible reasons."
+msgstr ""
+"Sur quoi ces articles divergent-ils ou donnent-ils des valeurs différentes ?"
+" Donne la valeur de chaque article et les raisons possibles."
+
+#: templates/summarizer/chat.html
+msgid ""
+"In what order were these papers written, and how does each build on or "
+"answer the others?"
+msgstr ""
+"Dans quel ordre ces articles ont-ils été écrits, et comment chacun s’appuie-"
+"t-il sur les autres ou leur répond-il ?"
+
+#: templates/summarizer/chat.html
+msgid "How they relate"
+msgstr "Liens entre eux"
+
+#: templates/summarizer/chat.html
+msgid "What question does none of these papers address?"
+msgstr "Quelle question aucun de ces articles n’aborde-t-il ?"
+
+#: templates/summarizer/chat.html
+msgid "What is missing"
+msgstr "Ce qui manque"
+
+#: templates/summarizer/chat.html
+msgid ""
+"one row per paper, each value with the passage of the paper behind it. Each "
+"paper is read on its own, so more of it is read than in an answer about all "
+"of them."
+msgstr ""
+"une ligne par article, chaque valeur avec le passage de l’article qui "
+"l’étaye. Chaque article est lu séparément, donc plus complètement que dans "
+"une réponse sur tous à la fois."
+
+#: templates/summarizer/chat.html
+msgid "Columns, one per line:"
+msgstr "Colonnes, une par ligne :"
+
+#: templates/summarizer/chat.html
+msgid "Build the table"
+msgstr "Construire le tableau"
+
+#: templates/summarizer/chat.html
+msgid "Default columns"
+msgstr "Colonnes par défaut"
+
+#: templates/summarizer/chat.html
+msgid "Uses {n} questions of your daily quota (one per paper)."
+msgstr "Utilise {n} questions de votre quota quotidien (une par article)."
+
+#: templates/summarizer/chat.html
+msgid "Export the conversation"
+msgstr "Exporter la conversation"
+
+#: templates/summarizer/chat.html
+msgid "New conversation"
+msgstr "Nouvelle conversation"
+
+#: templates/summarizer/chat.html
+msgid "Type your question here (Shift+Enter for a new line)"
+msgstr "Tapez votre question ici (Maj+Entrée pour aller à la ligne)"
+
+#: templates/summarizer/chat.html
+msgid "Stop"
+msgstr "Arrêter"
+
+#: templates/summarizer/chat.html
+msgid ""
+"The assistant only answers questions about the selected papers. It reads "
+"their full text when the license allows it; each paper says what it reads."
+msgstr ""
+"L’assistant ne répond qu’aux questions sur les articles sélectionnés. Il lit"
+" leur texte intégral quand la licence le permet ; chaque article indique ce "
+"qu’il en lit."
+
+#: templates/summarizer/chat.html
+msgid ""
+"With several papers, each statement names its paper, such as [Smith et al. "
+"2021]. Under each answer, every claim comes with the passage of the paper "
+"that supports it, or a warning when none was found."
+msgstr ""
+"Avec plusieurs articles, chaque affirmation nomme son article, par exemple "
+"[Smith et al. 2021]. Sous chaque réponse, chaque affirmation est accompagnée"
+" du passage de l’article qui l’étaye, ou d’un avertissement si aucun n’a été"
+" trouvé."
+
+#: templates/summarizer/chat.html
+msgid ""
+"The comparison table reads each paper on its own and fills the same columns "
+"for all of them; you choose the columns."
+msgstr ""
+"Le tableau comparatif lit chaque article séparément et remplit les mêmes "
+"colonnes pour tous ; vous choisissez les colonnes."
+
+#: templates/summarizer/chat.html
+msgid ""
+"The assistant answers in the language of the site; ask in your question for "
+"another language."
+msgstr ""
+"L’assistant répond dans la langue du site ; demandez une autre langue dans "
+"votre question."
+
+#: templates/summarizer/chat.html
+msgid ""
+"This page keeps your conversation in its address: bookmark it to come back "
+"to it."
+msgstr ""
+"Cette page garde votre conversation dans son adresse : ajoutez-la à vos "
+"favoris pour y revenir."
+
+#: templates/summarizer/chat.html
+msgid "A free account keeps your conversations on all your devices."
+msgstr "Un compte gratuit garde vos conversations sur tous vos appareils."
+
+#: templates/summarizer/chat.html
+msgid "Sample size and scale"
+msgstr "Taille de l’échantillon et échelle"
+
+#: templates/summarizer/chat.html
+msgid "You can chat with at most %(n)s papers at once."
+msgstr "Vous pouvez discuter avec au plus %(n)s articles à la fois."

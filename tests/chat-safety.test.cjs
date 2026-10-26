@@ -6,8 +6,8 @@ const {createHarness, element} = require('./chat-rendering-helper.cjs');
 
 for (const template of ['chat', 'arxividpage']) {
   test(`${template}: streamed and final model output only use the safe Markdown renderer`, () => {
-    const source = fs.readFileSync(template === 'chat' ? 'templates/summarizer/chat.html' : 'static/summarizer/js/paper-ready.js', 'utf8');
-    const handler = template === 'arxividpage' ? source.match(/function receive\(event\) \{([\s\S]*?)\n    \}/) : source.match(/socketl\.addEventListener\("message", function\(event\) \{([\s\S]*?)\n\s*\}\);/);
+    const source = fs.readFileSync(template === 'chat' ? 'static/summarizer/js/chat-page.js' : 'static/summarizer/js/paper-ready.js', 'utf8');
+    const handler = template === 'arxividpage' ? source.match(/function receive\(event\) \{([\s\S]*?)\n    \}/) : source.match(/function receive\(event\) \{([\s\S]*?)\n  \}\n/);
     assert.ok(handler, 'Exercise the actual chat message handler');
     const elements = [];
     const {SPChat} = createHarness();
@@ -54,7 +54,7 @@ for (const template of ['chat', 'arxividpage']) {
     context.handle({data: JSON.stringify({message: 'Checked answer', evidence: 'checking', answer_id: 7})});
     const answer = elements[2];
     assert.equal(answer.querySelector('.chat-evidence').className, 'chat-evidence chat-evidence-checking');
-    if (template === 'arxividpage') assert.equal(context.finished, finished + 1, 'the next question does not wait for the check');
+    assert.equal(context.finished, finished + 1, 'the next question does not wait for the check');
     context.handle({data: JSON.stringify({message: 'Next answer', evidence: 'checking', answer_id: 8})});
     context.handle({data: JSON.stringify({type: 'chat_evidence', status: 'done', answer_id: 7,
       claims: [{claim: attack, status: 'verified', quote: 'We find lenses.', link: 'javascript:alert(1)'}]})});
