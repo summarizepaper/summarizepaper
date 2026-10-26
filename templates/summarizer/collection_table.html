@@ -1,4 +1,5 @@
-{% load i18n %}{# A comparison table (comparison.display) with the source of each cell, then its findings. Pass: table. #}
+{% load i18n %}{% comment %}A comparison table (comparison.display) with the source of each cell, then its findings. Pass: table;
+   editable, collection and table_row (the Generated pk) to let the owner correct a cell.{% endcomment %}
 {% get_current_language as LANGUAGE_CODE %}
 <div class="compare-wrap">
   <table class="compare-table">
@@ -17,8 +18,22 @@
             {% if c.numbers %}<p class="cell-warning">{% blocktrans with n=c.numbers|join:", " %}Not in this passage: {{ n }}{% endblocktrans %}</p>{% endif %}
             {% if c.link %}<a href="{{ c.link }}" target="_blank" rel="noopener">{% trans 'Open in the paper' %}</a>{% endif %}
           </details>
-          {% elif not c.missing and table.version > 1 %}
+          {% elif not c.missing and table.version > 1 and not c.edited %}
           <span class="cell-unchecked">{% trans 'Not checked against the paper' %}</span>
+          {% endif %}
+          {% if c.edited %}<span class="cell-edited">{% trans 'Corrected by hand' %}</span>{% endif %}
+          {% if editable %}
+          <details class="cell-edit">
+            <summary>{% trans 'Correct' %}</summary>
+            <form method="post" action="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/cell/">
+              {% csrf_token %}
+              <input type="hidden" name="row" value="{{ table_row }}">
+              <input type="hidden" name="arxiv_id" value="{{ row.arxiv_id }}">
+              <input type="hidden" name="code" value="{{ c.code }}">
+              <textarea name="text" rows="3" maxlength="700" aria-label="{% trans 'Corrected text' %}">{% if not c.missing %}{{ c.text }}{% endif %}</textarea>
+              <button class="btn btn-sm" type="submit">{% trans 'Save' %}</button>
+            </form>
+          </details>
           {% endif %}
         </td>
         {% endfor %}

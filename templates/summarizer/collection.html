@@ -22,16 +22,18 @@
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/bib/">BibTeX</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/ris/">RIS</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/md/">Markdown</a>
+    <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/list/">{% trans 'Spreadsheet (CSV)' %}</a>
     <button type="button" class="btn btn-sm btn-ghost" id="zotero-go">{% trans 'Send to Zotero' %} <span class="badge-premium">Premium</span></button>
     <span class="tool-status" id="zotero-status" aria-live="polite"></span>
   </div>
-  <p class="muted"><small>{% trans 'Exports keep your notes and tags. Filter by a tag to export only its papers.' %}{% if analysed|length > chat_max %} {% blocktrans with n=chat_max %}The chat takes the first {{ n }} selected papers.{% endblocktrans %}{% endif %}</small></p>
+  <p class="muted"><small>{% trans 'Exports keep your notes and tags. Filter by a tag to export only its papers. Drag the papers or use the arrows to order them: the analyses read them in this order.' %}{% if analysed|length > chat_max %} {% blocktrans with n=chat_max %}The chat takes the first {{ n }} selected papers.{% endblocktrans %}{% endif %}</small></p>
   {% endif %}
 
   {% if added %}
   <p class="notice" role="status">
     {% if added.added %}{% blocktrans count n=added.added %}{{ n }} paper added.{% plural %}{{ n }} papers added.{% endblocktrans %} {% endif %}
     {% if added.updated %}{% blocktrans count n=added.updated %}{{ n }} paper replaced by its newer version.{% plural %}{{ n }} papers replaced by their newer version.{% endblocktrans %} {% endif %}
+    {% if added.duplicate %}{% blocktrans count n=added.duplicate %}{{ n }} was already there as its preprint or published version.{% plural %}{{ n }} were already there as their preprint or published version.{% endblocktrans %} {% endif %}
     {% if added.already %}{% blocktrans count n=added.already %}{{ n }} was already in the collection.{% plural %}{{ n }} were already in the collection.{% endblocktrans %} {% endif %}
     {% if added.unknown %}{% blocktrans count n=added.unknown %}{{ n }} identifier was not found.{% plural %}{{ n }} identifiers were not found.{% endblocktrans %} {% endif %}
     {% if added.skipped %}{% blocktrans count n=added.skipped %}{{ n }} entry has no arXiv identifier or DOI.{% plural %}{{ n }} entries have no arXiv identifier or DOI.{% endblocktrans %} {% endif %}
@@ -67,7 +69,7 @@
         <option value="none">{% trans 'No status' %}</option>
       </select>
       <select id="paper-sort" aria-label="{% trans 'Sort' %}">
-        <option value="order">{% trans 'In the order added' %}</option>
+        <option value="order">{% trans 'In your order' %}</option>
         <option value="newest">{% trans 'Newest first' %}</option>
         <option value="oldest">{% trans 'Oldest first' %}</option>
         <option value="cited">{% trans 'Most cited first' %}</option>
@@ -99,17 +101,24 @@
     <p class="tool-status" id="meta-status" data-pending="{% if meta_row.status == 'pending' %}1{% endif %}"></p>
     {% endif %}
 
+    {% if duplicates %}
+    <div class="notice stale" role="status">
+      <p>{% trans 'These papers look like one work, a preprint and its published version. Keep one, so that it counts once in the analyses:' %}</p>
+      <ul>{% for group in duplicates %}<li>{% for p in group %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title|truncatechars:70 }}</a> ({{ p.arxiv_id|paper_ref }}){% if not forloop.last %} = {% endif %}{% endfor %}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
     <datalist id="tag-list">{% for t in tags %}<option value="{{ t }}">{% endfor %}</datalist>
     <p class="muted" id="paper-empty" hidden>{% trans 'No paper matches these filters.' %}</p>
     <ul class="item-list paper-list" id="paper-list">
       {% for p in papers %}
-      <li class="card paper-card" data-order="{{ p.order }}" data-year="{{ p.facts.year }}" data-cited="{{ p.facts.citations|default_if_none:'' }}"
+      <li class="card paper-card" data-id="{{ p.arxiv_id }}" data-order="{{ p.order }}" data-year="{{ p.facts.year }}" data-cited="{{ p.facts.citations|default_if_none:'' }}"
           data-title="{{ p.title|default:p.arxiv_id|lower }}" data-tags="{{ p.tags|lower }}" data-reading="{{ p.reading }}"
           data-search="{{ p.title|lower }} {{ p.authors|lower }} {{ p.note|lower }} {{ p.tags|lower }}">
         <form method="post" class="paper-form" data-id="{{ p.arxiv_id }}">
           {% csrf_token %}
           <input type="hidden" name="arxiv_id" value="{{ p.arxiv_id }}">
           <div class="paper-head">
+            <span class="drag-handle" title="{% trans 'Drag to reorder' %}" aria-hidden="true">⠿</span>
             <label class="paper-select" title="{% trans 'Read by the comparison table, the open questions and the chat' %}">
               <input type="hidden" name="selected" value="0">
               <input type="checkbox" name="selected" value="1"{% if p.selected %} checked{% endif %}>
@@ -135,6 +144,8 @@
             <textarea name="note" rows="2" maxlength="5000" placeholder="{% trans 'Your note: what you take from it, where you would cite it' %}" aria-label="{% trans 'Your note' %}">{{ p.note }}</textarea>
             <div class="item-actions">
               <button class="btn btn-sm btn-ghost js-hide" name="action" value="paper">{% trans 'Save' %}</button>
+              <button class="btn btn-sm btn-ghost paper-move" name="action" value="up" aria-label="{% trans 'Move up' %}" title="{% trans 'Move up' %}">↑</button>
+              <button class="btn btn-sm btn-ghost paper-move" name="action" value="down" aria-label="{% trans 'Move down' %}" title="{% trans 'Move down' %}">↓</button>
               <button class="btn btn-sm btn-ghost paper-remove" name="action" value="remove">{% trans 'Remove' %}</button>
               <span class="tool-status" aria-live="polite"></span>
             </div>
@@ -212,7 +223,7 @@
           {% blocktrans with t=table.full_text n=table.rows|length %}{{ t }} of {{ n }} papers were read in their key sections, the others from their abstract and our summary.{% endblocktrans %}
           {% if table.version < 2 %}{% trans 'This table was written before cells had their sources: write it again to see them.' %}{% endif %}
         </p>
-        {% include 'summarizer/collection_table.html' %}
+        {% include 'summarizer/collection_table.html' with table_row=compare_shown.pk %}
         <div class="item-actions">
           <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/csv/">{% trans 'Download as a spreadsheet (CSV)' %}</a>
           <button type="button" class="btn btn-sm btn-ghost" data-run="compare" data-mode="again">{% trans 'Write it again' %}</button>

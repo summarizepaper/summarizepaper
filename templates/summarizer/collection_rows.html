@@ -1,1 +1,4 @@
 {% load i18n %}{% if x.papers %} <span class="row-refs" title="{% trans 'Rows of the table' %}">[{% for n in x.papers %}<a href="#row-{{ n }}">{{ n }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}]</span>{% endif %}
+{% if x.passages %}<details class="cell-source finding-passages"><summary>{% blocktrans count n=x.passages|length %}{{ n }} passage behind it{% plural %}{{ n }} passages behind it{% endblocktrans %}</summary>
+  {% for q in x.passages %}<blockquote><strong>{{ q.n }} · {{ q.label }}</strong>{% if q.section %} ({{ q.section }}){% endif %}: {{ q.quote }}</blockquote>{% endfor %}</details>{% endif %}
+{% if x.backed is False %}<span class="cell-unchecked">{% if x.passages %}{% trans 'Some of the papers it names have no passage in these columns.' %}{% else %}{% trans 'Rests on cells without a source.' %}{% endif %}</span>{% endif %}

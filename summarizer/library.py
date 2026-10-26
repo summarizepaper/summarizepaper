@@ -7,19 +7,22 @@ paper was published (collection_tools.py), imports from Zotero, and alerts on ne
 the papers of a collection it watches (citations.py, changes.py).
 
 The analyses and the chat read the selected papers of a collection (comparison.analysed). A paper is kept
-once, whatever its version: adding a newer version replaces the older one.
+once, whatever its version: adding a newer version replaces the older one, and a preprint and its published
+version are recognized as one work (work_keys) when arXiv, Crossref or the source say so.
 
 comparison and collection_tools are imported where they are used: presskit imports this module, and evidence,
 which comparison uses, imports presskit.
 """
+import csv
 import datetime
+import io
 import json
 import re
 import secrets
 
 import requests
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.http import urlencode
@@ -27,8 +30,10 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, citations, digest, exports, generated, sources
-from .models import (AnnouncedPaper, ArxivPaper, CitationCache, Collection, CollectionPaper, FollowedPaper, Generated,
+from . import access, citations, digest, exports, sources
+from django.db.models import Max
+
+from .models import (AnnouncedPaper, ArxivPaper, Collection, CollectionPaper, ExternalPaper, FollowedPaper, Generated,
                      ZoteroAccount)
 
 FREE = {'collections': 3, 'papers': 20}
@@ -39,7 +44,7 @@ SYNC_ADD = 10  # more than this are added in the background: each DOI is one loo
 MAX_UPLOAD = 2 * 1024 * 1024
 SHARE_DAYS = 90  # a shared link works this long after its last sharing
 READING = [('to_read', _('To read')), ('read', _('Read')), ('key', _('Key paper'))]
-ADD_RESULTS = ('added', 'updated', 'already', 'unknown', 'full', 'skipped')
+ADD_RESULTS = ('added', 'updated', 'already', 'duplicate', 'unknown', 'full', 'skipped')
 
 
 def limits(paid):
@@ -65,6 +70,59 @@ def version_of(arxiv_id):
         return arxiv_id, 0
     match = re.match(r'^(.*?)(?:v(\d+))?$', arxiv_id)
     return match.group(1), int(match.group(2) or 0)
+
+
+def identity(text):
+    """One form for any identifier of a paper: 'arxiv:2101.00001' (no version; an arXiv DOI too),
+    'doi:10.1093/mnras/stad1234', or the key of another source; None when it is none of them."""
+    key = canonical_id(str(text or '')) if text else None
+    if not key:
+        return None
+    if sources.is_external(key):
+        doi = sources.key_doi(key) if key.startswith('doi_') else ''
+        return 'doi:' + doi.lower() if doi else key
+    return 'arxiv:' + version_of(key)[0].lower()
+
+
+def work_keys(arxiv_ids):
+    """{id: the identities of its work}: its own, the journal DOI arXiv gives, the published version Crossref
+    links (publication_status), and the arXiv id or DOI another source gives. A preprint and its published
+    version share one of them."""
+    keys = {a: {k for k in [identity(a)] if k} for a in arxiv_ids}
+
+    def add(aid, value):
+        key = identity(value)
+        if key:
+            keys[aid].add(key)
+    for aid, link in ArxivPaper.objects.filter(arxiv_id__in=arxiv_ids).values_list('arxiv_id', 'link_doi'):
+        add(aid, sources.clean_doi(link or '') or '')
+    for row in Generated.objects.filter(kind='presskit_status', key__in=arxiv_ids, lang='en').exclude(content=''):
+        report = row.data()
+        if report.get('status') in ('published', 'forthcoming'):
+            add(row.key, report.get('doi', ''))
+    for row in ExternalPaper.objects.filter(key__in=arxiv_ids):
+        try:
+            meta = json.loads(row.metadata or '{}')
+        except ValueError:
+            continue
+        for value in (meta.get('arxiv_id'), meta.get('doi')):
+            add(row.key, value or '')
+    return keys
+
+
+def duplicates(papers):
+    """[[paper, paper...]] of the papers of a collection that are one work (a preprint and its published version)."""
+    keys = work_keys([p.arxiv_id for p in papers])
+    groups, owner = [], {}
+    for paper in papers:
+        joined = [g for g in groups if keys[paper.arxiv_id] & g['keys']]
+        group = {'keys': set(keys[paper.arxiv_id]), 'papers': [paper]}
+        for other in joined:
+            groups.remove(other)
+            group['keys'] |= other['keys']
+            group['papers'] = other['papers'] + group['papers']
+        groups.append(group)
+    return [g['papers'] for g in groups if len(g['papers']) > 1]
 
 
 # --- reading pasted lists, BibTeX and RIS -------------------------------------------
@@ -157,24 +215,34 @@ def kept_version(collection, arxiv_id):
     return next((p for p in collection.papers.filter(arxiv_id__startswith=base) if version_of(p.arxiv_id)[0] == base), None)
 
 
-def add_paper(collection, arxiv_id, paid, found=None):
-    """'added', 'updated' (a newer version replaced the one kept), 'already', 'full' or 'unknown'.
-    found: what lookup_many already knows."""
+def add_paper(collection, arxiv_id, paid, found=None, works=None):
+    """'added', 'updated' (a newer version replaced the one kept), 'already', 'duplicate' (its preprint or
+    published version is there), 'full' or 'unknown'. found: what lookup_many already knows;
+    works: the identities of the works already in the collection (see work_keys), to share between calls."""
     kept = kept_version(collection, arxiv_id)
     if kept is not None:
         if version_of(arxiv_id)[1] > version_of(kept.arxiv_id)[1] > 0:
+            newer = (found or {}).get(arxiv_id) if found is not None else lookup(arxiv_id)
             kept.arxiv_id = arxiv_id
-            kept.save(update_fields=['arxiv_id'])
+            if newer:
+                kept.title, kept.authors = newer
+            kept.save(update_fields=['arxiv_id', 'title', 'authors'])
             collection.save(update_fields=['updated'])
             return 'updated'
         return 'already'
+    if works is None:
+        works = set().union(*work_keys(list(collection.papers.values_list('arxiv_id', flat=True))).values())
+    if work_keys([arxiv_id])[arxiv_id] & works:
+        return 'duplicate'
     if collection.papers.count() >= limits(paid)['papers']:
         return 'full'
     found = found.get(arxiv_id) if found is not None else lookup(arxiv_id)
     if found is None:
         return 'unknown'
+    last = collection.papers.aggregate(last=Max('position'))['last'] or 0
     CollectionPaper.objects.get_or_create(collection=collection, arxiv_id=arxiv_id,
-                                          defaults={'title': found[0], 'authors': found[1]})
+                                          defaults={'title': found[0], 'authors': found[1], 'position': last + 1})
+    works |= work_keys([arxiv_id])[arxiv_id]
     collection.save(update_fields=['updated'])
     return 'added'
 
@@ -185,8 +253,9 @@ def add_many(collection, ids, paid, step=None):
     if step:
         step()
     counts, added = {}, []
+    works = set().union(*work_keys(list(collection.papers.values_list('arxiv_id', flat=True))).values())
     for arxiv_id in ids:
-        status = add_paper(collection, arxiv_id, paid, known)
+        status = add_paper(collection, arxiv_id, paid, known, works)
         counts[status] = counts.get(status, 0) + 1
         if status in ('added', 'updated'):
             added.append(arxiv_id)
@@ -197,9 +266,10 @@ def add_many(collection, ids, paid, step=None):
 
 def follow_papers(user, arxiv_ids):
     """Follow these papers (citation alerts, and version alerts for arXiv papers); returns how many could not be
-    followed, past the most a user follows."""
+    followed, past the most a user follows. Their first check is the hourly run's (citations.refresh_due), which
+    records the citations they already have as known: a whole collection is not read here, a call a second."""
     room = citations.MAX_FOLLOWED - FollowedPaper.objects.filter(user=user).count()
-    new, missed = [], 0
+    missed = 0
     for arxiv_id in arxiv_ids:
         base = citations.base_id(arxiv_id)
         if not base or FollowedPaper.objects.filter(user=user, arxiv_id=base).exists():
@@ -207,12 +277,8 @@ def follow_papers(user, arxiv_ids):
         if room <= 0:
             missed += 1
             continue
-        followed, created = citations.follow(user, base)
+        citations.follow(user, base)
         room -= 1
-        if created and followed.known == '' and not CitationCache.objects.filter(arxiv_id=base, checked__isnull=False).exists():
-            new.append(base)
-    if new:
-        generated.background(citations.refresh_new, new)
     return missed
 
 
@@ -300,6 +366,26 @@ def select(collection, value):
         papers.filter(reading=value[8:]).update(selected=True)
 
 
+def reorder(collection, ids):
+    """Put the papers in this order (ids of the collection; the others keep theirs, after them)."""
+    papers = list(collection.papers.all())
+    rank = {aid: i for i, aid in enumerate(ids)}
+    papers.sort(key=lambda p: (rank.get(p.arxiv_id, len(rank)), p.position, p.added, p.pk))
+    for position, paper in enumerate(papers, 1):
+        if paper.position != position:
+            paper.position = position
+            paper.save(update_fields=['position'])
+
+
+def move(collection, arxiv_id, step):
+    ids = list(collection.papers.values_list('arxiv_id', flat=True))
+    if arxiv_id in ids:
+        i = ids.index(arxiv_id)
+        j = max(0, min(len(ids) - 1, i + step))
+        ids[i], ids[j] = ids[j], ids[i]
+        reorder(collection, ids)
+
+
 def share(collection, notes):
     if not collection.share_token:
         collection.share_token = secrets.token_urlsafe(16)
@@ -342,6 +428,14 @@ def collection_page(request, pk):
                 return JsonResponse({'status': 'saved', 'tags': paper.tags, 'selected': paper.selected,
                                      'analysed': len(comparison.analysed(collection))})
             return _page(collection, 'papers')
+        if action in ('up', 'down'):
+            move(collection, request.POST.get('arxiv_id', ''), -1 if action == 'up' else 1)
+            if fetch:
+                return JsonResponse({'status': 'moved'})
+            return _page(collection, 'papers')
+        if action == 'order':
+            reorder(collection, [i for i in request.POST.get('ids', '').split(',') if i])
+            return JsonResponse({'status': 'moved'}) if fetch else _page(collection, 'papers')
         if action == 'select':
             select(collection, request.POST.get('value', ''))
             return _page(collection, request.POST.get('tab', 'papers'))
@@ -399,6 +493,7 @@ def collection_page(request, pk):
 
     context = {
         'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid), 'tags': tags,
+        'duplicates': duplicates(papers),
         'reading_choices': READING, 'analysed': chosen, 'compare_max': comparison.COMPARE_MAX,
         'chat_ids': ','.join(p.arxiv_id for p in chosen[:CHAT_MAX]), 'chat_max': CHAT_MAX,
         'added': {k: int(request.GET[k]) for k in ADD_RESULTS + ('unfollowed',) if request.GET.get(k, '').isdigit()},
@@ -420,7 +515,7 @@ def collection_page(request, pk):
     }
     if paid:
         exact, shown = comparison.shown_result(collection, 'compare', lang)
-        context.update(comparison=exact, compare_shown=shown,
+        context.update(comparison=exact, compare_shown=shown, editable=True,
                        table=comparison.display(shown.data(), lang) if shown is not None else None,
                        compare_stale=comparison.staleness(collection, 'compare', shown, chosen))
         exact, shown = comparison.shown_result(collection, 'questions', lang)
@@ -460,7 +555,8 @@ def export_name(collection):
 
 @login_required
 def collection_export(request, pk, fmt):
-    """bib, ris, md: the papers (with a tag only, ?tag=), with their notes and tags; csv: the comparison table."""
+    """bib, ris, md: the papers (with a tag only, ?tag=), with their notes and tags; list: the papers as a
+    spreadsheet; csv: the comparison table."""
     from . import comparison
     collection = _mine(request, pk)
     lang = get_language()
@@ -474,9 +570,33 @@ def collection_export(request, pk, fmt):
     tag = request.GET.get('tag', '').strip().lower()
     if tag:
         rows = [r for r in rows if tag in [t.strip().lower() for t in r.tags.split(',')]]
+    if fmt == 'list':
+        return list_csv(rows, filename)
     metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in rows) if m]
     notes = {p.arxiv_id: (p.note, p.tags) for p in rows}
     return exports.export_many(metas, fmt, filename, lang, notes=notes)
+
+
+def list_csv(papers, filename):
+    """The papers as a spreadsheet: what the page shows of each, with the reader's notes, tags and status."""
+    from . import collection_tools
+    facts = collection_tools.facts(papers)
+    reading = dict(READING)
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(['Identifier', 'Title', 'Authors', 'Year', 'Venue', 'Editorial status', 'Notices', 'Citations',
+                     'Newer version', 'Reading status', 'Tags', 'Note', 'Selected', 'Link'])
+    for p in papers:
+        f = facts.get(p.arxiv_id, {})
+        writer.writerow([exports.bare_ref(p.arxiv_id), p.title, p.authors, f.get('year', ''), f.get('venue', ''),
+                         f.get('label', ''), '; '.join(str(n['label']) for n in f.get('notices', [])),
+                         '' if f.get('citations') is None else f['citations'], f.get('newer') or '',
+                         str(reading.get(p.reading, '')), p.tags, p.note, 'yes' if p.selected else 'no',
+                         sources.ref_url(p.arxiv_id) if sources.is_external(p.arxiv_id)
+                         else 'https://arxiv.org/abs/%s' % exports.bare_ref(p.arxiv_id)])
+    response = HttpResponse('\ufeff' + out.getvalue(), content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="%s-papers.csv"' % filename
+    return response
 
 
 def paper_collections(user, arxiv_id):
@@ -527,7 +647,7 @@ def shared_copy(request, token):
         return redirect('/%s/collections/' % get_language())
     collection = Collection.objects.create(user=request.user, name=source.name, template=source.template,
                                            custom_columns=source.custom_columns)
-    for paper in source.papers.all()[:limits(paid)['papers']]:
+    for position, paper in enumerate(source.papers.all()[:limits(paid)['papers']], 1):
         CollectionPaper.objects.create(collection=collection, arxiv_id=paper.arxiv_id, title=paper.title,
-                                       authors=paper.authors, selected=paper.selected)
+                                       authors=paper.authors, selected=paper.selected, position=position)
     return redirect('/%s/collections/%s/' % (get_language(), collection.pk))

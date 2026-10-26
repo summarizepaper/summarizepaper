@@ -31,7 +31,7 @@ def fake_model(answers=None):
             ids = [line.split('"')[1] for line in system.splitlines() if line.startswith('<paper id=')]
             return {'rows': [{'id': i, 'cells': answers.get(i, {'method': {'text': 'Spectroscopy', 'quote': ''}})}
                              for i in ids]}
-        return {'agreements': [{'text': 'Both see clouds', 'papers': ids_of(system)}],
+        return {'agreements': [{'text': 'Both see clouds', 'papers': ids_of(system), 'columns': ['method', 'results']}],
                 'disagreements': [{'text': 'Cloud height differs', 'papers': ['made-up']}], 'gaps': ['Nobody looks at night']}
     chat.calls = calls
     return chat
@@ -78,6 +78,7 @@ class SelectionAndVersionTests(CollectionsTestCase):
         collection = self.make_collection(user, ('2101.00001v1',))
         self.paper('2101.00001v2', title='Clouds, second version')
         self.assertEqual(library.add_paper(collection, '2101.00001v2', False), 'updated')
+        self.assertEqual(collection.papers.get().title, 'Clouds, second version')
         self.assertEqual(library.add_paper(collection, '2101.00001v1', False), 'already')
         self.assertEqual(list(collection.papers.values_list('arxiv_id', flat=True)), ['2101.00001v2'])
         self.assertTrue(library.paper_collections(user, '2101.00001v1')[0]['has'])
@@ -394,7 +395,7 @@ class ShareAndWatchTests(CollectionsTestCase):
         with mock.patch('summarizer.citations.refresh_new') as refresh:
             client.post('/en/collections/%d/' % collection.pk, {'action': 'watch', 'value': 'on'})
             self.assertEqual(list(FollowedPaper.objects.filter(user=user).values_list('arxiv_id', flat=True)), ['2101.00001'])
-            refresh.assert_called_once_with(['2101.00001'])
+            refresh.assert_not_called()  # the hourly run checks them first, at its own pace
             self.paper('2101.00002v1')
             client.post('/en/collections/%d/' % collection.pk, {'action': 'add', 'ids': '2101.00002v1'})
         self.assertIn(user.pk, changes.watched()['2101.00002'])
@@ -404,3 +405,102 @@ class ShareAndWatchTests(CollectionsTestCase):
         self.client_for(free).post('/en/collections/%d/' % mine.pk, {'action': 'watch', 'value': 'on'})
         mine.refresh_from_db()
         self.assertFalse(mine.watch)
+
+
+class WorkspaceTests(CollectionsTestCase):
+    def test_a_preprint_and_its_published_version_are_one_work(self):
+        user = self.user()
+        collection = self.make_collection(user, ('2101.00001v1',))
+        ArxivPaper.objects.filter(arxiv_id='2101.00001v1').update(link_doi='https://doi.org/10.1093/mnras/stad1234')
+        key = 'doi_10.1093--mnras--stad1234'
+        self.assertEqual(library.identity('https://doi.org/10.48550/arXiv.2101.00001v3'), 'arxiv:2101.00001')
+        self.assertEqual(library.identity(key), 'doi:10.1093/mnras/stad1234')
+        with mock.patch('summarizer.library.lookup_many', return_value={key: ('Clouds', 'Ann Lee')}):
+            r = self.client_for(user).post('/en/collections/%d/' % collection.pk, {'action': 'add', 'ids': '10.1093/mnras/stad1234'})
+        self.assertIn('duplicate=1', r['Location'])
+        self.assertContains(self.client_for(user).get(r['Location']), 'was already there as its preprint or published version')
+        self.assertEqual(collection.papers.count(), 1)
+        CollectionPaper.objects.create(collection=collection, arxiv_id=key, title='Clouds (MNRAS)', authors='Ann Lee')
+        groups = library.duplicates(list(collection.papers.all()))
+        self.assertEqual([sorted(p.arxiv_id for p in g) for g in groups], [['2101.00001v1', key]])
+        self.assertContains(self.client_for(user).get('/en/collections/%d/' % collection.pk), 'look like one work')
+
+    def test_the_owner_orders_the_papers_and_the_analyses_follow(self):
+        user = self.user()
+        collection = self.make_collection(user, ('2101.00001v1', '2101.00002v1', '2101.00003v1'))
+        client = self.client_for(user)
+        url = '/en/collections/%d/' % collection.pk
+        client.post(url, {'action': 'down', 'arxiv_id': '2101.00001v1'})
+        self.assertEqual(list(collection.papers.values_list('arxiv_id', flat=True)), ['2101.00002v1', '2101.00001v1', '2101.00003v1'])
+        r = client.post(url, {'action': 'order', 'ids': '2101.00003v1,2101.00001v1'}, HTTP_X_REQUESTED_WITH='fetch').json()
+        self.assertEqual(r['status'], 'moved')
+        self.assertEqual([p.arxiv_id for p in comparison.analysed(collection)], ['2101.00003v1', '2101.00001v1', '2101.00002v1'])
+        self.paper('2101.00004v1')
+        library.add_paper(collection, '2101.00004v1', False)
+        self.assertEqual(list(collection.papers.values_list('arxiv_id', flat=True))[-1], '2101.00004v1')
+        self.assertContains(client.get(url), '/en/chat/?ids=2101.00003v1,2101.00001v1,2101.00002v1,2101.00004v1')
+
+    def test_the_paper_list_exports_as_a_spreadsheet(self):
+        user = self.user()
+        collection = self.make_collection(user)
+        CollectionPaper.objects.filter(arxiv_id='2101.00001v1').update(tags='core', reading='key', note='Cite in ch. 2')
+        CitationCache.objects.create(arxiv_id='2101.00001', total=7, checked=timezone.now())
+        csv = self.client_for(user).get('/en/collections/%d/export/list/' % collection.pk).content.decode()
+        self.assertIn('Identifier,Title,Authors,Year,Venue', csv)
+        self.assertIn('2101.00001,Paper 2101.00001v1,"Ann Lee, Bob Ray",2021,,,,7,,Key paper,core,Cite in ch. 2,yes,https://arxiv.org/abs/2101.00001', csv)
+
+    def test_literature_review_collections_keep_one_paper_per_work(self):
+        user = self.user()
+        collection = Collection.objects.create(user=user, name='Review')
+        self.paper()
+        known = {'2101.00001v1': ('Clouds', 'Ann'), '2101.00001v2': ('Clouds v2', 'Ann')}
+        for key in known:
+            library.add_paper(collection, key, False, known)
+        self.assertEqual(list(collection.papers.values_list('arxiv_id', flat=True)), ['2101.00001v2'])
+
+
+class CorrectionAndFindingTests(ComparisonTableTests):
+    def write(self, mode=''):
+        with mock.patch('summarizer.paper_source.paper_text', return_value=OPEN_TEXT), \
+             mock.patch('summarizer.generated.chat_json', side_effect=fake_model(self.answers())):
+            self.client.post(self.url + 'compare/', {'mode': mode})
+        return Generated.objects.get(kind='compare')
+
+    def test_a_corrected_cell_is_marked_and_survives_a_rewrite(self):
+        row = self.write()
+        r = self.client.post(self.url + 'cell/', {'row': row.pk, 'arxiv_id': '2101.00001v1', 'code': 'data',
+                                                  'text': '12 NIRSpec spectra, 2.9-5.2 micron'})
+        self.assertEqual(r['Location'], self.url + '#row-1')
+        page = self.client.get(self.url)
+        self.assertContains(page, 'Corrected by hand')
+        self.assertContains(page, '12 NIRSpec spectra, 2.9-5.2 micron')
+        row = self.write('again')
+        cell = row.data()['rows'][0]['cells']['data']
+        self.assertEqual((cell['text'], cell['edited']), ('12 NIRSpec spectra, 2.9-5.2 micron', True))
+        other = self.user('eve', paid=True)
+        mine = self.make_collection(other)
+        self.assertEqual(self.client_for(other).post('/en/collections/%d/cell/' % mine.pk, {
+            'row': row.pk, 'arxiv_id': '2101.00001v1', 'code': 'data', 'text': 'x'}).status_code, 404)
+        self.assertNotContains(Client().get(self._shared_url()), 'name="code"')
+
+    def _shared_url(self):
+        library.share(self.collection, False)
+        return '/en/collections/shared/%s/' % self.collection.share_token
+
+    def test_findings_show_the_passages_they_rest_on(self):
+        self.write()
+        table = comparison.display(Generated.objects.get(kind='compare').data(), 'en')
+        agreement = table['agreements'][0]
+        self.assertEqual(agreement['papers'], [1, 2])
+        self.assertEqual([(p['n'], p['label']) for p in agreement['passages']], [(1, 'Method'), (1, 'Main results')])
+        self.assertFalse(agreement['backed'])  # paper 2 has no quoted cell in these columns
+        self.assertIsNone(table['disagreements'][0]['backed'])  # names no column (and its made-up paper is dropped)
+        page = self.client.get(self.url)
+        self.assertContains(page, '2 passages behind it')
+        self.assertContains(page, 'Some of the papers it names have no passage in these columns.')
+
+
+class BoundedSuggestionTests(SuggestionTests):
+    def test_common_references_then_the_closest_papers(self):
+        with mock.patch('summarizer.collection_tools.EMBEDDING_CHUNK', 1):
+            super().test_common_references_then_the_closest_papers()

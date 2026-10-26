@@ -113,7 +113,9 @@
     });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      var removing = e.submitter && e.submitter.value === 'remove';
+      var value = e.submitter && e.submitter.value;
+      if (value === 'up' || value === 'down') return move(card, value);
+      var removing = value === 'remove';
       if (!removing) return save(form, {note: note.value, tags: tags.value, reading: reading.value});
       if (!confirm(t.remove)) return;
       SP.post(here, {action: 'remove', arxiv_id: form.dataset.id}).then(function (json) {
@@ -125,6 +127,66 @@
     });
   }
   if (list) Array.prototype.slice.call(list.querySelectorAll('.paper-form')).forEach(setUp);
+
+  // --- the owner's order: arrows, or dragging a card by its handle ------------------------
+  // The order is the one the analyses read; moving a paper while another sort is shown goes back to it first.
+  function saveOrder() {
+    var cards = Array.prototype.slice.call(list.children);
+    cards.forEach(function (c, i) { c.dataset.order = i; });
+    SP.post(here, {action: 'order', ids: cards.map(function (c) { return c.dataset.id; }).join(',')});
+  }
+
+  function inOwnOrder() {
+    if (sortPick.value === 'order') return;
+    sortPick.value = 'order';
+    filter();
+  }
+
+  function move(card, direction) {
+    inOwnOrder();
+    var sibling = direction === 'up' ? card.previousElementSibling : card.nextElementSibling;
+    if (!sibling) return;
+    list.insertBefore(card, direction === 'up' ? sibling : sibling.nextElementSibling);
+    saveOrder();
+    card.querySelector('[value=' + direction + ']').focus();
+  }
+
+  var dragged = null;
+  if (list) {
+    list.addEventListener('pointerdown', function (e) {
+      var handle = e.target.closest && e.target.closest('.drag-handle');
+      if (handle) handle.closest('.paper-card').draggable = true;
+    });
+    list.addEventListener('dragstart', function (e) {
+      var card = e.target.closest && e.target.closest('.paper-card');
+      if (!card || !card.draggable) return;
+      inOwnOrder();
+      dragged = card;
+      card.classList.add('is-dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+    list.addEventListener('dragover', function (e) {
+      var over = dragged && e.target.closest && e.target.closest('.paper-card');
+      if (!over) return;
+      e.preventDefault();
+      if (over === dragged) return;
+      var box = over.getBoundingClientRect();
+      list.insertBefore(dragged, e.clientY > box.top + box.height / 2 ? over.nextElementSibling : over);
+    });
+    list.addEventListener('pointerup', function () {
+      if (dragged) return;
+      Array.prototype.slice.call(list.children).forEach(function (c) { c.draggable = false; });
+    });
+    list.addEventListener('drop', function (e) { if (dragged) e.preventDefault(); });
+    list.addEventListener('dragend', function () {
+      if (!dragged) return;
+      dragged.classList.remove('is-dragging');
+      dragged.draggable = false;
+      dragged = null;
+      saveOrder();
+    });
+  }
 
   // --- filters and sorting ---------------------------------------------------------
   var query = document.getElementById('paper-filter');

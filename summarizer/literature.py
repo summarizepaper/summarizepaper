@@ -32,7 +32,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from . import access, digest, evidence, generated, library, similar, sources
-from .models import Collection, CollectionPaper, Generated
+from .models import Collection, Generated
 
 logger = logging.getLogger(__name__)
 
@@ -488,8 +488,8 @@ def save_collection(request, row):
         return redirect('/%s/literature-review/%s/?m=too_many' % (get_language(), row.key))
     result = row.data()
     collection = Collection.objects.create(user=request.user, name=str(result.get('title') or _('Literature review'))[:120])
-    room = library.limits(paid)['papers']
-    for paper in result.get('papers', [])[:room]:
-        CollectionPaper.objects.get_or_create(collection=collection, arxiv_id=paper['key'],
-                                              defaults={'title': paper['title'], 'authors': paper['authors']})
+    papers = result.get('papers', [])
+    known = {p['key']: (p['title'], p['authors']) for p in papers}
+    for paper in papers:  # one per work, whatever its version; up to the plan's limit
+        library.add_paper(collection, paper['key'], paid, known)
     return redirect('/%s/literature-review/%s/?m=saved&c=%s' % (get_language(), row.key, collection.pk))

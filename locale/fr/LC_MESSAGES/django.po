@@ -11601,3 +11601,66 @@ msgstr "Lu"
 #: summarizer/library.py
 msgid "Key paper"
 msgstr "Article clé"
+
+#: templates/summarizer/collection.html
+msgid "Spreadsheet (CSV)"
+msgstr "Tableur (CSV)"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Exports keep your notes and tags. Filter by a tag to export only its papers. "
+"Drag the papers or use the arrows to order them: the analyses read them in "
+"this order."
+msgstr ""
+"Les exports gardent vos notes et vos étiquettes. Filtrez par étiquette pour "
+"n’exporter que ses articles. Faites glisser les articles ou utilisez les "
+"flèches pour les ordonner : les analyses les lisent dans cet ordre."
+
+#, python-format
+msgid "%(n)s was already there as its preprint or published version."
+msgid_plural "%(n)s were already there as their preprint or published version."
+msgstr[0] "%(n)s y était déjà sous sa version preprint ou publiée."
+msgstr[1] "%(n)s y étaient déjà sous leur version preprint ou publiée."
+
+#: templates/summarizer/collection.html
+msgid "In your order"
+msgstr "Dans votre ordre"
+
+#: templates/summarizer/collection.html
+msgid ""
+"These papers look like one work, a preprint and its published version. Keep "
+"one, so that it counts once in the analyses:"
+msgstr ""
+"Ces articles semblent être un même travail, un preprint et sa version "
+"publiée. Gardez-en un, pour qu’il ne compte qu’une fois dans les analyses :"
+
+#: templates/summarizer/collection.html
+msgid "Move down"
+msgstr "Descendre"
+
+#: templates/summarizer/collection_table.html
+msgid "Corrected by hand"
+msgstr "Corrigé à la main"
+
+#: templates/summarizer/collection_table.html
+msgid "Correct"
+msgstr "Corriger"
+
+#: templates/summarizer/collection_table.html
+msgid "Corrected text"
+msgstr "Texte corrigé"
+
+#, python-format
+msgid "%(n)s passage behind it"
+msgid_plural "%(n)s passages behind it"
+msgstr[0] "%(n)s passage derrière ce constat"
+msgstr[1] "%(n)s passages derrière ce constat"
+
+#: templates/summarizer/collection_rows.html
+msgid "Some of the papers it names have no passage in these columns."
+msgstr ""
+"Certains des articles qu’il cite n’ont pas de passage dans ces colonnes."
+
+#: templates/summarizer/collection_rows.html
+msgid "Rests on cells without a source."
+msgstr "Repose sur des cases sans source."

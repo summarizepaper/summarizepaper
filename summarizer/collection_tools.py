@@ -7,9 +7,11 @@
   compare with, and writing it here would swallow an alert.
 - suggestions() (Premium): what the collection may be missing. The papers cited by at least two of its papers
   (their references, from Semantic Scholar or OpenAlex), then the papers closest to the collection as a whole
-  (the mean of their title-and-abstract embeddings, see similar.py).
+  (the mean of their title-and-abstract embeddings, see similar.py), read in chunks so that memory stays
+  bounded whatever the number of indexed papers. Papers already there in another version are left out.
 - import_ids() and zotero_import(): adding many papers at once, a lookup per DOI, out of the request.
 """
+import heapq
 import json
 import logging
 import re
@@ -33,7 +35,9 @@ from .models import (ArxivPaper, CitationCache, Collection, CollectionPaper, Ext
 
 logger = logging.getLogger(__name__)
 
-META_MAX = 60  # papers checked by one refresh
+META_MAX = 30  # papers checked by one refresh (the oldest checks first: the next refresh goes on)
+ARXIV_SECONDS = 3  # arXiv asks for one query every three seconds
+EMBEDDING_CHUNK = 5000
 SUGGEST_MAX = 15
 ZOTERO_MAX = 500
 META_STEPS = [
@@ -124,8 +128,12 @@ def refresh(collection_pk):
         generated.progress(pk, 'status')
         papers = list(ArxivPaper.objects.filter(arxiv_id__in=ids))
         papers.sort(key=lambda p: (publication_status.latest(p.arxiv_id) or {}).get('checked_at', ''))  # oldest check first
+        asked = 0
         for index, paper in enumerate(papers[:META_MAX]):
             if publication_status.stale(publication_status.latest(paper.arxiv_id)):
+                if asked:
+                    time.sleep(ARXIV_SECONDS)
+                asked += 1
                 try:
                     publication_status.for_generation(paper)
                 except Exception:
@@ -176,10 +184,15 @@ def refresh_start(request, pk):
 # --- what the collection may be missing (Premium) ------------------------------------
 
 def same_ref(text):
-    """One form for an arXiv id (without version) or a DOI, whatever the source wrote."""
-    from .library import canonical_id
-    key = canonical_id(str(text or ''))
-    return re.sub(r'v\d+$', '', key) if key and not sources.is_external(key) else key
+    """One form for an arXiv id (without version) or a DOI, whatever the source wrote (library.identity)."""
+    from .library import identity
+    return identity(text)
+
+
+def own_works(collection):
+    """The identities of the works of a collection, in all their versions (preprint and published)."""
+    from .library import work_keys
+    return set().union(*work_keys(list(collection.papers.values_list('arxiv_id', flat=True))).values())
 
 
 def common_references(papers, own):
@@ -203,8 +216,10 @@ def common_references(papers, own):
             info.setdefault(key, ref)
     ranked = sorted((k for k in counts if counts[k] >= 2), key=lambda k: (-counts[k], k))[:SUGGEST_MAX]
     titles = {p.arxiv_id: p.title or p.arxiv_id for p in papers}
-    return [{'ref': key, 'title': info[key].get('title', ''), 'authors': info[key].get('authors', ''),
-             'year': info[key].get('year', ''), 'count': counts[key], 'by': [titles[a] for a in by[key]][:6]}
+    from .library import canonical_id
+    return [{'ref': info[key]['ref'], 'key': canonical_id(info[key]['ref']), 'title': info[key].get('title', ''),
+             'authors': info[key].get('authors', ''), 'year': info[key].get('year', ''), 'count': counts[key],
+             'by': [titles[a] for a in by[key]][:6]}
             for key in ranked]
 
 
@@ -227,31 +242,47 @@ def closest_to(papers, own):
     categories = {c for c in (similar.candidate_category(r) for r in rows) if c}
     if categories:
         candidates = candidates.filter(category__in=categories)
-    pairs = [(aid, np.frombuffer(vec, dtype=np.float32)) for aid, vec in candidates.values_list('arxiv_id', 'vector')]
-    pairs = [(aid, vec) for aid, vec in pairs if same_ref(aid) not in own]
-    if not pairs:
-        return []
-    scores = np.stack([vec for _a, vec in pairs]) @ centre
+    best, ids, chunk = [], [], []  # best: a heap of the highest (score, id), a few per suggestion for the versions
+
+    def score():
+        found = np.frombuffer(b''.join(chunk), dtype=np.float32).reshape(len(chunk), -1) @ centre
+        for aid, value in zip(ids, found):
+            item = (float(value), aid)
+            if len(best) < SUGGEST_MAX * 4:
+                heapq.heappush(best, item)
+            elif item > best[0]:
+                heapq.heapreplace(best, item)
+        ids.clear()
+        chunk.clear()
+    for aid, vec in candidates.values_list('arxiv_id', 'vector').iterator(chunk_size=EMBEDDING_CHUNK):
+        if same_ref(aid) in own:
+            continue
+        ids.append(aid)
+        chunk.append(bytes(vec))
+        if len(ids) >= EMBEDDING_CHUNK:
+            score()
+    if ids:
+        score()
     chosen, seen = [], set()
-    for i in np.argsort(-scores):
-        key = same_ref(pairs[i][0])
+    for value, aid in sorted(best, reverse=True):
+        key = same_ref(aid)
         if key in seen:
             continue
         seen.add(key)
-        chosen.append((pairs[i][0], float(scores[i])))
+        chosen.append((aid, value))
         if len(chosen) == SUGGEST_MAX:
             break
     found = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=[a for a, _s in chosen]).prefetch_related('authors')}
     result = []
-    for aid, score in chosen:
+    for aid, value in chosen:
         paper = found.get(aid)
         if paper is None or not paper.title:
             continue
         names = [a.name for a in paper.authors.all()[:4]]
-        result.append({'ref': aid, 'title': ' '.join(paper.title.split()),
+        result.append({'ref': aid, 'key': aid, 'title': ' '.join(paper.title.split()),
                        'authors': ', '.join(names[:3]) + (' et al.' if len(names) > 3 else ''),
                        'year': paper.published_arxiv.year if paper.published_arxiv else '',
-                       'similarity': round(100 * score, 1)})
+                       'similarity': round(100 * value, 1)})
     return result
 
 
@@ -259,11 +290,11 @@ def suggestions(collection_pk):
     def work(pk):
         collection = Collection.objects.get(pk=collection_pk)
         papers = comparison.analysed(collection)
-        own = {same_ref(a) for a in collection.papers.values_list('arxiv_id', flat=True)}
+        own = own_works(collection)
         generated.progress(pk, 'references')
         cited = common_references(papers, own)
         generated.progress(pk, 'close')
-        close = closest_to(papers, own | {c['ref'] for c in cited})
+        close = closest_to(papers, own | {same_ref(c['ref']) for c in cited})
         return {'cited': cited, 'close': close, 'ids': [p.arxiv_id for p in papers]}
     return work
 

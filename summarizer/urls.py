@@ -73,6 +73,7 @@ urlpatterns = [
     path("collections/add/", library.add_to_collection, name="collection_add"),
     path("collections/<int:pk>/", library.collection_page, name="collection"),
     path("collections/<int:pk>/compare/", comparison.compare_start, name="collection_compare"),
+    path("collections/<int:pk>/cell/", comparison.edit_cell, name="collection_cell"),
     path("collections/<int:pk>/refresh/", collection_tools.refresh_start, name="collection_refresh"),
     path("collections/<int:pk>/suggest/", collection_tools.suggest_start, name="collection_suggest"),
     path("collections/<int:pk>/zotero/", collection_tools.zotero_import_start, name="collection_zotero_import"),

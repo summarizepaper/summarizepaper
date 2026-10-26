@@ -4,5 +4,5 @@
   <input type="hidden" name="tab" value="missing">
   <input type="hidden" name="ids" value="{{ s.ref }}">
   <button class="btn btn-sm" type="submit">{% trans 'Add to the collection' %}</button>
-  <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/paper/{{ s.ref }}/">{% trans 'Open' %}</a>
+  <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/paper/{{ s.key|default:s.ref }}/">{% trans 'Open' %}</a>
 </form>

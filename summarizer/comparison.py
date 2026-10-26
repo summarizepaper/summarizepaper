@@ -6,6 +6,9 @@ method, data and results (paper_source); otherwise its abstract, with our summar
 its quote only when the quote is word for word in what the model read of the paper, never in our summary
 (evidence.find); the page shows it with its section and, for arXiv HTML, a link that opens the passage. A cell
 without a quote is shown as not checked against the paper, and numbers of a cell missing from its quote are named.
+The owner can correct a cell by hand; the correction is marked and survives updates and rewrites. Each
+agreement, disagreement or gap names the papers and columns it rests on, so the page shows the passages behind
+it, or says that it rests on cells without a source.
 
 The columns are a template's (general, clinical, machine learning, observation, theory) followed by the user's
 own. The papers read are the collection's selected ones, COMPARE_MAX at most, in the collection's order; the
@@ -20,8 +23,8 @@ import json
 import re
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -309,12 +312,14 @@ def synthesize(rows, cols, lang):
         'Above is a comparison table of %d papers, one JSON object per paper. For a researcher writing a literature '
         'review, say in %s where the papers agree, where they disagree or report different results (give the '
         'numbers), and which questions none of them addresses. Rest only on the table. Each item lists the ids of '
-        'the papers it rests on (an empty list for a question nobody addresses). At most %d items per list. No '
-        'LaTeX, no markdown, never write paper IDs in the texts. Answer with a JSON object {"agreements": [{"text": '
-        '"...", "papers": ["id"]}], "disagreements": [...], "gaps": [...]}.'
-        % (len(rows), generated.language_name(lang), MAX_ITEMS),
+        'the papers it rests on (an empty list for a question nobody addresses) and the codes of the columns it '
+        'rests on (%s). At most %d items per list. No LaTeX, no markdown, never write paper IDs in the texts. '
+        'Answer with a JSON object {"agreements": [{"text": "...", "papers": ["id"], "columns": ["code"]}], '
+        '"disagreements": [...], "gaps": [...]}.'
+        % (len(rows), generated.language_name(lang), ', '.join(code for code, _l, _h in cols), MAX_ITEMS),
         paid=True, max_tokens=3000, system=json.dumps(table, ensure_ascii=False))
     known = {r['arxiv_id'] for r in rows}
+    codes = [code for code, _l, _h in cols]
     lists = {}
     for name in ('agreements', 'disagreements', 'gaps'):
         items = []
@@ -324,8 +329,10 @@ def synthesize(rows, cols, lang):
             if not isinstance(item, dict) or not str(item.get('text') or '').strip():
                 continue
             papers = item.get('papers') if isinstance(item.get('papers'), list) else []
+            columns = item.get('columns') if isinstance(item.get('columns'), list) else []
             items.append({'text': ' '.join(str(item['text']).split()),
-                          'papers': [p for p in dict.fromkeys(papers) if isinstance(p, str) and p in known]})
+                          'papers': [p for p in dict.fromkeys(papers) if isinstance(p, str) and p in known],
+                          'columns': [c for c in dict.fromkeys(columns) if c in codes]})
         lists[name] = items[:MAX_ITEMS]
     return lists
 
@@ -337,8 +344,9 @@ def write(collection_pk, lang, full=False):
         papers = analysed(collection)
         cols = columns(collection)
         sig = signature(collection)
-        previous = {} if full else Generated.objects.get(pk=pk).data()
-        kept = {r['arxiv_id']: r for r in previous.get('rows', []) if previous.get('sig') == sig and 'cells' in r}
+        previous = Generated.objects.get(pk=pk).data()
+        same = previous.get('sig') == sig
+        kept = {} if full else {r['arxiv_id']: r for r in previous.get('rows', []) if same and 'cells' in r}
         generated.progress(pk, 'read')
         todo = [reading(p) for p in papers if p.arxiv_id not in kept]
         generated.progress(pk, 'extract')
@@ -350,6 +358,14 @@ def write(collection_pk, lang, full=False):
             raise generated.GenerationError('empty comparison')
         generated.progress(pk, 'compare')
         lists = synthesize(rows, cols, lang) if len(rows) > 1 else {'agreements': [], 'disagreements': [], 'gaps': []}
+        # what the owner corrected stays corrected, read last: they may correct a cell while this runs
+        latest = Generated.objects.get(pk=pk).data()
+        if latest.get('sig') == sig:
+            edited = {(r['arxiv_id'], code): c for r in latest.get('rows', [])
+                      for code, c in (r.get('cells') or {}).items() if isinstance(c, dict) and c.get('edited')}
+            for row in rows:
+                for code in row['cells']:
+                    row['cells'][code] = edited.get((row['arxiv_id'], code), row['cells'][code])
         return dict(lists, version=2, sig=sig, template=collection.template, rows=rows,
                     columns=[[code, label if code.startswith('c') else ''] for code, label, _h in cols],
                     ids=[p.arxiv_id for p in papers],
@@ -374,7 +390,8 @@ def display(data, lang):
         stored = row.get('cells') or {code: {'text': row.get(code, '')} for code, _l in cols}
         cells = []
         for code, _l in cols:
-            value = dict(BLANK_CELL, **(stored.get(code) or {}))
+            value = dict(dict(BLANK_CELL, edited=False), **(stored.get(code) or {}))
+            value['code'] = code
             value['missing'] = is_missing(value['text'])
             if value['missing']:
                 value.update(text=missing, quote='')
@@ -382,13 +399,29 @@ def display(data, lang):
         numbers[row.get('arxiv_id')] = index
         rows.append({'n': index, 'arxiv_id': row.get('arxiv_id', ''), 'title': row.get('title', ''),
                      'source': row.get('source', ''), 'cells': cells})
+    by_paper = {r['arxiv_id']: r for r in rows}
+    labels_now = dict(cols)
 
     def items(name):
+        """Each finding with its rows, and the passages behind it: the quoted cells of its papers in its columns.
+        backed: every paper it names has one; None when the finding does not name columns (older tables)."""
         found = []
         for item in data.get(name, []):
             item = item if isinstance(item, dict) else {'text': str(item), 'papers': []}
             text = missing if is_missing(item.get('text', '')) else item.get('text', '')
-            found.append({'text': text, 'papers': sorted(numbers[p] for p in item.get('papers', []) if p in numbers)})
+            papers = [p for p in item.get('papers', []) if p in numbers]
+            passages, backed = [], None
+            if 'columns' in item and papers:
+                quoted = set()
+                for aid in papers:
+                    for c in by_paper[aid]['cells']:
+                        if c['code'] in item['columns'] and c['quote']:
+                            passages.append({'n': numbers[aid], 'label': labels_now.get(c['code'], c['code']),
+                                             'quote': c['quote'], 'section': c['section']})
+                            quoted.add(aid)
+                backed = len(quoted) == len(papers)
+            found.append({'text': text, 'papers': sorted(numbers[p] for p in papers), 'passages': passages,
+                          'backed': backed})
         return found
 
     filled = [c for r in rows for c in r['cells'] if not c['missing']]
@@ -431,3 +464,27 @@ def compare_start(request, pk):
     row = generated.start('compare', result_key(collection, 'compare'), lang, write(collection.pk, lang, full=mode == 'again'),
                           user=request.user, force=mode in ('update', 'again'))
     return JsonResponse({'status': row.status, 'id': row.pk})
+
+
+@login_required
+@require_POST
+def edit_cell(request, pk):
+    """The owner corrects a cell of a table of this collection. The correction is marked as such."""
+    collection = get_object_or_404(Collection, pk=pk, user=request.user)
+    if not access.has_tool(request.user, 'collections'):
+        raise Http404
+    row = get_object_or_404(Generated, pk=request.POST.get('row'), kind='compare', key__startswith='%s:' % collection.pk)
+    data = row.data()
+    arxiv_id, code = request.POST.get('arxiv_id', ''), request.POST.get('code', '')
+    target = next((r for r in data.get('rows', []) if r.get('arxiv_id') == arxiv_id), None)
+    if target is None:
+        raise Http404
+    if 'cells' not in target:  # an older table: one text per column
+        target['cells'] = {c: {'text': target.pop(c, '')} for c in list(target) if c not in ('arxiv_id', 'title', 'id', 'source')}
+    text = ' '.join(request.POST.get('text', '').split())[:700]
+    previous = dict(BLANK_CELL, **(target['cells'].get(code) or {}))
+    target['cells'][code] = dict(previous, text=text or missing_label(row.lang), edited=True, numbers=[])
+    row.content = json.dumps(data)
+    row.save(update_fields=['content'])
+    number = data['rows'].index(target) + 1
+    return redirect('/%s/collections/%s/#row-%d' % (get_language(), collection.pk, number))

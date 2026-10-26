@@ -649,11 +649,12 @@ class CollectionPaper(models.Model):
     tags = models.CharField(max_length=300, blank=True, default='')  # comma-separated
     reading = models.CharField(max_length=10, blank=True, default='', choices=READING)
     selected = models.BooleanField(default=True)  # read by the comparison table, the open questions and the chat
+    position = models.PositiveIntegerField(default=0)  # the order its owner gave; papers never moved keep 0
     added = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('collection', 'arxiv_id')
-        ordering = ('added', 'pk')
+        ordering = ('position', 'added', 'pk')
 
     def __str__(self):
         return '%s in %s' % (self.arxiv_id, self.collection.name)
