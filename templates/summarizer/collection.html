@@ -341,7 +341,7 @@
       {% endif %}
       {% if invite_url %}
       <p>{% trans 'Anyone logged in who opens this link can edit the collection with you: add, remove, annotate and order papers, and run the analyses on their own plan. Only you can rename, share, watch or delete it.' %}</p>
-      <div class="tool-row share-row">
+      <div class="tool-row link-row">
         <input type="text" readonly value="{{ invite_url }}" id="invite-url" aria-label="{% trans 'Invitation link' %}">
         <button type="button" class="btn btn-sm" data-copy="invite-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
       </div>
@@ -358,7 +358,7 @@
     <h3>{% trans 'Share a read-only link' %}</h3>
     {% if share_url %}
       <p>{% blocktrans with d=collection.share_expires|date:"j F Y" %}Anyone with this link sees the papers, the comparison table and the open questions, never who made the collection, and can copy the papers into a collection of theirs. It works until {{ d }}.{% endblocktrans %}{% if collection.share_notes %} {% trans 'Your notes are shown.' %}{% endif %}</p>
-      <div class="tool-row share-row">
+      <div class="tool-row link-row">
         <input type="text" readonly value="{{ share_url }}" id="share-url" aria-label="{% trans 'Shared link' %}">
         <button type="button" class="btn btn-sm" data-copy="share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
       </div>
