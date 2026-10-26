@@ -5,7 +5,7 @@
 
 {% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: which papers we summarize (arXiv, journals, bioRxiv, medRxiv, HAL...), how the AI summaries and assistant work, licenses, free limits, Premium, the daily digest and citing us.' %}" />
+  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: which papers we summarize, how the summaries and the assistant work, collections, the daily digest and alerts, the tools for researchers, free limits, Premium and Premium+.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/faq/" />
 {% endblock %}
 
@@ -15,11 +15,13 @@
 
 <div class="page">
       <header class="page-header"><h1>{% trans "Frequently Asked Questions" %}</h1></header>
+
+      <h2>{% trans "Papers and summaries" %}</h2>
       <div class="accordion">
       <details>
         <summary>{% trans "What is this website about?" %}</summary>
         <div class="answer">
-          {% trans "SummarizePaper summarizes scientific papers with AI: arXiv papers, journal articles and preprints from bioRxiv, medRxiv, HAL and other servers. For each paper you get a detailed summary, the key points, a lay summary anyone can understand and a blog-style article, in English or French, as well as a list of related papers. An AI assistant answers your questions about one or several papers, and a free daily email digest brings you the new arXiv, bioRxiv and medRxiv papers in your fields." %}
+          {% blocktrans %}SummarizePaper helps you read, follow and use research with AI. For any paper from arXiv, a journal or a preprint server, you get a detailed summary, the key points, a lay summary and a blog-style article, which you can have rewritten in 16 languages and for four reading levels. An AI assistant answers your questions about one or several papers with the sentences of the papers that support its answers. Collections keep your papers together and compare them; a daily digest and alerts follow your field; and <a href="/{{ LANGUAGE_CODE }}/tools/">tools for researchers</a> help you check a bibliography, review a question, prepare a journal club or a conference.{% endblocktrans %}
         </div>
       </details>
       <details>
@@ -28,10 +30,16 @@
           <p>{% trans "Every arXiv paper, and papers from many other sources:" %}</p>
           <ul>
             <li>{% trans "Journal articles: any paper with a DOI. Paste the DOI or the link of the article, or search the open-access literature from the home page (we use OpenAlex, which lists more than 250 million works)." %}</li>
-            <li>{% trans "bioRxiv and medRxiv preprints, whose new papers can also come in your daily digest." %}</li>
+            <li>{% trans "bioRxiv and medRxiv preprints." %}</li>
             <li>{% trans "HAL, ChemRxiv, the OSF preprint servers (PsyArXiv, SocArXiv, EarthArXiv, EdArXiv...), and the articles of PubMed and Europe PMC: paste their link, their PMID or their PMCID." %}</li>
           </ul>
-          <p>{% trans "When a journal article also has an arXiv version and its own license does not let us read it, we take you to the arXiv page." %}</p>
+          <p>{% trans "When a journal article also has an arXiv version and its own license does not let us read it, we take you to the arXiv page. You cannot upload your own PDF to have it summarized." %}</p>
+        </div>
+      </details>
+      <details>
+        <summary>{% trans "How do I get the summary of a paper?" %}</summary>
+        <div class="answer">
+          {% trans "Search for a paper with the search bar on the home page (on arXiv, or in the journals and preprints), or paste its arXiv ID, its DOI or its link. If the paper has already been summarized, the summary shows up immediately. If it is the first time someone looks for it, our AI has to read and summarize it first, which can take a few minutes; the progress is shown on the page. You can open the PDF of the paper beside its summary to compare them." %}
         </div>
       </details>
       <details>
@@ -46,22 +54,148 @@
           {% trans "We read the full text of the paper and send it to recent OpenAI language models with a series of prompts that produce each part of the summary. For arXiv, we read the HTML version when it exists and the PDF otherwise; for journals and other preprint servers, the structured text of the publisher or of Europe PMC when there is one, an open PDF otherwise, or the arXiv version. Free users get our standard model; Premium subscribers get our most capable model, for summaries as well as for answers." %}
         </div>
       </details>
-      <details>
-        <summary>{% trans "How do I get the summary of a paper?" %}</summary>
+      <details id="rewrites">
+        <summary>{% trans "Can I read a summary in another language or for another reader?" %}</summary>
         <div class="answer">
-          {% trans "Search for a paper with the search bar on the home page (on arXiv, or in the journals and preprints), or paste its arXiv ID, its DOI or its link. If the paper has already been summarized, the summary shows up immediately. If it is the first time someone looks for it, our AI has to read and summarize it first, which can take a few minutes; the progress is shown on the page." %}
+          {% blocktrans %}Yes. On the page of a paper, ask for a version in one of 16 languages (English, French, Spanish, German, Chinese, Japanese, Arabic, Hindi...) and for one of four readers: a 12-year-old, a high school student, an undergraduate or an expert. Each version is written once from the summary and the abstract, then shared by every reader. Versions already written are free to read; you can ask for {{ readings_free }} new ones per day without Premium, as many as you want with Premium.{% endblocktrans %}
         </div>
       </details>
+      </div>
+
+      <h2>{% trans "The AI assistant" %}</h2>
+      <div class="accordion">
       <details>
         <summary>{% trans "Does the AI assistant read the whole paper?" %}</summary>
         <div class="answer">
-          {% blocktrans %}Yes, when the license of the paper allows it (see above); otherwise it answers from the abstract and tells you so. Its answers appear as they are written. Ask it questions from the paper page, or on the <a href="/{{ LANGUAGE_CODE }}/chat/">chat page</a> to question several papers at once, from arXiv, journals or preprint servers.{% endblocktrans %}
+          {% trans "Yes, when the license of the paper allows it (see above); otherwise it answers from the abstract and tells you so. When a paper is too long, the assistant leaves out its references and appendices first, then keeps the passages that matter most for your question, and each paper says how much of it is read. Its answers appear as they are written: you can stop, copy or ask again." %}
+        </div>
+      </details>
+      <details id="evidence">
+        <summary>{% trans "How do I know that an answer is right?" %}</summary>
+        <div class="answer">
+          {% trans "Each claim of an answer comes with the sentence of the paper that supports it, and we check that this sentence is word for word in the paper. A claim whose sentence is not found, or a number no paper states, is marked. When several papers are discussed, tags such as [Smith et al. 2021] say which one each claim comes from and link to it. The assistant can still be wrong: read the passages before you rely on an answer." %}
+        </div>
+      </details>
+      <details id="chat">
+        <summary>{% trans "Can I question or compare several papers at once?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}Yes, on the <a href="/{{ LANGUAGE_CODE }}/chat/">chat page</a>: search arXiv, the journals and the preprint servers in one list, and add up to {{ chat_max_papers }} papers. You can reorder them, which orders the answers. With Premium, a comparison table reads each paper whole and gives each value with the passage of the paper it comes from.{% endblocktrans %}
+        </div>
+      </details>
+      <details id="conversations">
+        <summary>{% trans "Are my conversations saved? Can I share them?" %}</summary>
+        <div class="answer">
+          {% blocktrans %}Your recent conversations are kept: you can come back to them, rename them and delete them, and export an answer with the BibTeX of its papers. A conversation can be shared as a public, read-only page of what it was when shared, which never says who asked. The link works for {{ share_days }} days after it was last shared, and you can stop sharing it at any time; deleting the conversation stops it too.{% endblocktrans %}
+        </div>
+      </details>
+      </div>
+
+      <h2>{% trans "Collections" %}</h2>
+      <div class="accordion">
+      <details id="collections">
+        <summary>{% trans "What is a collection?" %}</summary>
+        <div class="answer">
+          {% blocktrans with free_collections=collections_free.collections free_papers=collections_free.papers premium_collections=collections_premium.collections premium_papers=collections_premium.papers %}A <a href="/{{ LANGUAGE_CODE }}/collections/">collection</a> keeps papers together for a project: add them from any paper page, or import a BibTeX or RIS file or a Zotero collection. Each paper can have notes, tags and a reading status, and shows its year, journal, editorial status, citations and newer version. A preprint and its published version count as one work. You can chat with a whole collection, order its papers and export them (BibTeX, RIS, Markdown or a spreadsheet) with your notes and tags. A free account has {{ free_collections }} collections of {{ free_papers }} papers, Premium {{ premium_collections }} collections of {{ premium_papers }} papers.{% endblocktrans %}
+        </div>
+      </details>
+      <details id="comparison-tables">
+        <summary>{% trans "What do the comparison tables and open questions of a collection give?" %}</summary>
+        <div class="answer">
+          {% trans "With Premium, a comparison table puts the papers of a collection side by side, in columns from a template (general, clinical, machine learning, observation, theory) or of your own. Each value keeps the passage of the paper that supports it, quoted word for word, and you can correct a value yourself. The analysis then lists where the papers agree, disagree and what they leave open, with the passages behind each point. It can also find what the collection may be missing: references several of its papers share and the closest papers it does not hold." %}
+        </div>
+      </details>
+      <details id="collection-sharing">
+        <summary>{% trans "Can I share a collection or work on it with colleagues?" %}</summary>
+        <div class="answer">
+          {% trans "Yes. A read-only link shows the collection to anyone, who can copy it into their own account. An invitation link lets colleagues edit it with you: they add, remove, annotate and order papers, and run the analyses on their own plan. Only you can rename, share, watch or delete it, and you can stop either link at any time." %}
+        </div>
+      </details>
+      <details id="watch">
+        <summary>{% trans "What does watching a collection do?" %}</summary>
+        <div class="answer">
+          {% trans "With Premium, a watched collection follows its papers: you get an email when they are cited, when one gets a new version, and when one is published in a journal, retracted or corrected." %}
+        </div>
+      </details>
+      </div>
+
+      <h2>{% trans "Following your field" %}</h2>
+      <div class="accordion">
+      <details id="digest">
+        <summary>{% trans "How does the daily digest work?" %}</summary>
+        <div class="answer">
+          <p>{% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories, bioRxiv and medRxiv subject areas or journal subfields, which cover every journal and other preprint servers such as ChemRxiv, OSF or SSRN (or import them from your ORCID iD or arXiv author identifier), optional keywords, the kind of summaries (for researchers: contribution, method and main result; or 2 sentences in plain language), their language and the time you want to receive it. While you edit, the page shows what you would have received from the latest announcement, and you can send yourself a preview.{% endblocktrans %}</p>
+          <p>{% blocktrans %}Every weekday, you get up to {{ papers_per_email }} new papers, with a link to the full AI summary of each and to a web page where every paper of the day is ranked. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}</p>
+          <p>{% blocktrans with categories=premium_digest.categories papers=premium_digest.papers digests=premium_digest.digests %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the digest ranks papers by closeness to a description of your research or to reference papers (by arXiv ID or DOI), and can hold every paper close enough rather than a fixed number. It follows authors across all categories, adds a synthesis of the week in your fields, has the full summary of your 3 best papers ready before you open the email, and can be listened to as audio. It can also gather your scoop, citation, new version and publication alerts instead of separate emails. You can have up to {{ digests }} digests, with {{ categories }} categories and {{ papers }} papers each.{% endblocktrans %}</p>
+        </div>
+      </details>
+      <details id="alerts">
+        <summary>{% trans "Which alerts can I receive?" %}</summary>
+        <div class="answer">
+          <ul>
+            <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/saved-searches/">Saved searches</a>: an email when new papers match a search (one with a free account, five with Premium).{% endblocktrans %}</li>
+            <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/citations/">Citation alerts</a> (Premium): who cites your papers or the papers you follow and what they say about them, what changed when one gets a new version, and when one is published, retracted or corrected.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/scoops/">Scoop watch</a> (Premium): an email the day a new paper comes close to your project in progress.{% endblocktrans %}</li>
+            <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/letters/">Weekly letters</a>: an article per theme on the papers that matter, on the web for everyone and by email with Premium.{% endblocktrans %}</li>
+          </ul>
+        </div>
+      </details>
+      <details id="scoops">
+        <summary>{% trans "Is the description of my project private in the scoop watch?" %}</summary>
+        <div class="answer">
+          {% trans "Yes. Only you see it. It is used to compare your project with the new papers: an AI rewrites it once as an English abstract, and both are sent to our AI provider for that comparison only. If you give the PDF of a draft, it is read once to write the description and is not stored. You can delete a project at any time." %}
+        </div>
+      </details>
+      </div>
+
+      <h2>{% trans "Tools for researchers" %}</h2>
+      <div class="accordion">
+      <details id="tools">
+        <summary>{% trans "Which tools do you offer researchers?" %}</summary>
+        <div class="answer">
+          <p>{% trans "Besides the summaries, the assistant, collections and the digest:" %}</p>
+          <ul>
+            <li>{% trans "To follow your field: citation alerts, the scoop watch, saved searches, weekly letters, the rising topics of arXiv and a map of the groups that work on a topic." %}</li>
+            <li>{% trans "To write and submit: a literature review from a research question, “What did I miss?” for the close papers your draft does not cite, a bibliography check, and exports to Zotero, Notion and Obsidian." %}</li>
+            <li>{% trans "To present and meet: journal club slides, press kits, a conference companion and research placement leads for students." %}</li>
+          </ul>
+          <p>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/tools/">See all the tools</a> and <a href="/{{ LANGUAGE_CODE }}/premium/#compare">what each offer includes</a>.{% endblocktrans %}</p>
+        </div>
+      </details>
+      <details id="literature-review">
+        <summary>{% trans "What does the literature review do?" %}</summary>
+        <div class="answer">
+          {% trans "From a research question, it finds 15 to 30 founding and recent papers, groups them by approach and writes a synthesis that cites them (Premium+). It is an exploratory review to start reading a question, not a systematic review: check the papers it cites and complete them with your own search." %}
+        </div>
+      </details>
+      <details id="refcheck">
+        <summary>{% trans "How does the bibliography check work?" %}</summary>
+        <div class="answer">
+          {% trans "Give your .bib file, and your LaTeX source if you want. We look for each paper on arXiv, OpenAlex and Semantic Scholar: retracted papers come from Retraction Watch through OpenAlex, and preprints published since get their corrected BibTeX entry from Crossref. With the LaTeX source, an AI reads each sentence that cites a paper next to the abstract of that paper. It only knows the abstract, so a flagged citation is something to check, not a proof of error. Your files are not stored." %}
+        </div>
+      </details>
+      <details id="journal-club">
+        <summary>{% trans "How do I make journal club slides?" %}</summary>
+        <div class="answer">
+          {% trans "Open the page of the paper and, in its tools, click “Slides to present it” (Premium+). In about a minute you get around ten slides with what to say on each, the strengths and limits of the paper and questions for the discussion. The figures of the paper are included when its license allows it (CC BY and similar). Present them full screen, or save them as PDF from your browser." %}
+          <p>{% trans 'You can edit the slide text and speaker notes, choose the position and size of figures, and save a private version. The PDF uses a 16:9 slide format, with one slide per page and no speaker notes.' %}</p>
+          <p>{% trans 'Download the PowerPoint (.pptx) to continue editing text, moving figures and using speaker notes in PowerPoint.' %}</p>
+          <p>{% trans 'Choose French or English before generating the slides. The chosen language applies to the presentation and its exports, independently from the website language. Previous presentations and edits remain available.' %}</p>
         </div>
       </details>
       <details>
+        <summary>{% trans "Can I export a summary or a reference?" %}</summary>
+        <div class="answer">
+          {% trans "Yes. Each paper page lets you download the summary as a PDF, and export the paper to BibTeX, RIS (Zotero, Mendeley, EndNote) or Markdown (Notion, Obsidian), whether it comes from arXiv, a journal or a preprint server. With Premium, you can also send it to your Zotero library with its summary." %}
+        </div>
+      </details>
+      </div>
+
+      <h2>{% trans "Account, limits and Premium" %}</h2>
+      <div class="accordion">
+      <details>
         <summary>{% trans "Is this website free to use?" %}</summary>
         <div class="answer">
-          {% blocktrans %}Yes. Reading summaries, asking questions and receiving the daily digest are free, within the daily limits below. An optional <a href="/{{ LANGUAGE_CODE }}/premium/">Premium subscription</a> gives you our most capable model and higher limits.{% endblocktrans %}
+          {% blocktrans %}Yes. Reading summaries, asking questions, collections, the daily digest, saved searches and the weekly letters are free, within the limits below. An optional <a href="/{{ LANGUAGE_CODE }}/premium/">Premium subscription</a> gives you our most capable model, higher limits and the tools that follow your field and check your work; Premium+ adds the tools that read the most for you.{% endblocktrans %}
         </div>
       </details>
       <details>
@@ -74,7 +208,7 @@
       <details>
         <summary>{% trans "What does Premium include and how do I cancel?" %}</summary>
         <div class="answer">
-          {% blocktrans %}Premium gives you our most capable AI model for summaries and answers, no daily summary limit and {{ chat_paid }} questions per day to the assistant. It is billed monthly or yearly through Stripe; we never see your card details. You can cancel in one click with the "Manage my subscription" button on the <a href="/{{ LANGUAGE_CODE }}/premium/">Premium page</a>: Premium then stays active until the end of the period you paid for.{% endblocktrans %}
+          {% blocktrans %}Premium gives you our most capable AI model for summaries and answers, no daily summary limit, {{ chat_paid }} questions per day to the assistant, unlimited rewrites, larger collections with their comparison tables and open questions, a smarter digest, citation and version alerts, the scoop watch, “Who works on it?”, “What did I miss?” and the bibliography check. It is billed monthly or yearly through Stripe; we never see your card details. You can cancel in one click with the "Manage my subscription" button on the <a href="/{{ LANGUAGE_CODE }}/premium/">Premium page</a>: Premium then stays active until the end of the period you paid for.{% endblocktrans %}
         </div>
       </details>
       <details id="premium-plus">
@@ -84,51 +218,15 @@
         </div>
       </details>
       <details>
-        <summary>{% trans "How does the daily digest work?" %}</summary>
-        <div class="answer">
-          {% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories or bioRxiv and medRxiv subject areas, optional keywords, the language of the summaries and the time you want to receive it. Every weekday, you get up to {{ papers_per_email }} new papers, each with a 2-sentence plain-language summary and a link to the full AI summary. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}
-          {% blocktrans %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the digest ranks papers by closeness to a description of your research or to papers you choose (by arXiv ID or DOI), follows authors across all categories, adds a synthesis of the week in your fields, and has the full summary of your best papers ready before you open the email. You can have up to 5 digests, with 15 categories and 25 papers each.{% endblocktrans %}
-        </div>
-      </details>
-      <details>
         <summary>{% trans "Do I need an account?" %}</summary>
         <div class="answer">
-          {% blocktrans %}No account is needed to read summaries or ask a few questions. A free account is needed for the daily digest, for Premium and for more questions per day. You can sign in with Google, or receive a login link by email: no password to remember.{% endblocktrans %}
+          {% blocktrans %}No account is needed to read summaries or ask a few questions. A free account is needed for collections, the daily digest, saved searches, Premium and more questions per day. You can sign in with Google, or receive a login link by email: no password to remember.{% endblocktrans %}
         </div>
       </details>
-      <details>
-        <summary>{% trans "Can I export a summary or a reference?" %}</summary>
-        <div class="answer">
-          {% trans "Yes. Each paper page lets you download the summary as a PDF, and export the paper to BibTeX, RIS (Zotero, Mendeley, EndNote) or Markdown (Notion, Obsidian), whether it comes from arXiv, a journal or a preprint server. With Premium, you can also send it to your Zotero library with its summary." %}
-        </div>
-      </details>
-      <details id="tools">
-        <summary>{% trans "Which tools do you offer researchers?" %}</summary>
-        <div class="answer">
-          <p>{% blocktrans %}Besides the summaries, the assistant and the digest: a literature review that starts from a research question and synthesizes 15 to 30 founding and recent papers, a scoop watch that emails you when a new paper comes close to your project in progress, citation alerts that also say what changed when a followed paper gets a new version, saved searches that email you new matching papers, weekly letters on the papers that matter, a bibliography check before you submit, "What did I miss?" for the close papers your draft does not cite, a map of the groups that work on a topic, research placement leads for students, journal club slides, press kits, a conference companion, and the comparison tables and open questions of a collection. <a href="/{{ LANGUAGE_CODE }}/tools/">See all the tools</a>.{% endblocktrans %}</p>
-        </div>
-      </details>
-      <details id="scoops">
-        <summary>{% trans "Is the description of my project private in the scoop watch?" %}</summary>
-        <div class="answer">
-          {% trans "Yes. Only you see it. It is used to compare your project with the new papers: an AI rewrites it once as an English abstract, and both are sent to our AI provider for that comparison only. If you give the PDF of a draft, it is read once to write the description and is not stored. You can delete a project at any time." %}
-        </div>
-      </details>
-      <details id="refcheck">
-        <summary>{% trans "How does the bibliography check work?" %}</summary>
-        <div class="answer">
-          {% trans "Give your .bib file, and your LaTeX source if you want. We look for each paper on arXiv, OpenAlex and Semantic Scholar: retracted papers come from Retraction Watch through OpenAlex, and preprints published since get their corrected BibTeX entry from Crossref. With the LaTeX source, an AI reads each sentence that cites a paper next to the abstract of that paper. It only knows the abstract, so a flagged citation is something to check, not a proof of error. Your files are not stored." %}
-        </div>
-      </details>
-      <details id="journal-club">
-        <summary>{% trans "How do I make journal club slides?" %}</summary>
-        <div class="answer">
-          {% trans "Open the page of the paper and, in its tools, click “Slides to present it” (Premium). In about a minute you get around ten slides with what to say on each, the strengths and limits of the paper and questions for the discussion. The figures of the paper are included when its license allows it (CC BY and similar). Present them full screen, or save them as PDF from your browser." %}
-          <p>{% trans 'You can edit the slide text and speaker notes, choose the position and size of figures, and save a private version. The PDF uses a 16:9 slide format, with one slide per page and no speaker notes.' %}</p>
-          <p>{% trans 'Download the PowerPoint (.pptx) to continue editing text, moving figures and using speaker notes in PowerPoint.' %}</p>
-          <p>{% trans 'Choose French or English before generating the slides. The chosen language applies to the presentation and its exports, independently from the website language. Previous presentations and edits remain available.' %}</p>
-        </div>
-      </details>
+      </div>
+
+      <h2>{% trans "About us" %}</h2>
+      <div class="accordion">
       <details>
         <summary>{% trans "Who is behind this website?" %}</summary>
         <div class="answer">

@@ -181,7 +181,7 @@ Ce que les gens choisissent de lire donne une autre image : voir [quelles caté
 
 À environ 780 nouveaux articles par jour en 2025, et davantage en 2026, personne ne lit tout, même dans une seule grande catégorie : cs.LG a reçu à elle seule environ 70 articles par jour en 2025. Deux habitudes aident :
 
-- **Filtrer par catégorie et par mot-clé** plutôt que lire les listes complètes. Le [digest quotidien](https://www.summarizepaper.com/fr/digest/) gratuit de SummarizePaper envoie jusqu'à 10 nouveaux articles chaque jour de semaine, parmi 5 catégories arXiv, bioRxiv ou medRxiv au plus que vous choisissez, chacun avec un résumé de deux phrases ; avec Premium, jusqu'à 25 articles classés selon leur proximité avec votre propre recherche.
+- **Filtrer par catégorie et par mot-clé** plutôt que lire les listes complètes. Le [digest quotidien](https://www.summarizepaper.com/fr/digest/) gratuit de SummarizePaper envoie jusqu'à 10 nouveaux articles chaque jour de semaine, parmi 5 catégories arXiv, bioRxiv, medRxiv ou de revues au plus que vous choisissez, chacun avec un résumé de deux phrases ; avec Premium, jusqu'à 25 articles classés selon leur proximité avec votre propre recherche.
 - **Lire un résumé avant l'article.** [Cherchez n'importe quel article arXiv](https://www.summarizepaper.com/fr/), ou un article de revue à partir de son DOI, pour obtenir un résumé détaillé, les points clés et un résumé vulgarisé, ou voyez [quels outils d'IA résument les articles arXiv](https://www.summarizepaper.com/fr/guides/best-ai-tools-to-summarize-arxiv-papers/).
 
 ## Méthode et limites

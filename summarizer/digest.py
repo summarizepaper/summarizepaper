@@ -1,4 +1,5 @@
-"""Email digests of new arXiv, bioRxiv and medRxiv papers, by category, keywords and, with Premium, a research profile.
+"""Email digests of new arXiv, bioRxiv, medRxiv and journal papers, by category, keywords and, with Premium, a research
+profile.
 
 Run every hour (Heroku Scheduler): python manage.py send_digest
 
@@ -12,6 +13,12 @@ from api.biorxiv.org, up to the day before yesterday, so the days read are compl
 (see bio_window). Their categories are written 'biorxiv.neuroscience'. When their
 API fails, the batch is stored without them and only the digests following their
 categories wait for them, as for an arXiv archive.
+
+The journals, and the preprint servers other than these three (ChemRxiv, OSF, SSRN...),
+come from OpenAlex by subfield ('journals.1605', see journal_taxonomy), only for the
+subfields some digest follows. OpenAlex cannot tell when it added a work, so each
+announcement reads the works published over the last JOURNAL_DAYS days and keeps those
+not stored yet (see read_journals).
 
 Whatever costs a model call is done once and shared by every subscriber: the
 2-sentence blurb (per paper and language), the embedding (per paper), the full
@@ -40,7 +47,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
-from . import access, arxiv_taxonomy, audio, mailcheck, similar, sources, usage
+from . import access, arxiv_taxonomy, audio, journal_taxonomy, mailcheck, similar, sources, usage
 from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
 from .utils import ai_models, chat_params
@@ -77,9 +84,16 @@ RSS = 'https://rss.arxiv.org/atom/'
 ARCHIVES = ['astro-ph', 'cond-mat', 'cs', 'econ', 'eess', 'gr-qc', 'hep-ex', 'hep-lat', 'hep-ph', 'hep-th', 'math',
             'math-ph', 'nlin', 'nucl-ex', 'nucl-th', 'physics', 'q-bio', 'q-fin', 'quant-ph', 'stat']
 BIO_ARCHIVES = ['biorxiv', 'medrxiv']
-SERVER_NAMES = {'biorxiv': 'bioRxiv', 'medrxiv': 'medRxiv'}
+JOURNALS = 'journals'
+OTHER_ARCHIVES = BIO_ARCHIVES + [JOURNALS]  # read with each arXiv announcement, never a sign of an arXiv holiday
+SERVER_NAMES = {'biorxiv': 'bioRxiv', 'medrxiv': 'medRxiv', JOURNALS: 'journals and preprint servers'}
 BIORXIV_DETAILS = 'https://api.biorxiv.org/details/%s/%s/%s/%d'
 BIO_MAX_PAGES = 200
+JOURNAL_DAYS = 9  # publication days read again at each announcement: OpenAlex has most works 3 to 4 days after
+JOURNAL_FIRST_DAYS = 2  # a subfield read for the first time sends only these days, and keeps the others as seen
+JOURNAL_MAX_PAGES = 25  # of 200 works, per subfield and announcement
+# arXiv, bioRxiv and medRxiv come from their own feeds; Zenodo and Figshare are mostly data, slides and posters
+JOURNAL_SKIPPED_SOURCES = ('S4306400194', 'S4306402567', 'S3005729997', 'S4306400562', 'S4377196282')
 RSS_MAX_ENTRIES = 2000  # a longer feed is cut by arXiv; its followed categories are then read one by one
 PARTIAL_AFTER = datetime.timedelta(hours=3)  # then a batch is accepted without the archives that still fail
 QUIET_KEY = 'arxiv-rss-quiet:%s'  # set when no archive has the expected day hours after it was due (arXiv holiday)
@@ -144,7 +158,7 @@ BIO_CATEGORIES = [
 ]
 
 TIMEZONES = {tz for tz in zoneinfo.available_timezones() if '/' in tz and not tz.startswith(('Etc/', 'SystemV/', 'US/'))} | {'UTC'}
-CATEGORY_RE = re.compile(r'^[a-z\-]+(\.[A-Za-z\-]+)?$')
+CATEGORY_RE = re.compile(r'^[a-z\-]+(\.[A-Za-z0-9\-]+)?$')
 BIO_CODES = {sources.category_code(server, name): (server, name) for server, names in BIO_CATEGORIES for name in names}
 ARXIV_ID_RE = re.compile(r'(\d{4}\.\d{4,5}(?:v\d+)?|[a-z\-]+(?:\.[A-Z]{2})?/\d{7}(?:v\d+)?)')
 
@@ -344,12 +358,12 @@ def fetch_batch(expected, now, categories=(), batch=None):
     The batch is stored once every archive was read for that day, or after PARTIAL_AFTER without the
     archives that still fail; those are read again at each run until they answer.
     """
-    archives = batch.missing_list() if batch else ARCHIVES + BIO_ARCHIVES
+    archives = batch.missing_list() if batch else ARCHIVES + BIO_ARCHIVES + [JOURNALS] * bool(followed_journals())
     found, bio_found, missing, on_time, stale = {}, {}, [], 0, 0
     for archive in archives:
-        if archive in BIO_ARCHIVES:
+        if archive in OTHER_ARCHIVES:
             try:
-                papers = read_bio(archive, expected)
+                papers = read_journals(expected) if archive == JOURNALS else read_bio(archive, expected)
             except ArxivUnavailable:
                 logger.exception('%s could not be read', SERVER_NAMES[archive])
                 missing.append(archive)
@@ -391,8 +405,8 @@ def fetch_batch(expected, now, categories=(), batch=None):
     elif stale and not on_time:
         if now >= announcement_time(expected) + PARTIAL_AFTER:
             cache.set(QUIET_KEY % expected, True, QUIET_SECONDS)  # feeds still on an older day: arXiv holiday
-    elif not [m for m in missing if m not in BIO_ARCHIVES] or now >= announcement_time(expected) + PARTIAL_AFTER:
-        # bioRxiv or medRxiv missing holds back only the digests that follow them (see _run)
+    elif not [m for m in missing if m not in OTHER_ARCHIVES] or now >= announcement_time(expected) + PARTIAL_AFTER:
+        # bioRxiv, medRxiv or the journals missing hold back only the digests that follow them (see _run)
         if missing:
             logger.warning('arXiv batch %s accepted without %s', expected, missing)
         ArxivBatch.objects.get_or_create(day=expected, defaults={
@@ -455,6 +469,61 @@ def read_bio(server, expected):
     return papers
 
 
+def followed_journals():
+    """The journal subfields at least one active digest follows."""
+    followed = set()
+    for categories in DigestSubscription.objects.filter(active=True, categories__contains=JOURNALS + '.') \
+            .values_list('categories', flat=True):
+        followed.update(c.strip() for c in categories.split(',') if c.strip() in journal_taxonomy.NAMES)
+    return sorted(followed)
+
+
+def openalex_page(params):
+    """One page of OpenAlex works, retried like arXiv."""
+    error = None
+    for wait in RETRY_WAITS + (None,):
+        try:
+            return (sources._json(sources.OPENALEX + '/works', sources._openalex_params(params)) or {}).get('results') or []
+        except sources.SourceUnavailable as e:
+            error = str(e)
+        if wait is not None:
+            logger.info('OpenAlex page failed (%s), retrying in %ds', error, wait)
+            time.sleep(wait)
+    raise ArxivUnavailable('OpenAlex: %s' % error)
+
+
+def read_journals(expected):
+    """New works of the followed journal subfields for the announcement of `expected`: those published over the
+    last JOURNAL_DAYS days, as OpenAlex has them now; fetch_batch stores only the ones not stored yet. The first
+    time a subfield is read, its works older than JOURNAL_FIRST_DAYS are stored on their publication day, so that
+    they count as seen without going out as new."""
+    first, last = expected - datetime.timedelta(days=JOURNAL_DAYS), expected - datetime.timedelta(days=1)
+    recent = expected - datetime.timedelta(days=JOURNAL_FIRST_DAYS)
+    papers = []
+    for code in followed_journals():
+        new_subfield = not AnnouncedPaper.objects.filter(categories=code).exists()
+        params = {'filter': ','.join(['primary_topic.subfield.id:%s' % code.split('.', 1)[1],
+                                      'from_publication_date:%s' % first, 'to_publication_date:%s' % last,
+                                      'has_abstract:true', 'has_doi:true', 'type:article|preprint|review',
+                                      'primary_location.source.id:!' + '|'.join(JOURNAL_SKIPPED_SOURCES)]),
+                  'select': sources.OPENALEX_FIELDS, 'per_page': 200}
+        for page in range(1, JOURNAL_MAX_PAGES + 1):  # pages, not a cursor: OpenAlex wants a key for cursors
+            works = openalex_page(dict(params, page=page))
+            for work in works:
+                paper = sources.openalex_paper(work)
+                if not paper['key'] or paper['doi'].startswith(sources.BIORXIV_PREFIXES) or not paper['abstract']:
+                    continue
+                published = datetime.date.fromisoformat(paper['published']) if paper['published'] else last
+                papers.append({
+                    'arxiv_id': paper['key'], 'title': paper['title'], 'abstract': paper['abstract'],
+                    'authors': paper['authors'], 'categories': [code],
+                    'announced': published if new_subfield and published < recent else expected,
+                })
+            if len(works) < params['per_page']:
+                break
+    return papers
+
+
 def announcement_time(day):
     return datetime.datetime.combine(day, datetime.time(), tzinfo=ANNOUNCE_TZ) + RSS_DELAY
 
@@ -464,7 +533,10 @@ def archive_of(category):
 
 
 def category_name(category):
-    """'biorxiv.cell-biology' -> 'Cell Biology'; arXiv codes stay as they are."""
+    """'biorxiv.cell-biology' -> 'Cell Biology', 'journals.1605' -> 'Organic Chemistry'; arXiv codes stay as they are."""
+    if category in journal_taxonomy.NAMES:
+        with translation.override('en'):
+            return str(journal_taxonomy.NAMES[category])
     return BIO_CODES.get(category, (None, category))[1]
 
 
@@ -1072,6 +1144,8 @@ def category_label(code):
     active language."""
     if code in arxiv_taxonomy.NAMES:
         return str(arxiv_taxonomy.NAMES[code])
+    if code in journal_taxonomy.NAMES:
+        return str(journal_taxonomy.NAMES[code])
     return translation.gettext(category_name(code)) if code in BIO_CODES else code
 
 
@@ -1308,9 +1382,10 @@ def check_health(now):
         last = DigestSubscription.objects.exclude(last_sent=None).order_by('-last_sent').values_list('last_sent', flat=True).first()
         if last is None or last < now - datetime.timedelta(hours=30):
             problems.append(('sent', 'No digest was sent since %s' % last))
-    bio_missing = [SERVER_NAMES[a] for a in batch.missing_list() if a in BIO_ARCHIVES] if batch else []
+    bio_missing = [SERVER_NAMES[a] for a in batch.missing_list() if a in OTHER_ARCHIVES] if batch else []
     if bio_missing and expected == local.date() and local.hour >= 9 and DigestSubscription.objects.filter(
-            active=True).filter(models.Q(categories__contains='biorxiv.') | models.Q(categories__contains='medrxiv.')).exists():
+            active=True).filter(models.Q(categories__contains='biorxiv.') | models.Q(categories__contains='medrxiv.') |
+                                models.Q(categories__contains=JOURNALS + '.')).exists():
         problems.append(('bio', '%s still missing from the announcement of %s at %s in New York'
                          % (' and '.join(bio_missing), expected, local.strftime('%H:%M'))))
     for name, message in problems:
@@ -1572,17 +1647,17 @@ def hour_label(hour):
     return '%d:00 %s' % (hour % 12 or 12, 'AM' if hour < 12 else 'PM')
 
 
-def taxonomy_choices():
+def taxonomy_choices(taxonomy=arxiv_taxonomy):
     """[(group, [(code, name in the active language, English name)])]: a category is found by either name."""
     with translation.override('en'):
-        english = {code: str(name) for code, name in arxiv_taxonomy.NAMES.items()}
-    return [(str(group), [(code, str(name), english[code]) for code, name in codes]) for group, codes in arxiv_taxonomy.GROUPS]
+        english = {code: str(name) for code, name in taxonomy.NAMES.items()}
+    return [(str(group), [(code, str(name), english[code]) for code, name in codes]) for group, codes in taxonomy.GROUPS]
 
 
 def _digest_context(request, subscription, digests, paid, error=False):
     lim = limits(paid)
     chosen = subscription.category_list() if subscription else []
-    known = set(arxiv_taxonomy.NAMES) | set(BIO_CODES)
+    known = set(arxiv_taxonomy.NAMES) | set(BIO_CODES) | set(journal_taxonomy.NAMES)
     configured = bool(not error and subscription and subscription.pk and
                       request.session.get('digest_configured') == subscription.pk)
     if configured:
@@ -1595,6 +1670,7 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'can_create': len(digests) < lim['digests'],
         'inactive_digests': [] if paid else digests[1:],
         'taxonomy': taxonomy_choices(),
+        'journal_taxonomy': taxonomy_choices(journal_taxonomy),
         'digest_tabs': [(d, d.name or ', '.join(category_label(c) for c in d.category_list()[:2]) +
                          ('…' if len(d.category_list()) > 2 else '')) for d in digests],
         'chosen_labels': [(c, category_label(c)) for c in chosen],

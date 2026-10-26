@@ -20,7 +20,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 
 from . import access, generated
-from .digest import ARCHIVES, BIO_ARCHIVES, SERVER_NAMES, archive_of
+from .digest import ARCHIVES, BIO_ARCHIVES, JOURNALS, SERVER_NAMES, archive_of
 from .models import AnnouncedPaper, ArxivBatch, RisingTopics, TermDay
 
 logger = logging.getLogger(__name__)
@@ -80,8 +80,10 @@ def count_day(day):
         return False
     scopes = {}
     for title, abstract, categories in papers:
-        found = terms('%s. %s' % (title, abstract))
         own = {archive_of(c) for c in categories.split(',') if c}
+        if own == {JOURNALS}:
+            continue  # the rising topics are arXiv's, bioRxiv's and medRxiv's
+        found = terms('%s. %s' % (title, abstract))
         # '*' stays all of arXiv: bioRxiv and medRxiv papers only count in their own scope
         for scope in own | ({'*'} if not own or not own.issubset(BIO_ARCHIVES) else set()):
             totals = scopes.setdefault(scope, [0, {}])

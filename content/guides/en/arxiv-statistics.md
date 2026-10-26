@@ -182,7 +182,7 @@ What people choose to read is a different picture: see [which arXiv categories r
 
 At about 780 new papers a day in 2025, and more in 2026, nobody reads everything in even one large category: cs.LG alone received about 70 papers a day in 2025. Two habits help:
 
-- **Filter by category and keyword** instead of reading full listings. SummarizePaper's free [daily digest](https://www.summarizepaper.com/en/digest/) sends up to 10 new papers every weekday from up to 5 arXiv, bioRxiv or medRxiv categories you choose, each with a two-sentence summary; with Premium, up to 25 papers ranked by closeness to your own research.
+- **Filter by category and keyword** instead of reading full listings. SummarizePaper's free [daily digest](https://www.summarizepaper.com/en/digest/) sends up to 10 new papers every weekday from up to 5 arXiv, bioRxiv, medRxiv or journal categories you choose, each with a two-sentence summary; with Premium, up to 25 papers ranked by closeness to your own research.
 - **Read a summary before the paper.** [Look up any arXiv paper](https://www.summarizepaper.com/en/), or a journal article from its DOI, for a detailed summary, key points and a lay summary, or see [which AI tools summarize arXiv papers](https://www.summarizepaper.com/en/guides/best-ai-tools-to-summarize-arxiv-papers/).
 
 ## Methodology and limits

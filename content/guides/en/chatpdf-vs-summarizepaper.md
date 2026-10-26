@@ -51,7 +51,7 @@ Key takeaways
 | Free limits | 2 documents a day | Unlimited reading, 10 new summaries and 30 questions a day without an account |
 | Paid plan | ChatPDF Plus, unlimited documents | Premium €7/month, Premium+ €14/month |
 | Summary languages | Not checked | English and French; rewrites in 16 languages |
-| New papers by email | No | Daily digest of arXiv, bioRxiv and medRxiv papers |
+| New papers by email | No | Daily digest of arXiv, bioRxiv, medRxiv and journal papers |
 
 ## What ChatPDF does better
 

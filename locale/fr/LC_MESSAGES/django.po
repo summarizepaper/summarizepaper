@@ -2562,16 +2562,6 @@ msgstr "Se désinscrire du digest quotidien ?"
 msgid "Frequently Asked Questions - Our AI-Powered Summarization Service"
 msgstr "Foire aux Questions - Notre Service de Synthèse Basé Sur l'IA"
 
-#: templates/summarizer/faq.html:8
-msgid ""
-"Answers to common questions about SummarizePaper: how the AI summaries and "
-"assistant work, free limits, Premium, the daily arXiv digest, accounts and "
-"citing us."
-msgstr ""
-"Réponses aux questions fréquentes sur SummarizePaper : fonctionnement des "
-"résumés et de l'assistant IA, limites gratuites, Premium, digest arXiv "
-"quotidien, comptes et citation."
-
 #: templates/summarizer/faq.html:17
 msgid "Frequently Asked Questions"
 msgstr "Foire Aux Questions"
@@ -2580,92 +2570,21 @@ msgstr "Foire Aux Questions"
 msgid "What is this website about?"
 msgstr "De quoi parle ce site Web ?"
 
-#: templates/summarizer/faq.html:22
-msgid ""
-"SummarizePaper summarizes arXiv papers with AI: for each paper you get a "
-"detailed summary, the key points, a lay summary anyone can understand and a "
-"blog-style article, in English or French, as well as a list of related "
-"papers. An AI assistant answers your questions about one or several papers, "
-"and a free daily email digest brings you the new papers in your fields."
-msgstr ""
-"SummarizePaper résume les articles arXiv grâce à l'IA : pour chaque article,"
-" vous obtenez un résumé détaillé, les points clés, un résumé vulgarisé "
-"compréhensible par tous et un article de blog, en français ou en anglais, "
-"ainsi qu'une liste d'articles proches. Un assistant IA répond à vos "
-"questions sur un ou plusieurs articles, et un digest quotidien gratuit par "
-"email vous apporte les nouveaux articles de vos domaines."
-
 #: templates/summarizer/faq.html:26
 msgid "How does the AI summarization work?"
 msgstr "Comment fonctionne la synthèse de notre IA ?"
-
-#: templates/summarizer/faq.html:28
-msgid ""
-"We read the full text of the paper (the HTML version published by arXiv when"
-" it exists, the PDF otherwise) and send it to recent OpenAI language models "
-"with a series of prompts that produce each part of the summary. Free users "
-"get our standard model; Premium subscribers get our most capable model, for "
-"summaries as well as for answers."
-msgstr ""
-"Nous lisons le texte intégral de l'article (la version HTML publiée par "
-"arXiv quand elle existe, le PDF sinon) et l'envoyons à des modèles de "
-"langage récents d'OpenAI avec une série de prompts qui produisent chaque "
-"partie du résumé. Les utilisateurs gratuits ont notre modèle standard ; les "
-"abonnés Premium ont notre modèle le plus performant, pour les résumés comme "
-"pour les réponses."
 
 #: templates/summarizer/faq.html:32
 msgid "How do I get the summary of a paper?"
 msgstr "Comment obtenir le résumé d'un article ?"
 
-#: templates/summarizer/faq.html:34
-msgid ""
-"Search for a paper with the search bar on the home page, or type its arXiv "
-"ID. If the paper has already been summarized, the summary shows up "
-"immediately. If it is the first time someone looks for it, our AI has to "
-"read and summarize it first, which can take a few minutes; the progress is "
-"shown on the page."
-msgstr ""
-"Cherchez un article avec la barre de recherche de la page d'accueil, ou "
-"tapez son identifiant arXiv. Si l'article a déjà été résumé, le résumé "
-"s'affiche immédiatement. Si c'est la première fois que quelqu'un le cherche,"
-" notre IA doit d'abord le lire et le résumer, ce qui peut prendre quelques "
-"minutes ; la progression s'affiche sur la page."
-
 #: templates/summarizer/faq.html:38
 msgid "Does the AI assistant read the whole paper?"
 msgstr "L'assistant IA lit-il l'article en entier ?"
 
-#: templates/summarizer/faq.html:40
-#, python-format
-msgid ""
-"Yes. The assistant answers from the full text of the paper, not just the "
-"abstract, and its answers appear as they are written. Ask it questions from "
-"the paper page, or on the <a href=\"/%(LANGUAGE_CODE)s/chat/\">chat page</a>"
-" to question several papers at once."
-msgstr ""
-"Oui. L'assistant répond à partir du texte intégral de l'article, pas "
-"seulement du résumé, et ses réponses s'affichent au fur et à mesure qu'elles"
-" s'écrivent. Posez-lui vos questions depuis la page de l'article, ou sur la "
-"<a href=\"/%(LANGUAGE_CODE)s/chat/\">page de chat</a> pour interroger "
-"plusieurs articles à la fois."
-
 #: templates/summarizer/faq.html:44
 msgid "Is this website free to use?"
 msgstr "L'utilisation de ce site Web est-elle gratuite ?"
-
-#: templates/summarizer/faq.html:46
-#, python-format
-msgid ""
-"Yes. Reading summaries, asking questions and receiving the daily digest are "
-"free, within the daily limits below. An optional <a "
-"href=\"/%(LANGUAGE_CODE)s/premium/\">Premium subscription</a> gives you our "
-"most capable model and higher limits."
-msgstr ""
-"Oui. Lire les résumés, poser des questions et recevoir le digest quotidien "
-"sont gratuits, dans les limites quotidiennes ci-dessous. Un <a "
-"href=\"/%(LANGUAGE_CODE)s/premium/\">abonnement Premium</a> optionnel vous "
-"donne notre modèle le plus performant et des limites plus élevées."
 
 #: templates/summarizer/faq.html:50
 msgid "Is there a limit to the number of papers I can summarize?"
@@ -2777,14 +2696,6 @@ msgstr ""
 #: templates/summarizer/faq.html:76
 msgid "Can I export a summary or a reference?"
 msgstr "Puis-je exporter un résumé ou une référence ?"
-
-#: templates/summarizer/faq.html:78
-msgid ""
-"Yes. Each paper page lets you download the summary as a PDF and get the "
-"BibTeX entry of the paper for your bibliography."
-msgstr ""
-"Oui. Chaque page d'article vous permet de télécharger le résumé en PDF et "
-"d'obtenir l'entrée BibTeX de l'article pour votre bibliographie."
 
 #: templates/summarizer/faq.html:82
 msgid "Who is behind this website?"
@@ -4598,10 +4509,6 @@ msgstr ""
 "sans limite quotidienne de résumés et avec bien plus de questions à "
 "l’assistant IA."
 
-msgid "One digest of arXiv, bioRxiv and medRxiv papers, daily or weekly"
-msgstr ""
-"Un digest des articles arXiv, bioRxiv et medRxiv, quotidien ou hebdomadaire"
-
 msgid ""
 "A smarter digest: papers ranked by closeness to your research, authors you "
 "follow, a weekly synthesis of your fields, full summaries ready in advance, "
@@ -4617,16 +4524,6 @@ msgid ""
 msgstr ""
 "les articles proches de votre brouillon qu’il ne cite pas, sur arXiv et dans"
 " les revues"
-
-msgid "Daily digest of arXiv, bioRxiv and medRxiv papers by email"
-msgstr "Digest quotidien des articles arXiv, bioRxiv et medRxiv par e-mail"
-
-msgid ""
-"Every morning, the new arXiv, bioRxiv and medRxiv papers in your fields with"
-" a 2-sentence plain-language summary. Free."
-msgstr ""
-"Chaque matin, les nouveaux articles arXiv, bioRxiv et medRxiv de vos "
-"domaines, avec un résumé de 2 phrases en langage simple. Gratuit."
 
 msgid "Your daily paper digest"
 msgstr "Votre digest quotidien d’articles"
@@ -4827,24 +4724,6 @@ msgstr ""
 " résumés et l’assistant IA, les licences, les limites gratuites, Premium, le"
 " digest quotidien et comment nous citer."
 
-msgid ""
-"SummarizePaper summarizes scientific papers with AI: arXiv papers, journal "
-"articles and preprints from bioRxiv, medRxiv, HAL and other servers. For "
-"each paper you get a detailed summary, the key points, a lay summary anyone "
-"can understand and a blog-style article, in English or French, as well as a "
-"list of related papers. An AI assistant answers your questions about one or "
-"several papers, and a free daily email digest brings you the new arXiv, "
-"bioRxiv and medRxiv papers in your fields."
-msgstr ""
-"SummarizePaper résume des articles scientifiques par IA : articles arXiv, "
-"articles de revues et prépublications de bioRxiv, medRxiv, HAL et d’autres "
-"serveurs. Pour chaque article, vous obtenez un résumé détaillé, les points "
-"clés, un résumé vulgarisé compréhensible par tous et un article de style "
-"blog, en français ou en anglais, ainsi qu’une liste d’articles proches. Un "
-"assistant IA répond à vos questions sur un ou plusieurs articles, et un "
-"digest quotidien gratuit par e-mail vous apporte les nouveaux articles "
-"arXiv, bioRxiv et medRxiv de vos domaines."
-
 msgid "Which papers can I summarize?"
 msgstr "Quels articles puis-je résumer ?"
 
@@ -4861,13 +4740,6 @@ msgstr ""
 " de l’article, ou cherchez dans la littérature en accès ouvert depuis la "
 "page d’accueil (nous utilisons OpenAlex, qui recense plus de 250 millions de"
 " travaux)."
-
-msgid ""
-"bioRxiv and medRxiv preprints, whose new papers can also come in your daily "
-"digest."
-msgstr ""
-"Les prépublications bioRxiv et medRxiv, dont les nouveaux articles peuvent "
-"aussi arriver dans votre digest quotidien."
 
 msgid ""
 "HAL, ChemRxiv, the OSF preprint servers (PsyArXiv, SocArXiv, EarthArXiv, "
@@ -4963,27 +4835,6 @@ msgstr ""
 "l’assistant utilisent le titre, les auteurs et l’abstract, et la page le "
 "signale. Beaucoup de prépublications bioRxiv, par exemple, sont sous CC BY-"
 "NC-ND."
-
-#, python-format
-msgid ""
-"On the <a href=\"/%(LANGUAGE_CODE)s/digest/\">digest page</a>, choose up to "
-"%(max_categories)s arXiv categories or bioRxiv and medRxiv subject areas, "
-"optional keywords, the language of the summaries and the time you want to "
-"receive it. Every weekday, you get up to %(papers_per_email)s new papers, "
-"each with a 2-sentence plain-language summary and a link to the full AI "
-"summary. No digest is sent on Saturday and Sunday in your time zone. You can"
-" also receive it once a week instead. Every email has a link to unsubscribe "
-"in one click."
-msgstr ""
-"Sur la <a href=\"/%(LANGUAGE_CODE)s/digest/\">page du digest</a>, choisissez"
-" jusqu’à %(max_categories)s catégories arXiv ou domaines bioRxiv et medRxiv,"
-" des mots-clés facultatifs, la langue des résumés et l’heure à laquelle vous"
-" voulez le recevoir. Chaque jour de semaine, vous recevez jusqu’à "
-"%(papers_per_email)s nouveaux articles, chacun avec un résumé de 2 phrases "
-"en langage simple et un lien vers le résumé complet par IA. Aucun digest "
-"n’est envoyé le samedi et le dimanche dans votre fuseau horaire. Vous pouvez"
-" aussi le recevoir une fois par semaine. Chaque e-mail contient un lien de "
-"désinscription en un clic."
 
 #, python-format
 msgid ""
@@ -6121,13 +5972,6 @@ msgid "Follow your field"
 msgstr "Suivre votre domaine"
 
 msgid ""
-"The new arXiv, bioRxiv and medRxiv papers of your fields, ranked for you, "
-"every morning."
-msgstr ""
-"Les nouveaux articles arXiv, bioRxiv et medRxiv de vos domaines, classés "
-"pour vous, chaque matin."
-
-msgid ""
 "Describe your project in progress: we email you the day a new paper comes "
 "close to it."
 msgstr ""
@@ -6253,34 +6097,6 @@ msgstr ""
 " l'article sont incluses quand sa licence le permet (CC BY et similaires). "
 "Présentez-les en plein écran, ou enregistrez-les en PDF depuis votre "
 "navigateur."
-
-#, python-format
-msgid ""
-"Besides the summaries, the assistant and the digest: a literature review that"
-" starts from a research question and synthesizes 15 to 30 founding and recent"
-" papers, a scoop watch that emails you when a new paper comes close to your "
-"project in progress, citation alerts that also say what changed when a "
-"followed paper gets a new version, saved searches that email you new matching"
-" papers, weekly letters on the papers that matter, a bibliography check "
-"before you submit, \"What did I miss?\" for the close papers your draft does "
-"not cite, a map of the groups that work on a topic, research placement leads "
-"for students, journal club slides, press kits, a conference companion, and "
-"the comparison tables and open questions of a collection. <a "
-"href=\"/%(LANGUAGE_CODE)s/tools/\">See all the tools</a>."
-msgstr ""
-"En plus des résumés, de l'assistant et du digest : une revue de littérature "
-"qui part d'une question de recherche et fait la synthèse de 15 à 30 articles "
-"fondateurs et récents, une veille anti-scoop qui vous écrit quand un nouvel "
-"article s'approche de votre projet en cours, des alertes de citations qui "
-"disent aussi ce qui a changé quand un article suivi a une nouvelle version, "
-"des recherches enregistrées qui vous envoient les nouveaux articles "
-"correspondants, des lettres hebdomadaires sur les articles qui comptent, une "
-"vérification de bibliographie avant de soumettre, « What did I miss? » pour "
-"les articles proches que votre brouillon ne cite pas, une carte des groupes "
-"qui travaillent sur un sujet, des pistes de stages de recherche pour les "
-"étudiants, des slides de journal club, des dossiers de presse, un compagnon "
-"de conférence, et les tableaux comparatifs et questions ouvertes d'une "
-"collection. <a href=\"/%(LANGUAGE_CODE)s/tools/\">Voir tous les outils</a>."
 
 msgid "All the tools"
 msgstr "Tous les outils"
@@ -12821,3 +12637,1281 @@ msgstr "Jusqu'à %(papers_per_email)s nouveaux articles chaque jour de semaine o
 
 msgid "Every morning, up to %(papers_per_email)s new papers from the categories you follow, each with its contribution, method and main result, a link to the full AI summary, and every other paper of the day ranked on the web. Free."
 msgstr "Chaque matin, jusqu'à %(papers_per_email)s nouveaux articles des catégories que vous suivez, chacun avec sa contribution, sa méthode et son résultat principal, un lien vers le résumé IA complet, et tous les autres articles du jour classés sur le web. Gratuit."
+
+
+#: templates/summarizer/faq.html
+msgid ""
+"Answers to common questions about SummarizePaper: which papers we summarize,"
+" how the summaries and the assistant work, collections, the daily digest and"
+" alerts, the tools for researchers, free limits, Premium and Premium+."
+msgstr ""
+"Réponses aux questions fréquentes sur SummarizePaper : les articles que nous"
+" résumons, le fonctionnement des résumés et de l'assistant, les collections,"
+" le digest quotidien et les alertes, les outils pour les chercheurs, les "
+"limites gratuites, Premium et Premium+."
+
+#: templates/summarizer/faq.html
+msgid "Papers and summaries"
+msgstr "Articles et résumés"
+
+#: templates/summarizer/faq.html
+msgid ""
+"SummarizePaper helps you read, follow and use research with AI. For any "
+"paper from arXiv, a journal or a preprint server, you get a detailed "
+"summary, the key points, a lay summary and a blog-style article, which you "
+"can have rewritten in 16 languages and for four reading levels. An AI "
+"assistant answers your questions about one or several papers with the "
+"sentences of the papers that support its answers. Collections keep your "
+"papers together and compare them; a daily digest and alerts follow your "
+"field; and <a href=\"/%(LANGUAGE_CODE)s/tools/\">tools for researchers</a> "
+"help you check a bibliography, review a question, prepare a journal club or "
+"a conference."
+msgstr ""
+"SummarizePaper vous aide à lire, suivre et utiliser la recherche grâce à "
+"l'IA. Pour tout article d'arXiv, d'une revue ou d'un serveur de "
+"prépublications, vous obtenez un résumé détaillé, les points clés, un résumé"
+" vulgarisé et un article de blog, que vous pouvez faire réécrire en 16 "
+"langues et pour quatre niveaux de lecture. Un assistant IA répond à vos "
+"questions sur un ou plusieurs articles, avec les phrases des articles qui "
+"appuient ses réponses. Les collections rassemblent vos articles et les "
+"comparent ; un digest quotidien et des alertes suivent votre domaine ; et "
+"des <a href=\"/%(LANGUAGE_CODE)s/tools/\">outils pour les chercheurs</a> "
+"vous aident à vérifier une bibliographie, faire le tour d'une question, "
+"préparer un journal club ou une conférence."
+
+#: templates/summarizer/faq.html
+msgid ""
+"When a journal article also has an arXiv version and its own license does "
+"not let us read it, we take you to the arXiv page. You cannot upload your "
+"own PDF to have it summarized."
+msgstr ""
+"Quand un article de revue a aussi une version arXiv et que sa propre licence"
+" ne nous permet pas de le lire, nous vous emmenons sur la page arXiv. Vous "
+"ne pouvez pas déposer votre propre PDF pour le faire résumer."
+
+#: templates/summarizer/faq.html
+msgid ""
+"Search for a paper with the search bar on the home page (on arXiv, or in the"
+" journals and preprints), or paste its arXiv ID, its DOI or its link. If the"
+" paper has already been summarized, the summary shows up immediately. If it "
+"is the first time someone looks for it, our AI has to read and summarize it "
+"first, which can take a few minutes; the progress is shown on the page. You "
+"can open the PDF of the paper beside its summary to compare them."
+msgstr ""
+"Cherchez un article avec la barre de recherche de la page d'accueil (sur "
+"arXiv, ou dans les revues et les prépublications), ou collez son identifiant"
+" arXiv, son DOI ou son lien. Si l'article a déjà été résumé, le résumé "
+"s'affiche immédiatement. Si c'est la première fois que quelqu'un le cherche,"
+" notre IA doit d'abord le lire et le résumer, ce qui peut prendre quelques "
+"minutes ; la progression s'affiche sur la page. Vous pouvez ouvrir le PDF de"
+" l'article à côté de son résumé pour les comparer."
+
+#: templates/summarizer/faq.html
+msgid "Can I read a summary in another language or for another reader?"
+msgstr ""
+"Puis-je lire un résumé dans une autre langue ou pour un autre lecteur ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Yes. On the page of a paper, ask for a version in one of 16 languages "
+"(English, French, Spanish, German, Chinese, Japanese, Arabic, Hindi...) and "
+"for one of four readers: a 12-year-old, a high school student, an "
+"undergraduate or an expert. Each version is written once from the summary "
+"and the abstract, then shared by every reader. Versions already written are "
+"free to read; you can ask for %(readings_free)s new ones per day without "
+"Premium, as many as you want with Premium."
+msgstr ""
+"Oui. Sur la page d'un article, demandez une version dans l'une des 16 "
+"langues (anglais, français, espagnol, allemand, chinois, japonais, arabe, "
+"hindi...) et pour l'un des quatre lecteurs : un enfant de 12 ans, un lycéen,"
+" un étudiant de licence ou un expert. Chaque version est écrite une fois à "
+"partir du résumé et de l'abstract, puis partagée par tous les lecteurs. Les "
+"versions déjà écrites se lisent librement ; vous pouvez en demander "
+"%(readings_free)s nouvelles par jour sans Premium, autant que vous voulez "
+"avec Premium."
+
+#: templates/summarizer/faq.html
+msgid "The AI assistant"
+msgstr "L'assistant IA"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Yes, when the license of the paper allows it (see above); otherwise it "
+"answers from the abstract and tells you so. When a paper is too long, the "
+"assistant leaves out its references and appendices first, then keeps the "
+"passages that matter most for your question, and each paper says how much of"
+" it is read. Its answers appear as they are written: you can stop, copy or "
+"ask again."
+msgstr ""
+"Oui, quand la licence de l'article le permet (voir plus haut) ; sinon il "
+"répond à partir de l'abstract et vous le dit. Quand un article est trop "
+"long, l'assistant laisse d'abord de côté ses références et ses annexes, puis"
+" garde les passages qui comptent le plus pour votre question, et chaque "
+"article indique quelle part en est lue. Ses réponses s'affichent au fur et à"
+" mesure qu'elles s'écrivent : vous pouvez les arrêter, les copier ou reposer"
+" la question."
+
+#: templates/summarizer/faq.html
+msgid "How do I know that an answer is right?"
+msgstr "Comment savoir si une réponse est juste ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Each claim of an answer comes with the sentence of the paper that supports "
+"it, and we check that this sentence is word for word in the paper. A claim "
+"whose sentence is not found, or a number no paper states, is marked. When "
+"several papers are discussed, tags such as [Smith et al. 2021] say which one"
+" each claim comes from and link to it. The assistant can still be wrong: "
+"read the passages before you rely on an answer."
+msgstr ""
+"Chaque affirmation d'une réponse est accompagnée de la phrase de l'article "
+"qui l'appuie, et nous vérifions que cette phrase figure mot pour mot dans "
+"l'article. Une affirmation dont la phrase n'est pas retrouvée, ou un nombre "
+"qu'aucun article ne donne, est signalé. Quand plusieurs articles sont "
+"discutés, des étiquettes comme [Smith et al. 2021] indiquent de quel article"
+" vient chaque affirmation et renvoient vers lui. L'assistant peut tout de "
+"même se tromper : lisez les passages avant de vous fier à une réponse."
+
+#: templates/summarizer/faq.html
+msgid "Can I question or compare several papers at once?"
+msgstr "Puis-je interroger ou comparer plusieurs articles à la fois ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Yes, on the <a href=\"/%(LANGUAGE_CODE)s/chat/\">chat page</a>: search "
+"arXiv, the journals and the preprint servers in one list, and add up to "
+"%(chat_max_papers)s papers. You can reorder them, which orders the answers. "
+"With Premium, a comparison table reads each paper whole and gives each value"
+" with the passage of the paper it comes from."
+msgstr ""
+"Oui, sur la <a href=\"/%(LANGUAGE_CODE)s/chat/\">page de chat</a> : cherchez"
+" dans arXiv, les revues et les serveurs de prépublications en une seule "
+"liste, et ajoutez jusqu'à %(chat_max_papers)s articles. Vous pouvez les "
+"réordonner, ce qui ordonne les réponses. Avec Premium, un tableau comparatif"
+" lit chaque article en entier et donne chaque valeur avec le passage de "
+"l'article dont elle vient."
+
+#: templates/summarizer/faq.html
+msgid "Are my conversations saved? Can I share them?"
+msgstr "Mes conversations sont-elles gardées ? Puis-je les partager ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Your recent conversations are kept: you can come back to them, rename them "
+"and delete them, and export an answer with the BibTeX of its papers. A "
+"conversation can be shared as a public, read-only page of what it was when "
+"shared, which never says who asked. The link works for %(share_days)s days "
+"after it was last shared, and you can stop sharing it at any time; deleting "
+"the conversation stops it too."
+msgstr ""
+"Vos conversations récentes sont gardées : vous pouvez y revenir, les "
+"renommer et les supprimer, et exporter une réponse avec le BibTeX de ses "
+"articles. Une conversation peut être partagée sous forme de page publique, "
+"en lecture seule, telle qu'elle était au moment du partage, qui ne dit "
+"jamais qui a posé les questions. Le lien fonctionne %(share_days)s jours "
+"après le dernier partage, et vous pouvez arrêter de le partager à tout "
+"moment ; supprimer la conversation l'arrête aussi."
+
+#: templates/summarizer/faq.html
+msgid "What is a collection?"
+msgstr "Qu'est-ce qu'une collection ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"A <a href=\"/%(LANGUAGE_CODE)s/collections/\">collection</a> keeps papers "
+"together for a project: add them from any paper page, or import a BibTeX or "
+"RIS file or a Zotero collection. Each paper can have notes, tags and a "
+"reading status, and shows its year, journal, editorial status, citations and"
+" newer version. A preprint and its published version count as one work. You "
+"can chat with a whole collection, order its papers and export them (BibTeX, "
+"RIS, Markdown or a spreadsheet) with your notes and tags. A free account has"
+" %(free_collections)s collections of %(free_papers)s papers, Premium "
+"%(premium_collections)s collections of %(premium_papers)s papers."
+msgstr ""
+"Une <a href=\"/%(LANGUAGE_CODE)s/collections/\">collection</a> rassemble les"
+" articles d'un projet : ajoutez-les depuis n'importe quelle page d'article, "
+"ou importez un fichier BibTeX ou RIS ou une collection Zotero. Chaque "
+"article peut avoir des notes, des étiquettes et un statut de lecture, et "
+"affiche son année, sa revue, son statut éditorial, ses citations et sa "
+"version plus récente. Une prépublication et sa version publiée comptent "
+"comme une seule œuvre. Vous pouvez discuter avec toute une collection, "
+"ordonner ses articles et les exporter (BibTeX, RIS, Markdown ou tableur) "
+"avec vos notes et étiquettes. Un compte gratuit a %(free_collections)s "
+"collections de %(free_papers)s articles, Premium %(premium_collections)s "
+"collections de %(premium_papers)s articles."
+
+#: templates/summarizer/faq.html
+msgid "What do the comparison tables and open questions of a collection give?"
+msgstr ""
+"Que donnent les tableaux comparatifs et les questions ouvertes d'une "
+"collection ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"With Premium, a comparison table puts the papers of a collection side by "
+"side, in columns from a template (general, clinical, machine learning, "
+"observation, theory) or of your own. Each value keeps the passage of the "
+"paper that supports it, quoted word for word, and you can correct a value "
+"yourself. The analysis then lists where the papers agree, disagree and what "
+"they leave open, with the passages behind each point. It can also find what "
+"the collection may be missing: references several of its papers share and "
+"the closest papers it does not hold."
+msgstr ""
+"Avec Premium, un tableau comparatif met côte à côte les articles d'une "
+"collection, dans des colonnes tirées d'un modèle (général, clinique, "
+"apprentissage automatique, observation, théorie) ou les vôtres. Chaque "
+"valeur garde le passage de l'article qui l'appuie, cité mot pour mot, et "
+"vous pouvez corriger une valeur vous-même. L'analyse dit ensuite où les "
+"articles s'accordent, où ils divergent et ce qu'ils laissent ouvert, avec "
+"les passages derrière chaque point. Elle peut aussi trouver ce qui manque "
+"peut-être à la collection : les références que plusieurs de ses articles "
+"partagent et les articles les plus proches qu'elle ne contient pas."
+
+#: templates/summarizer/faq.html
+msgid "Can I share a collection or work on it with colleagues?"
+msgstr "Puis-je partager une collection ou y travailler avec des collègues ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Yes. A read-only link shows the collection to anyone, who can copy it into "
+"their own account. An invitation link lets colleagues edit it with you: they"
+" add, remove, annotate and order papers, and run the analyses on their own "
+"plan. Only you can rename, share, watch or delete it, and you can stop "
+"either link at any time."
+msgstr ""
+"Oui. Un lien en lecture seule montre la collection à tous, qui peuvent la "
+"copier dans leur propre compte. Un lien d'invitation permet à des collègues "
+"de la modifier avec vous : ils ajoutent, retirent, annotent et ordonnent les"
+" articles, et lancent les analyses avec leur propre offre. Vous seul pouvez "
+"la renommer, la partager, la surveiller ou la supprimer, et vous pouvez "
+"arrêter l'un ou l'autre lien à tout moment."
+
+#: templates/summarizer/faq.html
+msgid "What does watching a collection do?"
+msgstr "À quoi sert la surveillance d'une collection ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"With Premium, a watched collection follows its papers: you get an email when"
+" they are cited, when one gets a new version, and when one is published in a"
+" journal, retracted or corrected."
+msgstr ""
+"Avec Premium, une collection surveillée suit ses articles : vous recevez un "
+"email quand ils sont cités, quand l'un d'eux a une nouvelle version, et "
+"quand l'un d'eux est publié dans une revue, rétracté ou corrigé."
+
+#: templates/summarizer/faq.html
+msgid "Following your field"
+msgstr "Suivre votre domaine"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Every weekday, you get up to %(papers_per_email)s new papers, with a link to"
+" the full AI summary of each and to a web page where every paper of the day "
+"is ranked. No digest is sent on Saturday and Sunday in your time zone. You "
+"can also receive it once a week instead. Every email has a link to "
+"unsubscribe in one click."
+msgstr ""
+"Chaque jour de semaine, vous recevez jusqu'à %(papers_per_email)s nouveaux "
+"articles, avec un lien vers le résumé IA complet de chacun et vers une page "
+"web où tous les articles du jour sont classés. Aucun digest n'est envoyé le "
+"samedi et le dimanche dans votre fuseau horaire. Vous pouvez aussi le "
+"recevoir une fois par semaine. Chaque email contient un lien de "
+"désinscription en un clic."
+
+#: templates/summarizer/faq.html
+msgid ""
+"With <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium</a>, the digest ranks "
+"papers by closeness to a description of your research or to reference papers"
+" (by arXiv ID or DOI), and can hold every paper close enough rather than a "
+"fixed number. It follows authors across all categories, adds a synthesis of "
+"the week in your fields, has the full summary of your 3 best papers ready "
+"before you open the email, and can be listened to as audio. It can also "
+"gather your scoop, citation, new version and publication alerts instead of "
+"separate emails. You can have up to %(digests)s digests, with %(categories)s"
+" categories and %(papers)s papers each."
+msgstr ""
+"Avec <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium</a>, le digest classe "
+"les articles selon leur proximité avec une description de vos recherches ou "
+"avec des articles de référence (par identifiant arXiv ou DOI), et peut "
+"contenir tous les articles assez proches plutôt qu'un nombre fixe. Il suit "
+"des auteurs dans toutes les catégories, ajoute une synthèse de la semaine "
+"dans vos domaines, prépare le résumé complet de vos 3 meilleurs articles "
+"avant que vous ouvriez l'email et peut s'écouter en audio. Il peut aussi "
+"regrouper vos alertes de scoop, de citation, de nouvelle version et de "
+"publication au lieu d'emails séparés. Vous pouvez avoir jusqu'à %(digests)s "
+"digests, avec %(categories)s catégories et %(papers)s articles chacun."
+
+#: templates/summarizer/faq.html
+msgid "Which alerts can I receive?"
+msgstr "Quelles alertes puis-je recevoir ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"<a href=\"/%(LANGUAGE_CODE)s/saved-searches/\">Saved searches</a>: an email "
+"when new papers match a search (one with a free account, five with Premium)."
+msgstr ""
+"<a href=\"/%(LANGUAGE_CODE)s/saved-searches/\">Recherches enregistrées</a> :"
+" un email quand de nouveaux articles correspondent à une recherche (une avec"
+" un compte gratuit, cinq avec Premium)."
+
+#: templates/summarizer/faq.html
+msgid ""
+"<a href=\"/%(LANGUAGE_CODE)s/citations/\">Citation alerts</a> (Premium): who"
+" cites your papers or the papers you follow and what they say about them, "
+"what changed when one gets a new version, and when one is published, "
+"retracted or corrected."
+msgstr ""
+"<a href=\"/%(LANGUAGE_CODE)s/citations/\">Alertes de citation</a> (Premium) "
+": qui cite vos articles ou ceux que vous suivez et ce qu'ils en disent, ce "
+"qui a changé quand l'un d'eux a une nouvelle version, et quand l'un d'eux "
+"est publié, rétracté ou corrigé."
+
+#: templates/summarizer/faq.html
+msgid ""
+"<a href=\"/%(LANGUAGE_CODE)s/scoops/\">Scoop watch</a> (Premium): an email "
+"the day a new paper comes close to your project in progress."
+msgstr ""
+"<a href=\"/%(LANGUAGE_CODE)s/scoops/\">Veille anti-scoop</a> (Premium) : un "
+"email le jour où un nouvel article se rapproche de votre projet en cours."
+
+#: templates/summarizer/faq.html
+msgid ""
+"<a href=\"/%(LANGUAGE_CODE)s/letters/\">Weekly letters</a>: an article per "
+"theme on the papers that matter, on the web for everyone and by email with "
+"Premium."
+msgstr ""
+"<a href=\"/%(LANGUAGE_CODE)s/letters/\">Lettres hebdomadaires</a> : un "
+"article par thème sur les articles qui comptent, sur le web pour tous et par"
+" email avec Premium."
+
+#: templates/summarizer/faq.html
+msgid "Besides the summaries, the assistant, collections and the digest:"
+msgstr "En plus des résumés, de l'assistant, des collections et du digest :"
+
+#: templates/summarizer/faq.html
+msgid ""
+"To follow your field: citation alerts, the scoop watch, saved searches, "
+"weekly letters, the rising topics of arXiv and a map of the groups that work"
+" on a topic."
+msgstr ""
+"Pour suivre votre domaine : les alertes de citation, la veille anti-scoop, "
+"les recherches enregistrées, les lettres hebdomadaires, les sujets en hausse"
+" sur arXiv et une carte des équipes qui travaillent sur un sujet."
+
+#: templates/summarizer/faq.html
+msgid ""
+"To write and submit: a literature review from a research question, “What did"
+" I miss?” for the close papers your draft does not cite, a bibliography "
+"check, and exports to Zotero, Notion and Obsidian."
+msgstr ""
+"Pour écrire et soumettre : une revue de littérature à partir d'une question "
+"de recherche, « Qu'est-ce que j'ai raté ? » pour les articles proches que "
+"votre brouillon ne cite pas, une vérification de bibliographie, et des "
+"exports vers Zotero, Notion et Obsidian."
+
+#: templates/summarizer/faq.html
+msgid ""
+"To present and meet: journal club slides, press kits, a conference companion"
+" and research placement leads for students."
+msgstr ""
+"Pour présenter et rencontrer : des diapositives de journal club, des kits "
+"presse, un compagnon de conférence et des pistes de stage ou de thèse pour "
+"les étudiants."
+
+#: templates/summarizer/faq.html
+msgid ""
+"<a href=\"/%(LANGUAGE_CODE)s/tools/\">See all the tools</a> and <a "
+"href=\"/%(LANGUAGE_CODE)s/premium/#compare\">what each offer includes</a>."
+msgstr ""
+"<a href=\"/%(LANGUAGE_CODE)s/tools/\">Voir tous les outils</a> et <a "
+"href=\"/%(LANGUAGE_CODE)s/premium/#compare\">ce que comprend chaque "
+"offre</a>."
+
+#: templates/summarizer/faq.html
+msgid "What does the literature review do?"
+msgstr "Que fait la revue de littérature ?"
+
+#: templates/summarizer/faq.html
+msgid ""
+"From a research question, it finds 15 to 30 founding and recent papers, "
+"groups them by approach and writes a synthesis that cites them (Premium+). "
+"It is an exploratory review to start reading a question, not a systematic "
+"review: check the papers it cites and complete them with your own search."
+msgstr ""
+"À partir d'une question de recherche, elle trouve 15 à 30 articles "
+"fondateurs et récents, les regroupe par approche et écrit une synthèse qui "
+"les cite (Premium+). C'est une revue exploratoire pour commencer à lire sur "
+"une question, pas une revue systématique : vérifiez les articles qu'elle "
+"cite et complétez-les par votre propre recherche."
+
+#: templates/summarizer/faq.html
+msgid ""
+"Open the page of the paper and, in its tools, click “Slides to present it” "
+"(Premium+). In about a minute you get around ten slides with what to say on "
+"each, the strengths and limits of the paper and questions for the "
+"discussion. The figures of the paper are included when its license allows it"
+" (CC BY and similar). Present them full screen, or save them as PDF from "
+"your browser."
+msgstr ""
+"Ouvrez la page de l'article et, dans ses outils, cliquez sur « Des slides "
+"pour le présenter » (Premium+). En une minute environ, vous obtenez une "
+"dizaine de slides avec ce qu'il faut dire sur chacune, les points forts et "
+"les limites de l'article et des questions pour la discussion. Les figures de"
+" l'article sont incluses quand sa licence le permet (CC BY et similaires). "
+"Présentez-les en plein écran, ou enregistrez-les en PDF depuis votre "
+"navigateur."
+
+#: templates/summarizer/faq.html
+msgid "Account, limits and Premium"
+msgstr "Compte, limites et Premium"
+
+#: templates/summarizer/faq.html
+msgid ""
+"Yes. Reading summaries, asking questions, collections, the daily digest, "
+"saved searches and the weekly letters are free, within the limits below. An "
+"optional <a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium subscription</a> "
+"gives you our most capable model, higher limits and the tools that follow "
+"your field and check your work; Premium+ adds the tools that read the most "
+"for you."
+msgstr ""
+"Oui. Lire les résumés, poser des questions, les collections, le digest "
+"quotidien, les recherches enregistrées et les lettres hebdomadaires sont "
+"gratuits, dans les limites ci-dessous. Un <a "
+"href=\"/%(LANGUAGE_CODE)s/premium/\">abonnement Premium</a> optionnel vous "
+"donne notre modèle le plus performant, des limites plus élevées et les "
+"outils qui suivent votre domaine et vérifient votre travail ; Premium+ "
+"ajoute les outils qui lisent le plus pour vous."
+
+#: templates/summarizer/faq.html
+msgid ""
+"Premium gives you our most capable AI model for summaries and answers, no "
+"daily summary limit, %(chat_paid)s questions per day to the assistant, "
+"unlimited rewrites, larger collections with their comparison tables and open"
+" questions, a smarter digest, citation and version alerts, the scoop watch, "
+"“Who works on it?”, “What did I miss?” and the bibliography check. It is "
+"billed monthly or yearly through Stripe; we never see your card details. You"
+" can cancel in one click with the \"Manage my subscription\" button on the "
+"<a href=\"/%(LANGUAGE_CODE)s/premium/\">Premium page</a>: Premium then stays"
+" active until the end of the period you paid for."
+msgstr ""
+"Premium vous donne notre modèle d'IA le plus performant pour les résumés et "
+"les réponses, aucune limite quotidienne de résumés, %(chat_paid)s questions "
+"par jour à l'assistant, des réécritures illimitées, des collections plus "
+"grandes avec leurs tableaux comparatifs et leurs questions ouvertes, un "
+"digest plus intelligent, les alertes de citation et de version, la veille "
+"anti-scoop, « Qui travaille dessus ? », « Qu'est-ce que j'ai raté ? » et la "
+"vérification de bibliographie. Il est facturé au mois ou à l'année via "
+"Stripe ; nous ne voyons jamais vos coordonnées bancaires. Vous pouvez "
+"résilier en un clic avec le bouton « Gérer mon abonnement » de la <a "
+"href=\"/%(LANGUAGE_CODE)s/premium/\">page Premium</a> : Premium reste alors "
+"actif jusqu'à la fin de la période payée."
+
+#: templates/summarizer/faq.html
+msgid ""
+"No account is needed to read summaries or ask a few questions. A free "
+"account is needed for collections, the daily digest, saved searches, Premium"
+" and more questions per day. You can sign in with Google, or receive a login"
+" link by email: no password to remember."
+msgstr ""
+"Aucun compte n'est nécessaire pour lire les résumés ou poser quelques "
+"questions. Un compte gratuit est nécessaire pour les collections, le digest "
+"quotidien, les recherches enregistrées, Premium et pour poser plus de "
+"questions par jour. Vous pouvez vous connecter avec Google, ou recevoir un "
+"lien de connexion par email : aucun mot de passe à retenir."
+
+#: templates/summarizer/faq.html
+msgid "About us"
+msgstr "À propos"
+
+msgid "Chemical Engineering"
+msgstr "Génie chimique"
+
+msgid "Chemistry"
+msgstr "Chimie"
+
+msgid "Earth and Planetary Sciences"
+msgstr "Sciences de la Terre et des planètes"
+
+msgid "Energy"
+msgstr "Énergie"
+
+msgid "Engineering"
+msgstr "Ingénierie"
+
+msgid "Environmental Science"
+msgstr "Sciences de l'environnement"
+
+msgid "Physics and Astronomy"
+msgstr "Physique et astronomie"
+
+msgid "Agricultural and Biological Sciences"
+msgstr "Sciences agricoles et biologiques"
+
+msgid "Biochemistry, Genetics and Molecular Biology"
+msgstr "Biochimie, génétique et biologie moléculaire"
+
+msgid "Immunology and Microbiology"
+msgstr "Immunologie et microbiologie"
+
+msgid "Pharmacology, Toxicology and Pharmaceutics"
+msgstr "Pharmacologie, toxicologie et pharmacie"
+
+msgid "Dentistry"
+msgstr "Odontologie"
+
+msgid "Health Professions"
+msgstr "Professions de santé"
+
+msgid "Medicine"
+msgstr "Médecine"
+
+msgid "Veterinary"
+msgstr "Médecine vétérinaire"
+
+msgid "Arts and Humanities"
+msgstr "Arts et sciences humaines"
+
+msgid "Business, Management and Accounting"
+msgstr "Gestion, management et comptabilité"
+
+msgid "Decision Sciences"
+msgstr "Sciences de la décision"
+
+msgid "Economics, Econometrics and Finance"
+msgstr "Économie, économétrie et finance"
+
+msgid "Psychology"
+msgstr "Psychologie"
+
+msgid "Social Sciences"
+msgstr "Sciences sociales"
+
+msgid "Catalysis"
+msgstr "Catalyse"
+
+msgid "Chemical Health and Safety"
+msgstr "Santé et sécurité chimiques"
+
+msgid "Filtration and Separation"
+msgstr "Filtration et séparation"
+
+msgid "Fluid Flow and Transfer Processes"
+msgstr "Écoulements et transferts"
+
+msgid "Process Chemistry and Technology"
+msgstr "Chimie et technologie des procédés"
+
+msgid "Analytical Chemistry"
+msgstr "Chimie analytique"
+
+msgid "Electrochemistry"
+msgstr "Électrochimie"
+
+msgid "Inorganic Chemistry"
+msgstr "Chimie inorganique"
+
+msgid "Organic Chemistry"
+msgstr "Chimie organique"
+
+msgid "Physical and Theoretical Chemistry"
+msgstr "Chimie physique et théorique"
+
+msgid "Spectroscopy"
+msgstr "Spectroscopie"
+
+msgid "Computational Theory and Mathematics"
+msgstr "Théorie du calcul et mathématiques"
+
+msgid "Computer Graphics and Computer-Aided Design"
+msgstr "Infographie et conception assistée par ordinateur"
+
+msgid "Computer Networks and Communications"
+msgstr "Réseaux et communications"
+
+msgid "Computer Science Applications"
+msgstr "Applications de l'informatique"
+
+msgid "Hardware and Architecture"
+msgstr "Matériel et architecture"
+
+msgid "Information Systems"
+msgstr "Systèmes d'information"
+
+msgid "Software"
+msgstr "Logiciel"
+
+msgid "Atmospheric Science"
+msgstr "Sciences de l'atmosphère"
+
+msgid "Earth-Surface Processes"
+msgstr "Processus de surface terrestre"
+
+msgid "Geochemistry and Petrology"
+msgstr "Géochimie et pétrologie"
+
+msgid "Geology"
+msgstr "Géologie"
+
+msgid "Oceanography"
+msgstr "Océanographie"
+
+msgid "Space and Planetary Science"
+msgstr "Sciences spatiales et planétaires"
+
+msgid "Energy Engineering and Power Technology"
+msgstr "Génie énergétique et production électrique"
+
+msgid "Fuel Technology"
+msgstr "Technologie des combustibles"
+
+msgid "General Energy"
+msgstr "Énergie (général)"
+
+msgid "Nuclear Energy and Engineering"
+msgstr "Énergie et génie nucléaires"
+
+msgid "Renewable Energy, Sustainability and the Environment"
+msgstr "Énergies renouvelables, durabilité et environnement"
+
+msgid "Aerospace Engineering"
+msgstr "Génie aérospatial"
+
+msgid "Architecture"
+msgstr "Architecture"
+
+msgid "Automotive Engineering"
+msgstr "Génie automobile"
+
+msgid "Biomedical Engineering"
+msgstr "Génie biomédical"
+
+msgid "Building and Construction"
+msgstr "Bâtiment et construction"
+
+msgid "Civil and Structural Engineering"
+msgstr "Génie civil et des structures"
+
+msgid "Computational Mechanics"
+msgstr "Mécanique numérique"
+
+msgid "Control and Systems Engineering"
+msgstr "Automatique et ingénierie des systèmes"
+
+msgid "Electrical and Electronic Engineering"
+msgstr "Génie électrique et électronique"
+
+msgid "General Engineering"
+msgstr "Ingénierie (général)"
+
+msgid "Industrial and Manufacturing Engineering"
+msgstr "Génie industriel et de production"
+
+msgid "Mechanical Engineering"
+msgstr "Génie mécanique"
+
+msgid "Mechanics of Materials"
+msgstr "Mécanique des matériaux"
+
+msgid "Media Technology"
+msgstr "Technologies des médias"
+
+msgid "Ocean Engineering"
+msgstr "Génie océanique"
+
+msgid "Safety, Risk, Reliability and Quality"
+msgstr "Sécurité, risque, fiabilité et qualité"
+
+msgid "Ecological Modeling"
+msgstr "Modélisation écologique"
+
+msgid "Environmental Chemistry"
+msgstr "Chimie de l'environnement"
+
+msgid "Environmental Engineering"
+msgstr "Génie de l'environnement"
+
+msgid "Global and Planetary Change"
+msgstr "Changement global et planétaire"
+
+msgid "Health, Toxicology and Mutagenesis"
+msgstr "Santé, toxicologie et mutagenèse"
+
+msgid "Management, Monitoring, Policy and Law"
+msgstr "Gestion, surveillance, politiques et droit"
+
+msgid "Nature and Landscape Conservation"
+msgstr "Conservation de la nature et des paysages"
+
+msgid "Pollution"
+msgstr "Pollution"
+
+msgid "Waste Management and Disposal"
+msgstr "Gestion et traitement des déchets"
+
+msgid "Water Science and Technology"
+msgstr "Sciences et techniques de l'eau"
+
+msgid "Biomaterials"
+msgstr "Biomatériaux"
+
+msgid "Ceramics and Composites"
+msgstr "Céramiques et composites"
+
+msgid "Electronic, Optical and Magnetic Materials"
+msgstr "Matériaux électroniques, optiques et magnétiques"
+
+msgid "General Materials Science"
+msgstr "Science des matériaux (général)"
+
+msgid "Materials Chemistry"
+msgstr "Chimie des matériaux"
+
+msgid "Metals and Alloys"
+msgstr "Métaux et alliages"
+
+msgid "Polymers and Plastics"
+msgstr "Polymères et plastiques"
+
+msgid "Surfaces, Coatings and Films"
+msgstr "Surfaces, revêtements et couches minces"
+
+msgid "Algebra and Number Theory"
+msgstr "Algèbre et théorie des nombres"
+
+msgid "Applied Mathematics"
+msgstr "Mathématiques appliquées"
+
+msgid "Computational Mathematics"
+msgstr "Mathématiques computationnelles"
+
+msgid "Discrete Mathematics and Combinatorics"
+msgstr "Mathématiques discrètes et combinatoire"
+
+msgid "Geometry and Topology"
+msgstr "Géométrie et topologie"
+
+msgid "Modeling and Simulation"
+msgstr "Modélisation et simulation"
+
+msgid "Statistics and Probability"
+msgstr "Statistiques et probabilités"
+
+msgid "Theoretical Computer Science"
+msgstr "Informatique théorique"
+
+msgid "Acoustics and Ultrasonics"
+msgstr "Acoustique et ultrasons"
+
+msgid "Astronomy and Astrophysics"
+msgstr "Astronomie et astrophysique"
+
+msgid "Atomic and Molecular Physics, and Optics"
+msgstr "Physique atomique et moléculaire, optique"
+
+msgid "Condensed Matter Physics"
+msgstr "Physique de la matière condensée"
+
+msgid "Instrumentation"
+msgstr "Instrumentation"
+
+msgid "Nuclear and High Energy Physics"
+msgstr "Physique nucléaire et des hautes énergies"
+
+msgid "Radiation"
+msgstr "Rayonnements"
+
+msgid "Statistical and Nonlinear Physics"
+msgstr "Physique statistique et non linéaire"
+
+msgid "Agronomy and Crop Science"
+msgstr "Agronomie et sciences des cultures"
+
+msgid "Animal Science and Zoology"
+msgstr "Sciences animales et zoologie"
+
+msgid "Aquatic Science"
+msgstr "Sciences aquatiques"
+
+msgid "Ecology, Evolution, Behavior and Systematics"
+msgstr "Écologie, évolution, comportement et systématique"
+
+msgid "Food Science"
+msgstr "Sciences des aliments"
+
+msgid "Forestry"
+msgstr "Foresterie"
+
+msgid "General Agricultural and Biological Sciences"
+msgstr "Sciences agricoles et biologiques (général)"
+
+msgid "Horticulture"
+msgstr "Horticulture"
+
+msgid "Insect Science"
+msgstr "Entomologie"
+
+msgid "Plant Science"
+msgstr "Biologie végétale"
+
+msgid "Soil Science"
+msgstr "Science du sol"
+
+msgid "Aging"
+msgstr "Vieillissement"
+
+msgid "Biochemistry (Biochemistry, Genetics and Molecular Biology)"
+msgstr "Biochimie (Biochimie, génétique et biologie moléculaire)"
+
+msgid "Biotechnology"
+msgstr "Biotechnologie"
+
+msgid "Cancer Research"
+msgstr "Recherche sur le cancer"
+
+msgid "Clinical Biochemistry"
+msgstr "Biochimie clinique"
+
+msgid "Genetics (Biochemistry, Genetics and Molecular Biology)"
+msgstr "Génétique (Biochimie, génétique et biologie moléculaire)"
+
+msgid "Molecular Medicine"
+msgstr "Médecine moléculaire"
+
+msgid "Physiology (Biochemistry, Genetics and Molecular Biology)"
+msgstr "Physiologie (Biochimie, génétique et biologie moléculaire)"
+
+msgid "Structural Biology"
+msgstr "Biologie structurale"
+
+msgid "Applied Microbiology and Biotechnology"
+msgstr "Microbiologie appliquée et biotechnologie"
+
+msgid "Microbiology (Immunology and Microbiology)"
+msgstr "Microbiologie (Immunologie et microbiologie)"
+
+msgid "Parasitology"
+msgstr "Parasitologie"
+
+msgid "Virology"
+msgstr "Virologie"
+
+msgid "Behavioral Neuroscience"
+msgstr "Neurosciences comportementales"
+
+msgid "Biological Psychiatry"
+msgstr "Psychiatrie biologique"
+
+msgid "Cellular and Molecular Neuroscience"
+msgstr "Neurosciences cellulaires et moléculaires"
+
+msgid "Cognitive Neuroscience"
+msgstr "Neurosciences cognitives"
+
+msgid "Developmental Neuroscience"
+msgstr "Neurosciences du développement"
+
+msgid "Endocrine and Autonomic Systems"
+msgstr "Systèmes endocrinien et autonome"
+
+msgid "Neurology (Neuroscience)"
+msgstr "Neurologie (Neurosciences)"
+
+msgid "Sensory Systems"
+msgstr "Systèmes sensoriels"
+
+msgid "Drug Discovery"
+msgstr "Découverte de médicaments"
+
+msgid "Pharmaceutical Science"
+msgstr "Sciences pharmaceutiques"
+
+msgid "Pharmacology (Pharmacology, Toxicology and Pharmaceutics)"
+msgstr "Pharmacologie (Pharmacologie, toxicologie et pharmacie)"
+
+msgid "General Dentistry"
+msgstr "Odontologie générale"
+
+msgid "Oral Surgery"
+msgstr "Chirurgie buccale"
+
+msgid "Orthodontics"
+msgstr "Orthodontie"
+
+msgid "Periodontics"
+msgstr "Parodontologie"
+
+msgid "Complementary and Manual Therapy"
+msgstr "Thérapies complémentaires et manuelles"
+
+msgid "Emergency Medical Services"
+msgstr "Services médicaux d'urgence"
+
+msgid "General Health Professions"
+msgstr "Professions de santé (général)"
+
+msgid "Health Information Management"
+msgstr "Gestion de l'information de santé"
+
+msgid "Medical Laboratory Technology"
+msgstr "Techniques de laboratoire médical"
+
+msgid "Medical Terminology"
+msgstr "Terminologie médicale"
+
+msgid "Occupational Therapy"
+msgstr "Ergothérapie"
+
+msgid "Pharmacy"
+msgstr "Pharmacie"
+
+msgid "Physical Therapy, Sports Therapy and Rehabilitation"
+msgstr "Kinésithérapie, thérapie du sport et réadaptation"
+
+msgid "Radiological and Ultrasound Technology"
+msgstr "Techniques radiologiques et échographiques"
+
+msgid "Speech and Hearing"
+msgstr "Parole et audition"
+
+msgid "Anatomy"
+msgstr "Anatomie"
+
+msgid "Anesthesiology and Pain Medicine"
+msgstr "Anesthésiologie et médecine de la douleur"
+
+msgid "Biochemistry (Medicine)"
+msgstr "Biochimie (Médecine)"
+
+msgid "Cardiology and Cardiovascular Medicine"
+msgstr "Cardiologie et médecine cardiovasculaire"
+
+msgid "Complementary and alternative medicine"
+msgstr "Médecines complémentaires et alternatives"
+
+msgid "Critical Care and Intensive Care Medicine"
+msgstr "Réanimation et soins intensifs"
+
+msgid "Endocrinology, Diabetes and Metabolism"
+msgstr "Endocrinologie, diabète et métabolisme"
+
+msgid "Family Practice"
+msgstr "Médecine générale"
+
+msgid "Genetics (Medicine)"
+msgstr "Génétique (Médecine)"
+
+msgid "Geriatrics and Gerontology"
+msgstr "Gériatrie et gérontologie"
+
+msgid "Hepatology"
+msgstr "Hépatologie"
+
+msgid "Immunology and Allergy"
+msgstr "Immunologie et allergologie"
+
+msgid "Internal Medicine"
+msgstr "Médecine interne"
+
+msgid "Microbiology (Medicine)"
+msgstr "Microbiologie (Médecine)"
+
+msgid "Neurology (Medicine)"
+msgstr "Neurologie (Médecine)"
+
+msgid "Orthopedics and Sports Medicine"
+msgstr "Orthopédie et médecine du sport"
+
+msgid "Otorhinolaryngology"
+msgstr "Oto-rhino-laryngologie"
+
+msgid "Pathology and Forensic Medicine"
+msgstr "Pathologie et médecine légale"
+
+msgid "Pediatrics, Perinatology and Child Health"
+msgstr "Pédiatrie, périnatalogie et santé de l'enfant"
+
+msgid "Pharmacology (Medicine)"
+msgstr "Pharmacologie (Médecine)"
+
+msgid "Physiology (Medicine)"
+msgstr "Physiologie (Médecine)"
+
+msgid "Psychiatry and Mental health"
+msgstr "Psychiatrie et santé mentale"
+
+msgid "Public Health, Environmental and Occupational Health"
+msgstr "Santé publique, environnementale et au travail"
+
+msgid "Pulmonary and Respiratory Medicine"
+msgstr "Pneumologie"
+
+msgid "Radiology, Nuclear Medicine and Imaging"
+msgstr "Radiologie, médecine nucléaire et imagerie"
+
+msgid "Rehabilitation"
+msgstr "Réadaptation"
+
+msgid "Reproductive Medicine"
+msgstr "Médecine de la reproduction"
+
+msgid "Issues, ethics and legal aspects"
+msgstr "Enjeux, éthique et aspects juridiques"
+
+msgid "Leadership and Management"
+msgstr "Encadrement et gestion"
+
+msgid "Nutrition and Dietetics"
+msgstr "Nutrition et diététique"
+
+msgid "Research and Theory"
+msgstr "Recherche et théorie"
+
+msgid "Equine"
+msgstr "Équidés"
+
+msgid "Small Animals"
+msgstr "Petits animaux"
+
+msgid "Archeology (Arts and Humanities)"
+msgstr "Archéologie (Arts et sciences humaines)"
+
+msgid "Classics"
+msgstr "Études classiques"
+
+msgid "Conservation"
+msgstr "Conservation-restauration"
+
+msgid "General Arts and Humanities"
+msgstr "Arts et sciences humaines (général)"
+
+msgid "History"
+msgstr "Histoire"
+
+msgid "History and Philosophy of Science"
+msgstr "Histoire et philosophie des sciences"
+
+msgid "Language and Linguistics"
+msgstr "Langue et linguistique"
+
+msgid "Literature and Literary Theory"
+msgstr "Littérature et théorie littéraire"
+
+msgid "Museology"
+msgstr "Muséologie"
+
+msgid "Music"
+msgstr "Musique"
+
+msgid "Philosophy"
+msgstr "Philosophie"
+
+msgid "Religious studies"
+msgstr "Études religieuses"
+
+msgid "Visual Arts and Performing Arts"
+msgstr "Arts visuels et arts du spectacle"
+
+msgid "Accounting"
+msgstr "Comptabilité"
+
+msgid "Business and International Management"
+msgstr "Commerce et management international"
+
+msgid "Industrial relations"
+msgstr "Relations professionnelles"
+
+msgid "Management Information Systems"
+msgstr "Systèmes d'information de gestion"
+
+msgid "Management of Technology and Innovation"
+msgstr "Management de la technologie et de l'innovation"
+
+msgid "Marketing"
+msgstr "Marketing"
+
+msgid "Organizational Behavior and Human Resource Management"
+msgstr "Comportement organisationnel et ressources humaines"
+
+msgid "Strategy and Management"
+msgstr "Stratégie et management"
+
+msgid "Tourism, Leisure and Hospitality Management"
+msgstr "Tourisme, loisirs et hôtellerie"
+
+msgid "General Decision Sciences"
+msgstr "Sciences de la décision (général)"
+
+msgid "Information Systems and Management"
+msgstr "Systèmes d'information et gestion"
+
+msgid "Management Science and Operations Research"
+msgstr "Sciences de gestion et recherche opérationnelle"
+
+msgid "Statistics, Probability and Uncertainty"
+msgstr "Statistiques, probabilités et incertitude"
+
+msgid "Economics and Econometrics"
+msgstr "Économie et économétrie"
+
+msgid "Finance"
+msgstr "Finance"
+
+msgid "General Economics, Econometrics and Finance"
+msgstr "Économie, économétrie et finance (général)"
+
+msgid "Applied Psychology"
+msgstr "Psychologie appliquée"
+
+msgid "Clinical Psychology"
+msgstr "Psychologie clinique"
+
+msgid "Developmental and Educational Psychology"
+msgstr "Psychologie du développement et de l'éducation"
+
+msgid "Experimental and Cognitive Psychology"
+msgstr "Psychologie expérimentale et cognitive"
+
+msgid "General Psychology"
+msgstr "Psychologie (général)"
+
+msgid "Neuropsychology and Physiological Psychology"
+msgstr "Neuropsychologie et psychophysiologie"
+
+msgid "Social Psychology"
+msgstr "Psychologie sociale"
+
+msgid "Anthropology"
+msgstr "Anthropologie"
+
+msgid "Archeology (Social Sciences)"
+msgstr "Archéologie (Sciences sociales)"
+
+msgid "Communication"
+msgstr "Communication"
+
+msgid "Cultural Studies"
+msgstr "Études culturelles"
+
+msgid "Demography"
+msgstr "Démographie"
+
+msgid "Development"
+msgstr "Développement"
+
+msgid "Education"
+msgstr "Éducation"
+
+msgid "Gender Studies"
+msgstr "Études de genre"
+
+msgid "General Social Sciences"
+msgstr "Sciences sociales (général)"
+
+msgid "Geography, Planning and Development"
+msgstr "Géographie, aménagement et développement"
+
+msgid "Health"
+msgstr "Santé"
+
+msgid "Human Factors and Ergonomics"
+msgstr "Facteurs humains et ergonomie"
+
+msgid "Law"
+msgstr "Droit"
+
+msgid "Library and Information Sciences"
+msgstr "Sciences de l'information et des bibliothèques"
+
+msgid "Life-span and Life-course Studies"
+msgstr "Études des âges et parcours de vie"
+
+msgid "Linguistics and Language"
+msgstr "Linguistique et langage"
+
+msgid "Political Science and International Relations"
+msgstr "Science politique et relations internationales"
+
+msgid "Public Administration"
+msgstr "Administration publique"
+
+msgid "Safety Research"
+msgstr "Recherche sur la sécurité"
+
+msgid "Sociology and Political Science"
+msgstr "Sociologie et science politique"
+
+msgid "Transportation"
+msgstr "Transports"
+
+msgid "Urban Studies"
+msgstr "Études urbaines"
+
+msgid ""
+"The new arXiv, bioRxiv, medRxiv and journal papers of your fields, ranked "
+"for you, every morning."
+msgstr ""
+"Les nouveaux articles arXiv, bioRxiv, medRxiv et des revues de vos domaines,"
+" classés pour vous, chaque matin."
+
+msgid "Daily digest of arXiv, bioRxiv, medRxiv and journal papers by email"
+msgstr ""
+"Digest quotidien des articles arXiv, bioRxiv, medRxiv et des revues par "
+"email"
+
+msgid ""
+"Every morning, the new papers of arXiv, bioRxiv, medRxiv and the journals in"
+" your fields, with a short summary. Free."
+msgstr ""
+"Chaque matin, les nouveaux articles d'arXiv, bioRxiv, medRxiv et des revues "
+"de vos domaines, avec un court résumé. Gratuit."
+
+msgid "Journals and other preprint servers"
+msgstr "Revues et autres serveurs de prépublications"
+
+msgid ""
+"The new articles of every journal, and of ChemRxiv, OSF, SSRN and other "
+"preprint servers, by subfield, from OpenAlex. They come a few days after "
+"their publication."
+msgstr ""
+"Les nouveaux articles de toutes les revues, et de ChemRxiv, OSF, SSRN et "
+"d'autres serveurs de prépublications, par sous-domaine, depuis OpenAlex. Ils"
+" arrivent quelques jours après leur publication."
+
+msgid ""
+"%(names)s: their articles are read from the next announcement on, once this "
+"digest is saved."
+msgstr ""
+"%(names)s : leurs articles sont lus à partir de la prochaine annonce, une "
+"fois ce digest enregistré."
+
+msgid "bioRxiv and medRxiv preprints."
+msgstr "Les prépublications bioRxiv et medRxiv."
+
+msgid ""
+"On the <a href=\"/%(LANGUAGE_CODE)s/digest/\">digest page</a>, choose up to "
+"%(max_categories)s arXiv categories, bioRxiv and medRxiv subject areas or "
+"journal subfields, which cover every journal and other preprint servers such"
+" as ChemRxiv, OSF or SSRN (or import them from your ORCID iD or arXiv author"
+" identifier), optional keywords, the kind of summaries (for researchers: "
+"contribution, method and main result; or 2 sentences in plain language), "
+"their language and the time you want to receive it. While you edit, the page"
+" shows what you would have received from the latest announcement, and you "
+"can send yourself a preview."
+msgstr ""
+"Sur la <a href=\"/%(LANGUAGE_CODE)s/digest/\">page du digest</a>, choisissez"
+" jusqu'à %(max_categories)s catégories arXiv, domaines bioRxiv et medRxiv ou"
+" sous-domaines de revues, qui couvrent toutes les revues et d'autres "
+"serveurs de prépublications comme ChemRxiv, OSF ou SSRN (ou importez-les "
+"depuis votre ORCID iD ou votre identifiant d'auteur arXiv), des mots-clés "
+"optionnels, le type de résumés (pour chercheurs : contribution, méthode et "
+"résultat principal ; ou 2 phrases vulgarisées), leur langue et l'heure à "
+"laquelle vous voulez le recevoir. Pendant que vous modifiez ces réglages, la"
+" page montre ce que vous auriez reçu de la dernière annonce, et vous pouvez "
+"vous envoyer un aperçu."
+
+msgid ""
+"One digest of arXiv, bioRxiv, medRxiv and journal papers, daily or weekly"
+msgstr ""
+"Un digest des articles arXiv, bioRxiv, medRxiv et des revues, quotidien ou "
+"hebdomadaire"

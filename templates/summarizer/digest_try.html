@@ -4,6 +4,7 @@
 {% else %}
 <p>{% if weekly %}{% blocktrans with day=day|date:"j F" count counter=total %}{{ counter }} paper of your categories and keywords in the week to {{ day }}.{% plural %}{{ counter }} papers of your categories and keywords in the week to {{ day }}.{% endblocktrans %}{% else %}{% blocktrans with day=day|date:"j F" count counter=total %}{{ counter }} paper of your categories and keywords on {{ day }}.{% plural %}{{ counter }} papers of your categories and keywords on {{ day }}.{% endblocktrans %}{% endif %}
 {% if threshold %}{% blocktrans count counter=rows|length %}{{ counter }} is close enough to your research.{% plural %}{{ counter }} are close enough to your research.{% endblocktrans %}{% elif not ranked %}{% trans 'Without a research profile or votes yet, the email shows a varied selection, papers posted in your categories first.' %}{% endif %}</p>
+{% if waiting %}<p class="muted">{% blocktrans with names=waiting|join:", " %}{{ names }}: their articles are read from the next announcement on, once this digest is saved.{% endblocktrans %}</p>{% endif %}
 {% if profile_pending %}<p class="muted">{% trans 'Your research profile is taken into account once saved.' %}</p>{% endif %}
 <ol>
 {% for row in rows %}<li><strong>{{ row.title }}</strong> <span class="muted">{{ row.ident }}{% if row.score is not None %} · {% blocktrans with score=row.score|floatformat:2 %}closeness {{ score }}{% endblocktrans %}{% endif %}</span>{% if row.reasons %}<br><span class="why">{{ row.reasons|join:" · " }}</span>{% endif %}</li>

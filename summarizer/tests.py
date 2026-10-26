@@ -1622,6 +1622,59 @@ class ArxivFetchTests(NoBioServers, TestCase):
         self.assertTrue(sub.is_due(MONDAY + datetime.timedelta(hours=1)))
 
 
+def openalex_work(doi, published, title='A journal paper'):
+    return {'doi': 'https://doi.org/' + doi, 'display_name': title, 'publication_date': published, 'type': 'article',
+            'authorships': [{'author': {'display_name': 'Ann Lee'}}],
+            'abstract_inverted_index': {'What': [0], 'it': [1], 'found.': [2]},
+            'primary_location': {'source': {'display_name': 'Journal of Tests'}}}
+
+
+class JournalFetchTests(NoBioServers, TestCase):
+    """The journals come from OpenAlex, only for the subfields some digest follows."""
+    def setUp(self):
+        super().setUp()
+        u = User.objects.create_user('j', email='j@example.com', password='x')
+        DigestSubscription.objects.create(user=u, categories='cs.LG,journals.1605', timezone='UTC', send_hour=7)
+
+    def test_reads_the_followed_subfields_and_keeps_older_works_as_seen(self):
+        works = [openalex_work('10.1000/new', '2026-10-18'), openalex_work('10.1000/old', '2026-10-12'),
+                 openalex_work('10.1101/2026.10.01.1', '2026-10-18')]  # bioRxiv comes from its own API
+        with mock.patch('summarizer.digest.openalex_page', return_value=works) as page:
+            papers = digest.read_journals(MONDAY.date())
+        params = page.call_args.args[0]
+        self.assertIn('primary_topic.subfield.id:1605', params['filter'])
+        self.assertIn('from_publication_date:2026-10-10', params['filter'])
+        self.assertEqual(params['page'], 1)
+        self.assertEqual({p['arxiv_id']: p['announced'] for p in papers},
+                         {'doi_10.1000--new': MONDAY.date(), 'doi_10.1000--old': datetime.date(2026, 10, 12)})
+        self.assertEqual(papers[0]['categories'], ['journals.1605'])
+        self.assertEqual(papers[0]['abstract'], 'What it found.')
+
+    def test_a_work_already_stored_is_not_announced_again(self):
+        AnnouncedPaper.objects.create(arxiv_id='doi_10.1000--seen', announced=datetime.date(2026, 10, 16), title='T',
+                                      categories='journals.1605')
+        works = [openalex_work('10.1000/seen', '2026-10-12'), openalex_work('10.1000/late', '2026-10-12')]
+        feeds = ArxivFetchTests.feeds(self)
+        with mock.patch('summarizer.digest.read_feed', side_effect=feeds), \
+                mock.patch('summarizer.digest.openalex_page', return_value=works):
+            digest.ensure_batch(MONDAY)
+        self.assertEqual(AnnouncedPaper.objects.get(arxiv_id='doi_10.1000--seen').announced, datetime.date(2026, 10, 16))
+        # the subfield was read before: a work indexed late is new, whatever its publication day
+        self.assertEqual(AnnouncedPaper.objects.get(arxiv_id='doi_10.1000--late').announced, MONDAY.date())
+
+    def test_only_the_digests_of_the_journals_wait_when_openalex_fails(self):
+        with mock.patch('summarizer.digest.read_feed', side_effect=ArxivFetchTests.feeds(self)), \
+                mock.patch('summarizer.digest.openalex_page', side_effect=digest.ArxivUnavailable('OpenAlex')):
+            digest.ensure_batch(MONDAY)
+        self.assertEqual(ArxivBatch.objects.get().missing_list(), ['journals'])
+
+    def test_journal_subfields_are_categories(self):
+        self.assertEqual(digest.clean_categories(['journals.1605', 'journals.99x!']), ['journals.1605'])
+        self.assertEqual(digest.category_label('journals.1605'), 'Organic Chemistry')
+        self.assertEqual(digest.category_name('journals.2716'), 'Genetics (Medicine)')
+        self.assertEqual(digest.followed_journals(), ['journals.1605'])
+
+
 RSS_FEED = """<?xml version='1.0' encoding='UTF-8'?>
 <feed xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2005/Atom">
   <entry>

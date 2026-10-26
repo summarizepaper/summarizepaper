@@ -50,7 +50,7 @@ sources:
 | Limites gratuites | 2 documents par jour | Lecture illimitée, 10 nouveaux résumés et 30 questions par jour sans compte |
 | Offre payante | ChatPDF Plus, documents illimités | Premium 7 €/mois, Premium+ 14 €/mois |
 | Langues des résumés | Non vérifié | Anglais et français ; réécritures en 16 langues |
-| Nouveaux articles par email | Non | Digest quotidien des articles arXiv, bioRxiv et medRxiv |
+| Nouveaux articles par email | Non | Digest quotidien des articles arXiv, bioRxiv, medRxiv et des revues |
 
 ## Ce que ChatPDF fait mieux
 

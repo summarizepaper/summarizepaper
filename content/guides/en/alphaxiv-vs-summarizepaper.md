@@ -16,7 +16,7 @@ faq:
   - q: "Which one gives a summary in French or another language?"
     a: "SummarizePaper writes every summary in English or French, and rewrites it in 16 languages and four reading levels. alphaXiv also offers AI overviews in several languages."
   - q: "Which one helps me follow new papers in my field?"
-    a: "alphaXiv lists papers to explore and researchers to follow. SummarizePaper sends a free daily email digest of new arXiv, bioRxiv and medRxiv papers in the categories you choose, and with Premium, citation alerts, new-version alerts and a scoop watch on your project."
+    a: "alphaXiv lists papers to explore and researchers to follow. SummarizePaper sends a free daily email digest of new arXiv, bioRxiv, medRxiv and journal papers in the fields you choose, and with Premium, citation alerts, new-version alerts and a scoop watch on your project."
 sources:
   - label: "alphaXiv home page and paper pages (checked 2026-10-25)"
     url: "https://www.alphaxiv.org/"
@@ -49,7 +49,7 @@ Key takeaways
 | Ask questions about a paper | Yes | Yes, from the full text and figures, on one or several papers |
 | See where each claim comes from | Not checked | Yes: each claim with the paper's own sentence, checked word for word, and a link to the passage |
 | Languages | Several languages for AI overviews | English and French, rewrites in 16 languages and 4 reading levels |
-| Following new papers | Papers to explore, researchers to follow, conference pages | Daily email digest (arXiv, bioRxiv, medRxiv), citation, version and scoop alerts, saved searches |
+| Following new papers | Papers to explore, researchers to follow, conference pages | Daily email digest (arXiv, bioRxiv, medRxiv, journals), citation, version and scoop alerts, saved searches |
 | Research tools | Deep Research literature search, browser extension, MCP server | Draft and bibliography checks, literature review, journal club slides, press kits, conference companion, collections with comparison tables |
 | Community | Comments and discussion | None |
 | Price | No pricing listed | Free; Premium €7/month; Premium+ €14/month |
@@ -66,7 +66,7 @@ Key takeaways
 - **A complete summary on one page.** The detailed summary, key points and a lay summary are written in advance, so the page loads ready to read. See [an example](https://www.summarizepaper.com/en/paper/2302.13303v1/).
 - **Beyond arXiv.** Journal articles from their DOI, bioRxiv, medRxiv, HAL and other open repositories get the same summary page. The full text is read when the license allows it; otherwise the page says the summary comes from the abstract.
 - **Reading outside your field.** The lay summary and blog-style article explain the paper without jargon, and any summary can be rewritten for a 12-year-old, a high school student, an undergraduate or an expert, in 16 languages.
-- **Following your field.** The free [daily digest](https://www.summarizepaper.com/en/digest/) emails new arXiv, bioRxiv and medRxiv papers from the categories you choose. Premium ranks them by closeness to your research, reads the digest aloud, and adds [citation alerts](https://www.summarizepaper.com/en/citations/) and a [scoop watch](https://www.summarizepaper.com/en/scoops/) that emails you when a new paper comes close to your project.
+- **Following your field.** The free [daily digest](https://www.summarizepaper.com/en/digest/) emails new arXiv, bioRxiv, medRxiv and journal papers from the fields you choose. Premium ranks them by closeness to your research, reads the digest aloud, and adds [citation alerts](https://www.summarizepaper.com/en/citations/) and a [scoop watch](https://www.summarizepaper.com/en/scoops/) that emails you when a new paper comes close to your project.
 - **The work around the paper.** Check your draft's references and find the papers it misses (Premium), review the literature on a research question, prepare journal club slides or a press kit (Premium+). See [all the tools](https://www.summarizepaper.com/en/tools/).
 
 ## When to use which

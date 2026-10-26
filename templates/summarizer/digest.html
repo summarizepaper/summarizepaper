@@ -3,10 +3,10 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'Daily digest of arXiv, bioRxiv and medRxiv papers by email' %}{% endblock %}
+{% block title %}{% trans 'Daily digest of arXiv, bioRxiv, medRxiv and journal papers by email' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
-  <meta name="description" content="{% trans 'Every morning, the new arXiv, bioRxiv and medRxiv papers in your fields with a 2-sentence plain-language summary. Free.' %}" />
+  <meta name="description" content="{% trans 'Every morning, the new papers of arXiv, bioRxiv, medRxiv and the journals in your fields, with a short summary. Free.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/digest/" />
 <style>
   .digest .cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px 16px; }
@@ -16,6 +16,9 @@
   .digest .bio-cats summary { padding: 6px 8px; font-weight: 600; cursor: pointer; }
   .digest .cats label:hover { background: var(--bg-soft); }
   .digest .cats small { color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; }
+  /* a fieldset is as wide as its widest content by default: the long options of "How many papers" pushed it out */
+  .digest fieldset { min-width: 0; }
+  .digest fieldset > p > select { max-width: 100%; }
   .digest fieldset > p:last-child { margin-bottom: 0; }
   .digest fieldset p label { display: block; margin-bottom: 8px; }
   .digest .radios label { display: inline-flex; align-items: center; gap: 8px; margin-right: 20px; font-weight: 400; }
@@ -28,6 +31,8 @@
   .digest textarea { width: 100%; min-height: 90px; }
   .digest .form-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
   .digest .cat-search { margin: 0 0 10px; }
+  .digest .cats-heading { margin: 20px 0 0; }
+  .digest .cats-heading .help { display: block; }
   .digest .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; min-height: 8px; }
   .digest .chips span { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); font-size: 13px; }
   .digest .help { color: var(--text-muted); font-size: 14px; margin: 4px 0 0; }
@@ -126,6 +131,18 @@
           <div class="cats">
             {% for code, name, english in codes %}
             <label><input type="checkbox" name="categories" data-label="{{ name }}" data-name="{{ english }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ name }}</label>
+            {% endfor %}
+          </div>
+        </details>
+        {% endfor %}
+        <p class="cats-heading"><strong>{% trans 'Journals and other preprint servers' %}</strong>
+        <span class="help">{% trans 'The new articles of every journal, and of ChemRxiv, OSF, SSRN and other preprint servers, by subfield, from OpenAlex. They come a few days after their publication.' %}</span></p>
+        {% for group, codes in journal_taxonomy %}
+        <details class="bio-cats" data-cat-group {% for code, name, english in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
+          <summary>{{ group }}</summary>
+          <div class="cats">
+            {% for code, label, english in codes %}
+            <label><input type="checkbox" name="categories" data-label="{{ label }}" data-name="{{ english }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }}</label>
             {% endfor %}
           </div>
         </details>

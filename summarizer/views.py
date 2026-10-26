@@ -7,13 +7,13 @@ import time
 import re
 import hashlib
 from .models import (AnnouncedPaper, ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search,
-                     PaperScore, UserPlan)
+                     PaperScore, SiteSettings, UserPlan)
 from .forms import RegistrationForm
 from .tool_list import TOOL_GROUPS
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, reading, similar, sources, exports, insight, summary_text
+from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, reading, similar, sources, exports, insight, summary_text
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -475,6 +475,12 @@ def faq(request):
         'chat_paid': access.chat_messages_per_day()['paid'],
         'papers_per_email': digest.PAPERS_PER_EMAIL,
         'max_categories': digest.MAX_CATEGORIES,
+        'premium_digest': digest.PREMIUM,
+        'readings_free': SiteSettings.current().free_readings_per_day,
+        'collections_free': library.FREE,
+        'collections_premium': library.PREMIUM,
+        'chat_max_papers': assistant.MAX_PAPERS,
+        'share_days': chat_page.SHARE_DAYS,
     })
     return render(request, "summarizer/faq.html", stuff_for_frontend)
 

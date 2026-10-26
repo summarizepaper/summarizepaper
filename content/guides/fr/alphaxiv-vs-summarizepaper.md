@@ -15,7 +15,7 @@ faq:
   - q: "Lequel donne un résumé en français ou dans une autre langue ?"
     a: "SummarizePaper rédige chaque résumé en anglais ou en français, et le réécrit en 16 langues et quatre niveaux de lecture. alphaXiv propose aussi des aperçus IA en plusieurs langues."
   - q: "Lequel aide à suivre les nouveaux articles de mon domaine ?"
-    a: "alphaXiv liste des articles à explorer et des chercheurs à suivre. SummarizePaper envoie un digest quotidien gratuit des nouveaux articles arXiv, bioRxiv et medRxiv des catégories choisies et, avec Premium, des alertes de citations, des alertes de nouvelles versions et une veille anti-scoop sur votre projet."
+    a: "alphaXiv liste des articles à explorer et des chercheurs à suivre. SummarizePaper envoie un digest quotidien gratuit des nouveaux articles arXiv, bioRxiv, medRxiv et des revues des domaines choisis et, avec Premium, des alertes de citations, des alertes de nouvelles versions et une veille anti-scoop sur votre projet."
 sources:
   - label: "Page d'accueil et pages d'articles d'alphaXiv (vérifiées le 2026-10-25)"
     url: "https://www.alphaxiv.org/"
@@ -48,7 +48,7 @@ sources:
 | Poser des questions sur un article | Oui | Oui, à partir du texte intégral et des figures, sur un ou plusieurs articles |
 | Voir d'où vient chaque affirmation | Non vérifié | Oui : chaque affirmation avec la phrase de l'article, vérifiée mot pour mot, et un lien vers le passage |
 | Langues | Plusieurs langues pour les aperçus IA | Anglais et français, réécritures en 16 langues et 4 niveaux de lecture |
-| Suivre les nouveaux articles | Articles à explorer, chercheurs à suivre, pages de conférences | Digest quotidien par email (arXiv, bioRxiv, medRxiv), alertes de citations, de versions et anti-scoop, recherches enregistrées |
+| Suivre les nouveaux articles | Articles à explorer, chercheurs à suivre, pages de conférences | Digest quotidien par email (arXiv, bioRxiv, medRxiv, revues), alertes de citations, de versions et anti-scoop, recherches enregistrées |
 | Outils de recherche | Recherche bibliographique Deep Research, extension de navigateur, serveur MCP | Vérification de manuscrit et de bibliographie, revue de littérature, slides de journal club, dossiers de presse, compagnon de conférence, collections avec tableaux comparatifs |
 | Communauté | Commentaires et discussion | Aucune |
 | Prix | Aucun tarif affiché | Gratuit ; Premium 7 €/mois ; Premium+ 14 €/mois |
@@ -65,7 +65,7 @@ sources:
 - **Un résumé complet sur une page.** Le résumé détaillé, les points clés et un résumé vulgarisé sont rédigés à l'avance, la page s'ouvre prête à lire. Voir [un exemple](https://www.summarizepaper.com/fr/paper/2302.13303v1/).
 - **Au-delà d'arXiv.** Les articles de revues à partir de leur DOI, bioRxiv, medRxiv, HAL et d'autres archives ouvertes ont la même page de résumé. Le texte intégral est lu quand la licence le permet ; sinon, la page indique que le résumé vient du résumé de l'article (abstract).
 - **Lire hors de son domaine.** Le résumé vulgarisé et l'article de blog expliquent l'article sans jargon, et tout résumé peut être réécrit pour un enfant de 12 ans, un lycéen, un étudiant de licence ou un expert, en 16 langues.
-- **Suivre son domaine.** Le [digest quotidien](https://www.summarizepaper.com/fr/digest/) gratuit envoie par email les nouveaux articles arXiv, bioRxiv et medRxiv des catégories choisies. Premium les classe selon leur proximité avec votre recherche, lit le digest à voix haute, et ajoute des [alertes de citations](https://www.summarizepaper.com/fr/citations/) et une [veille anti-scoop](https://www.summarizepaper.com/fr/scoops/) qui vous écrit quand un nouvel article s'approche de votre projet.
+- **Suivre son domaine.** Le [digest quotidien](https://www.summarizepaper.com/fr/digest/) gratuit envoie par email les nouveaux articles arXiv, bioRxiv, medRxiv et des revues des domaines choisis. Premium les classe selon leur proximité avec votre recherche, lit le digest à voix haute, et ajoute des [alertes de citations](https://www.summarizepaper.com/fr/citations/) et une [veille anti-scoop](https://www.summarizepaper.com/fr/scoops/) qui vous écrit quand un nouvel article s'approche de votre projet.
 - **Le travail autour de l'article.** Vérifier les références d'un manuscrit et trouver les articles qui lui manquent (Premium), explorer la littérature sur une question de recherche, préparer des slides de journal club ou un dossier de presse (Premium+). Voir [tous les outils](https://www.summarizepaper.com/fr/tools/).
 
 ## Quand utiliser lequel

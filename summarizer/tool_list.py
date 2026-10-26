@@ -10,7 +10,7 @@ _GROUPS = [
         ('collections/', 'layer-group', _('Collections'), False, _('Keep papers together, chat with a whole collection, and with Premium compare them in a table and find their open questions.')),
     ]),
     (_('Follow your field'), [
-        ('digest/', 'envelope', _('Daily digest'), False, _('The new arXiv, bioRxiv and medRxiv papers of your fields, ranked for you, every morning.')),
+        ('digest/', 'envelope', _('Daily digest'), False, _('The new arXiv, bioRxiv, medRxiv and journal papers of your fields, ranked for you, every morning.')),
         ('scoops/', 'user-secret', _('Scoop watch'), True, _('Describe your project in progress: we email you the day a new paper comes close to it.')),
         ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they say about them, and what changed when they get a new version.')),
         ('students/', 'graduation-cap', _('Find a research placement'), 'plus', _('Potential research contacts, supporting publications, reading suggestions and a private shortlist.')),

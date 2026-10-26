@@ -18,7 +18,7 @@ from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.views.decorators.csrf import csrf_exempt
 
-from . import access, digest, library, sources
+from . import access, digest, journal_taxonomy, library, sources
 from .models import (AnnouncedPaper, ArxivBatch, Collection, DigestClick, DigestEdition, DigestFeedback, DigestItem,
                      DigestSubscription)
 
@@ -289,6 +289,9 @@ def live_preview(request):
     if not categories or not days:
         return render(request, 'summarizer/digest_try.html', {'empty': not categories, 'no_batch': not days})
     papers = papers_of(days, categories)
+    # a journal subfield no digest followed yet is read from the next announcement on
+    waiting = [digest.category_label(c) for c in categories if c in journal_taxonomy.NAMES
+               and not AnnouncedPaper.objects.filter(categories=c).exists()]
     ranking = digest.ranking_for(preview, paid, save=False, quick=True)
     vectors = digest.stored_vectors(list(papers))
     missing = [p for aid, p in papers.items() if aid not in vectors]
@@ -304,6 +307,7 @@ def live_preview(request):
     return render(request, 'summarizer/digest_try.html', {
         'rows': rows, 'total': len(entries), 'papers': len(papers), 'day': days[0], 'weekly': preview.frequency == 'weekly',
         'threshold': threshold, 'ranked': bool(ranking), 'profile_pending': paid and preview.profile and ranking is None,
+        'waiting': waiting,
     })
 
 
@@ -312,12 +316,14 @@ def import_publications(text):
     {'papers': n, 'categories': [...], 'references': [...], 'coauthors': [...]} or {'error': ...}."""
     text = (text or '').strip()
     orcid, author = ORCID_RE.search(text), ARXIV_AUTHOR_RE.match(text)
+    subfields = collections.Counter()
     try:
         if orcid:
             arxiv_ids, dois = orcid_works(orcid.group(1).upper())
             papers = digest.fetch_ids([i.replace('--', '/') for i in arxiv_ids[:IMPORT_PAPERS]], timeout=20, retry=False)
             references = [p['arxiv_id'] for p in papers][:digest.MAX_REFERENCES]
             references += [sources.doi_key(d) for d in dois][:digest.MAX_REFERENCES - len(references)]
+            subfields = journal_subfields(dois[:IMPORT_PAPERS])
         elif author:
             response = requests.get('https://arxiv.org/a/%s.atom' % author.group(1).lower(), timeout=20,
                                     headers={'User-Agent': sources.USER_AGENT})
@@ -333,6 +339,8 @@ def import_publications(text):
     if not papers and not references:
         return {'error': 'empty'}
     primary = collections.Counter(p['categories'][0] for p in papers if p['categories'])
+    categories = [c for c, _ in primary.most_common(IMPORT_CATEGORIES)]
+    categories += [c for c, _ in subfields.most_common(IMPORT_CATEGORIES)]  # the journal papers' subfields
     names, spelling = collections.Counter(), {}
     for paper in papers:
         for name in {digest.name_key(n): n for n in paper['authors'] if digest.name_key(n)}.items():
@@ -340,8 +348,23 @@ def import_publications(text):
             spelling.setdefault(name[0], name[1])
     own = names.most_common(1)[0][0] if names else None  # the researcher signs all their papers
     coauthors = [spelling[k] for k, count in names.most_common() if k != own and count >= 2][:IMPORT_COAUTHORS]
-    return {'papers': len(papers) or len(references), 'categories': [c for c, _ in primary.most_common(IMPORT_CATEGORIES)],
+    return {'papers': len(papers) or len(references), 'categories': categories,
             'references': references, 'coauthors': coauthors}
+
+
+def journal_subfields(dois):
+    """{'journals.<subfield>': papers} of these DOIs, from their OpenAlex topic; empty when OpenAlex fails."""
+    if not dois:
+        return collections.Counter()
+    try:
+        body = sources._json(sources.OPENALEX + '/works', sources._openalex_params(
+            {'filter': 'doi:' + '|'.join(dois), 'select': 'primary_topic', 'per_page': len(dois)}))
+    except sources.SourceUnavailable:
+        logger.warning('OpenAlex did not give the subfields of %d imported DOIs', len(dois))
+        return collections.Counter()
+    found = (((w.get('primary_topic') or {}).get('subfield') or {}).get('id') or '' for w in (body or {}).get('results') or [])
+    return collections.Counter(code for code in ('journals.' + i.rsplit('/', 1)[-1] for i in found if i)
+                               if code in journal_taxonomy.NAMES)
 
 
 def orcid_works(orcid):
