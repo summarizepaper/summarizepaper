@@ -35,12 +35,24 @@
     <li class="card">
       <a href="/{{ LANGUAGE_CODE }}/collections/{{ c.pk }}/"><strong>{{ c.name }}</strong></a>
       <div class="meta">{% blocktrans count n=c.papers.all|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% trans 'updated' %} {{ c.updated|date:"j F Y" }}
-        {% if c.watch %} <span class="importance info">{% trans 'Watched' %}</span>{% endif %}{% if c.shared %} <span class="importance info">{% trans 'Shared' %}</span>{% endif %}</div>
+        {% if c.watch %} <span class="importance info">{% trans 'Watched' %}</span>{% endif %}{% if c.shared %} <span class="importance info">{% trans 'Shared' %}</span>{% endif %}{% if c.editors %} <span class="importance info">{% blocktrans count n=c.editors %}{{ n }} editor{% plural %}{{ n }} editors{% endblocktrans %}</span>{% endif %}</div>
     </li>
     {% endfor %}
   </ul>
   {% else %}
   <p class="muted">{% trans 'No collection yet. Create one here, or from any paper page with "Save to a collection".' %}</p>
+  {% endif %}
+
+  {% if joined %}
+  <h2>{% trans 'Edited with others' %}</h2>
+  <ul class="item-list">
+    {% for c in joined %}
+    <li class="card">
+      <a href="/{{ LANGUAGE_CODE }}/collections/{{ c.pk }}/"><strong>{{ c.name }}</strong></a>
+      <div class="meta">{% blocktrans count n=c.papers.all|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% blocktrans with name=c.user.first_name|default:c.user.username %}with {{ name }}{% endblocktrans %}</div>
+    </li>
+    {% endfor %}
+  </ul>
   {% endif %}
 
   {% if can_create %}

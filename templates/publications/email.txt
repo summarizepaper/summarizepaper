@@ -1,0 +1,7 @@
+{% load i18n %}{% autoescape off %}{% for item in items %}== {{ item.title }} ==
+{% if item.kind == 'published' %}{% if item.journal %}{% blocktrans with journal=item.journal %}Published in {{ journal }}{% endblocktrans %}{% else %}{% trans 'Published in a journal' %}{% endif %}{% else %}{{ item.label }}{% endif %}{% if item.doi %} · https://doi.org/{{ item.doi }}{% endif %}
+{{ item.url }}
+
+{% endfor %}{% trans 'Found in the records of arXiv and Crossref. Check the publisher page before citing.' %}
+{% trans 'Manage the papers you follow:' %} {{ manage_url }}
+{% endautoescape %}

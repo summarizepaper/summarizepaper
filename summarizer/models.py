@@ -629,6 +629,7 @@ class Collection(models.Model):
     share_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # read-only public link
     share_expires = models.DateTimeField(blank=True, null=True)
     share_notes = models.BooleanField(default=False)  # the shared page shows the owner's notes
+    invite_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # joins as an editor
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -658,6 +659,17 @@ class CollectionPaper(models.Model):
 
     def __str__(self):
         return '%s in %s' % (self.arxiv_id, self.collection.name)
+
+
+class CollectionMember(models.Model):
+    """Someone who edits a collection with its owner: papers, notes, tags, order, analyses (library.editable)."""
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_collections')
+    added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('collection', 'user')
+        ordering = ('added',)
 
 
 class FollowedPaper(models.Model):
@@ -842,6 +854,22 @@ class VersionAlert(models.Model):
 
     class Meta:
         unique_together = ('user', 'arxiv_id', 'new')
+
+
+class PublicationAlert(models.Model):
+    """A paper a user follows was published in a journal, or got a retraction or correction (see publication_alerts.py)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='publication_alerts')
+    arxiv_id = models.CharField(max_length=100)  # the paper as followed ('2101.00001', 'hep-th/9901001')
+    paper = models.CharField(max_length=100, blank=True, default='')  # its page ('2101.00001v2')
+    title = models.TextField(blank=True, default='')
+    kind = models.CharField(max_length=30)  # 'published', or a notice: 'retraction', 'correction'...
+    journal = models.CharField(max_length=300, blank=True, default='')
+    doi = models.CharField(max_length=300, blank=True, default='')
+    emailed = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'arxiv_id', 'kind', 'doi')
 
 
 class AIPrice(models.Model):

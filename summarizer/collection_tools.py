@@ -8,7 +8,9 @@
 - suggestions() (Premium): what the collection may be missing. The papers cited by at least two of its papers
   (their references, from Semantic Scholar or OpenAlex), then the papers closest to the collection as a whole
   (the mean of their title-and-abstract embeddings, see similar.py), read in chunks so that memory stays
-  bounded whatever the number of indexed papers. Papers already there in another version are left out.
+  bounded whatever the number of indexed papers. Papers already there in another version are left out. The
+  references papers share are often software, data or generic methods (SciPy, emcee...): a small model call
+  sets them apart from the research a review is expected to know.
 - import_ids() and zotero_import(): adding many papers at once, a lookup per DOI, out of the request.
 """
 import heapq
@@ -23,7 +25,6 @@ import requests
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
@@ -39,6 +40,8 @@ META_MAX = 30  # papers checked by one refresh (the oldest checks first: the nex
 ARXIV_SECONDS = 3  # arXiv asks for one query every three seconds
 EMBEDDING_CHUNK = 5000
 SUGGEST_MAX = 15
+CLASSIFY_MAX = 40  # shared references the model sorts into research and tools
+NOTICE_TITLE = re.compile(r'\s*(?:erratum|corrigendum|correction|retraction)\b', re.I)
 ZOTERO_MAX = 500
 META_STEPS = [
     ('status', _('Checking where each paper was published, and any retraction or correction')),
@@ -60,7 +63,9 @@ NOTICE_LABELS = {
 
 
 def _mine(request, pk):
-    return get_object_or_404(Collection, pk=pk, user=request.user)
+    """A collection the visitor owns or edits (library.editable)."""
+    from .library import editable
+    return editable(request, pk)
 
 
 # --- what the page shows of each paper --------------------------------------------
@@ -196,8 +201,10 @@ def own_works(collection):
 
 
 def common_references(papers, own):
-    """[{ref, title, authors, year, count, by}] of the papers cited by two papers of the collection or more."""
-    counts, by, info = {}, {}, {}
+    """[{ref, key, title, authors, year, count, by}] of the papers cited by two papers of the collection or more.
+    A work cited under its arXiv id by one paper and its DOI by another counts once: each reference brings all
+    the identifiers its source gives (chat_page.reference), and references sharing one are the same work."""
+    works = []  # [{'keys': identities, 'ref': the first reference seen, 'by': [citing ids]}]
     asked = 0
     for row in papers:
         found = cache.get('chat-refs:%s' % row.arxiv_id)
@@ -207,20 +214,48 @@ def common_references(papers, own):
             asked += 1
             found = chat_page.fetch_references(row.arxiv_id) or []
         for ref in found:
-            key = same_ref(ref.get('ref'))
-            if not key or key in own:
+            if NOTICE_TITLE.match(str(ref.get('title') or '')):
+                continue  # an erratum is cited with the paper it corrects
+            keys = {k for k in (same_ref(i) for i in [ref.get('ref')] + list(ref.get('also') or [])) if k}
+            if not keys or keys & own:
                 continue
-            if row.arxiv_id not in by.setdefault(key, []):
-                by[key].append(row.arxiv_id)
-                counts[key] = counts.get(key, 0) + 1
-            info.setdefault(key, ref)
-    ranked = sorted((k for k in counts if counts[k] >= 2), key=lambda k: (-counts[k], k))[:SUGGEST_MAX]
-    titles = {p.arxiv_id: p.title or p.arxiv_id for p in papers}
+            joined = [w for w in works if w['keys'] & keys]
+            work = {'keys': keys, 'ref': ref, 'by': []}
+            for other in joined:
+                works.remove(other)
+                work['keys'] |= other['keys']
+                work['ref'] = other['ref']
+                work['by'] += [a for a in other['by'] if a not in work['by']]
+            if row.arxiv_id not in work['by']:
+                work['by'].append(row.arxiv_id)
+            works.append(work)
     from .library import canonical_id
-    return [{'ref': info[key]['ref'], 'key': canonical_id(info[key]['ref']), 'title': info[key].get('title', ''),
-             'authors': info[key].get('authors', ''), 'year': info[key].get('year', ''), 'count': counts[key],
-             'by': [titles[a] for a in by[key]][:6]}
-            for key in ranked]
+    titles = {p.arxiv_id: p.title or p.arxiv_id for p in papers}
+    ranked = sorted((w for w in works if len(w['by']) >= 2), key=lambda w: (-len(w['by']), str(w['ref'].get('ref'))))
+    return [{'ref': w['ref']['ref'], 'key': canonical_id(w['ref']['ref']), 'title': w['ref'].get('title', ''),
+             'authors': w['ref'].get('authors', ''), 'year': w['ref'].get('year', ''), 'count': len(w['by']),
+             'by': [titles[a] for a in w['by']][:6]}
+            for w in ranked[:CLASSIFY_MAX]]
+
+
+def set_tools_apart(cited, papers):
+    """(research, tools): the references a review is expected to know, and the software, data and generic
+    methods the papers share, SUGGEST_MAX of each at most. Everything is research when the model cannot tell."""
+    if not cited:
+        return [], []
+    listing = '\n'.join('%d. %s' % (i, c['title']) for i, c in enumerate(cited, 1))
+    try:
+        answer = generated.chat_json(
+            'The papers of a research collection are titled:\n%s\n\nThey cite the works below. Which of them are '
+            'software, codes, databases, catalogs, instruments or generic statistical methods, rather than research '
+            'results about the topic? Answer with a JSON object {"tools": [numbers]}.\n\n%s'
+            % ('\n'.join('- ' + (p.title or '') for p in papers[:25]), listing), paid=False, max_tokens=400)
+        tools = {int(n) for n in answer.get('tools', []) if str(n).isdigit()}
+    except Exception:
+        logger.warning('Could not set the tools apart in the references of a collection')
+        tools = set()
+    research = [c for i, c in enumerate(cited, 1) if i not in tools]
+    return research[:SUGGEST_MAX], [c for i, c in enumerate(cited, 1) if i in tools][:SUGGEST_MAX]
 
 
 def closest_to(papers, own):
@@ -292,10 +327,10 @@ def suggestions(collection_pk):
         papers = comparison.analysed(collection)
         own = own_works(collection)
         generated.progress(pk, 'references')
-        cited = common_references(papers, own)
+        cited, tools = set_tools_apart(common_references(papers, own), papers)
         generated.progress(pk, 'close')
-        close = closest_to(papers, own | {same_ref(c['ref']) for c in cited})
-        return {'cited': cited, 'close': close, 'ids': [p.arxiv_id for p in papers]}
+        close = closest_to(papers, own | {k for k in (same_ref(c['ref']) for c in cited + tools) if k})
+        return {'cited': cited, 'tools': tools, 'close': close, 'ids': [p.arxiv_id for p in papers]}
     return work
 
 

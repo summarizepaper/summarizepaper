@@ -33,8 +33,8 @@ from django.views.decorators.http import require_POST
 from . import access, citations, digest, exports, sources
 from django.db.models import Max
 
-from .models import (AnnouncedPaper, ArxivPaper, Collection, CollectionPaper, ExternalPaper, FollowedPaper, Generated,
-                     ZoteroAccount)
+from .models import (AnnouncedPaper, ArxivPaper, Collection, CollectionMember, CollectionPaper, ExternalPaper,
+                     FollowedPaper, Generated, ZoteroAccount)
 
 FREE = {'collections': 3, 'papers': 20}
 PREMIUM = {'collections': 100, 'papers': 200}
@@ -293,6 +293,28 @@ def _mine(request, pk):
     return get_object_or_404(Collection, pk=pk, user=request.user)
 
 
+def editable(request, pk):
+    """A collection the visitor owns or edits with its owner (a member); 404 otherwise. Members add, remove,
+    annotate and order papers and run the analyses on their own plan; deleting, renaming, sharing, inviting and
+    watching stay with the owner. Notes and tags are the collection's, shared by all who edit it."""
+    collection = get_object_or_404(Collection, pk=pk)
+    if collection.user_id != request.user.id and not CollectionMember.objects.filter(collection=collection, user=request.user).exists():
+        raise Http404
+    return collection
+
+
+def can_edit(user, collection_pk):
+    """For the status of a background result: whether this user edits the collection."""
+    return user.is_authenticated and (Collection.objects.filter(pk=collection_pk, user=user).exists() or
+                                      CollectionMember.objects.filter(collection_id=collection_pk, user=user).exists())
+
+
+def invite_url(request, collection):
+    if not collection.invite_token:
+        return ''
+    return request.build_absolute_uri('/%s/collections/join/%s/' % (get_language(), collection.invite_token))
+
+
 def _page(collection, tab='', **params):
     query = urlencode({k: v for k, v in params.items() if v})
     return redirect('/%s/collections/%s/%s%s' % (get_language(), collection.pk, '?' + query if query else '',
@@ -313,8 +335,11 @@ def collections_page(request):
     now = timezone.now()
     for c in collections:
         c.shared = bool(c.share_token and (c.share_expires is None or c.share_expires > now))
+        c.editors = c.members.count()
+    joined = list(Collection.objects.filter(members__user=request.user).select_related('user').prefetch_related('papers'))
     return render(request, 'summarizer/collections.html', {
-        'collections': collections, 'paid': paid, 'can_create': can_create, 'limits': limits(paid), 'premium': PREMIUM})
+        'collections': collections, 'joined': joined, 'paid': paid, 'can_create': can_create, 'limits': limits(paid),
+        'premium': PREMIUM})
 
 
 def clean_tags(text):
@@ -403,11 +428,29 @@ def shared_url(request, collection):
 @login_required
 def collection_page(request, pk):
     from . import collection_tools, comparison
-    collection = _mine(request, pk)
-    paid = access.has_tool(request.user, 'collections')
+    collection = editable(request, pk)
+    owner = collection.user_id == request.user.id
+    paid = access.has_tool(request.user, 'collections')  # the analyses: the visitor's plan
+    room = access.has_tool(collection.user, 'collections')  # how many papers: the owner's plan
     if request.method == 'POST':
         action = request.POST.get('action')
         fetch = request.headers.get('X-Requested-With') == 'fetch'
+        if action == 'leave' and not owner:
+            CollectionMember.objects.filter(collection=collection, user=request.user).delete()
+            return redirect('/%s/collections/' % get_language())
+        if action in ('delete', 'rename', 'watch', 'share', 'unshare', 'invite', 'uninvite', 'drop') and not owner:
+            raise Http404
+        if action == 'invite':
+            collection.invite_token = secrets.token_urlsafe(16)
+            collection.save(update_fields=['invite_token', 'updated'])
+            return _page(collection, 'settings')
+        if action == 'uninvite':
+            collection.invite_token = ''
+            collection.save(update_fields=['invite_token', 'updated'])
+            return _page(collection, 'settings')
+        if action == 'drop':
+            collection.members.filter(user_id=request.POST.get('user')).delete()
+            return _page(collection, 'settings')
         if action == 'delete':
             collection.delete()
             return redirect('/%s/collections/' % get_language())
@@ -466,9 +509,9 @@ def collection_page(request, pk):
                 texts.append(upload.read().decode('utf-8', 'replace'))
             ids, skipped = wanted_ids(texts)
             if len(ids) > SYNC_ADD:
-                row = collection_tools.start_import(request, collection, ids, paid, skipped)
+                row = collection_tools.start_import(request, collection, ids, room, skipped)
                 return _page(collection, 'papers', job=row.pk)
-            counts = add_many(collection, ids, paid)
+            counts = add_many(collection, ids, room)
             counts['skipped'] = counts.get('skipped', 0) + skipped
             if not ids and not skipped:
                 counts['unknown'] = 1
@@ -492,8 +535,9 @@ def collection_page(request, pk):
     tags = sorted({t for p in papers for t in p.tag_list}, key=str.lower)
 
     context = {
-        'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(paid), 'tags': tags,
-        'duplicates': duplicates(papers),
+        'collection': collection, 'papers': papers, 'paid': paid, 'limits': limits(room), 'tags': tags,
+        'duplicates': duplicates(papers), 'owner': owner, 'members': list(collection.members.select_related('user')),
+        'invite_url': invite_url(request, collection) if owner else '',
         'reading_choices': READING, 'analysed': chosen, 'compare_max': comparison.COMPARE_MAX,
         'chat_ids': ','.join(p.arxiv_id for p in chosen[:CHAT_MAX]), 'chat_max': CHAT_MAX,
         'added': {k: int(request.GET[k]) for k in ADD_RESULTS + ('unfollowed',) if request.GET.get(k, '').isdigit()},
@@ -503,7 +547,7 @@ def collection_page(request, pk):
         'followed': followed_count(request.user, collection) if collection.watch else 0,
         'zotero': ZoteroAccount.objects.filter(user=request.user).exists(),
         'can_zotero': access.has_tool(request.user, 'zotero'),
-        'share_url': shared_url(request, collection),
+        'share_url': shared_url(request, collection) if owner else '',
         'templates': comparison.TEMPLATE_CHOICES,
         'template_columns': [(code, [label for _c, label, _h in cols]) for code, cols in comparison.TEMPLATES.items()],
         'custom_text': '\n'.join('%s: %s' % (c['label'], c['hint']) if c['hint'] else c['label']
@@ -542,8 +586,8 @@ def add_to_collection(request):
         name = request.POST.get('name', '').strip()[:120] or arxiv_id
         collection = Collection.objects.create(user=request.user, name=name)
     else:
-        collection = _mine(request, wanted)
-    status = add_many(collection, [arxiv_id], paid)
+        collection = editable(request, wanted)
+    status = add_many(collection, [arxiv_id], access.has_tool(collection.user, 'collections'))
     status = next(iter(k for k in status if k in ADD_RESULTS), 'unknown')
     return JsonResponse({'status': 'added' if status == 'updated' else status, 'collection': collection.pk,
                          'name': collection.name, 'url': '/%s/collections/%s/' % (get_language(), collection.pk)})
@@ -558,7 +602,7 @@ def collection_export(request, pk, fmt):
     """bib, ris, md: the papers (with a tag only, ?tag=), with their notes and tags; list: the papers as a
     spreadsheet; csv: the comparison table."""
     from . import comparison
-    collection = _mine(request, pk)
+    collection = editable(request, pk)
     lang = get_language()
     filename = export_name(collection)
     if fmt == 'csv':
@@ -606,7 +650,10 @@ def paper_collections(user, arxiv_id):
     base = version_of(arxiv_id)[0]
     inside = {c for c, aid in CollectionPaper.objects.filter(collection__user=user, arxiv_id__startswith=base)
               .values_list('collection_id', 'arxiv_id') if version_of(aid)[0] == base}
-    return [{'pk': c.pk, 'name': c.name, 'has': c.pk in inside} for c in Collection.objects.filter(user=user)]
+    inside |= {c for c, aid in CollectionPaper.objects.filter(collection__members__user=user, arxiv_id__startswith=base)
+               .values_list('collection_id', 'arxiv_id') if version_of(aid)[0] == base}
+    mine = list(Collection.objects.filter(user=user)) + list(Collection.objects.filter(members__user=user))
+    return [{'pk': c.pk, 'name': c.name, 'has': c.pk in inside} for c in mine]
 
 
 # --- the shared page ---------------------------------------------------------------
@@ -651,3 +698,17 @@ def shared_copy(request, token):
         CollectionPaper.objects.create(collection=collection, arxiv_id=paper.arxiv_id, title=paper.title,
                                        authors=paper.authors, selected=paper.selected, position=position)
     return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
+
+
+@login_required
+def join(request, token):
+    """An invitation to edit a collection: shown, then accepted with a POST. The owner can stop the link."""
+    collection = get_object_or_404(Collection, invite_token=token) if token else None
+    if collection is None:
+        raise Http404
+    if collection.user_id == request.user.id or CollectionMember.objects.filter(collection=collection, user=request.user).exists():
+        return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
+    if request.method == 'POST':
+        CollectionMember.objects.get_or_create(collection=collection, user=request.user)
+        return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
+    return render(request, 'summarizer/collection_join.html', {'collection': collection, 'count': collection.papers.count()})

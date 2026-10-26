@@ -13,6 +13,7 @@
   <header class="page-header">
     <p><a href="/{{ LANGUAGE_CODE }}/collections/">← {% trans 'My collections' %}</a></p>
     <h1>{{ collection.name }}</h1>
+    {% if not owner %}<p class="muted">{% blocktrans with name=collection.user.first_name|default:collection.user.username %}You edit this collection with {{ name }}. Notes and tags are seen by everyone who edits it.{% endblocktrans %}</p>{% endif %}
     <p class="lead">{% blocktrans count n=papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}{% if papers %} · <span id="selection-summary">{% blocktrans with n=analysed|length %}{{ n }} read by the analyses and the chat{% endblocktrans %}</span>{% endif %}</p>
   </header>
 
@@ -295,6 +296,12 @@
       {% else %}
       <p class="muted">{% trans 'No paper outside the collection is cited by two of its papers, or their references are not known.' %}</p>
       {% endif %}
+      {% if suggested.tools %}
+      <details class="columns-box">
+        <summary>{% blocktrans count n=suggested.tools|length %}{{ n }} software, data set or method they share{% plural %}{{ n }} software, data sets and methods they share{% endblocktrans %}</summary>
+        <ul class="findings">{% for s in suggested.tools %}<li>{{ s.title }}{% if s.year %} ({{ s.year }}){% endif %} · {% blocktrans count n=s.count %}cited by {{ n }} paper of the collection{% plural %}cited by {{ n }} papers of the collection{% endblocktrans %}</li>{% endfor %}</ul>
+      </details>
+      {% endif %}
       <h3>{% trans 'Closest to the collection' %}</h3>
       {% if suggested.close %}
       <ul class="item-list">
@@ -324,12 +331,36 @@
   <section id="settings" class="tab-panel" role="tabpanel" aria-labelledby="tab-settings">
     <h2>{% trans 'Share and settings' %}</h2>
 
+    <h3>{% trans 'Edit together' %}</h3>
+    {% if owner %}
+      {% if members %}
+      <ul class="item-list members">
+        {% for m in members %}<li class="card"><strong>{{ m.user.first_name|default:m.user.username }}</strong> <span class="muted">{% blocktrans with d=m.added|date:"j F Y" %}since {{ d }}{% endblocktrans %}</span>
+          <form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="user" value="{{ m.user_id }}"><button class="btn btn-sm btn-ghost" name="action" value="drop">{% trans 'Remove' %}</button></form></li>{% endfor %}
+      </ul>
+      {% endif %}
+      {% if invite_url %}
+      <p>{% trans 'Anyone logged in who opens this link can edit the collection with you: add, remove, annotate and order papers, and run the analyses on their own plan. Only you can rename, share, watch or delete it.' %}</p>
+      <div class="tool-row share-row">
+        <input type="text" readonly value="{{ invite_url }}" id="invite-url" aria-label="{% trans 'Invitation link' %}">
+        <button type="button" class="btn btn-sm" data-copy="invite-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
+      </div>
+      <form method="post" class="item-actions">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="uninvite">{% trans 'Stop this link' %}</button></form>
+      {% else %}
+      <p>{% trans 'Invite co-authors or your team to edit this collection with you: one link, which you can stop at any time.' %}</p>
+      <form method="post" class="item-actions">{% csrf_token %}<button class="btn btn-sm" name="action" value="invite">{% trans 'Create an invitation link' %}</button></form>
+      {% endif %}
+    {% else %}
+      <form method="post" class="item-actions">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="leave" onclick="return confirm('{% filter escapejs %}{% trans 'Leave this collection?' %}{% endfilter %}')">{% trans 'Leave this collection' %}</button></form>
+    {% endif %}
+
+    {% if owner %}
     <h3>{% trans 'Share a read-only link' %}</h3>
     {% if share_url %}
       <p>{% blocktrans with d=collection.share_expires|date:"j F Y" %}Anyone with this link sees the papers, the comparison table and the open questions, never who made the collection, and can copy the papers into a collection of theirs. It works until {{ d }}.{% endblocktrans %}{% if collection.share_notes %} {% trans 'Your notes are shown.' %}{% endif %}</p>
       <div class="tool-row share-row">
         <input type="text" readonly value="{{ share_url }}" id="share-url" aria-label="{% trans 'Shared link' %}">
-        <button type="button" class="btn btn-sm" id="share-copy" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
+        <button type="button" class="btn btn-sm" data-copy="share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
       </div>
       <form method="post" class="item-actions">
         {% csrf_token %}
@@ -348,18 +379,18 @@
 
     <h3>{% trans 'Watch the collection' %} <span class="badge-premium">Premium</span></h3>
     {% if not can_follow %}
-      <div class="upsell"><p>{% trans 'Premium emails you when a paper of the collection is cited, with what the citing paper says of it, and when one gets a new arXiv version, with what changed.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+      <div class="upsell"><p>{% trans 'Premium emails you when a paper of the collection is cited, with what the citing paper says of it, when one gets a new arXiv version, with what changed, and when one is published in a journal, retracted or corrected.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% else %}
       <form method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="watch">
         {% if collection.watch %}
-          <p>{% blocktrans count n=followed %}Watched: you get an email when a paper of the collection is cited, and when one gets a new arXiv version. {{ n }} paper is followed.{% plural %}Watched: you get an email when a paper of the collection is cited, and when one gets a new arXiv version. {{ n }} papers are followed.{% endblocktrans %}</p>
+          <p>{% blocktrans count n=followed %}Watched: you get an email when a paper of the collection is cited, gets a new arXiv version, or is published, retracted or corrected. {{ n }} paper is followed.{% plural %}Watched: you get an email when a paper of the collection is cited, gets a new arXiv version, or is published, retracted or corrected. {{ n }} papers are followed.{% endblocktrans %}</p>
           {% if added.unfollowed %}<p class="error">{% blocktrans with n=added.unfollowed m=max_followed %}{{ n }} papers could not be followed: you follow {{ m }} papers at most.{% endblocktrans %}</p>{% endif %}
           <p class="muted"><small>{% trans 'Papers added later are followed too. Stopping does not unfollow the papers: manage them on' %} <a href="/{{ LANGUAGE_CODE }}/citations/">{% trans 'the citation alerts page' %}</a>.</small></p>
           <button class="btn btn-sm btn-ghost" name="value" value="off">{% trans 'Stop watching' %}</button>
         {% else %}
-          <p>{% trans 'Get an email when a paper of the collection is cited, with what the citing paper says of it, and when one gets a new arXiv version, with what changed.' %}</p>
+          <p>{% trans 'Get an email when a paper of the collection is cited, with what the citing paper says of it, when one gets a new arXiv version, with what changed, and when one is published in a journal, retracted or corrected.' %}</p>
           <button class="btn btn-sm" name="value" value="on">{% trans 'Watch this collection' %}</button>
         {% endif %}
       </form>
@@ -372,6 +403,7 @@
       <button class="btn btn-sm btn-ghost" name="action" value="rename">{% trans 'Rename' %}</button>
       <button class="btn btn-sm btn-danger" name="action" value="delete" onclick="return confirm('{% filter escapejs %}{% trans 'Delete this collection?' %}{% endfilter %}')">{% trans 'Delete' %}</button>
     </form>
+    {% endif %}
   </section>
 </div>
 <div id="collection-text" hidden

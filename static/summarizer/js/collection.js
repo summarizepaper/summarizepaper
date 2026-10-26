@@ -325,13 +325,14 @@
     });
   });
 
-  var copy = document.getElementById('share-copy');
-  if (copy) copy.addEventListener('click', function () {
-    var field = document.getElementById('share-url');
-    field.select();
-    (navigator.clipboard ? navigator.clipboard.writeText(field.value) : Promise.reject()).catch(function () {
-      document.execCommand('copy');
-    }).then(function () { copy.textContent = copy.dataset.copied; });
+  Array.prototype.slice.call(root.querySelectorAll('[data-copy]')).forEach(function (copy) {
+    copy.addEventListener('click', function () {
+      var field = document.getElementById(copy.dataset.copy);
+      field.select();
+      (navigator.clipboard ? navigator.clipboard.writeText(field.value) : Promise.reject()).catch(function () {
+        document.execCommand('copy');
+      }).then(function () { copy.textContent = copy.dataset.copied; });
+    });
   });
 
   var template = document.getElementById('columns-template');

@@ -153,9 +153,12 @@ def export_selection(request, fmt):
     return exports.export_many(metas, fmt, 'papers', get_language())
 
 
-def reference(title, year, authors, ref):
+def reference(title, year, authors, ref, also=()):
+    """also: the paper's other identifiers (its DOI when ref is its arXiv id...), so that one work cited under two
+    of them is counted once (collection_tools.common_references)."""
     return {'title': ' '.join(title.split())[:250], 'year': year or '',
-            'authors': ', '.join(authors[:3]) + (' et al.' if len(authors) > 3 else ''), 'ref': ref}
+            'authors': ', '.join(authors[:3]) + (' et al.' if len(authors) > 3 else ''), 'ref': ref,
+            'also': [i for i in also if i and i != ref]}
 
 
 def s2_references(arxiv_id):
@@ -183,7 +186,8 @@ def s2_references(arxiv_id):
         ids = paper.get('externalIds') or {}
         ref = ids.get('ArXiv') or ids.get('DOI') or ''
         if ref and paper.get('title'):
-            found.append(reference(paper['title'], paper.get('year'), [a.get('name', '') for a in paper.get('authors') or []], ref))
+            found.append(reference(paper['title'], paper.get('year'), [a.get('name', '') for a in paper.get('authors') or []], ref,
+                                   (ids.get('ArXiv') or '', ids.get('DOI') or '')))
     return found
 
 
@@ -213,7 +217,8 @@ def openalex_references(arxiv_id):
         ref = arxiv or (work.get('doi') or '').replace('https://doi.org/', '')
         if ref and work.get('title'):
             found.append(reference(work['title'], work.get('publication_year'),
-                                   [(a.get('author') or {}).get('display_name', '') for a in work.get('authorships') or []], ref))
+                                   [(a.get('author') or {}).get('display_name', '') for a in work.get('authorships') or []], ref,
+                                   (arxiv, (work.get('doi') or '').replace('https://doi.org/', ''))))
     return found
 
 

@@ -130,11 +130,21 @@ def run_now(kind, key, lang, work, user=None):
     return row
 
 
+COLLECTION_KINDS = ('compare', 'questions', 'suggest', 'collection_meta')
+
+
+def shared_result(row, user):
+    """A collection's result, which those who edit the collection with its owner follow too."""
+    from .library import can_edit
+    collection = row.key.split(':', 1)[0]
+    return row.kind in COLLECTION_KINDS and collection.isdigit() and can_edit(user, int(collection))
+
+
 def status_view(request, pk):
     """{'status', 'data'} of a result; private results only for their owner."""
     from .access import has_tool
     row = Generated.objects.filter(pk=pk).first()
-    if row is None or (row.user_id and row.user_id != request.user.id):
+    if row is None or (row.user_id and row.user_id != request.user.id and not shared_result(row, request.user)):
         raise Http404
     if row.kind in PREMIUM_KINDS and not has_tool(request.user, GENERATED_TOOLS[row.kind]):
         raise Http404

@@ -11664,3 +11664,181 @@ msgstr ""
 #: templates/summarizer/collection_rows.html
 msgid "Rests on cells without a source."
 msgstr "Repose sur des cases sans source."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid ""
+"You edit this collection with %(name)s. Notes and tags are seen by everyone "
+"who edits it."
+msgstr ""
+"Vous éditez cette collection avec %(name)s. Les notes et étiquettes sont vues"
+" par toutes les personnes qui l’éditent."
+
+#: templates/summarizer/collection.html
+msgid "Edit together"
+msgstr "Éditer à plusieurs"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "since %(d)s"
+msgstr "depuis le %(d)s"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Anyone logged in who opens this link can edit the collection with you: add, "
+"remove, annotate and order papers, and run the analyses on their own plan. "
+"Only you can rename, share, watch or delete it."
+msgstr ""
+"Toute personne connectée qui ouvre ce lien peut éditer la collection avec "
+"vous : ajouter, retirer, annoter et ordonner les articles, et lancer les "
+"analyses avec son propre abonnement. Vous seul pouvez la renommer, la "
+"partager, la suivre ou la supprimer."
+
+#: templates/summarizer/collection.html
+msgid "Invitation link"
+msgstr "Lien d’invitation"
+
+#: templates/summarizer/collection.html
+msgid "Stop this link"
+msgstr "Désactiver ce lien"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Invite co-authors or your team to edit this collection with you: one link, "
+"which you can stop at any time."
+msgstr ""
+"Invitez vos co-auteurs ou votre équipe à éditer cette collection avec vous : "
+"un seul lien, que vous pouvez désactiver à tout moment."
+
+#: templates/summarizer/collection.html
+msgid "Create an invitation link"
+msgstr "Créer un lien d’invitation"
+
+#: templates/summarizer/collection.html
+msgid "Leave this collection?"
+msgstr "Quitter cette collection ?"
+
+#: templates/summarizer/collection.html
+msgid "Leave this collection"
+msgstr "Quitter cette collection"
+
+#: templates/summarizer/collection.html
+msgid ""
+"Premium emails you when a paper of the collection is cited, with what the "
+"citing paper says of it, when one gets a new arXiv version, with what "
+"changed, and when one is published in a journal, retracted or corrected."
+msgstr ""
+"Premium vous écrit quand un article de la collection est cité, avec ce qu’en "
+"dit l’article citant, quand l’un d’eux a une nouvelle version sur arXiv, avec"
+" ce qui a changé, et quand l’un d’eux est publié dans une revue, rétracté ou "
+"corrigé."
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid ""
+"Watched: you get an email when a paper of the collection is cited, gets a new"
+" arXiv version, or is published, retracted or corrected. %(n)s paper is "
+"followed."
+msgid_plural ""
+"Watched: you get an email when a paper of the collection is cited, gets a new"
+" arXiv version, or is published, retracted or corrected. %(n)s papers are "
+"followed."
+msgstr[0] ""
+"Suivie : vous recevez un e-mail quand un article de la collection est cité, a"
+" une nouvelle version sur arXiv, ou est publié, rétracté ou corrigé. %(n)s "
+"article est suivi."
+msgstr[1] ""
+"Suivie : vous recevez un e-mail quand un article de la collection est cité, a"
+" une nouvelle version sur arXiv, ou est publié, rétracté ou corrigé. %(n)s "
+"articles sont suivis."
+
+#: templates/summarizer/collection.html
+msgid ""
+"Get an email when a paper of the collection is cited, with what the citing "
+"paper says of it, when one gets a new arXiv version, with what changed, and "
+"when one is published in a journal, retracted or corrected."
+msgstr ""
+"Recevez un e-mail quand un article de la collection est cité, avec ce qu’en "
+"dit l’article citant, quand l’un d’eux a une nouvelle version sur arXiv, avec"
+" ce qui a changé, et quand l’un d’eux est publié dans une revue, rétracté ou "
+"corrigé."
+
+#: templates/summarizer/collection_join.html
+msgid "Edit a collection together"
+msgstr "Éditer une collection à plusieurs"
+
+#: templates/summarizer/collection_join.html
+msgid ""
+"You are invited to edit this collection with its owner: add and remove "
+"papers, keep notes and tags on them, order them and run the analyses. Notes "
+"and tags are seen by everyone who edits it."
+msgstr ""
+"Vous êtes invité à éditer cette collection avec son propriétaire : ajouter et"
+" retirer des articles, y garder des notes et des étiquettes, les ordonner et "
+"lancer les analyses. Les notes et étiquettes sont vues par toutes les "
+"personnes qui l’éditent."
+
+#: templates/summarizer/collection_join.html
+msgid "Join this collection"
+msgstr "Rejoindre cette collection"
+
+#: templates/summarizer/collection_join.html
+msgid "Not now"
+msgstr "Pas maintenant"
+
+#, python-format
+msgid "%(n)s editor"
+msgid_plural "%(n)s editors"
+msgstr[0] "%(n)s éditeur"
+msgstr[1] "%(n)s éditeurs"
+
+#: templates/summarizer/collections.html
+msgid "Edited with others"
+msgstr "Éditées à plusieurs"
+
+#: templates/summarizer/collection.html
+#, python-format
+msgid "with %(name)s"
+msgstr "avec %(name)s"
+
+#: templates/publications/subject.txt
+#, python-format
+msgid "Published: %(title)s"
+msgstr "Publié : %(title)s"
+
+#, python-format
+msgid "%(label)s: %(title)s"
+msgstr "%(label)s : %(title)s"
+
+#, python-format
+msgid "%(count)s papers you follow were published or corrected"
+msgstr "%(count)s articles que vous suivez ont été publiés ou corrigés"
+
+#: templates/publications/email.txt
+#, python-format
+msgid "Published in %(journal)s"
+msgstr "Publié dans %(journal)s"
+
+#: templates/publications/email.txt
+msgid "Published in a journal"
+msgstr "Publié dans une revue"
+
+#: templates/publications/email.txt
+msgid ""
+"Found in the records of arXiv and Crossref. Check the publisher page before "
+"citing."
+msgstr ""
+"Trouvé dans les notices d’arXiv et de Crossref. Vérifiez la page de l’éditeur"
+" avant de citer."
+
+#: templates/publications/email.html
+msgid "News of a paper you follow"
+msgid_plural "News of %(n)s papers you follow"
+msgstr[0] "Du nouveau pour un article que vous suivez"
+msgstr[1] "Du nouveau pour %(n)s articles que vous suivez"
+
+#, python-format
+msgid "%(n)s software, data set or method they share"
+msgid_plural "%(n)s software, data sets and methods they share"
+msgstr[0] "%(n)s logiciel, jeu de données ou méthode qu’ils partagent"
+msgstr[1] "%(n)s logiciels, jeux de données et méthodes qu’ils partagent"

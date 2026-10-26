@@ -13,11 +13,10 @@ import re
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
-from . import access, comparison, generated, paper_source, sources
+from . import access, comparison, generated, library, paper_source, sources
 from .models import ArxivPaper, Collection
 
 SECTION_RE = re.compile(r'^##\s*(?:[\dIVX.]+\s*)?.*(limitation|future|outlook|discussion|conclusion|open (?:question|problem)|'
@@ -108,7 +107,7 @@ def write(collection_pk, lang):
 @login_required
 @require_POST
 def questions_start(request, pk):
-    collection = get_object_or_404(Collection, pk=pk, user=request.user)
+    collection = library.editable(request, pk)
     if not access.has_tool(request.user, 'collections'):
         return JsonResponse({'status': 'premium'}, status=403)
     if len(comparison.analysed(collection)) < 2:

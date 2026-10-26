@@ -339,8 +339,10 @@ class SuggestionTests(CollectionsTestCase):
         collection = self.make_collection(user, ('2101.00001v1', '2101.00002v1'))
         refs = {'2101.00001v1': [{'ref': '1999.00001', 'title': 'Classic', 'year': 1999, 'authors': 'Old'},
                                  {'ref': '2101.00002', 'title': 'Already in', 'year': 2021, 'authors': ''},
-                                 {'ref': '10.1/once', 'title': 'Once', 'year': 2000, 'authors': ''}],
-                '2101.00002v1': [{'ref': '1999.00001v2', 'title': 'Classic', 'year': 1999, 'authors': 'Old'}]}
+                                 {'ref': '10.1/once', 'title': 'Once', 'year': 2000, 'authors': ''},
+                                 {'ref': '1202.3665', 'title': 'emcee: The MCMC Hammer', 'year': 2013, 'authors': ''}],
+                '2101.00002v1': [{'ref': '1999.00001v2', 'title': 'Classic', 'year': 1999, 'authors': 'Old'},
+                                 {'ref': '1202.3665', 'title': 'emcee: The MCMC Hammer', 'year': 2013, 'authors': ''}]}
         for aid, vector in (('2101.00001v1', [1, 0, 0]), ('2101.00002v1', [0.8, 0.6, 0]), ('2201.00009v1', [0.9, 0.4, 0.1]),
                             ('2201.00010v1', [0, 0, 1])):
             if not ArxivPaper.objects.filter(arxiv_id=aid).exists():
@@ -349,14 +351,18 @@ class SuggestionTests(CollectionsTestCase):
             PaperEmbedding.objects.create(arxiv_id=aid, category='astro-ph.EP', model='text-embedding-3-small',
                                           vector=(vec / np.linalg.norm(vec)).tobytes())
         with mock.patch('summarizer.chat_page.fetch_references', side_effect=lambda aid: refs[aid]), \
+             mock.patch('summarizer.generated.chat_json', return_value={'tools': [1]}) as chat, \
              mock.patch('summarizer.collection_tools.time.sleep'):
             r = self.client_for(user).post('/en/collections/%d/suggest/' % collection.pk).json()
+        self.assertIn('1. emcee: The MCMC Hammer\n2. Classic', chat.call_args.args[0])
         data = Generated.objects.get(pk=r['id']).data()
         self.assertEqual([(c['ref'], c['count']) for c in data['cited']], [('1999.00001', 2)])
+        self.assertEqual([c['title'] for c in data['tools']], ['emcee: The MCMC Hammer'])
         self.assertEqual([c['ref'] for c in data['close']], ['2201.00009v1', '2201.00010v1'])
         page = self.client_for(user).get('/en/collections/%d/' % collection.pk)
         self.assertContains(page, 'cited by 2 papers of the collection')
         self.assertContains(page, '<input type="hidden" name="ids" value="1999.00001">')
+        self.assertContains(page, '1 software, data set or method they share')
 
 
 class ShareAndWatchTests(CollectionsTestCase):
@@ -504,3 +510,89 @@ class BoundedSuggestionTests(SuggestionTests):
     def test_common_references_then_the_closest_papers(self):
         with mock.patch('summarizer.collection_tools.EMBEDDING_CHUNK', 1):
             super().test_common_references_then_the_closest_papers()
+
+
+class EditTogetherTests(CollectionsTestCase):
+    def test_an_invitation_lets_others_edit_but_not_own(self):
+        owner = self.user('owner', paid=True)
+        collection = self.make_collection(owner)
+        mine = self.client_for(owner)
+        url = '/en/collections/%d/' % collection.pk
+        mine.post(url, {'action': 'invite'})
+        collection.refresh_from_db()
+        join = '/en/collections/join/%s/' % collection.invite_token
+        self.assertContains(mine.get(url), 'http://testserver' + join)
+        editor = self.user('editor', paid=True)
+        theirs = self.client_for(editor)
+        self.assertEqual(theirs.get(url).status_code, 404)
+        self.assertContains(theirs.get(join), 'Join this collection')
+        self.assertEqual(theirs.post(join)['Location'], url)
+        page = theirs.get(url)
+        self.assertContains(page, 'You edit this collection with owner.')
+        self.assertNotContains(page, 'name="action" value="delete"')
+        theirs.post(url, {'action': 'paper', 'arxiv_id': '2101.00001v1', 'note': 'Seen by both'}, HTTP_X_REQUESTED_WITH='fetch')
+        self.assertContains(mine.get(url), 'Seen by both')
+        for action in ('delete', 'rename', 'share', 'invite', 'watch'):
+            self.assertEqual(theirs.post(url, {'action': action, 'name': 'x', 'value': 'on'}).status_code, 404)
+        self.assertTrue(Collection.objects.filter(pk=collection.pk, name='Clouds').exists())
+        self.assertContains(theirs.get('/en/collections/'), 'Edited with others')
+        self.assertTrue(library.paper_collections(editor, '2101.00001v1')[0]['has'])
+        with mock.patch('summarizer.paper_source.paper_text', return_value=OPEN_TEXT), \
+             mock.patch('summarizer.generated.chat_json', side_effect=fake_model()):
+            started = theirs.post(url + 'compare/').json()
+        self.assertEqual(mine.get('/en/ai/%d/' % started['id']).json()['status'], 'done')  # started by the editor
+        stranger = self.user('stranger', paid=True)
+        self.assertEqual(self.client_for(stranger).get('/en/ai/%d/' % started['id']).status_code, 404)
+        mine.post(url, {'action': 'uninvite'})
+        self.assertEqual(self.client_for(stranger).get(join).status_code, 404)
+        mine.post(url, {'action': 'drop', 'user': editor.pk})
+        self.assertEqual(theirs.get(url).status_code, 404)
+
+
+class PublicationAlertTests(CollectionsTestCase):
+    def report(self, status, **more):
+        return dict({'status': status, 'checked_at': timezone.now().isoformat(), 'journal': '', 'doi': ''}, **more)
+
+    def test_a_followed_paper_published_or_retracted_is_emailed_once(self):
+        from django.core import mail
+        from . import publication_alerts
+        from .models import PublicationAlert
+        user = self.user(paid=True)
+        free = self.user('free')
+        self.paper('2101.00001v1')
+        self.paper('2101.00001v2', title='Clouds, v2')
+        self.paper('2101.00002v1')
+        for u in (user, free):
+            FollowedPaper.objects.create(user=u, arxiv_id='2101.00001')
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00002')
+        Generated.objects.create(kind=publication_status.KIND, key='2101.00001v2', lang='en', status='done', content=json.dumps(
+            dict(self.report('preprint'), checked_at=(timezone.now() - datetime.timedelta(days=2)).isoformat())))
+        published = self.report('published', journal='MNRAS', doi='10.1093/mnras/stad1',
+                                updates=[{'type': 'correction', 'doi': '10.1093/mnras/corr'}])
+        lookups = {'2101.00001v2': published, '2101.00002v1': self.report('published', journal='ApJ')}
+        with mock.patch('summarizer.publication_status.lookup', side_effect=lambda p: lookups[p.arxiv_id]), \
+             mock.patch('summarizer.publication_alerts.time.sleep'):
+            self.assertEqual(publication_alerts.check(timezone.now()), 4)  # published + correction, for two followers
+            self.assertEqual(publication_alerts.check(timezone.now()), 0)  # nothing is due any more
+        self.assertFalse(PublicationAlert.objects.filter(arxiv_id='2101.00002').exists())  # its first check: no news
+        self.assertEqual(publication_alerts.send_alerts(timezone.now(), 10, base_url='https://x'), 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('MNRAS', mail.outbox[0].body)
+        self.assertIn('Correction published', mail.outbox[0].body)
+        self.assertIn('https://x/en/paper/2101.00001v2/', mail.outbox[0].body)
+        self.assertFalse(PublicationAlert.objects.filter(emailed=False).exists())  # the free user's are dropped
+
+
+class ReferenceWorkTests(CollectionsTestCase):
+    def test_a_work_cited_by_its_arxiv_id_and_its_doi_counts_once(self):
+        papers = [CollectionPaper(arxiv_id='2101.00001v1', title='A'), CollectionPaper(arxiv_id='2101.00002v1', title='B'),
+                  CollectionPaper(arxiv_id='2101.00003v1', title='C'), CollectionPaper(arxiv_id='2101.00004v1', title='D')]
+        refs = {'2101.00001v1': [{'ref': '1999.00001', 'title': 'Classic', 'also': ['10.1234/classic']}],
+                '2101.00002v1': [{'ref': '10.1234/classic', 'title': 'Classic', 'also': []}],
+                '2101.00003v1': [{'ref': '10.1234/CLASSIC', 'title': 'Classic'}, {'ref': '10.1234/own', 'title': 'Own'},
+                                 {'ref': '10.1234/err', 'title': 'Erratum: Classic'}],
+                '2101.00004v1': [{'ref': '10.1234/err', 'title': 'ERRATUM: “Classic”'}]}
+        with mock.patch('summarizer.chat_page.fetch_references', side_effect=lambda aid: refs[aid]), \
+             mock.patch('summarizer.collection_tools.time.sleep'):
+            found = collection_tools.common_references(papers, {'doi:10.1234/own'})
+        self.assertEqual([(c['ref'], c['count'], c['by']) for c in found], [('1999.00001', 3, ['A', 'B', 'C'])])

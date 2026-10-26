@@ -79,6 +79,7 @@ urlpatterns = [
     path("collections/<int:pk>/zotero/", collection_tools.zotero_import_start, name="collection_zotero_import"),
     path("collections/zotero/", collection_tools.zotero_collections, name="collection_zotero_list"),
     path("collections/shared/<str:token>/", library.shared_page, name="collection_shared"),
+    path("collections/join/<str:token>/", library.join, name="collection_join"),
     path("collections/shared/<str:token>/copy/", library.shared_copy, name="collection_shared_copy"),
     path("collections/<int:pk>/questions/", questions.questions_start, name="collection_questions"),
     path("collections/<int:pk>/export/<str:fmt>/", library.collection_export, name="collection_export"),

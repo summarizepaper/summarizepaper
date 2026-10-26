@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ collection.name }} | {% trans 'Edit a collection together' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page collection-page">
+  <header class="page-header">
+    <h1>{{ collection.name }}</h1>
+    <p class="lead">{% blocktrans count n=count %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</p>
+  </header>
+  <p>{% trans 'You are invited to edit this collection with its owner: add and remove papers, keep notes and tags on them, order them and run the analyses. Notes and tags are seen by everyone who edits it.' %}</p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn" type="submit">{% trans 'Join this collection' %}</button>
+    <a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/collections/">{% trans 'Not now' %}</a>
+  </form>
+</div>
+{% endblock %}

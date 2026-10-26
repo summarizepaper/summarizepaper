@@ -29,8 +29,8 @@ from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, evidence, exports, generated, paper_source, sources
-from .models import ArxivPaper, Collection, CollectionPaper, Generated, PaperText, SummaryPaper
+from . import access, evidence, exports, generated, library, paper_source, sources
+from .models import ArxivPaper, Collection, Generated, PaperText, SummaryPaper
 
 COMPARE_MAX = 25  # papers read by one comparison (and by the open questions)
 EXTRACT_BATCH = 5  # papers per model call
@@ -284,9 +284,9 @@ def extract(papers, cols, lang):
         'For each of the %d papers above, fill these columns for a researcher writing a literature review. Write the '
         'texts in %s.\n%s\nFor each cell give "text": one or two short sentences, with the key numbers and their '
         'uncertainties when the paper gives them, or %s when what you were given of the paper does not say it; and '
-        '"quote": the passage of <paper_text> that supports the cell, copied word for word in the paper\'s language, '
-        '1 or 2 consecutive sentences, no ellipsis, or "" when the cell rests on <our_summary> or on nothing. Never '
-        'quote <our_summary>. No LaTeX, no markdown, never write paper IDs in the texts. Answer with a JSON object '
+        '"quote": the passage of <paper_text> that states what the cell says (not a sentence about context, motivation '
+        'or future work), copied word for word in the paper\'s language, 1 or 2 consecutive sentences, no ellipsis, '
+        'or "" when the cell rests on <our_summary> or on nothing. Never quote <our_summary>. No LaTeX, no markdown, never write paper IDs in the texts. Answer with a JSON object '
         '{"rows": [{"id": "paper id", "cells": {"<column code>": {"text": "...", "quote": "..."}}}]}.'
         % (len(papers), generated.language_name(lang), lines, json.dumps(missing_label(lang), ensure_ascii=False)))
     answer = generated.chat_json(prompt, paid=True, max_tokens=8000, system='\n\n'.join(block(p) for p in papers))
@@ -454,7 +454,7 @@ def csv_response(data, lang, filename):
 @require_POST
 def compare_start(request, pk):
     """Start (or follow) the table; mode 'update' reads only the papers it has no row for, 'again' all of them."""
-    collection = get_object_or_404(Collection, pk=pk, user=request.user)
+    collection = library.editable(request, pk)
     if not access.has_tool(request.user, 'collections'):
         return JsonResponse({'status': 'premium'}, status=403)
     if len(analysed(collection)) < 2:
@@ -469,8 +469,8 @@ def compare_start(request, pk):
 @login_required
 @require_POST
 def edit_cell(request, pk):
-    """The owner corrects a cell of a table of this collection. The correction is marked as such."""
-    collection = get_object_or_404(Collection, pk=pk, user=request.user)
+    """The owner or an editor corrects a cell of a table of this collection. The correction is marked as such."""
+    collection = library.editable(request, pk)
     if not access.has_tool(request.user, 'collections'):
         raise Http404
     row = get_object_or_404(Generated, pk=request.POST.get('row'), kind='compare', key__startswith='%s:' % collection.pk)
