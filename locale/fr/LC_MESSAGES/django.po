@@ -6285,6 +6285,9 @@ msgstr ""
 msgid "All the tools"
 msgstr "Tous les outils"
 
+msgid "All the tools, with what they do"
+msgstr "Tous les outils, avec ce qu'ils font"
+
 msgid "Hello,"
 msgstr "Bonjour,"
 

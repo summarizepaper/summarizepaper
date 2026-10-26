@@ -3,6 +3,7 @@ import ipaddress
 from django.conf import settings
 
 from . import access
+from .tool_list import TOOL_GROUPS
 
 # Crawlers that run JavaScript with a regular browser user agent, so the
 # client-side filter in base.html lets them through. Huawei Cloud Singapore
@@ -25,3 +26,7 @@ def analytics(request):
     if _untracked(access.client_ip(request)):
         return {'UMAMI_WEBSITE_ID': ''}
     return {'UMAMI_WEBSITE_ID': settings.UMAMI_WEBSITE_ID}
+
+
+def tools_menu(request):
+    return {'TOOL_GROUPS': TOOL_GROUPS}

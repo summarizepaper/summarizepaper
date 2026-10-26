@@ -202,6 +202,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'summarizer.context_processors.analytics',
+                'summarizer.context_processors.tools_menu',
             ],
         },
     },
