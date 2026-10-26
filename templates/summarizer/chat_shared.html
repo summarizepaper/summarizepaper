@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{# A shared chat page conversation, read-only (chat_page.shared). Readers' content: never indexed. #}
+
+{% block title %}{% trans 'Shared conversation about research papers' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex, nofollow">
+  {% include 'summarizer/mathjax.html' %}
+  {% include 'summarizer/chat_rendering.html' %}
+  <style>
+.shared-page { max-width: 960px; margin: 0 auto; padding: 48px 20px 0; }
+.shared-page .page-header { margin-bottom: 20px; }
+.shared-papers { margin: 0 0 24px; padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.shared-papers h2 { margin: 0 0 10px; font-size: 16px; }
+.shared-papers ul { margin: 0 0 12px; padding-left: 1.2rem; }
+.shared-papers small { color: var(--text-muted); }
+.shared-page .chatbot-body .chatbot-messages { height: auto; max-height: none; }
+.shared-question { margin-left: auto; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="shared-page">
+<header class="page-header">
+  <h1>{% trans 'Shared conversation about research papers' %}</h1>
+  <p class="lead">{% blocktrans with date=link.upto|date:"DATE_FORMAT" %}Shared on {{ date }}. The answers come from the papers below; under each answer, every claim comes with the passage of the paper that supports it.{% endblocktrans %}</p>
+</header>
+
+<section class="shared-papers">
+  <h2>{% trans 'Papers' %}</h2>
+  <ul>
+    {% for paper in papers %}
+    <li><a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.id|urlencode }}/">{{ paper.title|default:paper.id }}</a>{% if paper.author %} <small>— {{ paper.author }}{% if paper.published %}, {{ paper.published|slice:":4" }}{% endif %}</small>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  <a class="btn btn-primary" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ continue_ids|urlencode }}" rel="nofollow">{% trans 'Ask your own questions about these papers' %}</a>
+</section>
+
+<div class="chatbot-container">
+  <div class="chatbot-body">
+    {% include 'summarizer/chat_evidence_labels.html' %}
+    <div class="chatbot-messages">
+      {% for chat in chathistory %}
+      {% if chat.kind == 'table' %}
+      {% with table=chat.evidence.table %}
+      <div class="chatbot-message shared-question">{% trans 'Comparison table' %}: {{ chat.query }}</div>
+      <div class="chatbot-response"><span class="chat-label">{% trans 'AI -' %}</span>
+        <div class="chat-table"><table>
+          <thead><tr><th>{% trans 'Paper' %}</th>{% for column in table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead>
+          <tbody>{% for row in table.rows %}<tr>
+            <td class="paper">{% if row.tag %}<strong>{{ row.tag }}</strong> {% endif %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ row.arxiv_id|urlencode }}/">{{ row.title }}</a><small>{{ row.label }}</small></td>
+            {% for cell in row.cells %}<td class="cell-{{ cell.status }}">
+              {% if cell.value %}{{ cell.value }}
+                {% if cell.numbers_absent %}<p class="chat-claim-warning">{% trans 'Numbers the paper never states:' %} {{ cell.numbers_absent|join:", " }}</p>{% endif %}
+                <details><summary>{% if cell.status == 'verified' %}{% trans 'Passage found in the paper' %}{% else %}{% trans 'Passage not found in the paper: check this value' %}{% endif %}</summary>
+                  {% if cell.quote %}<blockquote>{{ cell.quote }}</blockquote>{% endif %}
+                  {% if cell.section %}<p>{{ cell.section }}{% if cell.figure %} · {{ cell.figure }}{% endif %}</p>{% endif %}
+                </details>
+              {% elif cell.status == 'missing' %}<span class="cell-empty">{% trans 'Not stated' %}</span>
+              {% elif cell.status == 'unknown' %}<span class="cell-empty">{% trans 'Not in the text supplied' %}</span>
+              {% else %}<span class="cell-empty">{% trans 'Could not be read' %}</span>{% endif %}
+            </td>{% endfor %}
+          </tr>{% endfor %}</tbody>
+        </table></div>
+        <div class="chat-table-lists">
+          {% if table.agreements %}<h4>{% trans 'Agreements' %}</h4><ul>{% for item in table.agreements %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+          {% if table.disagreements %}<h4>{% trans 'Disagreements' %}</h4><ul>{% for item in table.disagreements %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+          {% if table.gaps %}<h4>{% trans 'What none of them addresses' %}</h4><ul>{% for item in table.gaps %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+      </div>
+      {% endwith %}
+      {% else %}
+      <div class="chatbot-message shared-question">{{ chat.query }}</div>
+      <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"{% if chat.claims %} data-evidence="{{ chat.evidence_json }}"{% endif %}><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}

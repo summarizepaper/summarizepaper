@@ -137,6 +137,7 @@ def features():
             (_('AI model'), '', _('Standard'), _('Most capable'), _('Most capable')),
             (_('Chat with papers'), 'chat', _('%d questions per day') % chat['user'], _('%d questions per day') % chat['paid'],
              _('%d questions per day') % chat['paid']),
+            (_('Comparison table of the chat, each value with its passage of the paper'), 'chat', False, True, True),
             (_('Rewrites for another reader or language'), '', _('%d per day') % readings, unlimited, unlimited),
             (_('Collections'), 'collections/', _('3 of 20 papers'), _('100 of 200 papers'), _('100 of 200 papers')),
             (_('Comparison tables and open questions of a collection'), 'collections/', False, True, True),

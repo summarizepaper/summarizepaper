@@ -10562,3 +10562,58 @@ msgstr "Taille de l’échantillon et échelle"
 #: templates/summarizer/chat.html
 msgid "You can chat with at most %(n)s papers at once."
 msgstr "Vous pouvez discuter avec au plus %(n)s articles à la fois."
+
+#: templates/summarizer/chat.html
+msgid "The conversation could not be shared. Try again in a moment."
+msgstr "La conversation n’a pas pu être partagée. Réessayez dans un instant."
+
+#: templates/summarizer/chat.html
+msgid "The comparison table is part of Premium."
+msgstr "Le tableau comparatif fait partie de Premium."
+
+#: templates/summarizer/chat.html
+msgid "Share"
+msgstr "Partager"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Anyone with this link can read this conversation as it is now, without "
+"knowing who asked. Your next questions stay private until you share again."
+msgstr ""
+"Toute personne disposant de ce lien peut lire cette conversation telle "
+"qu’elle est maintenant, sans savoir qui l’a posée. Vos prochaines questions "
+"restent privées tant que vous ne partagez pas à nouveau."
+
+#: templates/summarizer/chat.html
+msgid "Link of the shared conversation"
+msgstr "Lien de la conversation partagée"
+
+#: templates/summarizer/chat.html
+msgid "Stop sharing"
+msgstr "Arrêter le partage"
+
+#: templates/summarizer/chat.html
+msgid "Shared conversation about research papers"
+msgstr "Conversation partagée sur des articles scientifiques"
+
+#: templates/summarizer/chat.html
+msgid "Ask your own questions about these papers"
+msgstr "Posez vos propres questions sur ces articles"
+
+#: templates/summarizer/chat.html
+msgid "Numbers the paper never states:"
+msgstr "Chiffres que l’article ne donne nulle part :"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Shared on %(date)s. The answers come from the papers below; under each "
+"answer, every claim comes with the passage of the paper that supports it."
+msgstr ""
+"Partagée le %(date)s. Les réponses viennent des articles ci-dessous ; sous "
+"chaque réponse, chaque affirmation est accompagnée du passage de l’article "
+"qui l’étaye."
+
+#: templates/summarizer/chat.html
+msgid "Comparison table of the chat, each value with its passage of the paper"
+msgstr ""
+"Tableau comparatif du chat, chaque valeur avec son passage de l’article"

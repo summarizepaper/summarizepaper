@@ -98,6 +98,11 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 .chat-tools button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
 .chat-tools button:disabled { color: var(--text-muted); cursor: default; }
 .chat-tools .spacer { flex: 1; }
+.share-box { margin: 0 24px 12px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 14px; }
+.share-box p { margin: 0 0 8px; }
+.share-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-row input { flex: 1; min-width: 200px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font: 13px var(--font); }
+.share-row button { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font: 600 13px var(--font); cursor: pointer; }
 .chat-answer-actions { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; }
 .chat-answer-actions button { padding: 0; border: 0; background: none; color: var(--text-muted); font: inherit; cursor: pointer; }
 .chat-answer-actions button:hover { color: var(--accent); }
@@ -107,25 +112,10 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 .table-builder { margin: 0 24px 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg, #fafafa); }
 .table-builder[hidden] { display: none; }
 .table-builder p { margin: 0 0 8px; font-size: 14px; }
+.table-premium { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--premium); }
+.premium-tag { margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: #fff7ed; color: var(--premium); font-size: 11px; font-weight: 700; }
 .table-builder textarea { width: 100%; min-height: 120px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font: 14px/1.5 var(--font); }
 .table-builder .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--text-muted); }
-.chat-table { overflow-x: auto; }
-.chat-table table { border-collapse: collapse; min-width: 100%; font-size: 13px; }
-.chat-table th, .chat-table td { padding: 8px 10px; border: 1px solid var(--border); vertical-align: top; text-align: left; }
-.chat-table th { background: var(--bg-soft, #f4f4f5); }
-.chat-table td.paper { min-width: 160px; }
-.chat-table td.paper small { display: block; color: var(--text-muted); }
-.chat-table td { min-width: 180px; }
-.chat-table .cell-pending { color: var(--text-muted); font-style: italic; }
-.chat-table .cell-empty { color: var(--text-muted); }
-.chat-table details { margin-top: 4px; font-size: 12px; }
-.chat-table summary { cursor: pointer; color: var(--text-muted); }
-.chat-table .cell-verified summary::before { content: '✓ '; color: var(--success); font-weight: 700; }
-.chat-table .cell-not_found summary { color: var(--premium); }
-.chat-table .cell-not_found summary::before { content: '! '; font-weight: 700; }
-.chat-table blockquote { margin: 4px 0; padding: 4px 8px; border-left: 3px solid var(--accent); background: var(--bg); font-style: italic; }
-.chat-table-lists h4 { margin: 12px 0 4px; font-size: 14px; }
-.chat-table-lists ul { margin: 0; padding-left: 1.2rem; }
 
 @media (max-width: 800px) {
   .chat-page { padding-top: 28px; }
@@ -142,6 +132,8 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 <div class="chat-page" id="chat-page"
   data-lang="{{ LANGUAGE_CODE }}" data-room="{{ room }}" data-max="{{ max_nb_paper }}"
   data-api="{% url 'arxiv_api' %}" data-sources-url="{% url 'chat_sources' %}"
+  data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
+  data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
   data-export-url="{% url 'chat_export' 'FMT' %}" data-references-url="{% url 'chat_references' 'PAPER_ID' %}"
   data-ai="{% trans 'AI -' %}" data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
   data-error="{% trans 'Connection interrupted. Please try again.' %}"
@@ -174,7 +166,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   data-stopped="{% trans 'Stopped.' %}" data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}"
   data-ask-again="{% trans 'Ask again' %}" data-sources="{% trans 'Sources' %}"
   data-busy="{% trans 'Wait for the current answer, or stop it.' %}"
-  data-table-title="{% trans 'Comparison table' %}" data-table-paper="{% trans 'Paper' %}"
+  data-table-title="{% trans 'Comparison table' %}" data-table-premium="{% trans 'The comparison table is part of Premium.' %}" data-table-paper="{% trans 'Paper' %}"
   data-table-pending="{% trans 'Reading…' %}" data-table-missing="{% trans 'Not stated' %}"
   data-table-unknown="{% trans 'Not in the text supplied' %}" data-table-error="{% trans 'Could not be read' %}"
   data-table-failed="{% trans 'The table could not be built. Try again in a moment.' %}"
@@ -276,6 +268,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
     </div>
     <div class="table-builder" id="table-builder" hidden>
       <p><strong>{% trans 'Comparison table' %}</strong> — {% trans 'one row per paper, each value with the passage of the paper behind it. Each paper is read on its own, so more of it is read than in an answer about all of them.' %}</p>
+      {% if table_allowed %}
       <label for="table-columns"><small>{% trans 'Columns, one per line:' %}</small></label>
       <textarea id="table-columns" rows="6"></textarea>
       <div class="row">
@@ -283,12 +276,25 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
         <button type="button" id="table-reset">{% trans 'Default columns' %}</button>
         <span id="table-cost" data-text="{% trans 'Uses {n} questions of your daily quota (one per paper).' %}"></span>
       </div>
+      {% else %}
+      <p class="table-premium"><i class="fas fa-star"></i> {% trans 'The comparison table is part of Premium.' %}
+        <a class="btn btn-primary btn-sm" href="{% url 'premium' %}">{% trans 'See Premium' %}</a></p>
+      {% endif %}
     </div>
     <div class="chat-tools">
-      <button type="button" id="table-toggle" disabled><i class="fas fa-table"></i> {% trans 'Comparison table' %}</button>
+      <button type="button" id="table-toggle" disabled><i class="fas fa-table"></i> {% trans 'Comparison table' %}{% if not table_allowed %} <span class="premium-tag">Premium</span>{% endif %}</button>
       <span class="spacer"></span>
+      <button type="button" id="share-conversation" disabled><i class="fas fa-share-alt"></i> {% trans 'Share' %}</button>
       <button type="button" id="export-conversation" disabled><i class="fas fa-file-download"></i> {% trans 'Export the conversation' %}</button>
       <button type="button" id="new-conversation"><i class="fas fa-plus"></i> {% trans 'New conversation' %}</button>
+    </div>
+    <div class="share-box" id="share-box"{% if not share %} hidden{% endif %}>
+      <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %}</p>
+      <div class="share-row">
+        <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}" value="{% if share %}{{ request.scheme }}://{{ request.get_host }}{% url 'chat_shared' share.token %}{% endif %}">
+        <button type="button" id="share-copy">{% trans 'Copy' %}</button>
+        <button type="button" id="share-stop" data-token="{{ share.token|default:'' }}">{% trans 'Stop sharing' %}</button>
+      </div>
     </div>
     <form class="chatbot-form">
       <textarea maxlength="6000" rows="1" placeholder="{% trans 'Type your question here (Shift+Enter for a new line)' %}" aria-label="{% trans 'Your question' %}" disabled></textarea>
@@ -311,6 +317,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   </ol>
 </div>
 </div>
+{% csrf_token %}
 {{ preset|json_script:"chat-preset" }}
 {{ table_columns|json_script:"chat-table-columns" }}
 </div>

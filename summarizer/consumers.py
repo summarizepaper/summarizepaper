@@ -20,6 +20,9 @@ import time
 from django.core.cache import cache
 import aiohttp
 
+KEEPALIVE_SECONDS = 20  # between two messages while a paper is read
+
+
 class EmbeddingConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
@@ -37,8 +40,12 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
             return
         if not isinstance(paper_id, str) or not re.match(r'^[\w.\-/]{1,100}$', paper_id):
             return
+        reading = asyncio.ensure_future(self.create_embeddings(paper_id))
         try:
-            licenseurl = await self.create_embeddings(paper_id)
+            # Heroku closes a websocket silent for 55 s, and a long PDF takes longer to read
+            while not (await asyncio.wait({reading}, timeout=KEEPALIVE_SECONDS))[0]:
+                await self.send(text_data=json.dumps({'message': 'reading', 'paper_id': paper_id}))
+            licenseurl = reading.result()
         except Exception:
             logger.exception('Could not read %s for the chat page', paper_id)
             await self.send(text_data=json.dumps({'message': 'failed', 'paper_id': paper_id}))
@@ -1046,6 +1053,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
             if self.chat_task is not None and not self.chat_task.done():
                 await self.send(text_data=json.dumps({'type': 'chat_busy'}))
+                return
+            if columns and not await database_sync_to_async(access.has_tool)(self.user, 'collections'):
+                await self.send(text_data=json.dumps({'type': 'table_error', 'premium': True}))
                 return
             cost = len(arxiv_ids) if columns else 1  # a table reads each paper once: a question per paper
             if await database_sync_to_async(access.chat_quota_left)(self.user, self.hashed_ip) < cost:

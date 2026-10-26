@@ -12,7 +12,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.test import Client, TransactionTestCase, override_settings
 
 from summarizer import access, assistant, chat_page, chat_table
-from summarizer.models import AIassistant, ArxivPaper, Author, PaperAuthor, PaperText
+from summarizer.models import AIassistant, ArxivPaper, ChatShare, PaperText
 from summarizer.routing import websocket_urlpatterns
 from summarizer.test_tools import ToolsTestCase
 
@@ -230,8 +230,56 @@ class PageTests(ToolsTestCase):
         get.assert_called_once()  # cached
         self.assertIn('arXiv:2101.00001', get.call_args[0][0])
         self.assertEqual([(r['title'], r['ref']) for r in data['references']], [('Old paper', '1901.00001'), ('Journal paper', '10.1/x')])
-        with mock.patch('summarizer.chat_page.requests.get', return_value=mock.Mock(status_code=429)):
-            self.assertEqual(Client().get('/en/chat/references/2101.00002v1/').json(), {'status': 'unavailable'})
+        # Semantic Scholar refuses (no key, or a wrong one): OpenAlex, without the references younger than the paper
+        works = {'results': [
+            {'title': 'Preprint', 'publication_year': 2019, 'doi': 'https://doi.org/10.1/p', 'authorships': [],
+             'locations': [{'landing_page_url': 'http://arxiv.org/abs/1902.00002'}]},
+            {'title': 'Article', 'publication_year': 2020, 'doi': 'https://doi.org/10.1/a',
+             'authorships': [{'author': {'display_name': 'C D'}}], 'locations': []},
+            {'title': 'Merged record', 'publication_year': 2026, 'doi': 'https://doi.org/10.1/m', 'authorships': [], 'locations': []}]}
+        answers = lambda url, params=None: {'referenced_works': ['https://openalex.org/W1', 'https://openalex.org/W2']} if '/works/doi:' in url else works
+        with mock.patch('summarizer.chat_page.requests.get', return_value=mock.Mock(status_code=429)), \
+             mock.patch('summarizer.sources._json', side_effect=answers) as openalex:
+            data = Client().get('/en/chat/references/2101.00002v1/').json()
+        self.assertIn('doi:10.48550/arXiv.2101.00002', openalex.call_args_list[0][0][0])
+        self.assertEqual([(r['ref'], r['authors']) for r in data['references']], [('1902.00002', ''), ('10.1/a', 'C D')])
+        with mock.patch('summarizer.chat_page.requests.get', return_value=mock.Mock(status_code=403)), \
+             mock.patch('summarizer.sources._json', side_effect=chat_page.sources.SourceUnavailable('down')):
+            self.assertEqual(Client().get('/en/chat/references/2101.00009v1/').json(), {'status': 'unavailable'})
+
+    def test_the_table_builder_is_for_premium(self):
+        page = Client().get('/en/chat/')
+        self.assertNotContains(page, 'id="table-build"')
+        self.assertContains(page, 'The comparison table is part of Premium.')
+        page = self.client_for(self.user(paid=True, tier='premium')).get('/en/chat/')
+        self.assertContains(page, 'id="table-build"')
+
+    def test_a_shared_conversation_is_public_read_only_and_frozen(self):
+        room = 'abcdef0123456789'
+        AIassistant.objects.create(arxiv_id=room, lang='en', ip_address=LOCAL_IP, query='Shared question?',
+                                   response='**Shared answer**', papers='2101.00001v1')
+        AIassistant.objects.create(arxiv_id=room, lang='en', ip_address='someone else', query='NOT_MINE', response='x')
+        self.assertEqual(Client().post('/en/chat/share/', {'room': 'fedcba9876543210'}).status_code, 404)  # not mine
+        url = Client().post('/en/chat/share/', {'room': room}).json()['url']
+        token = url.rstrip('/').rsplit('/', 1)[1]
+        AIassistant.objects.create(arxiv_id=room, lang='en', ip_address=LOCAL_IP, query='LATER_QUESTION', response='y')
+        reader = self.client_for(self.user('reader'))
+        page = reader.get(url.split('testserver', 1)[1])
+        self.assertContains(page, 'Shared question?')
+        self.assertContains(page, 'noindex')
+        self.assertContains(page, 'Clouds on a hot planet')
+        self.assertContains(page, '/en/chat/?ids=2101.00001v1')
+        self.assertNotContains(page, 'NOT_MINE')
+        self.assertNotContains(page, 'LATER_QUESTION')
+        self.assertNotContains(page, '127.0.0.1')
+        # the owner sees the link on the conversation, sharing again shows the later exchanges
+        self.assertContains(Client().get('/en/chat/?c=' + room), token)
+        self.assertEqual(Client().post('/en/chat/share/', {'room': room}).json()['url'], url)
+        self.assertContains(reader.get('/en/chat/shared/%s/' % token), 'LATER_QUESTION')
+        self.assertEqual(reader.post('/en/chat/share/%s/stop/' % token).status_code, 404)  # only its owner stops it
+        self.assertEqual(Client().post('/en/chat/share/%s/stop/' % token).json(), {'status': 'done'})
+        self.assertEqual(reader.get('/en/chat/shared/%s/' % token).status_code, 404)
+        self.assertFalse(ChatShare.objects.get().active)
 
     def test_the_arxiv_relay_takes_several_ids(self):
         with mock.patch('summarizer.views.requests.get') as get:
@@ -275,7 +323,7 @@ class ChatSocketTests(TransactionTestCase):
             await on_row(0, {'cells': []})
             return {'columns': columns, 'rows': []}
         comm = await self.connect()
-        with mock.patch('summarizer.chat_table.build', build):
+        with mock.patch('summarizer.chat_table.build', build), mock.patch('summarizer.access.has_tool', return_value=True):
             await comm.send_json_to({'table': {'columns': ['Data']}, 'selectedpapers': ['2101.00001v1', 'hep-th/9901001v1']})
             self.assertEqual((await comm.receive_json_from())['type'], 'chat_sources')
             self.assertEqual(await comm.receive_json_from(), {'type': 'table_row', 'index': 0, 'row': {'cells': []}})
@@ -288,12 +336,34 @@ class ChatSocketTests(TransactionTestCase):
     async def test_a_table_needs_a_question_of_quota_per_paper(self):
         comm = await self.connect()
         with mock.patch('summarizer.access.chat_quota_left', return_value=1), \
+             mock.patch('summarizer.access.has_tool', return_value=True), \
              mock.patch('summarizer.chat_table.build') as build:
             await comm.send_json_to({'table': {'columns': ['Data']}, 'selectedpapers': ['2101.00001v1', '2101.00002v1']})
             reply = await comm.receive_json_from()
         self.assertEqual(reply['type'], 'table_error')
         self.assertIn('daily question limit', reply['message'])
         build.assert_not_called()
+        await comm.disconnect()
+
+    async def test_the_table_is_premium(self):
+        comm = await self.connect()
+        with mock.patch('summarizer.chat_table.build') as build:
+            await comm.send_json_to({'table': {'columns': ['Data']}, 'selectedpapers': ['2101.00001v1', '2101.00002v1']})
+            self.assertEqual(await comm.receive_json_from(), {'type': 'table_error', 'premium': True})
+        build.assert_not_called()
+        await comm.disconnect()
+
+    async def test_a_long_reading_keeps_the_socket_alive(self):
+        async def slow(self, paper_id):
+            await asyncio.sleep(0.25)
+            return 'http://creativecommons.org/licenses/by/4.0/'
+        comm = await self.connect('/ws/emb/')
+        with mock.patch('summarizer.consumers.KEEPALIVE_SECONDS', 0.1), \
+             mock.patch('summarizer.consumers.EmbeddingConsumer.create_embeddings', slow):
+            await comm.send_json_to({'paper_id': '2101.00001v1'})
+            self.assertEqual(await comm.receive_json_from(), {'message': 'reading', 'paper_id': '2101.00001v1'})
+            self.assertEqual(await comm.receive_json_from(), {'message': 'reading', 'paper_id': '2101.00001v1'})
+            self.assertEqual((await comm.receive_json_from())['message'], 'completed')
         await comm.disconnect()
 
     async def test_a_paper_that_cannot_be_read_is_reported(self):

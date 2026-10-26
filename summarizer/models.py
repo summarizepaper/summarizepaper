@@ -259,6 +259,21 @@ class AIassistant(models.Model):
         return json.dumps(self.evidence, ensure_ascii=False)
 
 
+class ChatShare(models.Model):
+    """A public, read-only link to a chat page conversation as it was when shared (see chat_page.share).
+    The exchanges asked after upto stay private until the owner shares again; the owner can stop sharing."""
+    token = models.CharField(max_length=32, unique=True)
+    room = models.CharField(max_length=100)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    ip_address = models.TextField(blank=True, null=True)  # the owner without an account, as AIassistant keeps it
+    upto = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return '%s (%s)' % (self.token, self.room)
+
+
 class DigestSubscription(models.Model):
     """Email of new arXiv papers in the categories a user follows (Premium users may have several)."""
     FREQUENCIES = [('daily', 'Every weekday'), ('weekly', 'Once a week')]

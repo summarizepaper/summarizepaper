@@ -20,6 +20,7 @@
   var sendButton = $('#send-btn'), stopButton = $('#stop-btn'), loading = $('#loading-spinner');
   var tableToggle = $('#table-toggle'), builder = $('#table-builder'), columnsInput = $('#table-columns');
   var tableCost = $('#table-cost'), exportButton = $('#export-conversation');
+  var shareButton = $('#share-conversation'), shareBox = $('#share-box'), shareUrl = $('#share-url'), shareStop = $('#share-stop');
   var defaultColumns = JSON.parse(document.getElementById('chat-table-columns').textContent);
 
   var selected = [];  // {id, title, author, published, label, state: 'reading'|'ready'|'failed', supply, item}
@@ -200,7 +201,7 @@
     socket.addEventListener('message', function (event) {
       var data;
       try {data = JSON.parse(event.data);} catch (_) {return;}
-      if (data.paper_id !== entry.id) return;
+      if (data.paper_id !== entry.id || (data.message !== 'completed' && data.message !== 'failed')) return;  // 'reading': still at it
       entry.state = data.message === 'completed' ? 'ready' : 'failed';
       socket.close();
       badges(entry);
@@ -375,7 +376,7 @@
     sendButton.disabled = !can || busy;
     tableToggle.disabled = ready.length < 2 || waiting || busy;
     if (tableToggle.disabled) builder.hidden = true;
-    tableCost.textContent = fmt(tableCost.dataset.text, {n: ready.length});
+    if (tableCost) tableCost.textContent = fmt(tableCost.dataset.text, {n: ready.length});
     suggestions.hidden = !can || busy;
     suggestions.querySelector('[data-papers="one"]').hidden = ready.length !== 1;
     suggestions.querySelector('[data-papers="several"]').hidden = ready.length < 2;
@@ -436,7 +437,7 @@
     stopButton.hidden = true;
     loading.style.display = 'none';
     if (response) actions(response, lastQuestion);
-    exportButton.disabled = !messages.querySelector('.chatbot-response');
+    exportButton.disabled = shareButton.disabled = !messages.querySelector('.chatbot-response');
     composer();
   }
 
@@ -556,6 +557,7 @@
     room = newRoom();
     busy = false; queue = []; currentResponse = null; pendingFigures = null; checking = {}; currentTable = null;
     lastPapers = null;
+    shareBox.hidden = true;
     messages.replaceChildren();
     finish(null);
     updateUrl();
@@ -565,10 +567,11 @@
 
   tableToggle.addEventListener('click', function () {
     builder.hidden = !builder.hidden;
-    if (!builder.hidden && !columnsInput.value.trim()) columnsInput.value = defaultColumns.join('\n');
+    if (!builder.hidden && columnsInput && !columnsInput.value.trim()) columnsInput.value = defaultColumns.join('\n');
   });
-  $('#table-reset').addEventListener('click', function () {columnsInput.value = defaultColumns.join('\n');});
-  $('#table-build').addEventListener('click', function () {
+  var tableBuild = $('#table-build');  // absent without Premium: the builder then says what Premium gives
+  if (tableBuild) $('#table-reset').addEventListener('click', function () {columnsInput.value = defaultColumns.join('\n');});
+  if (tableBuild) tableBuild.addEventListener('click', function () {
     var columns = columnsInput.value.split('\n').map(function (c) {return c.trim();}).filter(Boolean);
     var ids = readyIds();
     if (!columns.length || columns.length > 8) {alert(T.tableColumnsInvalid); return;}
@@ -596,7 +599,7 @@
       finish(element);
     } else if (data.type === 'table_error') {
       if (currentTable) currentTable.element.remove();
-      messages.appendChild(node('p', 'chat-note error', data.message || T.tableFailed));
+      messages.appendChild(node('p', 'chat-note error', data.premium ? T.tablePremium : data.message || T.tableFailed));
       currentTable = null;
       finish(null);
     }
@@ -727,6 +730,39 @@
     return lines.join('\n');
   }
 
+  // --- sharing: a public, read-only page of the conversation as it is now (chat_page.share) ---------------
+
+  function post(url, data) {
+    var csrf = root.querySelector('[name=csrfmiddlewaretoken]');
+    return fetch(url, {method: 'POST', body: new URLSearchParams(data || {}),
+                       headers: {'X-CSRFToken': csrf ? csrf.value : ''}}).then(function (response) {
+      if (!response.ok) throw new Error(response.status);
+      return response.json();
+    });
+  }
+  shareButton.addEventListener('click', function () {
+    shareButton.disabled = true;
+    post(T.shareUrl, {room: room}).then(function (data) {
+      shareUrl.value = data.url;
+      shareStop.dataset.token = data.url.split('/shared/')[1].replace(/\/$/, '');
+      shareBox.hidden = false;
+      shareUrl.select();
+    }).catch(function () {alert(T.shareFailed);}).then(function () {shareButton.disabled = false;});
+  });
+  $('#share-copy').addEventListener('click', function () {
+    var button = this;
+    if (navigator.clipboard) navigator.clipboard.writeText(shareUrl.value).then(function () {
+      button.textContent = T.copied;
+      setTimeout(function () {button.textContent = T.copy;}, 1500);
+    });
+  });
+  shareStop.addEventListener('click', function () {
+    post(T.unshareUrl.replace('TOKEN', encodeURIComponent(shareStop.dataset.token))).then(function () {
+      shareBox.hidden = true;
+      shareUrl.value = '';
+    }).catch(function () {alert(T.shareFailed);});
+  });
+
   // --- the export of the conversation -------------------------------------------
 
   exportButton.addEventListener('click', function () {
@@ -770,7 +806,7 @@
     actions(response, response.dataset.question);
     if (response.dataset.papers) lastPapers = response.dataset.papers;
   });
-  exportButton.disabled = !messages.querySelector('.chatbot-response');
+  exportButton.disabled = shareButton.disabled = !messages.querySelector('.chatbot-response');
   scroll();
 
   // the papers of the stored conversation, or of a collection's "chat with these" (?ids=)

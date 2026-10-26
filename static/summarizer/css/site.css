@@ -1054,3 +1054,22 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
   .pdf-panel.resizing iframe { pointer-events: none; }
   .pdf-panel.resizing, body:has(.pdf-panel.resizing) { cursor: col-resize; user-select: none; }
 }
+
+/* comparison table of the chat page and of a shared conversation (chat-page.js, chat_shared.html) */
+.chat-table { overflow-x: auto; }
+.chat-table table { border-collapse: collapse; min-width: 100%; font-size: 13px; }
+.chat-table th, .chat-table td { padding: 8px 10px; border: 1px solid var(--border); vertical-align: top; text-align: left; }
+.chat-table th { background: var(--bg-soft, #f4f4f5); }
+.chat-table td.paper { min-width: 160px; }
+.chat-table td.paper small { display: block; color: var(--text-muted); }
+.chat-table td { min-width: 180px; }
+.chat-table .cell-pending { color: var(--text-muted); font-style: italic; }
+.chat-table .cell-empty { color: var(--text-muted); }
+.chat-table details { margin-top: 4px; font-size: 12px; }
+.chat-table summary { cursor: pointer; color: var(--text-muted); }
+.chat-table .cell-verified summary::before { content: '✓ '; color: var(--success); font-weight: 700; }
+.chat-table .cell-not_found summary { color: var(--premium); }
+.chat-table .cell-not_found summary::before { content: '! '; font-weight: 700; }
+.chat-table blockquote { margin: 4px 0; padding: 4px 8px; border-left: 3px solid var(--accent); background: var(--bg); font-style: italic; }
+.chat-table-lists h4 { margin: 12px 0 4px; font-size: 14px; }
+.chat-table-lists ul { margin: 0; padding-left: 1.2rem; }
