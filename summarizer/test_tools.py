@@ -1560,6 +1560,40 @@ class SearchCookieTests(TestCase):
         asyncio.run(run())
 
 
+class CanonicalHostTests(TestCase):
+    def test_other_hosts_are_moved_to_www_before_django(self):
+        import asyncio
+        from summarizer.canonical_host import CanonicalHost
+
+        async def run():
+            reached = []
+
+            async def app(scope, receive, send):
+                reached.append(scope['path'])
+                await send({'type': 'http.response.start', 'status': 200, 'headers': []})
+                await send({'type': 'http.response.body', 'body': b'page'})
+            app = CanonicalHost(app)
+
+            async def call(host, path, query=b'', method='GET'):
+                sent = []
+
+                async def send(message):
+                    sent.append(message)
+                await app({'type': 'http', 'method': method, 'path': path, 'raw_path': path.encode(),
+                           'query_string': query, 'headers': [(b'host', host)]}, None, send)
+                return sent[0]['status'], dict(sent[0]['headers']).get(b'location')
+            self.assertEqual(await call(b'summarizepaper.com', '/en/guides/arxiv-statistics/'),
+                             (301, b'https://www.summarizepaper.com/en/guides/arxiv-statistics/'))
+            self.assertEqual(await call(b'summarizepaper.herokuapp.com:443', '/en/search/', b'q=dust'),
+                             (301, b'https://www.summarizepaper.com/en/search/?q=dust'))
+            self.assertEqual(await call(b'summarizepaper.com', '/en/paper/2302.12218v1/', method='POST'),
+                             (308, b'https://www.summarizepaper.com/en/paper/2302.12218v1/'))
+            self.assertEqual(reached, [])
+            self.assertEqual(await call(b'www.summarizepaper.com', '/en/'), (200, None))
+            self.assertEqual(await call(b'localhost', '/en/'), (200, None))
+        asyncio.run(run())
+
+
 class AudioTests(ToolsTestCase):
     def test_clips_are_shared_and_joined(self):
         items = [DigestItem.objects.create(arxiv_id='2610.0000%dv1' % i, lang='en', title='Paper %d' % i, blurb='Blurb %d.' % i)

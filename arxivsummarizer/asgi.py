@@ -33,11 +33,14 @@ print('joe')
 
 from summarizer import threadwatch
 from summarizer.loadshed import LoadShedder
+from summarizer.canonical_host import CanonicalHost
 threadwatch.start()  # logs the threads of the web process (see threadwatch.py)
 
 application = ProtocolTypeRouter(
     {
-        "http": LoadShedder(django_asgi_app),  # a 503 at once past LIMIT requests in flight (see loadshed.py)
+        # summarizepaper.com and the herokuapp address are moved to www (see canonical_host.py), then
+        # a 503 at once past LIMIT requests in flight (see loadshed.py)
+        "http": CanonicalHost(LoadShedder(django_asgi_app)),
         "websocket": AllowedHostsOriginValidator(
             AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
         ),

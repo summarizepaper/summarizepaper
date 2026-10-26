@@ -121,7 +121,7 @@ Usage validé par le membre le 2026-10-18 : **chiffres agrégés uniquement**, j
 
 - **Suivi de la visibilité IA** : aucun (mesure manuelle des prompts)
 - **Analytics produit** : Umami Cloud (sans cookie, depuis le 2026-10-18)
-- **Google Search Console** : configurée par le membre le 2026-10-18 (sitemap soumis) ; pas d'accès direct pour Claude, mesure par exports
+- **Google Search Console** : configurée par le membre le 2026-10-18 (sitemap soumis) ; accès API en lecture pour Claude depuis le 2026-10-26 (compte de service `claude-gsc@summarizepaper.iam.gserviceaccount.com`, propriété `sc-domain:summarizepaper.com`, autorisation restreinte : inspection d'URL, sitemaps, performances ; le rapport Indexation → Pages reste en export CSV)
 - **Emailing** : SMTP transactionnel du site (digest, comptes) ; Lumail disponible en MCP dans la session
 - **Automatisation navigateur** : aucun
 - **Recherche de mots-clés** : aucun (expansion manuelle)
