@@ -11,7 +11,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.backends.db import SessionStore
 from django.test import Client, TransactionTestCase, override_settings
 
-from summarizer import access, assistant, chat_page, chat_table
+from summarizer import access, activity, assistant, chat_page, chat_table, evidence
 from summarizer.models import AIassistant, ArxivPaper, ChatShare, PaperText
 from summarizer.routing import websocket_urlpatterns
 from summarizer.test_tools import ToolsTestCase
@@ -57,6 +57,25 @@ class FitTests(ToolsTestCase):
         self.assertIn('Paragraph 0.', fitted)
         self.assertIn('Paragraph 36.', fitted)  # the end of the paper is not lost
         self.assertAlmostEqual(kept, 1 / 3, delta=0.05)
+
+    def test_with_a_question_the_passages_about_it_are_kept(self):
+        filler = ' '.join('Generic sentence number %d about nothing in particular.' % i for i in range(30))
+        text = ('## 1 Introduction\n\nWe introduce the survey.\n\n' +
+                '\n\n'.join(filler for _ in range(6)) +
+                '\n\nThe spectroscopic redshift calibration reaches 0.3 percent precision.\n\n' +
+                '\n\n'.join(filler for _ in range(6)) + '\n\n## 5 Conclusion\n\nWe conclude.')
+        fitted, kept, left_out = assistant.fit(text, 1500, 'How precise is the redshift calibration?')
+        self.assertEqual(left_out, ['selected'])
+        self.assertLessEqual(len(fitted), 1500)
+        for kept_text in ('## 1 Introduction', 'We introduce the survey.', '0.3 percent precision', '## 5 Conclusion', 'We conclude.'):
+            self.assertIn(kept_text, fitted)
+        self.assertIn('[…]', fitted)
+        # a question made only of common words does not choose: the sections keep their start
+        self.assertEqual(assistant.fit(text, 1500, 'What about this paper?')[2], ['shortened'])
+
+    def test_more_papers_have_more_claims_checked(self):
+        self.assertEqual([evidence.max_claims(n) for n in (1, 2, 5, 10)], [8, 11, 20, 20])
+        self.assertIn('20 at most', evidence.prompt('English', 20))
 
     def test_share_gives_the_room_short_papers_leave_to_long_ones(self):
         self.assertEqual(assistant.share([100, 5000, 5000], 6100), [100, 3000, 3000])
@@ -155,13 +174,14 @@ class TableTests(TransactionTestCase):
         async def complete(messages, paid, max_tokens, on_delta=None, task='assistant', user_id=None, json_object=False):
             self.assertEqual((task, json_object), ('table', True))
             source = messages[1]['content']
+            calls.append(source if '<paper>' in source else '')
             if 'comparison_table' in source:
                 return json.dumps({'agreements': [], 'disagreements': ['[Lee & Ray 2021] observes, [Kim 2021] simulates.'], 'gaps': []})
             self.assertEqual(source.count('<paper>'), 1)
             if 'Dust' in source:
                 return 'not json'
             return json.dumps({'cells': [{'column': 'Data', 'value': '42 planets', 'quote': 'We observed 42 planets with JWST.'}]})
-        rows = []
+        rows, calls = [], []
 
         async def on_row(index, row):
             rows.append(index)
@@ -173,6 +193,17 @@ class TableTests(TransactionTestCase):
         self.assertEqual(table['disagreements'], ['[Lee & Ray 2021] observes, [Kim 2021] simulates.'])
         row = AIassistant.objects.get()
         self.assertEqual((row.kind, row.cost, row.arxiv_id, row.papers), ('table', 2, 'room', '2101.00001v1,2101.00002v1'))
+        # built again: the row read before is reused, only the one that failed is read (and counted)
+        calls.clear()
+        with mock.patch.object(assistant, 'complete', complete):
+            table = asyncio.run(chat_table.build(['2101.00001v1', '2101.00002v1'], ['Data'], 'en', False,
+                                                 hashed_ip='a', conversation_id='room'))
+        self.assertEqual(sum('Dust' in c for c in calls), 1)
+        self.assertFalse(any('Clouds' in c for c in calls))
+        self.assertEqual(table['rows'][0]['cells'][0]['status'], 'verified')
+        self.assertEqual(AIassistant.objects.latest('pk').cost, 1)
+        # other columns: read again
+        self.assertEqual(chat_table.reusable_rows(['2101.00001v1'], ['Method'], 'en'), {})
         self.assertIn('| [Lee & Ray 2021] Clouds on a hot planet | 42 planets |', row.response)
         self.assertIn('Could not be read', row.response)
 
@@ -219,6 +250,7 @@ class PageTests(ToolsTestCase):
         self.assertEqual(Client().get('/en/chat/export/exe/?ids=2101.00001v1').status_code, 404)
         self.assertEqual(Client().get('/en/chat/sources/?ids=' + ','.join('a%d' % i for i in range(11))).status_code, 404)
 
+    @mock.patch.object(chat_page, 'S2_RETRY_SECONDS', 0)
     def test_references_with_an_arxiv_id_or_a_doi_can_be_added(self):
         answer = mock.Mock(status_code=200, json=lambda: {'data': [
             {'citedPaper': {'title': 'Old  paper', 'year': 2019, 'authors': [{'name': 'A B'}], 'externalIds': {'ArXiv': '1901.00001'}}},
@@ -238,9 +270,10 @@ class PageTests(ToolsTestCase):
              'authorships': [{'author': {'display_name': 'C D'}}], 'locations': []},
             {'title': 'Merged record', 'publication_year': 2026, 'doi': 'https://doi.org/10.1/m', 'authorships': [], 'locations': []}]}
         answers = lambda url, params=None: {'referenced_works': ['https://openalex.org/W1', 'https://openalex.org/W2']} if '/works/doi:' in url else works
-        with mock.patch('summarizer.chat_page.requests.get', return_value=mock.Mock(status_code=429)), \
+        with mock.patch('summarizer.chat_page.requests.get', return_value=mock.Mock(status_code=429)) as s2, \
              mock.patch('summarizer.sources._json', side_effect=answers) as openalex:
             data = Client().get('/en/chat/references/2101.00002v1/').json()
+        self.assertEqual(s2.call_count, 2)  # asked again once after its limit
         self.assertIn('doi:10.48550/arXiv.2101.00002', openalex.call_args_list[0][0][0])
         self.assertEqual([(r['ref'], r['authors']) for r in data['references']], [('1902.00002', ''), ('10.1/a', 'C D')])
         with mock.patch('summarizer.chat_page.requests.get', return_value=mock.Mock(status_code=403)), \
@@ -280,6 +313,46 @@ class PageTests(ToolsTestCase):
         self.assertEqual(Client().post('/en/chat/share/%s/stop/' % token).json(), {'status': 'done'})
         self.assertEqual(reader.get('/en/chat/shared/%s/' % token).status_code, 404)
         self.assertFalse(ChatShare.objects.get().active)
+
+    def test_questions_left_today(self):
+        self.assertEqual(Client().get('/en/chat/quota/').json(), {'left': access.chat_messages_per_day()['anonymous']})
+        AIassistant.objects.create(arxiv_id='room', lang='en', ip_address=LOCAL_IP, query='Q', cost=2)
+        self.assertEqual(Client().get('/en/chat/quota/').json()['left'], access.chat_messages_per_day()['anonymous'] - 2)
+        self.assertContains(Client().get('/en/chat/'), 'id="chat-quota" data-left="%d"' % (access.chat_messages_per_day()['anonymous'] - 2))
+        staff = self.user('boss')
+        staff.is_superuser = True
+        staff.save()
+        self.assertEqual(self.client_for(staff).get('/en/chat/quota/').json(), {'left': None})
+
+    def test_a_paper_page_conversation_can_be_shared_and_previews_well(self):
+        AIassistant.objects.create(arxiv_id='2101.00001v1', lang='en', ip_address=LOCAL_IP, query='What is **new**?',
+                                   response='The **clouds** are $x$ thick.', papers='2101.00001v1')
+        url = Client().post('/en/chat/share/', {'room': '2101.00001v1'}).json()['url']
+        page = Client().get(url.split('testserver', 1)[1])
+        self.assertContains(page, '<meta property="og:title" content="What is **new**?">')
+        self.assertContains(page, '<meta property="og:description" content="The clouds are x thick.">')
+        paper = Client().get('/en/paper/2101.00001v1/')
+        self.assertContains(paper, 'id="share-conversation"')
+        self.assertContains(paper, '<textarea maxlength="6000"')
+        self.assertContains(paper, 'id="stop-btn"')
+
+    def test_the_staff_sees_how_far_answers_hold(self):
+        claims = [{'status': 'verified'}, {'status': 'verified', 'numbers_absent': ['57']}, {'status': 'not_found'},
+                  {'status': 'general'}]
+        AIassistant.objects.create(arxiv_id='r', query='Q', response='As [Lee et al. 2021] shows.', model='gpt-big',
+                                   papers='a,b', evidence={'status': 'done', 'claims': claims})
+        AIassistant.objects.create(arxiv_id='r', query='Q', response='No tag.', model='gpt-big', papers='a,b',
+                                   evidence={'status': 'unavailable'})
+        AIassistant.objects.create(arxiv_id='r', query='T', kind='table', model='gpt-big')
+        quality = activity.answer_quality(activity.today())
+        self.assertEqual({k: quality['total'][k] for k in ('answers', 'checked', 'claims', 'verified', 'not_found', 'general', 'numbers', 'multi', 'tagged')},
+                         {'answers': 2, 'checked': '50 %', 'claims': 4, 'verified': '50 %', 'not_found': '25 %',
+                          'general': '25 %', 'numbers': '25 %', 'multi': 2, 'tagged': '50 %'})
+        self.assertEqual([m['label'] for m in quality['models']], ['gpt-big'])
+        staff = self.user('boss')
+        staff.is_staff = staff.is_superuser = True
+        staff.save()
+        self.assertContains(self.client_for(staff).get('/admin/activite/'), 'Fiabilité de l’assistant')
 
     def test_the_arxiv_relay_takes_several_ids(self):
         with mock.patch('summarizer.views.requests.get') as get:

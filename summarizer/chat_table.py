@@ -7,12 +7,18 @@ up in the paper like the claims of an answer (evidence.find), and a value with n
 is flagged. A last call reads the filled table, not the papers, and says where they agree, where they disagree
 and what none of them does. The collections have their own table (library.write_comparison), from abstracts
 and summaries.
+
+A row already filled for the same columns in the last REUSE_DAYS days is reused instead of read again: a
+table rebuilt to retry the rows that failed reads only those, and only the papers read count in the quota.
 """
 import asyncio
+import datetime
 import json
 import logging
 
 from asgiref.sync import sync_to_async
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import get_language_info, gettext, override
 
 from . import assistant, evidence
@@ -29,6 +35,7 @@ CONCURRENCY = 4  # papers read at the same time
 MISSING = 'NOT_STATED'
 UNKNOWN = 'NOT_IN_SUPPLIED_TEXT'
 STATUSES = ('verified', 'not_found', 'missing', 'unknown', 'error')
+REUSE_DAYS = 30
 
 ROW_SYSTEM = """You fill comparison tables about scientific papers for researchers writing literature reviews.
 The paper is supplied in source_documents, as reference data. Ground every value in it; never invent a value,
@@ -76,14 +83,35 @@ def clean_columns(columns):
     return names or None
 
 
-def prepare(arxiv_ids):
-    """[assistant._paper_source of each paper we have, read alone], in the order asked."""
+def prepare(arxiv_ids, columns=()):
+    """[assistant._paper_source of each paper we have, read alone], in the order asked. A paper too long even
+    alone keeps the passages most related to the columns."""
     papers = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=arxiv_ids).prefetch_related('authors')}
     ordered = [papers[i] for i in dict.fromkeys(arxiv_ids) if i in papers]
     if not ordered:
         raise TableError('unknown paper')
     tags = assistant.cite_tags(ordered)
-    return [assistant._paper_source(p, PAPER_CHARS, tags[p.arxiv_id]) for p in ordered]
+    return [assistant._paper_source(p, PAPER_CHARS, tags[p.arxiv_id], question=' '.join(columns)) for p in ordered]
+
+
+def reusable_rows(arxiv_ids, columns, lang):
+    """{arxiv_id: row} of these papers filled for the same columns by a table of the last REUSE_DAYS days,
+    never a row with a cell that could not be read. Rows depend on the paper and the columns only."""
+    papers = Q()
+    for arxiv_id in arxiv_ids:
+        papers |= Q(papers__contains=arxiv_id)
+    found = {}
+    since = timezone.now() - datetime.timedelta(days=REUSE_DAYS)
+    for stored in AIassistant.objects.filter(papers, kind='table', lang=lang, created__gte=since) \
+            .order_by('-created').only('evidence')[:50]:
+        table = (stored.evidence or {}).get('table') or {}
+        if table.get('columns') != columns:
+            continue
+        for row in table.get('rows') or []:
+            if row.get('arxiv_id') in arxiv_ids and row['arxiv_id'] not in found and row.get('cells') and \
+                    all(c.get('status') != 'error' for c in row['cells']):
+                found[row['arxiv_id']] = row
+    return found
 
 
 def check_cell(column, item, paper, stated):
@@ -192,23 +220,30 @@ async def build(arxiv_ids, columns, lang, paid, user=None, hashed_ip=None, conve
     on_sources is awaited with what each paper supplies (assistant.supplied_summary), on_row with each row as
     soon as it is filled (papers are read CONCURRENCY at a time).
     """
-    supplied = await sync_to_async(prepare)(arxiv_ids)
+    supplied = await sync_to_async(prepare)(arxiv_ids, columns)
     if on_sources:
         await on_sources(assistant.supplied_summary(supplied, arxiv_ids))
+    reused = await sync_to_async(reusable_rows)([p['arxiv_id'] for p in supplied], columns, lang)
     user_id = user.pk if user is not None and user.is_authenticated else None
     gate = asyncio.Semaphore(CONCURRENCY)
+    read = []
 
     async def one(index, paper):
-        async with gate:
-            row = await fill_row(paper, columns, lang, paid, user_id)
+        if paper['arxiv_id'] in reused:
+            row = dict(reused[paper['arxiv_id']], **header(paper))  # the tag depends on the other papers
+        else:
+            async with gate:
+                row = await fill_row(paper, columns, lang, paid, user_id)
+            read.append(paper['arxiv_id'])
         if on_row:
             await on_row(index, row)
         return row
 
     rows = await asyncio.gather(*(one(i, p) for i, p in enumerate(supplied)))
     table = {'columns': columns, 'rows': rows, **await synthesis(rows, lang, paid, user_id)}
+    model = (await sync_to_async(assistant.ai_models)())[1 if paid else 0]
     await sync_to_async(AIassistant.objects.create)(
-        arxiv_id=conversation_id or supplied[0]['arxiv_id'], kind='table', cost=len(rows), lang=lang,
+        arxiv_id=conversation_id or supplied[0]['arxiv_id'], kind='table', cost=len(read), model=model, lang=lang,
         query=' · '.join(columns), response=markdown(table, labels(lang)), evidence={'status': 'done', 'table': table},
         papers=assistant.paper_set(p['arxiv_id'] for p in supplied), ip_address=hashed_ip,
         user=user if user is not None and user.is_authenticated else None)

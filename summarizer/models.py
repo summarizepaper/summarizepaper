@@ -246,6 +246,7 @@ class AIassistant(models.Model):
     papers = models.TextField(blank=True, null=True)
     kind = models.CharField(max_length=10, default='answer', choices=[('answer', 'Answer'), ('table', 'Comparison table')])
     cost = models.PositiveSmallIntegerField(default=1)  # questions of the daily quota it used (a table: one per paper)
+    model = models.CharField(max_length=60, blank=True, default='')  # the AI model that answered (activity.answer_quality)
 
     def __str__(self):
         return self.arxiv_id+' '+self.query

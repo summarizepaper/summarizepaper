@@ -10,6 +10,7 @@ selection.
 import logging
 import re
 import secrets
+import time
 
 import requests
 from django.conf import settings
@@ -32,6 +33,7 @@ RECENT = 8  # conversations listed on the page
 S2_REFERENCES = 'https://api.semanticscholar.org/graph/v1/paper/%s/references'
 MAX_REFERENCES = 100
 REFERENCES_SECONDS = 24 * 3600
+S2_RETRY_SECONDS = 1.5
 TABLE_COLUMNS = [('question', _('Question')), ('data', _('Data')), ('method', _('Method')),
                  ('sample', _('Sample size and scale')), ('results', _('Main results')),
                  ('limitations', _('Limitations'))]
@@ -100,8 +102,21 @@ def page(request):
         'conversations': recent_conversations(request, room), 'max_nb_paper': assistant.MAX_PAPERS,
         'table_columns': [str(label) for _, label in TABLE_COLUMNS],
         'table_allowed': access.has_tool(request.user, 'collections'),  # Premium, like the collections' tables
+        'quota_left': quota_left(request),
         'share': owned(ChatShare.objects.filter(room=room, active=True), request).first() if room else None,
     })
+
+
+def quota_left(request):
+    """Questions left today, None when there is no limit to show (staff)."""
+    if request.user.is_superuser:
+        return None
+    return max(access.chat_quota_left(request.user, access.hash_ip(access.client_ip(request))), 0)
+
+
+def quota(request):
+    """What the page shows under the question box after each answer."""
+    return JsonResponse({'left': quota_left(request)})
 
 
 def selected_ids(request, limit=assistant.MAX_PAPERS):
@@ -142,13 +157,17 @@ def s2_references(arxiv_id):
     """The references Semantic Scholar knows, None when it does not answer (logged: a 403 is a wrong key,
     a 429 the limit of calls without one)."""
     headers = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
-    try:
-        response = requests.get(S2_REFERENCES % citations.s2_ref(citations.base_id(arxiv_id) or arxiv_id),
-                                params={'fields': 'title,year,authors,externalIds', 'limit': 500},
-                                headers=headers, timeout=20)
-    except requests.RequestException:
-        logger.warning('Semantic Scholar unreachable for the references of %s', arxiv_id)
-        return None
+    for wait in (S2_RETRY_SECONDS, None):  # a key allows about one call a second, shared with the citation alerts
+        try:
+            response = requests.get(S2_REFERENCES % citations.s2_ref(citations.base_id(arxiv_id) or arxiv_id),
+                                    params={'fields': 'title,year,authors,externalIds', 'limit': 500},
+                                    headers=headers, timeout=20)
+        except requests.RequestException:
+            logger.warning('Semantic Scholar unreachable for the references of %s', arxiv_id)
+            return None
+        if response.status_code != 429 or wait is None:
+            break
+        time.sleep(wait)
     if response.status_code != 200:
         logger.warning('Semantic Scholar answered %s for the references of %s (key set: %s)',
                        response.status_code, arxiv_id, bool(headers))
@@ -230,8 +249,8 @@ def references(request, arxiv_id):
 def share(request):
     """Share the visitor's conversation as it is now: the link of its public page (the same link when shared
     before, now showing the exchanges since)."""
-    room = request.POST.get('room', '')
-    if not ROOM_RE.match(room) or not owned(AIassistant.objects.filter(arxiv_id=room, active=True), request).exists():
+    room = request.POST.get('room', '')  # a chat page room, or the paper of a paper page's conversation
+    if not (ROOM_RE.match(room) or ID_RE.match(room)) or not owned(AIassistant.objects.filter(arxiv_id=room, active=True), request).exists():
         raise Http404
     link = owned(ChatShare.objects.filter(room=room, active=True), request).first()
     if link is None:
@@ -263,7 +282,10 @@ def shared(request, token):
     ids = []
     for row in rows:
         ids += [i for i in (row.papers or '').split(',') if i and i not in ids]
+    first = next((row for row in rows if row.kind == 'answer' and row.response), None)
+    preview = re.sub(r'[*_`#>|$\\\[\]]', '', first.response if first else '')
     return render(request, 'summarizer/chat_shared.html', {
         'link': link, 'chathistory': rows, 'papers': preset_papers(ids[:assistant.MAX_PAPERS * 3]),
-        'continue_ids': ','.join(ids[-assistant.MAX_PAPERS:]),
+        'continue_ids': ','.join(ids[-assistant.MAX_PAPERS:]), 'first_question': rows[0].query,
+        'preview': ' '.join(preview.split())[:300],  # what a link preview (Open Graph) shows
     })

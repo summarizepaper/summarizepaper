@@ -1,11 +1,19 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static %}
 {% get_current_language as LANGUAGE_CODE %}
 {# A shared chat page conversation, read-only (chat_page.shared). Readers' content: never indexed. #}
 
 {% block title %}{% trans 'Shared conversation about research papers' %} | SummarizePaper{% endblock %}
 {% block extra_head_tags %}
   <meta name="robots" content="noindex, nofollow">
+  {# the preview of the link where it is shared (messaging apps, social networks) #}
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="SummarizePaper">
+  <meta property="og:title" content="{{ first_question|truncatechars:90 }}">
+  <meta property="og:description" content="{{ preview|default:_('Shared conversation about research papers') }}">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:image" content="https://www.summarizepaper.com{% static 'summarizer/images/logo.png' %}">
+  <meta name="twitter:card" content="summary">
   {% include 'summarizer/mathjax.html' %}
   {% include 'summarizer/chat_rendering.html' %}
   <style>

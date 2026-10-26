@@ -10,8 +10,10 @@ to the others, and a paper longer than its share loses its references, then its
 appendices, then the end of its longest sections (see fit). Each paper says how
 much of it was supplied, to the model and to the reader.
 """
+import collections
 import json
 import logging
+import math
 import re
 
 import aiohttp
@@ -37,6 +39,8 @@ HEADER_CHARS = 2000  # room for the title, authors... of each <paper> block
 ANSWER_TOKENS = 1500  # one paper; each further paper adds PAPER_TOKENS, up to MAX_ANSWER_TOKENS
 PAPER_TOKENS = 350
 MAX_ANSWER_TOKENS = 4500
+CHECK_TOKENS = 2500  # the check of an answer's claims (check_answer), and what each further claim adds
+CHECK_TOKENS_PER_CLAIM = 250
 OMITTED = '\n[…]\n'  # where a shortened section was cut, as the model and the evidence check see it
 REFERENCES = re.compile(r'^[ \t]*(?:#{1,6}[ \t]*)?(?:[\dIVX]+\.?[ \t]+)?(?:References|Bibliography|Literature Cited|'
                         r'Works Cited|Références|Bibliographie)[ \t]*:?[ \t]*$', re.M | re.I)
@@ -122,7 +126,17 @@ SUPPLIED = {
     'restricted': 'the title, authors and abstract only (the license does not allow reading the full text)',
 }
 LEFT_OUT = {'references': 'the references', 'appendices': 'the appendices',
-            'shortened': 'the end of the longest sections, where marked […]'}
+            'shortened': 'the end of the longest sections, where marked […]',
+            'selected': 'the passages least related to the question, where marked […]'}
+PASSAGE_CHARS = 1500
+# words too common in questions about papers to choose passages with (select)
+STOPWORDS = frozenset("""
+about above after again also among another being between both could does doing during each from further have
+having here into itself just more most much must only other over same should some such than that their them
+then there these they this those through under until very what when where which while whom whose will with
+within without would your yours paper papers study studies authors author result results show shows shown
+using used based dans avec pour sont cette ces leur leurs nous vous elle elles être fait faire plus moins
+comme mais aussi entre depuis selon chaque quel quelle quels quelles article articles résultat résultats""".split())
 
 
 class AssistantError(Exception):
@@ -197,11 +211,60 @@ def shorten(part, size):
     return (kept[:end + 1] if end > 0 else kept).rstrip() + OMITTED
 
 
-def fit(text, budget):
+def terms(text):
+    """The words of a text that can tell passages apart (4 letters or more, not the commonest ones)."""
+    return {w for w in re.findall(r'[^\W\d_]{4,}|\d+(?:\.\d+)?', text.lower()) if w not in STOPWORDS}
+
+
+def passages(text):
+    """The paragraphs of a text; a long one (a PDF page read as one block) in pieces of about PASSAGE_CHARS."""
+    found = []
+    for paragraph in re.split(r'\n[ \t]*\n', text):
+        while len(paragraph) > 2 * PASSAGE_CHARS:
+            cut = paragraph.rfind('. ', PASSAGE_CHARS // 2, PASSAGE_CHARS)
+            cut = cut + 1 if cut > 0 else PASSAGE_CHARS
+            found.append(paragraph[:cut])
+            paragraph = paragraph[cut:].lstrip()
+        found.append(paragraph)
+    return found
+
+
+def select(text, budget, question):
+    """At most budget characters of a text: its headings and the first paragraph of each section, then the
+    paragraphs sharing the most rare words with the question, in their order, with the gaps marked."""
+    parts = passages(text)
+    asked = terms(question)
+    seen = collections.Counter(t for part in parts for t in terms(part) & asked)
+    weight = {t: math.log(1 + len(parts) / seen[t]) for t in seen}
+
+    def priority(i):
+        if parts[i].lstrip().startswith('#') or i == 0:
+            return (3, 0, -i)
+        if parts[i - 1].lstrip().startswith('#'):
+            return (2, 0, -i)
+        return (1, sum(weight.get(t, 0) for t in terms(parts[i])), -i)
+
+    kept, used = set(), 0
+    for i in sorted(range(len(parts)), key=priority, reverse=True):
+        if used + len(parts[i]) + 2 + len(OMITTED) <= budget:
+            kept.add(i)
+            used += len(parts[i]) + 2
+    out, gap = [], False
+    for i, part in enumerate(parts):
+        if i in kept:
+            out.append((OMITTED.strip() + '\n\n' if gap else '') + part)
+            gap = False
+        else:
+            gap = True
+    return '\n\n'.join(out) + (OMITTED if gap else '')
+
+
+def fit(text, budget, question=''):
     """(at most budget characters of a paper's text, share of its content kept, what was left out).
 
-    The references go first, then the appendices; then each section keeps its start, a short one (abstract,
-    conclusions) all of it, so the results and conclusions are never the part lost to the budget.
+    The references go first, then the appendices. Then, with a question, the passages that share the fewest
+    words with it ('selected'); without one, the end of each section, a short one (abstract, conclusions)
+    kept whole ('shortened'). Either way the results and conclusions are never the part lost to the budget.
     """
     if len(text) <= budget:
         return text, 1.0, []
@@ -214,12 +277,15 @@ def fit(text, budget):
         body, appendix = _cut(body, APPENDIX)
         if appendix:
             left_out.append('appendices')
-    if len(body) > budget:
+    if len(body) > budget and terms(question):
+        body = select(body, budget, question)
+        left_out.append('selected')
+    elif len(body) > budget:
         parts = sections(body)
         body = ''.join(shorten(p, s) for p, s in zip(parts, share([len(p) for p in parts], budget)))
         left_out.append('shortened')
-    kept = len(body) - body.count(OMITTED) * len(OMITTED)
-    return body, min(kept / content, 1.0) if content else 1.0, left_out
+    kept = len(body) - body.count(OMITTED.strip()) * len(OMITTED)
+    return body, max(min(kept / content, 1.0), 0.0) if content else 1.0, left_out
 
 
 def cite_tags(papers):
@@ -251,7 +317,7 @@ def _readable(paper):
     return text, source, 'abstract' if source == 'abstract' else 'full'
 
 
-def _paper_source(paper, budget, tag='', readable=None):
+def _paper_source(paper, budget, tag='', readable=None, question=''):
     """The <paper> block with as much text as the budget allows, and what an answer may quote from it.
 
     'text' is the part of the block that is the paper's own words (never our summary of it), 'source' where it
@@ -277,7 +343,7 @@ def _paper_source(paper, budget, tag='', readable=None):
         header += 'Category: %s\n' % paper.category
     left_out, coverage = [], 1.0
     if kind == 'full':
-        text, coverage, left_out = fit(text, budget)
+        text, coverage, left_out = fit(text, budget, question)
         body = text
     else:
         text = text[:budget]
@@ -285,6 +351,8 @@ def _paper_source(paper, budget, tag='', readable=None):
     supplied = SUPPLIED[kind]
     if left_out:
         supplied = 'about %d%% of the text; left out: %s' % (round(coverage * 100), ', '.join(LEFT_OUT[k] for k in left_out))
+        if 'selected' in left_out:
+            supplied += ' (chosen for this question)'
         if left_out == ['references']:
             supplied = 'the full text, without its references'
     header += 'Text supplied: %s\n' % supplied
@@ -298,9 +366,10 @@ def _paper_block(paper, budget):
     return _paper_source(paper, budget)['block']
 
 
-def build_sources(arxiv_ids):
+def build_sources(arxiv_ids, question=''):
     """(context given to the model, [_paper_source of each paper]). Papers we do not have are left out:
-    supplied_summary tells which."""
+    supplied_summary tells which. With a question, a paper too long for its share keeps the passages most
+    related to it (see fit)."""
     papers = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=arxiv_ids).prefetch_related('authors')}
     ordered = [papers[i] for i in dict.fromkeys(arxiv_ids) if i in papers]
     if not ordered:
@@ -308,7 +377,7 @@ def build_sources(arxiv_ids):
     tags = cite_tags(ordered) if len(ordered) > 1 else {}
     readable = [_readable(p) for p in ordered]
     budgets = share([len(r[0]) + HEADER_CHARS for r in readable], MAX_CONTEXT_CHARS)
-    supplied = [_paper_source(p, max(b - HEADER_CHARS, 0), tags.get(p.arxiv_id, ''), r)
+    supplied = [_paper_source(p, max(b - HEADER_CHARS, 0), tags.get(p.arxiv_id, ''), r, question)
                 for p, b, r in zip(ordered, budgets, readable)]
     return '\n\n'.join(s['block'] for s in supplied), supplied
 
@@ -398,7 +467,7 @@ async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_
     """
     validate_question(question)
     conversation_id = conversation_id or arxiv_ids[0]
-    context, supplied = await sync_to_async(build_sources)(arxiv_ids)
+    context, supplied = await sync_to_async(build_sources)(arxiv_ids, question)
     if on_sources:
         await on_sources(supplied_summary(supplied, arxiv_ids))
     papers = paper_set(s['arxiv_id'] for s in supplied)
@@ -414,6 +483,7 @@ async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_
         messages.append({'role': 'user', 'content': parts or json.dumps({'figure_source': [], 'status': 'unavailable'})})
     messages.append({'role': 'user', 'content': question})
     user_id = user.pk if user is not None and user.is_authenticated else None
+    model = (await sync_to_async(ai_models)())[1 if paid else 0]
     try:
         text = await complete(messages, paid, answer_tokens(len(supplied)), on_delta, user_id=user_id)
     except AssistantError as error:
@@ -425,7 +495,7 @@ async def answer(arxiv_ids, lang, question, paid, user=None, hashed_ip=None, on_
             await on_figures([], 'unavailable')
         text = await complete(messages, paid, answer_tokens(len(supplied)), on_delta, user_id=user_id)
     row = await sync_to_async(AIassistant.objects.create)(
-        arxiv_id=conversation_id, query=question, response=text, lang=lang, ip_address=hashed_ip, papers=papers,
+        arxiv_id=conversation_id, query=question, response=text, lang=lang, ip_address=hashed_ip, papers=papers, model=model,
         user=user if user is not None and user.is_authenticated else None)
     if on_evidence is not None and text:
         on_evidence(row.pk, check_answer(messages, text, supplied, lang, paid, user_id, row))
@@ -439,11 +509,13 @@ async def check_answer(messages, text, supplied, lang, paid, user_id, row):
     Returns {'status': 'done', 'claims': [...]} or {'status': 'unavailable'}; never raises.
     """
     from . import evidence  # it reads quotes with presskit, which imports this module
-    task = {'role': 'system', 'content': evidence.prompt(get_language_info(lang)['name'])}
+    claims = evidence.max_claims(len(supplied))
+    task = {'role': 'system', 'content': evidence.prompt(get_language_info(lang)['name'], claims)}
     try:
-        raw = await complete(messages + [{'role': 'assistant', 'content': text}, task], paid, 2500,
+        raw = await complete(messages + [{'role': 'assistant', 'content': text}, task], paid,
+                             CHECK_TOKENS + CHECK_TOKENS_PER_CLAIM * (claims - evidence.MAX_CLAIMS),
                              task='evidence', user_id=user_id, json_object=True)
-        result = {'status': 'done', 'claims': evidence.verify(json.loads(raw), supplied, text)}
+        result = {'status': 'done', 'claims': evidence.verify(json.loads(raw), supplied, text, claims)}
     except Exception:
         logger.exception('Evidence check failed for %s', row.arxiv_id)
         return {'status': 'unavailable'}

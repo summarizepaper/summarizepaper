@@ -2,7 +2,17 @@
 {% get_current_language as LANGUAGE_CODE %}
 <div id="paper-detail" data-paper="{{ arxiv_id }}" data-lang="{{ language }}" data-public="{{ public|yesno:'1,0' }}"
  data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
- data-ai="{% trans 'AI -' %}" data-error="{% trans 'Connection interrupted. Please try again.' %}">
+ data-ai="{% trans 'AI -' %}" data-error="{% trans 'Connection interrupted. Please try again.' %}"
+ data-sources-url="{% url 'chat_sources' %}" data-quota-url="{% url 'chat_quota' %}"
+ data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
+ data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
+ data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}" data-ask-again="{% trans 'Ask again' %}"
+ data-sources="{% trans 'Sources' %}" data-stopped="{% trans 'Stopped.' %}"
+ data-export-general="{% trans 'general knowledge' %}" data-export-not-found="{% trans 'passage not found: check' %}"
+ data-export-unsupported="{% trans 'not supported by the paper' %}"
+ data-reads-full="{% trans 'The assistant reads the full text of this paper.' %}"
+ data-reads-partial="{% trans 'This paper is too long to be read whole: for each question the assistant reads about {n}% of it, the passages most related to the question.' %}"
+ data-reads-abstract="{% trans 'The assistant only has the abstract of this paper: it will say when a question needs more.' %}">
 
   <header class="paper-head">
     <p class="paper-eyebrow">{% trans 'AI summary' as summary_label %}{{ summary_label|capfirst }} · {{ arxiv_id|paper_ref }}{% if paper.category %} · {{ paper.category|category_label }}{% endif %}</p>
@@ -138,6 +148,7 @@
   <div class="chatbot-container" id="assistant">
     <div class="chatbot-header">
       <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
+      <p class="chat-reading" id="chat-reading" hidden></p>
       {% if not arxiv_id|is_external %}<p><a href="https://arxiv.org/pdf/{{ arxiv_id|dash_slash }}" target="_blank" rel="noopener" class="chat-pdf-link" data-pdf-panel><i class="fas fa-file-pdf"></i> {% trans 'Compare with the PDF' %}</a></p>{% endif %}
       <p><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>
       {% if not public %}
@@ -150,7 +161,7 @@
       <div class="chatbot-messages" data-empty="{% trans 'Ask anything about this paper.' %}">{% if chathistory %}
           {% for chat in chathistory %}
             <div class="chatbot-message">{{ chat.user }} - {{ chat.query }}</div>
-            <div class="chatbot-response" data-chat-markdown data-chat-label="{% trans 'AI -' %}"{% if chat.claims %} data-evidence="{{ chat.evidence_json }}"{% endif %}><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
+            <div class="chatbot-response" data-question="{{ chat.query }}" data-chat-markdown data-chat-label="{% trans 'AI -' %}"{% if chat.claims %} data-evidence="{{ chat.evidence_json }}"{% endif %}><span class="chat-label">{% trans 'AI -' %}</span><div class="chat-answer tex2jax_ignore">{{ chat.response }}</div></div>
           {% endfor %}
         {% endif %}</div>
       <div class="chat-suggestions" aria-label="{% trans 'Suggested questions' %}">
@@ -159,10 +170,26 @@
         <button type="button" data-question="{% trans 'What are the limitations of this study?' %}">{% trans 'Limitations' %}</button>
         <button type="button" data-question="{% trans 'What is new compared with earlier work?' %}">{% trans 'What is new' %}</button>
       </div>
+      <div class="chat-tools">
+        <span class="chat-quota" id="chat-quota" data-left="{{ quota_left|default_if_none:'' }}" hidden
+          data-one="{% trans '1 question left today' %}" data-many="{% trans '{n} questions left today' %}"></span>
+        <span class="spacer"></span>
+        <button type="button" id="share-conversation"{% if not chathistory %} disabled{% endif %}><i class="fas fa-share-alt"></i> {% trans 'Share' %}</button>
+      </div>
+      <div class="share-box" id="share-box" hidden>
+        <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %}</p>
+        <div class="share-row">
+          <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}">
+          <button type="button" id="share-copy">{% trans 'Copy' %}</button>
+          <button type="button" id="share-stop">{% trans 'Stop sharing' %}</button>
+        </div>
+      </div>
       <form class="chatbot-form">
-        <input type="text" maxlength="6000" placeholder="{% trans 'Type your question here' %}">
+        <textarea maxlength="6000" rows="1" placeholder="{% trans 'Type your question here (Shift+Enter for a new line)' %}" aria-label="{% trans 'Your question' %}"></textarea>
         <button type="submit" id="send-btn">{% trans 'Send' %}</button>
+        <button type="button" id="stop-btn" hidden>{% trans 'Stop' %}</button>
       </form>
+      {% csrf_token %}
       <div id="loading-spinner" style="display: none;text-align:right;">
       <i class="fa fa-spinner fa-spin"></i> {% trans 'Loading...' %}
     </div>

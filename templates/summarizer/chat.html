@@ -86,32 +86,11 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 .chat-suggestions span { display: contents; }
 .chat-suggestions button { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-soft); color: var(--text); font: 600 13px var(--font); cursor: pointer; }
 .chat-suggestions button:hover { border-color: #c7cbff; background: var(--accent-soft); }
-.chat-reading { margin: 10px 0 0; font-size: 14px; color: var(--text-muted); }
-.chat-reading.warn { color: #92400e; }
-.chat-page .chatbot-form { align-items: flex-end; }
-.chat-page .chatbot-form textarea { flex: 1; min-width: 0; min-height: 44px; max-height: 240px; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font: 15px/1.45 var(--font); resize: none; outline: none; }
-.chat-page .chatbot-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.chat-page .chatbot-form button { flex: none; }
-.chat-page .chatbot-form button:disabled { opacity: .45; cursor: default; }
-#stop-btn { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-.chat-tools { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 0 24px 12px; font-size: 13px; }
-.chat-tools button { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
-.chat-tools button:disabled { color: var(--text-muted); cursor: default; }
-.chat-tools .spacer { flex: 1; }
-.share-box { margin: 0 24px 12px; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 14px; }
-.share-box p { margin: 0 0 8px; }
-.share-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.share-row input { flex: 1; min-width: 200px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font: 13px var(--font); }
-.share-row button { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font: 600 13px var(--font); cursor: pointer; }
-.chat-answer-actions { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; }
-.chat-answer-actions button { padding: 0; border: 0; background: none; color: var(--text-muted); font: inherit; cursor: pointer; }
-.chat-answer-actions button:hover { color: var(--accent); }
-.chat-divider { margin: 12px 0; font-size: 12px; color: var(--text-muted); text-align: center; }
-.chat-stopped { font-size: 12px; color: var(--text-muted); font-style: italic; }
 
 .table-builder { margin: 0 24px 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg, #fafafa); }
 .table-builder[hidden] { display: none; }
 .table-builder p { margin: 0 0 8px; font-size: 14px; }
+.table-abstract { color: #92400e; }
 .table-premium { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--premium); }
 .premium-tag { margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: #fff7ed; color: var(--premium); font-size: 11px; font-weight: 700; }
 .table-builder textarea { width: 100%; min-height: 120px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font: 14px/1.5 var(--font); }
@@ -121,6 +100,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   .chat-page { padding-top: 28px; }
   .columns-container { grid-template-columns: minmax(0, 1fr); }
   .column-card { padding: 18px; }
+  .search-container select { max-width: 92px; }
   .chat-tools, .table-builder { margin-left: 0; margin-right: 0; padding-left: 16px; padding-right: 16px; }
 }
   </style>
@@ -132,7 +112,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 <div class="chat-page" id="chat-page"
   data-lang="{{ LANGUAGE_CODE }}" data-room="{{ room }}" data-max="{{ max_nb_paper }}"
   data-api="{% url 'arxiv_api' %}" data-sources-url="{% url 'chat_sources' %}"
-  data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
+  data-quota-url="{% url 'chat_quota' %}" data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
   data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
   data-export-url="{% url 'chat_export' 'FMT' %}" data-references-url="{% url 'chat_references' 'PAPER_ID' %}"
   data-ai="{% trans 'AI -' %}" data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
@@ -142,7 +122,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   data-full="{% trans 'Full text' %}" data-partial="{% trans '{n}% of the text' %}"
   data-partial-title="{% trans 'Too long to be read whole with the other papers. Left out: {parts}' %}"
   data-left-references="{% trans 'the references' %}" data-left-appendices="{% trans 'the appendices' %}"
-  data-left-shortened="{% trans 'the end of the longest sections' %}"
+  data-left-shortened="{% trans 'the end of the longest sections' %}" data-left-selected="{% trans 'the passages least related to the question' %}"
   data-abstract="{% trans 'Abstract only' %}" data-abstract-title="{% trans 'The full text could not be read' %}"
   data-restricted="{% trans 'Abstract only (license)' %}" data-restricted-title="{% trans 'Its license does not allow us to read the full text' %}"
   data-missing="{% trans 'Not read yet' %}" data-version="{% trans 'Version {v}' %}"
@@ -166,7 +146,9 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   data-stopped="{% trans 'Stopped.' %}" data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}"
   data-ask-again="{% trans 'Ask again' %}" data-sources="{% trans 'Sources' %}"
   data-busy="{% trans 'Wait for the current answer, or stop it.' %}"
-  data-table-title="{% trans 'Comparison table' %}" data-table-premium="{% trans 'The comparison table is part of Premium.' %}" data-table-paper="{% trans 'Paper' %}"
+  data-table-title="{% trans 'Comparison table' %}" data-table-premium="{% trans 'The comparison table is part of Premium.' %}"
+  data-table-retry="{% trans 'Read again the papers that could not be read' %}"
+  data-table-abstract="{% trans 'Known by their abstract only, so their cells will mostly say “Not in the text supplied”: {papers}' %}" data-table-paper="{% trans 'Paper' %}"
   data-table-pending="{% trans 'Reading…' %}" data-table-missing="{% trans 'Not stated' %}"
   data-table-unknown="{% trans 'Not in the text supplied' %}" data-table-error="{% trans 'Could not be read' %}"
   data-table-failed="{% trans 'The table could not be built. Try again in a moment.' %}"
@@ -269,6 +251,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
     <div class="table-builder" id="table-builder" hidden>
       <p><strong>{% trans 'Comparison table' %}</strong> — {% trans 'one row per paper, each value with the passage of the paper behind it. Each paper is read on its own, so more of it is read than in an answer about all of them.' %}</p>
       {% if table_allowed %}
+      <p class="table-abstract" id="table-abstract" hidden></p>
       <label for="table-columns"><small>{% trans 'Columns, one per line:' %}</small></label>
       <textarea id="table-columns" rows="6"></textarea>
       <div class="row">
@@ -283,6 +266,8 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
     </div>
     <div class="chat-tools">
       <button type="button" id="table-toggle" disabled><i class="fas fa-table"></i> {% trans 'Comparison table' %}{% if not table_allowed %} <span class="premium-tag">Premium</span>{% endif %}</button>
+      <span class="chat-quota" id="chat-quota" data-left="{{ quota_left|default_if_none:'' }}" hidden
+        data-one="{% trans '1 question left today' %}" data-many="{% trans '{n} questions left today' %}"></span>
       <span class="spacer"></span>
       <button type="button" id="share-conversation" disabled><i class="fas fa-share-alt"></i> {% trans 'Share' %}</button>
       <button type="button" id="export-conversation" disabled><i class="fas fa-file-download"></i> {% trans 'Export the conversation' %}</button>

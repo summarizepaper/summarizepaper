@@ -55,6 +55,26 @@
         </div>
     {% endif %}
 
+    {% if quality.total.answers %}
+        <div class="mb-6">
+            {% component "unfold/components/card.html" with title="Fiabilité de l’assistant" %}
+                <p class="text-subtle mb-3">Sur {{ quality.total.label }} jusqu’au {{ day|date:"d/m" }}. Chaque affirmation d’une réponse est cherchée mot pour mot dans l’article (evidence.py) ; « chiffres absents » : affirmations qui donnent un nombre qu’aucun article ne contient ; « tags » : réponses sur plusieurs articles qui les nomment par [Auteur année].</p>
+                <div style="overflow-x:auto">
+                <table class="w-full text-sm">
+                    <tr class="text-left text-subtle">
+                        <th class="py-2 pr-3"></th><th class="py-2 pr-3">Réponses</th><th class="py-2 pr-3">Vérifiées</th><th class="py-2 pr-3">Affirmations</th>
+                        <th class="py-2 pr-3">Trouvées</th><th class="py-2 pr-3">Introuvables</th><th class="py-2 pr-3">Non étayées</th>
+                        <th class="py-2 pr-3">Connaissance générale</th><th class="py-2 pr-3">Chiffres absents</th><th class="py-2 pr-3">Multi-articles</th><th class="py-2">Tags</th>
+                    </tr>
+                    {% for r in quality.models %}{% include "admin/summarizer/quality_row.html" with r=r kind="model" %}{% endfor %}
+                    {% include "admin/summarizer/quality_row.html" with r=quality.total kind="total" %}
+                    {% for r in quality.days %}{% include "admin/summarizer/quality_row.html" with r=r kind="day" %}{% endfor %}
+                </table>
+                </div>
+            {% endcomponent %}
+        </div>
+    {% endif %}
+
     {% component "unfold/components/card.html" with title="Fil d’activité" %}
         <div class="flex flex-wrap items-center gap-2 mb-4">
             <a href="?jour={{ day|date:'Y-m-d' }}{% if members %}&membres=1{% endif %}" class="rounded-default px-3 py-1 border {% if not kind %}border-primary-600 text-primary-600 dark:text-primary-500{% else %}border-base-200 dark:border-base-700{% endif %}">Tout</a>

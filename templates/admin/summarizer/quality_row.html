@@ -1,0 +1,7 @@
+<tr class="border-t border-base-200 dark:border-base-800{% if kind == 'total' %} font-semibold{% endif %}">
+    <td class="py-2 pr-3 whitespace-nowrap">{% if kind == 'model' %}<span class="text-subtle">modèle</span> {% endif %}{{ r.label }}</td>
+    <td class="py-2 pr-3">{{ r.answers }}</td><td class="py-2 pr-3">{{ r.checked }}</td><td class="py-2 pr-3">{{ r.claims }}</td>
+    <td class="py-2 pr-3" style="color:#16a34a">{{ r.verified }}</td><td class="py-2 pr-3" style="color:#d97706">{{ r.not_found }}</td>
+    <td class="py-2 pr-3" style="color:#dc2626">{{ r.unsupported }}</td><td class="py-2 pr-3">{{ r.general }}</td>
+    <td class="py-2 pr-3" style="color:#dc2626">{{ r.numbers }}</td><td class="py-2 pr-3">{{ r.multi }}</td><td class="py-2">{{ r.tagged }}</td>
+</tr>

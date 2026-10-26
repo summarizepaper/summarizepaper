@@ -30,6 +30,7 @@ urlpatterns = [
     path("chat/sources/", chat_page.supplied, name="chat_sources"),
     path("chat/export/<str:fmt>/", chat_page.export_selection, name="chat_export"),
     path("chat/references/<str:arxiv_id>/", chat_page.references, name="chat_references"),
+    path("chat/quota/", chat_page.quota, name="chat_quota"),
     path("chat/share/", chat_page.share, name="chat_share"),
     path("chat/share/<str:token>/stop/", chat_page.unshare, name="chat_unshare"),
     path("chat/shared/<str:token>/", chat_page.shared, name="chat_shared"),

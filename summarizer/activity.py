@@ -1,5 +1,7 @@
 """What happened on the site on a given day, for the staff page /admin/activite/: the day's numbers
-against the day before and the week, every action in time order, and what needs a look."""
+against the day before and the week, every action in time order, what needs a look, and how far the
+assistant's answers hold against the papers."""
+import collections
 import datetime
 import re
 from zoneinfo import ZoneInfo
@@ -196,3 +198,54 @@ def watch():
                               'href': _tool_url(g), 'who': _who(g.user), 'who_url': _user_url(g.user),
                               'detail': g.error[:200] or g.step} for g in query]
     return {'failed': as_rows(failed), 'stuck': as_rows(stuck)}
+
+
+# an answer about several papers names each by its tag, such as [Smith et al. 2021] (assistant.MULTI_INSTRUCTIONS)
+TAG = re.compile(r'\[[^\[\]\n]{2,80}?\d{4}[a-z]?\]')
+QUALITY_DAYS = 14
+CLAIM_STATUSES = ('verified', 'not_found', 'unsupported', 'general', 'visual')
+
+
+def _tally():
+    return collections.Counter()
+
+
+def _count(tally, row):
+    tally['answers'] += 1
+    evidence = row.evidence or {}
+    if evidence.get('status') == 'done':
+        tally['checked'] += 1
+        for claim in evidence.get('claims') or []:
+            tally['claims'] += 1
+            tally[claim.get('status') if claim.get('status') in CLAIM_STATUSES else 'unsupported'] += 1
+            if claim.get('numbers_absent'):
+                tally['numbers'] += 1
+    if ',' in (row.papers or ''):
+        tally['multi'] += 1
+        tally['tagged'] += bool(TAG.search(row.response or ''))
+
+
+def _shares(label, tally):
+    def share(part, whole):
+        return '%d %%' % round(100 * tally[part] / tally[whole]) if tally[whole] else '—'
+    return {'label': label, 'answers': tally['answers'], 'checked': share('checked', 'answers'), 'claims': tally['claims'],
+            'verified': share('verified', 'claims'), 'not_found': share('not_found', 'claims'),
+            'unsupported': share('unsupported', 'claims'), 'general': share('general', 'claims'),
+            'numbers': share('numbers', 'claims'), 'multi': tally['multi'], 'tagged': share('tagged', 'multi')}
+
+
+def answer_quality(day, days=QUALITY_DAYS):
+    """How far the answers of the assistant hold against the papers, over the `days` days up to `day`, per day
+    and per model: the share of answers whose claims were checked, of claims found word for word in a paper,
+    not found, unsupported or from general knowledge, of claims with numbers the papers never state, and of
+    answers about several papers that name them by their tags."""
+    start, end = day_bounds(day - datetime.timedelta(days=days - 1))[0], day_bounds(day)[1]
+    per_day, per_model, total = collections.defaultdict(_tally), collections.defaultdict(_tally), _tally()
+    rows = AIassistant.objects.filter(created__gte=start, created__lt=end, kind='answer') \
+        .only('created', 'evidence', 'papers', 'response', 'model')
+    for row in rows.iterator():
+        for tally in (per_day[row.created.astimezone(PARIS).date()], per_model[row.model or '(non enregistré)'], total):
+            _count(tally, row)
+    return {'total': _shares('%d jours' % days, total),
+            'days': [_shares(d.strftime('%d/%m'), per_day[d]) for d in sorted(per_day, reverse=True)],
+            'models': [_shares(m, per_model[m]) for m in sorted(per_model, key=lambda m: -per_model[m]['answers'])]}

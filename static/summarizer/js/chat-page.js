@@ -10,6 +10,7 @@
   var MAX = Number(T.max) || 10;
   var WS = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
   var $ = function (selector) {return root.querySelector(selector);};
+  var tools = window.SPChatTools;
 
   var search = $('#search'), searchSource = $('#search-source'), searchResults = $('#search-results');
   var searchNote = $('#search-note'), spinner = $('#spinner');
@@ -19,8 +20,8 @@
   var form = $('.chatbot-form'), input = form.querySelector('textarea');
   var sendButton = $('#send-btn'), stopButton = $('#stop-btn'), loading = $('#loading-spinner');
   var tableToggle = $('#table-toggle'), builder = $('#table-builder'), columnsInput = $('#table-columns');
-  var tableCost = $('#table-cost'), exportButton = $('#export-conversation');
-  var shareButton = $('#share-conversation'), shareBox = $('#share-box'), shareUrl = $('#share-url'), shareStop = $('#share-stop');
+  var tableCost = $('#table-cost'), tableAbstract = $('#table-abstract'), exportButton = $('#export-conversation');
+  var shareButton = $('#share-conversation'), shareBox = $('#share-box');
   var defaultColumns = JSON.parse(document.getElementById('chat-table-columns').textContent);
 
   var selected = [];  // {id, title, author, published, label, state: 'reading'|'ready'|'failed', supply, item}
@@ -364,6 +365,7 @@
       if (entry) entry.supply = {kind: 'missing'};
     });
     selected.forEach(badges);
+    messages.querySelectorAll('.chatbot-response').forEach(function (r) {tools.linkTags(r, tagLinks());});
     if (currentTable && data.papers) {currentTable.papers = data.papers; drawTable(currentTable);}
     composer();
   }
@@ -377,6 +379,11 @@
     tableToggle.disabled = ready.length < 2 || waiting || busy;
     if (tableToggle.disabled) builder.hidden = true;
     if (tableCost) tableCost.textContent = fmt(tableCost.dataset.text, {n: ready.length});
+    var abstractOnly = selected.filter(function (e) {return e.state === 'ready' && e.supply && /^(abstract|restricted)$/.test(e.supply.kind);});
+    if (tableAbstract) {
+      tableAbstract.textContent = fmt(T.tableAbstract, {papers: abstractOnly.map(function (e) {return e.title;}).join(' ; ')});
+      tableAbstract.hidden = !abstractOnly.length;
+    }
     suggestions.hidden = !can || busy;
     suggestions.querySelector('[data-papers="one"]').hidden = ready.length !== 1;
     suggestions.querySelector('[data-papers="several"]').hidden = ready.length < 2;
@@ -436,7 +443,11 @@
     busy = false;
     stopButton.hidden = true;
     loading.style.display = 'none';
-    if (response) actions(response, lastQuestion);
+    if (response) {
+      actions(response, lastQuestion);
+      tools.linkTags(response, tagLinks());
+      refreshQuota();
+    }
     exportButton.disabled = shareButton.disabled = !messages.querySelector('.chatbot-response');
     composer();
   }
@@ -504,49 +515,19 @@
     if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({stop: true}));
   });
 
-  // Copy (the answer and its sources) and Ask again, under each answer
+  // Copy and Ask again under each answer; a table is copied as Markdown
   function actions(response, question) {
-    if (response.querySelector('.chat-answer-actions')) return;
-    if (question) response.dataset.question = question;
-    var bar = node('div', 'chat-answer-actions'), copy = node('button', '', T.copy);
-    copy.type = 'button';
-    copy.addEventListener('click', function () {
-      var text = response.classList.contains('chat-table-block') ? tableMarkdown(response.table)
-        : SPChat.raw(response) + sourcesMarkdown(SPChat.claims(response));
-      if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () {
-        copy.textContent = T.copied;
-        setTimeout(function () {copy.textContent = T.copy;}, 1500);
-      });
-    });
-    bar.appendChild(copy);
-    if (response.dataset.question) {
-      var again = node('button', '', T.askAgain);
-      again.type = 'button';
-      again.addEventListener('click', function () {ask(response.dataset.question);});
-      bar.appendChild(again);
-    }
-    var evidence = response.querySelector('.chat-evidence');
-    response.insertBefore(bar, evidence || null);
+    tools.actions(response, {question: question, ask: ask, labels: T, text: response.classList.contains('chat-table-block')
+      ? function () {return tableMarkdown(response.table);} : null});
   }
-
-  function sourcesMarkdown(claims) {
-    if (!claims.length) return '';
-    var notes = {general: T.exportGeneral, not_found: T.exportNotFound, unsupported: T.exportUnsupported};
-    return '\n\n**' + T.sources + '**\n\n' + claims.map(function (c, i) {
-      var where = [c.paper, c.section, c.figure].filter(Boolean).join(', ');
-      return (i + 1) + '. ' + c.claim + (notes[c.status] ? ' (' + notes[c.status] + ')' : '') +
-        (where ? ' — ' + where : '') + (c.quote ? '\n   > ' + c.quote : '');
-    }).join('\n');
+  function sourcesMarkdown(claims) {return tools.sourcesMarkdown(claims, T);}
+  // the tags of the selected papers ([Smith et al. 2021]) that answers turn into links to their pages
+  function tagLinks() {
+    return selected.filter(function (e) {return e.supply && e.supply.tag;})
+      .map(function (e) {return {tag: e.supply.tag, url: paperUrl(e.id), title: e.title};});
   }
-
-  function grow() {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 240) + 'px';
-  }
-  input.addEventListener('input', grow);
-  input.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {event.preventDefault(); ask(input.value);}
-  });
+  var refreshQuota = tools.quota($('#chat-quota'), T.quotaUrl);
+  var grow = tools.questionBox(input, function () {ask(input.value);});
   form.addEventListener('submit', function (event) {event.preventDefault(); ask(input.value);});
   suggestions.querySelectorAll('button').forEach(function (button) {
     button.addEventListener('click', function () {ask(button.dataset.question);});
@@ -573,8 +554,12 @@
   if (tableBuild) $('#table-reset').addEventListener('click', function () {columnsInput.value = defaultColumns.join('\n');});
   if (tableBuild) tableBuild.addEventListener('click', function () {
     var columns = columnsInput.value.split('\n').map(function (c) {return c.trim();}).filter(Boolean);
-    var ids = readyIds();
     if (!columns.length || columns.length > 8) {alert(T.tableColumnsInvalid); return;}
+    buildTable(columns);
+  });
+  // rows already filled for the same columns are reused by the server: building again reads only the others
+  function buildTable(columns) {
+    var ids = readyIds();
     if (busy || tableToggle.disabled) return;
     builder.hidden = true;
     lastQuestion = '';
@@ -586,7 +571,7 @@
     drawTable(currentTable);
     start();
     send({table: {columns: columns}, selectedpapers: ids});
-  });
+  }
 
   function tableMessage(data) {
     if (data.type === 'table_row' && currentTable) {
@@ -688,6 +673,12 @@
       csv.addEventListener('click', function () {download('comparison.csv', '﻿' + tableCsv(table), 'text/csv;charset=utf-8');});
       md.addEventListener('click', function () {download('comparison.md', tableMarkdown(table), 'text/markdown;charset=utf-8');});
       bar.append(csv, md);
+      if (tableBuild && table.rows.some(function (r) {return r.cells.some(function (c) {return c.status === 'error';});})) {
+        var retry = node('button', '', T.tableRetry);
+        retry.type = 'button';
+        retry.addEventListener('click', function () {buildTable(table.columns);});
+        bar.appendChild(retry);
+      }
       parts.push(bar);
     }
     element.replaceChildren.apply(element, parts);
@@ -730,38 +721,7 @@
     return lines.join('\n');
   }
 
-  // --- sharing: a public, read-only page of the conversation as it is now (chat_page.share) ---------------
-
-  function post(url, data) {
-    var csrf = root.querySelector('[name=csrfmiddlewaretoken]');
-    return fetch(url, {method: 'POST', body: new URLSearchParams(data || {}),
-                       headers: {'X-CSRFToken': csrf ? csrf.value : ''}}).then(function (response) {
-      if (!response.ok) throw new Error(response.status);
-      return response.json();
-    });
-  }
-  shareButton.addEventListener('click', function () {
-    shareButton.disabled = true;
-    post(T.shareUrl, {room: room}).then(function (data) {
-      shareUrl.value = data.url;
-      shareStop.dataset.token = data.url.split('/shared/')[1].replace(/\/$/, '');
-      shareBox.hidden = false;
-      shareUrl.select();
-    }).catch(function () {alert(T.shareFailed);}).then(function () {shareButton.disabled = false;});
-  });
-  $('#share-copy').addEventListener('click', function () {
-    var button = this;
-    if (navigator.clipboard) navigator.clipboard.writeText(shareUrl.value).then(function () {
-      button.textContent = T.copied;
-      setTimeout(function () {button.textContent = T.copy;}, 1500);
-    });
-  });
-  shareStop.addEventListener('click', function () {
-    post(T.unshareUrl.replace('TOKEN', encodeURIComponent(shareStop.dataset.token))).then(function () {
-      shareBox.hidden = true;
-      shareUrl.value = '';
-    }).catch(function () {alert(T.shareFailed);});
-  });
+  tools.share(root, function () {return room;});
 
   // --- the export of the conversation -------------------------------------------
 

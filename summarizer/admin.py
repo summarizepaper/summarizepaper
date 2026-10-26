@@ -68,7 +68,7 @@ def activity_view(request):
                    is_today=day == activity.today(), kind=kind, members=members,
                    kinds=[(k, label) for k, (label, _) in activity.KINDS.items()],
                    numbers=activity.numbers(day), events=activity.feed(day, kind, members),
-                   watch=activity.watch(), feed_limit=activity.FEED_LIMIT)
+                   watch=activity.watch(), feed_limit=activity.FEED_LIMIT, quality=activity.answer_quality(day))
     return render(request, 'admin/summarizer/activity.html', context)
 
 

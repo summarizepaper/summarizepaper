@@ -10617,3 +10617,47 @@ msgstr ""
 msgid "Comparison table of the chat, each value with its passage of the paper"
 msgstr ""
 "Tableau comparatif du chat, chaque valeur avec son passage de l’article"
+
+#: templates/summarizer/chat.html
+msgid "the passages least related to the question"
+msgstr "les passages les moins liés à la question"
+
+#: templates/summarizer/chat.html
+msgid "Read again the papers that could not be read"
+msgstr "Relire les articles qui n’ont pas pu être lus"
+
+#: templates/summarizer/chat.html
+msgid ""
+"Known by their abstract only, so their cells will mostly say “Not in the "
+"text supplied”: {papers}"
+msgstr ""
+"Connus par leur seul résumé, leurs cellules diront surtout « Absent du texte"
+" fourni » : {papers}"
+
+#: templates/summarizer/chat.html
+msgid "1 question left today"
+msgstr "Encore 1 question aujourd’hui"
+
+#: templates/summarizer/chat.html
+msgid "{n} questions left today"
+msgstr "Encore {n} questions aujourd’hui"
+
+#: templates/summarizer/chat.html
+msgid "The assistant reads the full text of this paper."
+msgstr "L’assistant lit le texte intégral de cet article."
+
+#: templates/summarizer/chat.html
+msgid ""
+"This paper is too long to be read whole: for each question the assistant "
+"reads about {n}%% of it, the passages most related to the question."
+msgstr ""
+"Cet article est trop long pour être lu en entier : pour chaque question, "
+"l’assistant en lit environ {n} %%, les passages les plus liés à la question."
+
+#: templates/summarizer/chat.html
+msgid ""
+"The assistant only has the abstract of this paper: it will say when a "
+"question needs more."
+msgstr ""
+"L’assistant n’a que le résumé de cet article : il le dira quand une question"
+" demande davantage."

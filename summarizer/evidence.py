@@ -17,7 +17,9 @@ from . import sources
 from .paper_source import ARXIV_HTML, arxiv_ref
 from .presskit import normalized, quote_match
 
-MAX_CLAIMS = 8
+MAX_CLAIMS = 8  # for one paper; each further paper adds CLAIMS_PER_PAPER, up to MAX_CLAIMS_ALL
+CLAIMS_PER_PAPER = 3
+MAX_CLAIMS_ALL = 20
 BASES = ('paper', 'figure_image', 'general', 'unsupported')
 
 PROMPT = """New task: check your last answer against source_documents. Answer with a JSON object:
@@ -64,8 +66,13 @@ def with_roundings(values):
     return rounded
 
 
-def prompt(language):
-    return PROMPT.format(language=language, max_claims=MAX_CLAIMS)
+def max_claims(papers):
+    """How many claims of an answer are checked: an answer about more papers makes more of them."""
+    return min(MAX_CLAIMS + CLAIMS_PER_PAPER * (papers - 1), MAX_CLAIMS_ALL)
+
+
+def prompt(language, claims=MAX_CLAIMS):
+    return PROMPT.format(language=language, max_claims=claims)
 
 
 def clean(value, limit):
@@ -242,7 +249,7 @@ def passage_link(passage, paper):
     return '%s#:~:text=%s' % (url, fragment(words[:10]))
 
 
-def verify(answer, supplied, answer_text=''):
+def verify(answer, supplied, answer_text='', claims_max=MAX_CLAIMS):
     """The claims of the model's answer as shown under the answer.
 
     status: 'verified' (passage found in the paper), 'not_found' (the model gave a passage we cannot find),
@@ -291,6 +298,6 @@ def verify(answer, supplied, answer_text=''):
         if claim['status'] != 'general':
             claim['numbers_absent'] = sorted(numbers(claim['claim']) - stated_in([paper] if paper else supplied))
         claims.append(claim)
-        if len(claims) == MAX_CLAIMS:
+        if len(claims) == claims_max:
             break
     return claims
