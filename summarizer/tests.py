@@ -392,8 +392,8 @@ class DigestTests(TestCase):
         self.assertIn('Une comète active.', message.body)
         self.assertIn('Strings.', message.body)  # blurb missing from the model answer -> abstract
         # links go through the digest, which counts them, then on to the paper
-        link = re.search(r'https://www.summarizepaper.com(/fr/digest/open/[^/]+/)', message.alternatives[0][0]).group(1)
-        self.assertIn('/fr/paper/hep-th--9901001v2/?autorun=1', Client().get(link)['Location'])
+        link = re.search(r'https://www.summarizepaper.com(/fr/digest/l/[^/]+/)', message.alternatives[0][0]).group(1)
+        self.assertIn('/fr/paper/hep-th--9901001v2/?autorun=1', opened_target(link))
         self.assertIn('List-Unsubscribe', message.extra_headers)
         self.assertEqual(DigestDelivery.objects.count(), 2)
         # the abstract fallback is not stored, so the model is asked again next time
@@ -1504,6 +1504,7 @@ class DatabaseGuideTests(TestCase):
         self.assertFalse(guide.draft)
 
 
+import html
 import json
 
 import numpy as np
@@ -1513,6 +1514,14 @@ import re
 from summarizer.models import AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestFeedback, DigestVector
 
 MONDAY = datetime.datetime(2026, 10, 19, 7, 0, tzinfo=datetime.timezone.utc)
+
+
+from summarizer.models import DigestEdition  # noqa: E402
+
+
+def opened_target(path):
+    """Where a link of a digest email leads: its page goes on to the paper (see digest_web.opening)."""
+    return html.unescape(re.search(r'id="go" href="([^"]+)"', Client().get(path).content.decode()).group(1))
 
 
 def fake_paper(aid, category, title, authors=('Ann Lee',), day=0):
@@ -1889,12 +1898,12 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP', timezone='UTC', send_hour=7)
         sent, _ = self.run_digest()
         html = mail.outbox[0].alternatives[0][0]
-        first = re.search(r'href="https://www.summarizepaper.com(/en/digest/open/[^/]+/)"', html).group(1)
-        self.assertIn('utm_source=digest&utm_medium=email&utm_campaign=daily&utm_content=r1', Client().get(first)['Location'])
-        links = re.findall(r'href="https://www.summarizepaper.com(/en/digest/feedback/[^/]+/)"', html)
+        first = re.search(r'href="https://www.summarizepaper.com(/en/digest/l/o[^/]+/)"', html).group(1)
+        self.assertIn('utm_source=digest&utm_medium=email&utm_campaign=daily&utm_content=r1', opened_target(first))
+        links = re.findall(r'href="https://www.summarizepaper.com(/en/digest/l/v[^/]+/)"', html)
         self.assertEqual(len(links), 6)  # more and less for each of the 3 papers
-        token = digest.feedback_token(sub, '2610.00002v1', 1)  # the galaxy paper
-        url = '/en/digest/feedback/%s/' % token
+        rank = json.loads(DigestEdition.objects.get().papers).index('2610.00002v1') + 1  # the galaxy paper
+        url = '/en/digest/l/%s/' % digest.link_code('v', DigestEdition.objects.get(), rank, 'u')
         self.assertContains(Client().get(url), 'More papers like this')
         self.assertFalse(DigestFeedback.objects.filter(source='vote').exists())  # a link checker following the link does not vote
         self.assertContains(Client().post(url), 'Thank you')
@@ -1926,7 +1935,7 @@ class DigestPremiumExtrasTests(DigestPremiumTests):
         self.run_digest()
         message = mail.outbox[0]
         self.assertIn('Dust & gas <in> discs', message.body)
-        self.assertIn('/en/digest/open/', message.body)
+        self.assertIn('/en/digest/l/o', message.body)
         self.assertIn('Dust &amp; gas &lt;in&gt; discs', message.alternatives[0][0])
 
 

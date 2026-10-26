@@ -1,4 +1,5 @@
 from django.urls import path, re_path
+from django.views.decorators.csrf import csrf_exempt
 from . import (views, search_filters, saved_searches, billing, conference, digest, digest_web, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
 from django.contrib.auth import views as auth_views
@@ -54,6 +55,7 @@ urlpatterns = [
     path("digest/feedback/<str:token>/", digest.feedback, name="digest_feedback"),
     path("digest/e/<str:token>/", digest_web.edition_page, name="digest_edition"),
     path("digest/open/<str:token>/", digest_web.open_link, name="digest_open"),
+    path("digest/l/<str:code>/", csrf_exempt(digest_web.link), name="digest_link"),
     path("digest/save/<str:token>/", digest_web.save_paper, name="digest_save"),
     path("digest/try/", digest_web.live_preview, name="digest_try"),
     path("digest/listen/<str:token_value>/", audio.listen_page, name="digest_listen"),

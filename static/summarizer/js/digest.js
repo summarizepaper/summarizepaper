@@ -26,7 +26,7 @@
         var shown = 0;
         group.querySelectorAll('label').forEach(function (label) {
           var box = label.querySelector('input');
-          var hit = !wanted || plain(box.value + ' ' + (box.dataset.label || '')).indexOf(wanted) !== -1;
+          var hit = !wanted || plain(box.value + ' ' + (box.dataset.label || '') + ' ' + (box.dataset.name || '')).indexOf(wanted) !== -1;
           label.hidden = !hit;
           shown += hit ? 1 : 0;
         });

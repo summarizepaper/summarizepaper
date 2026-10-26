@@ -273,7 +273,7 @@ img { max-width: 100%; }
 }
 
 /* form controls inside content pages */
-.page input[type=text], .page input[type=email], .page input[type=password],
+.page input[type=text], .page input[type=search], .page input[type=email], .page input[type=password],
 .page select, .page textarea {
   width: 100%;
   padding: 11px 14px;

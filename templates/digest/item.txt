@@ -3,5 +3,5 @@
 {% endif %}{% if item.point_list %}{% for label, text in item.point_list %}{{ label }}: {{ text }}
 {% endfor %}{% else %}{{ item.blurb }}
 {% endif %}{% trans 'Read the summary:' %} {{ item.url }}
-{% if item.abs_url %}{% trans 'Abstract' %}: {{ item.abs_url }}
+{% if item.abs_url %}{{ item.source }}: {{ item.abs_url }}
 {% endif %}{% trans 'Save to a collection' %}: {{ item.save_url }}

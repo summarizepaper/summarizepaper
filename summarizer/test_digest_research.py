@@ -17,7 +17,7 @@ from summarizer import digest, digest_bundle, digest_web
 from summarizer.models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, Collection, CollectionPaper, DigestClick,
                                DigestEdition, DigestFeedback, DigestItem, DigestSubscription, DigestVector, ScoopMatch,
                                UserPlan, WatchedProject)
-from summarizer.tests import MONDAY, announced, blurbs, fake_embed, fake_paper
+from summarizer.tests import MONDAY, announced, blurbs, fake_embed, fake_paper, opened_target
 
 
 def paper(aid, title, abstract='', category='astro-ph.EP'):
@@ -31,6 +31,9 @@ def entry_ids(entries):
 class ResearchDigestCase(TestCase):
     def setUp(self):
         cache.clear()
+        patcher = mock.patch('summarizer.similar.embed', side_effect=fake_embed)  # never the real model
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     def user(self, name, paid=False):
         u = User.objects.create_user(name, email='%s@example.com' % name, password='x')
@@ -148,9 +151,9 @@ class EmailTests(ResearchDigestCase):
         self.assertIn('Cross-listed in astro-ph.EP from astro-ph.GA', message.body)
         self.assertIn('arXiv:2610.00001v1 - astro-ph.EP', message.body)
         self.assertIn('Earth and Planetary Astrophysics - 2 of 2 papers shown', message.body)
-        self.assertIn('https://arxiv.org/pdf/2610.00001v1', Client().get(
-            re.search(r'https://www.summarizepaper.com(/en/digest/open/[^/]+/)', message.alternatives[0][0].split('>PDF<')[0]
-                      .rsplit('href="', 1)[1]).group(1))['Location'])
+        pdf = re.search(r'https://www.summarizepaper.com(/en/digest/l/[^/]+/)', message.alternatives[0][0].split('>PDF<')[0]
+                        .rsplit('href="', 1)[1]).group(1)
+        self.assertEqual(opened_target(pdf), 'https://arxiv.org/pdf/2610.00001v1')
         edition = DigestEdition.objects.get()
         self.assertEqual(json.loads(edition.papers), ['2610.00001v1', '2610.00002v1'])
 
@@ -195,29 +198,60 @@ class LinkTests(ResearchDigestCase):
     def setUp(self):
         super().setUp()
         self.sub = DigestSubscription.objects.create(user=self.user('l'), categories='astro-ph.EP')
-        self.edition = DigestEdition.objects.create(subscription=self.sub, sent=MONDAY, days='2026-10-19', papers='[]')
-        DigestVector.objects.create(arxiv_id='2610.00001v1', vector=fake_embed(['planet'])[0].tobytes())
+        self.edition = DigestEdition.objects.create(subscription=self.sub, sent=MONDAY, days='2026-10-19',
+                                                    papers=json.dumps(['2610.0000%dv1' % i for i in range(1, 7)]))
+        for i in range(1, 7):
+            DigestVector.objects.create(arxiv_id='2610.0000%dv1' % i, vector=fake_embed(['planet'])[0].tobytes())
 
-    def url(self, aid='2610.00001v1', rank=1, target='summary'):
-        return '/en/digest/open/%s/' % digest.open_token(self.sub, self.edition, aid, rank, target)
+    def url(self, rank=1, target='s'):
+        return '/en/digest/l/%s/' % digest.link_code('o', self.edition, rank, target)
 
-    def test_a_click_is_counted_and_ranks_the_next_digests(self):
-        response = Client().get(self.url())
-        self.assertIn('/en/paper/2610.00001v1/?autorun=1', response['Location'])
-        self.assertIn('utm_content=r1', response['Location'])
+    def test_short_signed_codes(self):
+        code = digest.link_code('o', self.edition, 3, 'p')
+        self.assertLess(len(code), 30)
+        self.assertEqual(digest.read_link_code(code), ('o', self.edition.pk, 3, 'p'))
+        self.assertIsNone(digest.read_link_code(code[:-1] + ('0' if code[-1] != '0' else '1')))
+        self.assertEqual(Client().get(self.url(rank=9)).status_code, 404)  # no 9th paper in this email
+        self.assertEqual(Client().get('/en/digest/l/o1.1s.0000000000000000/').status_code, 404)
+
+    def test_a_reader_counts_and_ranks_the_next_digests_but_a_follower_of_links_does_not(self):
+        page = Client().get(self.url())
+        self.assertContains(page, 'sendBeacon')
+        self.assertIn('/en/paper/2610.00001v1/?autorun=1', opened_target(self.url()))
+        self.assertIn('utm_content=r1', opened_target(self.url()))
+        self.assertFalse(DigestClick.objects.exists())  # following the link runs no script: nothing counted
+        self.assertEqual(Client().post(self.url()).status_code, 204)  # the page's script
         click = DigestClick.objects.get()
-        self.assertEqual((click.rank, click.edition, click.burst), (1, self.edition, False))
+        self.assertEqual((click.rank, click.edition, click.burst, click.target), (1, self.edition, False, 'summary'))
         self.assertEqual(DigestFeedback.objects.get().source, 'click')
-        self.assertEqual(Client().get(self.url(target='abs'))['Location'], 'https://arxiv.org/abs/2610.00001v1')
+        self.assertEqual(opened_target(self.url(target='a')), 'https://arxiv.org/abs/2610.00001v1')
 
-    def test_mail_scanners_neither_count_nor_teach(self):
-        Client(HTTP_USER_AGENT='Mozilla/5.0 (compatible; Barracuda Sentinel)').get(self.url())
+    def test_scanners_that_run_scripts_neither_count_nor_teach(self):
+        Client(HTTP_USER_AGENT='Mozilla/5.0 (compatible; Barracuda Sentinel)').post(self.url())
         self.assertFalse(DigestClick.objects.exists())
-        for i in range(digest_web.BURST_CLICKS):
-            Client().get(self.url('2610.0000%dv1' % (i + 1), rank=i + 1))
+        for rank in range(1, digest_web.BURST_CLICKS + 1):
+            Client().post(self.url(rank=rank))
         self.assertTrue(all(DigestClick.objects.values_list('burst', flat=True)))
         self.assertFalse(DigestFeedback.objects.exists())
+
+    def test_links_of_emails_sent_before_the_short_codes_still_work(self):
+        old = '/en/digest/open/%s/' % digest.open_token(self.sub, self.edition, '2610.00001v1', 1, 'pdf')
+        self.assertEqual(opened_target(old), 'https://arxiv.org/pdf/2610.00001v1')
+        Client().post(old)
+        self.assertEqual(DigestClick.objects.get().target, 'pdf')
         self.assertEqual(Client().get('/en/digest/open/forged/').status_code, 404)
+
+    def test_votes_from_short_links(self):
+        url = '/en/digest/l/%s/' % digest.link_code('v', self.edition, 2, 'd')
+        self.assertContains(Client().get(url), 'Fewer papers like this')
+        Client().post(url)
+        self.assertEqual(DigestFeedback.objects.get().value, -1)
+        self.assertEqual(DigestFeedback.objects.get().arxiv_id, '2610.00002v1')
+
+    def test_save_from_a_short_link(self):
+        AnnouncedPaper.objects.create(arxiv_id='2610.00001v1', announced=MONDAY.date(), title='Planet', authors='["A B"]')
+        url = '/en/digest/l/%s/' % digest.link_code('k', self.edition, 1)
+        self.assertContains(Client().post(url, {'collection': 'new', 'name': 'Mine'}), 'Saved in “Mine”')
 
     def test_save_to_a_new_or_an_existing_collection(self):
         token = digest.save_token(self.sub, '2610.00001v1')
@@ -247,7 +281,8 @@ class SettingsTests(ResearchDigestCase):
         self.assertEqual((sub.categories, sub.level, sub.volume, sub.bundle_alerts), ('math.AG', 'general', 'medium', True))
         page = self.c.get('/en/digest/')
         self.assertContains(page, 'Algebraic Geometry')  # every arXiv category is offered
-        self.assertContains(page, 'data-label="Algebraic Geometry" value="math.AG" checked')
+        self.assertContains(page, 'data-name="Algebraic Geometry" value="math.AG" checked')
+        self.assertContains(self.c.get('/fr/digest/'), 'Géométrie algébrique')
 
     def test_pages_in_french(self):
         page = self.c.get('/fr/digest/')
@@ -355,3 +390,78 @@ class StatsTests(ResearchDigestCase):
         call_command('digest_stats', stdout=out)
         self.assertRegex(out.getvalue(), r'\n\s+1\s+1\s+1\s+100\.0%')
         self.assertRegex(out.getvalue(), r'\n\s+2\s+1\s+0\s+0\.0%')
+
+
+class FollowUpTests(ResearchDigestCase):
+    def test_an_email_of_fifty_papers_stays_under_gmail_limit(self):
+        sub = DigestSubscription.objects.create(user=self.user('big', paid=True), categories='astro-ph.EP')
+        papers = [fake_paper('2610.%05dv1' % i, 'astro-ph.EP', 'A rather long title about planets and their many clouds %d' % i,
+                             authors=['Author %d' % k for k in range(8)]) for i in range(50)]
+        items = []
+        for p in papers:
+            items.append(DigestItem(arxiv_id=p['arxiv_id'], lang='en', title=p['title'], authors=', '.join(p['authors'][:6]) + ' et al.',
+                                    categories='astro-ph.EP', blurb='b', points=json.dumps({
+                                        'contribution': 'A first measurement of something new in this field, done carefully.',
+                                        'method': 'Spectra from a large telescope over three years.',
+                                        'result': 'The clouds sit at 2 bar, ten times higher than thought.'})))
+        edition = DigestEdition.objects.create(subscription=sub, sent=MONDAY, days='2026-10-19',
+                                               papers=json.dumps([i.arxiv_id for i in items]), candidates=400)
+        entries = {p['arxiv_id']: {'paper': p, 'closest': {'kind': 'reference', 'title': 'A reference paper on hot planet clouds'},
+                                   'keywords': ['planet'], 'primary': True} for p in papers}
+        digest.send_one(sub, items, 'https://www.summarizepaper.com', paid=True, edition=edition, entries=entries)
+        html = mail.outbox[0].alternatives[0][0]
+        self.assertLess(len(html.encode()), 80 * 1024)  # Gmail cuts at 102 KB: room for long titles and alerts
+        self.assertIn('Unsubscribe', html)
+
+    def test_the_page_of_an_email_keeps_the_profile_for_its_owner(self):
+        u = self.user('own', paid=True)
+        sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP', profile='I study hot planet clouds.')
+        p = fake_paper('2610.00001v1', 'astro-ph.EP', 'Planet clouds')
+        AnnouncedPaper.objects.create(arxiv_id=p['arxiv_id'], announced=p['announced'], title=p['title'], abstract='x',
+                                      authors='["A B"]', categories='astro-ph.EP')
+        DigestVector.objects.create(arxiv_id=p['arxiv_id'], vector=fake_embed(['planet'])[0].tobytes())
+        edition = DigestEdition.objects.create(subscription=sub, sent=MONDAY, days='2026-10-19', papers='["2610.00001v1"]')
+        url = '/en/digest/e/%s/' % digest.edition_token(edition)
+        with mock.patch('summarizer.similar.embed', side_effect=fake_embed):
+            forwarded = Client().get(url)
+            c = Client()
+            c.force_login(u)
+            mine = c.get(url)
+        self.assertContains(forwarded, 'Close to your research profile<')
+        self.assertNotContains(forwarded, 'hot planet clouds')
+        self.assertContains(mine, 'Close to your research profile: “I study hot planet clouds.”')
+
+    def test_the_preview_embeds_a_category_nobody_follows_yet(self):
+        u = self.user('pv')
+        c = Client()
+        c.force_login(u)
+        ArxivBatch.objects.create(day=MONDAY.date(), papers=3)
+        for aid, title in (('2610.00001v1', 'Galaxy one'), ('2610.00002v1', 'Galaxy two'), ('2610.00003v1', 'Planet three')):
+            AnnouncedPaper.objects.create(arxiv_id=aid, announced=MONDAY.date(), title=title, abstract=title,
+                                          authors='["A B"]', categories='math.AG')
+        with mock.patch('summarizer.similar.embed', side_effect=fake_embed) as embed:
+            c.post('/en/digest/try/', {'categories': ['math.AG']})
+            c.post('/en/digest/try/', {'categories': ['math.AG']})
+        self.assertEqual(embed.call_count, 1)  # then kept for everyone
+        self.assertEqual(DigestVector.objects.count(), 3)
+
+    def test_scores_are_kept_and_calibrate_the_thresholds(self):
+        sub = DigestSubscription.objects.create(user=self.user('cal'), categories='cs.LG')
+        now = datetime.datetime.now(datetime.timezone.utc)
+        for i in range(40):
+            edition = DigestEdition.objects.create(subscription=sub, sent=now, days='2026-10-19', papers='["a%d", "b%d"]' % (i, i),
+                                                   scores='[0.6, 0.4]')
+            DigestClick.objects.create(subscription=sub, edition=edition, arxiv_id='a%d' % i, rank=1)
+        out = StringIO()
+        call_command('digest_stats', stdout=out)
+        self.assertIn('Suggested: high 0.60, medium 0.60, low 0.60', out.getvalue())
+        self.assertIn('high   0.55 keeps 100% of the papers opened and   0% of the others', out.getvalue())
+
+    def test_a_bundled_digest_checks_the_projects_first(self):
+        u = self.user('sc', paid=True)
+        sub = DigestSubscription.objects.create(user=u, categories='astro-ph.EP', bundle_alerts=True)
+        with mock.patch('summarizer.scoops.check_due', return_value=0) as check, \
+             mock.patch('summarizer.citations.pending', return_value=None):
+            digest_bundle.collect(u, 'en', 'https://www.summarizepaper.com', MONDAY)
+        check.assert_called_once_with(MONDAY, user=u)
+        self.assertTrue(sub.bundle_alerts)

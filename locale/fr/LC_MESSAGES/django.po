@@ -12101,3 +12101,723 @@ msgstr "Nouvelles versions des articles que vous suivez"
 
 msgid "Published, retracted or corrected"
 msgstr "Publiés, rétractés ou corrigés"
+
+msgid "Astrophysics"
+msgstr "Astrophysique"
+
+msgid "Condensed Matter"
+msgstr "Matière condensée"
+
+msgid "Computer Science"
+msgstr "Informatique"
+
+msgid "Economics"
+msgstr "Économie"
+
+msgid "Electrical Engineering and Systems Science"
+msgstr "Génie électrique et sciences des systèmes"
+
+msgid "Physics: gravitation, high energy, nuclear"
+msgstr "Physique : gravitation, hautes énergies, nucléaire"
+
+msgid "Mathematics"
+msgstr "Mathématiques"
+
+msgid "Nonlinear Sciences"
+msgstr "Sciences non linéaires"
+
+msgid "Physics"
+msgstr "Physique"
+
+msgid "Quantitative Biology"
+msgstr "Biologie quantitative"
+
+msgid "Quantitative Finance"
+msgstr "Finance quantitative"
+
+msgid "Statistics"
+msgstr "Statistiques"
+
+msgid "Cosmology and Nongalactic Astrophysics"
+msgstr "Cosmologie et astrophysique extragalactique"
+
+msgid "Earth and Planetary Astrophysics"
+msgstr "Astrophysique terrestre et planétaire"
+
+msgid "Astrophysics of Galaxies"
+msgstr "Astrophysique des galaxies"
+
+msgid "High Energy Astrophysical Phenomena"
+msgstr "Phénomènes astrophysiques de haute énergie"
+
+msgid "Instrumentation and Methods for Astrophysics"
+msgstr "Instrumentation et méthodes pour l’astrophysique"
+
+msgid "Solar and Stellar Astrophysics"
+msgstr "Astrophysique solaire et stellaire"
+
+msgid "Disordered Systems and Neural Networks"
+msgstr "Systèmes désordonnés et réseaux de neurones"
+
+msgid "Mesoscale and Nanoscale Physics"
+msgstr "Physique mésoscopique et nanométrique"
+
+msgid "Materials Science"
+msgstr "Science des matériaux"
+
+msgid "Other Condensed Matter"
+msgstr "Autre matière condensée"
+
+msgid "Quantum Gases"
+msgstr "Gaz quantiques"
+
+msgid "Soft Condensed Matter"
+msgstr "Matière molle"
+
+msgid "Statistical Mechanics"
+msgstr "Mécanique statistique"
+
+msgid "Strongly Correlated Electrons"
+msgstr "Électrons fortement corrélés"
+
+msgid "Superconductivity"
+msgstr "Supraconductivité"
+
+msgid "Artificial Intelligence"
+msgstr "Intelligence artificielle"
+
+msgid "Hardware Architecture"
+msgstr "Architecture matérielle"
+
+msgid "Computational Complexity"
+msgstr "Complexité algorithmique"
+
+msgid "Computational Engineering, Finance, and Science"
+msgstr "Ingénierie, finance et science numériques"
+
+msgid "Computational Geometry"
+msgstr "Géométrie algorithmique"
+
+msgid "Computation and Language"
+msgstr "Calcul et langage"
+
+msgid "Cryptography and Security"
+msgstr "Cryptographie et sécurité"
+
+msgid "Computer Vision and Pattern Recognition"
+msgstr "Vision par ordinateur et reconnaissance de formes"
+
+msgid "Computers and Society"
+msgstr "Informatique et société"
+
+msgid "Databases"
+msgstr "Bases de données"
+
+msgid "Distributed, Parallel, and Cluster Computing"
+msgstr "Calcul distribué, parallèle et en grappe"
+
+msgid "Digital Libraries"
+msgstr "Bibliothèques numériques"
+
+msgid "Discrete Mathematics"
+msgstr "Mathématiques discrètes"
+
+msgid "Data Structures and Algorithms"
+msgstr "Structures de données et algorithmes"
+
+msgid "Emerging Technologies"
+msgstr "Technologies émergentes"
+
+msgid "Formal Languages and Automata Theory"
+msgstr "Langages formels et théorie des automates"
+
+msgid "General Literature"
+msgstr "Littérature générale"
+
+msgid "Graphics"
+msgstr "Informatique graphique"
+
+msgid "Computer Science and Game Theory"
+msgstr "Informatique et théorie des jeux"
+
+msgid "Human-Computer Interaction"
+msgstr "Interaction humain-machine"
+
+msgid "Information Retrieval"
+msgstr "Recherche d’information"
+
+msgid "Information Theory"
+msgstr "Théorie de l’information"
+
+msgid "Machine Learning"
+msgstr "Apprentissage automatique"
+
+msgid "Logic in Computer Science"
+msgstr "Logique en informatique"
+
+msgid "Multiagent Systems"
+msgstr "Systèmes multi-agents"
+
+msgid "Multimedia"
+msgstr "Multimédia"
+
+msgid "Mathematical Software"
+msgstr "Logiciels mathématiques"
+
+msgid "Numerical Analysis"
+msgstr "Analyse numérique"
+
+msgid "Neural and Evolutionary Computing"
+msgstr "Calcul neuronal et évolutionnaire"
+
+msgid "Networking and Internet Architecture"
+msgstr "Réseaux et architecture d’Internet"
+
+msgid "Other Computer Science"
+msgstr "Autre informatique"
+
+msgid "Operating Systems"
+msgstr "Systèmes d’exploitation"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Programming Languages"
+msgstr "Langages de programmation"
+
+msgid "Robotics"
+msgstr "Robotique"
+
+msgid "Symbolic Computation"
+msgstr "Calcul symbolique"
+
+msgid "Sound"
+msgstr "Son"
+
+msgid "Software Engineering"
+msgstr "Génie logiciel"
+
+msgid "Social and Information Networks"
+msgstr "Réseaux sociaux et d’information"
+
+msgid "Systems and Control"
+msgstr "Systèmes et contrôle"
+
+msgid "Econometrics"
+msgstr "Économétrie"
+
+msgid "General Economics"
+msgstr "Économie générale"
+
+msgid "Theoretical Economics"
+msgstr "Économie théorique"
+
+msgid "Audio and Speech Processing"
+msgstr "Traitement de l’audio et de la parole"
+
+msgid "Image and Video Processing"
+msgstr "Traitement d’images et de vidéos"
+
+msgid "Signal Processing"
+msgstr "Traitement du signal"
+
+msgid "General Relativity and Quantum Cosmology"
+msgstr "Relativité générale et cosmologie quantique"
+
+msgid "High Energy Physics - Experiment"
+msgstr "Physique des hautes énergies - expérience"
+
+msgid "High Energy Physics - Lattice"
+msgstr "Physique des hautes énergies - réseau"
+
+msgid "High Energy Physics - Phenomenology"
+msgstr "Physique des hautes énergies - phénoménologie"
+
+msgid "High Energy Physics - Theory"
+msgstr "Physique des hautes énergies - théorie"
+
+msgid "Mathematical Physics"
+msgstr "Physique mathématique"
+
+msgid "Nuclear Experiment"
+msgstr "Physique nucléaire expérimentale"
+
+msgid "Nuclear Theory"
+msgstr "Physique nucléaire théorique"
+
+msgid "Quantum Physics"
+msgstr "Physique quantique"
+
+msgid "Commutative Algebra"
+msgstr "Algèbre commutative"
+
+msgid "Algebraic Geometry"
+msgstr "Géométrie algébrique"
+
+msgid "Analysis of PDEs"
+msgstr "Analyse des EDP"
+
+msgid "Algebraic Topology"
+msgstr "Topologie algébrique"
+
+msgid "Classical Analysis and ODEs"
+msgstr "Analyse classique et EDO"
+
+msgid "Combinatorics"
+msgstr "Combinatoire"
+
+msgid "Category Theory"
+msgstr "Théorie des catégories"
+
+msgid "Complex Variables"
+msgstr "Variables complexes"
+
+msgid "Differential Geometry"
+msgstr "Géométrie différentielle"
+
+msgid "Dynamical Systems"
+msgstr "Systèmes dynamiques"
+
+msgid "Functional Analysis"
+msgstr "Analyse fonctionnelle"
+
+msgid "General Mathematics"
+msgstr "Mathématiques générales"
+
+msgid "General Topology"
+msgstr "Topologie générale"
+
+msgid "Group Theory"
+msgstr "Théorie des groupes"
+
+msgid "Geometric Topology"
+msgstr "Topologie géométrique"
+
+msgid "History and Overview"
+msgstr "Histoire et panorama"
+
+msgid "K-Theory and Homology"
+msgstr "K-théorie et homologie"
+
+msgid "Logic"
+msgstr "Logique"
+
+msgid "Metric Geometry"
+msgstr "Géométrie métrique"
+
+msgid "Number Theory"
+msgstr "Théorie des nombres"
+
+msgid "Operator Algebras"
+msgstr "Algèbres d’opérateurs"
+
+msgid "Optimization and Control"
+msgstr "Optimisation et contrôle"
+
+msgid "Probability"
+msgstr "Probabilités"
+
+msgid "Quantum Algebra"
+msgstr "Algèbre quantique"
+
+msgid "Rings and Algebras"
+msgstr "Anneaux et algèbres"
+
+msgid "Representation Theory"
+msgstr "Théorie des représentations"
+
+msgid "Symplectic Geometry"
+msgstr "Géométrie symplectique"
+
+msgid "Spectral Theory"
+msgstr "Théorie spectrale"
+
+msgid "Statistics Theory"
+msgstr "Théorie statistique"
+
+msgid "Adaptation and Self-Organizing Systems"
+msgstr "Adaptation et systèmes auto-organisés"
+
+msgid "Chaotic Dynamics"
+msgstr "Dynamique chaotique"
+
+msgid "Cellular Automata and Lattice Gases"
+msgstr "Automates cellulaires et gaz sur réseau"
+
+msgid "Pattern Formation and Solitons"
+msgstr "Formation de motifs et solitons"
+
+msgid "Exactly Solvable and Integrable Systems"
+msgstr "Systèmes exactement solubles et intégrables"
+
+msgid "Accelerator Physics"
+msgstr "Physique des accélérateurs"
+
+msgid "Atmospheric and Oceanic Physics"
+msgstr "Physique de l’atmosphère et de l’océan"
+
+msgid "Applied Physics"
+msgstr "Physique appliquée"
+
+msgid "Atomic and Molecular Clusters"
+msgstr "Agrégats atomiques et moléculaires"
+
+msgid "Atomic Physics"
+msgstr "Physique atomique"
+
+msgid "Biological Physics"
+msgstr "Physique biologique"
+
+msgid "Chemical Physics"
+msgstr "Physique chimique"
+
+msgid "Classical Physics"
+msgstr "Physique classique"
+
+msgid "Computational Physics"
+msgstr "Physique numérique"
+
+msgid "Data Analysis, Statistics and Probability"
+msgstr "Analyse de données, statistiques et probabilités"
+
+msgid "Physics Education"
+msgstr "Enseignement de la physique"
+
+msgid "Fluid Dynamics"
+msgstr "Dynamique des fluides"
+
+msgid "General Physics"
+msgstr "Physique générale"
+
+msgid "Geophysics"
+msgstr "Géophysique"
+
+msgid "History and Philosophy of Physics"
+msgstr "Histoire et philosophie de la physique"
+
+msgid "Instrumentation and Detectors"
+msgstr "Instrumentation et détecteurs"
+
+msgid "Medical Physics"
+msgstr "Physique médicale"
+
+msgid "Optics"
+msgstr "Optique"
+
+msgid "Plasma Physics"
+msgstr "Physique des plasmas"
+
+msgid "Popular Physics"
+msgstr "Vulgarisation de la physique"
+
+msgid "Physics and Society"
+msgstr "Physique et société"
+
+msgid "Space Physics"
+msgstr "Physique spatiale"
+
+msgid "Biomolecules"
+msgstr "Biomolécules"
+
+msgid "Cell Behavior"
+msgstr "Comportement cellulaire"
+
+msgid "Genomics"
+msgstr "Génomique"
+
+msgid "Molecular Networks"
+msgstr "Réseaux moléculaires"
+
+msgid "Neurons and Cognition"
+msgstr "Neurones et cognition"
+
+msgid "Other Quantitative Biology"
+msgstr "Autre biologie quantitative"
+
+msgid "Populations and Evolution"
+msgstr "Populations et évolution"
+
+msgid "Quantitative Methods"
+msgstr "Méthodes quantitatives"
+
+msgid "Subcellular Processes"
+msgstr "Processus subcellulaires"
+
+msgid "Tissues and Organs"
+msgstr "Tissus et organes"
+
+msgid "Computational Finance"
+msgstr "Finance numérique"
+
+msgid "General Finance"
+msgstr "Finance générale"
+
+msgid "Mathematical Finance"
+msgstr "Finance mathématique"
+
+msgid "Portfolio Management"
+msgstr "Gestion de portefeuille"
+
+msgid "Pricing of Securities"
+msgstr "Évaluation des actifs"
+
+msgid "Risk Management"
+msgstr "Gestion des risques"
+
+msgid "Statistical Finance"
+msgstr "Finance statistique"
+
+msgid "Trading and Market Microstructure"
+msgstr "Trading et microstructure des marchés"
+
+msgid "Applications"
+msgstr "Applications"
+
+msgid "Computation"
+msgstr "Calcul"
+
+msgid "Methodology"
+msgstr "Méthodologie"
+
+msgid "Other Statistics"
+msgstr "Autres statistiques"
+
+msgid "Animal Behavior and Cognition"
+msgstr "Comportement et cognition animale"
+
+msgid "Biochemistry"
+msgstr "Biochimie"
+
+msgid "Bioengineering"
+msgstr "Bio-ingénierie"
+
+msgid "Bioinformatics"
+msgstr "Bio-informatique"
+
+msgid "Biophysics"
+msgstr "Biophysique"
+
+msgid "Cancer Biology"
+msgstr "Biologie du cancer"
+
+msgid "Cell Biology"
+msgstr "Biologie cellulaire"
+
+msgid "Developmental Biology"
+msgstr "Biologie du développement"
+
+msgid "Ecology"
+msgstr "Écologie"
+
+msgid "Evolutionary Biology"
+msgstr "Biologie de l’évolution"
+
+msgid "Genetics"
+msgstr "Génétique"
+
+msgid "Immunology"
+msgstr "Immunologie"
+
+msgid "Microbiology"
+msgstr "Microbiologie"
+
+msgid "Molecular Biology"
+msgstr "Biologie moléculaire"
+
+msgid "Neuroscience"
+msgstr "Neurosciences"
+
+msgid "Paleontology"
+msgstr "Paléontologie"
+
+msgid "Pathology"
+msgstr "Pathologie"
+
+msgid "Pharmacology and Toxicology"
+msgstr "Pharmacologie et toxicologie"
+
+msgid "Physiology"
+msgstr "Physiologie"
+
+msgid "Plant Biology"
+msgstr "Biologie végétale"
+
+msgid "Scientific Communication and Education"
+msgstr "Communication et enseignement scientifiques"
+
+msgid "Synthetic Biology"
+msgstr "Biologie de synthèse"
+
+msgid "Systems Biology"
+msgstr "Biologie des systèmes"
+
+msgid "Zoology"
+msgstr "Zoologie"
+
+msgid "Addiction Medicine"
+msgstr "Addictologie"
+
+msgid "Allergy and Immunology"
+msgstr "Allergologie et immunologie"
+
+msgid "Anesthesia"
+msgstr "Anesthésie"
+
+msgid "Cardiovascular Medicine"
+msgstr "Médecine cardiovasculaire"
+
+msgid "Dentistry and Oral Medicine"
+msgstr "Dentisterie et médecine bucco-dentaire"
+
+msgid "Dermatology"
+msgstr "Dermatologie"
+
+msgid "Emergency Medicine"
+msgstr "Médecine d’urgence"
+
+msgid "Endocrinology"
+msgstr "Endocrinologie"
+
+msgid "Epidemiology"
+msgstr "Épidémiologie"
+
+msgid "Forensic Medicine"
+msgstr "Médecine légale"
+
+msgid "Gastroenterology"
+msgstr "Gastro-entérologie"
+
+msgid "Genetic and Genomic Medicine"
+msgstr "Médecine génétique et génomique"
+
+msgid "Geriatric Medicine"
+msgstr "Gériatrie"
+
+msgid "Health Economics"
+msgstr "Économie de la santé"
+
+msgid "Health Informatics"
+msgstr "Informatique de santé"
+
+msgid "Health Policy"
+msgstr "Politiques de santé"
+
+msgid "Health Systems and Quality Improvement"
+msgstr "Systèmes de santé et amélioration de la qualité"
+
+msgid "Hematology"
+msgstr "Hématologie"
+
+msgid "HIV AIDS"
+msgstr "VIH sida"
+
+msgid "Infectious Diseases"
+msgstr "Maladies infectieuses"
+
+msgid "Intensive Care and Critical Care Medicine"
+msgstr "Soins intensifs et réanimation"
+
+msgid "Medical Education"
+msgstr "Enseignement médical"
+
+msgid "Medical Ethics"
+msgstr "Éthique médicale"
+
+msgid "Nephrology"
+msgstr "Néphrologie"
+
+msgid "Neurology"
+msgstr "Neurologie"
+
+msgid "Nursing"
+msgstr "Soins infirmiers"
+
+msgid "Nutrition"
+msgstr "Nutrition"
+
+msgid "Obstetrics and Gynecology"
+msgstr "Obstétrique et gynécologie"
+
+msgid "Occupational and Environmental Health"
+msgstr "Santé au travail et environnementale"
+
+msgid "Oncology"
+msgstr "Oncologie"
+
+msgid "Ophthalmology"
+msgstr "Ophtalmologie"
+
+msgid "Orthopedics"
+msgstr "Orthopédie"
+
+msgid "Otolaryngology"
+msgstr "Oto-rhino-laryngologie"
+
+msgid "Pain Medicine"
+msgstr "Médecine de la douleur"
+
+msgid "Palliative Medicine"
+msgstr "Médecine palliative"
+
+msgid "Pediatrics"
+msgstr "Pédiatrie"
+
+msgid "Pharmacology and Therapeutics"
+msgstr "Pharmacologie et thérapeutique"
+
+msgid "Primary Care Research"
+msgstr "Recherche en soins primaires"
+
+msgid "Psychiatry and Clinical Psychology"
+msgstr "Psychiatrie et psychologie clinique"
+
+msgid "Public and Global Health"
+msgstr "Santé publique et mondiale"
+
+msgid "Radiology and Imaging"
+msgstr "Radiologie et imagerie"
+
+msgid "Rehabilitation Medicine and Physical Therapy"
+msgstr "Médecine de réadaptation et kinésithérapie"
+
+msgid "Respiratory Medicine"
+msgstr "Pneumologie"
+
+msgid "Rheumatology"
+msgstr "Rhumatologie"
+
+msgid "Sexual and Reproductive Health"
+msgstr "Santé sexuelle et reproductive"
+
+msgid "Sports Medicine"
+msgstr "Médecine du sport"
+
+msgid "Surgery"
+msgstr "Chirurgie"
+
+msgid "Toxicology"
+msgstr "Toxicologie"
+
+msgid "Transplantation"
+msgstr "Transplantation"
+
+msgid "Urology"
+msgstr "Urologie"
+
+msgid "Close to your research profile"
+msgstr "Proche de votre profil de recherche"
+
+msgid "Close to a paper you liked"
+msgstr "Proche d’un article que vous avez aimé"
+
+msgid "Close to a paper you opened"
+msgstr "Proche d’un article que vous avez ouvert"
+
+msgid "Opening the paper…"
+msgstr "Ouverture de l’article…"
+
+msgid "Up to %(papers_per_email)s new papers every weekday or once a week, ranked for your research, each with its contribution, method and main result and why it is there, and the full AI summary ready to read."
+msgstr "Jusqu'à %(papers_per_email)s nouveaux articles chaque jour de semaine ou une fois par semaine, classés selon vos recherches, chacun avec sa contribution, sa méthode, son résultat principal et la raison de sa présence, et le résumé IA complet prêt à lire."
+
+msgid "Every morning, up to %(papers_per_email)s new papers from the categories you follow, each with its contribution, method and main result, a link to the full AI summary, and every other paper of the day ranked on the web. Free."
+msgstr "Chaque matin, jusqu'à %(papers_per_email)s nouveaux articles des catégories que vous suivez, chacun avec sa contribution, sa méthode et son résultat principal, un lien vers le résumé IA complet, et tous les autres articles du jour classés sur le web. Gratuit."

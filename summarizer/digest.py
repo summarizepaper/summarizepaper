@@ -34,6 +34,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
+from django.utils.crypto import constant_time_compare, salted_hmac
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
@@ -90,6 +91,10 @@ UNSUBSCRIBE_SALT = 'digest-unsubscribe'
 FEEDBACK_SALT = 'digest-feedback'
 EDITION_SALT = 'digest-edition'
 OPEN_SALT = 'digest-open'
+LINK_SALT = 'digest-link'
+LINK_SIGNATURE = 16  # hex characters: 64 bits
+LINK_RE = re.compile(r'^(([okv])(\d+)\.(\d+)([sapud]?))\.([0-9a-f]+)$')
+TARGETS = {'s': 'summary', 'a': 'abs', 'p': 'pdf'}
 SAVE_SALT = 'digest-save'
 PROFILE_VERSION = 'parts-v1'  # profile_vector holds one row per profile paragraph and reference paper
 PROFILE_PARTS = 5
@@ -1030,6 +1035,23 @@ def save_token(subscription, arxiv_id):
     return signing.dumps([subscription.pk, arxiv_id], salt=SAVE_SALT, compress=True)
 
 
+def link_code(kind, edition, rank, extra=''):
+    """Short signed code of a link of an email: what to do ('o' open, 'k' keep in a collection, 'v' vote),
+    with which paper of which email. Signed tokens of the arXiv id made each email ~1 KB per paper heavier,
+    and Gmail cuts emails past 102 KB, unsubscribe link included."""
+    payload = '%s%d.%d%s' % (kind, edition.pk, rank, extra)
+    return '%s.%s' % (payload, salted_hmac(LINK_SALT, payload).hexdigest()[:LINK_SIGNATURE])
+
+
+def read_link_code(code):
+    """(kind, edition id, rank, extra) of a valid code, or None."""
+    match = LINK_RE.match(code or '')
+    if not match or not constant_time_compare(salted_hmac(LINK_SALT, match.group(1)).hexdigest()[:LINK_SIGNATURE],
+                                              match.group(6)):
+        return None
+    return match.group(2), int(match.group(3)), int(match.group(4)), match.group(5)
+
+
 def tracked(url, campaign, content):
     """Link with the UTM tags Umami reports on, to see which parts of the digest get clicked."""
     return '%s%sutm_source=digest&utm_medium=email&utm_campaign=%s&utm_content=%s' % (
@@ -1046,12 +1068,17 @@ def source_links(arxiv_id):
 
 
 def category_label(code):
-    """'astro-ph.EP' -> 'Earth and Planetary Astrophysics', 'biorxiv.cell-biology' -> 'Cell Biology'."""
-    return arxiv_taxonomy.NAMES.get(code) or category_name(code)
+    """'astro-ph.EP' -> 'Earth and Planetary Astrophysics', 'biorxiv.cell-biology' -> 'Cell Biology', in the
+    active language."""
+    if code in arxiv_taxonomy.NAMES:
+        return str(arxiv_taxonomy.NAMES[code])
+    return translation.gettext(category_name(code)) if code in BIO_CODES else code
 
 
-def reasons(entry, wanted=()):
-    """Why a paper is in a digest, in the active language: ['Close to your reference paper “…”', 'Keywords: …']."""
+def reasons(entry, wanted=(), private=True):
+    """Why a paper is in a digest, in the active language: ['Close to your reference paper “…”', 'Keywords: …'].
+    private=False leaves out what only its reader should read (their profile, the papers they liked or opened):
+    for a page anyone with its link can open."""
     from django.utils.translation import gettext as _
     if not entry:
         return []
@@ -1060,11 +1087,14 @@ def reasons(entry, wanted=()):
     if kind == 'reference':
         found.append(_('Close to your reference paper “%(title)s”') % {'title': closest.get('title')})
     elif kind == 'profile':
-        found.append(_('Close to your research profile: “%(text)s”') % {'text': closest.get('text')})
+        found.append(_('Close to your research profile: “%(text)s”') % {'text': closest.get('text')} if private
+                     else _('Close to your research profile'))
     elif kind == 'liked':
-        found.append(_('Close to a paper you liked: “%(title)s”') % {'title': closest.get('title')})
+        found.append(_('Close to a paper you liked: “%(title)s”') % {'title': closest.get('title')} if private
+                     else _('Close to a paper you liked'))
     elif kind == 'opened':
-        found.append(_('Close to a paper you opened: “%(title)s”') % {'title': closest.get('title')})
+        found.append(_('Close to a paper you opened: “%(title)s”') % {'title': closest.get('title')} if private
+                     else _('Close to a paper you opened'))
     if entry.get('keywords'):
         found.append(_('Keywords: %(terms)s') % {'terms': ', '.join(entry['keywords'])})
     categories = entry['paper']['categories']
@@ -1086,6 +1116,8 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
     wanted = subscription.category_list()
 
     def opened(item, rank, target):
+        if edition is not None:
+            return '%s/%s/digest/l/%s/' % (base_url, lang, link_code('o', edition, rank, target[0]))
         return '%s/%s/digest/open/%s/' % (base_url, lang, open_token(subscription, edition, item.arxiv_id, rank, target))
 
     with translation.override(lang):
@@ -1093,9 +1125,11 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
             item.rank = rank
             item.url = opened(item, rank, 'summary')
             item.ident, abs_url, pdf_url = source_links(item.arxiv_id)
+            item.source = 'DOI' if sources.is_external(item.arxiv_id) else 'arXiv'
             item.abs_url = opened(item, rank, 'abs') if abs_url else None
             item.pdf_url = opened(item, rank, 'pdf') if pdf_url else None
-            item.save_url = '%s/%s/digest/save/%s/' % (base_url, lang, save_token(subscription, item.arxiv_id))
+            item.save_url = ('%s/%s/digest/l/%s/' % (base_url, lang, link_code('k', edition, rank)) if edition else
+                             '%s/%s/digest/save/%s/' % (base_url, lang, save_token(subscription, item.arxiv_id)))
             item.ready = item.arxiv_id in ready
             item.via = ', '.join((via or {}).get(item.arxiv_id, []))
             categories = [c for c in item.categories.split(',') if c]
@@ -1105,8 +1139,12 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
             item.point_list = [(label, points[key]) for key, label in (
                 ('contribution', translation.gettext('Contribution')), ('method', translation.gettext('Method')),
                 ('result', translation.gettext('Result'))) if points.get(key)]
-            item.more_url, item.less_url = ('%s/%s/digest/feedback/%s/' % (base_url, lang, feedback_token(subscription, item.arxiv_id, v))
-                                            for v in (1, -1))
+            if edition is not None:
+                item.more_url, item.less_url = ('%s/%s/digest/l/%s/' % (base_url, lang, link_code('v', edition, rank, v))
+                                                for v in 'ud')
+            else:
+                item.more_url, item.less_url = ('%s/%s/digest/feedback/%s/' % (base_url, lang, feedback_token(subscription, item.arxiv_id, v))
+                                                for v in (1, -1))
         link = lambda aid: tracked('%s/%s/paper/%s/?autorun=1' % (base_url, lang, aid), campaign, 'synthesis')
         syntheses = [dict(synthesis, notable=[dict(paper, url=link(paper['arxiv_id'])) for paper in synthesis['notable']],
                           trends=[dict(trend, papers=[dict(paper, url=link(paper['arxiv_id'])) for paper in trend.get('papers', [])])
@@ -1355,9 +1393,11 @@ def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dr
             if plan.synthesis:
                 from . import trends  # trends reads the archive list of this module
                 rising = trends.for_digest(plan.categories, subscription.lang, plan.today)
+        scores = {e['paper']['arxiv_id']: e['score'] for e in entries}
         edition = DigestEdition.objects.create(
             subscription=subscription, sent=now, days=','.join(str(d) for d in sorted(batches)),
-            papers=json.dumps(all_ids), candidates=len(entries) + len(author_items))
+            papers=json.dumps(all_ids), candidates=len(entries) + len(author_items),
+            scores=json.dumps([None if scores.get(aid) is None else round(scores[aid], 4) for aid in all_ids]))
         try:
             send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
                      paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None,
@@ -1532,6 +1572,13 @@ def hour_label(hour):
     return '%d:00 %s' % (hour % 12 or 12, 'AM' if hour < 12 else 'PM')
 
 
+def taxonomy_choices():
+    """[(group, [(code, name in the active language, English name)])]: a category is found by either name."""
+    with translation.override('en'):
+        english = {code: str(name) for code, name in arxiv_taxonomy.NAMES.items()}
+    return [(str(group), [(code, str(name), english[code]) for code, name in codes]) for group, codes in arxiv_taxonomy.GROUPS]
+
+
 def _digest_context(request, subscription, digests, paid, error=False):
     lim = limits(paid)
     chosen = subscription.category_list() if subscription else []
@@ -1547,13 +1594,15 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'paid': paid,
         'can_create': len(digests) < lim['digests'],
         'inactive_digests': [] if paid else digests[1:],
-        'taxonomy': arxiv_taxonomy.GROUPS,
+        'taxonomy': taxonomy_choices(),
+        'digest_tabs': [(d, d.name or ', '.join(category_label(c) for c in d.category_list()[:2]) +
+                         ('…' if len(d.category_list()) > 2 else '')) for d in digests],
         'chosen_labels': [(c, category_label(c)) for c in chosen],
         'editions': [(e, edition_token(e)) for e in DigestEdition.objects.filter(subscription=subscription)[:8]]
         if subscription and subscription.pk else [],
         'volumes': DigestSubscription.VOLUMES,
         'thresholds': THRESHOLDS,
-        'bio_categories': [(SERVER_NAMES[server], [(sources.category_code(server, n), n) for n in names])
+        'bio_categories': [(SERVER_NAMES[server], [(sources.category_code(server, n), translation.gettext(n), n) for n in names])
                            for server, names in BIO_CATEGORIES],
         'chosen': chosen,
         'other': ', '.join(c for c in chosen if c not in known),
@@ -1599,6 +1648,10 @@ def feedback(request, token):
     except (signing.BadSignature, ValueError, TypeError):
         pk = arxiv_id = value = None
     subscription = DigestSubscription.objects.filter(pk=pk).first() if pk else None
+    return feedback_view(request, subscription, arxiv_id, value)
+
+
+def feedback_view(request, subscription, arxiv_id, value):
     item = DigestItem.objects.filter(arxiv_id=arxiv_id).first() if subscription else None
     done = False
     if subscription is not None and request.method == 'POST' and value in (1, -1):

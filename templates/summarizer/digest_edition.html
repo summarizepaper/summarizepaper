@@ -59,7 +59,7 @@
       <details><summary>{% trans 'Abstract' %}</summary><p>{{ row.abstract }}</p></details>
       <div class="actions">
         <a href="{{ row.url }}">{% trans 'Full AI summary and questions' %} &rarr;</a>
-        {% if row.abs_url %}<a href="{{ row.abs_url }}" rel="noopener">{% trans 'Abstract page' %}</a>{% endif %}
+        {% if row.abs_url %}<a href="{{ row.abs_url }}" rel="noopener">{{ row.source }}</a>{% endif %}
         {% if row.pdf_url %}<a href="{{ row.pdf_url }}" rel="noopener">PDF</a>{% endif %}
         <a href="{{ row.save_url }}">&#128278; {% trans 'Save to a collection' %}</a>
         <a href="{{ row.more_url }}">&#128077; {% trans 'More like this' %}</a>

@@ -29,6 +29,7 @@ BURST_SECONDS = 10
 BURST_CLICKS = 4  # this many links of one digest opened within BURST_SECONDS: a mail scanner, not a reader
 BOT_RE = re.compile(r'bot|crawl|spider|preview|scan|proofpoint|barracuda|mimecast|safelinks|slurp|python|curl', re.I)
 PREVIEWS = (30, 600)  # live previews per user and 10 minutes
+PREVIEW_EMBED_MAX = 1000  # papers a preview may embed (4 calls of digest.EMBED_BATCH)
 ORCID_RE = re.compile(r'(\d{4}-\d{4}-\d{4}-\d{3}[\dX])', re.I)
 ARXIV_AUTHOR_RE = re.compile(r'^(?:https?://arxiv\.org/a/)?([a-z][a-z0-9_]*_\d+)(?:\.(?:atom2?|html))?/?$', re.I)
 IMPORT_PAPERS = 25
@@ -66,7 +67,7 @@ def papers_of(days, categories, extra_ids=()):
     return papers
 
 
-def describe(entries, subscription, base_url='', in_email=()):
+def describe(entries, subscription, base_url='', in_email=(), private=True):
     """The entries as the page shows them: links, why each paper is there, and its summary when one exists."""
     lang = subscription.lang
     ids = [e['paper']['arxiv_id'] for e in entries]
@@ -81,10 +82,11 @@ def describe(entries, subscription, base_url='', in_email=()):
         points = json.loads(item.points or '{}') if item is not None and item.points else {}
         rows.append({
             'rank': rank, 'arxiv_id': aid, 'title': paper['title'], 'ident': ident, 'abs_url': abs_url, 'pdf_url': pdf_url,
+            'source': 'DOI' if sources.is_external(aid) else 'arXiv',
             'authors': ', '.join(paper['authors'][:6]) + (' et al.' if len(paper['authors']) > 6 else ''),
             'category': paper['categories'][0] if paper['categories'] else '',
             'primary': entry.get('primary', True), 'score': entry.get('score'),
-            'reasons': entry.get('why') or digest.reasons(entry, wanted),
+            'reasons': entry.get('why') or digest.reasons(entry, wanted, private),
             'blurb': item.blurb if item is not None else '',
             'points': [(label, points[key]) for key, label in (
                 ('contribution', translation.gettext('Contribution')), ('method', translation.gettext('Method')),
@@ -115,13 +117,15 @@ def edition_page(request, token):
         ranking = digest.ranking_for(subscription, paid, quick=True)
         vectors = digest.stored_vectors(list(papers))
         entries = digest.rank_papers(subscription, papers, set(), set(days), categories, ranking, vectors)
-        listed = {e['paper']['arxiv_id'] for e in entries}
+        ranked = {e['paper']['arxiv_id']: e for e in entries}
         with translation.override(subscription.lang):
-            # papers of followed authors outside the categories, as the email put them: first
+            # the papers of the email first, in its order (followed authors, then the best), then the others
             via = translation.gettext('An author you follow')
-            first = [{'paper': papers[aid], 'score': None, 'primary': True, 'why': [via]}
-                     for aid in sent if aid in papers and aid not in listed]
-            rows = describe(first + entries[:PAGE_MAX], subscription, in_email=set(sent))
+            first = [ranked.get(aid) or {'paper': papers[aid], 'score': None, 'primary': True, 'why': [via]}
+                     for aid in sent if aid in papers]
+            rest = [e for e in entries if e['paper']['arxiv_id'] not in set(sent)]
+            rows = describe(first + rest[:PAGE_MAX], subscription, in_email=set(sent),
+                            private=request.user.is_authenticated and request.user.pk == subscription.user_id)
     return render(request, 'summarizer/digest_edition.html', {
         'edition': edition, 'subscription': subscription, 'rows': rows, 'expired': expired,
         'total': len(rows), 'shown': len(sent), 'days': days, 'paid': paid,
@@ -132,27 +136,57 @@ def edition_page(request, token):
 
 # --- the links of an email ------------------------------------------------------------------
 
+def link(request, code):
+    """A short link of a digest email (see digest.link_code)."""
+    found = digest.read_link_code(code)
+    if found is None:
+        raise Http404
+    kind, edition_pk, rank, extra = found
+    edition = DigestEdition.objects.filter(pk=edition_pk).select_related('subscription__user').first()
+    papers = json.loads(edition.papers or '[]') if edition else []
+    if not 1 <= rank <= len(papers):
+        raise Http404
+    subscription, arxiv_id = edition.subscription, papers[rank - 1]
+    if kind == 'o':
+        return opening(request, subscription, edition.pk, arxiv_id, rank, digest.TARGETS.get(extra, 'summary'))
+    if kind == 'k':
+        return save_view(request, subscription, arxiv_id)
+    return digest.feedback_view(request, subscription, arxiv_id, 1 if extra == 'u' else -1)
+
+
+@csrf_exempt  # the page posts back to its own signed address
 def open_link(request, token):
-    """A link of a digest email: counted (rank, target), then on to the paper. Mail scanners, which open
-    every link within seconds, are told apart so they neither count nor teach the ranking."""
-    if request.method not in ('GET', 'HEAD'):
-        return HttpResponseNotAllowed(['GET', 'HEAD'])
+    """A link of a digest email sent before the short links (see link)."""
     try:
         pk, edition_pk, arxiv_id, rank, target = signing.loads(token, salt=digest.OPEN_SALT)
     except (signing.BadSignature, ValueError, TypeError):
         raise Http404
     subscription = DigestSubscription.objects.filter(pk=pk).first()
-    lang = subscription.lang if subscription else get_language()
+    if subscription is None:
+        raise Http404
+    return opening(request, subscription, edition_pk, arxiv_id, rank, target)
+
+
+def opening(request, subscription, edition_pk, arxiv_id, rank, target):
+    """The page between an email and the paper: it goes on at once, and its script tells us the paper was
+    opened. Mail scanners follow links without running scripts, so they never count nor teach the ranking."""
     _, abs_url, pdf_url = digest.source_links(arxiv_id)
-    campaign = 'weekly' if subscription and subscription.frequency == 'weekly' else 'daily'
+    campaign = 'weekly' if subscription.frequency == 'weekly' else 'daily'
     url = {'abs': abs_url, 'pdf': pdf_url}.get(target) or digest.tracked(
-        '/%s/paper/%s/?autorun=1' % (lang, arxiv_id), campaign, 'r%d' % rank if rank else 'paper')
-    if subscription is not None and request.method == 'GET' and not BOT_RE.search(request.META.get('HTTP_USER_AGENT', '')):
-        try:
-            record_click(subscription, edition_pk, arxiv_id, rank, target)
-        except Exception:
-            logger.exception('Digest click %s could not be recorded', arxiv_id)
-    return redirect(url)
+        '/%s/paper/%s/?autorun=1' % (subscription.lang, arxiv_id), campaign, 'r%d' % rank if rank else 'paper')
+    if request.method == 'POST':
+        if not BOT_RE.search(request.META.get('HTTP_USER_AGENT', '')):
+            try:
+                record_click(subscription, edition_pk, arxiv_id, rank, target)
+            except Exception:
+                logger.exception('Digest click %s could not be recorded', arxiv_id)
+        return HttpResponse(status=204)
+    if request.method not in ('GET', 'HEAD'):
+        return HttpResponseNotAllowed(['GET', 'HEAD', 'POST'])
+    response = render(request, 'summarizer/digest_open.html', {'url': url})
+    response['X-Robots-Tag'] = 'noindex'
+    response['Referrer-Policy'] = 'no-referrer'
+    return response
 
 
 def record_click(subscription, edition_pk, arxiv_id, rank, target, now=None):
@@ -176,7 +210,7 @@ def record_click(subscription, edition_pk, arxiv_id, rank, target, now=None):
 
 @csrf_exempt  # the link comes from an email; the signed token is the authorization
 def save_paper(request, token):
-    """Save a paper of a digest to one of its reader's collections, or to a new one."""
+    """Save a paper of a digest to one of its reader's collections (links sent before the short links)."""
     try:
         pk, arxiv_id = signing.loads(token, salt=digest.SAVE_SALT)
     except (signing.BadSignature, ValueError, TypeError):
@@ -184,6 +218,11 @@ def save_paper(request, token):
     subscription = DigestSubscription.objects.filter(pk=pk).select_related('user').first()
     if subscription is None:
         raise Http404
+    return save_view(request, subscription, arxiv_id)
+
+
+def save_view(request, subscription, arxiv_id):
+    """Save a paper of a digest to one of its reader's collections, or to a new one."""
     user = subscription.user
     item = DigestItem.objects.filter(arxiv_id=arxiv_id).first()
     status, chosen = None, None
@@ -251,7 +290,12 @@ def live_preview(request):
         return render(request, 'summarizer/digest_try.html', {'empty': not categories, 'no_batch': not days})
     papers = papers_of(days, categories)
     ranking = digest.ranking_for(preview, paid, save=False, quick=True)
-    entries = digest.rank_papers(preview, papers, set(), set(days), categories, ranking, digest.stored_vectors(list(papers)))
+    vectors = digest.stored_vectors(list(papers))
+    missing = [p for aid, p in papers.items() if aid not in vectors]
+    if missing:
+        # categories no digest follows yet have no embeddings: a few calls make them, kept for everyone
+        vectors.update(digest.ensure_vectors(missing[:PREVIEW_EMBED_MAX]))
+    entries = digest.rank_papers(preview, papers, set(), set(days), categories, ranking, vectors)
     limit = digest.limits(paid)['papers']
     threshold = paid and preview.volume in digest.THRESHOLDS and ranking is not None and ranking.has_profile
     chosen = digest.above_threshold(entries, preview.volume)[:digest.THRESHOLD_MAX_EMAIL] if threshold else entries[:limit]

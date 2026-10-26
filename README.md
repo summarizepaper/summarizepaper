@@ -247,17 +247,22 @@ Each paper of a digest gets, in the same model call as its plain-language blurb,
   cosine 0.55, 0.48, 0.42 with `text-embedding-3-small` at 512 dimensions; 50 papers at most per email).
   These thresholds are a first guess: check them with `digest_stats` and the scores shown on the web pages.
 
-Every email is stored as a `DigestEdition` (announcement days and papers sent). Its web page
-(`/digest/e/<token>/`) lists every paper of those announcements, ranked, with its closeness and why it is
-there, for two weeks (`PAGE_DAYS`). Email links go through `/digest/open/<token>/`, which records the rank
-(`DigestClick`) and turns a click into a light `click` feedback; four links of one digest opened within ten
-seconds are taken as a mail scanner and neither count nor teach the ranking. `python manage.py digest_stats`
-prints the click-through rate by rank, votes and stopped digests.
+Every email is stored as a `DigestEdition` (announcement days, papers sent and their closeness). Its web page
+(`/digest/e/<token>/`) lists the papers of the email in its order, then every other paper of those
+announcements, ranked, with its closeness and why it is there, for two weeks (`PAGE_DAYS`); only its owner,
+logged in, sees the profile excerpts and liked titles behind a reason. Email links are short signed codes
+(`/digest/l/<code>/`, see `digest.link_code`: an email of 50 papers stays well under Gmail's 102 KB cut).
+An opening link shows a page that goes on to the paper at once and whose script reports the click
+(`DigestClick`, and a light `click` feedback): mail scanners run no script, and four links of one digest
+reported within ten seconds are still set apart. `python manage.py digest_stats` prints the click-through
+rate by rank, votes, stopped digests and, once there are clicks enough, the closeness of the papers opened
+against the ones left, with the thresholds the data would suggest.
 
 `/digest/save/<token>/` saves a paper to a collection from the email. The settings page imports categories,
 reference papers and frequent co-authors from an ORCID iD or an arXiv author identifier, and shows what the
-form's settings would have sent from the latest announcement (`/digest/try/`, stored embeddings only, 30 per
-user and 10 minutes). With `bundle_alerts`, a Premium digest carries the scoop, citation, version and
+form's settings would have sent from the latest announcement (`/digest/try/`, 30 per user and 10 minutes; it
+embeds up to 1,000 papers of categories nobody follows yet, kept for everyone). A bundled digest checks its
+reader's scoop projects against the day's announcement before it is sent. Category names are translated. With `bundle_alerts`, a Premium digest carries the scoop, citation, version and
 publication alerts as sections; each module then leaves that user's alerts for it (`digest_bundle`).
 The weekly synthesis cites the papers behind each trend, and picks its notable papers from a shortlist ranked
 by how many research profiles they come close to, rising topics and cross-listing, with a reason for each.

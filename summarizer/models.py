@@ -452,6 +452,7 @@ class DigestEdition(models.Model):
     sent = models.DateTimeField(db_index=True)
     days = models.CharField(max_length=200)  # comma-separated ISO dates of the announcements
     papers = models.TextField(default='[]')  # JSON list of the arxiv_ids in the email, in order
+    scores = models.TextField(default='[]')  # JSON list of their closeness (None without a ranking), same order
     candidates = models.PositiveIntegerField(default=0)  # papers of its categories that matched (keywords included)
 
     class Meta:

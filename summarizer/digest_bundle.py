@@ -27,7 +27,7 @@ def collect(user, lang, base_url, now):
     from . import changes, citations, publication_alerts, scoops
     sections = []
     with translation.override(lang):
-        for build in (lambda: scoops.bundle_section(user, base_url),
+        for build in (lambda: scoops.bundle_section(user, base_url, now),
                       lambda: citations.bundle_section(user, base_url, lang, now),
                       lambda: changes.bundle_section(user, base_url, lang),
                       lambda: publication_alerts.bundle_section(user, base_url, lang)):

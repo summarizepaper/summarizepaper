@@ -53,9 +53,9 @@
   <header class="page-header">
   <h1>{% trans 'Your daily paper digest' %}</h1>
   {% if paid %}
-  <p class="lead">{% blocktrans %}Up to {{ papers_per_email }} new papers every weekday or once a week, ranked for your research, each with a 2-sentence summary anyone can understand, and the full AI summary ready to read.{% endblocktrans %}</p>
+  <p class="lead">{% blocktrans %}Up to {{ papers_per_email }} new papers every weekday or once a week, ranked for your research, each with its contribution, method and main result and why it is there, and the full AI summary ready to read.{% endblocktrans %}</p>
   {% else %}
-  <p class="lead">{% blocktrans %}Every morning, up to {{ papers_per_email }} new papers from the categories you follow, each with a 2-sentence summary anyone can understand, and a link to the full AI summary. Free.{% endblocktrans %}</p>
+  <p class="lead">{% blocktrans %}Every morning, up to {{ papers_per_email }} new papers from the categories you follow, each with its contribution, method and main result, a link to the full AI summary, and every other paper of the day ranked on the web. Free.{% endblocktrans %}</p>
   {% endif %}
   {% if not paid %}<p class="muted"><span class="badge">Premium</span> {% blocktrans with papers=premium.papers categories=premium.categories digests=premium.digests %}Papers ranked by closeness to your research, alerts on the authors you follow, a weekly synthesis of each field, full summaries ready before you open them, up to {{ papers }} papers, {{ categories }} categories and {{ digests }} digests.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>{% endif %}
   </header>
@@ -72,7 +72,7 @@
     {% elif preview == 'busy' %}<p class="notice">{% trans 'Many previews were asked for this hour. Please try again a bit later.' %}</p>{% endif %}
     {% if digests|length > 1 or paid and digests %}
     <nav class="tabs">
-      {% for d in digests %}<a href="?d={{ d.pk }}" {% if d == subscription %}class="current"{% endif %}>{{ d.name|default:d.categories|truncatechars:40 }}</a>{% endfor %}
+      {% for d, label in digest_tabs %}<a href="?d={{ d.pk }}" {% if d == subscription %}class="current"{% endif %}>{{ label|truncatechars:48 }}</a>{% endfor %}
       {% if can_create %}<a href="?d=new" {% if not subscription.pk %}class="current"{% endif %}>+ {% trans 'New digest' %}</a>{% endif %}
     </nav>
     {% endif %}
@@ -87,7 +87,7 @@
     {% endif %}
     {% if editions %}
     <p class="editions muted">{% trans 'Your latest emails, with every paper ranked:' %}
-      {% for edition, token in editions %}<a href="/{{ LANGUAGE_CODE }}/digest/e/{{ token }}/">{{ edition.sent|date:"j M" }}</a>{% endfor %}</p>
+      {% for edition, token in editions %}<a href="/{{ LANGUAGE_CODE }}/digest/e/{{ token }}/">{{ edition.sent|date:"j F" }}</a>{% endfor %}</p>
     {% endif %}
     <div class="layout">
     <form method="post" id="digest-form" data-try-url="/{{ LANGUAGE_CODE }}/digest/try/">{% csrf_token %}
@@ -111,21 +111,21 @@
         <p class="cat-search"><label for="cat-search">{% trans 'Find a category' %}</label>
         <input type="search" id="cat-search" placeholder="{% trans 'e.g. galaxies, cs.LG, number theory' %}" autocomplete="off"></p>
         {% for group, codes in taxonomy %}
-        <details class="bio-cats" data-cat-group {% for code, name in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
+        <details class="bio-cats" data-cat-group {% for code, name, english in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
           <summary>{{ group }}</summary>
           <div class="cats">
-            {% for code, label in codes %}
-            <label><input type="checkbox" name="categories" data-label="{{ label }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
+            {% for code, label, english in codes %}
+            <label><input type="checkbox" name="categories" data-label="{{ label }}" data-name="{{ english }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ label }} <small>({{ code }})</small></label>
             {% endfor %}
           </div>
         </details>
         {% endfor %}
         {% for server, codes in bio_categories %}
-        <details class="bio-cats" data-cat-group {% for code, name in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
+        <details class="bio-cats" data-cat-group {% for code, name, english in codes %}{% if code in chosen %}open{% endif %}{% endfor %}>
           <summary>{% blocktrans %}{{ server }} preprints (biology and medicine){% endblocktrans %}</summary>
           <div class="cats">
-            {% for code, name in codes %}
-            <label><input type="checkbox" name="categories" data-label="{{ name }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ name }}</label>
+            {% for code, name, english in codes %}
+            <label><input type="checkbox" name="categories" data-label="{{ name }}" data-name="{{ english }}" value="{{ code }}" {% if code in chosen %}checked{% endif %}> {{ name }}</label>
             {% endfor %}
           </div>
         </details>

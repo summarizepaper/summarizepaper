@@ -1,0 +1,17 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{% trans 'Opening the paper…' %}</title>
+<script>
+  // tells us a reader (not a mail scanner, which runs no script) opened this paper, then goes on
+  try { navigator.sendBeacon(location.href); } catch (e) {}
+  location.replace("{{ url|escapejs }}");
+</script>
+<noscript><meta http-equiv="refresh" content="0;url={{ url }}"></noscript>
+<style>body{font-family:system-ui,sans-serif;margin:40px 16px;color:#5b5b6b;background:#fff}@media (prefers-color-scheme:dark){body{background:#111;color:#bbb}a{color:#9aa4ff}}</style>
+</head>
+<body><p>{% trans 'Opening the paper…' %} <a id="go" href="{{ url }}">{% trans 'Continue' %}</a></p></body>
+</html>

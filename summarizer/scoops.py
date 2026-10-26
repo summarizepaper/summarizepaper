@@ -149,11 +149,13 @@ def papers_of(days, cache):
     return cache[key]
 
 
-def check_due(now, limit=MAX_CHECKS_PER_RUN):
-    """Compare the Premium users' projects with the announcements they have not seen; returns how many were checked."""
+def check_due(now, limit=MAX_CHECKS_PER_RUN, user=None):
+    """Compare the Premium users' projects (or this user's) with the announcements they have not seen; returns
+    how many were checked."""
     batches = stored_batches(now)
     loaded, done = {}, 0
-    for project in WatchedProject.objects.exclude(description='').select_related('user'):
+    projects = WatchedProject.objects.exclude(description='').select_related('user')
+    for project in projects.filter(user=user) if user is not None else projects:
         if done >= limit:
             break
         days = days_to_check(project, batches)
@@ -184,10 +186,13 @@ def pending(user, base_url):
     return lang, context, lambda: ScoopMatch.objects.filter(pk__in=[m.pk for m in matches]).update(emailed=True)
 
 
-def bundle_section(user, base_url):
+def bundle_section(user, base_url, now=None):
     """The close papers as a section of the user's digest (see digest_bundle), in the active language."""
     if not access.has_tool(user, 'scoops'):
         return None
+    # the hourly run checks the projects after sending the digests: this one's are checked now, so that a
+    # paper of today's announcement is in today's digest rather than tomorrow's
+    check_due(now or timezone.now(), user=user)
     found = pending(user, base_url)
     if found is None:
         return None

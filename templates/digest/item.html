@@ -1,15 +1,7 @@
-{% load i18n %}<div style="border-top:1px solid #eee;padding:16px 0;">
-      <a href="{{ item.url }}" style="font-size:17px;font-weight:bold;color:#1a0dab;text-decoration:none;">{{ item.title }}</a>
-      <p style="margin:4px 0 4px;color:#666;font-size:13px;">{{ item.authors }}{% if item.via %} &middot; <strong>{% blocktrans with names=item.via %}you follow {{ names }}{% endblocktrans %}</strong>{% endif %}</p>
-      <p style="margin:0 0 8px;color:#888;font-size:12px;font-family:Menlo,Consolas,monospace;">{{ item.ident }}{% if item.category %} &middot; {{ item.category }}{% endif %}</p>
-      {% if item.reasons %}<p style="margin:0 0 8px;color:#4f46e5;font-size:13px;">{% trans 'Why:' %} {{ item.reasons|join:" · " }}</p>{% endif %}
-      {% if item.point_list %}
-      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px;font-size:14px;line-height:1.45;">
-        {% for label, text in item.point_list %}<tr><td style="vertical-align:top;padding:0 8px 4px 0;color:#666;white-space:nowrap;"><strong>{{ label }}</strong></td><td style="padding:0 0 4px;">{{ text }}</td></tr>{% endfor %}
-      </table>
-      {% else %}
-      <p style="margin:0 0 8px;line-height:1.5;">{{ item.blurb }}</p>
-      {% endif %}
-      <p style="margin:0;font-size:14px;"><a href="{{ item.url }}" style="color:#34a853;">{% if item.ready %}{% trans 'Full AI summary ready' %}{% else %}{% trans 'Full AI summary and questions' %}{% endif %} &rarr;</a>{% if item.abs_url %} &nbsp;&middot;&nbsp; <a href="{{ item.abs_url }}" style="color:#1a0dab;">{% trans 'Abstract' %}</a>{% endif %}{% if item.pdf_url %} &nbsp;&middot;&nbsp; <a href="{{ item.pdf_url }}" style="color:#1a0dab;">PDF</a>{% endif %}</p>
-      <p style="margin:8px 0 0;font-size:13px;color:#888;"><a href="{{ item.save_url }}" style="color:#888;">&#128278; {% trans 'Save to a collection' %}</a>{% if item.more_url %} &nbsp; <a href="{{ item.more_url }}" style="color:#888;">&#128077; {% trans 'More like this' %}</a> &nbsp; <a href="{{ item.less_url }}" style="color:#888;">&#128078; {% trans 'Less like this' %}</a>{% endif %}</p>
-    </div>
+{% load i18n %}<div class="it"><a class="t" href="{{ item.url }}">{{ item.title }}</a>
+<p class="m">{{ item.authors }}{% if item.via %} &middot; <b>{% blocktrans with names=item.via %}you follow {{ names }}{% endblocktrans %}</b>{% endif %}</p>
+<p class="i">{{ item.ident }}{% if item.category %} &middot; {{ item.category }}{% endif %}</p>
+{% if item.reasons %}<p class="w">{% trans 'Why:' %} {{ item.reasons|join:" · " }}</p>{% endif %}
+{% if item.point_list %}<p class="p">{% for label, text in item.point_list %}<b>{{ label }}</b> {{ text }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>{% else %}<p class="p">{{ item.blurb }}</p>{% endif %}
+<p class="l"><a class="s" href="{{ item.url }}">{% if item.ready %}{% trans 'Full AI summary ready' %}{% else %}{% trans 'Full AI summary and questions' %}{% endif %} &rarr;</a>{% if item.abs_url %} &middot; <a href="{{ item.abs_url }}">{{ item.source }}</a>{% endif %}{% if item.pdf_url %} &middot; <a href="{{ item.pdf_url }}">PDF</a>{% endif %}</p>
+<p class="f"><a href="{{ item.save_url }}">&#128278; {% trans 'Save to a collection' %}</a>{% if item.more_url %} &nbsp; <a href="{{ item.more_url }}">&#128077; {% trans 'More like this' %}</a> &nbsp; <a href="{{ item.less_url }}">&#128078; {% trans 'Less like this' %}</a>{% endif %}</p></div>
