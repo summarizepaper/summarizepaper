@@ -70,9 +70,10 @@
   {% if not is_paid %}{% include 'summarizer/currency_selector.html' %}{% endif %}
 
   <div class="plans">
-    <div class="plan card">
+    <div class="plan card{% if request.user.is_authenticated and not is_paid %} highlight{% endif %}">
       <h2>{% trans 'Free' %}</h2>
       <p class="pitch">{% trans 'To read papers and follow your field.' %}</p>
+      {% if request.user.is_authenticated and not is_paid %}<span class="current">{% trans 'Your plan' %}</span>{% endif %}
       <ul>
         <li>{% blocktrans %}{{ runs_per_day }} new summaries per day{% endblocktrans %}</li>
         <li>{% blocktrans %}{{ chat_free }} questions per day to the AI assistant{% endblocktrans %}</li>
@@ -82,7 +83,7 @@
       </ul>
     </div>
 
-    <div class="plan card highlight">
+    <div class="plan card{% if not request.user.is_authenticated or is_paid and not is_plus %} highlight{% endif %}">
       <h2>{% trans 'Premium' %}</h2>
       <p class="pitch">{% trans 'For researchers who follow a field closely and prepare their papers.' %}</p>
       {% if is_paid and not is_plus %}
@@ -118,7 +119,7 @@
       </ul>
     </div>
 
-    <div class="plan card" id="plus">
+    <div class="plan card{% if is_plus %} highlight{% endif %}" id="plus">
       <h2>{% trans 'Premium+' %}</h2>
       <p class="pitch">{% trans 'Everything in Premium, plus the tools that read the most for you.' %}</p>
       {% if is_plus %}
