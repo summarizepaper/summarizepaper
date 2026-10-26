@@ -1567,22 +1567,6 @@ msgstr ""
 "disques circumstellaires, en particulier les disques de débris, ainsi que "
 "sur la détection d'exolunes et l'origine de l'eau sur Terre."
 
-#: templates/summarizer/author.html:32
-msgid ""
-"He studied at the École normale supérieure (Ulm) and the Paris Observatory, "
-"where he obtained his PhD in 2014, followed by about four years as a "
-"postdoctoral researcher at Cambridge. His thesis received the PhD prize of "
-"the French Society of Astronomy and Astrophysics (SF2A) in 2015, and he "
-"obtained his habilitation (HDR) in 2024. He is in charge of the "
-"Encyclopaedia of exoplanetary systems."
-msgstr ""
-"Il a étudié à l'École normale supérieure (Ulm) et à l'Observatoire de Paris,"
-" où il a soutenu sa thèse en 2014, puis a été chercheur postdoctoral à "
-"Cambridge pendant environ quatre ans. Sa thèse a reçu le prix de thèse de la"
-" Société française d'astronomie et d'astrophysique (SF2A) en 2015, et il a "
-"obtenu son habilitation à diriger des recherches (HDR) en 2024. Il est "
-"responsable de l'Encyclopédie des planètes extrasolaires."
-
 #: templates/summarizer/author.html:34
 msgid "Why SummarizePaper"
 msgstr "Pourquoi SummarizePaper"
