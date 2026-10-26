@@ -239,16 +239,17 @@ def common_references(papers, own):
 
 
 def set_tools_apart(cited, papers):
-    """(research, tools): the references a review is expected to know, and the software, data and generic
-    methods the papers share, SUGGEST_MAX of each at most. Everything is research when the model cannot tell."""
+    """(research, tools): the references a review is expected to know, and the software, data and methods
+    (papers of other fields cited for their method included) the papers share, SUGGEST_MAX of each at most. Everything is research when the model cannot tell."""
     if not cited:
         return [], []
     listing = '\n'.join('%d. %s' % (i, c['title']) for i, c in enumerate(cited, 1))
     try:
         answer = generated.chat_json(
             'The papers of a research collection are titled:\n%s\n\nThey cite the works below. Which of them are '
-            'software, codes, databases, catalogs, instruments or generic statistical methods, rather than research '
-            'results about the topic? Answer with a JSON object {"tools": [numbers]}.\n\n%s'
+            'software, codes, databases, catalogs, instruments or generic statistical methods, or papers from another '
+            'field cited for a method they introduced, rather than research results on the collection\'s topic? '
+            'Answer with a JSON object {"tools": [numbers]}.\n\n%s'
             % ('\n'.join('- ' + (p.title or '') for p in papers[:25]), listing), paid=False, max_tokens=400)
         tools = {int(n) for n in answer.get('tools', []) if str(n).isdigit()}
     except Exception:
