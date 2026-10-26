@@ -309,7 +309,7 @@ def search_results(request):
         'src': src, 'unified': True, 'failed': window['failed'], 'field': field, 'kind': kind})
 
 
-OPEN_SEARCH_SECONDS = 6 * 3600  # an OpenAlex search costs; pages and reloads of the same search reuse it
+OPEN_SEARCH_SECONDS = 3600  # an OpenAlex search costs; pages and reloads of the same search reuse it
 
 
 def open_search_results(request, query, kind, page_num, filter_context=None):

@@ -135,7 +135,8 @@ def fetch(url, website):
                 if len(raw) > 1_000_000:
                     raise Unavailable()
                 html = raw.decode('utf-8', errors='replace')
-                cache.set(key, (html, url), 6*3600)
+                if len(raw) < 256 * 1024:  # large pages would crowd the shared Redis
+                    cache.set(key, (html, url), 6*3600)
                 return Page(html), url
             finally:
                 connection.close()

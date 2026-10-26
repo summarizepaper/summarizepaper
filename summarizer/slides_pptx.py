@@ -126,7 +126,8 @@ def figure_bytes(url):
                     if len(data) > MAX_IMAGE_BYTES or time.monotonic() > deadline:
                         raise ExportError
                 result = normalized_image(bytes(data))
-                cache.set(key, result, 6 * 3600)
+                if len(result) < 256 * 1024:  # large images would crowd the shared Redis
+                    cache.set(key, result, 6 * 3600)
                 return result
     except (requests.RequestException, ValueError, OSError, RuntimeError, etree.XMLSyntaxError) as error:
         raise ExportError from error

@@ -120,7 +120,7 @@ def search(query, field='all', source='all', kind='', filters=None, page=1):
     return result
 
 
-WINDOW_SECONDS = 6 * 3600
+WINDOW_SECONDS = 3600
 MAX_BATCHES = 20
 WINDOW_SALT = 'research-search-window'
 

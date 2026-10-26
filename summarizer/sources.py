@@ -866,7 +866,7 @@ SEARCH_TYPES = {'journals': 'type:article', 'preprints': 'type:preprint', 'revie
 SEARCH_FIELDS = 'id,doi,display_name,authorships,publication_date,primary_location,best_oa_location,locations,type'
 
 
-SEARCH_SECONDS = 6 * 3600  # pages, reloads and the same words typed again reuse a search
+SEARCH_SECONDS = 3600  # pages, reloads and the same words typed again reuse a search
 # Searches cost $0.001 each on the same $1 a day as the full texts (OPENALEX_CONTENT_PER_DAY): past this many,
 # the day's searches go to Crossref, which is free but does not know which papers are open.
 OPENALEX_SEARCHES_PER_DAY = 450

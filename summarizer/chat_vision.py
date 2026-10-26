@@ -70,7 +70,7 @@ def image_data(url):
         if len(result) > MAX_BYTES:
             return None
         # Avoid large cache entries for unusually complex plots.
-        if len(result) < 1024 * 1024:
+        if len(result) < 256 * 1024:
             cache.set(key, result, 3600)
         return result
     except (requests.RequestException, OSError, ValueError, RuntimeError, ExportError,
