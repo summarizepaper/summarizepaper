@@ -15156,3 +15156,109 @@ msgid "Reminder: %(n)s research placement lead to follow up"
 msgid_plural "Reminder: %(n)s research placement leads to follow up"
 msgstr[0] "Rappel : %(n)s piste de stage ou de thèse à relancer"
 msgstr[1] "Rappel : %(n)s pistes de stage ou de thèse à relancer"
+
+msgid "You will get an email when they publish a new paper, in any journal or on a preprint server."
+msgstr "Vous recevrez un e-mail quand cette personne publiera un nouvel article, dans n'importe quelle revue ou sur un serveur de preprints."
+
+msgid "Their new papers are no longer followed."
+msgstr "Ses nouveaux articles ne sont plus suivis."
+
+msgid "The leads found by an earlier version were checked again, up to five at a time."
+msgstr "Les pistes trouvées par une version antérieure ont été revérifiées, cinq au plus à la fois."
+
+msgid "Their ORCID record: check it is the right person, not a namesake"
+msgstr "Sa fiche ORCID : vérifiez que c'est la bonne personne, pas un homonyme"
+
+msgid "not among the people shown"
+msgstr "pas parmi les personnes affichées"
+
+msgid "Check them again to see how each person signs their papers, their team and the funding their papers acknowledge, without a new search."
+msgstr "Revérifiez-les pour voir comment chaque personne signe ses articles, son équipe et les financements que ses articles remercient, sans nouvelle recherche."
+
+msgid "Check them again"
+msgstr "Les revérifier"
+
+msgid "You get an email when they publish a new paper."
+msgstr "Vous recevez un e-mail quand cette personne publie un nouvel article."
+
+msgid "Email me their new papers"
+msgstr "M'envoyer ses nouveaux articles par e-mail"
+
+msgid "In any journal or on a preprint server. A new paper is a good reason to write or to follow up."
+msgstr "Dans n'importe quelle revue ou sur un serveur de preprints. Un nouvel article est une bonne raison d'écrire ou de relancer."
+
+msgid "Their new papers since you follow them:"
+msgstr "Ses nouveaux articles depuis que vous la suivez :"
+
+msgid "Show my leads to a supervisor"
+msgstr "Montrer mes pistes à un encadrant"
+
+msgid "A read-only link to your leads and where each application stands, for a supervisor or a programme coordinator. Never your drafts, never your name; your notes only if you choose."
+msgstr "Un lien en lecture seule vers vos pistes et l'état de chaque candidature, pour un encadrant ou un responsable de formation. Jamais vos brouillons ni votre nom ; vos notes seulement si vous le choisissez."
+
+msgid "It shows your notes."
+msgstr "Il montre vos notes."
+
+msgid "It does not show your notes."
+msgstr "Il ne montre pas vos notes."
+
+msgid "Include my private notes"
+msgstr "Inclure mes notes privées"
+
+msgid "The link works until %(d)s."
+msgstr "Le lien fonctionne jusqu'au %(d)s."
+
+msgid "Research placement leads"
+msgstr "Pistes de stage ou de thèse"
+
+msgid "Shared leads"
+msgstr "Pistes partagées"
+
+msgid "The leads a student saved and where each application stands. Read-only; the student can stop this link at any time."
+msgstr "Les pistes enregistrées par un étudiant et l'état de chaque candidature. En lecture seule ; l'étudiant peut arrêter ce lien à tout moment."
+
+msgid "These are publication-based leads, not advertised vacancies. Affiliation metadata does not prove a current position or a right to supervise."
+msgstr "Ce sont des pistes tirées des publications, pas des offres de recrutement. Une affiliation ne prouve ni un poste actuel ni le droit d'encadrer."
+
+msgid "No saved lead."
+msgstr "Aucune piste enregistrée."
+
+msgid "New papers by the researchers you follow for a placement. A new paper is a good reason to write or to follow up: read it first."
+msgstr "Nouveaux articles des chercheurs que vous suivez pour un stage ou une thèse. Un nouvel article est une bonne raison d'écrire ou de relancer : lisez-le d'abord."
+
+msgid "Your leads:"
+msgstr "Vos pistes :"
+
+msgid "Your leads"
+msgstr "Vos pistes"
+
+msgid "You receive this email because you follow these researchers from your leads. Stop following them on the page above."
+msgstr "Vous recevez cet e-mail parce que vous suivez ces chercheurs depuis vos pistes. Arrêtez de les suivre sur la page ci-dessus."
+
+msgid "signs last on %(n)s paper on your topic"
+msgid_plural "signs last on %(n)s papers on your topic"
+msgstr[0] "signe en dernier %(n)s article sur votre sujet"
+msgstr[1] "signe en dernier %(n)s articles sur votre sujet"
+
+msgid "%(n)s lead was found by an earlier version of this tool."
+msgid_plural "%(n)s leads were found by an earlier version of this tool."
+msgstr[0] "%(n)s piste a été trouvée par une version antérieure de l'outil."
+msgstr[1] "%(n)s pistes ont été trouvées par une version antérieure de l'outil."
+
+msgid "New papers by %(n)s researcher you follow for a placement"
+msgid_plural "New papers by %(n)s researchers you follow for a placement"
+msgstr[0] "Nouveaux articles de %(n)s chercheur suivi pour un stage ou une thèse"
+msgstr[1] "Nouveaux articles de %(n)s chercheurs suivis pour un stage ou une thèse"
+
+msgid "(a small record: OpenAlex may have split this person’s papers between several records; check their ORCID or website)"
+msgstr "(une petite fiche : OpenAlex a peut-être réparti les articles de cette personne sur plusieurs fiches ; vérifiez son ORCID ou son site)"
+
+msgid "%(n)s person among those checked could not be located (affiliation unknown or unreadable): not shown, not excluded on purpose."
+msgid_plural "%(n)s people among those checked could not be located (affiliation unknown or unreadable): not shown, not excluded on purpose."
+msgstr[0] "%(n)s personne vérifiée n'a pas pu être localisée (affiliation inconnue ou illisible) : elle n'est pas affichée, sans avoir été écartée exprès."
+msgstr[1] "%(n)s personnes vérifiées n'ont pas pu être localisées (affiliation inconnue ou illisible) : elles ne sont pas affichées, sans avoir été écartées exprès."
+
+msgid "We check the people who sign these papers most prominently; %(n)s other coauthor was not checked."
+msgid_plural "We check the people who sign these papers most prominently; %(n)s other coauthors were not checked."
+msgstr[0] "Nous vérifions les personnes qui signent ces articles de la façon la plus visible ; %(n)s autre coauteur n'a pas été vérifié."
+msgstr[1] "Nous vérifions les personnes qui signent ces articles de la façon la plus visible ; %(n)s autres coauteurs n'ont pas été vérifiés."

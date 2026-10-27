@@ -104,11 +104,13 @@ class StudentTests(ToolsTestCase):
             self.assertEqual(students.institution_details('https://openalex.org/I1'), first)
         self.assertEqual(fetch.call_count, 1)
         papers = [dict(self.paper_data('A%d'%i, 'I%d'%i), id='W%d' % i, doi='https://doi.org/10.1234/unique%d' % i) for i in range(40)]
+        report = {}
         with mock.patch.object(students, 'institution_details', return_value=self.details()) as fetch:
-            found, limited = students.candidates(papers, self.profile)
+            found, limited = students.candidates(papers, self.profile, report=report)
         self.assertEqual(fetch.call_count, students.MAX_AUTHORS)
         self.assertEqual(len(found), 10)
-        self.assertTrue(limited)
+        self.assertFalse(limited)  # the people beyond the budget are told apart, not a failure
+        self.assertEqual(report['beyond'], 40 - students.MAX_AUTHORS)
         self.assertEqual(students.safe_url('javascript:alert(1)'), '')
         self.assertEqual(students.safe_url('https://[invalid'), '')
 
@@ -674,7 +676,8 @@ class StudentRoleAndRankingTests(ToolsTestCase):
         found, _ = students.candidates(papers, dict(self.profile, city=''))
         by_name = {p['name']: p for p in found}
         self.assertEqual(by_name['Pat Student']['team_id'], by_name['Lee Leader']['team_id'])
-        self.assertEqual(by_name['Lee Leader']['team'], [{'key': by_name['Pat Student']['key'], 'name': 'Pat Student', 'shared': 2}])
+        self.assertEqual(by_name['Lee Leader']['team'], [{'key': by_name['Pat Student']['key'], 'name': 'Pat Student', 'shared': 2,
+                                                          'last': 1, 'institution': 'Example University', 'shown': True}])
         self.assertIsNone(by_name['Solo Person']['team_id'])
         rows = students.overview(found)
         self.assertEqual(sum(r['team_start'] for r in rows), 1)
@@ -686,7 +689,8 @@ class StudentRoleAndRankingTests(ToolsTestCase):
         with mock.patch.object(students, 'institution_details', return_value=None):
             found, limited = students.candidates(papers, self.profile, report=report)
             self.assertEqual(found, [])
-            self.assertEqual(report['unchecked'], 30)
+            self.assertEqual(report['unchecked'], students.MAX_AUTHORS)
+            self.assertEqual(report['beyond'], 30 - students.MAX_AUTHORS)
             found, _ = students.candidates(papers[:2], dict(self.profile, mobility='open'))
         self.assertEqual(len(found), 2)
         self.assertFalse(found[0]['location_checked'])
@@ -800,21 +804,82 @@ class StudentLeadsPageTests(ToolsTestCase):
         self.assertEqual(students.send_reminders(now + timezone.timedelta(days=1), 10), 1)
         self.assertEqual(students.send_reminders(now.replace(hour=3), 10), 0)
 
-    def test_follow_in_the_digest_and_without_one(self):
-        from summarizer.models import DigestSubscription
+    def openalex_work(self, key, title, date='2026-10-01'):
+        return {'id': 'https://openalex.org/' + key, 'display_name': title, 'publication_date': date, 'doi': 'https://doi.org/10.1/' + key,
+                'authorships': [{'author': {'id': self.person['author_url'], 'display_name': 'Alex Example'}, 'author_position': 'last'}]}
+
+    def test_following_new_papers_learns_what_exists_then_emails_only_what_is_new(self):
+        from django.core import mail
         follow = '/en/students/shortlist/%d/follow/' % self.item.pk
-        self.assertTrue(self.client.post(follow)['Location'].endswith('/en/digest/'))
-        subscription = DigestSubscription.objects.create(user=self.owner, categories='astro-ph.EP', authors='Ann Lee')
-        self.client.post(follow)
-        subscription.refresh_from_db()
-        self.assertEqual(subscription.authors, 'Ann Lee, Alex Example')
-        self.client.post(follow)
-        subscription.refresh_from_db()
-        self.assertEqual(subscription.authors, 'Ann Lee, Alex Example')
-        page = self.client.get('/en/students/leads/')
-        self.assertContains(page, 'Their new arXiv papers come first in your digest.')
+        with mock.patch.object(students, 'new_works', return_value=[self.openalex_work('W1', 'Known paper')]):
+            self.client.post(follow)
+        self.item.refresh_from_db()
+        self.assertTrue(self.item.watch)
+        self.assertEqual(json.loads(self.item.watch_seen), ['https://openalex.org/W1'])
+        now = timezone.now().replace(hour=9) + timezone.timedelta(days=1)
+        fresh = [self.openalex_work('W2', 'A new paper on moons'), self.openalex_work('W1', 'Known paper')]
+        with mock.patch.object(students, 'new_works', return_value=fresh) as look:
+            self.assertEqual(students.watch_new_papers(now, 10), 1)
+            self.assertEqual(students.watch_new_papers(now, 10), 0)  # once a day
+        self.assertEqual(look.call_count, 1)
+        self.assertIn('A new paper on moons', mail.outbox[0].body)
+        self.assertNotIn('Known paper', mail.outbox[0].body)
+        self.item.refresh_from_db()
+        self.assertEqual(json.loads(self.item.watch_new)[0]['roles'], ['last'])
+        self.assertContains(self.client.get('/en/students/leads/'), 'A new paper on moons')
+        with mock.patch.object(students, 'new_works', return_value=fresh):
+            self.assertEqual(students.watch_new_papers(now + timezone.timedelta(days=1), 10), 0)  # nothing new
+        self.client.post(follow, {'action': 'stop'})
+        self.item.refresh_from_db()
+        self.assertFalse(self.item.watch)
         other = self.client_for(self.user('intruder', paid=True))
         self.assertEqual(other.post(follow).status_code, 404)
+
+    def test_a_failed_first_look_tells_nothing_on_the_next_one(self):
+        from django.core import mail
+        with mock.patch.object(students, 'new_works', return_value=None):
+            self.client.post('/en/students/shortlist/%d/follow/' % self.item.pk)
+        with mock.patch.object(students, 'new_works', return_value=[self.openalex_work('W1', 'Old paper')]):
+            self.assertEqual(students.watch_new_papers(timezone.now(), 10), 0)
+        self.assertEqual(mail.outbox, [])
+        self.item.refresh_from_db()
+        self.assertEqual(json.loads(self.item.watch_seen), ['https://openalex.org/W1'])
+
+    def test_reminders_wait_for_the_morning_of_the_users_time_zone(self):
+        from django.core import mail
+        from summarizer.models import DigestSubscription
+        DigestSubscription.objects.create(user=self.owner, categories='astro-ph.EP', timezone='America/Los_Angeles')
+        day = timezone.now().replace(month=1, day=10, hour=12, minute=0)  # 4 am in Los Angeles
+        StudentShortlist.objects.filter(pk=self.item.pk).update(remind_on=day.date(), email_reminder=True)
+        self.assertEqual(students.send_reminders(day, 10), 0)
+        self.assertEqual(students.send_reminders(day.replace(hour=17), 10), 1)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_shared_leads_show_progress_never_drafts_and_notes_only_when_chosen(self):
+        StudentShortlist.objects.filter(pk=self.item.pk).update(notes='Private thought', draft='Secret draft', status='interview')
+        self.client.post('/en/students/leads/share/', {'action': 'share'})
+        from summarizer.models import StudentLeadsShare
+        share = StudentLeadsShare.objects.get(user=self.owner)
+        page = Client().get('/en/students/leads/shared/%s/' % share.token)
+        self.assertContains(page, 'Alex Example')
+        self.assertContains(page, 'Interview')
+        self.assertNotContains(page, 'Private thought')
+        self.assertNotContains(page, 'Secret draft')
+        self.assertNotContains(page, 'owner')
+        self.client.post('/en/students/leads/share/', {'action': 'share', 'notes': '1'})
+        self.assertContains(Client().get('/en/students/leads/shared/%s/' % share.token), 'Private thought')
+        self.client.post('/en/students/leads/share/', {'action': 'unshare'})
+        self.assertEqual(Client().get('/en/students/leads/shared/%s/' % share.token).status_code, 404)
+
+    def test_old_leads_are_checked_again_five_at_a_time(self):
+        StudentShortlist.objects.filter(pk=self.item.pk).update(snapshot=dict(self.person, version=4))
+        for i in range(6):
+            StudentShortlist.objects.create(user=self.owner, candidate_key='old%d' % i, snapshot=dict(self.person, version=3, name='Old %d' % i))
+        self.assertContains(self.client.get('/en/students/leads/'), '7 leads were found by an earlier version')
+        with mock.patch.object(students, 'checked_again', side_effect=lambda p: dict(p, version=students.RESULT_VERSION)) as check:
+            self.client.post('/en/students/leads/update/')
+        self.assertEqual(check.call_count, 5)
+        self.assertContains(self.client.get('/en/students/leads/'), '2 leads were found by an earlier version')
 
     def test_readings_go_to_a_collection(self):
         from summarizer.models import Collection
@@ -876,3 +941,83 @@ class StudentLeadsPageTests(ToolsTestCase):
         with mock.patch.object(students, 'find', return_value={'title': 'Fresh', 'profile': self.profile, 'candidates': []}) as find:
             self.assertEqual(self.client.post('/en/students/old/refresh/').status_code, 302)
         self.assertEqual(find.call_args.args[0]['country'], 'FR')
+
+
+class StudentSearchQualityTests(ToolsTestCase):
+    def test_placements_screen_abstracts_and_teams_keep_titles(self):
+        from summarizer import teams
+        work = {'id': 'W1', 'display_name': 'Moons', 'abstract_inverted_index': {'Astrometric': [0], 'exomoons': [1]}}
+        with mock.patch.object(teams.generated, 'chat_json', return_value={'relevant_ids': ['W1']}) as chat:
+            teams.relevant_papers('exomoons', [work], abstracts=True)
+            self.assertEqual(json.loads(chat.call_args.args[0])['papers'][0]['abstract'], 'Astrometric exomoons')
+            teams.relevant_papers('exomoons', [work])
+            self.assertNotIn('abstract', json.loads(chat.call_args.args[0])['papers'][0])
+        with mock.patch.object(teams.sources, 'tool_search_allowed', return_value=True), \
+             mock.patch.object(teams.sources, '_json', return_value={'results': []}) as fetch:
+            teams.works('moons', timezone.now().date(), abstracts=True)
+        self.assertIn('abstract_inverted_index', fetch.call_args.args[1]['select'])
+        with mock.patch.object(students.teams, 'search_papers', return_value={'works': []}) as search, \
+             mock.patch.object(students, 'reading_notes'):
+            students.find(StudentTests.profile, 'en')
+        self.assertTrue(search.call_args.kwargs['abstracts'])
+
+    def test_corresponding_authors_listed_by_the_work_count_and_orcid_is_kept(self):
+        from summarizer import student_papers as papers
+        work = {'id': 'W1', 'corresponding_author_ids': ['https://openalex.org/A2'], 'authorships': [
+            {'author': {'id': 'https://openalex.org/A1', 'display_name': 'Ann Zed'}, 'author_position': 'first'},
+            {'author': {'id': 'https://openalex.org/A2', 'display_name': 'Bob Abel'}, 'author_position': 'middle'},
+            {'author': {'id': 'https://openalex.org/A3', 'display_name': 'Cy Moe'}, 'author_position': 'last'}]}
+        self.assertEqual(papers.author_roles(work)['https://openalex.org/A2'], ['corresponding'])
+        paper = StudentTests.paper_data(self)
+        paper['authorships'][0]['author']['orcid'] = 'https://orcid.org/0000-0001-6527-4684'
+        with mock.patch.object(students, 'latest_affiliations', side_effect=lambda aid: StudentTests.latest(self, aid)), \
+             mock.patch.object(students, 'institution_details', return_value=StudentTests.details(self)):
+            found, _ = students.candidates([paper], StudentTests.profile)
+        self.assertEqual(found[0]['orcid'], 'https://orcid.org/0000-0001-6527-4684')
+
+    def test_a_team_member_beyond_the_people_shown_is_named(self):
+        people = [{'key': 'k%d' % i, 'name': 'P%d' % i, 'institution_url': 'I%d' % i, 'institution': 'U', 'role_counts': {'last': i},
+                   'small_ids': ['W%d' % i, 'W%d' % (i + 1)] if i in (0, 11) else ['X%d' % i]} for i in range(12)]
+        people[11]['small_ids'] = ['W0', 'W1']
+        students.group_teams(people)
+        self.assertEqual(people[0]['team'][0]['name'], 'P11')
+        self.assertEqual(people[0]['team'][0]['last'], 11)
+
+
+class StudentCalibrationFixTests(ToolsTestCase):
+    """What a calibration on real OpenAlex records showed (October 2026)."""
+    work = StudentRoleAndRankingTests.work
+    aid = StudentRoleAndRankingTests.aid
+
+    def test_one_paper_under_two_records_counts_once_for_its_author(self):
+        from summarizer import student_papers as papers
+        published = self.work('W1', ['Ann Lee', 'Aditya Mohite'], title='Design principle for mitigating moisture-induced degradation in 2D halide perovskites')
+        preprint = self.work('W2', ['Aditya Mohite', 'Ann Lee'], title='Design principle for mitigating moisture induced degradation in 2D halide perovskites')
+        person = {'works': {}, 'signed': {}, 'weights': {}}
+        for work in (published, preprint):
+            students.add_work(person, work, papers.author_roles(work)[self.aid('Aditya Mohite')], 1.0, self.aid('Aditya Mohite'))
+        self.assertEqual(len(person['works']), 1)
+        self.assertEqual(person['signed']['https://openalex.org/W1'], {'first', 'last'})
+        series = [self.work('W3', ['Ann Lee'], title='Barron optimal transport I: generative modeling'),
+                  self.work('W4', ['Ann Lee'], title='Barron optimal transport II: generative modeling')]
+        self.assertFalse(papers.same(series[0], series[1], owner=self.aid('Ann Lee')))
+        self.assertFalse(papers.same(published, preprint))  # two people's papers are never merged on titles alone
+
+    def test_records_sharing_an_orcid_are_one_person(self):
+        people = {'A1': {'orcid': 'https://orcid.org/0000-0002-0378-2023', 'works': {'W1': {'id': 'W1', 'display_name': 'One paper here today'}},
+                         'signed': {'W1': {'last'}}, 'weights': {'W1': 1.0}, 'country_hint': False},
+                  'A2': {'orcid': 'https://orcid.org/0000-0002-0378-2023', 'works': {'W2': {'id': 'W2', 'display_name': 'Another paper there now'}},
+                         'signed': {'W2': {'last'}}, 'weights': {'W2': 1.0}, 'country_hint': True},
+                  'A3': {'orcid': '', 'works': {}, 'signed': {}, 'weights': {}, 'country_hint': False}}
+        students.merge_namesakes(people)
+        self.assertEqual(sorted(people), ['A1', 'A3'])
+        self.assertEqual(sorted(people['A1']['works']), ['W1', 'W2'])
+        self.assertTrue(people['A1']['country_hint'])
+
+    def test_economics_lists_of_two_by_last_name_are_alphabetical(self):
+        from summarizer import student_papers as papers
+        paper = self.work('W1', ['Olivier Coibion', 'Yuriy Gorodnichenko', 'Michael Weber'])
+        self.assertFalse(papers.alphabetical(paper))
+        paper['primary_topic'] = {'field': {'display_name': 'Economics, Econometrics and Finance'}}
+        self.assertTrue(papers.alphabetical(paper))
+        self.assertEqual(papers.author_roles(paper)[self.aid('Michael Weber')], [])

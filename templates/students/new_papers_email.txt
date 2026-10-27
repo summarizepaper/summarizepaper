@@ -1,0 +1,8 @@
+{% load i18n %}{% trans 'New papers by the researchers you follow for a placement. A new paper is a good reason to write or to follow up: read it first.' %}
+{% for item, papers in leads %}
+{{ item.snapshot.name }}, {{ item.snapshot.institution }}
+{% for paper in papers %}- {{ paper.title }}{% if paper.year %} ({{ paper.year }}){% endif %}{% if paper.url %} {{ paper.url }}{% endif %}
+{% endfor %}{% endfor %}
+{% trans 'Your leads:' %} {{ url }}
+
+{% trans 'You receive this email because you follow these researchers from your leads. Stop following them on the page above.' %}

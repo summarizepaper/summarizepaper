@@ -37,7 +37,8 @@ class Command(BaseCommand):
                            ('letter emails', lambda: letters.send(now, budget)),
                            ('search watches', lambda: saved_searches.run(now, budget, base_url=options['base_url'])),
                            ('publication alerts', lambda: publication_alerts.run(now, budget)),
-                           ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url']))):
+                           ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url'])),
+                           ('placement new papers', lambda: students.watch_new_papers(now, budget, base_url=options['base_url']))):
             try:
                 with usage.task(name.replace(' ', '_')):
                     done = step()
@@ -45,6 +46,6 @@ class Command(BaseCommand):
                 logger.exception('Hourly step %s failed', name)
                 continue
             if name in ('scoop alerts', 'citation alerts', 'version alerts', 'letter emails', 'search watches', 'publication alerts',
-                        'placement reminders'):
+                        'placement reminders', 'placement new papers'):
                 budget -= done
             self.stdout.write('%s: %s' % (name, done))

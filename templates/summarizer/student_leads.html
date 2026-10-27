@@ -11,6 +11,7 @@
   {% if total %}
     <nav class="student-pipeline" aria-label="{% trans 'Progress' %}"><a href="?#leads"{% if not status_filter %} aria-current="true"{% endif %}>{% trans 'All' %} <strong>{{ total }}</strong></a>{% for key, label, n in pipeline %}{% if n %}<a href="?status={{ key }}#leads"{% if status_filter == key %} aria-current="true"{% endif %}>{{ label }} <strong>{{ n }}</strong></a>{% endif %}{% endfor %}</nav>
     <form method="get" action="#leads" class="student-filters"><input type="hidden" name="status" value="{{ status_filter }}"><label><input type="checkbox" name="due" value="1"{% if due_filter %} checked{% endif %} onchange="this.form.submit()"> {% trans 'Reminders due' %}</label> <noscript><button class="btn btn-secondary">{% trans 'Filter' %}</button></noscript></form>
+    {% if old and paid %}<form method="post" action="{% url 'student_update_old' %}" class="card section-card">{% csrf_token %}<p>{% blocktrans count n=old %}{{ n }} lead was found by an earlier version of this tool.{% plural %}{{ n }} leads were found by an earlier version of this tool.{% endblocktrans %} {% trans 'Check them again to see how each person signs their papers, their team and the funding their papers acknowledge, without a new search.' %}</p><button class="btn btn-secondary" type="submit">{% trans 'Check them again' %}</button></form>{% endif %}
     <form id="student-compare" method="get" action="{% url 'student_compare' %}"><p>{% trans 'Select two to four saved leads to compare their evidence and your progress.' %} <button class="btn btn-secondary">{% trans 'Compare selected leads' %}</button></p></form>
   {% endif %}
   {% for item in shortlist %}
@@ -28,9 +29,8 @@
       {% if message and message_pk == item.pk %}<p class="notice" role="status">{{ message }}</p>{% endif %}
       <div class="card section-card student-actions"><h3>{% trans 'Next steps' %}</h3>
         {% if paid %}<form method="post" action="{% url 'student_update_lead' pk=item.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">{% trans 'Check this lead again' %}</button> <span class="muted">{% trans 'Affiliation, location, roles, funding and their new papers, without a new search.' %}</span></form>{% endif %}
-        {% if item.followed %}<p>{% trans 'Their new arXiv papers come first in your digest.' %}</p>
-        {% elif has_digest %}<form method="post" action="{% url 'student_follow' pk=item.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">{% trans 'Follow their new papers in my digest' %}</button> <span class="muted">{% trans 'A new paper is a good reason to write or to follow up.' %}</span></form>
-        {% else %}<p><a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Create a digest' %}</a> {% trans 'to follow their new papers: a new paper is a good reason to write or to follow up.' %}</p>{% endif %}
+        <form method="post" action="{% url 'student_follow' pk=item.pk %}">{% csrf_token %}{% if item.watch %}<input type="hidden" name="action" value="stop"><span>{% trans 'You get an email when they publish a new paper.' %}</span> <button class="btn btn-secondary" type="submit">{% trans 'Stop following' %}</button>{% else %}<button class="btn btn-secondary" type="submit">{% trans 'Email me their new papers' %}</button> <span class="muted">{% trans 'In any journal or on a preprint server. A new paper is a good reason to write or to follow up.' %}</span>{% endif %}</form>
+        {% if item.new_papers %}<p><strong>{% trans 'Their new papers since you follow them:' %}</strong></p><ul>{% for paper in item.new_papers %}<li>{% if paper.url %}<a href="{{ paper.url }}" target="_blank" rel="noopener">{{ paper.title }}</a>{% else %}{{ paper.title }}{% endif %}{% if paper.year %} · {{ paper.year }}{% endif %}</li>{% endfor %}</ul>{% endif %}
         {% if item.collectable %}<form method="post" action="{% url 'student_collection' pk=item.pk %}">{% csrf_token %}<label>{% trans 'Put the readings in' %} <select name="collection"><option value="new">{% trans 'a new collection' %}</option>{% for collection in collections %}<option value="{{ collection.pk }}">{{ collection.name }}</option>{% endfor %}</select></label> <button class="btn btn-secondary" type="submit">{% trans 'Add' %}</button> <span class="muted">{% trans 'to read them together, chat with them or export them to Zotero.' %}</span></form>{% endif %}
         {% for talk in item.talks %}<p>{% trans 'Speaks in one of your conference programs:' %} <a href="{{ talk.url }}">{{ talk.conference|default:_('Your program') }}</a> · {{ talk.title }}{% if talk.session %} · {{ talk.session }}{% endif %}{% if talk.time %} · {{ talk.time }}{% endif %}</p>{% endfor %}
       </div>
@@ -39,5 +39,17 @@
     </details>
   {% empty %}<p class="muted">{% if status_filter or due_filter %}{% trans 'No saved lead matches this filter.' %} <a href="?#leads">{% trans 'Show all' %}</a>{% else %}{% trans 'Save a lead from a search to keep its sources, reading suggestions and your private notes here.' %}{% endif %}</p>{% endfor %}
   </section>
+  {% if total %}<section id="share" class="card section-card" style="scroll-margin-top:90px"><h2>{% trans 'Show my leads to a supervisor' %}</h2>
+    <p>{% trans 'A read-only link to your leads and where each application stands, for a supervisor or a programme coordinator. Never your drafts, never your name; your notes only if you choose.' %}</p>
+    {% if share %}
+      <p>{% blocktrans with d=share.expires|date:"j F Y" %}The link works until {{ d }}.{% endblocktrans %} {% if share.notes %}{% trans 'It shows your notes.' %}{% else %}{% trans 'It does not show your notes.' %}{% endif %}</p>
+      <div class="tool-row link-row"><input type="text" readonly value="{{ share_url }}" id="leads-share-url" aria-label="{% trans 'Shared link' %}"> <button type="button" class="btn btn-sm" data-copy="leads-share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button></div>
+    {% endif %}
+    <form method="post" action="{% url 'student_leads_share' %}" class="item-actions">{% csrf_token %}
+      <label><input type="checkbox" name="notes" value="1"{% if share.notes %} checked{% endif %}> {% trans 'Include my private notes' %}</label>
+      <button class="btn btn-sm" name="action" value="share">{% if share %}{% trans 'Update the link for 90 more days' %}{% else %}{% trans 'Create a link' %}{% endif %}</button>
+      {% if share %}<button class="btn btn-sm btn-danger" name="action" value="unshare">{% trans 'Stop sharing' %}</button>{% endif %}
+    </form>
+  </section>{% endif %}
 </div>
 {% endblock %}

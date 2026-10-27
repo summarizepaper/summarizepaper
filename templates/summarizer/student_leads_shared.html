@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load i18n static_version %}
+{% block title %}{% trans 'Research placement leads' %}{% endblock %}
+{% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="page">
+  <header class="page-header"><p class="muted">{% trans 'Shared leads' %} · <a href="{% url 'students' %}">{% trans 'Find a research placement' %}</a></p>
+    <h1>{% trans 'Research placement leads' %}</h1>
+    <p class="lead">{% trans 'The leads a student saved and where each application stands. Read-only; the student can stop this link at any time.' %}</p></header>
+  <p class="notice">{% trans 'These are publication-based leads, not advertised vacancies. Affiliation metadata does not prove a current position or a right to supervise.' %}</p>
+  <div class="student-table" role="region" aria-label="{% trans 'Research placement leads' %}" tabindex="0"><table>
+    <thead><tr><th scope="col">{% trans 'Person' %}</th><th scope="col">{% trans 'Institution' %}</th><th scope="col">{% trans 'Signed first / last / corresponding' %}</th><th scope="col">{% trans 'Progress' %}</th><th scope="col">{% trans 'Reminder date (optional)' %}</th>{% if notes %}<th scope="col">{% trans 'Private notes' %}</th>{% endif %}</tr></thead>
+    <tbody>{% for item in items %}{% with p=item.snapshot %}<tr>
+      <th scope="row"><a href="#{{ p.anchor }}">{{ p.name }}</a></th>
+      <td>{{ p.institution }}{% if p.city %} · {{ p.city }}{% endif %}</td>
+      <td>{% if p.role_counts %}{{ p.role_counts.first }} / {{ p.role_counts.last }} / {{ p.role_counts.corresponding }}{% else %}—{% endif %}</td>
+      <td>{% trans item.get_status_display %}</td>
+      <td>{{ item.remind_on|date:'j F Y'|default:'—' }}</td>
+      {% if notes %}<td>{{ item.notes|linebreaksbr }}</td>{% endif %}
+    </tr>{% endwith %}{% empty %}<tr><td colspan="6">{% trans 'No saved lead.' %}</td></tr>{% endfor %}</tbody></table></div>
+  {% for item in items %}{% include 'summarizer/student_card.html' with person=item.snapshot shared=True %}{% endfor %}
+</div>
+{% endblock %}

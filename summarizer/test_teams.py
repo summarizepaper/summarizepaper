@@ -69,7 +69,7 @@ class TeamsEvidenceTests(ToolsTestCase):
         papers = [self.work('W%d' % i, title='Exomoon %d' % i, authors=authors) for i in range(125)]
         with mock.patch.object(teams, 'works', return_value=papers), \
              mock.patch.object(teams.similar, 'embed', return_value=np.ones((126, 1))), \
-             mock.patch.object(teams, 'relevant_papers', side_effect=lambda topic, candidates: candidates) as relevant, \
+             mock.patch.object(teams, 'relevant_papers', side_effect=lambda topic, candidates, *abstracts: candidates) as relevant, \
              mock.patch.object(generated, 'chat_json', side_effect=[{'queries': ['moons']}, {'groups': []}]) as chat:
             result = teams.find('Exomoons', 'en')
         self.assertTrue(result['truncated'])

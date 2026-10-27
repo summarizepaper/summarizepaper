@@ -273,7 +273,10 @@ by how many research profiles they come close to, rising topics and cross-listin
 
 - Hourly job (Heroku Scheduler): `python manage.py send_digest`. It sends the digests that are due, then counts the
   day's terms for the rising topics, writes the weekly topics and letters, and sends scoop alerts, citation alerts, new version alerts, letters
-  and the research placement reminders students asked by email, within what is left of the hourly email budget.
+  and, for research placements, the reminders students asked by email and the new papers of the researchers they follow,
+  within what is left of the hourly email budget.
+- Research placement ranking: `python manage.py students_calibrate` ranks the people of sample topics in several fields (or
+  `--topic`, `--country`, `--city`, `--full` for readings and notes too) and prints their roles, teams and ORCID. It writes nothing.
 - Scoop watch thresholds: `python manage.py scoop_calibrate` scores sample projects (or `--text file`) against the last
   announcements and has the model read each closeness band; `--feedback` shows the readers' verdicts. It writes nothing.
 - Stripe: webhook endpoint `https://www.summarizepaper.com/stripe/webhook/` with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` and `customer.subscription.deleted`.

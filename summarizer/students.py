@@ -1,8 +1,10 @@
 """Private research-placement leads grounded in publications, not inferred vacancies."""
+import datetime
 import hashlib
 import json
 import logging
 import re
+import secrets
 import unicodedata
 import uuid
 from collections import defaultdict
@@ -25,7 +27,7 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse
 
 from . import access, generated, mailcheck, result_share, sources, teams, student_sources, student_papers
-from .models import Collection, Generated, StudentShortlist, WatchedProject
+from .models import Collection, Generated, StudentLeadsShare, StudentShortlist, WatchedProject
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,12 @@ ROLE_WEIGHTS = {'last': 1.0, 'corresponding': 1.0, 'first': 0.8}
 OTHER_WEIGHT = 0.4
 SKILL_WEIGHT = 0.5  # per skill of the student found in the person's readings
 LEAD_UPDATES_PER_DAY = 20
+OLD_PER_CLICK = 5  # older leads checked again in one click
 DRAFT_CHARS = 5000
+WATCH_PER_RUN = 60  # followed people whose new papers one hourly run looks for (each once a day)
+WATCH_KEEP = 10
+REMINDER_HOUR = 8  # local hour from which a due reminder is emailed
+SHARE_DAYS = 90
 STEPS = teams.STEPS[:2] + [
     ('group', _('Checking relevance and publication affiliations')),
     ('location', _('Checking institution locations')),
@@ -97,10 +104,9 @@ LEAD_MESSAGES = {
     'updated': _('This lead was checked again: affiliation, location, roles and new papers.'),
     'update_failed': _('The lead could not be checked again: no recent affiliation was found or the sources are unavailable. Nothing was changed.'),
     'update_quota': _('You have checked enough leads again today. Come back tomorrow.'),
-    'followed': _('Their new arXiv papers will now come first in your digest.'),
-    'already_followed': _('Your digest already follows this person.'),
-    'follow_full': _('Your digest already follows as many authors as it can. Remove one in your digest settings first.'),
-    'follow_unknown': _('This name cannot be followed: it needs a first and a last name.'),
+    'watching': _('You will get an email when they publish a new paper, in any journal or on a preprint server.'),
+    'unwatched': _('Their new papers are no longer followed.'),
+    'old_updated': _('The leads found by an earlier version were checked again, up to five at a time.'),
     'collection_none': _('None of these readings has an arXiv identifier or a DOI to put in a collection.'),
     'collection_too_many': _('You have reached your number of collections. Delete one to save these papers.'),
 }
@@ -288,7 +294,7 @@ def work_year(work):
 
 def candidates(papers, profile, step=lambda name: None, scores=None, report=None):
     """Up to CANDIDATES people, the ones who sign the most relevant recent papers on the topic first; report
-    (a dict) gets how many authors of these papers were left unchecked."""
+    (a dict) gets how many of the people checked could not be located, and how many were beyond the budget."""
     people = {}
     code = country_code(profile.get('country', ''))
     recent = str(timezone.now().year - 1)
@@ -297,20 +303,21 @@ def candidates(papers, profile, step=lambda name: None, scores=None, report=None
         weight = (scores or {}).get(work['id'], 1.0) * (1.0 if work_year(work) >= recent else 0.7)
         for authorship in work.get('authorships') or []:
             author = authorship.get('author') or {}
-            if author.get('id') not in roles or not author.get('display_name'):
+            aid = author.get('id')
+            if aid not in roles or not author.get('display_name'):
                 continue
-            person = people.setdefault(author['id'], {'name': teams.person_name(author['display_name']), 'works': {}, 'first': set(),
-                                                      'role_counts': {'first': 0, 'last': 0, 'corresponding': 0}, 'score': 0.0, 'country_hint': False})
+            person = people.setdefault(aid, {'name': teams.person_name(author['display_name']), 'works': {}, 'signed': {},
+                                             'weights': {}, 'country_hint': False, 'orcid': ''})
+            if not person['orcid'] and re.fullmatch(r'https://orcid\.org/\d{4}-\d{4}-\d{4}-\d{3}[\dX]', author.get('orcid') or ''):
+                person['orcid'] = author['orcid']
             person['country_hint'] |= bool(code and any(inst.get('country_code') == code for inst in authorship.get('institutions') or []))
-            if work['id'] in person['works']:
-                continue
-            person['works'][work['id']] = work
-            signed = roles[author['id']]
-            for role in signed:
-                person['role_counts'][role] += 1
-            if 'first' in signed:
-                person['first'].add(work['id'])
-            person['score'] += weight * max((ROLE_WEIGHTS[r] for r in signed), default=OTHER_WEIGHT)
+            add_work(person, work, roles[aid], weight, aid)
+    merge_namesakes(people)
+    for aid, person in people.items():
+        person['role_counts'] = {role: sum(role in signed for signed in person['signed'].values()) for role in ('first', 'last', 'corresponding')}
+        person['first'] = {wid for wid, signed in person['signed'].items() if 'first' in signed}
+        person['score'] = sum(person['weights'][wid] * max((ROLE_WEIGHTS[r] for r in signed), default=OTHER_WEIGHT)
+                              for wid, signed in person['signed'].items())
     ordered = sorted(people, key=lambda aid: (not people[aid]['country_hint'], -people[aid]['score'], -len(people[aid]['works']),
                                               people[aid]['name'].casefold(), aid))
     selected = ordered[:MAX_AUTHORS]
@@ -324,7 +331,7 @@ def candidates(papers, profile, step=lambda name: None, scores=None, report=None
     with ThreadPoolExecutor(max_workers=4) as pool:
         checked_ids = institution_ids[:MAX_INSTITUTIONS]
         details = dict(zip(checked_ids, pool.map(sources.closing(institution_details), checked_ids)))
-    found, unchecked = [], set(ordered[MAX_AUTHORS:])
+    found, unchecked = [], set()
     for aid in selected:
         person, record = people[aid], latest[aid]
         if not record or not record.get('institutions'):
@@ -340,13 +347,13 @@ def candidates(papers, profile, step=lambda name: None, scores=None, report=None
                     unchecked.add(aid)  # beyond the institution budget or unreadable: not known to be elsewhere
                 continue
             geo = (info or {}).get('geo') or {}
-            listed = sorted(person['works'].values(), key=lambda w: (bool(student_papers.author_roles(w).get(aid)),
+            listed = sorted(person['works'].values(), key=lambda w: (bool(person['signed'][w['id']]),
                                                                    (scores or {}).get(w['id'], 0), w.get('publication_date') or ''), reverse=True)
             years = sorted(work_year(w) for w in listed if work_year(w))
             found.append({
                 'version': RESULT_VERSION,
                 'key': hashlib.sha256(('%s|%s' % (aid, iid)).encode()).hexdigest(),
-                'name': person['name'], 'author_url': aid, 'institution': inst.get('display_name') or '',
+                'name': person['name'], 'author_url': aid, 'orcid': person['orcid'], 'institution': inst.get('display_name') or '',
                 'institution_url': iid, 'website': safe_url((info or {}).get('homepage_url')),
                 'city': geo.get('city') or '', 'region': geo.get('region') or '',
                 'country': geo.get('country') or inst.get('country_code') or '',
@@ -357,7 +364,8 @@ def candidates(papers, profile, step=lambda name: None, scores=None, report=None
                 'role_counts': person['role_counts'], 'score': round(person['score'], 3), 'years': [years[0], years[-1]] if years else [],
                 'small_ids': [w['id'] for w in listed if len(w.get('authorships') or []) <= student_papers.BIG_TEAM],
                 'count': len(listed), 'first_count': len(person['first']),
-                'readings': [student_papers.reading(w, aid) for w in listed[:READINGS]],
+                'readings': [dict(student_papers.reading(w, aid), roles=sorted(person['signed'][w['id']]),
+                                  first_author='first' in person['signed'][w['id']]) for w in listed[:READINGS]],
                 'profile': profile, 'checked': timezone.now().date().isoformat(),
             })
     found.sort(key=lambda p: (not p['location_match'], p['umbrella'], -p['score'], -p['count'], p['name'].casefold()))
@@ -368,13 +376,45 @@ def candidates(papers, profile, step=lambda name: None, scores=None, report=None
             unique.append(person)
             seen.add(person['author_url'])
     if report is not None:
-        report['unchecked'] = len(unchecked - seen)
-    limited = (len(ordered) > MAX_AUTHORS or len(institution_ids) > MAX_INSTITUTIONS
-               or any(not r or not r.get('institutions') or r.get('conflict') for r in latest.values())
-               or any(not v for v in details.values()))
+        report['unchecked'], report['beyond'] = len(unchecked - seen), max(0, len(ordered) - MAX_AUTHORS)
+    # Partial when a source failed, not because only the most prominent people are checked (said apart).
+    limited = any(r is None for r in latest.values()) or any(v is None for v in details.values())
+    group_teams(unique)  # over everyone checked: a team's head can be beyond the people shown
     chosen = unique[:CANDIDATES]
-    group_teams(chosen)
+    shown = {p['key'] for p in chosen}
+    for person in chosen:
+        for other in person['team']:
+            other['shown'] = other['key'] in shown
     return chosen, limited
+
+
+def add_work(person, work, roles, weight, aid):
+    """A paper of the person, or the roles it adds to the same paper under another record (a preprint, a
+    conference version), counted once."""
+    twin = next((wid for wid, other in person['works'].items() if student_papers.same(work, other, owner=aid)), None)
+    if twin is None:
+        person['works'][work['id']], person['signed'][work['id']], person['weights'][work['id']] = work, set(roles), weight
+    else:
+        person['signed'][twin] |= set(roles)
+        person['weights'][twin] = max(person['weights'][twin], weight)
+
+
+def merge_namesakes(people):
+    """OpenAlex sometimes splits one person into several author records: those with one ORCID are one person,
+    under the record with the most papers."""
+    by_orcid = defaultdict(list)
+    for aid, person in people.items():
+        if person['orcid']:
+            by_orcid[person['orcid']].append(aid)
+    for aids in by_orcid.values():
+        if len(aids) < 2:
+            continue
+        main, *others = sorted(aids, key=lambda aid: (-len(people[aid]['works']), aid))
+        for aid in others:
+            other = people.pop(aid)
+            people[main]['country_hint'] |= other['country_hint']
+            for wid, work in other['works'].items():
+                add_work(people[main], work, other['signed'][wid], other['weights'][wid], main)
 
 
 def group_teams(people):
@@ -395,7 +435,8 @@ def group_teams(people):
                 parent[root(j)] = root(i)
     numbers = {}
     for i, person in enumerate(people):
-        team = [{'key': other['key'], 'name': other['name'], 'shared': shared[i, j]}
+        team = [{'key': other['key'], 'name': other['name'], 'shared': shared[i, j], 'last': other['role_counts']['last'],
+                 'institution': other['institution']}
                 for j, other in enumerate(people) if (i, j) in shared]
         person['team'] = team
         person['team_id'] = numbers.setdefault(root(i), len(numbers) + 1) if team else None
@@ -502,7 +543,7 @@ def reading_notes(found, profile, lang):
 
 
 def find(profile, lang, step=lambda name: None):
-    selection = teams.search_papers(profile['topic'], lang, step)
+    selection = teams.search_papers(profile['topic'], lang, step, abstracts=True)
     report = {}
     found, geography_limited = candidates(selection.get('works', []), profile, step, selection.get('scores'), report)
     step('readings')
@@ -514,15 +555,17 @@ def find(profile, lang, step=lambda name: None):
         person['skills_found'] = found_skills(person, profile)
     found.sort(key=rank)
     step('sources')
-    # Bound institutional crawling to three distinct institutions per search.
-    checked = set()
+    # Bound institutional crawling to three distinct institutions per search, read at the same time.
+    checked = {}
     for person in found:
         if person['website'] and person['institution_url'] not in checked and len(checked) < 3:
-            person['official_sources'] = student_sources.inspect(person)
-            checked.add(person['institution_url'])
+            checked[person['institution_url']] = person
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        for person, evidence in zip(checked.values(), pool.map(student_sources.inspect, checked.values())):
+            person['official_sources'] = evidence
     return {'version': RESULT_VERSION, 'title': selection.get('title', ''), 'profile': profile, 'candidates': found,
             'limited': selection.get('limited') or selection.get('truncated') or geography_limited,
-            'queries': selection.get('queries') or [], 'unchecked': report.get('unchecked', 0),
+            'queries': selection.get('queries') or [], 'unchecked': report.get('unchecked', 0), 'beyond': report.get('beyond', 0),
             'checked': timezone.now().date().isoformat()}
 
 
@@ -606,6 +649,7 @@ def prepare_card(person):
     if version < LOCATION_VERSION:
         person['city'], person['region'], person['location_match'] = '', '', False
     person['anchor'] = 'person-' + (person.get('key') or '')[:16]
+    person['funders'] = list(dict.fromkeys(grant['funder'] for grant in person.get('funding') or []))
     return person
 
 
@@ -679,16 +723,6 @@ def page(request, criteria=None):
                                                        'leads': leads, 'due': due, 'error': error, 'per_day': PER_DAY})
 
 
-def followed_names(user):
-    return [name for subscription in user.digests.all() for name in subscription.author_list()]
-
-
-def is_followed(name, names):
-    from . import digest
-    key = digest.name_key(name or '')
-    return bool(key) and any(digest.same_author(key, n) for n in names)
-
-
 def conference_talks(user, items, lang):
     """The talks of the user's conference programs given by a saved lead."""
     from . import digest
@@ -726,21 +760,23 @@ def leads(request):
     if request.GET.get('due') == '1':
         saved = saved.filter(remind_on__lte=timezone.localdate())
     saved = list(saved)
-    names = followed_names(request.user)
     for item in saved:
         item.form = ShortlistForm(instance=item, auto_id='shortlist_%d_%%s' % item.pk)
         item.due = bool(item.remind_on and item.remind_on <= timezone.localdate())
         prepare_card(item.snapshot)
         set_draft(item.snapshot, lang, item.draft)
-        item.followed = is_followed(item.snapshot.get('name'), names)
+        item.new_papers = json.loads(item.watch_new or '[]')
         item.collectable = any(p.get('site_key') for p in item.snapshot['readings'])
     conference_talks(request.user, saved, lang)
     message = request.session.pop('student_message', None)
+    share = StudentLeadsShare.objects.filter(user=request.user, expires__gt=timezone.now()).first()
     return render(request, 'summarizer/student_leads.html', {
+        'old': sum((item.snapshot.get('version') or 0) < RESULT_VERSION for item in every),
+        'share': share, 'share_url': request.build_absolute_uri(reverse('student_leads_shared', kwargs={'token': share.token})) if share else '',
         'shortlist': saved, 'paid': paid, 'total': every.count(), 'pipeline': [(k, label, counts[k]) for k, label in statuses],
         'status_filter': selected_status, 'due_filter': request.GET.get('due') == '1', 'status_choices': statuses,
         'saved_pk': request.session.pop('student_saved_id', None), 'message': LEAD_MESSAGES.get(message),
-        'message_pk': request.session.pop('student_message_pk', None), 'has_digest': request.user.digests.exists(),
+        'message_pk': request.session.pop('student_message_pk', None),
         'collections': Collection.objects.filter(user=request.user).order_by('-updated')[:30]})
 
 
@@ -954,26 +990,139 @@ def update_lead(request, pk):
     return message(request, item, 'updated')
 
 
+def new_works(aid, since):
+    """The works of this OpenAlex author published since `since`, newest first; None when unavailable."""
+    match = re.fullmatch(r'https://openalex.org/(A\d+)', aid or '')
+    if not match or not sources.tool_search_allowed():
+        return None
+    try:
+        body = sources._json('%s/works' % sources.OPENALEX, sources._openalex_params({
+            'filter': 'author.id:%s,from_publication_date:%s' % (match[1], since.isoformat()),
+            'sort': 'publication_date:desc', 'per_page': 25, 'select': teams.FIELDS + ',type'}))
+    except sources.SourceUnavailable:
+        return None
+    if not isinstance(body, dict) or not isinstance(body.get('results'), list):
+        return None
+    return [w for w in body['results'] if isinstance(w, dict) and w.get('id') and w.get('display_name')]
+
+
+def remember_works(item, works):
+    """The works already known for a followed lead, newest first, so only later ones are told."""
+    known = json.loads(item.watch_seen or '[]')
+    item.watch_seen = json.dumps(list(dict.fromkeys([w['id'] for w in works] + known))[:300])
+
+
 @login_required
 @require_POST
 def follow(request, pk):
-    """Follow a saved lead's new arXiv papers in the user's digest (its followed authors)."""
-    from . import digest
+    """Follow a saved lead's new papers in any journal (their OpenAlex author), by email; or stop."""
     item = get_object_or_404(StudentShortlist, pk=pk, user=request.user)
-    name = item.snapshot.get('name') or ''
-    subscription = request.user.digests.filter(active=True).first() or request.user.digests.first()
-    if subscription is None:
-        return redirect('/%s/digest/' % translation.get_language())
-    names = subscription.author_list()
-    if not digest.name_key(name):
-        return message(request, item, 'follow_unknown')
-    if is_followed(name, names):
-        return message(request, item, 'already_followed')
-    if len(names) >= digest.MAX_AUTHORS:
-        return message(request, item, 'follow_full')
-    subscription.authors = ', '.join(digest.clean_authors(', '.join(names + [name])))
-    subscription.save(update_fields=['authors', 'updated'])
-    return message(request, item, 'followed')
+    if request.POST.get('action') == 'stop':
+        StudentShortlist.objects.filter(pk=item.pk).update(watch=False)
+        return message(request, item, 'unwatched')
+    today = timezone.now().date()
+    works = new_works(item.snapshot.get('author_url'), today - datetime.timedelta(days=60))
+    item.watch, item.watch_seen, item.watch_new = True, '', ''
+    item.watch_checked = today if works is not None else None  # else the hourly run learns them, telling nothing
+    if works is not None:
+        remember_works(item, works)
+    item.save(update_fields=['watch', 'watch_checked', 'watch_seen', 'watch_new'])
+    return message(request, item, 'watching')
+
+
+def watch_new_papers(now, budget, base_url='https://www.summarizepaper.com'):
+    """Look once a day for the new papers of the followed leads, and email each student theirs; how many sent."""
+    today = now.date()
+    items = (StudentShortlist.objects.filter(watch=True).filter(Q(watch_checked__isnull=True) | Q(watch_checked__lt=today))
+             .select_related('user').order_by(F('watch_checked').asc(nulls_first=True))[:WATCH_PER_RUN])
+    found = defaultdict(list)
+    for item in items:
+        aid = item.snapshot.get('author_url')
+        works = new_works(aid, (item.watch_checked or today) - datetime.timedelta(days=30))
+        if works is None:
+            continue
+        known = set(json.loads(item.watch_seen or '[]'))
+        papers = [dict(teams.title_data(w), url=student_papers.url(w), roles=student_papers.author_roles(w).get(aid, []))
+                  for w in works if w['id'] not in known and student_papers.research_paper(w)]
+        told = item.watch_checked is not None  # the first look only learns what exists
+        remember_works(item, works)
+        item.watch_checked = today
+        if papers and told:
+            item.watch_new = json.dumps((papers + json.loads(item.watch_new or '[]'))[:WATCH_KEEP])
+            found[item.user].append((item, papers))
+        item.save(update_fields=['watch_checked', 'watch_seen', 'watch_new'])
+    sent, suppressed = 0, mailcheck.suppressed()
+    for user, leads_found in found.items():
+        if sent >= budget:
+            break
+        if user.email and user.email.strip().lower() not in suppressed and send(user, 'new_papers', {'leads': leads_found}, base_url):
+            sent += 1
+    return sent
+
+
+def send(user, name, context, base_url):
+    """One email of templates/students/<name>_*, in the language of the user's digest; whether it was sent."""
+    lang = user.digests.values_list('lang', flat=True).first() or 'en'
+    context = dict(context, url='%s/%s/students/leads/' % (base_url, lang))
+    with translation.override(lang):
+        subject = render_to_string('students/%s_subject.txt' % name, context).strip()
+        text = render_to_string('students/%s_email.txt' % name, context)
+        html = render_to_string('students/%s_email.html' % name, context)
+    email = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email])
+    email.attach_alternative(html, 'text/html')
+    try:
+        return bool(email.send())
+    except Exception:
+        logger.exception('Placement email %s to %s failed', name, user.username)
+        return False
+
+
+@login_required
+@require_POST
+def update_old(request):
+    """Check again, without a new search, the saved leads found by an earlier version of the tool."""
+    if not access.has_tool(request.user, 'students'):
+        raise Http404
+    quota = 'student-lead-updates:%s:%s' % (request.user.pk, timezone.now().date())
+    cache.add(quota, 0, 86400)
+    old = [item for item in StudentShortlist.objects.filter(user=request.user)
+           if (item.snapshot.get('version') or 0) < RESULT_VERSION][:OLD_PER_CLICK]
+    for item in old:
+        if cache.incr(quota) > LEAD_UPDATES_PER_DAY:
+            request.session['student_message'] = 'update_quota'
+            return redirect('student_leads')
+        snapshot = checked_again(item.snapshot)
+        if snapshot is not None:
+            StudentShortlist.objects.filter(pk=item.pk).update(snapshot=snapshot, revision=F('revision')+1, updated=timezone.now())
+    request.session['student_message'] = 'old_updated'
+    return redirect('student_leads')
+
+
+@login_required
+@require_POST
+def leads_share(request):
+    """Share the saved leads read-only (again: 90 more days, the same link), with or without the notes, or stop."""
+    share = StudentLeadsShare.objects.filter(user=request.user).first()
+    if request.POST.get('action') == 'unshare':
+        if share:
+            share.delete()
+    elif request.POST.get('action') == 'share':
+        share = share or StudentLeadsShare(user=request.user, token=secrets.token_urlsafe(16))
+        share.expires = timezone.now() + datetime.timedelta(days=SHARE_DAYS)
+        share.notes = request.POST.get('notes') == '1'
+        share.save()
+    return redirect(reverse('student_leads') + '#share')
+
+
+def leads_shared(request, token):
+    """A student's saved leads and where each application stands, for a supervisor: never drafts or who."""
+    share = StudentLeadsShare.objects.filter(token=token, expires__gt=timezone.now()).first() if token else None
+    if share is None:
+        raise Http404
+    items = list(StudentShortlist.objects.filter(user=share.user_id))
+    for item in items:
+        prepare_card(item.snapshot)
+    return render(request, 'summarizer/student_leads_shared.html', {'items': items, 'notes': share.notes, 'share': share})
 
 
 @login_required
@@ -1002,9 +1151,9 @@ def to_collection(request, pk):
 
 def send_reminders(now, budget, base_url='https://www.summarizepaper.com'):
     """Email each student, once per reminder date, the saved leads they asked to be reminded of; how many sent."""
-    if budget <= 0 or now.hour < 6:
+    if budget <= 0:
         return 0
-    due = (StudentShortlist.objects.filter(email_reminder=True, remind_on__lte=now.date())
+    due = (StudentShortlist.objects.filter(email_reminder=True, remind_on__lte=now.date() + datetime.timedelta(days=1))
            .filter(Q(reminded__isnull=True) | Q(reminded__lt=F('remind_on'))).select_related('user').order_by('remind_on'))
     by_user = defaultdict(list)
     for item in due:
@@ -1015,20 +1164,20 @@ def send_reminders(now, budget, base_url='https://www.summarizepaper.com'):
             break
         if not user.email or user.email.strip().lower() in suppressed:
             continue
-        lang = user.digests.values_list('lang', flat=True).first() or 'en'
-        context = {'items': items, 'url': '%s/%s/students/leads/' % (base_url, lang)}
-        with translation.override(lang):
-            subject = render_to_string('students/reminder_subject.txt', context).strip()
-            text = render_to_string('students/reminder_email.txt', context)
-            html = render_to_string('students/reminder_email.html', context)
-        email = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email])
-        email.attach_alternative(html, 'text/html')
-        try:
-            if not email.send():
-                continue
-        except Exception:
-            logger.exception('Placement reminder to %s failed', user.username)
+        local = local_time(user, now)
+        items = [i for i in items if i.remind_on <= local.date()]
+        if local.hour < REMINDER_HOUR or not items or not send(user, 'reminder', {'items': items}, base_url):
             continue
         StudentShortlist.objects.filter(pk__in=[i.pk for i in items]).update(reminded=F('remind_on'))
         sent += 1
     return sent
+
+
+def local_time(user, now):
+    """now in the time zone of the user's digest (Paris without one)."""
+    from zoneinfo import ZoneInfo
+    name = user.digests.values_list('timezone', flat=True).first() or 'Europe/Paris'
+    try:
+        return now.astimezone(ZoneInfo(name))
+    except (KeyError, ValueError):
+        return now.astimezone(ZoneInfo('Europe/Paris'))

@@ -1140,6 +1140,16 @@ class SavedSearch(models.Model):
         return reverse('search_results') + '?' + urlencode(self.params, doseq=True)
 
 
+class StudentLeadsShare(models.Model):
+    """A read-only link to a student's saved leads and their progress, for a supervisor: never their drafts,
+    their notes only when the student says so, never who they are."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_leads_share')
+    token = models.CharField(max_length=32, unique=True)
+    expires = models.DateTimeField()
+    notes = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+
 class StudentShortlist(models.Model):
     """Private, source-backed placement lead saved by its student, never an offer."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_shortlist')
@@ -1154,6 +1164,11 @@ class StudentShortlist(models.Model):
     remind_on = models.DateField(null=True, blank=True)
     email_reminder = models.BooleanField(default=False)  # also emailed on remind_on (students.send_reminders)
     reminded = models.DateField(null=True, blank=True)  # the remind_on date already emailed
+    # New papers of the person, in any journal (OpenAlex author), emailed (students.watch_new_papers)
+    watch = models.BooleanField(default=False)
+    watch_checked = models.DateField(null=True, blank=True)
+    watch_seen = models.TextField(blank=True, default='')  # JSON list of the OpenAlex work ids already known
+    watch_new = models.TextField(blank=True, default='')  # JSON list of the latest new papers found, newest first
     revision = models.PositiveIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

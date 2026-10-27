@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans count n=leads|length %}New papers by {{ n }} researcher you follow for a placement{% plural %}New papers by {{ n }} researchers you follow for a placement{% endblocktrans %}

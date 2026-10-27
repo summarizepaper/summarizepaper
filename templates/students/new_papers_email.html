@@ -1,0 +1,14 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 24px;color:#666;">{% trans 'New papers by the researchers you follow for a placement. A new paper is a good reason to write or to follow up: read it first.' %}</p>
+    {% for item, papers in leads %}
+    <p style="margin:20px 0 6px;font-size:16px;font-weight:bold;">{{ item.snapshot.name }} <span style="color:#666;font-weight:normal;font-size:13px;">· {{ item.snapshot.institution }}</span></p>
+    {% for paper in papers %}<div style="border-left:3px solid #4f46e5;padding:4px 0 4px 12px;margin:0 0 10px;">{% if paper.url %}<a href="{{ paper.url }}" style="color:#1a0dab;text-decoration:none;font-weight:bold;">{{ paper.title }}</a>{% else %}<strong>{{ paper.title }}</strong>{% endif %}{% if paper.year %} <span style="color:#666;font-size:13px;">· {{ paper.year }}</span>{% endif %}</div>{% endfor %}
+    {% endfor %}
+    <p><a href="{{ url }}" style="color:#1a0dab;font-weight:bold;">{% trans 'Your leads' %}</a></p>
+    <p style="color:#888;font-size:12px;">{% trans 'You receive this email because you follow these researchers from your leads. Stop following them on the page above.' %}</p>
+  </div>
+</body></html>

@@ -20,6 +20,9 @@ BIG_TEAM_KEPT = 15
 SMALL_TEAM = 12  # funding acknowledged by a larger paper says little about one of its authors
 FUNDING_YEARS = 4
 FUNDING = 4
+# Fields where authors are usually listed by last name, even when there are only two or three of them
+ALPHABETICAL_FIELDS = {'Economics, Econometrics and Finance', 'Mathematics'}
+NEAR_TITLE = 0.75  # word overlap above which two papers of one person are one paper in two versions
 
 
 def normalized(value):
@@ -74,9 +77,23 @@ def last_name(authorship):
 
 
 def alphabetical(work):
-    """Authors listed by last name (mathematics, high-energy physics, consortia): their order says nothing."""
+    """Authors listed by last name (mathematics, economics, high-energy physics, consortia): their order says
+    nothing. Four names in order are rarely chance; in the fields where it is the custom, two are enough."""
     names = [last_name(a) for a in work.get('authorships') or []]
-    return len(names) >= 4 and all(names) and names == sorted(names)
+    field = ((work.get('primary_topic') or {}).get('field') or {}).get('display_name')
+    return len(names) >= (2 if field in ALPHABETICAL_FIELDS else 4) and all(names) and names == sorted(names)
+
+
+def near_title(left, right):
+    """Two titles of one person's papers that are the same paper (a preprint, a corrected title, a conference
+    version): most words shared, and no differing number (a series "I" and "II" stays two papers)."""
+    a, b = set(normalized(title(left)).split()), set(normalized(title(right)).split())
+    if len(a) < 4 or len(b) < 4:
+        return False
+    numbers = re.compile(r'^(?:\d+|[ivx]+)$')
+    if {w for w in a ^ b if numbers.match(w)}:
+        return False
+    return len(a & b) / len(a | b) >= NEAR_TITLE
 
 
 def author_roles(work):
@@ -85,13 +102,14 @@ def author_roles(work):
     after its first BIG_TEAM_KEPT, unless they are corresponding authors or sign last."""
     authorships = work.get('authorships') or []
     ordered, big = not alphabetical(work), len(authorships) > BIG_TEAM
+    corresponding = set(work.get('corresponding_author_ids') or [])  # sometimes filled when the authorships are not
     found = {}
     for index, authorship in enumerate(authorships):
         aid = (authorship.get('author') or {}).get('id') or ''
         if not re.fullmatch(r'https://openalex.org/A\d+', aid):
             continue
         roles = [authorship['author_position']] if ordered and authorship.get('author_position') in ('first', 'last') else []
-        if authorship.get('is_corresponding') is True:
+        if authorship.get('is_corresponding') is True or aid in corresponding:
             roles.append('corresponding')
         if big and index >= BIG_TEAM_KEPT and not roles:
             continue
@@ -138,6 +156,11 @@ def same(left, right, owner=None):
         return True
     # Title alone is insufficient. Only collapse a preprint/publication pair with
     # the same first-author identity (or readings already attributed to one owner).
+    lyear = str(left.get('year') or left.get('publication_date') or '')[:4]
+    ryear = str(right.get('year') or right.get('publication_date') or '')[:4]
+    close = lyear.isdigit() and ryear.isdigit() and abs(int(lyear) - int(ryear)) <= 2
+    if owner and close and near_title(left, right):
+        return True  # one person's paper under two records, whatever its author order there
     if not (arxiv(left) or arxiv(right) or left.get('type') == 'preprint' or right.get('type') == 'preprint'):
         return False
     name = normalized(title(left))
@@ -145,9 +168,7 @@ def same(left, right, owner=None):
         return False
     if not owner and (not first_author(left) or first_author(left) != first_author(right)):
         return False
-    lyear = str(left.get('year') or left.get('publication_date') or '')[:4]
-    ryear = str(right.get('year') or right.get('publication_date') or '')[:4]
-    return lyear.isdigit() and ryear.isdigit() and abs(int(lyear) - int(ryear)) <= 2
+    return close
 
 
 def deduplicate(works, owner=None):

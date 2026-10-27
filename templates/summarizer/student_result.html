@@ -11,7 +11,8 @@
   {% if result.profile.start %}<p>{% trans 'Desired start date (optional)' %} : {{ result.profile.start }}</p>{% endif %}{% if result.profile.duration %}<p>{% blocktrans with n=result.profile.duration %}Desired duration: {{ n }} months{% endblocktrans %}</p>{% endif %}{% if result.profile.skills %}<p>{{ result.profile.skills }}</p>{% endif %}
   <p class="muted">{% trans 'Dates, duration, skills and level are preferences, not verified eligibility or availability.' %}</p></details>
   {% if result.limited %}<p class="notice">{% trans 'This search is partial: the search budget, candidate limit or missing institution metadata prevented a complete check.' %}</p>{% endif %}
-  {% if result.unchecked %}<p class="notice">{% blocktrans count n=result.unchecked %}{{ n }} other author of these papers could not be checked (affiliation or location unknown, or beyond the search budget). They are not shown, not excluded on purpose.{% plural %}{{ n }} other authors of these papers could not be checked (affiliation or location unknown, or beyond the search budget). They are not shown, not excluded on purpose.{% endblocktrans %}</p>{% endif %}
+  {% if result.unchecked %}<p class="notice">{% blocktrans count n=result.unchecked %}{{ n }} person among those checked could not be located (affiliation unknown or unreadable): not shown, not excluded on purpose.{% plural %}{{ n }} people among those checked could not be located (affiliation unknown or unreadable): not shown, not excluded on purpose.{% endblocktrans %}</p>{% endif %}
+  {% if result.beyond %}<p class="muted">{% blocktrans count n=result.beyond %}We check the people who sign these papers most prominently; {{ n }} other coauthor was not checked.{% plural %}We check the people who sign these papers most prominently; {{ n }} other coauthors were not checked.{% endblocktrans %}</p>{% endif %}
   <p class="notice">{% trans 'Potential contacts: confirm the current position and availability before applying.' %}</p>
   {% if result.overview %}
   <section class="card section-card student-overview" aria-labelledby="overview-title"><h2 id="overview-title">{% trans 'At a glance' %}</h2>
@@ -26,7 +27,7 @@
           <td>{{ p.institution }}{% if p.city %} · {{ p.city }}{% endif %}</td>
           <td>{{ p.count|default:'—' }}{% if p.years %} <span class="muted">({{ p.years.1 }})</span>{% endif %}</td>
           <td>{% if p.role_counts %}{{ p.role_counts.first }} / {{ p.role_counts.last }} / {{ p.role_counts.corresponding }}{% else %}—{% endif %}</td>
-          <td>{% if p.funding %}{% for grant in p.funding|slice:':2' %}{{ grant.funder }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %}</td>
+          <td>{% if p.funders %}{{ p.funders|slice:':2'|join:', ' }}{% if p.funders|length > 2 %}…{% endif %}{% else %}—{% endif %}</td>
           <td>{% if p.location_match %}{% trans 'Requested area' %}{% else %}{% trans 'Other or not verified' %}{% endif %}</td>
         </tr>{% endwith %}{% endfor %}</tbody></table></div>
   </section>
