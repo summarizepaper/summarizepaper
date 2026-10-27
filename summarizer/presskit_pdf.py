@@ -62,8 +62,8 @@ def outline(paper, row, publication=None, role=None, editorial=None):
         add('p', novelty.get('assessment'))
         for item in novelty.get('comparisons', []):
             add('item', '%s (%s)' % (item['title'], item.get('date', '')[:4]))
-            add('p', _('Already done') + ': ' + item.get('already', ''))
-            add('p', _('This paper adds') + ': ' + item.get('adds', ''))
+            add('p', _('Already done:') + ' ' + item.get('already', ''))
+            add('p', _('This paper adds:') + ' ' + item.get('adds', ''))
         add('note', _('Compared with the abstracts of the closest papers we know, chosen automatically: not a literature review.'))
 
     if kit.get('evidence_cards'):
@@ -79,7 +79,7 @@ def outline(paper, row, publication=None, role=None, editorial=None):
                 add('quote', card['quote'], where(card))
             else:
                 add('note', _('Supporting passage not verified. Check this claim in the paper before using it.'))
-            add('p', _('Limit of this finding') + ': ' + card.get('limitation', ''))
+            add('p', _('Limit of this finding:') + ' ' + card.get('limitation', ''))
 
     add('h', _('Hype check'))
     for item in kit.get('hype_check', []):
@@ -92,7 +92,7 @@ def outline(paper, row, publication=None, role=None, editorial=None):
             add('h3', figure['label'])
             add('p', figure.get('why'))
             add('note', figure.get('caption'))
-            add('meta', _('Credit') + ': ' + figure['credit'])
+            add('meta', _('Credit:') + ' ' + figure['credit'])
             add('link', figure['source_url'], figure['source_url'])
 
     if kit.get('key_sentences'):
@@ -122,11 +122,11 @@ def outline(paper, row, publication=None, role=None, editorial=None):
     if publication:
         add('h', _('Editorial status: automatic verification'))
         add('warn', publication_status.description(publication))
-        add('meta', _('Checked at') + ': ' + publication.get('checked_at', ''))
+        add('meta', _('Checked at:') + ' ' + publication.get('checked_at', ''))
         if publication.get('journal'):
             add('p', publication['journal'] + (' · ' + publication['date'] if publication.get('date') else ''))
         if publication.get('unavailable'):
-            add('note', _('Some sources were unavailable') + ': ' + ', '.join(publication['unavailable']))
+            add('note', _('Some sources were unavailable:') + ' ' + ', '.join(publication['unavailable']))
         for reference in publication.get('sources', []):
             add('meta', reference['name'] + ': ' + reference['detail'])
             add('link', reference['url'], reference['url'])
@@ -149,7 +149,7 @@ def role_part(add, key, part, kit, publication):
         for paragraph in release.get('body', []):
             add('p', paragraph)
         if release.get('quote_slot'):
-            add('p', '[%s: %s]' % (_('Your quote'), release['quote_slot']))
+            add('p', _('[Your quote: %(slot)s]') % {'slot': release['quote_slot']})
         if part.get('likely_questions'):
             add('h3', _('Questions journalists are likely to ask'))
             for item in part['likely_questions']:
@@ -192,19 +192,19 @@ def role_part(add, key, part, kit, publication):
             for item in kit['angles']:
                 add('h3', item['angle'])
                 add('p', item.get('why_now'))
-                add('p', _('Next reporting step') + ': ' + item.get('reporting_step', ''))
+                add('p', _('Next reporting step:') + ' ' + item.get('reporting_step', ''))
         if kit.get('wording_checks'):
             add('h', _('Wording to check before publication'))
             for item in kit['wording_checks']:
-                add('warn', _('Avoid') + ': ' + item['avoid'])
-                add('p', _('Prefer') + ': ' + item.get('prefer', ''))
+                add('warn', _('Avoid:') + ' ' + item['avoid'])
+                add('p', _('Prefer:') + ' ' + item.get('prefer', ''))
                 add('note', item.get('reason'))
         add('h', _('Questions to ask the authors'))
         answers = kit.get('question_answers') or {}
         for index, question in enumerate(publication_status.questions(kit, publication), 1):
             add('item', '%s. %s' % (index, question))
             if question in answers:
-                add('note', _('The paper already says') + ': ' + answers[question]['answer'])
+                add('note', _('The paper already says:') + ' ' + answers[question]['answer'])
 
 
 class PressPDF(FPDF):

@@ -69,7 +69,7 @@
       <span class="eyebrow">{% trans 'In 30 seconds' %}</span>
       <h2>{{ kit.headline }}</h2>
       <p>{{ kit.plain_explanation }}</p>
-      {% if kit.verdict %}<p class="kit-verdict"><strong>{% trans 'How solid' %}:</strong> {{ kit.verdict }}</p>{% endif %}
+      {% if kit.verdict %}<p class="kit-verdict"><strong>{% trans 'How solid:' %}</strong> {{ kit.verdict }}</p>{% endif %}
       <ul class="kit-signals">
         <li class="kit-scope {% if kit.source.scope == 'full_text' %}ok{% else %}warning{% endif %}">{% if kit.source.scope == 'abstract' or kit.abstract_only %}{% trans 'Read: abstract only' %}{% elif kit.source.scope == 'excerpt' %}{% trans 'Read: part of the text' %}{% elif kit.source.scope == 'full_text' %}{% trans 'Read: full text' %}{% else %}{% trans 'Read: not recorded' %}{% endif %}</li>
         {% if publication_label %}<li>{{ publication_label }}</li>{% endif %}
@@ -120,7 +120,7 @@
           <h4>{{ part.press_release.title }}</h4>
           <p><strong>{{ part.press_release.lede }}</strong></p>
           {% for paragraph in part.press_release.body %}<p>{{ paragraph }}</p>{% endfor %}
-          {% if part.press_release.quote_slot %}<p class="kit-slot">[{% trans 'Your quote' %}: {{ part.press_release.quote_slot }}]</p>{% endif %}
+          {% if part.press_release.quote_slot %}<p class="kit-slot">{% blocktrans with slot=part.press_release.quote_slot %}[Your quote: {{ slot }}]{% endblocktrans %}</p>{% endif %}
         </article>
         <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-release">{% trans 'Copy the release' %}</button>
         {% endif %}
@@ -173,11 +173,11 @@
         <h2>{% trans 'Writing about it' %}</h2>
         {% if kit.angles %}
         <h3>{% trans 'Reporting angles' %}</h3>
-        {% for a in kit.angles %}<h4>{{ a.angle }}</h4><p>{{ a.why_now }}</p><p><strong>{% trans 'Next reporting step' %}:</strong> {{ a.reporting_step }}</p>{% endfor %}
+        {% for a in kit.angles %}<h4>{{ a.angle }}</h4><p>{{ a.why_now }}</p><p><strong>{% trans 'Next reporting step:' %}</strong> {{ a.reporting_step }}</p>{% endfor %}
         {% endif %}
         {% if kit.wording_checks %}
         <h3>{% trans 'Wording to check before publication' %}</h3>
-        {% for w in kit.wording_checks %}<div class="kit-wording"><p><strong>{% trans 'Avoid' %}:</strong> {{ w.avoid }}</p><p><strong>{% trans 'Prefer' %}:</strong> {{ w.prefer }}</p><p class="muted">{{ w.reason }}</p></div>{% endfor %}
+        {% for w in kit.wording_checks %}<div class="kit-wording"><p><strong>{% trans 'Avoid:' %}</strong> {{ w.avoid }}</p><p><strong>{% trans 'Prefer:' %}</strong> {{ w.prefer }}</p><p class="muted">{{ w.reason }}</p></div>{% endfor %}
         {% endif %}
         <h3>{% trans 'Questions to ask the authors' %}</h3>
         <ol id="author-questions" class="kit-list">{% include 'summarizer/presskit_questions.html' %}</ol>
@@ -195,7 +195,7 @@
         {% if e.numeric_mismatch %}<p class="error">{% trans 'Numbers in this claim do not all match the cited passage. Check them before publication.' %}</p>{% endif %}
         {% if e.verified %}{% include 'summarizer/presskit_passage.html' with p=e %}
         {% else %}<p class="error">{% trans 'Supporting passage not verified. Check this claim in the paper before using it.' %}</p>{% endif %}
-        <p><strong>{% trans 'Limit of this finding' %}:</strong> {{ e.limitation }}</p>
+        <p><strong>{% trans 'Limit of this finding:' %}</strong> {{ e.limitation }}</p>
         <button type="button" class="kit-report" data-report-section="evidence" data-report-item="{{ e.claim|truncatechars:300 }}">{% trans 'Report a mistake' %}</button>
       </article>
       {% endfor %}
@@ -210,7 +210,7 @@
       <h3>{% trans 'Against the closest earlier papers' %}</h3>
       {% if kit.novelty.assessment %}<p><strong>{{ kit.novelty.assessment }}</strong></p>{% endif %}
       <ul class="kit-list">{% for c in kit.novelty.comparisons %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ c.arxiv_id }}/">{{ c.title }}</a>{% if c.date %} ({{ c.date|slice:":4" }}){% endif %}
-        <p><strong>{% trans 'Already done' %}:</strong> {{ c.already }}</p><p><strong>{% trans 'This paper adds' %}:</strong> {{ c.adds }}</p></li>{% endfor %}</ul>
+        <p><strong>{% trans 'Already done:' %}</strong> {{ c.already }}</p><p><strong>{% trans 'This paper adds:' %}</strong> {{ c.adds }}</p></li>{% endfor %}</ul>
       <p class="muted">{% blocktrans count n=kit.novelty.compared %}Compared with the abstract of the closest paper we know, chosen automatically: not a literature review.{% plural %}Compared with the abstracts of the {{ n }} closest papers we know, chosen automatically: not a literature review.{% endblocktrans %}
         <a href="/{{ LANGUAGE_CODE }}/literature-review/">{% trans 'A literature review on the question' %}</a></p>
       <button type="button" class="kit-report" data-report-section="novelty" data-report-item="{{ kit.novelty.assessment|truncatechars:300 }}">{% trans 'Report a mistake' %}</button>
@@ -245,7 +245,7 @@
         <a href="{{ f.source_url }}" target="_blank" rel="noopener noreferrer"><img src="{{ f.image }}" alt="{{ f.label }}" loading="lazy" referrerpolicy="no-referrer"></a>
         <figcaption><strong>{{ f.label }}</strong>{% if f.why %} — {{ f.why }}{% endif %}
           <span class="muted kit-caption">{{ f.caption|truncatechars:600 }}</span>
-          <span class="kit-credit" id="kit-credit-{{ forloop.counter }}">{% trans 'Credit' %}: {{ f.credit }}</span>
+          <span class="kit-credit" id="kit-credit-{{ forloop.counter }}">{% trans 'Credit:' %} {{ f.credit }}</span>
           <span class="muted">{% for code, terms in license_terms.items %}{% if code == f.license_code %}{{ terms }}{% endif %}{% endfor %}</span>
           <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-credit-{{ forloop.counter }}">{% trans 'Copy the credit' %}</button></figcaption>
       </figure>

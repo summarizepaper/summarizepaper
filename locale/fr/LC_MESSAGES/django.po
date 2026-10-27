@@ -17281,3 +17281,37 @@ msgid "%(n)s close paper"
 msgid_plural "%(n)s close papers"
 msgstr[0] "%(n)s article proche"
 msgstr[1] "%(n)s articles proches"
+
+msgid "Already done:"
+msgstr "Déjà fait :"
+
+msgid "This paper adds:"
+msgstr "Ce que cet article ajoute :"
+
+msgid "Limit of this finding:"
+msgstr "Limite de ce résultat :"
+
+msgid "Credit:"
+msgstr "Crédit :"
+
+msgid "Checked at:"
+msgstr "Vérifié le :"
+
+msgid "Some sources were unavailable:"
+msgstr "Certaines sources étaient indisponibles :"
+
+#, python-format
+msgid "[Your quote: %(slot)s]"
+msgstr "[Votre citation : %(slot)s]"
+
+msgid "Next reporting step:"
+msgstr "Prochaine étape du reportage :"
+
+msgid "Avoid:"
+msgstr "À éviter :"
+
+msgid "Prefer:"
+msgstr "Préférer :"
+
+msgid "How solid:"
+msgstr "Solidité :"
