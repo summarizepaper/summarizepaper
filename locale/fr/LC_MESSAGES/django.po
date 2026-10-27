@@ -6044,19 +6044,8 @@ msgid "Is the description of my project private in the scoop watch?"
 msgstr ""
 "La description de mon projet reste-t-elle privée dans la veille anti-scoop ?"
 
-msgid ""
-"Yes. Only you see it. It is used to compare your project with the new "
-"papers: an AI rewrites it once as an English abstract, and both are sent to "
-"our AI provider for that comparison only. If you give the PDF of a draft, it"
-" is read once to write the description and is not stored. You can delete a "
-"project at any time."
-msgstr ""
-"Oui. Vous seul la voyez. Elle sert à comparer votre projet aux nouveaux "
-"articles : une IA la réécrit une fois sous forme de résumé en anglais, et "
-"les deux sont envoyés à notre fournisseur d'IA pour cette comparaison "
-"uniquement. Si vous donnez le PDF d'un brouillon, il est lu une fois pour "
-"écrire la description et n'est pas conservé. Vous pouvez supprimer un projet"
-" à tout moment."
+msgid "Yes. Only you see it. It is used to compare your project with the papers: an AI rewrites it as an English abstract and splits it into facets, and they are sent to our AI provider for that comparison only. If you give the PDF of a draft, it is read once to write the description and is not stored, unless you ask us to keep its text to compare it with the full text of close papers; you can delete that text at any time. You can delete a project at any time."
+msgstr "Oui. Vous seul la voyez. Elle sert à comparer votre projet aux articles : une IA la réécrit sous forme de résumé en anglais et la découpe en facettes ; résumé et facettes sont envoyés à notre fournisseur d'IA pour cette comparaison uniquement. Si vous donnez le PDF d'un brouillon, il est lu une fois pour écrire la description et n'est pas conservé, sauf si vous nous demandez d'en garder le texte pour le comparer au texte intégral des articles proches ; vous pouvez supprimer ce texte à tout moment. Vous pouvez supprimer un projet à tout moment."
 
 msgid "How does the bibliography check work?"
 msgstr "Comment fonctionne la vérification de bibliographie ?"
@@ -9106,6 +9095,235 @@ msgid ""
 "The extracted text interrupts this passage (page break, caption or link)"
 msgstr ""
 "Le texte extrait interrompt ce passage (saut de page, légende ou lien)"
+
+msgid "Every day, the new papers are compared with each facet of your project apart (question, method, data, results), and with the names that identify it. An AI reads the closest abstracts."
+msgstr "Chaque jour, les nouveaux articles sont comparés à chaque facette de votre projet séparément (question, méthode, données, résultats) et aux noms qui l'identifient. Une IA lit les résumés les plus proches."
+
+msgid "When one overlaps your project, you get an email: a strong overlap (same question, same or very close approach) or a partial one, with how close it is on each facet."
+msgstr "Quand l'un d'eux recoupe votre projet, vous recevez un email : un fort recouvrement (même question, approche identique ou très proche) ou un recouvrement partiel, avec sa proximité sur chaque facette."
+
+msgid "For each paper, the AI says what it shares with your project, what stays yours and what to do: cite it, set your project apart, contact the authors or publish soon. A strong overlap is compared with the full text of the paper when its license allows it."
+msgstr "Pour chaque article, l'IA dit ce qu'il partage avec votre projet, ce qui reste à vous et quoi faire : le citer, démarquer votre projet, contacter les auteurs ou publier vite. Un fort recouvrement est comparé au texte intégral de l'article quand sa licence le permet."
+
+msgid "Follow competing teams, and give your key references: their new papers, and the papers that cite your references, are always read."
+msgstr "Suivez des équipes concurrentes et indiquez vos références clés : leurs nouveaux articles, et ceux qui citent vos références, sont toujours lus."
+
+msgid "Mark a paper as not relevant and similar ones are pushed down; add the close ones to a collection."
+msgstr "Marquez un article comme non pertinent et les articles semblables passent après ; ajoutez les plus proches à une collection."
+
+msgid "Your description stays private and is only used for the comparison. A PDF is read once and is not stored, unless you ask us to keep its text for the full-text comparisons."
+msgstr "Votre description reste privée et ne sert qu'à la comparaison. Un PDF est lu une fois et n'est pas conservé, sauf si vous nous demandez d'en garder le texte pour les comparaisons sur texte intégral."
+
+msgid "Keep the text of my draft to compare it with the full text of close papers (otherwise the PDF is read once and not stored)"
+msgstr "Conserver le texte de mon brouillon pour le comparer au texte intégral des articles proches (sinon le PDF est lu une fois et n'est pas conservé)"
+
+msgid "More options: competing teams, key references, emails"
+msgstr "Plus d'options : équipes concurrentes, références clés, emails"
+
+msgid "Your description stays private and is only used for the comparison."
+msgstr "Votre description reste privée et ne sert qu'à la comparaison."
+
+msgid "Strong overlaps are emailed at once, partial ones once a week."
+msgstr "Les forts recouvrements sont envoyés tout de suite, les partiels une fois par semaine."
+
+msgid "Description and what we look for"
+msgstr "Description et ce que nous cherchons"
+
+msgid "Names that identify it"
+msgstr "Noms qui l'identifient"
+
+msgid "Each facet is compared with the new papers apart: a paper sharing only your method, or only your data, is found too."
+msgstr "Chaque facette est comparée séparément aux nouveaux articles : un article qui partage seulement votre méthode, ou seulement vos données, est trouvé aussi."
+
+msgid "Competing teams followed:"
+msgstr "Équipes concurrentes suivies :"
+
+msgid "Key references:"
+msgstr "Références clés :"
+
+msgid "The text of your draft is kept for the full-text comparisons."
+msgstr "Le texte de votre brouillon est conservé pour les comparaisons sur texte intégral."
+
+msgid "Edit the project"
+msgstr "Modifier le projet"
+
+msgid "Your name as it appears on your papers"
+msgstr "Votre nom tel qu'il apparaît sur vos articles"
+
+msgid "Delete the stored text of my draft"
+msgstr "Supprimer le texte conservé de mon brouillon"
+
+msgid "The papers already found are kept. A new title or description starts a new search for prior art."
+msgstr "Les articles déjà trouvés sont conservés. Un nouveau titre ou une nouvelle description relance la recherche d'antériorité."
+
+msgid "Papers close to your project, per month"
+msgstr "Articles proches de votre projet, par mois"
+
+msgid "Counted among the new papers of each announcement since the project is watched. A rise means the topic is heating up."
+msgstr "Comptés parmi les nouveaux articles de chaque annonce depuis le début de la veille. Une hausse signale un sujet qui s'accélère."
+
+msgid "Show"
+msgstr "Afficher"
+
+msgid "All"
+msgstr "Tous"
+
+msgid "Strong overlaps"
+msgstr "Forts recouvrements"
+
+msgid "Partial overlaps"
+msgstr "Recouvrements partiels"
+
+msgid "New papers"
+msgstr "Nouveaux articles"
+
+msgid "No close new paper so far."
+msgstr "Aucun nouvel article proche pour l'instant."
+
+msgid "Searching arXiv and the journals for papers that already overlap your project…"
+msgstr "Recherche sur arXiv et dans les revues d'articles qui recoupent déjà votre projet…"
+
+msgid "The search for prior art failed."
+msgstr "La recherche d'antériorité a échoué."
+
+msgid "No published paper overlaps your project."
+msgstr "Aucun article publié ne recoupe votre projet."
+
+msgid "Search again"
+msgstr "Relancer la recherche"
+
+msgid "Search for prior art"
+msgstr "Rechercher l'antériorité"
+
+msgid "Teams that come back in your results"
+msgstr "Équipes qui reviennent dans vos résultats"
+
+msgid "Follow them: their new papers will always be read."
+msgstr "Suivez-les : leurs nouveaux articles seront toujours lus."
+
+msgid "Papers like these are pushed down in the next checks."
+msgstr "Les articles semblables passent après lors des prochaines vérifications."
+
+msgid "Stop watching this project and delete what was found?"
+msgstr "Arrêter la veille de ce projet et supprimer ce qui a été trouvé ?"
+
+msgid "At once, the papers of the last %(n)s years are searched on arXiv and in the journals: you see what is already published close to your project."
+msgstr "Aussitôt, les articles des %(n)s dernières années sont cherchés sur arXiv et dans les revues : vous voyez ce qui est déjà publié près de votre projet."
+
+msgid "Added to “%(name)s”."
+msgstr "Ajouté à « %(name)s »."
+
+msgid "Already published (last %(n)s years)"
+msgstr "Déjà publié (%(n)s dernières années)"
+
+msgid "Marked relevant"
+msgstr "Marqué pertinent"
+
+msgid "Read because it:"
+msgstr "Lu parce qu'il :"
+
+msgid "Compared with the full text"
+msgstr "Comparé au texte intégral"
+
+msgid "The paper"
+msgstr "L'article"
+
+msgid "Your project"
+msgstr "Votre projet"
+
+msgid "Advice:"
+msgstr "Conseil :"
+
+msgid "Reading the full text of the paper…"
+msgstr "Lecture du texte intégral de l'article…"
+
+msgid "Its license does not let us read its full text: the comparison stays on the abstract."
+msgstr "Sa licence ne nous permet pas de lire son texte intégral : la comparaison reste fondée sur le résumé."
+
+msgid "Undo"
+msgstr "Annuler"
+
+msgid "Real overlap"
+msgstr "Vrai recouvrement"
+
+msgid "Not relevant"
+msgstr "Pas pertinent"
+
+msgid "Compare with the full text again"
+msgstr "Relancer la comparaison sur texte intégral"
+
+msgid "Compare with the full text"
+msgstr "Comparer au texte intégral"
+
+msgid "New collection “%(name)s”"
+msgstr "Nouvelle collection « %(name)s »"
+
+msgid "Competing teams: one author name per line. Their new papers are always read, even when they are not very close."
+msgstr "Équipes concurrentes : un nom d'auteur par ligne. Leurs nouveaux articles sont toujours lus, même s'ils sont peu proches."
+
+msgid "Key references of the project: arXiv ids or DOIs, one per line. A new paper that cites several of them is read."
+msgstr "Références clés du projet : identifiants arXiv ou DOI, un par ligne. Un nouvel article qui en cite plusieurs est lu."
+
+msgid "Emails"
+msgstr "Emails"
+
+msgid "Every overlap the day it is found"
+msgstr "Chaque recouvrement le jour où il est trouvé"
+
+msgid "Strong overlaps at once, partial ones in a weekly email"
+msgstr "Les forts recouvrements tout de suite, les partiels dans un email hebdomadaire"
+
+msgid "Compared with the full text:"
+msgstr "Comparé au texte intégral :"
+
+msgid "Not relevant? Say so on the page"
+msgstr "Pas pertinent ? Dites-le sur la page"
+
+msgid "What to do:"
+msgstr "Que faire :"
+
+msgid "Not relevant? Say so on the page, similar papers will be pushed down:"
+msgstr "Pas pertinent ? Dites-le sur la page, les articles semblables passeront après :"
+
+msgid "same"
+msgstr "identique"
+
+msgid "close"
+msgstr "proche"
+
+msgid "different"
+msgstr "autre"
+
+msgid "Cite it"
+msgstr "À citer"
+
+msgid "Set your project apart"
+msgstr "Démarquer votre projet"
+
+msgid "Contact the authors"
+msgstr "Contacter les auteurs"
+
+msgid "Publish soon"
+msgstr "Publier vite"
+
+msgid "Names what identifies your project"
+msgstr "nomme ce qui identifie votre projet"
+
+msgid "By a team you follow"
+msgstr "est signé par une équipe que vous suivez"
+
+msgid "Cites your key references"
+msgstr "cite vos références clés"
+
+msgid "%(n)s close paper found; the closest were read by an AI."
+msgid_plural "%(n)s close papers found; the closest were read by an AI."
+msgstr[0] "%(n)s article proche trouvé ; les plus proches ont été lus par une IA."
+msgstr[1] "%(n)s articles proches trouvés ; les plus proches ont été lus par une IA."
+
+msgid "%(n)s paper marked not relevant"
+msgid_plural "%(n)s papers marked not relevant"
+msgstr[0] "%(n)s article marqué non pertinent"
+msgstr[1] "%(n)s articles marqués non pertinents"
 
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "

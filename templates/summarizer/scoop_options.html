@@ -1,0 +1,8 @@
+{% load i18n %}<p><label>{% trans 'Competing teams: one author name per line. Their new papers are always read, even when they are not very close.' %}<br>
+  <textarea name="competitors" rows="3" placeholder="Jane Doe&#10;Wei Zhang">{{ values.competitors }}</textarea></label></p>
+<p><label>{% trans 'Key references of the project: arXiv ids or DOIs, one per line. A new paper that cites several of them is read.' %}<br>
+  <textarea name="references" rows="3" placeholder="2101.00001&#10;10.1093/mnras/stad1234">{{ values.references }}</textarea></label></p>
+<fieldset class="scoop-notify"><legend>{% trans 'Emails' %}</legend>
+  <label><input type="radio" name="notify" value="daily"{% if values.notify != 'strong' %} checked{% endif %}> {% trans 'Every overlap the day it is found' %}</label><br>
+  <label><input type="radio" name="notify" value="strong"{% if values.notify == 'strong' %} checked{% endif %}> {% trans 'Strong overlaps at once, partial ones in a weekly email' %}</label>
+</fieldset>

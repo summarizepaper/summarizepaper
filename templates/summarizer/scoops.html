@@ -7,6 +7,33 @@
 {% block extra_head_tags %}
   {% include 'summarizer/file_upload_assets.html' %}
   {% include 'summarizer/mathjax.html' %}
+  <style>
+    .scoop-aspects { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+    .scoop-aspect { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; background: var(--bg-soft); color: var(--text-muted); }
+    .scoop-aspect.same { background: #fee2e2; color: #991b1b; }
+    .scoop-aspect.close { background: #fef3c7; color: #92400e; }
+    .scoop-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; margin-top: 10px; }
+    .scoop-actions form { margin: 0; }
+    .scoop-collect select { max-width: 180px; font-size: 13px; padding: 2px 4px; }
+    .scoop-deep { margin-top: 10px; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--bg-soft); }
+    .scoop-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 8px 0; }
+    .scoop-table th, .scoop-table td { text-align: left; vertical-align: top; padding: 6px; border-top: 1px solid var(--border); }
+    .scoop-table thead th { border-top: 0; font-size: 12px; color: var(--text-muted); }
+    .scoop-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 0; }
+    .scoop-activity { margin: 16px 0 0; }
+    .scoop-activity figcaption { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+    .scoop-bars { display: flex; align-items: flex-end; gap: 2px; height: 56px; border-bottom: 1px solid var(--border); }
+    .scoop-bar { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+    .scoop-bar span { display: block; width: 100%; min-height: 1px; background: var(--accent); border-radius: 4px 4px 0 0; }
+    .scoop-bar:hover span { background: var(--accent-hover); }
+    .scoop-bar-axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .scoop-suggest { margin-top: 16px; }
+    .scoop-suggest .btn { margin: 2px 4px 2px 0; }
+    .scoop-notify { border: 0; padding: 0; margin: 0 0 12px; }
+    .scoop-notify legend { padding: 0; font-weight: 600; }
+    .scoop-facets { margin: 8px 0; padding-left: 18px; }
+    @media (max-width: 600px) { .scoop-table thead { display: none; } .scoop-table tr { display: block; } .scoop-table th, .scoop-table td { display: block; border-top: 0; padding: 2px 0; } .scoop-table tr + tr { border-top: 1px solid var(--border); padding-top: 6px; } }
+  </style>
   <meta name="description" content="{% trans 'Describe the project you are working on: every day, we compare it with the new papers on arXiv, bioRxiv and medRxiv, and email you when one comes close, with what it shares with your project and what stays yours.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/scoops/" />
 {% endblock %}
@@ -23,15 +50,17 @@
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'Describe your project in a few paragraphs (question, method, data, expected results), or upload the PDF of your draft: an AI writes the description from it.' %}</li>
-      <li>{% trans 'Every day, the new papers of the announcement are ranked by closeness to your project, and an AI reads the abstracts of the closest ones.' %}</li>
-      <li>{% trans 'When one overlaps your project, you get an email the same day: a strong overlap (same question, same or very close approach) or a partial one.' %}</li>
-      <li>{% trans 'For each paper, the AI says what it shares with your project, and what stays original in yours and how to set it apart.' %}</li>
+      <li>{% blocktrans with n=3 %}At once, the papers of the last {{ n }} years are searched on arXiv and in the journals: you see what is already published close to your project.{% endblocktrans %}</li>
+      <li>{% trans 'Every day, the new papers are compared with each facet of your project apart (question, method, data, results), and with the names that identify it. An AI reads the closest abstracts.' %}</li>
+      <li>{% trans 'When one overlaps your project, you get an email: a strong overlap (same question, same or very close approach) or a partial one, with how close it is on each facet.' %}</li>
+      <li>{% trans 'For each paper, the AI says what it shares with your project, what stays yours and what to do: cite it, set your project apart, contact the authors or publish soon. A strong overlap is compared with the full text of the paper when its license allows it.' %}</li>
     </ol>
     <ul class="tool-features">
-      <li>{% trans 'When you add a project, the papers of the last ten days are checked at once.' %}</li>
+      <li>{% trans 'Follow competing teams, and give your key references: their new papers, and the papers that cite your references, are always read.' %}</li>
+      <li>{% trans 'Mark a paper as not relevant and similar ones are pushed down; add the close ones to a collection.' %}</li>
       <li>{% trans 'Your own papers are never reported: give your name as it appears on your papers.' %}</li>
       <li>{% blocktrans with n=max_projects %}Up to {{ n }} projects watched.{% endblocktrans %}</li>
-      <li>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once and is not stored.' %}</li>
+      <li>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once and is not stored, unless you ask us to keep its text for the full-text comparisons.' %}</li>
     </ul>
     <p class="muted">{% trans 'Useful during a thesis or a long project, to know early that a competing team is close, cite it, and adjust how you present your work.' %}</p>
     {% if anonymous %}
@@ -43,9 +72,11 @@
     {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_projects %}You can watch {{ n }} projects at most.{% endblocktrans %}</p>
     {% elif error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
     {% elif error == 'empty' %}<p class="error">{% blocktrans with n=min_chars %}Give a title and a description of at least {{ n }} characters, or a PDF of your draft.{% endblocktrans %}</p>{% endif %}
+    {% if added %}<p class="card scoop-notice">{% blocktrans with name=added.name %}Added to “{{ name }}”.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ added.pk }}/">{% trans 'Open the collection' %}</a></p>{% endif %}
     {% if projects|length < max_projects %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
       {% csrf_token %}
+      <input type="hidden" name="action" value="create">
       <p><strong>{% trans 'Watch a project' %}</strong></p>
       <p><label>{% trans 'Title' %}<br><input type="text" name="title" maxlength="300" value="{{ form.title }}"></label></p>
       <p><label>{% trans 'What it does: the question, the method, the data, the results you expect' %}<br>
@@ -54,44 +85,143 @@
           data-enough="{% trans 'Long enough' %}">{{ form.description }}</textarea></label></p>
       {% trans 'or the PDF of your draft' as upload_label %}
       {% include 'summarizer/file_upload.html' with upload_name='draft' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
+      <p><label><input type="checkbox" name="keep_draft" value="1"{% if form.keep_draft %} checked{% endif %}> {% trans 'Keep the text of my draft to compare it with the full text of close papers (otherwise the PDF is read once and not stored)' %}</label></p>
       <p><label>{% trans 'Your name as it appears on your papers (optional: your own papers are then never reported)' %}<br>
         <input type="text" name="author_name" maxlength="200" value="{{ form.author_name|default:author_name }}"></label></p>
+      <details><summary>{% trans 'More options: competing teams, key references, emails' %}</summary>
+        {% include 'summarizer/scoop_options.html' with values=form %}
+      </details>
       <p><button class="btn" type="submit">{% trans 'Watch this project' %}</button></p>
-      <p class="muted"><small>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once to write the description and is not stored.' %}</small></p>
+      <p class="muted"><small>{% trans 'Your description stays private and is only used for the comparison.' %}</small></p>
     </form>
     {% endif %}
 
     {% for project in projects %}
-    <section class="card section-card" id="project-{{ project.pk }}"{% if not project.failed and not project.last_day %} data-pending{% endif %}>
+    <section class="card section-card" id="project-{{ project.pk }}"{% if project.working %} data-pending{% endif %}>
       <h2 style="margin-top:0">{{ project.title|default:_('Your draft') }}</h2>
       <div class="meta muted">
         {% if project.failed %}{% trans 'We could not read this draft. Check that the PDF holds text (not only scanned images), or describe the project instead.' %}
         {% elif not project.description %}<span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Reading your draft…' %}
         {% elif not project.last_day %}<span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'First check in progress (the papers of the last ten days)…' %}
-        {% else %}{% blocktrans with day=project.last_day|date:"j F Y" %}Compared with the papers announced up to {{ day }}.{% endblocktrans %}{% endif %}
+        {% else %}{% blocktrans with day=project.last_day|date:"j F Y" %}Compared with the papers announced up to {{ day }}.{% endblocktrans %}
+          {% if project.notify == 'strong' %}{% trans 'Strong overlaps are emailed at once, partial ones once a week.' %}{% endif %}{% endif %}
       </div>
-      {% if project.description %}<details style="margin:8px 0"><summary>{% trans 'Description' %}</summary><p>{{ project.description|linebreaksbr }}</p>
-        {% if project.search_text and project.search_text != project.description %}<p class="muted"><small><strong>{% trans 'Compared with the new papers as:' %}</strong> {{ project.search_text }}</small></p>{% endif %}</details>{% endif %}
-      {% if project.shown %}
-      <ul class="item-list" style="margin-top:12px">
-        {% for m in project.shown %}
-        <li class="card">
-          <span class="importance {% if m.overlap == 'high' %}high{% else %}medium{% endif %}">{% if m.overlap == 'high' %}{% trans 'Strong overlap' %}{% else %}{% trans 'Partial overlap' %}{% endif %}</span>
-          <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/paper/{{ m.arxiv_id }}/"><strong>{{ m.title }}</strong></a></p>
-          <div class="meta">{{ m.author_list|join:", " }} · {{ m.announced|date:"j F Y" }} · {{ m.arxiv_id|paper_ref }}</div>
-          {% if m.shared %}<p style="margin:8px 0 0"><strong>{% trans 'In common:' %}</strong> {{ m.shared }}</p>{% endif %}
-          {% if m.original %}<p style="margin:4px 0 0"><strong>{% trans 'What stays yours:' %}</strong> {{ m.original }}</p>{% endif %}
-        </li>
-        {% endfor %}
-      </ul>
-      {% elif project.last_day %}
-      <p class="muted">{% trans 'No close paper so far.' %}</p>
+      {% if project.description %}
+      <details style="margin:8px 0"><summary>{% trans 'Description and what we look for' %}</summary>
+        <p>{{ project.description|linebreaksbr }}</p>
+        {% with f=project.facet_data %}{% if f.question or f.method %}
+        <ul class="scoop-facets">
+          {% if f.question %}<li><strong>{% trans 'Question' %}:</strong> {{ f.question }}</li>{% endif %}
+          {% if f.method %}<li><strong>{% trans 'Method' %}:</strong> {{ f.method }}</li>{% endif %}
+          {% if f.data %}<li><strong>{% trans 'Data' %}:</strong> {{ f.data }}</li>{% endif %}
+          {% if f.results %}<li><strong>{% trans 'Results' %}:</strong> {{ f.results }}</li>{% endif %}
+          {% if f.entities %}<li><strong>{% trans 'Names that identify it' %}:</strong> {{ f.entities|join:", " }}</li>{% endif %}
+        </ul>
+        <p class="muted"><small>{% trans 'Each facet is compared with the new papers apart: a paper sharing only your method, or only your data, is found too.' %}</small></p>
+        {% endif %}{% endwith %}
+        {% if project.competitor_list %}<p><strong>{% trans 'Competing teams followed:' %}</strong> {{ project.competitor_list|join:", " }}</p>{% endif %}
+        {% if project.reference_list %}<p><strong>{% trans 'Key references:' %}</strong> {{ project.reference_list|join:", " }}</p>{% endif %}
+        {% if project.draft_text %}<p class="muted"><small>{% trans 'The text of your draft is kept for the full-text comparisons.' %}</small></p>{% endif %}
+      </details>
+      <details style="margin:8px 0"><summary>{% trans 'Edit the project' %}</summary>
+        <form method="post">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}">
+          <p><label>{% trans 'Title' %}<br><input type="text" name="title" maxlength="300" value="{{ project.title }}" required></label></p>
+          <p><label>{% trans 'Description' %}<br><textarea name="description" style="min-height:140px" minlength="{{ min_chars }}" required>{{ project.description }}</textarea></label></p>
+          <p><label>{% trans 'Your name as it appears on your papers' %}<br><input type="text" name="author_name" maxlength="200" value="{{ project.author_name }}"></label></p>
+          {% include 'summarizer/scoop_options.html' with values=project %}
+          {% if project.draft_text %}<p><label><input type="checkbox" name="forget_draft" value="1"> {% trans 'Delete the stored text of my draft' %}</label></p>{% endif %}
+          <p><button class="btn" name="action" value="edit">{% trans 'Save' %}</button></p>
+          <p class="muted"><small>{% trans 'The papers already found are kept. A new title or description starts a new search for prior art.' %}</small></p>
+        </form>
+      </details>
       {% endif %}
+
+      {% if project.bars %}
+      <figure class="scoop-activity">
+        <figcaption>{% trans 'Papers close to your project, per month' %}</figcaption>
+        <div class="scoop-bars" aria-hidden="true">
+          {% for b in project.bars %}<span class="scoop-bar" title="{{ b.month|date:'F Y' }}: {{ b.count }}"><span style="height:{{ b.height }}%"></span></span>{% endfor %}
+        </div>
+        <div class="scoop-bar-axis" aria-hidden="true"><span>{{ project.bars.0.month|date:"M Y" }}</span>{% with last=project.bars|last %}<span>{{ last.month|date:"M Y" }}</span>{% endwith %}</div>
+        <ul class="visually-hidden">{% for b in project.bars %}<li>{{ b.month|date:"F Y" }}: {{ b.count }}</li>{% endfor %}</ul>
+        <p class="muted"><small>{% trans 'Counted among the new papers of each announcement since the project is watched. A rise means the topic is heating up.' %}</small></p>
+      </figure>
+      {% endif %}
+
+      {% if project.new or project.prior %}
+      <div class="scoop-filter" role="group" aria-label="{% trans 'Show' %}">
+        <button type="button" class="btn btn-sm" data-show="all" aria-pressed="true">{% trans 'All' %}</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-show="high" aria-pressed="false">{% trans 'Strong overlaps' %}</button>
+        <button type="button" class="btn btn-sm btn-ghost" data-show="partial" aria-pressed="false">{% trans 'Partial overlaps' %}</button>
+      </div>
+      {% endif %}
+
+      {% if project.new %}
+      <h3>{% trans 'New papers' %}</h3>
+      <ul class="item-list">{% for m in project.new %}{% include 'summarizer/scoop_match.html' %}{% endfor %}</ul>
+      {% elif project.last_day %}
+      <p class="muted">{% trans 'No close new paper so far.' %}</p>
+      {% endif %}
+
+      {% if project.description %}
+      <h3>{% blocktrans with n=prior_years %}Already published (last {{ n }} years){% endblocktrans %}</h3>
+      {% if project.prior_status == 'pending' %}
+        <p class="meta muted"><span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Searching arXiv and the journals for papers that already overlap your project…' %}</p>
+      {% elif project.prior_status == 'failed' %}
+        <p class="error">{% trans 'The search for prior art failed.' %}</p>
+      {% elif project.prior_status == 'done' %}
+        {% if project.prior %}
+        <p class="muted"><small>{% blocktrans count n=project.prior_found %}{{ n }} close paper found; the closest were read by an AI.{% plural %}{{ n }} close papers found; the closest were read by an AI.{% endblocktrans %}</small></p>
+        <ul class="item-list">{% for m in project.prior %}{% include 'summarizer/scoop_match.html' %}{% endfor %}</ul>
+        {% else %}
+        <p class="muted">{% trans 'No published paper overlaps your project.' %}</p>
+        {% endif %}
+      {% endif %}
+      {% if project.prior_status != 'pending' %}
       <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}">
-        <button class="link-button" name="action" value="delete">{% trans 'Stop watching and delete' %}</button></form>
+        <button class="link-button" name="action" value="prior">{% if project.prior_status %}{% trans 'Search again' %}{% else %}{% trans 'Search for prior art' %}{% endif %}</button></form>
+      {% endif %}
+      {% endif %}
+
+      {% if project.suggested %}
+      <div class="scoop-suggest">
+        <p><strong>{% trans 'Teams that come back in your results' %}</strong> <span class="muted"><small>{% trans 'Follow them: their new papers will always be read.' %}</small></span></p>
+        {% for name in project.suggested %}
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}"><input type="hidden" name="name" value="{{ name }}">
+          <button class="btn btn-sm btn-ghost" name="action" value="competitor">+ {{ name }}</button></form>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if project.dismissed %}
+      <details style="margin-top:12px"><summary>{% blocktrans count n=project.dismissed|length %}{{ n }} paper marked not relevant{% plural %}{{ n }} papers marked not relevant{% endblocktrans %}</summary>
+        <p class="muted"><small>{% trans 'Papers like these are pushed down in the next checks.' %}</small></p>
+        <ul class="item-list">{% for m in project.dismissed %}{% include 'summarizer/scoop_match.html' %}{% endfor %}</ul>
+      </details>
+      {% endif %}
+
+      <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}">
+        <button class="link-button" name="action" value="delete" data-confirm="{% trans 'Stop watching this project and delete what was found?' %}">{% trans 'Stop watching and delete' %}</button></form>
     </section>
     {% endfor %}
     <script>
+    // Show all, strong or partial overlaps of a project; a confirmation before deleting one
+    document.addEventListener('click', function (e) {
+      var show = e.target.closest('[data-show]');
+      if (show) {
+        var section = show.closest('section');
+        section.querySelectorAll('[data-show]').forEach(function (b) {
+          var on = b === show;
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.classList.toggle('btn-ghost', !on);
+        });
+        section.querySelectorAll('.scoop-match').forEach(function (li) {
+          li.hidden = show.dataset.show !== 'all' && li.dataset.overlap !== show.dataset.show;
+        });
+      }
+      var confirmed = e.target.closest('[data-confirm]');
+      if (confirmed && !window.confirm(confirmed.dataset.confirm)) e.preventDefault();
+    });
     // Swap in each project still being prepared once it is ready, without reloading (a form being typed stays)
     (function poll() {
       if (!document.querySelector('[data-pending]')) return;

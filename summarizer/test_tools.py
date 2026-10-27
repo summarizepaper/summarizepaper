@@ -802,6 +802,12 @@ class CitationTests(ToolsTestCase):
 class ScoopTests(ToolsTestCase):
     DESCRIPTION = 'We measure the clouds of hot Jupiters with JWST transmission spectra and a new retrieval code. ' * 4
 
+    def setUp(self):
+        super().setUp()
+        prior = mock.patch('summarizer.scoops.prior_candidates', return_value={})
+        prior.start()
+        self.addCleanup(prior.stop)
+
     def announce(self, day, prefix):
         """A close paper, the user's own close paper, and a far one."""
         ArxivBatch.objects.create(day=day, papers=3)
@@ -865,6 +871,190 @@ class ScoopTests(ToolsTestCase):
         with mock.patch('summarizer.generated.chat_json') as chat:
             scoops.run(timezone.now(), 5)
         chat.assert_not_called()
+
+
+class ScoopEngineTests(ToolsTestCase):
+    """The facets, the signals, the reader's verdicts, prior art, full-text comparisons and the weekly emails."""
+    DESCRIPTION = ScoopTests.DESCRIPTION
+    FACETS = np.array([[1, 0, 0], [0, 1, 0]], dtype=np.float32)  # the whole project, and its method
+
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch('summarizer.scoops.project_vectors', return_value=self.FACETS)
+        patch.start()
+        self.addCleanup(patch.stop)
+        self.owner = self.user(paid=True)
+        self.project = WatchedProject.objects.create(
+            user=self.owner, title='Hot clouds', description=self.DESCRIPTION, last_day=datetime.date(2026, 10, 1),
+            facets=json.dumps({'entities': ['WASP-107b']}), competitors='Rival Team')
+
+    def paper(self, aid, vector, title='A paper', authors=('Zoe Q',), day=datetime.date(2026, 10, 5), abstract='Abstract.'):
+        return aid, {'arxiv_id': aid, 'title': title, 'abstract': abstract, 'authors': list(authors), 'announced': day}, \
+            np.array(vector, dtype=np.float32)
+
+    def run_check(self, rows, verdict='partial', **extra):
+        papers = {aid: p for aid, p, _ in rows}
+        vectors = {aid: v for aid, _, v in rows}
+        listings = []
+
+        def judge(prompt, **kwargs):
+            listings.append(kwargs['system'])
+            ids = re.findall(r'<paper id="([^"]+)">', kwargs['system'])
+            return {'items': [dict({'id': i, 'overlap': verdict, 'shared': 'S', 'original': 'O', 'action': 'cite',
+                                    'aspects': {'question': 'same', 'method': 'close', 'data': 'bogus'}}, **extra) for i in ids]}
+        with mock.patch('summarizer.generated.chat_json', side_effect=judge):
+            scoops.check(self.project, sorted({p['announced'] for p in papers.values()}), papers, vectors)
+        return listings
+
+    def test_each_day_has_its_own_candidates(self):
+        rows = [self.paper('d1-%d' % i, [1, 0, 0], day=datetime.date(2026, 10, 5)) for i in range(10)] + \
+               [self.paper('d2-%d' % i, [1, 0, 0], day=datetime.date(2026, 10, 6)) for i in range(10)]
+        self.run_check(rows)
+        days = list(ScoopMatch.objects.values_list('announced', flat=True))
+        self.assertEqual(days.count(datetime.date(2026, 10, 5)), scoops.CANDIDATES)
+        self.assertEqual(days.count(datetime.date(2026, 10, 6)), scoops.CANDIDATES)
+        self.assertEqual(json.loads(WatchedProject.objects.get().activity), {'2026-10': 20})
+
+    def test_facets_names_and_competitors_bring_papers_in(self):
+        rows = [self.paper('method', [0, 1, 0]),  # far from the whole project, close to its method
+                self.paper('named', [0.4, 0, 0.92], title='The atmosphere of WASP-107b'),
+                self.paper('rival', [0.35, 0, 0.94], authors=('R. Team',)),
+                self.paper('far', [0, 0, 1], title='WASP-107b again', authors=('Rival Team',))]  # below the loose floor
+        listing = ''.join(self.run_check(rows))
+        self.assertNotIn('"far"', listing)
+        matches = {m.arxiv_id: m for m in ScoopMatch.objects.all()}
+        self.assertEqual(set(matches), {'method', 'named', 'rival'})
+        self.assertEqual(matches['method'].signal_list(), ['similarity'])
+        self.assertEqual(matches['named'].signal_list(), ['entity'])
+        self.assertEqual(matches['rival'].signal_list(), ['competitor'])
+        self.assertEqual(matches['method'].aspect_data(), {'question': 'same', 'method': 'close'})  # 'bogus' dropped
+        self.assertEqual(matches['method'].action, 'cite')
+        self.assertIsNotNone(matches['method'].vector)
+
+    def test_papers_citing_the_key_references_are_read(self):
+        self.project.references = '2101.00001\n10.1093/MNRAS/X1'
+        self.project.save()
+        rows = [self.paper('2610.00001v1', [0.36, 0, 0.93]), self.paper('2610.00002v1', [0.35, 0, 0.94])]
+        answer = mock.Mock(status_code=200)
+        answer.json.return_value = [{'references': [{'externalIds': {'ArXiv': '2101.00001'}}, {'externalIds': {'DOI': '10.1093/mnras/x1'}}]},
+                                    {'references': [{'externalIds': {'ArXiv': '2101.00001'}}]}]
+        with mock.patch('summarizer.scoops.requests.post', return_value=answer) as post:
+            self.run_check(rows)
+        self.assertEqual(post.call_args[1]['json'], {'ids': ['arXiv:2610.00001', 'arXiv:2610.00002']})
+        self.assertEqual(list(ScoopMatch.objects.values_list('arxiv_id', 'signals')), [('2610.00001v1', 'references')])
+
+    def test_a_paper_marked_not_relevant_pushes_similar_ones_down(self):
+        self.run_check([self.paper('first', [0.6, 0, 0.8])])
+        match = ScoopMatch.objects.get()
+        client = self.client_for(self.owner)
+        r = client.post('/en/scoops/', {'action': 'mark', 'pk': self.project.pk, 'match': match.pk, 'status': 'irrelevant'})
+        self.assertEqual(r['Location'], '/en/scoops/#match-%d' % match.pk)
+        self.assertEqual(ScoopMatch.objects.get().status, 'irrelevant')
+        self.assertAlmostEqual(scoops.Scorer(self.project)(np.array([0.6, 0, 0.8], dtype=np.float32)), 0.2, places=5)
+        listing = self.run_check([self.paper('twin', [0.6, 0, 0.8])])
+        self.assertEqual(listing, [])
+        page = client.get('/en/scoops/')
+        self.assertContains(page, '1 paper marked not relevant')
+        # someone else's project or paper cannot be touched
+        other = self.client_for(self.user('bob', paid=True))
+        other.post('/en/scoops/', {'action': 'mark', 'pk': self.project.pk, 'match': match.pk, 'status': 'relevant'})
+        self.assertEqual(ScoopMatch.objects.get().status, 'irrelevant')
+
+    def test_editing_keeps_the_papers_and_searches_prior_art_again(self):
+        ScoopMatch.objects.create(project=self.project, arxiv_id='x', title='Kept', announced=datetime.date(2026, 10, 2),
+                                  similarity=0.8, overlap='high', emailed=True)
+        client = self.client_for(self.owner)
+        with mock.patch('summarizer.scoops.refresh') as refresh:
+            client.post('/en/scoops/', {'action': 'edit', 'pk': self.project.pk, 'title': 'Hot clouds 2',
+                                        'description': self.DESCRIPTION + ' More.', 'competitors': 'A B; C D',
+                                        'references': '2101.00001, 2101.00002', 'notify': 'strong'})
+        project = WatchedProject.objects.get()
+        refresh.assert_called_once_with(project.pk)
+        self.assertEqual((project.title, project.notify, project.prior_status), ('Hot clouds 2', 'strong', 'pending'))
+        self.assertEqual(project.competitor_list(), ['A B', 'C D'])
+        self.assertEqual(project.reference_list(), ['2101.00001', '2101.00002'])
+        self.assertTrue(ScoopMatch.objects.filter(title='Kept').exists())
+
+    def test_prior_art_is_judged_shown_and_its_journals_followed(self):
+        since = datetime.date(2025, 1, 1)
+        found = {'2401.00001': {'arxiv_id': '2401.00001v2', 'title': 'Old clouds', 'abstract': 'A.', 'authors': ['Old Author'],
+                                'announced': since, 'subfield': ''},
+                 'doi_10.1/own': {'arxiv_id': 'doi_10.1/own', 'title': 'Mine', 'abstract': 'B.', 'authors': ['Ann Lee'],
+                                  'announced': since, 'subfield': 'journals.3103'}}
+        for n in range(3):
+            found['doi_10.1/j%d' % n] = {'arxiv_id': 'doi_10.1/j%d' % n, 'title': 'Journal %d' % n, 'abstract': 'C.',
+                                         'authors': ['Old Author'], 'announced': since, 'subfield': 'journals.3103'}
+        self.project.author_name = 'Ann Lee'
+        self.project.save()
+        with mock.patch('summarizer.scoops.prior_candidates', return_value=found), \
+             mock.patch('summarizer.similar.embed', side_effect=lambda texts: np.array([[1, 0, 0]] * len(texts), dtype=np.float32)), \
+             mock.patch('summarizer.generated.chat_json', side_effect=lambda prompt, **kw: {'items': [
+                 {'id': i, 'overlap': 'high'} for i in re.findall(r'<paper id="([^"]+)">', kw['system'])]}):
+            scoops.prior_art(self.project)
+        project = WatchedProject.objects.get()
+        self.assertEqual((project.prior_status, project.prior_found, project.subfields), ('done', 4, 'journals.3103'))
+        prior = ScoopMatch.objects.filter(kind='prior')
+        self.assertEqual(prior.count(), 4)  # the user's own paper is left out
+        self.assertTrue(all(m.emailed for m in prior))
+        self.assertIn('journals.3103', digest.followed_journals())
+        page = self.client_for(self.owner).get('/en/scoops/')
+        self.assertContains(page, 'Already published')
+        self.assertContains(page, 'Old clouds')
+        self.assertContains(page, '+ Old Author')  # signs several of the results
+        UserPlan.objects.filter(user=self.owner).update(paid=False)
+        self.assertNotIn('journals.3103', digest.followed_journals())
+
+    def test_strong_overlaps_are_compared_with_the_full_text(self):
+        match = ScoopMatch.objects.create(project=self.project, arxiv_id='2610.00001v1', title='Rival', overlap='high',
+                                          announced=datetime.date(2026, 10, 5), similarity=0.8)
+        answer = {'aspects': [{'aspect': 'method', 'paper': 'Same code', 'project': 'New code', 'level': 'close'},
+                              {'aspect': 'mood', 'paper': '?'}], 'verdict': 'It does not take your result.', 'advice': 'Stress the code.'}
+        with mock.patch('summarizer.scoops.paper_full_text', return_value='x' * 5000) as text, \
+             mock.patch('summarizer.generated.chat_json', return_value=answer):
+            scoops.check_due(timezone.now())
+        text.assert_called_once_with('2610.00001v1')
+        match.refresh_from_db()
+        self.assertEqual(match.deep_status, 'done')
+        self.assertEqual([a['aspect'] for a in match.deep_data()['aspects']], ['method'])
+        scoops.send_alerts(timezone.now(), 5)
+        self.assertIn('It does not take your result.', mail.outbox[0].body)
+        self.assertIn('/en/scoops/#match-%d' % match.pk, mail.outbox[0].body)
+        self.assertContains(self.client_for(self.owner).get('/en/scoops/'), 'Stress the code.')
+        # a closed license: no full-text comparison
+        other = ScoopMatch.objects.create(project=self.project, arxiv_id='2610.00002v1', title='Closed', overlap='partial',
+                                          announced=datetime.date(2026, 10, 5), similarity=0.7)
+        with mock.patch('summarizer.scoops.paper_full_text', return_value=''):
+            self.client_for(self.owner).post('/en/scoops/', {'action': 'deep', 'pk': self.project.pk, 'match': other.pk})
+        other.refresh_from_db()
+        self.assertEqual(other.deep_status, 'unavailable')
+
+    def test_partial_overlaps_wait_for_the_weekly_email(self):
+        self.project.notify = 'strong'
+        self.project.weekly_sent = timezone.now() - datetime.timedelta(days=2)
+        self.project.save()
+        ScoopMatch.objects.create(project=self.project, arxiv_id='p', title='Partial one', overlap='partial',
+                                  announced=datetime.date(2026, 10, 5), similarity=0.6, deep_status='done')
+        self.assertEqual(scoops.send_alerts(timezone.now(), 5), 0)
+        ScoopMatch.objects.create(project=self.project, arxiv_id='h', title='Strong one', overlap='high',
+                                  announced=datetime.date(2026, 10, 5), similarity=0.9, deep_status='done')
+        self.assertEqual(scoops.send_alerts(timezone.now(), 5), 1)
+        self.assertIn('Strong one', mail.outbox[0].body)
+        self.assertNotIn('Partial one', mail.outbox[0].body)
+        later = timezone.now() + datetime.timedelta(days=6)
+        self.assertEqual(scoops.send_alerts(later, 5), 1)
+        self.assertIn('Partial one', mail.outbox[1].body)
+        self.assertEqual(WatchedProject.objects.get().weekly_sent, later)
+
+    def test_a_paper_goes_to_a_collection(self):
+        match = ScoopMatch.objects.create(project=self.project, arxiv_id='2610.00001v1', title='Rival', overlap='high',
+                                          announced=datetime.date(2026, 10, 5), similarity=0.8)
+        client = self.client_for(self.owner)
+        with mock.patch('summarizer.library.add_many', return_value={'added': 1}) as add:
+            r = client.post('/en/scoops/', {'action': 'collect', 'pk': self.project.pk, 'match': match.pk, 'collection': 'new'})
+        collection = Collection.objects.get()
+        self.assertEqual(collection.name, 'Hot clouds')
+        self.assertEqual(add.call_args[0][:2], (collection, ['2610.00001v1']))
+        self.assertContains(client.get(r['Location']), 'Added to')
 
 
 class RefcheckTests(ToolsTestCase):

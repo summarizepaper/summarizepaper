@@ -851,6 +851,20 @@ class WatchedProject(models.Model):
     vector = models.BinaryField(blank=True, null=True)
     vector_key = models.CharField(max_length=64, blank=True, default='')
     last_day = models.DateField(blank=True, null=True)  # the last announcement compared with it; None until the first check
+    # its question, method, data, expected results and the names that identify it (JSON), each facet embedded apart
+    facets = models.TextField(blank=True, default='')
+    facet_vectors = models.BinaryField(blank=True, null=True)
+    competitors = models.TextField(blank=True, default='')  # names, one per line: their new papers are always read
+    references = models.TextField(blank=True, default='')  # the arXiv ids or DOIs it builds on, one per line
+    draft_text = models.TextField(blank=True, default='')  # kept only when its author asks, for the full-text comparisons
+    NOTIFY = [('daily', 'Every overlap the day it is found'), ('strong', 'Strong overlaps at once, partial ones weekly')]
+    notify = models.CharField(max_length=10, choices=NOTIFY, default='daily')
+    weekly_sent = models.DateTimeField(blank=True, null=True)  # the last email with its partial overlaps (notify='strong')
+    subfields = models.CharField(max_length=200, blank=True, default='')  # journal subfields of its prior art, followed
+    prior_status = models.CharField(max_length=10, blank=True, default='')  # '', 'pending', 'done', 'failed'
+    prior_checked = models.DateTimeField(blank=True, null=True)
+    prior_found = models.PositiveIntegerField(default=0)  # candidates of the prior art search close enough to be judged
+    activity = models.TextField(blank=True, default='')  # JSON {"2026-10": papers above the floor that month}
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -858,6 +872,20 @@ class WatchedProject(models.Model):
 
     def __str__(self):
         return '%s: %s' % (self.user.username, self.title)
+
+    def facet_data(self):
+        import json
+        try:
+            data = json.loads(self.facets or '{}')
+        except ValueError:
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def competitor_list(self):
+        return [n.strip() for n in self.competitors.replace(';', '\n').splitlines() if n.strip()]
+
+    def reference_list(self):
+        return [r.strip() for r in self.references.replace(',', '\n').split() if r.strip()]
 
 
 class ScoopMatch(models.Model):
@@ -871,6 +899,15 @@ class ScoopMatch(models.Model):
     overlap = models.CharField(max_length=10)  # 'high' or 'partial'
     shared = models.TextField(blank=True, default='')
     original = models.TextField(blank=True, default='')
+    kind = models.CharField(max_length=10, default='new')  # 'new' (announced after it was watched) or 'prior' (published before)
+    aspects = models.TextField(blank=True, default='')  # JSON {"question": "same|close|different", "method", "data", "results"}
+    action = models.CharField(max_length=15, blank=True, default='')  # 'cite', 'differentiate', 'contact', 'hurry'
+    signals = models.CharField(max_length=100, blank=True, default='')  # why it was read: 'similarity,entity,competitor,references'
+    status = models.CharField(max_length=12, blank=True, default='')  # its reader's verdict: '', 'relevant', 'irrelevant'
+    vector = models.BinaryField(blank=True, null=True)  # its embedding, for the reader's verdicts to steer later checks
+    deep = models.TextField(blank=True, default='')  # JSON comparison with the paper's full text
+    deep_status = models.CharField(max_length=12, blank=True, default='')  # '', 'pending', 'done', 'unavailable', 'failed'
+    deep_started = models.DateTimeField(blank=True, null=True)
     emailed = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -881,6 +918,25 @@ class ScoopMatch(models.Model):
     def author_list(self):
         import json
         return json.loads(self.authors or '[]')
+
+    def aspect_data(self):
+        import json
+        try:
+            data = json.loads(self.aspects or '{}')
+        except ValueError:
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def deep_data(self):
+        import json
+        try:
+            data = json.loads(self.deep or '{}')
+        except ValueError:
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def signal_list(self):
+        return [s for s in self.signals.split(',') if s]
 
 
 class PaperVersion(models.Model):

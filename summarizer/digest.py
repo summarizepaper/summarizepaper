@@ -470,12 +470,13 @@ def read_bio(server, expected):
 
 
 def followed_journals():
-    """The journal subfields at least one active digest follows."""
+    """The journal subfields at least one active digest follows, or where a watched project's prior art is published."""
     followed = set()
     for categories in DigestSubscription.objects.filter(active=True, categories__contains=JOURNALS + '.') \
             .values_list('categories', flat=True):
         followed.update(c.strip() for c in categories.split(',') if c.strip() in journal_taxonomy.NAMES)
-    return sorted(followed)
+    from . import scoops
+    return sorted(followed | scoops.followed_subfields())
 
 
 def openalex_page(params):
