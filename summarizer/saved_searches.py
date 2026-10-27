@@ -65,7 +65,8 @@ API_PER_PAGE = 50
 ARXIV_PAGES = 4  # of 25, for a search in arXiv's own syntax
 PREVIEW_SHOWN = 15
 RANKED = 300
-LIKE_WEIGHT, DISLIKE_WEIGHT = 0.5, 0.5
+LIKE_WEIGHT, DISLIKE_WEIGHT = 1.0, 1.0  # on closeness beyond the usual (see usual)
+PHRASE_BONUS = 0.05  # the words of the search side by side, as typed
 # `mute` sets a new paper aside when it is much closer to a paper marked not relevant than the watch's papers
 # usually are to it: how close papers are varies by field (median 0.43 for language models, 0.57 for galaxy
 # clusters, measured on a week of arXiv), the same subtopic is about 0.12 above it
@@ -201,6 +202,16 @@ class Query:
                 found.extend(t for t, _ in include if t not in found)
         return found
 
+    def phrases(self):
+        """The alternatives of several words as expressions: 'galaxy cluster' found as typed ranks first."""
+        found = []
+        for include, _ in self.alternatives:
+            if len(include) > 1:
+                pattern = digest.keyword_pattern(' '.join(t for t, _ in include))
+                if pattern is not None:
+                    found.append(pattern)
+        return found
+
     def prefilter(self):
         """A database filter every match passes, so that only a few papers are read in Python."""
         if self.field == 'author':
@@ -301,6 +312,7 @@ def api_rows(params, since, engines, pool, pages=API_PAGES):
     options = {k: v for k, v in form.options().items() if k not in ('year_from', 'year_to', 'sort')}
     query, field = params.get('q', ''), params.get('field', 'all')
     terms = [query] if query else []
+    matcher = Query(query, field)
     rows, failed, truncated = [], False, False
     if 'arxiv' in engines:
         for page in range(1, min(pages, ARXIV_PAGES) + 1):
@@ -324,12 +336,23 @@ def api_rows(params, since, engines, pool, pages=API_PAGES):
             except (sources.SourceUnavailable, requests.RequestException):
                 failed = True
                 break
-            rows.extend(dict(r, terms=terms) for r in batch if not in_pool(r, pool))
+            rows.extend(r for r in (checked(r, matcher, terms) for r in batch if not in_pool(r, pool)) if r)
             if not batch.has_more:
                 break
         else:
             truncated = True
     return rows, failed, truncated
+
+
+def checked(row, matcher, terms):
+    """A search engine's paper with the words found, or None: OpenAlex also searches full texts, so its papers
+    must have the words in their title or abstract, as the announcements' (in the title when it has no abstract)."""
+    if not matcher.supported or matcher.field == 'author':
+        return dict(row, terms=terms)
+    abstract = re.sub(r'<[^>]+>', ' ', row.get('abstract') or '')
+    found = matcher.match({'title': row['title'], 'abstract': abstract, 'authors': row.get('authors') or []}) if abstract \
+        else Query(' '.join(terms), 'title').match({'title': row['title'], 'abstract': ''})
+    return dict(row, terms=found) if found else None
 
 
 def distinct(rows):
@@ -411,30 +434,43 @@ def rank(saved, rows):
         logger.warning('Ranking of saved search %s failed', saved.pk, exc_info=True)
         return rows
     likes, dislikes = feedback_vectors(saved)
-    floors = mute_floors(saved, dislikes, vectors, len(query)) if muting and len(dislikes) else None
+    usual_likes, usual_dislikes = usual(saved, likes, vectors, len(query)), usual(saved, dislikes, vectors, len(query))
+    floors = np.maximum(usual_dislikes + MUTE_MARGIN, MUTE_FLOOR) if muting and len(dislikes) else None
+    phrases = Query(saved.params.get('q', ''), saved.params.get('field', 'all')).phrases()
 
     def score(row):
         vector = vectors.get(row['key'])
         if vector is None or len(vector) != len(query):
             return -1.0
         value = float(query @ vector)
-        liked = float(np.max(likes @ vector)) if len(likes) else 0.0
-        disliked = dislikes @ vector if len(dislikes) else np.zeros(1)
-        if floors is not None and np.any(disliked >= floors) and float(np.max(disliked)) > liked:
+        if any(p.search(row['title'] + ' ' + (row.get('abstract') or '')) for p in phrases):
+            value += PHRASE_BONUS
+        # a vote counts beyond how close the watch's papers usually are to that paper: one paper marked not
+        # relevant must not push back the whole topic of the search
+        liked = likes @ vector - usual_likes if len(likes) else np.zeros(1)
+        disliked = dislikes @ vector - usual_dislikes if len(dislikes) else np.zeros(1)
+        if floors is not None and np.any(dislikes @ vector >= floors) and float(np.max(disliked)) > float(np.max(liked)):
             row['muted'] = True
-        return value + LIKE_WEIGHT * liked - DISLIKE_WEIGHT * float(np.max(disliked))
+        return value + LIKE_WEIGHT * max(float(np.max(liked)), 0.0) - DISLIKE_WEIGHT * max(float(np.max(disliked)), 0.0)
     ranked = sorted(head, key=score, reverse=True)
     return [r for r in ranked if not r.get('muted')] + tail + [r for r in ranked if r.get('muted')]
 
 
-def mute_floors(saved, dislikes, vectors, size):
-    """Per paper marked not relevant, the closeness past which a new paper is set aside: the median closeness of
-    the watch's papers (this check's and the history's) to it, plus MUTE_MARGIN."""
+def usual(saved, voted, vectors, size):
+    """Per voted paper, how close the watch's papers (this check's and the history's) usually are to it: the median
+    closeness, or MUTE_FALLBACK - MUTE_MARGIN with fewer than MUTE_SAMPLE papers to measure it."""
+    if not len(voted):
+        return np.zeros(0)
     known = digest.stored_vectors([r['key'] for r in saved.matches if r['key'] not in vectors])
     sample = [v for v in list(vectors.values()) + list(known.values()) if len(v) == size]
     if len(sample) < MUTE_SAMPLE:
-        return np.full(len(dislikes), MUTE_FALLBACK)
-    return np.maximum(np.median(dislikes @ np.array(sample).T, axis=1) + MUTE_MARGIN, MUTE_FLOOR)
+        return np.full(len(voted), MUTE_FALLBACK - MUTE_MARGIN)
+    return np.median(voted @ np.array(sample).T, axis=1)
+
+
+def mute_floors(saved, dislikes, vectors, size):
+    """Per paper marked not relevant, the closeness past which a new paper is set aside."""
+    return np.maximum(usual(saved, dislikes, vectors, size) + MUTE_MARGIN, MUTE_FLOOR)
 
 
 def add_blurbs(rows, lang):

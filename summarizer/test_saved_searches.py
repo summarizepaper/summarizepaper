@@ -419,15 +419,44 @@ class WatchTests(TestCase):
 
     def test_feedback_raises_close_papers_and_lowers_the_others(self):
         saved = self.create_saved()
-        SavedSearchFeedback.objects.create(saved=saved, key='liked', value=1, vector=np.array([0, 1, 0], dtype=np.float32).tobytes())
-        SavedSearchFeedback.objects.create(saved=saved, key='disliked', value=-1, vector=np.array([0, 0, 1], dtype=np.float32).tobytes())
-        rows = [paper('far'), paper('near_dislike'), paper('near_like')]
-        vectors = {'far': np.array([1, 0, 0], dtype=np.float32), 'near_dislike': np.array([0.7, 0, 0.7], dtype=np.float32),
-                   'near_like': np.array([0.7, 0.7, 0], dtype=np.float32)}
+        vec = lambda *x: np.array(x, dtype=np.float32)
+        SavedSearchFeedback.objects.create(saved=saved, key='liked', value=1, vector=vec(0, 1, 0, 0).tobytes())
+        SavedSearchFeedback.objects.create(saved=saved, key='disliked', value=-1, vector=vec(0, 0, 1, 0).tobytes())
+        vectors = {'near_dislike': vec(0.6, 0, 0.8, 0), 'plain': vec(0.6, 0, 0, 0.8), 'near_like': vec(0.6, 0.8, 0, 0),
+                   **{'other%d' % i: vec(0.6, 0, 0, 0.8) for i in range(3)}}
+        rows = [paper(k) for k in vectors]
         with self.settings(OPENAI_KEY='sk'), mock.patch.object(digest, 'ensure_vectors', return_value=vectors), \
-                mock.patch.object(saved_searches, 'query_vector', return_value=np.array([1, 0, 0], dtype=np.float32)):
-            ranked = saved_searches.rank(saved, rows)
-        self.assertEqual([r['key'] for r in ranked], ['near_like', 'far', 'near_dislike'])
+                mock.patch.object(saved_searches, 'query_vector', return_value=vec(1, 0, 0, 0)):
+            ranked = [r['key'] for r in saved_searches.rank(saved, rows)]
+        self.assertEqual((ranked[0], ranked[-1]), ('near_like', 'near_dislike'))
+
+    def test_a_vote_does_not_push_back_the_whole_topic(self):
+        # every paper is close to the one marked not relevant: only those closer than usual go back
+        saved = self.create_saved()
+        vec = lambda *x: np.array(x, dtype=np.float32) / np.linalg.norm(x)
+        SavedSearchFeedback.objects.create(saved=saved, key='disliked', value=-1, vector=vec(0, 1, 0).tobytes())
+        vectors = {'topic%d' % i: vec(0.8, 0.6, 0) for i in range(5)}
+        vectors['closest_to_query'] = vec(0.9, 0.6, 0)
+        rows = [paper(k) for k in vectors]
+        with self.settings(OPENAI_KEY='sk'), mock.patch.object(digest, 'ensure_vectors', return_value=vectors), \
+                mock.patch.object(saved_searches, 'query_vector', return_value=vec(1, 0, 0)):
+            ranked = [r['key'] for r in saved_searches.rank(saved, rows)]
+        self.assertEqual(ranked[0], 'closest_to_query')
+
+    def test_search_engine_papers_need_the_words_in_their_title_or_abstract_and_phrases_rank_first(self):
+        params = {'q': 'galaxy cluster', 'field': 'all', 'src': 'open', 'type': 'journals'}
+        saved = self.create_saved(params=params, last_checked=self.now - datetime.timedelta(days=1))
+        page = sources.SearchRows([dict(paper('doi_a'), title='A radio galaxy', abstract='Its jets.'),
+                                   dict(paper('doi_b'), title='Galaxy clusters at z=1', abstract='We observe them.'),
+                                   dict(paper('doi_c'), title='Cluster of a galaxy', abstract=''),
+                                   dict(paper('doi_d'), title='Notes', abstract='')], has_more=False)
+        with mock.patch.object(sources, 'search', return_value=page):
+            rows = saved_searches.latest(saved, self.now)[0]
+        self.assertEqual([r['key'] for r in rows], ['doi_b', 'doi_c'])
+        self.assertEqual(rows[0]['terms'], ['galaxy', 'cluster'])
+        self.assertEqual(len(saved_searches.Query('galaxy cluster').phrases()), 1)
+        self.assertTrue(saved_searches.Query('galaxy cluster').phrases()[0].search('rich galaxy clusters'))
+        self.assertFalse(saved_searches.Query('galaxy cluster').phrases()[0].search('a cluster in the galaxy'))
 
     def test_page_previews_votes_and_acts_on_the_ticked_papers(self):
         saved = self.create_saved()

@@ -16619,3 +16619,11 @@ msgstr ""
 
 msgid "Relevant"
 msgstr "Pertinent"
+
+#, python-format
+msgid "Yes: %(url)s"
+msgstr "Oui : %(url)s"
+
+#, python-format
+msgid "No: %(url)s"
+msgstr "Non : %(url)s"

@@ -7,7 +7,7 @@
 {% if paper.blurb %}{{ paper.blurb }}{% else %}{{ paper.abstract|striptags|truncatewords:55 }}{% endif %}{% if paper.terms %}
 {% trans 'matched:' %} {{ paper.terms|join:", " }}{% endif %}
 {{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/
-{% trans 'Relevant?' %} {% trans 'Yes' %}: {{ paper.vote_yes }} · {% trans 'No' %}: {{ paper.vote_no }}
+{% trans 'Relevant?' %} {% blocktrans with url=paper.vote_yes %}Yes: {{ url }}{% endblocktrans %} · {% blocktrans with url=paper.vote_no %}No: {{ url }}{% endblocktrans %}
 {% endfor %}{% if more %}
 {% blocktrans count n=more %}{{ n }} more new paper on the page of the search:{% plural %}{{ n }} more new papers on the page of the search:{% endblocktrans %} {{ page_url }}
 {% endif %}{% if truncated %}
