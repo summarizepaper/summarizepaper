@@ -66,7 +66,13 @@ ARXIV_PAGES = 4  # of 25, for a search in arXiv's own syntax
 PREVIEW_SHOWN = 15
 RANKED = 300
 LIKE_WEIGHT, DISLIKE_WEIGHT = 0.5, 0.5
-MUTE_SIMILARITY = 0.6  # closeness to a paper marked not relevant past which `mute` sets a new one aside
+# `mute` sets a new paper aside when it is much closer to a paper marked not relevant than the watch's papers
+# usually are to it: how close papers are varies by field (median 0.43 for language models, 0.57 for galaxy
+# clusters, measured on a week of arXiv), the same subtopic is about 0.12 above it
+MUTE_MARGIN = 0.12
+MUTE_FLOOR = 0.6
+MUTE_FALLBACK = 0.68  # with fewer than MUTE_SAMPLE papers to measure the usual closeness
+MUTE_SAMPLE = 5
 VOTE_SALT = 'saved-search-vote'
 STOPWORDS = frozenset('a an and the of in on for to with by from at as is are its into via using based '
                       'de des du la le les et en un une pour sur dans par aux au'.split())
@@ -313,7 +319,7 @@ def api_rows(params, since, engines, pool, pages=API_PAGES):
         kind = params.get('type') if params.get('type') in sources.SEARCH_TYPES else ''
         for page in range(1, pages + 1):
             try:
-                batch = sources.search(query, kind, per_page=API_PER_PAGE, field=field, page=page, keep=False,
+                batch = sources.search(query, kind, per_page=API_PER_PAGE, field=field, page=page, keep=False, watch=True,
                                        filters=dict(options, sort='newest', since=since.isoformat()))
             except (sources.SourceUnavailable, requests.RequestException):
                 failed = True
@@ -346,6 +352,11 @@ def collect(saved, since, api_since, pages=API_PAGES):
     if engines:
         found, failed, truncated = api_rows(params, api_since, engines, pool, pages)
         rows += found
+        if failed and pool and saved.last_checked is not None:
+            # the announcements are read whole: their papers go out now, and the search engine's are found again
+            # by a later check, whose window starts weeks before the last one
+            logger.warning('Saved search %s: a search engine failed, its papers wait for the next check', saved.pk)
+            failed = False
     return distinct(rows), failed, truncated
 
 
@@ -400,6 +411,7 @@ def rank(saved, rows):
         logger.warning('Ranking of saved search %s failed', saved.pk, exc_info=True)
         return rows
     likes, dislikes = feedback_vectors(saved)
+    floors = mute_floors(saved, dislikes, vectors, len(query)) if muting and len(dislikes) else None
 
     def score(row):
         vector = vectors.get(row['key'])
@@ -407,12 +419,22 @@ def rank(saved, rows):
             return -1.0
         value = float(query @ vector)
         liked = float(np.max(likes @ vector)) if len(likes) else 0.0
-        disliked = float(np.max(dislikes @ vector)) if len(dislikes) else 0.0
-        if muting and disliked >= MUTE_SIMILARITY and disliked > liked:
+        disliked = dislikes @ vector if len(dislikes) else np.zeros(1)
+        if floors is not None and np.any(disliked >= floors) and float(np.max(disliked)) > liked:
             row['muted'] = True
-        return value + LIKE_WEIGHT * liked - DISLIKE_WEIGHT * disliked
+        return value + LIKE_WEIGHT * liked - DISLIKE_WEIGHT * float(np.max(disliked))
     ranked = sorted(head, key=score, reverse=True)
     return [r for r in ranked if not r.get('muted')] + tail + [r for r in ranked if r.get('muted')]
+
+
+def mute_floors(saved, dislikes, vectors, size):
+    """Per paper marked not relevant, the closeness past which a new paper is set aside: the median closeness of
+    the watch's papers (this check's and the history's) to it, plus MUTE_MARGIN."""
+    known = digest.stored_vectors([r['key'] for r in saved.matches if r['key'] not in vectors])
+    sample = [v for v in list(vectors.values()) + list(known.values()) if len(v) == size]
+    if len(sample) < MUTE_SAMPLE:
+        return np.full(len(dislikes), MUTE_FALLBACK)
+    return np.maximum(np.median(dislikes @ np.array(sample).T, axis=1) + MUTE_MARGIN, MUTE_FLOOR)
 
 
 def add_blurbs(rows, lang):

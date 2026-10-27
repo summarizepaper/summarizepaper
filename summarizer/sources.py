@@ -871,6 +871,9 @@ SEARCH_SECONDS = 3600  # pages, reloads and the same words typed again reuse a s
 # the day's searches go to Crossref, which is free but does not know which papers are open.
 OPENALEX_SEARCHES_PER_DAY = 450
 OPENALEX_SEARCH_KEY = 'openalex-searches:%s'
+# the saved search watches have their own count, so that the site's searches (scrapers too) never use it up
+OPENALEX_WATCH_SEARCHES_PER_DAY = 200
+OPENALEX_WATCH_KEY = 'openalex-watch-searches:%s'
 # The research tools (who works on a topic, placements, bibliography check, literature review, prior art) count
 # apart, at most $1 a day more: the paper search of the site, crawlers included, used up the shared 450 by noon.
 TOOL_SEARCHES_PER_DAY = 1000
@@ -909,9 +912,10 @@ class SearchRows(list):
         self.has_more = has_more
 
 
-def search_papers(query, kind='', per_page=25, abstracts=False, field='all', filters=None, page=1, keep=True):
+def search_papers(query, kind='', per_page=25, abstracts=False, field='all', filters=None, page=1, keep=True, watch=False):
     """Open-access papers matching a query, as _paper dicts: from OpenAlex, or Crossref past the daily limit
-    or when OpenAlex refuses. Cached SEARCH_SECONDS, unless keep is False (the pages a search watch reads once)."""
+    or when OpenAlex refuses. Cached SEARCH_SECONDS, unless keep is False (the pages a search watch reads once);
+    watch: counted against the watches' own daily OpenAlex budget."""
     from django.core.cache import cache
     field = field if field in ('author', 'title', 'abstract') else 'all'
     options = filters or {}
@@ -947,7 +951,7 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
     if options.get('sort') in ('newest', 'oldest'):
         params['sort'] = 'publication_date:' + ('desc' if options['sort'] == 'newest' else 'asc')
     papers = None
-    if _spend(OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY):
+    if _spend(*((OPENALEX_WATCH_KEY, OPENALEX_WATCH_SEARCHES_PER_DAY) if watch else (OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY))):
         try:
             body = _json('%s/works' % OPENALEX, _openalex_params(params))
             works = (body or {}).get('results', [])
@@ -1010,7 +1014,7 @@ def crossref_search(query, per_page, field='all', filters=None, page=1):
     return SearchRows(papers, has_more=more)
 
 
-def search(query, kind='', per_page=25, field='all', filters=None, page=1, keep=True):
+def search(query, kind='', per_page=25, field='all', filters=None, page=1, keep=True, watch=False):
     """Search results as the search page shows them.
 
     [{'key', 'title', 'authors', 'venue', 'published', 'license', 'open', 'arxiv_id'}], open = we can read the full text.
@@ -1024,6 +1028,8 @@ def search(query, kind='', per_page=25, field='all', filters=None, page=1, keep=
         kwargs['page'] = page
     if not keep:
         kwargs['keep'] = False
+    if watch:
+        kwargs['watch'] = True
     papers = search_papers(query, kind, per_page, **kwargs)
     return SearchRows([{
         'key': paper['key'], 'title': paper['title'], 'authors': paper['authors'][:6],

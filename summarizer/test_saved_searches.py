@@ -582,3 +582,28 @@ class WatchTests(TestCase):
                                       categories='journals.1605', venue='Nature Catalysis', announced=self.now.date())
         rows = saved_searches.latest(saved, self.now)[0]
         self.assertEqual(rows[0]['venue'], 'Nature Catalysis')
+
+    def test_a_failed_search_engine_holds_back_only_its_own_papers(self):
+        params = {'q': 'exoplanet atmospheres', 'field': 'all', 'src': 'all', 'type': ''}
+        saved = self.create_saved(params=params, watch_enabled=True, frequency='daily',
+                                  last_checked=self.now - datetime.timedelta(days=2))
+        announce('2610.00001v1', 'Exoplanet atmospheres')
+        with mock.patch.object(sources, 'search', side_effect=sources.SourceUnavailable('budget')) as search:
+            self.assertEqual(saved_searches.run(self.now, 5), 1)
+        self.assertTrue(search.call_args.kwargs['watch'])
+        saved.refresh_from_db()
+        self.assertEqual([r['key'] for r in saved.matches], ['2610.00001v1'])
+        # a first check waits for every source: what the engine has would otherwise be sent as new later
+        fresh = self.create_saved(params=dict(params, q='hot jupiter'))
+        with mock.patch.object(sources, 'search', side_effect=sources.SourceUnavailable('budget')):
+            self.assertTrue(saved_searches.latest(fresh, self.now)[1])
+
+    def test_the_mute_floor_follows_how_close_the_watch_papers_usually_are(self):
+        saved = self.create_saved(mute=True)
+        dislikes = np.array([[1, 0, 0]], dtype=np.float32)
+        few = {'a': np.array([1, 0, 0], dtype=np.float32)}
+        self.assertEqual(list(saved_searches.mute_floors(saved, dislikes, few, 3)), [saved_searches.MUTE_FALLBACK])
+        dense = {str(i): np.array([0.7, 0.714, 0], dtype=np.float32) for i in range(6)}  # a field where papers are close
+        self.assertAlmostEqual(float(saved_searches.mute_floors(saved, dislikes, dense, 3)[0]), 0.82, places=2)
+        sparse = {str(i): np.array([0.3, 0.954, 0], dtype=np.float32) for i in range(6)}
+        self.assertAlmostEqual(float(saved_searches.mute_floors(saved, dislikes, sparse, 3)[0]), saved_searches.MUTE_FLOOR)
