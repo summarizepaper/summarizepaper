@@ -2645,7 +2645,7 @@ class LetterTests(ToolsTestCase):
         answers[2] = self.letter_answer(title='Astronomie et espace this week : des étoiles')
         with mock.patch('summarizer.generated.chat_json', side_effect=answers):
             letter = letters.write('space', self.day, 'fr')
-        self.assertEqual(letter.title, 'Astronomie et espace cette semaine : des étoiles')
+        self.assertEqual(letter.title, 'Astronomie et espace cette semaine\u00a0: des étoiles')
 
     def test_numbers_missing_from_the_abstracts_are_rewritten_or_dropped(self):
         answers = self.answers()

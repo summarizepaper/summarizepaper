@@ -468,8 +468,8 @@ def write(topic, day, lang, save=True, reuse=True):
         'written there; say "preprint" or "not yet peer reviewed" where useful; no hype, no LaTeX, no markdown, never '
         'write IDs in the texts. For each section also give "query": its subject as a researcher would type it in a '
         'search engine, in English, 4 to 12 words. For each paper give "study": one of %s; "evidence": what the result '
-        'rests on in a few words (a sample, a data set, a number of runs), copied from the abstract, or "" if it does '
-        'not say; "limit": in one sentence, what the result does not show yet or the main caveat a referee would raise (a small sample, simulations only, one data set, no independent test, a proxy measure...), from the abstract, not a restatement of its scope. Answer with a JSON object {"title": "...", '
+        'rests on in a few words (a sample, a data set, a number of runs, an instrument), copied from the abstract, '
+        'or "" if it does not say or for a proof or a theory; "limit": in one sentence, what the result does not show yet or the main caveat a referee would raise (a small sample, simulations only, one data set, no independent test, a proxy measure...), from the abstract, not a restatement of its scope. Answer with a JSON object {"title": "...", '
         '"dek": "...", "sections": [{"heading": "...", "text": "...", "papers": ["ID"], "query": "..."}], "closing": '
         '"...", "papers": {"ID": {"study": "...", "evidence": "...", "limit": "..."}}}.'
         % (generated.language_name(lang), heading, len(papers), heading, ', '.join(STUDY_TYPES)),
@@ -498,6 +498,8 @@ def write(topic, day, lang, save=True, reuse=True):
     title = str(answer['title']).strip()[:300]
     if lang != 'en':  # the model sometimes keeps the English 'this week' of the prompt's examples
         title = title.replace('%s this week' % name, heading)
+    if lang == 'fr':
+        title = re.sub(r'\s*:\s*', '\u00a0: ', title, count=1)
     selection = dict(selection, numbers=check['numbers'], rewritten=check['rewritten'], dropped=check['dropped'],
                      sources=sorted({facts[p['arxiv_id']]['source'] for p in chosen}))
     order = [p['arxiv_id'] for p in chosen]
