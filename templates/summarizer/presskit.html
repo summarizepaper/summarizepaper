@@ -23,7 +23,7 @@
   {% if paid or user.is_authenticated %}{% csrf_token %}{% endif %}
 
   {% if shared %}
-  <p class="kit-notice">{% trans 'A press kit shared by a SummarizePaper reader: read-only, as it was written.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
+  <p class="kit-notice">{% trans 'A press kit shared by a SummarizePaper reader: read-only, as it was written.' %} {% blocktrans with date=row.updated|date:"j F Y" %}Shared as it was on {{ date }}.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
   {% elif demo %}
   <p class="kit-notice">{% trans 'An example kit, open to everyone. With Premium+, you write one for any paper: arXiv, journals and preprints.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
   {% endif %}
@@ -51,7 +51,7 @@
       <li>{% trans 'For everyone: findings with their passages checked word for word, the novelty set against the closest earlier papers, a hype check, figures with their credit, and researchers for an outside view who have not signed with the authors.' %}</li>
     </ul>
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a>
-      {% for demo_id in demo_ids %}<a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/press-kit/{{ demo_id }}/">{% trans 'See an example kit' %}</a>{% endfor %}</p>
+      {% for demo_id in demo_ids %}<a class="btn btn-ghost" data-funnel="presskit_example" href="/{{ LANGUAGE_CODE }}/press-kit/{{ demo_id }}/">{% trans 'See an example kit' %}</a>{% endfor %}</p>
   </div>
   {% elif kit %}
     {% if newer %}
@@ -81,8 +81,8 @@
 
     {% if paid %}
     <div id="kit-start" class="presskit-actions"{% if row.status == 'pending' %} hidden{% endif %}>
-      <a class="btn" data-role-link href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}{% if editorial %}&amp;letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download as PDF' %}</a>
-      <a class="btn btn-ghost" data-role-link href="{% url 'presskit_markdown' arxiv_id %}?role={{ role }}">{% trans 'Markdown (to paste in a document)' %}</a>
+      <a class="btn" data-role-link data-funnel="presskit_pdf" href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}{% if editorial %}&amp;letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download as PDF' %}</a>
+      <a class="btn btn-ghost" data-role-link data-funnel="presskit_markdown" href="{% url 'presskit_markdown' arxiv_id %}?role={{ role }}">{% trans 'Markdown (to paste in a document)' %}</a>
       <button type="button" class="btn btn-ghost" data-kit-share>{% if share_url %}{% trans 'Shared link' %}{% else %}{% trans 'Share a read-only link' %}{% endif %}</button>
       {% if kit.schema_version != 3 or row.status == 'failed' %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Update this kit: roles, earlier papers, figures' %}</button>
       {% elif can_read_full_text %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Read the full text again' %}</button>{% endif %}
@@ -92,10 +92,12 @@
       <input id="kit-share-url" type="text" readonly value="{{ share_url }}">
       <button type="button" class="btn btn-sm" data-copy-field="kit-share-url">{% trans 'Copy' %}</button>
       <button type="button" class="btn btn-sm btn-ghost" data-kit-unshare>{% trans 'Stop sharing' %}</button>
+      <p class="muted" data-kit-share-outdated{% if not share_outdated %} hidden{% endif %}>{% trans 'The link shows the kit as it was when you shared it; it has been updated since.' %}
+        <button type="button" class="btn btn-sm btn-ghost" data-kit-share-update>{% trans 'Share the current kit' %}</button></p>
     </div>
     {% elif demo %}
-    <div class="presskit-actions"><a class="btn" data-role-link href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}">{% trans 'Download as PDF' %}</a>
-      <a class="btn btn-ghost" data-role-link href="{% url 'presskit_markdown' arxiv_id %}?role={{ role }}">{% trans 'Markdown (to paste in a document)' %}</a></div>
+    <div class="presskit-actions"><a class="btn" data-role-link data-funnel="presskit_pdf" href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}">{% trans 'Download as PDF' %}</a>
+      <a class="btn btn-ghost" data-role-link data-funnel="presskit_markdown" href="{% url 'presskit_markdown' arxiv_id %}?role={{ role }}">{% trans 'Markdown (to paste in a document)' %}</a></div>
     {% endif %}
 
     <nav class="kit-toc" aria-label="{% trans 'Contents' %}">
@@ -113,6 +115,7 @@
       <section class="card section-card" data-role-panel="author"{% if role != 'author' %} hidden{% endif %}>
         {% with part=kit.roles.author %}
         <h2>{% trans 'Your paper: talking about it' %}</h2>
+        {% if part.numbers_absent %}<p class="error">{% blocktrans with values=part.numbers_absent|join:', ' %}Numbers of these texts that the paper text does not state: {{ values }}. Check them before you send them.{% endblocktrans %}</p>{% endif %}
         {% if part.press_release.lede %}
         <h3>{% trans 'Draft press release' %}</h3>
         <p class="muted">{% trans 'A draft for your press office, written by AI from the paper: check every sentence, and add your own quote.' %}</p>
@@ -150,6 +153,7 @@
       <section class="card section-card" data-role-panel="commentator"{% if role != 'commentator' %} hidden{% endif %}>
         {% with part=kit.roles.commentator %}
         <h2>{% trans 'Asked to comment: what this paper shows' %}</h2>
+        {% if part.numbers_absent %}<p class="error">{% blocktrans with values=part.numbers_absent|join:', ' %}Numbers of these texts that the paper text does not state: {{ values }}. Check them before you send them.{% endblocktrans %}</p>{% endif %}
         {% if part.in_brief %}<ul class="kit-brief-lines">{% for line in part.in_brief %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
         {% if part.strengths %}
         <h3>{% trans 'Strengths' %}</h3>
@@ -260,7 +264,7 @@
       <ul class="kit-list">
         {% for e in kit.experts %}
         <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}{% if e.country %}, {{ e.country }}{% endif %}){% endif %}{% if e.orcid %} · <a href="{{ e.orcid }}" target="_blank" rel="noopener noreferrer">ORCID</a>{% endif %}
-          <br><span class="muted">{% if e.roles %}{% if 'last' in e.roles %}{% trans 'last author of' %}{% elif 'first' in e.roles %}{% trans 'first author of' %}{% else %}{% trans 'corresponding author of' %}{% endif %} {% endif %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a>{% if e.year %} ({{ e.year }}){% endif %}{% if e.count > 1 %} · {% blocktrans count n=e.count %}{{ n }} close paper{% plural %}{{ n }} close papers{% endblocktrans %}{% endif %}</span></li>
+          <br><span class="muted">{% if e.roles %}{% if 'last' in e.roles %}{% trans 'last author of' %}{% elif 'first' in e.roles %}{% trans 'first author of' %}{% else %}{% trans 'corresponding author of' %}{% endif %} {% endif %}{% if e.arxiv_id %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a>{% elif e.url %}<a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}{% if e.year %} ({{ e.year }}){% endif %}{% if e.count > 1 %} · {% blocktrans count n=e.count %}{{ n }} close paper{% plural %}{{ n }} close papers{% endblocktrans %}{% endif %}</span></li>
         {% endfor %}
       </ul>
       <p><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}&amp;mode=overview" rel="nofollow">{% trans 'Everyone who works on this topic' %} →</a></p>

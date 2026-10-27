@@ -4,6 +4,11 @@
   'use strict';
   var STORE = 'presskit-role';
 
+  // usage of the page (fixed labels only, as funnel.js): which roles, copies, shares and reports are used
+  function track(name, data) {
+    try { if (window.umami) Promise.resolve(window.umami.track(name, data)).catch(function () {}); } catch (_) {}
+  }
+
   function remember(role) { try { localStorage.setItem(STORE, role); } catch (_) {} }
   function remembered() { try { return localStorage.getItem(STORE); } catch (_) { return null; } }
 
@@ -61,7 +66,9 @@
         history.replaceState(null, '', page.pathname + page.search + page.hash);
       }
     }
-    tabs.forEach(function (tab) { tab.addEventListener('click', function () { show(tab.dataset.roleTab, true); }); });
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () { show(tab.dataset.roleTab, true); track('presskit_role', {role: tab.dataset.roleTab}); });
+    });
     var stored = remembered();
     if (stored && !new URLSearchParams(location.search).get('role')) show(stored, false);
 
@@ -70,12 +77,14 @@
       if (button) {
         var where = [root.dataset.citation, button.dataset.copyWhere].filter(Boolean).join(', ');
         copy('“' + button.dataset.copyQuote + '”' + (where ? ' (' + where + ')' : ''), button, root);
+        track('presskit_copy', {what: 'quote'});
         return;
       }
       button = event.target.closest('[data-copy-block]');
       if (button) {
         var node = document.getElementById(button.dataset.copyBlock);
         if (node) copy(blockText(node), button, root);
+        track('presskit_copy', {what: button.dataset.copyBlock.replace(/^kit-|-\d+$/g, '')});
         return;
       }
       button = event.target.closest('[data-copy-field]');
@@ -89,14 +98,18 @@
     var shareBox = root.querySelector('[data-kit-share-box]');
     function share(action) {
       if (!root.dataset.share) return;
+      track('presskit_share', {action: action});
       SP.post(root.dataset.share, {action: action}).then(function (json) {
         if (json.status !== 'ok') return;
         var field = document.getElementById('kit-share-url');
         field.value = json.url || '';
         shareBox.hidden = !json.url;
+        if (action === 'update') shareBox.querySelector('[data-kit-share-outdated]').hidden = true;
         if (json.url) field.select();
       });
     }
+    var update = root.querySelector('[data-kit-share-update]');
+    if (update) update.addEventListener('click', function () { share('update'); });
     var shareButton = root.querySelector('[data-kit-share]');
     if (shareButton) shareButton.addEventListener('click', function () { share('share'); });
     var unshare = root.querySelector('[data-kit-unshare]');
@@ -124,6 +137,7 @@
       SP.post(root.dataset.report, {section: current.section, item: current.item, text: text.value}).then(function (json) {
         if (json.status !== 'ok') throw json;
         dialog.close();
+        track('presskit_report', {section: current.section});
         current.button.textContent = root.dataset.reportSent;
         current.button.disabled = true;
       }).catch(function () {

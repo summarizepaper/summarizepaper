@@ -72,7 +72,7 @@ def offline():
 
 def base_call(chat):
     """The call that writes the kit itself (the other one writes the parts of each role)."""
-    return next(call for call in chat.call_args_list if 'publication_check' in call.args[0])
+    return next(call for call in chat.call_args_list if 'evidence_cards' in call.kwargs['system'])
 
 
 

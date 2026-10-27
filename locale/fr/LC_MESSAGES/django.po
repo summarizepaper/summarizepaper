@@ -17315,3 +17315,33 @@ msgstr "Préférer :"
 
 msgid "How solid:"
 msgstr "Solidité :"
+
+#, python-format
+msgid ""
+"Numbers of these texts that the paper text does not state: %s. Check them "
+"before you send them."
+msgstr ""
+"Nombres de ces textes que le texte de l’article ne donne pas : %s. Vérifiez-"
+"les avant de les envoyer."
+
+#, python-format
+msgid ""
+"Numbers of these texts that the paper text does not state: %(values)s. Check"
+" them before you send them."
+msgstr ""
+"Nombres de ces textes que le texte de l’article ne donne pas : %(values)s. "
+"Vérifiez-les avant de les envoyer."
+
+#, python-format
+msgid "Shared as it was on %(date)s."
+msgstr "Partagé tel qu’il était le %(date)s."
+
+msgid ""
+"The link shows the kit as it was when you shared it; it has been updated "
+"since."
+msgstr ""
+"Le lien montre le kit tel qu’il était quand vous l’avez partagé ; il a été "
+"mis à jour depuis."
+
+msgid "Share the current kit"
+msgstr "Partager le kit actuel"

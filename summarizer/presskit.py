@@ -52,6 +52,10 @@ RELATED = 5  # of them, the earlier ones whose abstracts set the novelty in cont
 RELATED_CHARS = 1200
 FIGURES_SHOWN = 20  # captions the model reads to choose the figures for the press
 COAUTHOR_YEARS = 5
+COAUTHOR_PAGES = 2  # of 200 papers each: a prolific author's co-authors
+RECENT_YEARS = 2  # a commentator who signed a paper on the topic since then comes first
+TOPIC_WORKS = 50  # recent works of a topic search, when the closest papers give too few commentators
+TOPIC_CLOSE = 0.5  # cosine of their title to this paper's title and abstract, below which they are about something else
 MAX_AUTHOR_IDS = 25  # authors of this paper whose co-authors are looked up (OpenAlex takes 100 values)
 KINDS = ('result', 'interpretation')  # as insight.KINDS: measured, computed or proved / concluded or suggested
 ROLES = [('author', _('It is my paper')), ('commentator', _('I am asked to comment')), ('writer', _('I write about it'))]
@@ -145,8 +149,11 @@ The authors write for their own paper: the release says "the team", never invent
 quote to them (quote_slot only says what it could explain). The comment is a draft for someone else's paper, never
 signed by anyone.
 Copy quotes exactly, in their ORIGINAL language: 1 to 3 consecutive sentences, no ellipsis; everything else in {language}.
-Do not invent a number, result, funding, publication status or peer review. For abstract-only or partial sources,
-limit what you write to them. Plain text: no Markdown, no LaTeX commands, no hashtags, no emoji."""
+Do not invent a number, result, funding, publication status or peer review. publication_check says what has been
+checked: never write that the paper is published or peer reviewed unless it establishes it, and a declaration on arXiv
+is the authors'. related_work holds the abstracts of the closest papers we know: never call the result the first or
+unprecedented beyond what they allow. For abstract-only or partial sources, limit what you write to them.
+Plain text: no Markdown, no LaTeX commands, no hashtags, no emoji."""
 
 
 def normalized(text):
@@ -300,13 +307,14 @@ def paper_dois(paper):
     return [doi for doi in dict.fromkeys([paper_doi(paper.arxiv_id), sources.clean_doi(paper.link_doi or '') or '']) if doi]
 
 
-def openalex(filters, select, per_page, sort=''):
+def openalex(filters, select, per_page, sort='', search='', page=1):
     """OpenAlex works for these filters, counted against the tools' daily budget; None when unavailable."""
     if not sources.tool_search_allowed():
         return None
     params = {'filter': filters, 'per_page': per_page, 'select': select}
-    if sort:
-        params['sort'] = sort
+    for key, value in (('sort', sort), ('search', search), ('page', page if page > 1 else '')):
+        if value:
+            params[key] = value
     try:
         body = sources._json('%s/works' % sources.OPENALEX, sources._openalex_params(params))
     except sources.SourceUnavailable:
@@ -323,10 +331,19 @@ def coauthors(author_ids):
     """OpenAlex ids of the people who signed a paper of the last COAUTHOR_YEARS years with one of these authors
     (large collaborations apart), or None when unavailable."""
     since = (timezone.now().date() - datetime.timedelta(days=365 * COAUTHOR_YEARS)).isoformat()
-    works = openalex('author.id:%s,from_publication_date:%s' % ('|'.join(author_ids), since),
-                     'id,authorships', 200, sort='publication_date:desc')
-    if works is None:
-        return None
+    works = []
+    for page in range(1, COAUTHOR_PAGES + 1):
+        batch = openalex('author.id:%s,from_publication_date:%s' % ('|'.join(author_ids), since),
+                         'id,authorships', 200, sort='publication_date:desc', page=page)
+        if batch is None:
+            return None if page == 1 else found_in(works)
+        works += batch
+        if len(batch) < 200:
+            break
+    return found_in(works)
+
+
+def found_in(works):
     found = set()
     for work in works:
         authorships = work.get('authorships') or []
@@ -336,17 +353,39 @@ def coauthors(author_ids):
     return found
 
 
-def openalex_experts(paper, papers):
-    """(experts, people left out because they sign with the authors or share their institution, whether the
-    co-authors were checked: not when OpenAlex does not know this paper), or None.
+WORK_FIELDS = 'id,doi,display_name,authorships,publication_date,corresponding_author_ids,locations'
 
-    Candidates sign one of the closest papers first, last or as corresponding author (student_papers.author_roles),
-    and are neither authors of this paper nor their co-authors of the last years."""
+
+def topic_works(paper):
+    """Recent works on this paper's topic: an OpenAlex search of its title over the last RECENT_YEARS years, kept
+    when their title is close to its title and abstract (embeddings); [] when unavailable."""
+    since = (timezone.now().date() - datetime.timedelta(days=365 * RECENT_YEARS)).isoformat()
+    works = [w for w in openalex('from_publication_date:%s,type:article|preprint|review|letter' % since, WORK_FIELDS,
+                                 TOPIC_WORKS, search=clean(paper.title, 200)) or [] if w.get('display_name')]
+    if not works:
+        return []
+    vectors = similar.embed([clean('%s %s' % (paper.title, paper.abstract or ''), similar.MAX_INPUT_CHARS)] +
+                            [w['display_name'][:500] for w in works])
+    scores = vectors[1:] @ vectors[0]
+    return [w for w, score in sorted(zip(works, scores), key=lambda pair: -pair[1]) if score >= TOPIC_CLOSE]
+
+
+def recent(year):
+    return str(year or '') >= str(timezone.now().year - RECENT_YEARS)
+
+
+def openalex_experts(paper, papers):
+    """{'experts', 'left_out': people left out because they sign with the authors or share their institution,
+    'checked': whether the co-authors were (not when OpenAlex does not know this paper), 'orcids': the authors'},
+    or None.
+
+    Candidates sign one of the closest papers, or a recent paper of the topic when they give too few, first, last or
+    as corresponding author (student_papers.author_roles), and are neither authors of this paper nor their co-authors
+    of the last years. Those who signed one since RECENT_YEARS come first."""
     dois = {doi: p for p in papers[::-1] + [paper] for doi in paper_dois(p)}  # this paper wins a shared DOI
     if not dois:
         return None
-    works = openalex('doi:' + '|'.join(list(dois)[-100:]),
-                     'id,doi,display_name,authorships,publication_date,corresponding_author_ids,locations', 100)
+    works = openalex('doi:' + '|'.join(list(dois)[-100:]), WORK_FIELDS, 100)
     if works is None:
         return None
     # OpenAlex merges a preprint into its publication: a work found by its arXiv DOI may come back with the journal's
@@ -355,19 +394,41 @@ def openalex_experts(paper, papers):
              for work in works]
     own = next((work for p, work in found if p is paper), None)
     own_names = [a.name for a in paper.authors.all()]
-    own_ids, own_institutions = set(), set()
+    own_ids, own_institutions, orcids = set(), set(), []
     if own:
         for authorship in own.get('authorships') or []:
             if (authorship.get('author') or {}).get('id'):
                 own_ids.add(authorship['author']['id'])
             own_institutions |= institution_ids(authorship)
+            orcid = re.search(r'\d{4}-\d{4}-\d{4}-\d{3}[\dX]', (authorship.get('author') or {}).get('orcid') or '')
+            if orcid:
+                orcids.append(orcid.group())
     linked = coauthors(sorted(own_ids)[:MAX_AUTHOR_IDS]) if own_ids else set()
     if linked is None:
         return None
     people, left_out = {}, set()
-    for neighbour, work in found:
-        if neighbour is None or neighbour is paper:
-            continue
+    candidates = [(neighbour, work) for neighbour, work in found if neighbour is not None and neighbour is not paper]
+    collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions)
+    if sum(any(recent(x['year']) for x in p['papers']) for p in people.values()) < EXPERTS:
+        try:
+            more = topic_works(paper)
+        except Exception:
+            logger.exception('Topic search for the commentators of %s failed', paper.arxiv_id)
+            more = []
+        known = {w['id'] for _n, w in found}
+        collect([(None, w) for w in more if w['id'] not in known], people, left_out, own_ids, linked, own_names, own_institutions)
+    ranked = sorted(people.values(), key=lambda p: (not any(recent(x['year']) for x in p['papers']), -len(p['papers']),
+                                                   -max(int(x['year'] or 0) for x in p['papers']), p['name']))
+    experts = []
+    for person in ranked[:EXPERTS]:
+        latest = max(person['papers'], key=lambda x: x['year'])
+        experts.append(dict({k: v for k, v in person.items() if k != 'papers'}, **latest, count=len(person['papers'])))
+    return {'experts': experts, 'left_out': len(left_out - set(people)), 'checked': bool(own_ids), 'orcids': orcids}
+
+
+def collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions):
+    """Add the lead signers of these (close paper or None, OpenAlex work) to people, or to left_out."""
+    for neighbour, work in candidates:
         roles = student_papers.author_roles(work)
         for authorship in work.get('authorships') or []:
             author = authorship.get('author') or {}
@@ -385,17 +446,11 @@ def openalex_experts(paper, papers):
             person = people.setdefault(aid, {'name': name, 'affiliation': institution.get('display_name') or '',
                                              'country': institution.get('country_code') or '',
                                              'orcid': author.get('orcid') or '', 'papers': [], 'checked': True})
-            if neighbour.arxiv_id in [x['arxiv_id'] for x in person['papers']]:
+            record = ({'arxiv_id': neighbour.arxiv_id, 'title': clean(neighbour.title, 300), 'url': ''} if neighbour else
+                      {'arxiv_id': '', 'title': clean(work.get('display_name'), 300), 'url': student_papers.url(work)})
+            if (record['arxiv_id'] or record['url']) in [x['arxiv_id'] or x['url'] for x in person['papers']]:
                 continue  # its preprint and its publication
-            person['papers'].append({'arxiv_id': neighbour.arxiv_id, 'title': clean(neighbour.title, 300),
-                                     'year': (work.get('publication_date') or '')[:4], 'roles': roles[aid]})
-    ranked = sorted(people.values(), key=lambda p: (-len(p['papers']), -max(int(x['year'] or 0) for x in p['papers']), p['name']))
-    experts = []
-    for person in ranked[:EXPERTS]:
-        latest = max(person['papers'], key=lambda x: x['year'])
-        experts.append(dict({k: v for k, v in person.items() if k != 'papers'}, arxiv_id=latest['arxiv_id'],
-                            title=latest['title'], year=latest['year'], roles=latest['roles'], count=len(person['papers'])))
-    return experts, len(left_out - set(people)), bool(own_ids)
+            person['papers'].append(dict(record, year=(work.get('publication_date') or '')[:4], roles=roles[aid]))
 
 
 def display_name(name):
@@ -415,7 +470,7 @@ def local_experts(paper, papers):
                 continue
             seen.add(key)
             found.append({'name': author.name, 'affiliation': author.affiliation or '', 'country': '', 'orcid': '',
-                          'arxiv_id': other.arxiv_id, 'title': clean(other.title, 300),
+                          'arxiv_id': other.arxiv_id, 'title': clean(other.title, 300), 'url': '',
                           'year': other.published_arxiv.year if other.published_arxiv else '', 'roles': [],
                           'count': 1, 'checked': False})
             if len(found) == EXPERTS:
@@ -424,16 +479,18 @@ def local_experts(paper, papers):
 
 
 def experts(paper, papers=None):
-    """(researchers to approach for outside comment, whether their co-authorships were checked, people left out)."""
+    """{'experts': researchers to approach for outside comment, 'checked': whether their co-authorships with the
+    authors were, 'left_out': how many people were for that, 'orcids': the authors' ORCID iDs}."""
     papers = neighbours(paper) if papers is None else papers
     try:
         found = openalex_experts(paper, papers)
     except Exception:
         logger.exception('Outside commentators of %s failed', paper.arxiv_id)
         found = None
-    if found is not None and found[0]:
-        return found[0], found[2], found[1]
-    return local_experts(paper, papers), False, 0
+    if found is not None and found['experts']:
+        return found
+    return {'experts': local_experts(paper, papers), 'checked': False, 'left_out': 0,
+            'orcids': found['orcids'] if found else []}
 
 
 # --- figures and topic ------------------------------------------------------------------------
@@ -532,6 +589,20 @@ def commentator_part(value, paper):
             'comment_draft': clean(value.get('comment_draft'), 600)}
 
 
+def role_texts(part):
+    """Every text a role part writes (not its quotes)."""
+    texts = []
+    for value in part.values():
+        if isinstance(value, str):
+            texts.append(value)
+        elif isinstance(value, dict):
+            texts += role_texts(value)
+        elif isinstance(value, list):
+            texts += [item if isinstance(item, str) else ' '.join(v for k, v in item.items() if isinstance(v, str))
+                      for item in value if isinstance(item, (str, dict))]
+    return texts
+
+
 def question_answers(value, paper):
     """{question: what the paper already says about it, with its passage} for the questions it answers."""
     found = {}
@@ -600,7 +671,7 @@ def write(arxiv_id, lang):
         generated.progress(pk, 'experts')
         papers = neighbours(paper)
         related = related_work(paper, papers)
-        people, checked, left_out = experts(paper, papers)
+        people = experts(paper, papers)
         figures = figures_of(paper)
         topic = rising(paper, lang)
         generated.progress(pk, 'write')
@@ -614,7 +685,8 @@ def write(arxiv_id, lang):
         answer, roles = at_once(
             lambda: generated.chat_json(context, paid=True, max_tokens=7000,
                                         system=SOURCE_POLICY + '\n' + PROMPT.format(language=language)),
-            lambda: generated.chat_json(json.dumps({'source_documents': {k: documents[k] for k in ('metadata', 'text')}},
+            lambda: generated.chat_json(json.dumps({'source_documents': {k: documents[k] for k in (
+                                            'metadata', 'text', 'publication_check', 'related_work')}},
                                                    ensure_ascii=False), paid=True, max_tokens=5000,
                                         system=SOURCE_POLICY + '\n' + ROLE_PROMPT.format(language=language)))
         if isinstance(answer, Exception):
@@ -636,7 +708,8 @@ def write(arxiv_id, lang):
             'question_answers': question_answers(answer.get('questions_for_authors'), source),
             'glossary': [{'term': clean(g.get('term'), 120), 'definition': clean(g.get('definition'), 600)}
                          for g in answer.get('glossary', []) if isinstance(g, dict) and g.get('term')][:10],
-            'experts': people, 'experts_checked': checked, 'experts_left_out': left_out,
+            'experts': people['experts'], 'experts_checked': people['checked'], 'experts_left_out': people['left_out'],
+            'author_orcids': people['orcids'],
             'figures': press_figures(answer.get('press_figures'), figures, paper),
             'publication_status': publication,
             'abstract_only': abstract_only, 'schema_version': SCHEMA, 'source': provenance(paper, scope),
@@ -647,6 +720,8 @@ def write(arxiv_id, lang):
                       'commentator': commentator_part(roles.get('commentator'), source)},
         }
         kit['numbers_absent'] = numbers_absent([kit['headline'], kit['plain_explanation'], kit['whats_new']], source_text)
+        for part in kit['roles'].values():  # the texts researchers paste as they are
+            part['numbers_absent'] = numbers_absent(role_texts(part), source_text)
         return kit
     return work
 
@@ -695,14 +770,20 @@ def can_read(user, arxiv_id):
     return access.has_tool(user, 'presskit') or arxiv_id in DEMO_KITS
 
 
-def role_of(request, paper):
-    """The role asked for (?role=), else 'author' for a signed-in reader who signs the paper, else 'commentator'."""
+def role_of(request, paper, kit=None):
+    """The role asked for (?role=), else 'author' for a signed-in reader who signs the paper (an ORCID iD they follow
+    as their own in the citation alerts, or the name of their account), else 'commentator'."""
     asked = request.GET.get('role')
     if asked in ROLE_KEYS:
         return asked
     user = request.user
-    key = name_key('%s %s' % (user.first_name, user.last_name)) if user.is_authenticated else None
-    if key and isinstance(paper, ArxivPaper) and any(same_author(key, a.name) for a in paper.authors.all()):
+    if not user.is_authenticated or not isinstance(paper, ArxivPaper):
+        return 'commentator'
+    from .teams import my_orcids
+    if set(o.upper() for o in my_orcids(user)) & set((kit or {}).get('author_orcids') or []):
+        return 'author'
+    key = name_key('%s %s' % (user.first_name, user.last_name))
+    if key and any(same_author(key, a.name) for a in paper.authors.all()):
         return 'author'
     return 'commentator'
 
@@ -749,7 +830,7 @@ def page_context(request, paper, arxiv_id, row, kit, shared=False):
         'paper': paper, 'arxiv_id': arxiv_id, 'row': row, 'kit': kit, 'steps': STEPS, 'shared': shared,
         **publication_status.display_context(publication),
         'author_questions': questions_shown(kit, publication) if kit else [],
-        'roles': ROLES, 'role': role_of(request, paper),
+        'roles': ROLES, 'role': role_of(request, paper, kit),
         'newer': newer_version(arxiv_id) if kit else None,
         'source': provenance(paper, 'unknown') if isinstance(paper, ArxivPaper) else None,
         'license_terms': LICENSE_TERMS, 'citation': citation(paper),
@@ -776,20 +857,41 @@ def presskit_page(request, arxiv_id):
         'editorial': editorial_context(request.GET.get('letter'), arxiv_id, request.LANGUAGE_CODE),
         'can_read_full_text': bool(kit and isinstance(paper, ArxivPaper) and kit.get('source', {}).get('scope') == 'abstract'
                                    and sources.is_open_license(paper.license)),
-        'share_url': result_share.shared_url(request, row, 'press-kit') if paid and row and kit else '',
+        **share_context(request, row if paid and kit else None),
         'demo_ids': sorted(DEMO_KITS),
     })
     return render(request, 'summarizer/presskit.html', context)
 
 
+SHARE_KIND = 'presskit_share'
+
+
+def share_key(arxiv_id, user):
+    return '%s:%s' % (arxiv_id, user.pk)
+
+
+def share_row(arxiv_id, user, lang):
+    """This reader's shared copy of the kit, or None."""
+    return Generated.objects.filter(kind=SHARE_KIND, key=share_key(arxiv_id, user), lang=lang, user=user).first()
+
+
+def share_context(request, row):
+    """The reader's share link of this kit, and whether the kit changed since they shared it."""
+    shared = share_row(row.key, request.user, row.lang) if row is not None else None
+    url = result_share.shared_url(request, shared, 'press-kit') if shared else ''
+    return {'share_url': url, 'share_outdated': bool(url and shared.data().get('kit_updated') != row.updated.isoformat())}
+
+
 def presskit_shared(request, token):
-    """A kit shared by a reader (a press office, co-authors): read-only, for anyone with the link."""
-    row = result_share.shared_row('presskit', token)
-    paper = ArxivPaper.objects.filter(arxiv_id=row.key).prefetch_related('authors').first()
+    """A kit shared by a reader (a press office, co-authors): read-only, for anyone with the link, as it was when
+    they shared it, whatever another reader does to the kit since."""
+    row = result_share.shared_row(SHARE_KIND, token)
+    arxiv_id = row.key.rsplit(':', 1)[0]
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).prefetch_related('authors').first()
     if paper is None:
         raise Http404
     kit = shown(row.data(), row.lang)
-    context = page_context(request, paper, row.key, row, kit, shared=True)
+    context = page_context(request, paper, arxiv_id, row, kit, shared=True)
     context.update({'paid': False, 'demo': False, 'publication_stale': False, 'editorial': None, 'share_token': token})
     response = render(request, 'summarizer/presskit.html', context)
     response['X-Robots-Tag'] = 'noindex'
@@ -872,10 +974,22 @@ def status_kit(request, arxiv_id):
 
 @require_POST
 def presskit_share(request, arxiv_id):
-    """Share the kit by a read-only link (again: 90 more days), or stop sharing it."""
-    row = status_kit(request, arxiv_id)
-    if not result_share.act(row, request.POST.get('action')):
+    """Share a copy of the kit as it is now by a read-only link of one's own ('share': 90 more days, the same copy;
+    'update': the kit as it is now, the same link), or stop sharing it."""
+    kit = status_kit(request, arxiv_id)
+    action = request.POST.get('action')
+    if action not in ('share', 'update', 'unshare'):
         return JsonResponse({'status': 'invalid'}, status=400)
+    row = share_row(arxiv_id, request.user, kit.lang)
+    if row is None and action != 'unshare':
+        row = Generated.objects.create(kind=SHARE_KIND, key=share_key(arxiv_id, request.user), lang=kit.lang,
+                                       user=request.user, status='done', content='{}')
+    if row is None:
+        return JsonResponse({'status': 'ok', 'url': ''})
+    if action == 'update' or (action == 'share' and not row.share_token):
+        row.content = json.dumps(dict(kit.data(), kit_updated=kit.updated.isoformat()))
+        row.save(update_fields=['content', 'updated'])
+    result_share.act(row, 'unshare' if action == 'unshare' else 'share')
     return JsonResponse({'status': 'ok', 'url': result_share.shared_url(request, row, 'press-kit')})
 
 
@@ -895,9 +1009,26 @@ def presskit_report(request, arxiv_id):
         return JsonResponse({'status': 'invalid'}, status=400)
     if PressKitReport.objects.filter(user=request.user, created__gte=timezone.now() - datetime.timedelta(days=1)).count() >= 30:
         return JsonResponse({'status': 'busy'}, status=429)
-    PressKitReport.objects.create(arxiv_id=arxiv_id, lang=row.lang, section=section, item=clean(request.POST.get('item'), 500),
-                                  text=text, user=request.user, kit_updated=row.updated)
+    report = PressKitReport.objects.create(arxiv_id=arxiv_id, lang=row.lang, section=section,
+                                           item=clean(request.POST.get('item'), 500), text=text, user=request.user,
+                                           kit_updated=row.updated)
+    generated.background(tell_staff, report.pk)
     return JsonResponse({'status': 'ok'})
+
+
+def tell_staff(pk):
+    """Email a reported mistake to the site's administrators (superusers), with a link to it in the admin."""
+    from django.core.mail import send_mail
+    from django.contrib.auth.models import User
+    from .digest import BASE_URL
+    report = PressKitReport.objects.filter(pk=pk).select_related('user').first()
+    emails = list(User.objects.filter(is_superuser=True, is_active=True).exclude(email='').values_list('email', flat=True))
+    if report is None or not emails:
+        return
+    send_mail('[SummarizePaper] Kit presse : erreur signalée sur %s' % report.arxiv_id,
+              'Section : %s\nSur : %s\n\n%s\n\nPar : %s\nKit : %s/%s/press-kit/%s/\nAdmin : %s/admin/summarizer/presskitreport/%d/change/'
+              % (report.section, report.item, report.text, report.user.email if report.user else '', BASE_URL, report.lang,
+                 report.arxiv_id, BASE_URL, report.pk), None, emails, fail_silently=True)
 
 
 @require_POST

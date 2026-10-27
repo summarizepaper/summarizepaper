@@ -9,7 +9,7 @@ from django.test import Client
 
 from . import presskit
 from .models import Generated, PaperScore, PaperText, PaperVersion, PressKitReport
-from .test_tools import ToolsTestCase, offline
+from .test_tools import ToolsTestCase, base_call, offline
 
 SOURCE = ('## Results\nWe observe a change of +5 percent in a sample of 120 objects.\n\n'
           'The signiﬁcance of the change is 4 sigma for the whole sample of objects.\n\n'
@@ -37,7 +37,7 @@ ROLES = {'author': {'press_release': {'title': 'Objects change', 'lede': 'The te
                                           'quote': 'The association does not establish a causal mechanism for the change.'},
                                          {'question': 'Is it new?', 'answer': 'Yes.', 'quote': 'An invented passage that the paper never contains at all.'}],
                     'misreadings': [{'misreading': 'It is a cause', 'correction': 'An association.'}],
-                    'lay_summary': 'Objects change a little.', 'social_posts': ['A change in 120 objects.']},
+                    'lay_summary': 'Objects change a little.', 'social_posts': ['A change in 120 objects.', 'Seen in 260 objects.']},
          'commentator': {'in_brief': ['It shows a change.', 'It does not show a cause.'],
                          'strengths': [{'point': 'A large sample', 'quote': 'We observe a change of +5 percent in a sample of 120 objects.'}],
                          'weaknesses': [{'point': 'No mechanism', 'quote': ''}],
@@ -46,7 +46,7 @@ ROLES = {'author': {'press_release': {'title': 'Objects change', 'lede': 'The te
 
 def answers(base=None, roles=None):
     def chat(prompt, **kwargs):
-        return base or kit_answer() if 'publication_check' in prompt else roles or ROLES
+        return base or kit_answer() if 'evidence_cards' in kwargs['system'] else roles or ROLES
     return chat
 
 
@@ -61,12 +61,14 @@ class PressKitRoleTests(ToolsTestCase):
 
     def generate(self, chat=None, **patches):
         with offline(), mock.patch('summarizer.generated.chat_json', side_effect=chat or answers()) as llm:
-            for name, value in patches.items():
-                mock.patch('summarizer.presskit.%s' % name, return_value=value).start()
+            started = [mock.patch('summarizer.presskit.%s' % name, return_value=value) for name, value in patches.items()]
+            for patch in started:
+                patch.start()
             try:
                 self.paid.post(self.base + 'start/')
             finally:
-                mock.patch.stopall()
+                for patch in started:
+                    patch.stop()
         return Generated.objects.get(kind='presskit').data(), llm
 
     def test_role_parts_keep_only_real_passages_and_the_page_opens_on_the_role(self):
@@ -74,12 +76,19 @@ class PressKitRoleTests(ToolsTestCase):
         self.assertEqual(kit['schema_version'], 3)
         self.assertEqual(llm.call_count, 2)
         author = kit['roles']['author']
+        self.assertEqual(author['numbers_absent'], ['260'])  # the thread says 260 objects, the paper 120
+        self.assertEqual(kit['roles']['commentator']['numbers_absent'], [])
+        role_call = next(c for c in llm.call_args_list if 'evidence_cards' not in c.kwargs['system'])
+        documents = json.loads(role_call.args[0])['source_documents']
+        self.assertEqual(sorted(documents), ['metadata', 'publication_check', 'related_work', 'text'])
+        self.assertIn('never write that the paper is published or peer reviewed', role_call.kwargs['system'])
         self.assertEqual(author['likely_questions'][0]['passage']['location'], 'Discussion')
         self.assertIsNone(author['likely_questions'][1]['passage'])
         self.assertEqual(kit['roles']['commentator']['strengths'][0]['passage']['location'], 'Results')
         page = self.paid.get(self.base + '?role=author')
         self.assertEqual(page.context['role'], 'author')
         self.assertContains(page, 'Draft press release')
+        self.assertContains(page, 'Numbers of these texts that the paper text does not state: 260.')
         self.assertContains(page, 'data-role-panel="commentator" hidden')
         self.assertNotContains(page, 'An invented passage')
         self.assertEqual(self.paid.get(self.base).context['role'], 'commentator')
@@ -89,7 +98,7 @@ class PressKitRoleTests(ToolsTestCase):
 
     def test_role_call_failure_keeps_the_kit(self):
         def chat(prompt, **kwargs):
-            if 'publication_check' in prompt:
+            if 'evidence_cards' in kwargs['system']:
                 return kit_answer()
             raise RuntimeError('timeout')
         kit, _ = self.generate(chat)
@@ -131,7 +140,7 @@ class PressKitRoleTests(ToolsTestCase):
             {'paper': '2001.00002v1', 'already': 'Measured it in 30 objects.', 'adds': 'Four times more objects.'},
             {'paper': '1999.99999v1', 'already': 'Invented.', 'adds': 'Invented.'}]})
         kit, llm = self.generate(answers(base))
-        related = json.loads(next(c for c in llm.call_args_list if 'publication_check' in c.args[0]).args[0])['source_documents']['related_work']
+        related = json.loads(base_call(llm).args[0])['source_documents']['related_work']
         self.assertEqual([r['id'] for r in related], ['2001.00002v1'])
         self.assertIn('30 objects', related[0]['abstract'])
         self.assertEqual([c['arxiv_id'] for c in kit['novelty']['comparisons']], ['2001.00002v1'])
@@ -156,14 +165,14 @@ class PressKitRoleTests(ToolsTestCase):
         coauthored = [{'id': 'W3', 'authorships': [authorship('A1', 'Ann Lee', 'first', 'i1'), authorship('A2', 'Cid Moe', 'last', 'i2')]}]
         calls = []
 
-        def openalex(filters, select, per_page, sort=''):
+        def openalex(filters, select, per_page, sort='', search='', page=1):
             calls.append(filters)
             return [own, other] if filters.startswith('doi:') else coauthored
         with mock.patch('summarizer.presskit.openalex', side_effect=openalex):
-            found, checked, left_out = presskit.experts(self.paper_obj)
-        self.assertTrue(checked)
-        self.assertEqual([(e['name'], e['affiliation'], e['roles']) for e in found], [('Dee Fox', 'I3', ['last'])])
-        self.assertEqual(left_out, 2)  # Cid Moe signs with Ann Lee, Fay Same works at her institution
+            found = presskit.experts(self.paper_obj)
+        self.assertTrue(found['checked'])
+        self.assertEqual([(e['name'], e['affiliation'], e['roles']) for e in found['experts']], [('Dee Fox', 'I3', ['last'])])
+        self.assertEqual(found['left_out'], 2)  # Cid Moe signs with Ann Lee, Fay Same works at her institution
         self.assertIn('10.48550/arxiv.2101.00002', calls[0])
         self.assertTrue(calls[1].startswith('author.id:https://openalex.org/A1|https://openalex.org/A9,from_publication_date:'))
 
@@ -189,7 +198,7 @@ class PressKitRoleTests(ToolsTestCase):
         self.assertContains(page, '/en/changes/2101.00001v1/?from=1&amp;to=3')
         self.assertContains(page, 'Read the full text again')
 
-    def test_share_link_is_read_only_and_can_be_stopped(self):
+    def test_share_link_is_each_readers_own_frozen_copy(self):
         self.generate()
         url = self.paid.post(self.base + 'share/', {'action': 'share'}).json()['url']
         self.assertIn('/en/press-kit/shared/', url)
@@ -200,8 +209,64 @@ class PressKitRoleTests(ToolsTestCase):
         self.assertNotContains(page, 'data-report=')
         self.assertNotContains(page, 'Write the press kit')
         self.assertEqual(self.client_for(self.user('free-sharer')).post(self.base + 'share/', {'action': 'share'}).status_code, 404)
+        # another reader updates the kit and shares and stops their own link: this one is unchanged
+        other = self.client_for(self.user('other-sharer', paid=True))
+        kit = Generated.objects.get(kind='presskit')
+        kit.content = json.dumps(dict(kit.data(), headline='A rewritten headline'))
+        kit.save()
+        other.post(self.base + 'share/', {'action': 'share'})
+        other.post(self.base + 'share/', {'action': 'unshare'})
+        self.assertContains(Client().get(path), 'A measured change')
+        mine = self.paid.get(self.base)
+        self.assertTrue(mine.context['share_outdated'])
+        self.assertEqual(self.paid.post(self.base + 'share/', {'action': 'share'}).json()['url'], url)
+        self.assertContains(Client().get(path), 'A measured change')  # sharing again keeps the copy
+        self.assertEqual(self.paid.post(self.base + 'share/', {'action': 'update'}).json()['url'], url)
+        self.assertContains(Client().get(path), 'A rewritten headline')
+        self.assertFalse(self.paid.get(self.base).context['share_outdated'])
+        self.assertEqual(self.paid.post(self.base + 'share/', {'action': 'delete'}).status_code, 400)
         self.paid.post(self.base + 'share/', {'action': 'unshare'})
         self.assertEqual(Client().get(path).status_code, 404)
+
+    def test_an_author_is_recognised_by_an_orcid_they_follow(self):
+        from .models import CitationAuthorWatch
+        Generated.objects.create(kind='presskit', key='2101.00001v1', lang='en', status='done',
+                                 content=json.dumps(dict(kit_answer(questions_for_authors=['Why?']), schema_version=3,
+                                                         author_orcids=['0000-0002-1825-009X'])))
+        self.assertEqual(self.paid.get(self.base).context['role'], 'commentator')
+        CitationAuthorWatch.objects.create(user=self.reader, ident='orcid:0000-0002-1825-009x')
+        self.assertEqual(self.paid.get(self.base).context['role'], 'author')
+        self.assertEqual(self.paid.get(self.base + '?role=writer').context['role'], 'writer')
+
+    def test_a_topic_search_completes_old_commentators_with_recent_ones(self):
+        year = str(datetime.date.today().year)
+
+        def authorship(aid, name, position):
+            return {'author': {'id': 'https://openalex.org/%s' % aid, 'display_name': name}, 'author_position': position,
+                    'institutions': []}
+        own = {'id': 'W1', 'doi': 'https://doi.org/10.48550/arxiv.2101.00001', 'authorships': [authorship('A1', 'Ann Lee', 'first')]}
+        close = self.paper('2101.00002v1', 'Old clouds', authors=('Old Lead', 'Old Last'))
+        PaperScore.objects.create(from_paper=self.paper_obj, to_paper=close, score=0.1)
+        old = {'id': 'W2', 'doi': 'https://doi.org/10.48550/arxiv.2101.00002', 'publication_date': '2015-01-01',
+               'authorships': [authorship('A2', 'Old Lead', 'first'), authorship('A3', 'Old Last', 'last')]}
+        recent = {'id': 'W3', 'doi': 'https://doi.org/10.1/new', 'display_name': 'New clouds on hot planets',
+                  'publication_date': year + '-01-01', 'authorships': [authorship('A4', 'New Lead', 'first')]}
+        off = {'id': 'W4', 'doi': 'https://doi.org/10.1/off', 'display_name': 'Bread recipes', 'publication_date': year + '-01-01',
+               'authorships': [authorship('A5', 'Off Topic', 'first')]}
+        searches = []
+
+        def openalex(filters, select, per_page, sort='', search='', page=1):
+            if search:
+                searches.append(search)
+                return [recent, off]
+            return [own, old] if filters.startswith('doi:') else []
+        vectors = __import__('numpy').array([[1.0, 0.0], [0.8, 0.6], [0.0, 1.0]], dtype='float32')
+        with mock.patch('summarizer.presskit.openalex', side_effect=openalex), \
+             mock.patch('summarizer.similar.embed', return_value=vectors):
+            found = presskit.experts(self.paper_obj)
+        self.assertEqual(searches, ['Clouds on a hot planet'])
+        self.assertEqual([e['name'] for e in found['experts']], ['New Lead', 'Old Last', 'Old Lead'])
+        self.assertEqual((found['experts'][0]['arxiv_id'], found['experts'][0]['url']), ('', 'https://doi.org/10.1/new'))
 
     def test_markdown_export_follows_the_role(self):
         self.generate()
@@ -226,6 +291,16 @@ class PressKitRoleTests(ToolsTestCase):
         self.assertEqual(self.paid.post(self.base + 'report/', {'text': ''}).status_code, 400)
         self.assertEqual(self.client_for(self.user('free-reporter')).post(self.base + 'report/', {'text': 'x'}).status_code, 403)
         self.assertEqual(Client().post(self.base + 'report/', {'text': 'x'}).status_code, 403)
+
+    def test_a_reported_mistake_is_emailed_to_the_administrators(self):
+        from django.contrib.auth.models import User
+        from django.core import mail
+        User.objects.create_superuser('boss', 'boss@example.com', 'x')
+        self.generate()
+        self.paid.post(self.base + 'report/', {'section': 'experts', 'item': 'Dee Fox', 'text': 'She is a co-author'})
+        self.assertEqual(mail.outbox[-1].to, ['boss@example.com'])
+        self.assertIn('She is a co-author', mail.outbox[-1].body)
+        self.assertIn('/admin/summarizer/presskitreport/', mail.outbox[-1].body)
 
     def test_example_kit_is_open_to_visitors_but_never_generated_by_them(self):
         demo = self.paper('2307.01574v1', 'Gas in debris discs')

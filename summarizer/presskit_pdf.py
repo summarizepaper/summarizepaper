@@ -16,7 +16,8 @@ from .latex_pdf import prose_html
 
 def where(found):
     """'Results · ¶2 · Figure 3' for a verified passage."""
-    parts = [found.get('location') or '', '¶%s' % found['paragraph'] if found.get('paragraph') else '', found.get('figure') or '']
+    location = found.get('location') or ''
+    parts = [location if len(location) <= 70 else location[:69].rstrip() + '…', '¶%s' % found['paragraph'] if found.get('paragraph') else '', found.get('figure') or '']
     return ' · '.join(p for p in parts if p)
 
 
@@ -109,7 +110,7 @@ def outline(paper, row, publication=None, role=None, editorial=None):
     for person in kit.get('experts', []):
         add('item', person['name'] + (' — ' + person['affiliation'] if person.get('affiliation') else ''))
         add('meta', '%s%s' % (person.get('title', ''), ' (%s)' % person['year'] if person.get('year') else ''))
-        link = sources.ref_url(person['arxiv_id'])
+        link = sources.ref_url(person['arxiv_id']) if person.get('arxiv_id') else person.get('url', '')
         add('link', link, link)
     if not kit.get('experts'):
         add('p', _('We do not know enough papers close to this one yet.'))
@@ -139,10 +140,17 @@ def outline(paper, row, publication=None, role=None, editorial=None):
     return out
 
 
+def numbers_warning(add, part):
+    if part.get('numbers_absent'):
+        add('warn', _('Numbers of these texts that the paper text does not state: %s. Check them before you send them.')
+            % ', '.join(part['numbers_absent']))
+
+
 def role_part(add, key, part, kit, publication):
-    if key == 'author' and any(part.values()):
+    if key == 'author' and ((part.get('press_release') or {}).get('lede') or part.get('likely_questions')):
         release = part.get('press_release') or {}
         add('h', _('For the authors: draft press release'))
+        numbers_warning(add, part)
         add('note', _('A draft for your press office, written by AI from the paper: check every sentence, and add your own quote.'))
         add('h3', release.get('title'))
         add('warn', release.get('lede'))
@@ -169,8 +177,9 @@ def role_part(add, key, part, kit, publication):
             add('h3', _('A short thread'))
             for post in part['social_posts']:
                 add('item', post)
-    elif key == 'commentator' and any(part.values()):
+    elif key == 'commentator' and (part.get('in_brief') or part.get('strengths')):
         add('h', _('Asked to comment: what this paper shows'))
+        numbers_warning(add, part)
         for line in part.get('in_brief', []):
             add('item', line)
         for title, items in ((_('Strengths'), part.get('strengths')), (_('Weaknesses and open questions'), part.get('weaknesses'))):
