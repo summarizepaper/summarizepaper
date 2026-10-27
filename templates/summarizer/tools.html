@@ -19,10 +19,17 @@
   <h2>{{ group.title }}</h2>
   <div class="sources-grid tools-grid">
     {% for tool in group.tools %}
+    <div class="tool-entry">
     <a class="card source-card tool-card" href="/{{ LANGUAGE_CODE }}/{{ tool.path }}">
       <h3><i class="fas fa-{{ tool.icon }}"></i> {{ tool.name }}{% if tool.premium %} <span class="badge-premium">{% if tool.premium == 'plus' %}Premium+{% else %}Premium{% endif %}</span>{% endif %}</h3>
       <p>{{ tool.text }}</p>
     </a>
+    {% if tool.guide %}
+      {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}
+      <a class="tool-guide" href="/{{ LANGUAGE_CODE }}/guides/{{ tool.guide }}/">{% if LANGUAGE_CODE == 'fr' %}Voir un exemple{% else %}See an example{% endif %} <span aria-hidden="true">→</span><span class="visually-hidden"> — {{ tool.name }}</span></a>
+      {% endif %}
+    {% endif %}
+    </div>
     {% endfor %}
   </div>
   {% endfor %}

@@ -32,7 +32,23 @@ _GROUPS = [
     ]),
 ]
 
+_GUIDE_SLUGS = {
+    '': 'how-to-summarize-a-research-paper',
+    'chat/': 'how-to-chat-with-research-papers',
+    'collections/': 'organize-research-paper-collections',
+    'digest/': 'daily-digest-research-papers',
+    'scoops/': 'scoop-watch-research-project',
+    'citations/': 'track-research-paper-citations',
+    'students/': 'find-research-placement-contacts',
+    'teams/': 'find-research-teams-by-topic',
+    'trends/': 'rising-research-topics',
+    'letters/': 'weekly-science-letters',
+    'saved-searches/': 'saved-searches-research-alerts',
+    'press-kit/': 'research-paper-press-kit',
+}
+
 TOOL_GROUPS = [
-    {'title': title, 'tools': [{'path': path, 'icon': icon, 'name': name, 'premium': premium, 'text': text}
+    {'title': title, 'tools': [{'path': path, 'icon': icon, 'name': name, 'premium': premium, 'text': text,
+                              'guide': _GUIDE_SLUGS.get(path)}
                                for path, icon, name, premium, text in tools]}
     for title, tools in _GROUPS]

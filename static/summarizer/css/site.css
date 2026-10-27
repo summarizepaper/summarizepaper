@@ -1123,6 +1123,9 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .tools-grid .source-card p { margin: 0; font-size: 14px; color: var(--text-muted); }
 a.tool-card { color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
 a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.tool-entry { display: flex; flex-direction: column; gap: 10px; }
+.tool-entry .tool-card { flex: 1; }
+.tool-guide { padding: 0 4px 8px; font-size: 14px; }
 .letter-papers { list-style: none; padding: 0; margin: 1.25rem 0 2rem; }
 .letter-papers li { border-left: 2px solid #cbd5e1; padding: .65rem 1rem; margin: .65rem 0; }
 .letter-kit-link { display: block; width: fit-content; margin-top: .45rem; font-size: .9rem; }
@@ -1251,3 +1254,8 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .cite-year { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 22px; height: 100%; font-size: 11px; }
 .cite-year a { display: flex; align-items: flex-end; width: 100%; flex: 1; }
 .cite-bar { display: block; width: 100%; min-height: 2px; background: var(--accent); border-radius: 3px 3px 0 0; }
+
+/* Localized screenshots in editorial guides: preserve the real viewport ratio. */
+.guide .guide-screenshot { margin: 26px 0; padding: 18px; background: var(--surface, #fff); border: 1px solid var(--border); border-radius: 12px; }
+.guide .guide-screenshot img { display: block; width: auto; max-width: 100%; height: auto; max-height: 620px; margin: 0 auto; border-radius: 6px; }
+.guide .guide-screenshot figcaption { margin-top: 14px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
