@@ -85,7 +85,7 @@ def remember_journal(row):
 
 def selected_journals(ids):
     missing = [v for v in ids if cache.get('search-journal:' + v) is None]
-    if missing and sources._spend(sources.OPENALEX_SEARCH_KEY, sources.OPENALEX_SEARCHES_PER_DAY):
+    if missing and sources.search_allowed():
         try:
             rows = sources._json(sources.OPENALEX + '/sources', sources._openalex_params({
                 'filter': 'type:journal,ids.openalex:' + '|'.join(missing), 'per_page': 10,
@@ -102,13 +102,18 @@ def selected_journals(ids):
 
 @require_GET
 def journal_suggestions(request):
+    with sources.searching_as(request):
+        return _journal_suggestions(request)
+
+
+def _journal_suggestions(request):
     query = (request.GET.get('q') or '').strip()[:100]
     if len(query) < 2:
         return JsonResponse({'results': []})
     key = 'journal-suggestions:' + hashlib.sha256(query.casefold().encode()).hexdigest()
     rows = cache.get(key)
     if rows is None:
-        if not sources._spend(sources.OPENALEX_SEARCH_KEY, sources.OPENALEX_SEARCHES_PER_DAY):
+        if not sources.search_allowed():
             return JsonResponse({'results': [], 'unavailable': True}, status=503)
         try:
             response = sources._json(sources.OPENALEX + '/sources', sources._openalex_params({

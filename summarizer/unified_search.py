@@ -1,4 +1,5 @@
 """Cached search across arXiv and the existing journal/preprint index."""
+import contextvars
 import hashlib
 import json
 import re
@@ -82,7 +83,9 @@ def search(query, field='all', source='all', kind='', filters=None, page=1):
         arxiv_provider = partial(arxiv_results, **arxiv_kwargs) if arxiv_kwargs else arxiv_results
         arxiv_allowed = (source != 'open' and kind not in ('journals', 'reviews') and
                          not any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')))
-        arxiv_job = pool.submit(sources.closing(_fetch), arxiv_provider, query, field) if arxiv_allowed else None
+        # each thread runs in a copy of this context: the visitor of the search (sources.search_visitor) goes along
+        arxiv_job = pool.submit(contextvars.copy_context().run, sources.closing(_fetch), arxiv_provider, query, field) \
+            if arxiv_allowed else None
         kwargs = {}
         if kind:
             kwargs['kind'] = kind
@@ -91,7 +94,8 @@ def search(query, field='all', source='all', kind='', filters=None, page=1):
         if page != 1:
             kwargs['page'] = page
         other_provider = partial(sources.search, **kwargs) if kwargs else sources.search
-        other_job = pool.submit(sources.closing(_fetch), other_provider, query, field) if source != 'arxiv' else None
+        other_job = pool.submit(contextvars.copy_context().run, sources.closing(_fetch), other_provider, query, field) \
+            if source != 'arxiv' else None
         arxiv, arxiv_failed = arxiv_job.result() if arxiv_job else ([], False)
         other, other_failed = other_job.result() if other_job else ([], False)
     results, seen = [], set()
@@ -116,7 +120,8 @@ def search(query, field='all', source='all', kind='', filters=None, page=1):
     results = sources.SearchRows(results, has_more=(
         getattr(arxiv, 'has_more', len(arxiv) >= 25) or getattr(other, 'has_more', len(other) >= 25)))
     result = (results, arxiv_failed or other_failed)
-    cache.set(key, result, 60 if result[1] else sources.SEARCH_SECONDS)
+    if not (sources.search_visitor.get() or {}).get('limited'):  # an account must not get a visitor's arXiv-only page
+        cache.set(key, result, 60 if result[1] else sources.SEARCH_SECONDS)
     return result
 
 
@@ -179,7 +184,8 @@ def window_search(query, kwargs, token=''):
         rows, failed = search(query, **kwargs, **({'page': batch} if batch > 1 else {}))
         rows = combine(previous, rows, kwargs.get('filters', {}))
         cached = rows, failed
-        cache.set(key, cached, 60 if failed else WINDOW_SECONDS)
+        if not (sources.search_visitor.get() or {}).get('limited'):
+            cache.set(key, cached, 60 if failed else WINDOW_SECONDS)
     rows, failed = cached
     current = signing.dumps({'key': fingerprint, 'batch': batch}, salt=WINDOW_SALT, compress=True)
     next_token = ''

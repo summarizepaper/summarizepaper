@@ -82,11 +82,13 @@
     {% elif request.user.is_authenticated %}
       {% if saved_search %}<a href="{% url 'saved_search' saved_search.pk %}">{% trans 'Search saved · manage its watch' %}</a>
       {% else %}<form method="post" action="{% url 'save_search' %}">{% csrf_token %}<input type="hidden" name="state" value="{{ save_token }}"><button class="btn btn-ghost" type="submit">{% trans 'Save search / create a watch' %}</button></form>{% endif %}
-    {% else %}<a href="{% url 'login' %}?next={{ search_return|urlencode }}">{% trans 'Log in to save this search or create a watch' %}</a>{% endif %}
+    {% else %}<a href="{% url 'login' %}?next={{ search_return|urlencode }}">{% trans 'Log in to save this search or create a watch' %}</a>
+      {% if not search_limited %}<span class="search-filter-note">{% trans 'A free account gives full access: every source without limit, saved searches and their watches.' %} <a href="{% url 'register' %}?next={{ search_return|urlencode }}">{% trans 'Create a free account' %}</a></span>{% endif %}{% endif %}
     <a href="{% url 'saved_searches' %}">{% trans 'Saved searches' %}</a>
   </div>{% endif %}
   {% if restricted_sources %}<p class="search-filter-note">{% trans 'These filters search indexed publication records. The direct arXiv feed is not included.' %}</p>{% endif %}
-  {% if failed %}<p role="status">{% trans 'Some sources are temporarily unavailable. Results may be incomplete; please try again shortly.' %}</p>{% endif %}
+  {% if search_limited %}<p class="notice" role="status">{% trans 'Without an account, the search is limited: these results come from arXiv only, without the journals and preprint servers.' %} <a href="{% url 'register' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Create a free account for full access' %}</a> · <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Log in' %}</a></p>
+  {% elif failed %}<p role="status">{% trans 'Some sources are temporarily unavailable. Results may be incomplete; please try again shortly.' %}</p>{% endif %}
   {% if page_obj and src != 'arxiv' or page_obj and unified %}
   <div class="search-results-list">
     {% for paper in page_obj %}

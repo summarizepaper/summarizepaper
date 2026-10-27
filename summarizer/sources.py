@@ -23,6 +23,8 @@ As for arXiv, the full text is read only when the license allows building on
 it (see is_open_license); otherwise the summary is written from the abstract.
 Metadata is kept in ExternalPaper and refreshed at most once a day.
 """
+import contextlib
+import contextvars
 import datetime
 import functools
 import hashlib
@@ -871,6 +873,13 @@ SEARCH_SECONDS = 3600  # pages, reloads and the same words typed again reuse a s
 # the day's searches go to Crossref, which is free but does not know which papers are open.
 OPENALEX_SEARCHES_PER_DAY = 450
 OPENALEX_SEARCH_KEY = 'openalex-searches:%s'
+# visitors without an account share this part of the site's count, so that accounts always have the rest: scrapers
+# spread over thousands of residential addresses used it all up (3,555 searches of 450 on 27 October)
+OPENALEX_ANONYMOUS_PER_DAY = 150
+OPENALEX_ANONYMOUS_KEY = 'openalex-anonymous-searches:%s'
+# who the current search is for, set by the views (searching_as): {'anonymous': bool, 'limited': bool}; the
+# views read 'limited' back to tell an anonymous visitor that an account opens the whole search
+search_visitor = contextvars.ContextVar('search_visitor', default=None)
 # the saved search watches have their own count, so that the site's searches (scrapers too) never use it up
 OPENALEX_WATCH_SEARCHES_PER_DAY = 200
 OPENALEX_WATCH_KEY = 'openalex-watch-searches:%s'
@@ -892,6 +901,27 @@ def _spend(key, limit):
     if used == limit + 1:
         logger.warning('OpenAlex: the daily limit %s (%d) is reached', key, limit)
     return used <= limit
+
+
+@contextlib.contextmanager
+def searching_as(request, limited=False):
+    """The searches made in this block count as this visitor's (see search_allowed); yields the visitor dict."""
+    token = search_visitor.set({'anonymous': not request.user.is_authenticated, 'limited': limited})
+    try:
+        yield search_visitor.get()
+    finally:
+        search_visitor.reset(token)
+
+
+def search_allowed():
+    """Count one OpenAlex search of the site; False past the day's budget or, for a visitor without an account,
+    past the anonymous share or their own hourly limit (then visitor['limited'] is set)."""
+    visitor = search_visitor.get()
+    if visitor is not None and visitor['anonymous']:
+        if visitor['limited'] or not _spend(OPENALEX_ANONYMOUS_KEY, OPENALEX_ANONYMOUS_PER_DAY):
+            visitor['limited'] = True
+            return False
+    return _spend(OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY)
 
 
 def tool_search_allowed():
@@ -952,7 +982,7 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
     if options.get('sort') in ('newest', 'oldest'):
         params['sort'] = 'publication_date:' + ('desc' if options['sort'] == 'newest' else 'asc')
     papers = None
-    if _spend(*((OPENALEX_WATCH_KEY, OPENALEX_WATCH_SEARCHES_PER_DAY) if watch else (OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY))):
+    if _spend(OPENALEX_WATCH_KEY, OPENALEX_WATCH_SEARCHES_PER_DAY) if watch else search_allowed():
         try:
             body = _json('%s/works' % OPENALEX, _openalex_params(params))
             works = (body or {}).get('results', [])
@@ -962,6 +992,9 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
         except SourceUnavailable:
             logger.warning('OpenAlex search failed, trying Crossref', exc_info=True)
     if papers is None:
+        if (search_visitor.get() or {}).get('limited'):
+            # an account opens the whole search: scrapers must not move to Crossref either
+            raise SourceUnavailable('Searches without an account are limited')
         if field == 'abstract' or kind or any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid', 'since')):
             # Never silently broaden a filter the fallback cannot express reliably.
             raise SourceUnavailable('The filtered research index is unavailable')

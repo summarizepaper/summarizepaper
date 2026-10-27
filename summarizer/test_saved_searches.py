@@ -643,3 +643,43 @@ class WatchTests(TestCase):
                 dict(paper('abstract'), title='Radio halos', abstract='We study a galaxy cluster merger.'),
                 dict(paper('title'), title='Galaxy clusters in KiDS', abstract='Weak lensing.')]
         self.assertEqual([r['key'] for r in saved_searches.rank(saved, rows)], ['title', 'abstract', 'star'])
+
+
+class AnonymousSearchTests(TestCase):
+    """Visitors without an account share part of the day's OpenAlex budget, and have an hourly limit of their own."""
+
+    def setUp(self):
+        cache.clear()
+        self.arxiv = mock.patch.object(unified_search, 'arxiv_results', return_value=sources.SearchRows([paper('2610.00001v1', arxiv_id='2610.00001v1')], has_more=False))
+        self.arxiv.start()
+        self.addCleanup(self.arxiv.stop)
+
+    def openalex(self):
+        return mock.patch('summarizer.sources._json', return_value={'results': [], 'meta': {'count': 0}})
+
+    def test_past_the_anonymous_share_visitors_get_arxiv_and_an_account_offer_while_accounts_keep_everything(self):
+        with mock.patch.object(sources, 'OPENALEX_ANONYMOUS_PER_DAY', 1), self.openalex() as openalex, \
+                mock.patch.object(sources, 'crossref_search') as crossref:
+            page = self.client.get('/en/search-results/?q=climate')
+            self.assertNotContains(page, 'Without an account, the search is limited')
+            self.assertContains(page, 'A free account gives full access')
+            page = self.client.get('/en/search-results/?q=oceans')
+            self.assertContains(page, 'Without an account, the search is limited')
+            self.assertContains(page, '/en/register/?next=')
+            self.assertNotContains(page, 'Some sources are temporarily unavailable')
+            self.assertEqual(openalex.call_count, 1)
+            crossref.assert_not_called()  # scrapers must not move to Crossref
+            self.assertEqual(self.client.get('/en/search-journals/?q=nature').status_code, 503)
+            user = User.objects.create_user('reader', 'reader@example.com', 'x')
+            self.client.force_login(user)
+            page = self.client.get('/en/search-results/?q=oceans')  # the visitor's arXiv-only page was not cached
+            self.assertNotContains(page, 'Without an account')
+            self.assertEqual(openalex.call_count, 2)
+
+    @override_settings(THROTTLE=True)
+    def test_an_address_without_an_account_has_an_hourly_limit(self):
+        from . import access
+        with mock.patch.object(access, 'ANONYMOUS_SEARCHES_PER_HOUR', 1), self.openalex() as openalex:
+            self.assertNotContains(self.client.get('/en/search-results/?q=climate'), 'Without an account, the search is limited')
+            self.assertContains(self.client.get('/en/search-results/?q=oceans'), 'Without an account, the search is limited')
+        self.assertEqual(openalex.call_count, 1)

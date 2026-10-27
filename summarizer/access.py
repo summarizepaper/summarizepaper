@@ -155,6 +155,24 @@ def throttled(name, request, per_minute):
         return False
 
 
+ANONYMOUS_SEARCHES_PER_HOUR = 30  # result pages reading the journals and preprints, per address without an account
+
+
+def anonymous_searches_over(request):
+    """True when this visitor, without an account, already made ANONYMOUS_SEARCHES_PER_HOUR searches this hour:
+    their next ones read arXiv only (see sources.search_allowed)."""
+    from django.conf import settings
+    from django.core.cache import cache
+    if request.user.is_authenticated or not settings.THROTTLE:
+        return False
+    key = 'anonymous-searches:%s:%d' % (hash_ip(client_ip(request))[:16], int(timezone.now().timestamp()) // 3600)
+    cache.add(key, 0, 7200)
+    try:
+        return cache.incr(key) > ANONYMOUS_SEARCHES_PER_HOUR
+    except ValueError:
+        return False
+
+
 def chat_quota_left(user, hashed_ip):
     if user is not None and user.is_superuser:
         return 1

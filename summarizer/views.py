@@ -288,11 +288,13 @@ def search_results(request):
         'field': field, 'source': src, 'kind': kind}
     if options:
         kwargs['filters'] = options
-    try:
-        window = unified_search.window_search(query, kwargs, request.GET.get('window', ''))
-    except unified_search.ExpiredWindow:
-        window = unified_search.window_search(query, kwargs)
-        filter_context['search_notice'] = _('This result window expired. The search has been refreshed.')
+    with sources.searching_as(request, limited=access.anonymous_searches_over(request)) as visitor:
+        try:
+            window = unified_search.window_search(query, kwargs, request.GET.get('window', ''))
+        except unified_search.ExpiredWindow:
+            window = unified_search.window_search(query, kwargs)
+            filter_context['search_notice'] = _('This result window expired. The search has been refreshed.')
+    filter_context['search_limited'] = visitor['limited']
     state['window'] = window['token']
     filter_context['pagination_query'] = state.urlencode()
     if window['next_token']:
@@ -801,7 +803,13 @@ def arxiv_api(request):
     """Relay the chat page's arXiv lookups: arXiv sends no CORS header, so browsers block direct calls.
 
     With src=open, or an identifier that is not arXiv's (a DOI, a HAL or PubMed link...), the answer comes
-    from the other sources, in the same Atom form."""
+    from the other sources, in the same Atom form. Searches without an account count as the search page's."""
+    with sources.searching_as(request, limited=access.anonymous_searches_over(request)
+                              if request.GET.get('search_query') and request.GET.get('src') in ('all', 'open') else False):
+        return _arxiv_api(request)
+
+
+def _arxiv_api(request):
     search_query = request.GET.get('search_query', '').strip()[:300]
     id_list = request.GET.get('id_list', '').strip()[:300]
     if bool(search_query) == bool(id_list):
