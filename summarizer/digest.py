@@ -396,7 +396,8 @@ def fetch_batch(expected, now, categories=(), batch=None):
         found.update(bio_found)
     AnnouncedPaper.objects.bulk_create([AnnouncedPaper(
         arxiv_id=p['arxiv_id'], announced=p['announced'], title=p['title'], abstract=p['abstract'],
-        authors=json.dumps(p['authors']), categories=','.join(p['categories'])) for p in found.values()],
+        authors=json.dumps(p['authors']), categories=','.join(p['categories']), venue=(p.get('venue') or '')[:300])
+        for p in found.values()],
         ignore_conflicts=True, batch_size=500)
     if batch is not None:
         batch.missing = ','.join(missing)
@@ -517,7 +518,7 @@ def read_journals(expected):
                 published = datetime.date.fromisoformat(paper['published']) if paper['published'] else last
                 papers.append({
                     'arxiv_id': paper['key'], 'title': paper['title'], 'abstract': paper['abstract'],
-                    'authors': paper['authors'], 'categories': [code],
+                    'authors': paper['authors'], 'categories': [code], 'venue': paper['journal'] or paper['source_name'],
                     'announced': published if new_subfield and published < recent else expected,
                 })
             if len(works) < params['per_page']:
@@ -607,8 +608,9 @@ def stored_vectors(ids):
 class Keywords:
     """The keywords of a digest: 'comet, "debris disk", -simulation'.
 
-    A term matches whole words, with or without a plural 's'; a quoted term matches as written; a term
-    after '-' leaves out the papers that use it.
+    A term matches whole words, in the singular or the plural (galaxy/galaxies, spectrum/spectra), or as a prefix
+    when it ends with '*' (exoplanet*); a quoted term matches as written; a term after '-' leaves out the papers
+    that use it.
     """
 
     def __init__(self, text):
@@ -642,16 +644,38 @@ class Keywords:
         return score, found
 
 
+# (singular ending, plural ending): galaxy/galaxies and the Latin and Greek plurals of the sciences
+PLURAL_ENDINGS = (('y', 'ies'), ('um', 'a'), ('us', 'i'), ('on', 'a'), ('a', 'ae'), ('is', 'es'), ('ix', 'ices'), ('ex', 'ices'))
+
+
+def word_forms(word):
+    """A word with its singular and plural: 'galaxy' -> {'galaxy', 'galaxies'}, 'spectra' -> {'spectra', 'spectrum', ...}
+    (a few forms that are no word never match anything)."""
+    forms = {word}
+    if not re.fullmatch(r'[a-z]{3,}', word):
+        return forms
+    stem = word[:-1] if len(word) > 4 and word.endswith('s') and not word.endswith(('ss', 'is', 'us')) else word
+    forms.add(stem)
+    for singular, plural in PLURAL_ENDINGS:
+        if stem.endswith(singular) and len(stem) - len(singular) >= 3:
+            forms.add(stem[:-len(singular)] + plural)
+        if word.endswith(plural) and len(word) - len(plural) >= 3:
+            forms.add(word[:-len(plural)] + singular)
+    return forms
+
+
 def keyword_pattern(term, exact=False):
+    """Whole words; the last one in any of its forms (see word_forms), or as a prefix when it ends with '*'."""
     words = re.findall(r'[^\s\-]+', term.lower())
     if not words:
         return None
     parts = [re.escape(w) for w in words]
     last = words[-1]
-    if not exact and re.fullmatch(r'[a-z]{3,}', last):
-        if len(last) > 4 and last.endswith('s') and not last.endswith(('ss', 'is', 'us')):
-            last = last[:-1]
-        parts[-1] = re.escape(last) + '(?:s|es)?'
+    if not exact and last.endswith('*') and len(last.rstrip('*')) >= 3:
+        parts[-1] = re.escape(last.rstrip('*')) + r'[a-z0-9]*'
+    elif not exact and re.fullmatch(r'[a-z]{3,}', last):
+        forms = sorted(word_forms(last), key=len, reverse=True)
+        parts[-1] = '(?:%s)(?:s|es)?' % '|'.join(re.escape(f) for f in forms)
     return re.compile(r'(?<![a-z0-9])' + r'[\s\-]+'.join(parts) + r'(?![a-z0-9])', re.I)
 
 

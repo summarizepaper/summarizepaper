@@ -433,8 +433,13 @@ class WatchTests(TestCase):
         saved = self.create_saved()
         announce('2610.00001v1', 'Exoplanet atmospheres in transit')
         page = self.client.get('/en/saved-searches/%d/' % saved.pk)
-        self.assertContains(page, 'Exoplanet atmospheres in transit')
-        self.assertContains(page, '1 new paper')
+        # the preview may ask OpenAlex: the page loads it afterwards, or at once without JavaScript
+        self.assertContains(page, 'data-preview-url="/en/saved-searches/%d/preview/"' % saved.pk)
+        self.assertNotContains(page, 'Exoplanet atmospheres in transit')
+        part = self.client.get('/en/saved-searches/%d/preview/' % saved.pk)
+        self.assertContains(part, 'Exoplanet atmospheres in transit')
+        self.assertContains(part, '1 new paper')
+        self.assertContains(self.client.get('/en/saved-searches/%d/' % saved.pk), 'Exoplanet atmospheres in transit')  # cached
         self.assertContains(page, 'form method="post" action="/en/saved-searches/" class="watch-controls" data-watch-activation')
         self.assertContains(page, '/en/teams/?topic=exoplanet%20atmospheres')
         saved.matches = [saved_searches.stored(dict(paper('2610.00001v1'), terms=['exoplanet']), self.now)]
@@ -506,3 +511,74 @@ class WatchTests(TestCase):
         self.assertEqual(saved.categories, 'astro-ph.EP, cs.LG')
         self.assertFalse(saved.email)
         self.assertIsNone(saved.last_checked)
+
+    def test_singular_plural_latin_plurals_and_prefixes(self):
+        self.assertEqual(saved_searches.Query('galaxy').match({'title': 'Two galaxies', 'abstract': ''}), ['galaxy'])
+        self.assertEqual(saved_searches.Query('galaxies').match({'title': 'A galaxy', 'abstract': ''}), ['galaxies'])
+        self.assertTrue(saved_searches.Query('spectrum').match({'title': 'Spectra of stars', 'abstract': ''}))
+        self.assertTrue(saved_searches.Query('nuclei').match({'title': 'The atomic nucleus', 'abstract': ''}))
+        self.assertFalse(saved_searches.Query('exoplanet').match({'title': 'Exoplanetary systems', 'abstract': ''}))
+        self.assertTrue(saved_searches.Query('exoplanet*').match({'title': 'Exoplanetary systems', 'abstract': ''}))
+        self.assertFalse(saved_searches.Query('comet').match({'title': 'Cometary dust', 'abstract': ''}))
+        # the database filter lets every form through
+        saved = self.create_saved(params={'q': 'galaxy', 'field': 'all', 'src': 'arxiv', 'type': ''})
+        announce('2610.00001v1', 'Merging galaxies')
+        self.assertEqual([r['key'] for r in saved_searches.latest(saved, self.now)[0]], ['2610.00001v1'])
+
+    def test_page_only_watches_need_no_email_and_announcement_checks_are_not_counted(self):
+        SuppressedEmail.objects.create(email=self.user.email)
+        quiet = self.create_saved(watch_enabled=True, email=False, frequency='daily', last_checked=self.now - datetime.timedelta(days=2))
+        announce('2610.00001v1', 'Exoplanet atmospheres')
+        with mock.patch.object(saved_searches, 'MAX_CHECKS_PER_RUN', 0):
+            self.assertEqual(saved_searches.run(self.now, 5), 0)
+        quiet.refresh_from_db()
+        self.assertEqual([r['key'] for r in quiet.matches], ['2610.00001v1'])
+        other = self.create_saved(params={'q': 'hot jupiter', 'field': 'all', 'src': 'arxiv', 'type': ''})
+        self.client.post('/en/saved-searches/', {'search': other.pk, 'action': 'enable', 'delivery': 'page'})
+        other.refresh_from_db()
+        self.assertFalse(other.watch_enabled)  # the free plan's one watch is taken
+        quiet.delete()
+        self.client.post('/en/saved-searches/', {'search': other.pk, 'action': 'enable', 'delivery': 'page'})
+        other.refresh_from_db()
+        self.assertTrue(other.watch_enabled)
+        self.assertFalse(other.email)
+
+    def test_email_vote_links_vote_only_with_the_page_post(self):
+        saved = self.create_saved(matches=[saved_searches.stored(paper('2610.00001v1'), self.now)])
+        token = saved_searches.vote_token(saved, '2610.00001v1', -1)
+        self.client.logout()
+        page = self.client.get('/en/saved-searches/vote/%s/' % token)
+        self.assertContains(page, 'Not relevant')
+        self.assertFalse(saved.feedback.exists())
+        with mock.patch.object(digest, 'stored_vectors', return_value={}):
+            self.assertContains(Client(enforce_csrf_checks=True).post('/en/saved-searches/vote/%s/' % token), 'Thank you')
+        self.assertEqual(saved.feedback.get().value, -1)
+        self.assertContains(self.client.get('/en/saved-searches/vote/forged/'), 'This link is invalid.')
+
+    def test_mute_sets_aside_papers_close_to_a_rejected_one_without_emailing_them(self):
+        saved = self.create_saved(watch_enabled=True, mute=True, frequency='daily', last_checked=self.now - datetime.timedelta(days=2))
+        SavedSearchFeedback.objects.create(saved=saved, key='old', value=-1, vector=np.array([0, 1, 0], dtype=np.float32).tobytes())
+        announce('2610.00001v1', 'Exoplanet atmospheres like the rejected one')
+        vectors = {'2610.00001v1': np.array([0, 0.9, 0.436], dtype=np.float32)}
+        with self.settings(OPENAI_KEY='sk'), mock.patch.object(digest, 'ensure_vectors', return_value=vectors), \
+                mock.patch.object(saved_searches, 'query_vector', return_value=np.array([0, 0, 1], dtype=np.float32)), \
+                mock.patch.object(saved_searches, 'add_blurbs') as blurbs:
+            self.assertEqual(saved_searches.run(self.now, 5), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        blurbs.assert_called_once_with([], saved.lang)
+        saved.refresh_from_db()
+        self.assertTrue(saved.matches[0]['muted'])
+        self.assertEqual(saved.last_checked, self.now)
+        self.assertIsNone(saved.last_sent)
+        page = self.client.get('/en/saved-searches/%d/' % saved.pk)
+        self.assertContains(page, 'set aside: close to a paper you marked not relevant')
+        self.client.get('/en/saved-searches/%d/' % saved.pk)
+        saved.refresh_from_db()
+        self.assertNotIn(b'2610.00001v1', self.client.get('/en/saved-searches/feed/%s/' % saved.feed_key).content)
+
+    def test_journal_papers_of_the_announcements_show_their_journal(self):
+        saved = self.create_saved(params={'q': 'catalysis', 'field': 'all', 'src': 'open', 'type': ''}, categories='journals')
+        AnnouncedPaper.objects.create(arxiv_id='doi_10.1--abc', title='Catalysis at scale', abstract='', authors='[]',
+                                      categories='journals.1605', venue='Nature Catalysis', announced=self.now.date())
+        rows = saved_searches.latest(saved, self.now)[0]
+        self.assertEqual(rows[0]['venue'], 'Nature Catalysis')

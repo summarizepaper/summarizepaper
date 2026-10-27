@@ -19,7 +19,7 @@ test('activation shows progress, blocks duplicates and resets on back navigation
     removeAttribute: key => {delete attrs[key];},
   };
   vm.runInNewContext(fs.readFileSync('static/summarizer/js/saved-searches.js', 'utf8'), {
-    document: {querySelectorAll: () => [form]},
+    document: {querySelectorAll: () => [form], querySelector: () => null},
     window: {addEventListener: (key, fn) => {pageEvents[key] = fn;}},
   });
   events.submit({preventDefault: () => assert.fail('first submission must continue')});

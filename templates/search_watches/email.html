@@ -5,7 +5,7 @@
 <p style="margin:0 0 4px;font-size:16px;font-weight:bold;"><a href="{{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/" style="color:#1a0dab;">{{ paper.title }}</a></p>
 <p style="margin:0 0 4px;font-size:13px;color:#666;">{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %} · {{ paper.venue }} · {{ paper.published }}</p>
 <p style="margin:0 0 4px;font-size:14px;line-height:1.45;">{% if paper.blurb %}{{ paper.blurb }}{% else %}{{ paper.abstract|striptags|truncatewords:55 }}{% endif %}</p>
-{% if paper.terms %}<p style="margin:0;font-size:12px;color:#888;">{% trans 'matched:' %} {{ paper.terms|join:", " }}</p>{% endif %}
+<p style="margin:0;font-size:12px;color:#888;">{% if paper.terms %}{% trans 'matched:' %} {{ paper.terms|join:", " }} · {% endif %}{% trans 'Relevant?' %} <a href="{{ paper.vote_yes }}" style="color:#16a34a;">{% trans 'Yes' %}</a> · <a href="{{ paper.vote_no }}" style="color:#b91c1c;">{% trans 'No' %}</a></p>
 </div>{% endfor %}
 {% if more %}<p><a href="{{ page_url }}" style="color:#4f46e5;font-weight:bold;">{% blocktrans count n=more %}{{ n }} more new paper on the page of the search{% plural %}{{ n }} more new papers on the page of the search{% endblocktrans %} &rarr;</a></p>{% endif %}
 {% if truncated %}<p style="font-size:13px;color:#b45309;">{% trans 'This search is too broad for the watch to read all its matches: add a word or restrict it to categories.' %}</p>{% endif %}

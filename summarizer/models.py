@@ -427,6 +427,7 @@ class AnnouncedPaper(models.Model):
     abstract = models.TextField(blank=True, default='')
     authors = models.TextField(blank=True, default='')  # JSON list of names
     categories = models.CharField(max_length=300, blank=True, default='')  # comma-separated
+    venue = models.CharField(max_length=300, blank=True, default='')  # the journal of a journal paper
 
     def __str__(self):
         return '%s (%s)' % (self.arxiv_id, self.announced)
@@ -1156,6 +1157,7 @@ class SavedSearch(models.Model):
     watch_enabled = models.BooleanField(default=False)
     frequency = models.CharField(max_length=10, choices=[('daily', 'Daily'), ('weekly', 'Weekly')], default='weekly')
     email = models.BooleanField(default=True)  # False: the new papers only go to the page and the RSS feed
+    mute = models.BooleanField(default=False)  # new papers closer to one marked not relevant stay on the page only
     categories = models.CharField(max_length=300, blank=True, default='')  # arXiv/bioRxiv/medRxiv codes the watch keeps to
     seen = models.JSONField(default=list)
     matches = models.JSONField(default=list)  # the new papers found, newest check first (saved_searches.MAX_HISTORY)

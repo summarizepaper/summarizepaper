@@ -78,3 +78,4 @@
 .page .saved-search-toolbar select { margin: 0; }
 .saved-search-further { padding-left: 18px; line-height: 1.8; }
 .watch-controls input[type="text"] { min-width: 240px; }
+.watch-controls .watch-check { flex-direction: row; align-items: center; gap: 8px; flex-basis: 100%; }

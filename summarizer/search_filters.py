@@ -138,10 +138,11 @@ def filter_chips(state, selected):
             continue
         copy = state.copy()
         copy.pop(key, None)
-        chips.append({'label': '%s: %s' % (labels[key], values.get(value, value)), 'url': '?' + copy.urlencode()})
+        chips.append({'label': _('%(label)s: %(value)s') % {'label': labels[key], 'value': values.get(value, value)},
+                      'url': '?' + copy.urlencode()})
     for key, label in (('journals', _('Include')), ('exclude_journals', _('Exclude'))):
         for item in selected[key]:
             copy = state.copy()
             copy.setlist(key, [v for v in state.getlist(key) if v != item['id']])
-            chips.append({'label': '%s: %s' % (label, item['name']), 'url': '?' + copy.urlencode()})
+            chips.append({'label': _('%(label)s: %(value)s') % {'label': label, 'value': item['name']}, 'url': '?' + copy.urlencode()})
     return chips

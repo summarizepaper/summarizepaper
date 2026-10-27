@@ -1,6 +1,6 @@
 {% load i18n %}<div class="saved-search-paper">
   <a class="saved-search-paper-title" href="/{{ LANGUAGE_CODE }}/paper/{{ paper.key }}/">{{ paper.title }}</a>{% if paper.new %} <span class="saved-search-new">{% trans 'New' %}</span>{% endif %}
   <p class="search-result-authors">{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %}</p>
-  <p class="search-filter-note">{% if paper.venue %}{{ paper.venue }} · {% endif %}{{ paper.published }}{% if paper.found %} · {% blocktrans with day=paper.found|slice:":10" %}found on {{ day }}{% endblocktrans %}{% endif %}{% if paper.terms %} · {% trans 'matched:' %} {{ paper.terms|join:", " }}{% endif %}</p>
+  <p class="search-filter-note">{% if paper.venue %}{{ paper.venue }} · {% endif %}{{ paper.published }}{% if paper.found_on %} · {% blocktrans with day=paper.found_on|date:"j F Y" %}found on {{ day }}{% endblocktrans %}{% endif %}{% if paper.muted %} · <strong>{% trans 'set aside: close to a paper you marked not relevant' %}</strong>{% endif %}{% if paper.terms %} · {% trans 'matched:' %} {{ paper.terms|join:", " }}{% endif %}</p>
   {% if paper.blurb %}<p>{{ paper.blurb }}</p>{% elif paper.abstract %}<p class="search-result-excerpt">{{ paper.abstract|striptags|truncatewords:45 }}</p>{% endif %}
 </div>

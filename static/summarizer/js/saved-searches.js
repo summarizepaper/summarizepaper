@@ -26,3 +26,25 @@
     window.addEventListener('pageshow', reset);
   });
 }());
+
+(function () {
+  // The preview reads OpenAlex, which may take seconds: the page asks for it once it has loaded.
+  var box = document.querySelector('[data-preview-url]');
+  if (!box || !window.fetch) {
+    return;
+  }
+  fetch(box.getAttribute('data-preview-url'), {credentials: 'same-origin', headers: {'X-Requested-With': 'fetch'}})
+    .then(function (response) {
+      if (!response.ok) {
+        throw new Error(response.status);
+      }
+      return response.text();
+    })
+    .then(function (html) {
+      box.innerHTML = html;
+    })
+    .catch(function () {
+      box.querySelector('[data-preview-status]').hidden = true;
+      box.querySelector('[data-preview-failed]').hidden = false;
+    });
+}());

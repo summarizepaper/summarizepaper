@@ -16554,3 +16554,68 @@ msgid_plural "%(n)s new papers for your saved search: %(name)s"
 msgstr[0] "%(n)s nouvel article pour votre recherche enregistrée : %(name)s"
 msgstr[1] ""
 "%(n)s nouveaux articles pour votre recherche enregistrée : %(name)s"
+
+#, python-format
+msgid "%(label)s: %(value)s"
+msgstr "%(label)s : %(value)s"
+
+msgid ""
+"Set aside the papers close to those I mark not relevant (they stay on this "
+"page)"
+msgstr ""
+"Écarter les articles proches de ceux que je juge non pertinents (ils restent"
+" sur cette page)"
+
+msgid ""
+"Reads every paper announced each day on arXiv, bioRxiv and medRxiv: a paper "
+"is kept when its title or abstract has all the words of the search (a plural"
+" counts). Put an expression in \"quotes\", a word to leave out after a minus"
+" (-review), alternatives between OR, the start of a word followed by * "
+"(exoplanet*)."
+msgstr ""
+"Lit chaque article annoncé chaque jour sur arXiv, bioRxiv et medRxiv : un "
+"article est gardé quand son titre ou son résumé contient tous les mots de la"
+" recherche (le pluriel compte). Mettez une expression entre \"guillemets\", "
+"un mot à exclure après un moins (-review), des alternatives séparées par OR,"
+" le début d’un mot suivi de * (exoplanet*)."
+
+msgid ""
+"The search page ranks by relevance and may show other papers: the watch "
+"keeps only those with all the words."
+msgstr ""
+"La page de recherche classe par pertinence et peut montrer d’autres articles"
+" : la veille ne garde que ceux qui contiennent tous les mots."
+
+msgid "What it would have found over the last two weeks"
+msgstr "Ce qu’elle aurait trouvé ces deux dernières semaines"
+
+msgid "Reading the announcements of the last two weeks…"
+msgstr "Lecture des annonces des deux dernières semaines…"
+
+msgid "The preview could not be loaded."
+msgstr "L’aperçu n’a pas pu être chargé."
+
+msgid "checked just now"
+msgstr "vérifiée à l’instant"
+
+msgid "set aside: close to a paper you marked not relevant"
+msgstr "écarté : proche d’un article jugé non pertinent"
+
+msgid ""
+"More journal papers match than the preview read: this count is a minimum."
+msgstr ""
+"Plus d’articles de revues correspondent que l’aperçu n’en a lu : ce nombre "
+"est un minimum."
+
+msgid "The next papers of this watch close to this one will come first:"
+msgstr ""
+"Les prochains articles de cette veille proches de celui-ci viendront en tête"
+" :"
+
+msgid "The next papers of this watch close to this one will come last:"
+msgstr ""
+"Les prochains articles de cette veille proches de celui-ci viendront en "
+"dernier :"
+
+msgid "Relevant"
+msgstr "Pertinent"

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{% trans 'Saved searches' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block content %}
+<div class="page" style="max-width:640px">
+  {% if search is None %}
+    <p>{% trans 'This link is invalid.' %}</p>
+  {% elif done %}
+    <h1>{% trans 'Thank you' %}</h1>
+    <p>{% if value == 1 %}{% trans 'The next papers of this watch close to this one will come first:' %}{% else %}{% trans 'The next papers of this watch close to this one will come last:' %}{% endif %}
+    <strong>{{ paper.title }}</strong></p>
+    <p><a href="/{{ LANGUAGE_CODE }}/saved-searches/{{ search.pk }}/">{{ search.name }}</a></p>
+  {% else %}
+    <form method="post" id="vote">
+      <p><strong>{{ paper.title }}</strong></p>
+      <button type="submit" class="btn">{% if value == 1 %}{% trans 'Relevant' %}{% else %}{% trans 'Not relevant' %}{% endif %}</button>
+    </form>
+    <script>document.getElementById('vote').submit();</script>
+  {% endif %}
+</div>
+{% endblock %}
