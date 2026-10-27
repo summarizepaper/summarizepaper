@@ -295,6 +295,11 @@ def paper_doi(key):
     return '10.48550/arxiv.%s' % re.sub(r'v\d+$', '', key.replace('--', '/')).lower()
 
 
+def paper_dois(paper):
+    """The DOIs OpenAlex may know a paper by: arXiv's own and, once published, its journal's."""
+    return [doi for doi in dict.fromkeys([paper_doi(paper.arxiv_id), sources.clean_doi(paper.link_doi or '') or '']) if doi]
+
+
 def openalex(filters, select, per_page, sort=''):
     """OpenAlex works for these filters, counted against the tools' daily budget; None when unavailable."""
     if not sources.tool_search_allowed():
@@ -337,15 +342,18 @@ def openalex_experts(paper, papers):
 
     Candidates sign one of the closest papers first, last or as corresponding author (student_papers.author_roles),
     and are neither authors of this paper nor their co-authors of the last years."""
-    dois = {paper_doi(p.arxiv_id): p for p in [paper] + papers if paper_doi(p.arxiv_id)}
+    dois = {doi: p for p in papers[::-1] + [paper] for doi in paper_dois(p)}  # this paper wins a shared DOI
     if not dois:
         return None
-    works = openalex('doi:' + '|'.join(list(dois)[:50]),
-                     'id,doi,display_name,authorships,publication_date,corresponding_author_ids', 50)
+    works = openalex('doi:' + '|'.join(list(dois)[-100:]),
+                     'id,doi,display_name,authorships,publication_date,corresponding_author_ids,locations', 100)
     if works is None:
         return None
-    by_doi = {student_papers.doi(work): work for work in works}
-    own = by_doi.get(paper_doi(paper.arxiv_id))
+    # OpenAlex merges a preprint into its publication: a work found by its arXiv DOI may come back with the journal's
+    by_arxiv = {re.sub(r'v\d+$', '', p.arxiv_id.replace('--', '/')).lower(): p for p in [paper] + papers}
+    found = [(dois.get(student_papers.doi(work)) or by_arxiv.get(re.sub(r'v\d+$', '', sources.arxiv_of(work).lower())), work)
+             for work in works]
+    own = next((work for p, work in found if p is paper), None)
     own_names = [a.name for a in paper.authors.all()]
     own_ids, own_institutions = set(), set()
     if own:
@@ -357,8 +365,7 @@ def openalex_experts(paper, papers):
     if linked is None:
         return None
     people, left_out = {}, set()
-    for doi, work in by_doi.items():
-        neighbour = dois.get(doi)
+    for neighbour, work in found:
         if neighbour is None or neighbour is paper:
             continue
         roles = student_papers.author_roles(work)
@@ -378,6 +385,8 @@ def openalex_experts(paper, papers):
             person = people.setdefault(aid, {'name': name, 'affiliation': institution.get('display_name') or '',
                                              'country': institution.get('country_code') or '',
                                              'orcid': author.get('orcid') or '', 'papers': [], 'checked': True})
+            if neighbour.arxiv_id in [x['arxiv_id'] for x in person['papers']]:
+                continue  # its preprint and its publication
             person['papers'].append({'arxiv_id': neighbour.arxiv_id, 'title': clean(neighbour.title, 300),
                                      'year': (work.get('publication_date') or '')[:4], 'roles': roles[aid]})
     ranked = sorted(people.values(), key=lambda p: (-len(p['papers']), -max(int(x['year'] or 0) for x in p['papers']), p['name']))
@@ -452,16 +461,17 @@ def citation(paper):
 
 def press_figures(value, figures, paper):
     """The figures the model chose, with the image of the paper, its caption and the credit its license asks."""
-    by_label = {normalized(f['label']): f for f in figures}
+    by_label = {normalized(f['label']): f for f in figures}  # 'Figure 2:' as arXiv tags it is 'figure 2'
     code, _version = sources.license_code(paper.license)
     chosen = []
     for item in value if isinstance(value, list) else []:
         figure = by_label.get(normalized(str((item or {}).get('label') or ''))) if isinstance(item, dict) else None
-        if figure is None or figure['label'] in [c['label'] for c in chosen]:
+        if figure is None or figure['label'].rstrip(':.| ') in [c['label'] for c in chosen]:
             continue
-        credit = ', '.join(part for part in [byline(paper), figure['label'], sources.label(paper.arxiv_id),
+        credit = ', '.join(part for part in [byline(paper), figure['label'].rstrip(':.| '), sources.label(paper.arxiv_id),
                                               sources.license_label(paper.license or '')] if part)
-        chosen.append({'label': figure['label'], 'image': figure['images'][0], 'caption': figure['caption'][:1500],
+        label = figure['label'].rstrip(':.| ')
+        chosen.append({'label': label, 'image': figure['images'][0], 'caption': figure['caption'][:1500],
                        'source_url': figure['source_url'], 'why': clean(item.get('why'), 400), 'credit': credit,
                        'license_code': code})
         if len(chosen) == 2:

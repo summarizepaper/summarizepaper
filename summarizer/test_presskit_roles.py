@@ -145,7 +145,9 @@ class PressKitRoleTests(ToolsTestCase):
             return {'author': {'id': 'https://openalex.org/%s' % aid, 'display_name': name, 'orcid': ''},
                     'author_position': position, 'is_corresponding': corresponding,
                     'institutions': [{'id': institution, 'display_name': institution.upper()}]}
-        own = {'id': 'W1', 'doi': 'https://doi.org/10.48550/arxiv.2101.00001', 'publication_date': '2021-01-04',
+        # merged with its publication: found by its arXiv DOI, it comes back with the journal's
+        own = {'id': 'W1', 'doi': 'https://doi.org/10.1093/mnras/stad1', 'publication_date': '2021-01-04',
+               'locations': [{'landing_page_url': 'https://arxiv.org/abs/2101.00001v2'}],
                'authorships': [authorship('A1', 'Ann Lee', 'first', 'i1'), authorship('A9', 'Bob Ray', 'last', 'i9')]}
         other = {'id': 'W2', 'doi': 'https://doi.org/10.48550/arxiv.2101.00002', 'publication_date': '2021-03-01',
                  'authorships': [authorship('A2', 'Cid Moe', 'first', 'i2'), authorship('A5', 'Eve Middle', 'middle', 'i5'),
@@ -166,7 +168,7 @@ class PressKitRoleTests(ToolsTestCase):
         self.assertTrue(calls[1].startswith('author.id:https://openalex.org/A1|https://openalex.org/A9,from_publication_date:'))
 
     def test_press_figures_keep_supplied_labels_with_credit_and_license(self):
-        gallery = [{'label': 'Figure 2', 'images': ['https://arxiv.org/html/2101.00001v1/x2.png'], 'caption': 'Figure 2: the change.',
+        gallery = [{'label': 'Figure 2:', 'images': ['https://arxiv.org/html/2101.00001v1/x2.png'], 'caption': 'Figure 2: the change.',
                     'source_url': 'https://arxiv.org/html/2101.00001v1#S2.F2'}]
         base = kit_answer(press_figures=[{'label': 'figure 2', 'why': 'Shows the change.'}, {'label': 'Figure 9', 'why': 'x'}])
         kit, _ = self.generate(answers(base), figures_of=gallery)
