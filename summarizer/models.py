@@ -845,7 +845,7 @@ class WatchedProject(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='watched_projects')
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True, default='')  # written by the user, or by the model from their draft
-    author_name = models.CharField(max_length=200, blank=True, default='')  # papers signed by it are the user's own
+    author_name = models.CharField(max_length=1000, blank=True, default='')  # the user's and their coauthors' names, one per line: their papers are left out
     search_text = models.TextField(blank=True, default='')  # the description told as an English abstract, embedded
     lang = models.CharField(max_length=10, default='en')
     vector = models.BinaryField(blank=True, null=True)
@@ -864,6 +864,8 @@ class WatchedProject(models.Model):
     prior_status = models.CharField(max_length=10, blank=True, default='')  # '', 'pending', 'done', 'failed'
     prior_checked = models.DateTimeField(blank=True, null=True)
     prior_found = models.PositiveIntegerField(default=0)  # candidates of the prior art search close enough to be judged
+    prior_limited = models.BooleanField(default=False)  # OpenAlex could not be searched (daily budget or outage)
+    openreview_checked = models.DateTimeField(blank=True, null=True)  # its last search of the new OpenReview submissions
     activity = models.TextField(blank=True, default='')  # JSON {"2026-10": papers above the floor that month}
     created = models.DateTimeField(auto_now_add=True)
 
@@ -880,6 +882,9 @@ class WatchedProject(models.Model):
         except ValueError:
             return {}
         return data if isinstance(data, dict) else {}
+
+    def own_names(self):
+        return [n.strip() for n in self.author_name.replace(';', '\n').splitlines() if n.strip()]
 
     def competitor_list(self):
         return [n.strip() for n in self.competitors.replace(';', '\n').splitlines() if n.strip()]
@@ -937,6 +942,16 @@ class ScoopMatch(models.Model):
 
     def signal_list(self):
         return [s for s in self.signals.split(',') if s]
+
+    def is_openreview(self):
+        return self.arxiv_id.startswith('openreview_')
+
+    def link(self):
+        """Its page on the site, or on OpenReview for a submission the site cannot open."""
+        from django.utils.translation import get_language
+        if self.is_openreview():
+            return 'https://openreview.net/forum?id=%s' % self.arxiv_id[len('openreview_'):]
+        return '/%s/paper/%s/' % (get_language(), self.arxiv_id)
 
 
 class PaperVersion(models.Model):

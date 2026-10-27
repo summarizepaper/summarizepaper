@@ -2,7 +2,7 @@ import os
 from django.contrib.auth.models import User
 from django.contrib.sessions.backends.db import SessionStore
 from django.test import TestCase, RequestFactory
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from summarizer import access
 from summarizer.models import AIassistant, PaperHistory, SiteSettings, UserPlan
@@ -1670,7 +1670,8 @@ class JournalFetchTests(NoBioServers, TestCase):
 
     def test_journal_subfields_are_categories(self):
         self.assertEqual(digest.clean_categories(['journals.1605', 'journals.99x!']), ['journals.1605'])
-        self.assertEqual(digest.category_label('journals.1605'), 'Organic Chemistry')
+        with translation.override('en'):  # a page test run before in the same process may leave French active
+            self.assertEqual(digest.category_label('journals.1605'), 'Organic Chemistry')
         self.assertEqual(digest.category_name('journals.2716'), 'Genetics (Medicine)')
         self.assertEqual(digest.followed_journals(), ['journals.1605'])
 

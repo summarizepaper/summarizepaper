@@ -2,8 +2,8 @@
   <span class="importance {% if m.overlap == 'high' %}high{% else %}medium{% endif %}">{% if m.overlap == 'high' %}{% trans 'Strong overlap' %}{% else %}{% trans 'Partial overlap' %}{% endif %}</span>
   {% if m.action_label %}<span class="importance info">{{ m.action_label }}</span>{% endif %}
   {% if m.status == 'relevant' %}<span class="importance good">{% trans 'Marked relevant' %}</span>{% endif %}
-  <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/paper/{{ m.arxiv_id }}/"><strong>{{ m.title }}</strong></a></p>
-  <div class="meta">{{ m.author_list|join:", " }} · {{ m.announced|date:"j F Y" }} · {{ m.arxiv_id|paper_ref }}</div>
+  <p style="margin:8px 0 4px"><a href="{{ m.link }}"{% if m.is_openreview %} rel="noopener" target="_blank"{% endif %}><strong>{{ m.title }}</strong></a></p>
+  <div class="meta">{{ m.author_list|join:", " }} · {{ m.announced|date:"j F Y" }} · {% if m.is_openreview %}OpenReview{% else %}{{ m.arxiv_id|paper_ref }}{% endif %}</div>
   {% if m.signal_labels %}<div class="meta muted"><small>{% trans 'Read because it:' %} {{ m.signal_labels|join:" · " }}</small></div>{% endif %}
   {% if m.aspect_rows %}<p class="scoop-aspects">{% for label, level, level_label in m.aspect_rows %}<span class="scoop-aspect {{ level }}">{{ label }}: {{ level_label }}</span>{% endfor %}</p>{% endif %}
   {% if m.shared %}<p style="margin:8px 0 0"><strong>{% trans 'In common:' %}</strong> {{ m.shared }}</p>{% endif %}
@@ -34,6 +34,7 @@
       <button class="link-button" name="action" value="deep">{% if m.deep_status == 'failed' %}{% trans 'Compare with the full text again' %}{% else %}{% trans 'Compare with the full text' %}{% endif %}</button>
     </form>
     {% endif %}
+    {% if not m.is_openreview %}
     <form method="post" class="scoop-collect">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}"><input type="hidden" name="match" value="{{ m.pk }}">
       <label class="visually-hidden" for="collect-{{ m.pk }}">{% trans 'Collection' %}</label>
       <select name="collection" id="collect-{{ m.pk }}">
@@ -42,5 +43,6 @@
       </select>
       <button class="link-button" name="action" value="collect">{% trans 'Add to the collection' %}</button>
     </form>
+    {% endif %}
   </div>
 </li>

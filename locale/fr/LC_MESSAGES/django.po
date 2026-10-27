@@ -6044,8 +6044,8 @@ msgid "Is the description of my project private in the scoop watch?"
 msgstr ""
 "La description de mon projet reste-t-elle privée dans la veille anti-scoop ?"
 
-msgid "Yes. Only you see it. It is used to compare your project with the papers: an AI rewrites it as an English abstract and splits it into facets, and they are sent to our AI provider for that comparison only. If you give the PDF of a draft, it is read once to write the description and is not stored, unless you ask us to keep its text to compare it with the full text of close papers; you can delete that text at any time. You can delete a project at any time."
-msgstr "Oui. Vous seul la voyez. Elle sert à comparer votre projet aux articles : une IA la réécrit sous forme de résumé en anglais et la découpe en facettes ; résumé et facettes sont envoyés à notre fournisseur d'IA pour cette comparaison uniquement. Si vous donnez le PDF d'un brouillon, il est lu une fois pour écrire la description et n'est pas conservé, sauf si vous nous demandez d'en garder le texte pour le comparer au texte intégral des articles proches ; vous pouvez supprimer ce texte à tout moment. Vous pouvez supprimer un projet à tout moment."
+msgid "Yes. Only you see it. It is used to compare your project with the papers: an AI rewrites it as an English abstract and splits it into facets, and they are sent to our AI provider for that comparison only. If you give the PDF of a draft, it is read once to write the description and is not stored, unless you ask us to keep its text, stored encrypted, to compare it with the full text of close papers; you can delete that text at any time. You can delete a project at any time."
+msgstr "Oui. Vous seul la voyez. Elle sert à comparer votre projet aux articles : une IA la réécrit sous forme de résumé en anglais et la découpe en facettes ; résumé et facettes sont envoyés à notre fournisseur d'IA pour cette comparaison uniquement. Si vous donnez le PDF d'un brouillon, il est lu une fois pour écrire la description et n'est pas conservé, sauf si vous nous demandez d'en garder le texte, conservé chiffré, pour le comparer au texte intégral des articles proches ; vous pouvez supprimer ce texte à tout moment. Vous pouvez supprimer un projet à tout moment."
 
 msgid "How does the bibliography check work?"
 msgstr "Comment fonctionne la vérification de bibliographie ?"
@@ -9180,8 +9180,8 @@ msgstr "Nouveaux articles"
 msgid "No close new paper so far."
 msgstr "Aucun nouvel article proche pour l'instant."
 
-msgid "Searching arXiv and the journals for papers that already overlap your project…"
-msgstr "Recherche sur arXiv et dans les revues d'articles qui recoupent déjà votre projet…"
+msgid "Searching arXiv, the journals and OpenReview for papers that already overlap your project…"
+msgstr "Recherche sur arXiv, dans les revues et sur OpenReview d'articles qui recoupent déjà votre projet…"
 
 msgid "The search for prior art failed."
 msgstr "La recherche d'antériorité a échoué."
@@ -9207,8 +9207,8 @@ msgstr "Les articles semblables passent après lors des prochaines vérification
 msgid "Stop watching this project and delete what was found?"
 msgstr "Arrêter la veille de ce projet et supprimer ce qui a été trouvé ?"
 
-msgid "At once, the papers of the last %(n)s years are searched on arXiv and in the journals: you see what is already published close to your project."
-msgstr "Aussitôt, les articles des %(n)s dernières années sont cherchés sur arXiv et dans les revues : vous voyez ce qui est déjà publié près de votre projet."
+msgid "At once, the papers of the last %(n)s years are searched on arXiv, in the journals and on OpenReview, with those that already cite your key references: you see what is already published close to your project."
+msgstr "Aussitôt, les articles des %(n)s dernières années sont cherchés sur arXiv, dans les revues et sur OpenReview, avec ceux qui citent déjà vos références clés : vous voyez ce qui est déjà publié près de votre projet."
 
 msgid "Added to “%(name)s”."
 msgstr "Ajouté à « %(name)s »."
@@ -9324,6 +9324,21 @@ msgid "%(n)s paper marked not relevant"
 msgid_plural "%(n)s papers marked not relevant"
 msgstr[0] "%(n)s article marqué non pertinent"
 msgstr[1] "%(n)s articles marqués non pertinents"
+
+msgid "Your own papers are never reported: give your name and those of your usual coauthors."
+msgstr "Vos propres articles ne sont jamais signalés : indiquez votre nom et ceux de vos coauteurs habituels."
+
+msgid "Your name as it appears on your papers, and those of your usual coauthors, one per line (optional: their papers are then never reported)"
+msgstr "Votre nom tel qu'il apparaît sur vos articles, et ceux de vos coauteurs habituels, un par ligne (facultatif : leurs articles ne sont alors jamais signalés)"
+
+msgid "Your name and those of your usual coauthors, one per line"
+msgstr "Votre nom et ceux de vos coauteurs habituels, un par ligne"
+
+msgid "A chart of the papers close to your project, month by month, will appear here as the announcements come in."
+msgstr "Un graphique des articles proches de votre projet, mois par mois, apparaîtra ici au fil des annonces."
+
+msgid "The journals could not be searched this time (daily limit of our search provider): only arXiv and OpenReview were. Search again tomorrow for a complete result."
+msgstr "Les revues n'ont pas pu être interrogées cette fois (limite quotidienne de notre fournisseur de recherche) : seuls arXiv et OpenReview l'ont été. Relancez la recherche demain pour un résultat complet."
 
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "

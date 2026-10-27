@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
 
-from summarizer import audio, changes, citations, conference, digest, generated, letters, library, literature, missed, presskit, questions, refcheck, scoops, slides, teams, trends, usage
+from summarizer import audio, changes, citations, conference, digest, generated, letters, library, literature, missed, presskit, questions, refcheck, scoops, slides, sources, teams, trends, usage
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
@@ -804,7 +804,7 @@ class ScoopTests(ToolsTestCase):
 
     def setUp(self):
         super().setUp()
-        prior = mock.patch('summarizer.scoops.prior_candidates', return_value={})
+        prior = mock.patch('summarizer.scoops.prior_candidates', return_value=({}, False))
         prior.start()
         self.addCleanup(prior.stop)
 
@@ -986,13 +986,17 @@ class ScoopEngineTests(ToolsTestCase):
                                          'authors': ['Old Author'], 'announced': since, 'subfield': 'journals.3103'}
         self.project.author_name = 'Ann Lee'
         self.project.save()
-        with mock.patch('summarizer.scoops.prior_candidates', return_value=found), \
+        found['doi_10.1/coauthor'] = dict(found['doi_10.1/own'], arxiv_id='doi_10.1/coauthor', authors=['Bo Chen'])
+        self.project.author_name = 'Ann Lee\nBo Chen'
+        self.project.save()
+        with mock.patch('summarizer.scoops.prior_candidates', return_value=(found, True)), \
              mock.patch('summarizer.similar.embed', side_effect=lambda texts: np.array([[1, 0, 0]] * len(texts), dtype=np.float32)), \
              mock.patch('summarizer.generated.chat_json', side_effect=lambda prompt, **kw: {'items': [
                  {'id': i, 'overlap': 'high'} for i in re.findall(r'<paper id="([^"]+)">', kw['system'])]}):
             scoops.prior_art(self.project)
         project = WatchedProject.objects.get()
         self.assertEqual((project.prior_status, project.prior_found, project.subfields), ('done', 4, 'journals.3103'))
+        self.assertTrue(project.prior_limited)
         prior = ScoopMatch.objects.filter(kind='prior')
         self.assertEqual(prior.count(), 4)  # the user's own paper is left out
         self.assertTrue(all(m.emailed for m in prior))
@@ -1001,6 +1005,7 @@ class ScoopEngineTests(ToolsTestCase):
         self.assertContains(page, 'Already published')
         self.assertContains(page, 'Old clouds')
         self.assertContains(page, '+ Old Author')  # signs several of the results
+        self.assertContains(page, 'The journals could not be searched this time')
         UserPlan.objects.filter(user=self.owner).update(paid=False)
         self.assertNotIn('journals.3103', digest.followed_journals())
 
@@ -1055,6 +1060,92 @@ class ScoopEngineTests(ToolsTestCase):
         self.assertEqual(collection.name, 'Hot clouds')
         self.assertEqual(add.call_args[0][:2], (collection, ['2610.00001v1']))
         self.assertContains(client.get(r['Location']), 'Added to')
+
+
+class ScoopSourceTests(ScoopEngineTests):
+    """OpenReview, the papers citing the key references, open journal versions and the kept drafts."""
+
+    def note(self, nid, title, days_ago, venue='ICLR.cc/2027/Conference/Submission'):
+        created = timezone.now() - datetime.timedelta(days=days_ago)
+        return {'id': nid, 'cdate': created.timestamp() * 1000, 'content': {
+            'title': {'value': title}, 'abstract': {'value': title + ' abstract.'}, 'venueid': {'value': venue},
+            'authors': {'value': ['Zoe Q', 'Ann Lee']}}}
+
+    def test_openreview_notes_keep_new_submissions_only(self):
+        answer = mock.Mock(status_code=200)
+        answer.json.return_value = {'notes': [self.note('new1', 'Fresh  idea', 1), self.note('old', 'Old idea', 40),
+                                              self.note('copy', 'Journal copy', 1, venue='OpenReview.net/Public_Article')]}
+        with mock.patch('summarizer.scoops.requests.get', return_value=answer):
+            notes = scoops.openreview_notes('clouds', timezone.now().date() - datetime.timedelta(days=10))
+        self.assertEqual([(n['arxiv_id'], n['title'], n['authors']) for n in notes], [('openreview_new1', 'Fresh idea', ['Zoe Q', 'Ann Lee'])])
+
+    def test_openreview_is_searched_once_a_day_and_its_first_results_are_not_emailed(self):
+        self.project.facets = json.dumps({'queries': ['hot clouds']})
+        self.project.save()
+        notes = [{'arxiv_id': 'openreview_a', 'title': 'A', 'abstract': 'A.', 'authors': ['Zoe Q'],
+                  'announced': timezone.now().date(), 'subfield': ''}]
+        with mock.patch('summarizer.scoops.openreview_notes', return_value=notes) as search, \
+             mock.patch('summarizer.similar.embed', return_value=np.array([[1, 0, 0]], dtype=np.float32)), \
+             mock.patch('summarizer.generated.chat_json', return_value={'items': [{'id': 'openreview_a', 'overlap': 'high'}]}), \
+             mock.patch('summarizer.scoops.paper_full_text', return_value=''):
+            scoops.check_due(timezone.now())
+            scoops.check_due(timezone.now())
+        search.assert_called_once()
+        match = ScoopMatch.objects.get()
+        self.assertTrue(match.emailed)  # the first search, over the last days
+        self.assertEqual(match.link(), 'https://openreview.net/forum?id=a')
+        self.assertEqual(scoops.base_id('openreview_abcv2'), 'openreview_abcv2')
+        page = self.client_for(self.owner).get('/en/scoops/')
+        self.assertContains(page, 'https://openreview.net/forum?id=a')
+
+    def test_prior_art_reads_the_papers_citing_the_key_references(self):
+        self.project.references = '2101.00001\n10.1093/key'
+        self.project.save()
+        work = lambda wid, refs: {'id': 'https://openalex.org/' + wid, 'doi': 'https://doi.org/10.1093/' + wid.lower(),
+                                  'display_name': 'Work ' + wid, 'publication_date': '2025-05-01',
+                                  'abstract_inverted_index': {'Clouds.': [0]}, 'authorships': [],
+                                  'referenced_works': ['https://openalex.org/' + r for r in refs]}
+
+        def openalex(url, params=None, missing=(404,)):
+            if '/works/doi:' in url:
+                return {'id': 'https://openalex.org/' + ('WA' if 'arxiv' in url else 'WB')}
+            return {'results': [work('W1', ['WA', 'WB']), work('W2', ['WA'])]}
+        found = {}
+        with mock.patch('summarizer.sources._json', side_effect=openalex):
+            self.assertTrue(scoops.citing_works(self.project, datetime.date(2024, 1, 1), found))
+        self.assertEqual({k: p.get('cites') for k, p in found.items()}, {sources.doi_key('10.1093/w1'): True})
+
+    def test_a_closed_preprint_is_read_through_its_open_journal_version(self):
+        with mock.patch('summarizer.sources.arxiv_text', return_value=('', '')), \
+             mock.patch('summarizer.digest.fetch_ids', return_value=[{'doi': '10.1093/mnras/x1'}]), \
+             mock.patch('summarizer.sources.metadata', return_value={'license': 'https://creativecommons.org/licenses/by/4.0/'}), \
+             mock.patch('summarizer.sources.full_text', return_value=('Full journal text', 'pdf')) as full:
+            self.assertEqual(scoops.paper_full_text('2610.00001v1'), 'Full journal text')
+        full.assert_called_once_with(sources.doi_key('10.1093/mnras/x1'))
+
+    def test_a_kept_draft_is_encrypted_and_used_for_the_comparison(self):
+        sealed = scoops.seal('My secret draft')
+        self.assertNotIn('secret', sealed)
+        self.assertEqual(scoops.unseal(sealed), 'My secret draft')
+        self.assertEqual(scoops.unseal('keep'), '')
+        self.project.draft_text = sealed
+        self.project.save()
+        match = ScoopMatch.objects.create(project=self.project, arxiv_id='2610.00001v1', title='Rival', overlap='high',
+                                          announced=datetime.date(2026, 10, 5), similarity=0.8)
+        with mock.patch('summarizer.scoops.paper_full_text', return_value='x' * 5000), \
+             mock.patch('summarizer.generated.chat_json', return_value={'aspects': [], 'verdict': 'V', 'advice': 'A'}) as chat:
+            scoops.deepen(match)
+        self.assertIn('My secret draft', chat.call_args[1]['system'])
+
+    def test_calibration_reports_the_readers_verdicts(self):
+        from io import StringIO
+        from django.core.management import call_command
+        ScoopMatch.objects.create(project=self.project, arxiv_id='a', title='A', overlap='high', status='irrelevant',
+                                  announced=datetime.date(2026, 10, 5), similarity=0.47, signals='entity')
+        out = StringIO()
+        call_command('scoop_calibrate', '--feedback', stdout=out)
+        self.assertIn('0.45-0.50: relevant 0, not relevant 1', out.getvalue())
+        self.assertIn('entity: relevant 0, not relevant 1', out.getvalue())
 
 
 class RefcheckTests(ToolsTestCase):

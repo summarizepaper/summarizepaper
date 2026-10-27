@@ -32,6 +32,7 @@ SECRET_KEY = os.getenv('SECRET_KEY') or ('' if 'ON_HEROKU' in os.environ else 'd
 OPENAI_KEY = os.getenv('OPENAI_KEY')
 # optional: a Semantic Scholar API key raises the rate limit of the citation alerts
 S2_API_KEY = os.getenv('S2_API_KEY', '')
+SCOOP_DRAFT_KEY = os.getenv('SCOOP_DRAFT_KEY', '')  # encrypts the drafts kept by the scoop watch; SECRET_KEY when empty
 # NASA ADS token: the citation alerts take their citing papers from ADS when it knows the paper
 ADS_TOKEN = os.getenv('ADS_TOKEN', '')
 # optional: an OpenAlex API key (free) for journal searches and the full texts OpenAlex keeps (see sources.py)

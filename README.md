@@ -274,6 +274,8 @@ by how many research profiles they come close to, rising topics and cross-listin
 - Hourly job (Heroku Scheduler): `python manage.py send_digest`. It sends the digests that are due, then counts the
   day's terms for the rising topics, writes the weekly topics and letters, and sends scoop alerts, citation alerts, new version alerts and letters
   within what is left of the hourly email budget.
+- Scoop watch thresholds: `python manage.py scoop_calibrate` scores sample projects (or `--text file`) against the last
+  announcements and has the model read each closeness band; `--feedback` shows the readers' verdicts. It writes nothing.
 - Stripe: webhook endpoint `https://www.summarizepaper.com/stripe/webhook/` with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` and `customer.subscription.deleted`.
 
 ## Contributors :octocat:

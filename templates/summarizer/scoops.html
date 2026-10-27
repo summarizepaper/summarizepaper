@@ -50,7 +50,7 @@
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'Describe your project in a few paragraphs (question, method, data, expected results), or upload the PDF of your draft: an AI writes the description from it.' %}</li>
-      <li>{% blocktrans with n=3 %}At once, the papers of the last {{ n }} years are searched on arXiv and in the journals: you see what is already published close to your project.{% endblocktrans %}</li>
+      <li>{% blocktrans with n=3 %}At once, the papers of the last {{ n }} years are searched on arXiv, in the journals and on OpenReview, with those that already cite your key references: you see what is already published close to your project.{% endblocktrans %}</li>
       <li>{% trans 'Every day, the new papers are compared with each facet of your project apart (question, method, data, results), and with the names that identify it. An AI reads the closest abstracts.' %}</li>
       <li>{% trans 'When one overlaps your project, you get an email: a strong overlap (same question, same or very close approach) or a partial one, with how close it is on each facet.' %}</li>
       <li>{% trans 'For each paper, the AI says what it shares with your project, what stays yours and what to do: cite it, set your project apart, contact the authors or publish soon. A strong overlap is compared with the full text of the paper when its license allows it.' %}</li>
@@ -58,7 +58,7 @@
     <ul class="tool-features">
       <li>{% trans 'Follow competing teams, and give your key references: their new papers, and the papers that cite your references, are always read.' %}</li>
       <li>{% trans 'Mark a paper as not relevant and similar ones are pushed down; add the close ones to a collection.' %}</li>
-      <li>{% trans 'Your own papers are never reported: give your name as it appears on your papers.' %}</li>
+      <li>{% trans 'Your own papers are never reported: give your name and those of your usual coauthors.' %}</li>
       <li>{% blocktrans with n=max_projects %}Up to {{ n }} projects watched.{% endblocktrans %}</li>
       <li>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once and is not stored, unless you ask us to keep its text for the full-text comparisons.' %}</li>
     </ul>
@@ -86,8 +86,8 @@
       {% trans 'or the PDF of your draft' as upload_label %}
       {% include 'summarizer/file_upload.html' with upload_name='draft' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
       <p><label><input type="checkbox" name="keep_draft" value="1"{% if form.keep_draft %} checked{% endif %}> {% trans 'Keep the text of my draft to compare it with the full text of close papers (otherwise the PDF is read once and not stored)' %}</label></p>
-      <p><label>{% trans 'Your name as it appears on your papers (optional: your own papers are then never reported)' %}<br>
-        <input type="text" name="author_name" maxlength="200" value="{{ form.author_name|default:author_name }}"></label></p>
+      <p><label>{% trans 'Your name as it appears on your papers, and those of your usual coauthors, one per line (optional: their papers are then never reported)' %}<br>
+        <textarea name="author_name" rows="2" maxlength="1000" style="min-height:60px">{{ form.author_name|default:author_name }}</textarea></label></p>
       <details><summary>{% trans 'More options: competing teams, key references, emails' %}</summary>
         {% include 'summarizer/scoop_options.html' with values=form %}
       </details>
@@ -127,7 +127,7 @@
         <form method="post">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}">
           <p><label>{% trans 'Title' %}<br><input type="text" name="title" maxlength="300" value="{{ project.title }}" required></label></p>
           <p><label>{% trans 'Description' %}<br><textarea name="description" style="min-height:140px" minlength="{{ min_chars }}" required>{{ project.description }}</textarea></label></p>
-          <p><label>{% trans 'Your name as it appears on your papers' %}<br><input type="text" name="author_name" maxlength="200" value="{{ project.author_name }}"></label></p>
+          <p><label>{% trans 'Your name and those of your usual coauthors, one per line' %}<br><textarea name="author_name" rows="2" maxlength="1000" style="min-height:60px">{{ project.author_name }}</textarea></label></p>
           {% include 'summarizer/scoop_options.html' with values=project %}
           {% if project.draft_text %}<p><label><input type="checkbox" name="forget_draft" value="1"> {% trans 'Delete the stored text of my draft' %}</label></p>{% endif %}
           <p><button class="btn" name="action" value="edit">{% trans 'Save' %}</button></p>
@@ -146,6 +146,8 @@
         <ul class="visually-hidden">{% for b in project.bars %}<li>{{ b.month|date:"F Y" }}: {{ b.count }}</li>{% endfor %}</ul>
         <p class="muted"><small>{% trans 'Counted among the new papers of each announcement since the project is watched. A rise means the topic is heating up.' %}</small></p>
       </figure>
+      {% elif project.last_day %}
+      <p class="muted"><small>{% trans 'A chart of the papers close to your project, month by month, will appear here as the announcements come in.' %}</small></p>
       {% endif %}
 
       {% if project.new or project.prior %}
@@ -166,10 +168,11 @@
       {% if project.description %}
       <h3>{% blocktrans with n=prior_years %}Already published (last {{ n }} years){% endblocktrans %}</h3>
       {% if project.prior_status == 'pending' %}
-        <p class="meta muted"><span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Searching arXiv and the journals for papers that already overlap your project…' %}</p>
+        <p class="meta muted"><span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Searching arXiv, the journals and OpenReview for papers that already overlap your project…' %}</p>
       {% elif project.prior_status == 'failed' %}
         <p class="error">{% trans 'The search for prior art failed.' %}</p>
       {% elif project.prior_status == 'done' %}
+        {% if project.prior_limited %}<p class="meta muted"><small>{% trans 'The journals could not be searched this time (daily limit of our search provider): only arXiv and OpenReview were. Search again tomorrow for a complete result.' %}</small></p>{% endif %}
         {% if project.prior %}
         <p class="muted"><small>{% blocktrans count n=project.prior_found %}{{ n }} close paper found; the closest were read by an AI.{% plural %}{{ n }} close papers found; the closest were read by an AI.{% endblocktrans %}</small></p>
         <ul class="item-list">{% for m in project.prior %}{% include 'summarizer/scoop_match.html' %}{% endfor %}</ul>
@@ -222,6 +225,10 @@
       var confirmed = e.target.closest('[data-confirm]');
       if (confirmed && !window.confirm(confirmed.dataset.confirm)) e.preventDefault();
     });
+    document.addEventListener('input', function (e) {
+      var section = e.target.closest('section[data-pending]');
+      if (section) section.setAttribute('data-typed', '');
+    });
     // Swap in each project still being prepared once it is ready, without reloading (a form being typed stays)
     (function poll() {
       if (!document.querySelector('[data-pending]')) return;
@@ -230,6 +237,8 @@
           var fresh = new DOMParser().parseFromString(html, 'text/html');
           document.querySelectorAll('[data-pending]').forEach(function (old) {
             var now = fresh.getElementById(old.id);
+            // a form being typed in stays as it is: the page is up to date at the next visit
+            if (old.hasAttribute('data-typed') || old.contains(document.activeElement)) return;
             if (now && !now.hasAttribute('data-pending')) old.replaceWith(now);
           });
         }).catch(function () {}).then(poll);
