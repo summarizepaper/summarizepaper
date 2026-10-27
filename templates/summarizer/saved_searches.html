@@ -6,21 +6,14 @@
 {% if search_saved_event %}<span hidden data-funnel-view="saved_search_created"></span>{% endif %}
 {% if watch_enabled_event %}<span hidden data-funnel-view="search_watch_enabled"></span>{% endif %}
 {% for message in messages %}<p class="notice" role="status">{{ message }}</p>{% endfor %}
-<p>{% trans 'Reopen a search with its filters, or receive new matches by email.' %}</p>
+<p>{% trans 'Reopen a search with its filters, and follow its new papers by email, in your digest, on its page or by RSS.' %}</p>
 <p class="search-filter-note">{% blocktrans count count=watch_limit %}Up to 50 saved searches and {{ count }} active watch with your plan.{% plural %}Up to 50 saved searches and {{ count }} active watches with your plan.{% endblocktrans %} <a href="{% url 'premium' %}">Premium</a></p>
-<p class="search-filter-note">{% trans 'Watches check up to 50 of the most recent matches daily or weekly. Existing matches are recorded during initialization; they are not emailed. Each email contains up to 10 unseen matches.' %}</p>
+<p class="search-filter-note">{% trans 'A watch reads every paper announced each day on arXiv, bioRxiv and medRxiv, and keeps those whose title or abstract has all the words of the search; journal papers are read from OpenAlex. What exists when a watch starts is recorded, never sent.' %}</p>
 {% for search in searches %}<article class="card saved-search">
-<h2><a href="{{ search.get_absolute_url }}">{{ search.name }}</a></h2>
-<details><summary>{% trans 'Rename' %}</summary><form method="post">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}"><label>{% trans 'Search name' %}<input type="text" name="name" value="{{ search.name }}" maxlength="120" required></label><button class="btn" name="action" value="rename">{% trans 'Save' %}</button></form></details>
-{% if search.watch_enabled %}<p>{% if search.watch_available %}{% if search.last_checked %}{% trans 'Watch active' %}{% else %}{% trans 'Watch enabled · initialization pending' %}{% endif %}{% else %}{% trans 'Watch paused by your current plan limit.' %}{% endif %} · {% if search.frequency == 'daily' %}{% trans 'Daily' %}{% else %}{% trans 'Weekly' %}{% endif %}</p>
-{% if search.watch_available and not search.last_checked %}<p class="search-filter-note">{% trans 'The hourly background check will initialize this watch when all required sources respond. Temporary outages are retried automatically. Existing matches at initialization are not emailed.' %}</p>{% endif %}
-<form method="post">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}"><button class="btn btn-ghost" name="action" value="pause">{% trans 'Pause this watch' %}</button></form>
-{% else %}<form method="post" class="watch-controls" data-watch-activation>{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}">
-<label>{% trans 'Frequency' %}<select name="frequency"><option value="weekly"{% if search.frequency == 'weekly' %} selected{% endif %}>{% trans 'Weekly' %}</option><option value="daily"{% if search.frequency == 'daily' %} selected{% endif %}>{% trans 'Daily' %}</option></select></label>
-<label>{% trans 'Email language' %}<select name="lang"><option value="en"{% if search.lang == 'en' %} selected{% endif %}>English</option><option value="fr"{% if search.lang == 'fr' %} selected{% endif %}>Français</option></select></label>
-<input type="hidden" name="action" value="enable"><button class="btn" type="submit" data-loading="{% trans 'Enabling…' %}"><span class="watch-spinner" aria-hidden="true" hidden></span><span data-watch-label>{% trans 'Enable email watch' %}</span></button><p class="search-filter-note" role="status" data-watch-status hidden>{% trans 'Enabling your watch…' %}</p></form>{% endif %}
-<div class="saved-search-actions"><a href="{{ search.get_absolute_url }}">{% trans 'Open the search' %} →</a><form method="post">{% csrf_token %}<input type="hidden" name="search" value="{{ search.pk }}"><button class="btn btn-ghost" name="action" value="delete">{% trans 'Remove saved search' %}</button></form></div>
+<h2><a href="{% url 'saved_search' search.pk %}">{{ search.name }}</a>{% if search.new_count %} <span class="saved-search-new">{% blocktrans count n=search.new_count %}{{ n }} new{% plural %}{{ n }} new{% endblocktrans %}</span>{% endif %}</h2>
+{% if search.labels %}<ul class="saved-search-chips">{% for label in search.labels %}<li>{{ label }}</li>{% endfor %}</ul>{% endif %}
+<p class="saved-search-status">{% include 'summarizer/saved_search_status.html' %}</p>
+{% if search.found_total %}<p class="search-filter-note">{% blocktrans count n=search.found_total %}{{ n }} new paper found since the watch started.{% plural %}{{ n }} new papers found since the watch started.{% endblocktrans %}</p>{% endif %}
+<div class="saved-search-actions"><a href="{% url 'saved_search' search.pk %}">{% if search.watch_enabled %}{% trans 'Papers found and watch settings' %}{% else %}{% trans 'What it would find, and its watch' %}{% endif %} →</a><a href="{{ search.get_absolute_url }}">{% trans 'Open the search' %} →</a></div>
 </article>{% empty %}<p>{% trans 'No saved searches yet. Save a search from its results page.' %}</p><a class="btn" href="{% url 'summarize' %}">{% trans 'Search' %}</a>{% endfor %}
 </main>{% endblock %}
-
-{% block scripts %}<script defer src="{% static_v 'summarizer/js/saved-searches.js' %}"></script>{% endblock %}

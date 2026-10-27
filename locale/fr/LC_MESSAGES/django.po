@@ -16181,3 +16181,376 @@ msgid "%(n)s section that the abstracts did not support was left out."
 msgid_plural "%(n)s sections that the abstracts did not support were left out."
 msgstr[0] "%(n)s section que les résumés n’étayaient pas a été retirée."
 msgstr[1] "%(n)s sections que les résumés n’étayaient pas ont été retirées."
+
+#, python-format
+msgid "Author: %(name)s"
+msgstr "Auteur : %(name)s"
+
+msgid "journals"
+msgstr "revues"
+
+#, python-format
+msgid "This search is already saved under the name “%(name)s”."
+msgstr "Cette recherche est déjà enregistrée sous le nom « %(name)s »."
+
+msgid ""
+"Search updated. Its watch, its history and its feed are kept; the papers it "
+"already finds are not sent."
+msgstr ""
+"Recherche mise à jour. Sa veille, son historique et son flux sont conservés "
+"; les articles qu’elle trouve déjà ne sont pas envoyés."
+
+msgid ""
+"Search saved. Below: what it would have found over the last two weeks, and "
+"its email watch."
+msgstr ""
+"Recherche enregistrée. Ci-dessous : ce qu’elle aurait trouvé ces deux "
+"dernières semaines, et sa veille par email."
+
+msgid "Watch settings saved."
+msgstr "Réglages de la veille enregistrés."
+
+msgid ""
+"Watch resumed. The papers announced while it was paused (two weeks at most) "
+"come with the next check."
+msgstr ""
+"Veille reprise. Les articles annoncés pendant la pause (deux semaines au "
+"plus) arrivent avec la prochaine vérification."
+
+msgid "A new feed address was made; the old one no longer works."
+msgstr ""
+"Une nouvelle adresse de flux a été créée ; l’ancienne ne fonctionne plus."
+
+msgid "Tick the papers first."
+msgstr "Cochez d’abord les articles."
+
+msgid "New papers found by a saved search watch."
+msgstr "Nouveaux articles trouvés par la veille d’une recherche enregistrée."
+
+msgid ""
+"Save a search: every new arXiv, bioRxiv, medRxiv and journal paper that "
+"matches it, ranked, by email, in your digest or by RSS, kept on its page. "
+"One watch free, five with Premium."
+msgstr ""
+"Enregistrez une recherche : chaque nouvel article d’arXiv, bioRxiv, medRxiv "
+"et des revues qui y correspond, classé, par email, dans votre digest ou par "
+"RSS, et gardé sur sa page. Une veille gratuite, cinq avec Premium."
+
+msgid ""
+"Reopen a search with its filters, and follow its new papers by email, in "
+"your digest, on its page or by RSS."
+msgstr ""
+"Rouvrez une recherche avec ses filtres, et suivez ses nouveaux articles par "
+"email, dans votre digest, sur sa page ou par RSS."
+
+msgid ""
+"A watch reads every paper announced each day on arXiv, bioRxiv and medRxiv, "
+"and keeps those whose title or abstract has all the words of the search; "
+"journal papers are read from OpenAlex. What exists when a watch starts is "
+"recorded, never sent."
+msgstr ""
+"Une veille lit chaque article annoncé chaque jour sur arXiv, bioRxiv et "
+"medRxiv, et garde ceux dont le titre ou le résumé contient tous les mots de "
+"la recherche ; les articles de revues sont lus dans OpenAlex. Ce qui existe "
+"au démarrage d’une veille est noté, jamais envoyé."
+
+msgid "Papers found and watch settings"
+msgstr "Articles trouvés et réglages de la veille"
+
+msgid "What it would find, and its watch"
+msgstr "Ce qu’elle trouverait, et sa veille"
+
+msgid "Edit the words or the filters"
+msgstr "Modifier les mots ou les filtres"
+
+msgid "Watch"
+msgstr "Veille"
+
+msgid "In my digest"
+msgstr "Dans mon digest"
+
+msgid "By email"
+msgstr "Par email"
+
+msgid "Only on this page and by RSS"
+msgstr "Seulement sur cette page et par RSS"
+
+msgid "Only these categories (optional)"
+msgstr "Seulement ces catégories (facultatif)"
+
+msgid "Save the settings"
+msgstr "Enregistrer les réglages"
+
+msgid "Enable the watch"
+msgstr "Activer la veille"
+
+msgid ""
+"Reads every paper announced each day on arXiv, bioRxiv and medRxiv: a paper "
+"is kept when its title or abstract has all the words of the search (a plural"
+" counts). Put an expression in \"quotes\", a word to leave out after a minus"
+" (-review), alternatives between OR."
+msgstr ""
+"Lit chaque article annoncé chaque jour sur arXiv, bioRxiv et medRxiv : un "
+"article est gardé quand son titre ou son résumé contient tous les mots de la"
+" recherche (le pluriel compte). Mettez une expression entre \"guillemets\", "
+"un mot à exclure après un moins (-review), des alternatives séparées par OR."
+
+msgid ""
+"Journal papers, and the searches the announcements cannot answer (journal, "
+"ORCID or publication-type filters, arXiv syntax), are read from OpenAlex or "
+"arXiv over a window of several weeks, as journals are indexed late."
+msgstr ""
+"Les articles de revues, et les recherches auxquelles les annonces ne peuvent"
+" pas répondre (filtres de revue, d’ORCID ou de type de publication, syntaxe "
+"arXiv), sont lus dans OpenAlex ou arXiv sur une fenêtre de plusieurs "
+"semaines, car les revues sont indexées en retard."
+
+msgid "Kept to the categories chosen: journals are not read."
+msgstr "Limitée aux catégories choisies : les revues ne sont pas lues."
+
+msgid ""
+"The year filters shape the search page only: the watch takes every new "
+"paper."
+msgstr ""
+"Les filtres d’années ne s’appliquent qu’à la page de recherche : la veille "
+"prend chaque nouvel article."
+
+msgid ""
+"With Premium, your digest can carry the new papers of your watches: one "
+"email in the morning."
+msgstr ""
+"Avec Premium, votre digest peut contenir les nouveaux articles de vos "
+"veilles : un seul email le matin."
+
+msgid "Digest settings"
+msgstr "Réglages du digest"
+
+msgid "RSS feed of the new papers"
+msgstr "Flux RSS des nouveaux articles"
+
+msgid ""
+"A private address: anyone who has it can read the papers this watch finds, "
+"not your account."
+msgstr ""
+"Une adresse privée : qui la connaît peut lire les articles que trouve cette "
+"veille, pas votre compte."
+
+msgid "RSS feed address"
+msgstr "Adresse du flux RSS"
+
+msgid "Make a new address"
+msgstr "Créer une nouvelle adresse"
+
+#, python-format
+msgid "about %(n)s a week"
+msgstr "environ %(n)s par semaine"
+
+msgid ""
+"That is a lot for a watch: add a word, an expression in quotes or categories"
+" to keep the closest papers."
+msgstr ""
+"C’est beaucoup pour une veille : ajoutez un mot, une expression entre "
+"guillemets ou des catégories pour garder les articles les plus proches."
+
+msgid "Nothing in two weeks: try fewer words, or alternatives between OR."
+msgstr ""
+"Rien en deux semaines : essayez moins de mots, ou des alternatives séparées "
+"par OR."
+
+msgid ""
+"If these are the papers you want, enable the watch; otherwise edit the "
+"words."
+msgstr ""
+"Si ce sont les articles que vous voulez, activez la veille ; sinon, modifiez"
+" les mots."
+
+msgid "Papers found by the watch"
+msgstr "Articles trouvés par la veille"
+
+msgid ""
+"Newest check first; within a check, the closest to your search and to the "
+"papers you marked relevant come first."
+msgstr ""
+"La vérification la plus récente d’abord ; dans chacune, les articles les "
+"plus proches de votre recherche et de ceux que vous avez jugés pertinents "
+"viennent en tête."
+
+msgid "See what the last two weeks hold"
+msgstr "Voir ce que contiennent les deux dernières semaines"
+
+msgid "Add the ticked papers"
+msgstr "Ajouter les articles cochés"
+
+msgid "Chat with them"
+msgstr "Discuter avec eux"
+
+msgid "Relevant?"
+msgstr "Pertinent ?"
+
+msgid ""
+"No new paper yet. They will appear here at each check, with those of the "
+"email."
+msgstr ""
+"Pas encore de nouvel article. Ils apparaîtront ici à chaque vérification, "
+"avec ceux de l’email."
+
+msgid "Enable the watch: its new papers will appear here at each check."
+msgstr ""
+"Activez la veille : ses nouveaux articles apparaîtront ici à chaque "
+"vérification."
+
+msgid "the groups and people who sign the recent papers"
+msgstr "les équipes et les personnes qui signent les articles récents"
+
+msgid "Is it rising?"
+msgstr "Le sujet monte-t-il ?"
+
+msgid "its share of the arXiv papers, week by week"
+msgstr "sa part des articles d’arXiv, semaine après semaine"
+
+msgid "the founding and recent papers, grouped by approach"
+msgstr "les articles fondateurs et récents, groupés par approche"
+
+msgid ""
+"describe your project instead of keywords: papers close in meaning, even "
+"with other words"
+msgstr ""
+"décrivez votre projet plutôt que des mots-clés : des articles proches par le"
+" sens, même avec d’autres mots"
+
+msgid "on this site and by RSS"
+msgstr "sur le site et par RSS"
+
+msgid "in your digest"
+msgstr "dans votre digest"
+
+msgid "by email"
+msgstr "par email"
+
+#, python-format
+msgid "checked %(ago)s ago"
+msgstr "vérifiée il y a %(ago)s"
+
+msgid ""
+"The last check could not read all the matching papers: the search is too "
+"broad. Add a word or restrict it to categories."
+msgstr ""
+"La dernière vérification n’a pas pu lire tous les articles correspondants : "
+"la recherche est trop large. Ajoutez un mot ou limitez-la à des catégories."
+
+msgid "No watch"
+msgstr "Pas de veille"
+
+#, python-format
+msgid "found on %(day)s"
+msgstr "trouvé le %(day)s"
+
+msgid "matched:"
+msgstr "mots trouvés :"
+
+#, python-format
+msgid "New papers for your saved search: %(name)s"
+msgstr "Nouveaux articles pour votre recherche enregistrée : %(name)s"
+
+msgid ""
+"The closest to your search first. Read the source paper before relying on "
+"its findings."
+msgstr ""
+"Les plus proches de votre recherche d’abord. Lisez l’article source avant de"
+" vous fier à ses résultats."
+
+msgid "Read the source paper before relying on its findings."
+msgstr "Lisez l’article source avant de vous fier à ses résultats."
+
+msgid ""
+"This search is too broad for the watch to read all its matches: add a word "
+"or restrict it to categories."
+msgstr ""
+"Cette recherche est trop large pour que la veille lise tous ses résultats : "
+"ajoutez un mot ou limitez-la à des catégories."
+
+msgid "All the papers found, with your marks of relevance"
+msgstr "Tous les articles trouvés, avec vos avis de pertinence"
+
+#, python-format
+msgid ""
+"You are editing the saved search “%(name)s”: change the words or the "
+"filters, check the results, then update it."
+msgstr ""
+"Vous modifiez la recherche enregistrée « %(name)s » : changez les mots ou "
+"les filtres, vérifiez les résultats, puis mettez-la à jour."
+
+msgid "Unchanged · back to the saved search"
+msgstr "Inchangée · retour à la recherche enregistrée"
+
+#, python-format
+msgid "Update “%(name)s”"
+msgstr "Mettre à jour « %(name)s »"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Found by your saved search"
+msgstr "Trouvé par votre recherche enregistrée"
+
+#, python-format
+msgid ""
+"<a href=\"/%(LANGUAGE_CODE)s/saved-searches/\">Saved searches</a>: every new"
+" paper that matches a search, by email, in the digest or by RSS (one watch "
+"with a free account, five with Premium)."
+msgstr ""
+"<a href=\"/%(LANGUAGE_CODE)s/saved-searches/\">Recherches enregistrées</a> :"
+" chaque nouvel article qui correspond à une recherche, par email, dans le "
+"digest ou par RSS (une veille avec un compte gratuit, cinq avec Premium)."
+
+msgid "New papers for your saved searches"
+msgstr "Nouveaux articles de vos recherches enregistrées"
+
+#, python-format
+msgid "%(n)s new"
+msgid_plural "%(n)s new"
+msgstr[0] "%(n)s nouveau"
+msgstr[1] "%(n)s nouveaux"
+
+#, python-format
+msgid "%(n)s new paper found since the watch started."
+msgid_plural "%(n)s new papers found since the watch started."
+msgstr[0] "%(n)s nouvel article trouvé depuis le début de la veille."
+msgstr[1] "%(n)s nouveaux articles trouvés depuis le début de la veille."
+
+#, python-format
+msgid "%(n)s active watch with your plan."
+msgid_plural "%(n)s active watches with your plan."
+msgstr[0] "%(n)s veille active avec votre formule."
+msgstr[1] "%(n)s veilles actives avec votre formule."
+
+#, python-format
+msgid "What it would have found over the last day"
+msgid_plural "What it would have found over the last %(n)s days"
+msgstr[0] "Ce qu’elle aurait trouvé le dernier jour"
+msgstr[1] "Ce qu’elle aurait trouvé ces %(n)s derniers jours"
+
+#, python-format
+msgid "%(n)s new paper"
+msgid_plural "%(n)s new papers"
+msgstr[0] "%(n)s nouvel article"
+msgstr[1] "%(n)s nouveaux articles"
+
+#, python-format
+msgid "%(n)s more new paper on the page of the search:"
+msgid_plural "%(n)s more new papers on the page of the search:"
+msgstr[0] "%(n)s autre nouvel article sur la page de la recherche :"
+msgstr[1] "%(n)s autres nouveaux articles sur la page de la recherche :"
+
+#, python-format
+msgid "%(n)s more new paper on the page of the search"
+msgid_plural "%(n)s more new papers on the page of the search"
+msgstr[0] "%(n)s autre nouvel article sur la page de la recherche"
+msgstr[1] "%(n)s autres nouveaux articles sur la page de la recherche"
+
+#, python-format
+msgid "%(n)s new paper for your saved search: %(name)s"
+msgid_plural "%(n)s new papers for your saved search: %(name)s"
+msgstr[0] "%(n)s nouvel article pour votre recherche enregistrée : %(name)s"
+msgstr[1] ""
+"%(n)s nouveaux articles pour votre recherche enregistrée : %(name)s"

@@ -909,9 +909,9 @@ class SearchRows(list):
         self.has_more = has_more
 
 
-def search_papers(query, kind='', per_page=25, abstracts=False, field='all', filters=None, page=1):
+def search_papers(query, kind='', per_page=25, abstracts=False, field='all', filters=None, page=1, keep=True):
     """Open-access papers matching a query, as _paper dicts: from OpenAlex, or Crossref past the daily limit
-    or when OpenAlex refuses. Cached SEARCH_SECONDS."""
+    or when OpenAlex refuses. Cached SEARCH_SECONDS, unless keep is False (the pages a search watch reads once)."""
     from django.core.cache import cache
     field = field if field in ('author', 'title', 'abstract') else 'all'
     options = filters or {}
@@ -936,6 +936,8 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
         filters.append('from_publication_date:%s-01-01' % options['year_from'])
     if options.get('year_to'):
         filters.append('to_publication_date:%s-12-31' % options['year_to'])
+    if options.get('since'):
+        filters.append('from_publication_date:%s' % options['since'])
     if options.get('orcid'):
         filters.append('authorships.author.orcid:https://orcid.org/' + options['orcid'])
     if options.get('journals'):
@@ -955,7 +957,7 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
         except SourceUnavailable:
             logger.warning('OpenAlex search failed, trying Crossref', exc_info=True)
     if papers is None:
-        if field == 'abstract' or kind or any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid')):
+        if field == 'abstract' or kind or any(options.get(k) for k in ('journals', 'exclude_journals', 'orcid', 'since')):
             # Never silently broaden a filter the fallback cannot express reliably.
             raise SourceUnavailable('The filtered research index is unavailable')
         papers = (crossref_search(query, per_page) if field == 'all' and not options and page == 1 else
@@ -965,7 +967,8 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
     for paper in papers:
         if paper['key'].startswith('doi_h'):
             remember(paper)  # a hashed key can only be read back from ExternalPaper (see key_doi)
-    cache.set(cache_key, papers, SEARCH_SECONDS)
+    if keep:
+        cache.set(cache_key, papers, SEARCH_SECONDS)
     return papers
 
 
@@ -1007,7 +1010,7 @@ def crossref_search(query, per_page, field='all', filters=None, page=1):
     return SearchRows(papers, has_more=more)
 
 
-def search(query, kind='', per_page=25, field='all', filters=None, page=1):
+def search(query, kind='', per_page=25, field='all', filters=None, page=1, keep=True):
     """Search results as the search page shows them.
 
     [{'key', 'title', 'authors', 'venue', 'published', 'license', 'open', 'arxiv_id'}], open = we can read the full text.
@@ -1019,6 +1022,8 @@ def search(query, kind='', per_page=25, field='all', filters=None, page=1):
         kwargs['filters'] = filters
     if page != 1:
         kwargs['page'] = page
+    if not keep:
+        kwargs['keep'] = False
     papers = search_papers(query, kind, per_page, **kwargs)
     return SearchRows([{
         'key': paper['key'], 'title': paper['title'], 'authors': paper['authors'][:6],

@@ -67,14 +67,20 @@
     <button type="submit" class="btn" data-loading="{% trans 'Searching…' %}">{% trans 'Search' %}</button>
     </div>
     {% include "summarizer/search_filters.html" %}
+    {% if editing_search %}<input type="hidden" name="edit" value="{{ editing_search.pk }}">{% endif %}
     <p class="search-status" role="status" data-search-status hidden>{% trans 'Searching scientific sources. This may take a few seconds.' %}</p>
   </form>
 
   {% if search_notice %}<p role="status" class="notice">{{ search_notice }}</p>{% endif %}
   {% if filter_chips %}<nav class="active-search-filters" aria-label="{% trans 'Active filters' %}">{% for chip in filter_chips %}<a href="{{ chip.url }}" aria-label="{% trans 'Remove' %} {{ chip.label }}">{{ chip.label }} <span aria-hidden="true">×</span></a>{% endfor %}</nav>{% endif %}
   {% if save_token %}<div class="save-search-actions">
-    {% if request.user.is_authenticated %}
-      {% if saved_search %}<a href="{% url 'saved_searches' %}">{% trans 'Search saved · manage its watch' %}</a>
+    {% if editing_search %}
+      <p class="search-filter-note">{% blocktrans with name=editing_search.name %}You are editing the saved search “{{ name }}”: change the words or the filters, check the results, then update it.{% endblocktrans %}</p>
+      {% if saved_search and saved_search.pk == editing_search.pk %}<a href="{% url 'saved_search' editing_search.pk %}">{% trans 'Unchanged · back to the saved search' %}</a>
+      {% else %}<form method="post" action="{% url 'save_search' %}">{% csrf_token %}<input type="hidden" name="state" value="{{ save_token }}"><input type="hidden" name="replace" value="{{ editing_search.pk }}"><button class="btn" type="submit">{% blocktrans with name=editing_search.name %}Update “{{ name }}”{% endblocktrans %}</button></form>
+      <a href="{% url 'saved_search' editing_search.pk %}">{% trans 'Cancel' %}</a>{% endif %}
+    {% elif request.user.is_authenticated %}
+      {% if saved_search %}<a href="{% url 'saved_search' saved_search.pk %}">{% trans 'Search saved · manage its watch' %}</a>
       {% else %}<form method="post" action="{% url 'save_search' %}">{% csrf_token %}<input type="hidden" name="state" value="{{ save_token }}"><button class="btn btn-ghost" type="submit">{% trans 'Save search / create a watch' %}</button></form>{% endif %}
     {% else %}<a href="{% url 'login' %}?next={{ search_return|urlencode }}">{% trans 'Log in to save this search or create a watch' %}</a>{% endif %}
     <a href="{% url 'saved_searches' %}">{% trans 'Saved searches' %}</a>

@@ -1,4 +1,13 @@
-{% load i18n %}<h1>{% blocktrans with name=saved.name %}New matches for your saved search: {{ name }}{% endblocktrans %}</h1>
-<p>{% trans 'New matches among the latest indexed results. Read the source paper before relying on its findings.' %}</p>
-{% for paper in papers %}<article><h2><a href="{{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/">{{ paper.title }}</a></h2><p>{{ paper.authors|join:", " }} · {{ paper.venue }} · {{ paper.published }}</p><p>{{ paper.abstract|striptags|truncatewords:55 }}</p></article>{% endfor %}
-<p><a href="{{ search_url }}">{% trans 'Open the search' %}</a> · <a href="{{ manage_url }}">{% trans 'Manage saved searches' %}</a> · <a href="{{ unsubscribe_url }}">{% trans 'Pause this watch' %}</a></p>
+{% load i18n %}<div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;color:#222;">
+<h1 style="font-size:20px;">{% blocktrans with name=saved.name %}New papers for your saved search: {{ name }}{% endblocktrans %}</h1>
+<p style="color:#555;font-size:14px;">{% if total > 1 %}{% trans 'The closest to your search first. Read the source paper before relying on its findings.' %}{% else %}{% trans 'Read the source paper before relying on its findings.' %}{% endif %}</p>
+{% for paper in papers %}<div style="margin:0 0 18px;">
+<p style="margin:0 0 4px;font-size:16px;font-weight:bold;"><a href="{{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/" style="color:#1a0dab;">{{ paper.title }}</a></p>
+<p style="margin:0 0 4px;font-size:13px;color:#666;">{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %} · {{ paper.venue }} · {{ paper.published }}</p>
+<p style="margin:0 0 4px;font-size:14px;line-height:1.45;">{% if paper.blurb %}{{ paper.blurb }}{% else %}{{ paper.abstract|striptags|truncatewords:55 }}{% endif %}</p>
+{% if paper.terms %}<p style="margin:0;font-size:12px;color:#888;">{% trans 'matched:' %} {{ paper.terms|join:", " }}</p>{% endif %}
+</div>{% endfor %}
+{% if more %}<p><a href="{{ page_url }}" style="color:#4f46e5;font-weight:bold;">{% blocktrans count n=more %}{{ n }} more new paper on the page of the search{% plural %}{{ n }} more new papers on the page of the search{% endblocktrans %} &rarr;</a></p>{% endif %}
+{% if truncated %}<p style="font-size:13px;color:#b45309;">{% trans 'This search is too broad for the watch to read all its matches: add a word or restrict it to categories.' %}</p>{% endif %}
+<p style="font-size:13px;"><a href="{{ page_url }}">{% trans 'All the papers found, with your marks of relevance' %}</a> · <a href="{{ search_url }}">{% trans 'Open the search' %}</a> · <a href="{{ manage_url }}">{% trans 'Manage saved searches' %}</a> · <a href="{{ unsubscribe_url }}">{% trans 'Pause this watch' %}</a></p>
+</div>

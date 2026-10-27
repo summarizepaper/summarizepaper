@@ -1278,6 +1278,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'citation_meta':citation_meta(paper),
                 'insight':paper_insight,
                 'topic':keywords[0] if keywords else '',
+                'saved_matches':saved_searches.matching(request.user, arxiv_id),
             })
         else:
             print('nope')

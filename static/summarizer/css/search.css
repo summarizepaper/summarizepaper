@@ -57,3 +57,24 @@
 .active-search-filters a:focus-visible, .search-result-abstract summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 .search-result-excerpt { position: relative; z-index: 1; font-size: 14px; line-height: 1.7; color: var(--text-muted); margin: 12px 0; }
+.saved-search-new { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 600; vertical-align: middle; }
+.saved-search-chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 12px; }
+.saved-search-chips li { border: 1px solid var(--border); border-radius: 14px; padding: 3px 10px; font-size: 12px; overflow-wrap: anywhere; }
+.saved-search-status { font-size: 14px; }
+.saved-search-notes { padding-left: 18px; }
+.saved-search-feed input { width: 100%; max-width: 100%; font-size: 12px; }
+.saved-search-papers { list-style: none; padding: 0; margin: 12px 0 0; }
+.saved-search-papers > li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--border); }
+.saved-search-papers > li > input[type="checkbox"] { margin-top: 4px; }
+.saved-search-paper { flex: 1 1 0; min-width: 0; }
+.saved-search-paper p { margin: 4px 0; overflow-wrap: anywhere; }
+.saved-search-paper-title { font-weight: 600; overflow-wrap: anywhere; }
+.saved-search-papers > li.dismissed .saved-search-paper { opacity: .55; }
+.saved-search-vote { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 0 26px; font-size: 12px; color: var(--text-muted); }
+.saved-search-vote .btn { padding: 3px 10px; font-size: 12px; }
+.saved-search-vote .btn.active { background: var(--accent-soft); color: var(--accent); }
+.saved-search-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; font-size: 13px; }
+.saved-search-toolbar label { display: flex; flex-direction: column; gap: 4px; }
+.page .saved-search-toolbar select { margin: 0; }
+.saved-search-further { padding-left: 18px; line-height: 1.8; }
+.watch-controls input[type="text"] { min-width: 240px; }

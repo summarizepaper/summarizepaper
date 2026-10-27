@@ -1,12 +1,18 @@
-{% load i18n %}{% autoescape off %}{% blocktrans with name=saved.name %}New matches for your saved search: {{ name }}{% endblocktrans %}
+{% load i18n %}{% autoescape off %}{% blocktrans with name=saved.name %}New papers for your saved search: {{ name }}{% endblocktrans %}
 
-{% trans 'New matches among the latest indexed results. Read the source paper before relying on its findings.' %}
+{% if total > 1 %}{% trans 'The closest to your search first. Read the source paper before relying on its findings.' %}{% else %}{% trans 'Read the source paper before relying on its findings.' %}{% endif %}
 {% for paper in papers %}
 {{ paper.title }}
-{{ paper.authors|join:", " }} · {{ paper.venue }} · {{ paper.published }}
-{{ paper.abstract|striptags|truncatewords:55 }}
-{{ base_url }}/{{ saved.lang }}/arxiv-id/{{ paper.key }}/
-{% endfor %}
+{{ paper.authors|join:", " }}{% if paper.more_authors %} et al.{% endif %} · {{ paper.venue }} · {{ paper.published }}
+{% if paper.blurb %}{{ paper.blurb }}{% else %}{{ paper.abstract|striptags|truncatewords:55 }}{% endif %}{% if paper.terms %}
+{% trans 'matched:' %} {{ paper.terms|join:", " }}{% endif %}
+{{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/
+{% endfor %}{% if more %}
+{% blocktrans count n=more %}{{ n }} more new paper on the page of the search:{% plural %}{{ n }} more new papers on the page of the search:{% endblocktrans %} {{ page_url }}
+{% endif %}{% if truncated %}
+{% trans 'This search is too broad for the watch to read all its matches: add a word or restrict it to categories.' %}
+{% endif %}
+{% trans 'All the papers found, with your marks of relevance' %}: {{ page_url }}
 {% trans 'Open the search' %}: {{ search_url }}
 {% trans 'Manage saved searches' %}: {{ manage_url }}
 {% trans 'Pause this watch' %}: {{ unsubscribe_url }}

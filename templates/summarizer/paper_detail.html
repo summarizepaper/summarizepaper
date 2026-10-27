@@ -34,6 +34,7 @@
       {% if sumlang %}<span class="info-text"><i class="fas fa-language"></i> {% trans 'Also in:' %} {% for l in sumlang %}<a href="/{{ l }}/paper/{{ arxiv_id }}/">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
     </div>
     {% include 'summarizer/source_scope.html' %}
+    {% if saved_matches %}<p class="saved-match-note"><i class="fas fa-bookmark" aria-hidden="true"></i> {% trans 'Found by your saved search' %} {% for s in saved_matches %}<a href="{% url 'saved_search' s.pk %}">{{ s.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
   </header>
 
   <nav class="paper-actions" aria-label="{% trans 'Actions on this paper' %}">

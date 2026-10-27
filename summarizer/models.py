@@ -1147,7 +1147,7 @@ class AnnouncementSent(models.Model):
 
 
 class SavedSearch(models.Model):
-    """A user's validated search and optional opt-in watch of its latest matches."""
+    """A user's validated search and optional opt-in watch of its new matches (see saved_searches.py)."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_searches')
     name = models.CharField(max_length=120)
     params = models.JSONField(default=dict)
@@ -1155,11 +1155,19 @@ class SavedSearch(models.Model):
     lang = models.CharField(max_length=10, default='en')
     watch_enabled = models.BooleanField(default=False)
     frequency = models.CharField(max_length=10, choices=[('daily', 'Daily'), ('weekly', 'Weekly')], default='weekly')
+    email = models.BooleanField(default=True)  # False: the new papers only go to the page and the RSS feed
+    categories = models.CharField(max_length=300, blank=True, default='')  # arXiv/bioRxiv/medRxiv codes the watch keeps to
     seen = models.JSONField(default=list)
+    matches = models.JSONField(default=list)  # the new papers found, newest check first (saved_searches.MAX_HISTORY)
+    pending = models.JSONField(default=list)  # new papers waiting for the user's digest (digest_bundle)
+    found_total = models.PositiveIntegerField(default=0)
+    truncated = models.BooleanField(default=False)  # the last check could not read its whole window
+    feed_key = models.CharField(max_length=32, blank=True, default='', db_index=True)
     watch_claim_until = models.DateTimeField(null=True, blank=True)
     last_attempt = models.DateTimeField(null=True, blank=True)
     last_checked = models.DateTimeField(null=True, blank=True)
     last_sent = models.DateTimeField(null=True, blank=True)
+    last_viewed = models.DateTimeField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -1170,6 +1178,18 @@ class SavedSearch(models.Model):
         from urllib.parse import urlencode
         from django.urls import reverse
         return reverse('search_results') + '?' + urlencode(self.params, doseq=True)
+
+
+class SavedSearchFeedback(models.Model):
+    """Relevant (+1) or not (-1), said of a paper a watch found: the next new papers are ranked with it."""
+    saved = models.ForeignKey(SavedSearch, on_delete=models.CASCADE, related_name='feedback')
+    key = models.CharField(max_length=200)
+    value = models.SmallIntegerField()
+    vector = models.BinaryField(blank=True, null=True)  # the paper's embedding, kept after DigestVector is cleaned up
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=('saved', 'key'), name='unique_saved_search_feedback')]
 
 
 class StudentLeadsShare(models.Model):

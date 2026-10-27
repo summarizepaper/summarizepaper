@@ -15,6 +15,7 @@ A web application that uses AI to summarize academic papers from arXiv, journals
 - Collections of papers, with a comparison table and their open questions (Premium) and chat with a whole collection
 - Premium tools: press kit with a hype check for journalists, "What did I miss?" (arXiv papers close to a draft that it does not cite), scoop watch (an email the day a new paper comes close to a project in progress), bibliography check (retractions, preprints published since, citations their abstract does not support), what changed between two versions of a paper (and an email when a followed paper gets one), who works on a topic (the groups that publish the most on it, OpenAlex), journal club slides, a conference companion (the talks of a program that matter for one's research), citation alerts, the digest read aloud, papers sent to Zotero with their summaries
 - Rising topics on arXiv (term counts week over week) and weekly letters written like magazine articles
+- Saved searches with watches: every new arXiv, bioRxiv and medRxiv paper of the daily announcements that has the words of a search (journals from OpenAlex), ranked by closeness and the user's relevance marks, by email, in the digest or by RSS, kept on the page of the search with what it would have found over two weeks
 
 ## Stack
 
@@ -45,6 +46,7 @@ Django 5.2 served by Daphne (ASGI), Channels websockets over Redis, PostgreSQL o
 | `summarizer/scoops.py` | Scoop watch: projects in progress compared with each new announcement |
 | `summarizer/usage.py` | AI tokens and cost by task, model, day and user (admin: usage de l’IA) |
 | `summarizer/audio.py`, `trends.py`, `letters.py` | Digest read aloud; rising topics; weekly letters |
+| `summarizer/saved_searches.py` | Saved searches and their watches over the daily announcements |
 
 ## Local setup :floppy_disk:
 

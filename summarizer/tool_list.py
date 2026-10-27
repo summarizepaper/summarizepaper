@@ -17,7 +17,7 @@ _GROUPS = [
         ('teams/', 'users', _('Who works on it?'), True, _('The people and institutions who sign the recent papers on your topic, how they sign them and with which approaches; referees without your co-authors, and the new names every month.')),
         ('trends/', 'chart-line', _('Rising topics'), False, _('The topics rising on arXiv, bioRxiv and medRxiv each week, field by field, from several teams, with their history; and whether your own topic is rising.')),
         ('letters/', 'feather-alt', _('Weekly letters'), False, _('What happens next door: each week, an article per field on the papers that matter beyond it, each number checked against the abstracts; on the web, by RSS, one by email for free.')),
-        ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search and get an email when new papers match it: one with a free account, five with Premium.')),
+        ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search: every new arXiv, bioRxiv, medRxiv and journal paper that matches it, ranked, by email, in your digest or by RSS, kept on its page. One watch free, five with Premium.')),
     ]),
     (_('Write and submit'), [
         ('press-kit/', 'newspaper', _('Press kit'), 'plus', _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),

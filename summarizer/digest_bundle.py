@@ -1,6 +1,6 @@
 """Premium alerts in the digest: one email in the morning instead of five.
 
-A Premium user may ask their digest to carry their scoop, citation, new version and publication alerts
+A Premium user may ask their digest to carry their scoop, citation, new version, publication and saved search alerts
 (DigestSubscription.bundle_alerts). Each module then leaves that user's queued alerts for the digest,
 which takes them as sections when it is sent and marks them sent only once the email went out.
 """
@@ -24,13 +24,14 @@ def bundled_users():
 def collect(user, lang, base_url, now):
     """The sections of alerts waiting for this user's digest: [{'title', 'items', 'more', 'manage_url', 'commit'}].
     commit() marks a section's alerts sent; the digest calls it once the email went out."""
-    from . import changes, citations, publication_alerts, scoops
+    from . import changes, citations, publication_alerts, saved_searches, scoops
     sections = []
     with translation.override(lang):
         for build in (lambda: scoops.bundle_section(user, base_url, now),
                       lambda: citations.bundle_section(user, base_url, lang, now),
                       lambda: changes.bundle_section(user, base_url, lang),
-                      lambda: publication_alerts.bundle_section(user, base_url, lang)):
+                      lambda: publication_alerts.bundle_section(user, base_url, lang),
+                      lambda: saved_searches.bundle_section(user, base_url, lang, now)):
             try:
                 section = build()
             except Exception:

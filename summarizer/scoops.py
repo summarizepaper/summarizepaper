@@ -1036,4 +1036,5 @@ def scoops_page(request):
         'collections': Collection.objects.filter(user=request.user).order_by('name') if paid else [],
         'prior_years': PRIOR_YEARS, 'aspects': ASPECTS,
         'open_collection': json.dumps(str(_('Open the collection')), ensure_ascii=False),
-        'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024), 'form': request.POST if error else {}})
+        'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024), 'form': request.POST if error else {  # from a saved search
+            'title': request.GET.get('title', '')[:300], 'description': request.GET.get('description', '')[:5000]}})
