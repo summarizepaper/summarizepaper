@@ -29,6 +29,12 @@
     .scoop-bar-axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
     .scoop-suggest { margin-top: 16px; }
     .scoop-suggest .btn { margin: 2px 4px 2px 0; }
+    .scoop-teams { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0; }
+    .scoop-teams strong { margin-right: 4px; }
+    .scoop-notice { padding: 10px 14px; border-left: 3px solid var(--accent); }
+    .scoop-toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 50; max-width: min(560px, calc(100vw - 32px));
+      padding: 12px 16px; border-radius: 10px; background: #1f2937; color: #fff; font-size: 14px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .scoop-toast a { color: #c7d2fe; }
     .scoop-notify { border: 0; padding: 0; margin: 0 0 12px; }
     .scoop-notify legend { padding: 0; font-weight: 600; }
     .scoop-facets { margin: 8px 0; padding-left: 18px; }
@@ -72,7 +78,6 @@
     {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_projects %}You can watch {{ n }} projects at most.{% endblocktrans %}</p>
     {% elif error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
     {% elif error == 'empty' %}<p class="error">{% blocktrans with n=min_chars %}Give a title and a description of at least {{ n }} characters, or a PDF of your draft.{% endblocktrans %}</p>{% endif %}
-    {% if added %}<p class="card scoop-notice">{% blocktrans with name=added.name %}Added to “{{ name }}”.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ added.pk }}/">{% trans 'Open the collection' %}</a></p>{% endif %}
     {% if projects|length < max_projects %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
       {% csrf_token %}
@@ -99,6 +104,7 @@
     {% for project in projects %}
     <section class="card section-card" id="project-{{ project.pk }}"{% if project.working %} data-pending{% endif %}>
       <h2 style="margin-top:0">{{ project.title|default:_('Your draft') }}</h2>
+      {% if project.notice %}<p class="card scoop-notice" role="status">{{ project.notice.0 }}{% if project.notice.1 %} <a href="{{ project.notice.1 }}">{% trans 'Open the collection' %}</a>{% endif %}</p>{% endif %}
       <div class="meta muted">
         {% if project.failed %}{% trans 'We could not read this draft. Check that the PDF holds text (not only scanned images), or describe the project instead.' %}
         {% elif not project.description %}<span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Reading your draft…' %}
@@ -171,28 +177,40 @@
         <p class="meta muted"><span class="spinner spinner-sm" aria-hidden="true"></span>{% trans 'Searching arXiv, the journals and OpenReview for papers that already overlap your project…' %}</p>
       {% elif project.prior_status == 'failed' %}
         <p class="error">{% trans 'The search for prior art failed.' %}</p>
-      {% elif project.prior_status == 'done' %}
-        {% if project.prior_limited %}<p class="meta muted"><small>{% trans 'The journals could not be searched this time (daily limit of our search provider): only arXiv and OpenReview were. Search again tomorrow for a complete result.' %}</small></p>{% endif %}
-        {% if project.prior %}
-        <p class="muted"><small>{% blocktrans count n=project.prior_found %}{{ n }} close paper found; the closest were read by an AI.{% plural %}{{ n }} close papers found; the closest were read by an AI.{% endblocktrans %}</small></p>
+      {% elif project.prior_status == 'done' and project.prior_limited %}
+        <p class="meta muted"><small>{% trans 'The journals could not be searched this time (daily limit of our search provider): only arXiv and OpenReview were. Search again tomorrow for a complete result.' %}</small></p>
+      {% endif %}
+      {% if project.prior %}
+        {% if project.prior_status == 'done' %}<p class="muted"><small>{% blocktrans count n=project.prior_found %}{{ n }} close paper found; the closest were read by an AI.{% plural %}{{ n }} close papers found; the closest were read by an AI.{% endblocktrans %}</small></p>{% endif %}
         <ul class="item-list">{% for m in project.prior %}{% include 'summarizer/scoop_match.html' %}{% endfor %}</ul>
-        {% else %}
+      {% elif project.prior_status == 'done' %}
         <p class="muted">{% trans 'No published paper overlaps your project.' %}</p>
-        {% endif %}
       {% endif %}
       {% if project.prior_status != 'pending' %}
       <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}">
-        <button class="link-button" name="action" value="prior">{% if project.prior_status %}{% trans 'Search again' %}{% else %}{% trans 'Search for prior art' %}{% endif %}</button></form>
+        <button class="link-button" name="action" value="prior">{% if project.prior_status %}{% trans 'Search again' %}{% else %}{% trans 'Search for prior art' %}{% endif %}</button>
+        <small class="muted">{% blocktrans with n=prior_years %}Searches arXiv, the journals and OpenReview for the papers of the last {{ n }} years that overlap your project; one to three minutes.{% endblocktrans %}</small></form>
       {% endif %}
       {% endif %}
 
-      {% if project.suggested %}
+      {% if project.suggested or project.competitor_list %}
       <div class="scoop-suggest">
-        <p><strong>{% trans 'Teams that come back in your results' %}</strong> <span class="muted"><small>{% trans 'Follow them: their new papers will always be read.' %}</small></span></p>
+        <h3>{% trans 'Competing teams' %}</h3>
+        <p class="muted"><small>{% trans 'The new papers of the teams you follow are always read for this project, even when they are not very close, and reported if they overlap it.' %}</small></p>
+        {% if project.competitor_list %}
+        <div class="scoop-teams"><strong>{% trans 'Followed:' %}</strong>
+        {% for name in project.competitor_list %}
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}"><input type="hidden" name="name" value="{{ name }}">
+          <button class="btn btn-sm btn-ghost" name="action" value="uncompetitor" aria-label="{% blocktrans %}Stop following {{ name }}{% endblocktrans %}" title="{% blocktrans %}Stop following {{ name }}{% endblocktrans %}">{{ name }} ×</button></form>
+        {% endfor %}</div>
+        {% endif %}
+        {% if project.suggested %}
+        <div class="scoop-teams"><strong>{% trans 'Coming back in your results:' %}</strong>
         {% for name in project.suggested %}
         <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="pk" value="{{ project.pk }}"><input type="hidden" name="name" value="{{ name }}">
-          <button class="btn btn-sm btn-ghost" name="action" value="competitor">+ {{ name }}</button></form>
-        {% endfor %}
+          <button class="btn btn-sm btn-ghost" name="action" value="competitor" title="{% blocktrans %}Follow {{ name }}{% endblocktrans %}">+ {{ name }}</button></form>
+        {% endfor %}</div>
+        {% endif %}
       </div>
       {% endif %}
 
@@ -229,10 +247,53 @@
       var section = e.target.closest('section[data-pending]');
       if (section) section.setAttribute('data-typed', '');
     });
+    // The actions on a project run in place: the page does not move, a message says what happened, and the
+    // project is shown again as it now is
+    var toast = document.createElement('div');
+    toast.className = 'scoop-toast';
+    toast.setAttribute('role', 'status');
+    toast.hidden = true;
+    document.body.appendChild(toast);
+    function say(message, link) {
+      toast.textContent = message;
+      if (link) {
+        var a = document.createElement('a');
+        a.href = link;
+        a.textContent = {{ open_collection|safe }};
+        toast.append(' ', a);
+      }
+      toast.hidden = !message;
+      clearTimeout(say.timer);
+      say.timer = setTimeout(function () { toast.hidden = true; }, 9000);
+    }
+    function reload(id) {
+      return fetch(location.pathname, {credentials: 'same-origin'}).then(function (r) { return r.text(); }).then(function (html) {
+        var now = new DOMParser().parseFromString(html, 'text/html').getElementById(id);
+        var old = document.getElementById(id);
+        if (now && old) old.replaceWith(now);
+        poll();
+      });
+    }
+    document.addEventListener('submit', function (e) {
+      var form = e.target, section = form.closest('section[id^="project-"]');
+      var button = e.submitter;
+      if (!section || !window.fetch || (button && button.value === 'delete')) return;
+      e.preventDefault();
+      var data = new FormData(form);
+      if (button && button.name) data.append(button.name, button.value);
+      if (button) button.disabled = true;
+      fetch(form.getAttribute('action') || location.pathname, {method: 'POST', body: data, credentials: 'same-origin',
+                                                               headers: {'X-Requested-With': 'fetch'}})
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function (answer) { say(answer.message, answer.link); return reload(section.id); })
+        .catch(function () { form.submit(); });
+    });
     // Swap in each project still being prepared once it is ready, without reloading (a form being typed stays)
-    (function poll() {
-      if (!document.querySelector('[data-pending]')) return;
+    function poll() {
+      if (poll.waiting || !document.querySelector('[data-pending]')) return;
+      poll.waiting = true;
       setTimeout(function () {
+        poll.waiting = false;
         fetch(location.pathname, {credentials: 'same-origin'}).then(function (r) { return r.text(); }).then(function (html) {
           var fresh = new DOMParser().parseFromString(html, 'text/html');
           document.querySelectorAll('[data-pending]').forEach(function (old) {
@@ -243,7 +304,8 @@
           });
         }).catch(function () {}).then(poll);
       }, 5000);
-    })();
+    }
+    poll();
     </script>
   {% endif %}
 </div>

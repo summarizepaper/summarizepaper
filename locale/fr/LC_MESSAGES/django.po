@@ -9340,6 +9340,63 @@ msgstr "Un graphique des articles proches de votre projet, mois par mois, appara
 msgid "The journals could not be searched this time (daily limit of our search provider): only arXiv and OpenReview were. Search again tomorrow for a complete result."
 msgstr "Les revues n'ont pas pu être interrogées cette fois (limite quotidienne de notre fournisseur de recherche) : seuls arXiv et OpenReview l'ont été. Relancez la recherche demain pour un résultat complet."
 
+msgid "Competing teams"
+msgstr "Équipes concurrentes"
+
+msgid "The new papers of the teams you follow are always read for this project, even when they are not very close, and reported if they overlap it."
+msgstr "Les nouveaux articles des équipes que vous suivez sont toujours lus pour ce projet, même s'ils sont peu proches, et signalés s'ils le recoupent."
+
+msgid "Followed:"
+msgstr "Suivies :"
+
+msgid "Coming back in your results:"
+msgstr "Reviennent dans vos résultats :"
+
+msgid "Searches arXiv, the journals and OpenReview for the papers of the last %(n)s years that overlap your project; one to three minutes."
+msgstr "Cherche sur arXiv, dans les revues et sur OpenReview les articles des %(n)s dernières années qui recoupent votre projet ; une à trois minutes."
+
+msgid "Stop following %(name)s"
+msgstr "Ne plus suivre %(name)s"
+
+msgid "Follow %(name)s"
+msgstr "Suivre %(name)s"
+
+msgid "Give a title and a description of at least %(n)d characters."
+msgstr "Donnez un titre et une description d'au moins %(n)d caractères."
+
+msgid "Project saved."
+msgstr "Projet enregistré."
+
+msgid "Project saved. What we look for is computed again, and the search for prior art starts again: its results appear in this project in one to three minutes."
+msgstr "Projet enregistré. Ce que nous cherchons est recalculé et la recherche d'antériorité est relancée : ses résultats apparaissent dans ce projet d'ici une à trois minutes."
+
+msgid "A search for prior art is already running for this project."
+msgstr "Une recherche d'antériorité est déjà en cours pour ce projet."
+
+msgid "Search for prior art started: arXiv, the journals and OpenReview are searched for the papers of the last %(n)d years that overlap your project. Its results appear in this project in one to three minutes."
+msgstr "Recherche d'antériorité lancée : nous cherchons sur arXiv, dans les revues et sur OpenReview les articles des %(n)d dernières années qui recoupent votre projet. Les résultats apparaissent dans ce projet d'ici une à trois minutes."
+
+msgid "%(name)s is no longer followed."
+msgstr "%(name)s n'est plus suivi."
+
+msgid "You follow %(n)d teams at most for a project."
+msgstr "Vous suivez au plus %(n)d équipes par projet."
+
+msgid "%(name)s is now followed: their new papers will always be read for this project, even when they are not very close, and reported if they overlap it."
+msgstr "%(name)s est maintenant suivi : ses nouveaux articles seront toujours lus pour ce projet, même s'ils sont peu proches, et signalés s'ils le recoupent."
+
+msgid "Marked as a real overlap: papers like this one will be ranked higher."
+msgstr "Marqué comme vrai recouvrement : les articles semblables seront mieux classés."
+
+msgid "Marked as not relevant: papers like this one will be pushed down, and it moves to the papers marked not relevant at the bottom of the project."
+msgstr "Marqué comme non pertinent : les articles semblables passeront après, et celui-ci rejoint les articles non pertinents en bas du projet."
+
+msgid "Your verdict on this paper was removed."
+msgstr "Votre avis sur cet article a été retiré."
+
+msgid "Comparison with the full text started: it appears under the paper in about a minute."
+msgstr "Comparaison avec le texte intégral lancée : elle apparaît sous l'article d'ici une minute environ."
+
 #~ msgid ""
 #~ "Searching arXiv and reading the closest papers… this takes one to three "
 #~ "minutes. The page updates by itself."

@@ -45,6 +45,7 @@ import requests
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
@@ -884,44 +885,59 @@ def form_fields(request):
 
 
 def act(request, projects, action):
-    """The actions on a project or one of its papers; returns where to go back to."""
+    """The actions on a project or one of its papers: (where to go back to, what happened, a link to show with it)."""
     lang = get_language()
     project = projects.filter(pk=request.POST.get('pk')).first()
     if project is None:
-        return '/%s/scoops/' % lang
+        return '/%s/scoops/' % lang, '', ''
     back = '/%s/scoops/#project-%d' % (lang, project.pk)
     if action == 'delete':
         project.delete()
-        return '/%s/scoops/' % lang
+        return '/%s/scoops/' % lang, '', ''
     if action == 'edit':
         fields = form_fields(request)
         if not fields['title'] or len(fields['description']) < MIN_CHARS:
-            return back
+            return back, _('Give a title and a description of at least %(n)d characters.') % {'n': MIN_CHARS}, ''
         changed = (fields['title'], fields['description']) != (project.title, project.description)
         for name, value in fields.items():
             setattr(project, name, value)
         if request.POST.get('forget_draft'):
             project.draft_text = ''
         project.save()
-        if changed:
-            project.prior_status, project.prior_checked = 'pending', timezone.now()
-            project.save(update_fields=['prior_status', 'prior_checked'])
-            generated.background(refresh, project.pk)
-        return back
-    if action == 'prior' and project.prior_status != 'pending':
+        if not changed:
+            return back, _('Project saved.'), ''
+        project.prior_status, project.prior_checked = 'pending', timezone.now()
+        project.save(update_fields=['prior_status', 'prior_checked'])
+        generated.background(refresh, project.pk)
+        return back, _('Project saved. What we look for is computed again, and the search for prior art starts again: '
+                       'its results appear in this project in one to three minutes.'), ''
+    if action == 'prior':
+        if project.prior_status == 'pending':
+            return back, _('A search for prior art is already running for this project.'), ''
         project.prior_status, project.prior_checked = 'pending', timezone.now()
         project.save(update_fields=['prior_status', 'prior_checked'])
         generated.background(search_prior, project.pk)
-        return back
-    if action == 'competitor':
+        return back, _('Search for prior art started: arXiv, the journals and OpenReview are searched for the papers of '
+                       'the last %(n)d years that overlap your project. Its results appear in this project in one to '
+                       'three minutes.') % {'n': PRIOR_YEARS}, ''
+    if action in ('competitor', 'uncompetitor'):
         name = request.POST.get('name', '').strip()[:100]
-        if name and len(project.competitor_list()) < MAX_COMPETITORS:
-            project.competitors = '\n'.join(project.competitor_list() + [name])
+        names = project.competitor_list()
+        if action == 'uncompetitor':
+            project.competitors = '\n'.join(n for n in names if n != name)
             project.save(update_fields=['competitors'])
-        return back
+            return back, _('%(name)s is no longer followed.') % {'name': name}, ''
+        if not name:
+            return back, '', ''
+        if len(names) >= MAX_COMPETITORS:
+            return back, _('You follow %(n)d teams at most for a project.') % {'n': MAX_COMPETITORS}, ''
+        project.competitors = '\n'.join(names + [name])
+        project.save(update_fields=['competitors'])
+        return back, _('%(name)s is now followed: their new papers will always be read for this project, even when '
+                       'they are not very close, and reported if they overlap it.') % {'name': name}, ''
     match = project.matches.filter(pk=request.POST.get('match')).first()
     if match is None:
-        return back
+        return back, '', ''
     back = '/%s/scoops/#match-%d' % (lang, match.pk)
     if action == 'mark' and request.POST.get('status') in ('relevant', 'irrelevant', ''):
         match.status = request.POST['status']
@@ -929,25 +945,31 @@ def act(request, projects, action):
             stored = DigestVector.objects.filter(arxiv_id=match.arxiv_id).values_list('vector', flat=True).first()
             match.vector = stored or similar.embed([match.title[:similar.MAX_INPUT_CHARS]])[0].tobytes()
         match.save(update_fields=['status', 'vector'])
-    elif action == 'deep' and match.deep_status not in ('pending', 'done'):
-        match.deep_status = 'pending'
-        match.deep_started = timezone.now()
-        match.save(update_fields=['deep_status', 'deep_started'])
-        generated.background(compare, match.pk)
-    elif action == 'collect':
+        return back, {'relevant': _('Marked as a real overlap: papers like this one will be ranked higher.'),
+                      'irrelevant': _('Marked as not relevant: papers like this one will be pushed down, and it moves '
+                                      'to the papers marked not relevant at the bottom of the project.'),
+                      '': _('Your verdict on this paper was removed.')}[match.status], ''
+    if action == 'deep':
+        if match.deep_status not in ('pending', 'done'):
+            match.deep_status = 'pending'
+            match.deep_started = timezone.now()
+            match.save(update_fields=['deep_status', 'deep_started'])
+            generated.background(compare, match.pk)
+        return back, _('Comparison with the full text started: it appears under the paper in about a minute.'), ''
+    if action == 'collect':
         from . import library
         paid = access.has_tool(request.user, 'collections')
         wanted = request.POST.get('collection')
         if wanted == 'new':
             if Collection.objects.filter(user=request.user).count() >= library.limits(paid)['collections']:
-                return back
+                return back, _('You have reached the number of collections of your plan.'), ''
             collection = Collection.objects.create(user=request.user, name=project.title[:120])
         else:
             collection = Collection.objects.filter(user=request.user, pk=wanted).first()
         if collection is not None:
             library.add_many(collection, [match.arxiv_id], paid)
-            return '/%s/scoops/?added=%d#match-%d' % (lang, collection.pk, match.pk)
-    return back
+            return back, _('Added to “%(name)s”.') % {'name': collection.name}, '/%s/collections/%d/' % (lang, collection.pk)
+    return back, '', ''
 
 
 def scoops_page(request):
@@ -959,7 +981,12 @@ def scoops_page(request):
     if request.method == 'POST' and paid:
         action = request.POST.get('action')
         if action and action != 'create':
-            return redirect(act(request, projects, action))
+            back, message, link = act(request, projects, action)
+            if request.headers.get('X-Requested-With') == 'fetch':  # the page updates the project in place
+                return JsonResponse({'message': str(message), 'link': link})
+            if message:
+                request.session['scoop_notice'] = [request.POST.get('pk'), str(message), link]
+            return redirect(back)
         upload = request.FILES.get('draft')
         fields = form_fields(request)
         if projects.count() >= MAX_PROJECTS:
@@ -977,8 +1004,10 @@ def scoops_page(request):
             generated.background(prepare, project.pk, upload.read() if upload is not None else None)
             return redirect('/%s/scoops/#project-%d' % (get_language(), project.pk))
     now = timezone.now()
+    notice = request.session.pop('scoop_notice', None)
     projects = list(projects)
     for project in projects:
+        project.notice = notice[1:] if notice and notice[0] == str(project.pk) else None
         matches = [decorate(m) for m in project.matches.all()[:SHOWN]]
         project.prior = [m for m in matches if m.kind == 'prior' and m.status != 'irrelevant']
         project.new = [m for m in matches if m.kind == 'new' and m.status != 'irrelevant']
@@ -1000,6 +1029,6 @@ def scoops_page(request):
         'paid': paid, 'projects': projects, 'error': error, 'max_projects': MAX_PROJECTS, 'min_chars': MIN_CHARS,
         'author_name': projects[0].author_name if projects else '',
         'collections': Collection.objects.filter(user=request.user).order_by('name') if paid else [],
-        'added': Collection.objects.filter(user=request.user, pk=request.GET.get('added')).first() if request.GET.get('added', '').isdigit() else None,
         'prior_years': PRIOR_YEARS, 'aspects': ASPECTS,
+        'open_collection': json.dumps(str(_('Open the collection')), ensure_ascii=False),
         'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024), 'form': request.POST if error else {}})

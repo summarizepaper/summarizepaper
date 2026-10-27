@@ -1050,6 +1050,27 @@ class ScoopEngineTests(ToolsTestCase):
         self.assertIn('Partial one', mail.outbox[1].body)
         self.assertEqual(WatchedProject.objects.get().weekly_sent, later)
 
+    def test_actions_say_what_they_did(self):
+        client = self.client_for(self.owner)
+        ajax = {'HTTP_X_REQUESTED_WITH': 'fetch'}
+        r = client.post('/en/scoops/', {'action': 'competitor', 'pk': self.project.pk, 'name': 'Jo Park'}, **ajax)
+        self.assertIn('Jo Park is now followed', r.json()['message'])
+        self.assertEqual(WatchedProject.objects.get().competitor_list(), ['Rival Team', 'Jo Park'])
+        r = client.post('/en/scoops/', {'action': 'uncompetitor', 'pk': self.project.pk, 'name': 'Rival Team'}, **ajax)
+        self.assertEqual(r.json()['message'], 'Rival Team is no longer followed.')
+        with mock.patch('summarizer.scoops.search_prior') as search:
+            r = client.post('/en/scoops/', {'action': 'prior', 'pk': self.project.pk}, **ajax)
+        search.assert_called_once_with(self.project.pk)
+        self.assertIn('Search for prior art started', r.json()['message'])
+        r = client.post('/en/scoops/', {'action': 'prior', 'pk': self.project.pk}, **ajax)
+        self.assertIn('already running', r.json()['message'])
+        # without the page script, the message is shown in the project after the redirect
+        r = client.post('/en/scoops/', {'action': 'competitor', 'pk': self.project.pk, 'name': 'Al Ng'})
+        page = client.get(r['Location'])
+        self.assertContains(page, 'Al Ng is now followed')
+        self.assertContains(page, 'Al Ng ×')
+        self.assertNotContains(client.get('/en/scoops/'), 'Al Ng is now followed')  # shown once
+
     def test_a_paper_goes_to_a_collection(self):
         match = ScoopMatch.objects.create(project=self.project, arxiv_id='2610.00001v1', title='Rival', overlap='high',
                                           announced=datetime.date(2026, 10, 5), similarity=0.8)
