@@ -636,3 +636,10 @@ class WatchTests(TestCase):
         self.assertAlmostEqual(float(saved_searches.mute_floors(saved, dislikes, dense, 3)[0]), 0.82, places=2)
         sparse = {str(i): np.array([0.3, 0.954, 0], dtype=np.float32) for i in range(6)}
         self.assertAlmostEqual(float(saved_searches.mute_floors(saved, dislikes, sparse, 3)[0]), saved_searches.MUTE_FLOOR)
+
+    def test_without_the_model_the_expression_and_the_title_rank_first(self):
+        saved = self.create_saved(params={'q': 'galaxy cluster', 'field': 'all', 'src': 'arxiv', 'type': ''})
+        rows = [dict(paper('star'), title='The oldest star cluster in the Galaxy', abstract='A cluster.'),
+                dict(paper('abstract'), title='Radio halos', abstract='We study a galaxy cluster merger.'),
+                dict(paper('title'), title='Galaxy clusters in KiDS', abstract='Weak lensing.')]
+        self.assertEqual([r['key'] for r in saved_searches.rank(saved, rows)], ['title', 'abstract', 'star'])

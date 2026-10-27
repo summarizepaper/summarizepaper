@@ -66,7 +66,8 @@ ARXIV_PAGES = 4  # of 25, for a search in arXiv's own syntax
 PREVIEW_SHOWN = 15
 RANKED = 300
 LIKE_WEIGHT, DISLIKE_WEIGHT = 1.0, 1.0  # on closeness beyond the usual (see usual)
-PHRASE_BONUS = 0.05  # the words of the search side by side, as typed
+PHRASE_BONUS = 0.15  # the words of the search side by side, as typed (closeness spreads over about 0.2)
+TITLE_BONUS = 0.05  # all the words in the title
 # `mute` sets a new paper aside when it is much closer to a paper marked not relevant than the watch's papers
 # usually are to it: how close papers are varies by field (median 0.43 for language models, 0.57 for galaxy
 # clusters, measured on a week of arXiv), the same subtopic is about 0.12 above it
@@ -406,7 +407,8 @@ def query_vector(saved):
     if cached is not None:
         return np.frombuffer(cached, dtype=np.float32)
     from . import similar
-    vector = similar.embed([saved.name + '\n' + (saved.params.get('q') or '')])[0]
+    query = saved.params.get('q') or ''
+    vector = similar.embed([query if saved.name == query else saved.name + '\n' + query])[0]
     cache.set(key, vector.tobytes(), 30 * 86400)
     return vector
 
@@ -418,13 +420,30 @@ def feedback_vectors(saved):
     return np.array(likes), np.array(dislikes)
 
 
+def lexical(saved):
+    """A paper's bonus for how it has the words: side by side as typed, or all in its title. For a search of a
+    few words, the embedding cannot tell a 'galaxy cluster' from a 'star cluster in the Galaxy' (measured: papers
+    with the expression were on average less close to it), the words can."""
+    query = Query(saved.params.get('q', ''), saved.params.get('field', 'all'))
+    if query.field == 'author' or not query.supported:
+        return lambda row: 0.0
+    phrases, in_title = query.phrases(), Query(saved.params.get('q', ''), 'title')
+
+    def bonus(row):
+        text = row['title'] + ' ' + (row.get('abstract') or '')
+        return (PHRASE_BONUS * any(p.search(text) for p in phrases) +
+                TITLE_BONUS * bool(in_title.match({'title': row['title'], 'abstract': ''})))
+    return bonus
+
+
 def rank(saved, rows):
-    """The papers by closeness to the search, raised by the ones marked relevant and lowered by the others; with
-    `mute`, a paper closer to one marked not relevant than to any marked relevant is set aside (row['muted']).
-    As they are when the model cannot be reached."""
+    """The papers by how they have the words (see lexical), then by closeness to the search, raised by the papers
+    marked relevant and lowered by the ones marked not relevant; with `mute`, a paper much closer than usual to one
+    marked not relevant is set aside (row['muted']). By the words alone when the model cannot be reached."""
+    bonus = lexical(saved)
     muting = saved.mute and saved.feedback.filter(value__lt=0).exists()
     if not rows or not getattr(settings, 'OPENAI_KEY', '') or (len(rows) < 2 and not muting):
-        return rows
+        return sorted(rows, key=bonus, reverse=True)
     head, tail = rows[:RANKED], rows[RANKED:]
     try:
         vectors = digest.ensure_vectors([{'arxiv_id': r['key'], 'title': r['title'], 'abstract': r.get('abstract') or ''}
@@ -432,26 +451,22 @@ def rank(saved, rows):
         query = query_vector(saved)
     except Exception:
         logger.warning('Ranking of saved search %s failed', saved.pk, exc_info=True)
-        return rows
+        return sorted(rows, key=bonus, reverse=True)
     likes, dislikes = feedback_vectors(saved)
     usual_likes, usual_dislikes = usual(saved, likes, vectors, len(query)), usual(saved, dislikes, vectors, len(query))
     floors = np.maximum(usual_dislikes + MUTE_MARGIN, MUTE_FLOOR) if muting and len(dislikes) else None
-    phrases = Query(saved.params.get('q', ''), saved.params.get('field', 'all')).phrases()
 
     def score(row):
         vector = vectors.get(row['key'])
         if vector is None or len(vector) != len(query):
-            return -1.0
-        value = float(query @ vector)
-        if any(p.search(row['title'] + ' ' + (row.get('abstract') or '')) for p in phrases):
-            value += PHRASE_BONUS
-        # a vote counts beyond how close the watch's papers usually are to that paper: one paper marked not
-        # relevant must not push back the whole topic of the search
-        liked = likes @ vector - usual_likes if len(likes) else np.zeros(1)
-        disliked = dislikes @ vector - usual_dislikes if len(dislikes) else np.zeros(1)
-        if floors is not None and np.any(dislikes @ vector >= floors) and float(np.max(disliked)) > float(np.max(liked)):
+            return bonus(row) - 1.0
+        # a vote counts beyond how close the watch's papers usually are to the paper voted on, and a paper marked
+        # not relevant only lowers the papers clearly close to it: it must not push back the whole topic
+        liked = float(np.max(likes @ vector - usual_likes)) if len(likes) else 0.0
+        disliked = float(np.max(dislikes @ vector - usual_dislikes - MUTE_MARGIN)) if len(dislikes) else 0.0
+        if floors is not None and np.any(dislikes @ vector >= floors) and disliked + MUTE_MARGIN > liked:
             row['muted'] = True
-        return value + LIKE_WEIGHT * max(float(np.max(liked)), 0.0) - DISLIKE_WEIGHT * max(float(np.max(disliked)), 0.0)
+        return bonus(row) + float(query @ vector) + LIKE_WEIGHT * max(liked, 0.0) - DISLIKE_WEIGHT * max(disliked, 0.0)
     ranked = sorted(head, key=score, reverse=True)
     return [r for r in ranked if not r.get('muted')] + tail + [r for r in ranked if r.get('muted')]
 
