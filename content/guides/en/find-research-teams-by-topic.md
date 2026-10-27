@@ -13,7 +13,7 @@ Map the approaches to a research question before comparing names. This example e
 The French run retained 24 papers from 293 search results and grouped them into two approaches. A separate English run retained 22 papers from 334 results and three approaches. These dated samples vary with the generated queries; they are not a census or a stable ranking.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/teams-approaches-en.png"><img src="/static/summarizer/img/guides/teams-approaches-en.png" alt="Find the researchers and teams working on your topic" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/teams-approaches-en.jpg"><img src="/static/summarizer/img/guides/teams-approaches-en.jpg" alt="Find the researchers and teams working on your topic" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ The French run retained 24 papers from 293 search results and grouped them into 
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/teams-result-en.png"><img src="/static/summarizer/img/guides/teams-result-en.png" alt="Read the search coverage before interpreting the names." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/teams-result-en.jpg"><img src="/static/summarizer/img/guides/teams-result-en.jpg" alt="Read the search coverage before interpreting the names." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Read the search coverage before interpreting the names.</figcaption>
 </figure>
 

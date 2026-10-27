@@ -16,7 +16,7 @@ Décider si un papier mérite une lecture approfondie : voici une synthèse rée
 Nous avons ouvert 1703.10693v1 et généré la synthèse jusqu’à son affichage terminé dans chaque langue. Elle sépare question, méthode, résultats et limites. Les sources sont ici restreintes à l’abstract et aux métadonnées : c’est une aide à la première lecture, pas une analyse du texte intégral.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/summary-example-fr.png"><img src="/static/summarizer/img/guides/summary-example-fr.png" alt="Comprendre un article scientifique avec un résumé IA" width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/summary-example-fr.jpg"><img src="/static/summarizer/img/guides/summary-example-fr.jpg" alt="Comprendre un article scientifique avec un résumé IA" width="382" height="785" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -30,7 +30,7 @@ Nous avons ouvert 1703.10693v1 et généré la synthèse jusqu’à son affichag
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/summary-levels-fr.png"><img src="/static/summarizer/img/guides/summary-levels-fr.png" alt="Choisir le niveau d’explication adapté à sa lecture." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/summary-levels-fr.jpg"><img src="/static/summarizer/img/guides/summary-levels-fr.jpg" alt="Choisir le niveau d’explication adapté à sa lecture." width="382" height="785" loading="lazy" /></a>
 <figcaption>Choisir le niveau d’explication adapté à sa lecture.</figcaption>
 </figure>
 

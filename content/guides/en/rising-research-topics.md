@@ -13,7 +13,7 @@ See where publication activity is changing, then read the papers behind the sign
 We inspected the astrophysics view for the submission week beginning 12 October 2026. This is a field-specific Premium result. Keep the selected week with the screenshot; it is not evidence that the same topics are rising in every later week.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/trends-result-en.png"><img src="/static/summarizer/img/guides/trends-result-en.png" alt="How to read rising research topics without confusing growth with importance" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/trends-result-en.jpg"><img src="/static/summarizer/img/guides/trends-result-en.jpg" alt="How to read rising research topics without confusing growth with importance" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ We inspected the astrophysics view for the submission week beginning 12 October 
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/trends-page-en.png"><img src="/static/summarizer/img/guides/trends-page-en.png" alt="Place the results in a specific field and week." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/trends-page-en.jpg"><img src="/static/summarizer/img/guides/trends-page-en.jpg" alt="Place the results in a specific field and week." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Place the results in a specific field and week.</figcaption>
 </figure>
 

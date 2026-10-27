@@ -41,6 +41,6 @@ Les lignes `Guide` en base prennent le pas sur les fichiers Markdown de même la
 
 ## Vérifications
 
-Les 24 guides sont rendus avec le template existant ; métadonnées, dates, descriptions, JSON-LD, images et liens internes sont contrôlés. Les nouvelles figures utilisent les dimensions réelles des PNG et s’ouvrent en taille originale. Les 15 tests existants des guides passent. Les liens des 12 outils sont vérifiés en français et en anglais, sans lien dans les langues qui ne disposent pas de ces guides. Les captures des résultats ont été inspectées ; les titres des publications et les passages scientifiques cités gardent leur langue originale.
+Les 24 guides sont rendus avec le template existant ; métadonnées, dates, descriptions, JSON-LD, images et liens internes sont contrôlés. Les nouvelles figures utilisent les dimensions réelles des JPEG et s’ouvrent en taille originale. Les 15 tests existants des guides passent. Les liens des 12 outils sont vérifiés en français et en anglais, sans lien dans les langues qui ne disposent pas de ces guides. Les captures des résultats ont été inspectées ; les titres des publications et les passages scientifiques cités gardent leur langue originale.
 
 Les boutons des guides conservent leurs événements fixes `guide_tool_<slug>`, gérés par le script analytics existant. Aucune donnée de projet ou de profil n’est incluse dans ces événements. La collecte et l’attribution complète des conversions n’ont pas été vérifiées en production.

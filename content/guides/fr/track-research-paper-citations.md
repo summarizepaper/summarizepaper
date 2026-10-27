@@ -13,7 +13,7 @@ Un compteur de citations n’explique pas comment un papier est utilisé. Partez
 Nous avons ouvert le papier suivi 1703.10693 et lancé l’analyse du contexte de ses citations. La fiche observée contenait 135 citations, dont une partie seulement disposait d’une phrase citante. L’analyse française a finalement classé 60 citations. C’est une analyse à la demande de citations existantes, pas la preuve d’une nouvelle alerte reçue par email. Examinez la phrase derrière une étiquette avant de l’interpréter.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/citations-result-fr.png"><img src="/static/summarizer/img/guides/citations-result-fr.png" alt="Suivre les nouvelles citations et comprendre comment un papier est utilisé" width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/citations-result-fr.jpg"><img src="/static/summarizer/img/guides/citations-result-fr.jpg" alt="Suivre les nouvelles citations et comprendre comment un papier est utilisé" width="382" height="785" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 

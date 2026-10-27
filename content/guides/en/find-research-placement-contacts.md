@@ -13,7 +13,7 @@ Find people whose recent research connects to what you want to learn. The goal i
 We ran a fictional Bachelor-level search with Python and numerical-modelling skills, a six-month duration and no geographical restriction. The results group potential contacts with publication evidence and acknowledged funding. Both runs explicitly report incomplete coverage and people whose institutions could not be located. These are leads to verify, not vacancies or confirmed supervisors. No enquiry was sent.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/students-result-en.png"><img src="/static/summarizer/img/guides/students-result-en.png" alt="Find research placement contacts through their publications" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/students-result-en.jpg"><img src="/static/summarizer/img/guides/students-result-en.jpg" alt="Find research placement contacts through their publications" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 

@@ -13,7 +13,7 @@ Cartographiez les approches d’une question scientifique avant de comparer les 
 La génération française a retenu 24 articles parmi 293 résultats et les a regroupés en deux approches. Une génération anglaise distincte en a retenu 22 parmi 334 résultats, avec trois approches. Ces échantillons datés dépendent des requêtes générées ; ils ne constituent ni un recensement ni un classement stable.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/teams-approaches-fr.png"><img src="/static/summarizer/img/guides/teams-approaches-fr.png" alt="Identifier les chercheurs et les équipes qui travaillent sur son sujet" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/teams-approaches-fr.jpg"><img src="/static/summarizer/img/guides/teams-approaches-fr.jpg" alt="Identifier les chercheurs et les équipes qui travaillent sur son sujet" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ La génération française a retenu 24 articles parmi 293 résultats et les a re
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/teams-result-fr.png"><img src="/static/summarizer/img/guides/teams-result-fr.png" alt="Lire la couverture de la recherche avant d’interpréter les noms." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/teams-result-fr.jpg"><img src="/static/summarizer/img/guides/teams-result-fr.jpg" alt="Lire la couverture de la recherche avant d’interpréter les noms." width="382" height="785" loading="lazy" /></a>
 <figcaption>Lire la couverture de la recherche avant d’interpréter les noms.</figcaption>
 </figure>
 

@@ -13,7 +13,7 @@ Keep a query you can explain and test what its watch would find. Our exact-phras
 We saved the exact query and ran its two-week preview. It returned zero new papers. The general search results and the watch preview are different: related search results do not prove an exact watch match. The example remains saved with its watch disabled; no new email watch was activated.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/saved-searches-preview-en.png"><img src="/static/summarizer/img/guides/saved-searches-preview-en.png" alt="Turn a saved search into a focused research alert" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/saved-searches-preview-en.jpg"><img src="/static/summarizer/img/guides/saved-searches-preview-en.jpg" alt="Turn a saved search into a focused research alert" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ We saved the exact query and ran its two-week preview. It returned zero new pape
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/saved-searches-page-en.png"><img src="/static/summarizer/img/guides/saved-searches-page-en.png" alt="Turn a query into a saved search." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/saved-searches-page-en.jpg"><img src="/static/summarizer/img/guides/saved-searches-page-en.jpg" alt="Turn a query into a saved search." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Turn a query into a saved search.</figcaption>
 </figure>
 

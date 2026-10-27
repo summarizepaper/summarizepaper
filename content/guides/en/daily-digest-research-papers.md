@@ -13,7 +13,7 @@ Build a morning reading queue you can actually finish. This example follows plan
 This live preview is configured in English and contains 20 papers from the announcement. Open papers that address your question and inspect why they were selected. Choose the summary language in the digest form: changing the interface language does not translate an edition already stored. This screenshot shows a preview, rather than a delivered email.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest-preview-en.png"><img src="/static/summarizer/img/guides/digest-preview-en.png" alt="Build a daily research digest that fits your reading routine" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/digest-preview-en.jpg"><img src="/static/summarizer/img/guides/digest-preview-en.jpg" alt="Build a daily research digest that fits your reading routine" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ This live preview is configured in English and contains 20 papers from the annou
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest-page-en.png"><img src="/static/summarizer/img/guides/digest-page-en.png" alt="Set selection and summary language before saving a digest." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/digest-page-en.jpg"><img src="/static/summarizer/img/guides/digest-page-en.jpg" alt="Set selection and summary language before saving a digest." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Set selection and summary language before saving a digest.</figcaption>
 </figure>
 

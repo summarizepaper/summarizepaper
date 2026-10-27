@@ -13,7 +13,7 @@ Discover a neighboring field without beginning with a long list of abstracts. A 
 We opened the astronomy and space edition dated 26 October 2026, in each language. The screenshots show the actual edition and its source-linked stories, not the subscription page. Follow one paper link to distinguish the editorial explanation from the source result.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/letters-edition-en.png"><img src="/static/summarizer/img/guides/letters-edition-en.png" alt="Keep up with another research field through weekly science letters" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/letters-edition-en.jpg"><img src="/static/summarizer/img/guides/letters-edition-en.jpg" alt="Keep up with another research field through weekly science letters" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ We opened the astronomy and space edition dated 26 October 2026, in each languag
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/letters-page-en.png"><img src="/static/summarizer/img/guides/letters-page-en.png" alt="Choose a field whose letters you want to follow." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/letters-page-en.jpg"><img src="/static/summarizer/img/guides/letters-page-en.jpg" alt="Choose a field whose letters you want to follow." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Choose a field whose letters you want to follow.</figcaption>
 </figure>
 

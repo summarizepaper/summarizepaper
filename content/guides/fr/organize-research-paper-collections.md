@@ -20,7 +20,7 @@ Transformez une liste de lecture en comparaison vérifiable. Notre collection r�
 La collection contient 1703.10693v1, 2110.02308v1 et 1606.01247v1. Son tableau comparatif comprend 13 cellules renseignées, toutes appuyées sur des passages sources. Ici, les sources disponibles sont les abstracts et les synthèses : les sections du texte intégral n’ont pas été lues. Ouvrez les passages associés pour voir ce qui justifie chaque comparaison.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/collections-table-fr.png"><img src="/static/summarizer/img/guides/collections-table-fr.png" alt="Organiser ses articles scientifiques dans une collection utile" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/collections-table-fr.jpg"><img src="/static/summarizer/img/guides/collections-table-fr.jpg" alt="Organiser ses articles scientifiques dans une collection utile" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 

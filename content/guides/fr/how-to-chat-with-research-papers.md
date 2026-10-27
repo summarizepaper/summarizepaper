@@ -16,7 +16,7 @@ Posez une question à laquelle un résumé seul ne répond pas. Dans cet exemple
 Nous avons aussi ouvert les trois papiers réellement utilisés dans la collection du guide (1703.10693v1, 2110.02308v1 et 1606.01247v1). Nous avons demandé à l’assistant de distinguer un modèle général, une recherche observationnelle et un modèle de système particulier. La conversation a été exécutée séparément dans chaque langue. Les trois sources sélectionnées étaient signalées comme limitées à l’abstract selon leur licence. C’est une vraie réponse multi-articles avec vérification des sources, pas une comparaison des textes intégraux.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/chat-multiple-fr.png"><img src="/static/summarizer/img/guides/chat-multiple-fr.png" alt="Chat avec des articles scientifiques : poser ses questions et vérifier les réponses" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/chat-multiple-fr.jpg"><img src="/static/summarizer/img/guides/chat-multiple-fr.jpg" alt="Chat avec des articles scientifiques : poser ses questions et vérifier les réponses" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -30,7 +30,7 @@ Nous avons aussi ouvert les trois papiers réellement utilisés dans la collecti
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/chat-source-scope-fr.png"><img src="/static/summarizer/img/guides/chat-source-scope-fr.png" alt="Vérifier les sources effectivement accessibles au chat." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/chat-source-scope-fr.jpg"><img src="/static/summarizer/img/guides/chat-source-scope-fr.jpg" alt="Vérifier les sources effectivement accessibles au chat." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Vérifier les sources effectivement accessibles au chat.</figcaption>
 </figure>
 

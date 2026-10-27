@@ -13,7 +13,7 @@ Repérez où l’activité de publication change, puis lisez les papiers derriè
 Nous avons examiné la vue Astrophysique pour la semaine de soumission commençant le 12 octobre 2026. Il s’agit d’un résultat Premium par domaine. Conservez la semaine choisie avec la capture : cela ne prouve pas que les mêmes sujets progressent les semaines suivantes.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/trends-result-fr.png"><img src="/static/summarizer/img/guides/trends-result-fr.png" alt="Repérer les sujets de recherche émergents et interpréter leur progression" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/trends-result-fr.jpg"><img src="/static/summarizer/img/guides/trends-result-fr.jpg" alt="Repérer les sujets de recherche émergents et interpréter leur progression" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ Nous avons examiné la vue Astrophysique pour la semaine de soumission commença
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/trends-page-fr.png"><img src="/static/summarizer/img/guides/trends-page-fr.png" alt="Situer les résultats dans un domaine et une semaine précise." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/trends-page-fr.jpg"><img src="/static/summarizer/img/guides/trends-page-fr.jpg" alt="Situer les résultats dans un domaine et une semaine précise." width="382" height="785" loading="lazy" /></a>
 <figcaption>Situer les résultats dans un domaine et une semaine précise.</figcaption>
 </figure>
 

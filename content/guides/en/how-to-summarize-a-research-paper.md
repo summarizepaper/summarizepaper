@@ -16,7 +16,7 @@ Decide whether a paper deserves a closer read. Here is a real summary of an astr
 We opened 1703.10693v1 and ran the synthesis to completion in each language. Its output separates the question, method, findings and limitations. The source statement restricts this example to the abstract and metadata; it is a first reading aid, not a full-text analysis.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/summary-example-en.png"><img src="/static/summarizer/img/guides/summary-example-en.png" alt="How to understand a research paper with an AI summary" width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/summary-example-en.jpg"><img src="/static/summarizer/img/guides/summary-example-en.jpg" alt="How to understand a research paper with an AI summary" width="382" height="785" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 

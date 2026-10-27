@@ -13,7 +13,7 @@ Un nouveau papier peut recouper votre projet sans employer vos mots-clés. Scoop
 Le projet fictif français a terminé sa recherche d’antériorité sur trois ans : 67 articles proches ont été trouvés, avec des commentaires sur les recouvrements et les différences. L’exemple ci-dessous montre une correspondance forte à examiner. Le premier contrôle des nouvelles annonces ne signalait aucun nouvel article proche ; il s’agit d’un contrôle distinct, pas d’une alerte reçue par email.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/scoops-overlap-fr.png"><img src="/static/summarizer/img/guides/scoops-overlap-fr.png" alt="Suivre les publications proches de son projet avec Scoop watch" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/scoops-overlap-fr.jpg"><img src="/static/summarizer/img/guides/scoops-overlap-fr.jpg" alt="Suivre les publications proches de son projet avec Scoop watch" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ Le projet fictif français a terminé sa recherche d’antériorité sur trois a
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/scoops-project-fr.png"><img src="/static/summarizer/img/guides/scoops-project-fr.png" alt="Décrire un projet fictif et examiner son premier contrôle." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/scoops-project-fr.jpg"><img src="/static/summarizer/img/guides/scoops-project-fr.jpg" alt="Décrire un projet fictif et examiner son premier contrôle." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Décrire un projet fictif et examiner son premier contrôle.</figcaption>
 </figure>
 

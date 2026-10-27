@@ -16,7 +16,7 @@ Préparez-vous à expliquer un papier en public tout en conservant ses preuves. 
 Le kit porte sur 1703.10693v1, un modèle du gaz dans les disques de débris. Le brief indique que seul l’abstract a été lu. Le parcours « On me demande de le commenter » présente ensuite les points forts, les faiblesses et les questions ouvertes, avec des passages retrouvés dans cette source. Les trois rôles proposent des contenus différents : choisissez celui qui correspond à votre usage.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/press-kit-result-fr.png"><img src="/static/summarizer/img/guides/press-kit-result-fr.png" alt="Préparer un dossier de presse scientifique sans exagérer les résultats" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/press-kit-result-fr.jpg"><img src="/static/summarizer/img/guides/press-kit-result-fr.jpg" alt="Préparer un dossier de presse scientifique sans exagérer les résultats" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -29,7 +29,7 @@ Le kit porte sur 1703.10693v1, un modèle du gaz dans les disques de débris. Le
 3. Vérifiez nombres, nuances et citations. Préparez une question pour les auteurs lorsqu’une incertitude reste ouverte, puis exportez les éléments utiles.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/press-kit-role-fr.png"><img src="/static/summarizer/img/guides/press-kit-role-fr.png" alt="Des points forts appuyés sur les passages de l’abstract, dans le parcours chercheur sollicité pour commenter." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/press-kit-role-fr.jpg"><img src="/static/summarizer/img/guides/press-kit-role-fr.jpg" alt="Des points forts appuyés sur les passages de l’abstract, dans le parcours chercheur sollicité pour commenter." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Des points forts appuyés sur les passages de l’abstract, dans le parcours chercheur sollicité pour commenter.</figcaption>
 </figure>
 

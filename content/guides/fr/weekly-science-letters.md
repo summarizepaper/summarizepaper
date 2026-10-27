@@ -13,7 +13,7 @@ Découvrez un domaine voisin sans commencer par une longue liste d’abstracts. 
 Nous avons ouvert l’édition Astronomie et espace du 26 octobre 2026 dans les deux langues. Les captures montrent le numéro réel et ses sujets reliés aux papiers sources, pas la page d’abonnement. Ouvrez un de ces liens pour distinguer l’explication éditoriale du résultat de la source.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/letters-edition-fr.png"><img src="/static/summarizer/img/guides/letters-edition-fr.png" alt="Suivre un domaine voisin avec les lettres scientifiques hebdomadaires" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/letters-edition-fr.jpg"><img src="/static/summarizer/img/guides/letters-edition-fr.jpg" alt="Suivre un domaine voisin avec les lettres scientifiques hebdomadaires" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ Nous avons ouvert l’édition Astronomie et espace du 26 octobre 2026 dans les 
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/letters-page-fr.png"><img src="/static/summarizer/img/guides/letters-page-fr.png" alt="Choisir le domaine dont on souhaite suivre les lettres." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/letters-page-fr.jpg"><img src="/static/summarizer/img/guides/letters-page-fr.jpg" alt="Choisir le domaine dont on souhaite suivre les lettres." width="382" height="785" loading="lazy" /></a>
 <figcaption>Choisir le domaine dont on souhaite suivre les lettres.</figcaption>
 </figure>
 

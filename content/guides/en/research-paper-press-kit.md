@@ -16,7 +16,7 @@ Prepare to explain a paper in public while keeping its evidence intact. This exa
 The kit uses 1703.10693v1, a model of gas in debris discs. Its brief states that only the abstract was read. The “I am asked to comment” view then provides strengths, weaknesses and open questions, with passages found in that source. The three roles offer different material: choose the one that fits your task.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/press-kit-result-en.png"><img src="/static/summarizer/img/guides/press-kit-result-en.png" alt="Prepare a research paper press kit without overstating the findings" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/press-kit-result-en.jpg"><img src="/static/summarizer/img/guides/press-kit-result-en.jpg" alt="Prepare a research paper press kit without overstating the findings" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -29,7 +29,7 @@ The kit uses 1703.10693v1, a model of gas in debris discs. Its brief states that
 3. Check numbers, qualifications and quotations. Prepare a question for the authors where the source does not resolve an uncertainty, then export the material you need.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/press-kit-role-en.png"><img src="/static/summarizer/img/guides/press-kit-role-en.png" alt="Strengths supported by abstract passages, in the view for a researcher asked to comment." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/press-kit-role-en.jpg"><img src="/static/summarizer/img/guides/press-kit-role-en.jpg" alt="Strengths supported by abstract passages, in the view for a researcher asked to comment." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Strengths supported by abstract passages, in the view for a researcher asked to comment.</figcaption>
 </figure>
 

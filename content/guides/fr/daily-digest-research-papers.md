@@ -13,7 +13,7 @@ Construisez une sélection matinale que vous pourrez réellement parcourir. Cet 
 Voici une édition web du 27 octobre 2026, avec 20 articles en astrophysique terrestre et planétaire. Ouvrez les articles qui répondent à votre question, puis comparez leur intérêt avec les raisons de sélection. La langue des résumés se choisit dans le formulaire du digest ; changer la langue de l’interface ne traduit pas une édition déjà enregistrée.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest-edition-fr.png"><img src="/static/summarizer/img/guides/digest-edition-fr.png" alt="Configurer un digest scientifique adapté à sa routine de lecture" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/digest-edition-fr.jpg"><img src="/static/summarizer/img/guides/digest-edition-fr.jpg" alt="Configurer un digest scientifique adapté à sa routine de lecture" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ Voici une édition web du 27 octobre 2026, avec 20 articles en astrophysique ter
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest-page-fr.png"><img src="/static/summarizer/img/guides/digest-page-fr.png" alt="Régler la sélection et la langue avant d’enregistrer son digest." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/digest-page-fr.jpg"><img src="/static/summarizer/img/guides/digest-page-fr.jpg" alt="Régler la sélection et la langue avant d’enregistrer son digest." width="382" height="785" loading="lazy" /></a>
 <figcaption>Régler la sélection et la langue avant d’enregistrer son digest.</figcaption>
 </figure>
 

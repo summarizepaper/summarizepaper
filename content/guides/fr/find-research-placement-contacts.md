@@ -13,7 +13,7 @@ Trouvez des personnes dont les travaux récents rejoignent ce que vous voulez ap
 Nous avons exécuté une recherche fictive de niveau L3 / Bachelor, avec Python et modélisation numérique, une durée de six mois et aucune restriction géographique. Les résultats regroupent des contacts avec leurs publications et les financements remerciés. Les deux générations signalent une couverture partielle et des personnes dont l’institution n’a pas pu être localisée. Ce sont des pistes à vérifier, pas des offres ni des encadrants confirmés. Aucune demande de contact n’a été envoyée.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/students-result-fr.png"><img src="/static/summarizer/img/guides/students-result-fr.png" alt="Trouver des contacts pour un stage de recherche à partir des publications" width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/students-result-fr.jpg"><img src="/static/summarizer/img/guides/students-result-fr.jpg" alt="Trouver des contacts pour un stage de recherche à partir des publications" width="382" height="785" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 

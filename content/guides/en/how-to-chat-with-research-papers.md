@@ -16,7 +16,7 @@ Ask a question that a summary alone cannot answer. In this example, three papers
 We also opened the three papers actually used in the tutorial collection (1703.10693v1, 2110.02308v1 and 1606.01247v1). We asked the assistant to distinguish a general model, an observational search and a model of one particular system. The conversation was executed separately in each language. All three selected sources were marked abstract-only under their licenses. This is a real multi-paper answer with source checks, not a comparison of full texts.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/chat-multiple-en.png"><img src="/static/summarizer/img/guides/chat-multiple-en.png" alt="Chat with research papers: ask better questions and check the answers" width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/chat-multiple-en.jpg"><img src="/static/summarizer/img/guides/chat-multiple-en.jpg" alt="Chat with research papers: ask better questions and check the answers" width="382" height="785" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
@@ -30,7 +30,7 @@ We also opened the three papers actually used in the tutorial collection (1703.1
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/chat-source-scope-en.png"><img src="/static/summarizer/img/guides/chat-source-scope-en.png" alt="Check which sources the chat can actually read." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/chat-source-scope-en.jpg"><img src="/static/summarizer/img/guides/chat-source-scope-en.jpg" alt="Check which sources the chat can actually read." width="382" height="785" loading="lazy" /></a>
 <figcaption>Check which sources the chat can actually read.</figcaption>
 </figure>
 

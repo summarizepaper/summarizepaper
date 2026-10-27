@@ -20,7 +20,7 @@ Turn a reading list into a comparison you can inspect. Our tutorial collection c
 The collection contains 1703.10693v1, 2110.02308v1 and 1606.01247v1. Its comparison table has 13 filled cells, each supported by source passages. The available sources here are abstracts and summaries; the full-text sections were not read. Open the associated passages to inspect what supports each comparison.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/collections-table-en.png"><img src="/static/summarizer/img/guides/collections-table-en.png" alt="Organize research papers into a collection you can actually use" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/collections-table-en.jpg"><img src="/static/summarizer/img/guides/collections-table-en.jpg" alt="Organize research papers into a collection you can actually use" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 

@@ -13,7 +13,7 @@ Conservez une requête que vous comprenez et testez ce que sa veille trouverait.
 Nous avons enregistré la requête exacte et exécuté son aperçu sur deux semaines : il a renvoyé zéro nouvel article. Les résultats de recherche générale et l’aperçu de veille sont distincts : un papier voisin dans la recherche ne prouve pas une correspondance exacte avec la veille. La recherche d’exemple reste enregistrée sans veille active ; aucun nouvel envoi par email n’a été activé.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/saved-searches-preview-fr.png"><img src="/static/summarizer/img/guides/saved-searches-preview-fr.png" alt="Transformer une recherche sauvegardée en veille scientifique ciblée" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/saved-searches-preview-fr.jpg"><img src="/static/summarizer/img/guides/saved-searches-preview-fr.jpg" alt="Transformer une recherche sauvegardée en veille scientifique ciblée" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observation du 27 octobre 2026. Ouvrez la capture en taille originale ; les titres scientifiques et passages sources conservent leur langue d’origine.</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ Nous avons enregistré la requête exacte et exécuté son aperçu sur deux sema
 
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/saved-searches-page-fr.png"><img src="/static/summarizer/img/guides/saved-searches-page-fr.png" alt="Passer d’une requête à une recherche sauvegardée." width="382" height="785" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/saved-searches-page-fr.jpg"><img src="/static/summarizer/img/guides/saved-searches-page-fr.jpg" alt="Passer d’une requête à une recherche sauvegardée." width="382" height="785" loading="lazy" /></a>
 <figcaption>Passer d’une requête à une recherche sauvegardée.</figcaption>
 </figure>
 

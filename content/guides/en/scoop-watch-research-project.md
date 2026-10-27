@@ -13,7 +13,7 @@ A new paper can overlap your project without using your keywords. Scoop Watch co
 This fictional project compares gas-production scenarios with resolved observations of debris discs. Its first check of new announcements found no close papers. The separate historical search failed, including after a retry, so this example demonstrates project setup and the announcement check. A three-year search for the French version of the project returned 67 close papers; its results are illustrated in the [French guide](/fr/guides/scoop-watch-research-project/). A completed announcement check is distinct from a historical search and does not demonstrate delivery of an email alert.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/scoops-project-en.png"><img src="/static/summarizer/img/guides/scoops-project-en.png" alt="Follow new papers that overlap your research project with Scoop watch" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/scoops-project-en.jpg"><img src="/static/summarizer/img/guides/scoops-project-en.jpg" alt="Follow new papers that overlap your research project with Scoop watch" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Observed on 27 October 2026. Open the screenshot at full size; scientific titles and source quotations retain their original language.</figcaption>
 </figure>
 
