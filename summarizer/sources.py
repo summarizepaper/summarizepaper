@@ -871,7 +871,10 @@ SEARCH_SECONDS = 3600  # pages, reloads and the same words typed again reuse a s
 # the day's searches go to Crossref, which is free but does not know which papers are open.
 OPENALEX_SEARCHES_PER_DAY = 450
 OPENALEX_SEARCH_KEY = 'openalex-searches:%s'
-TOOL_RESERVE = 150  # searches of the day the research tools leave to the paper search of the home page
+# The research tools (who works on a topic, placements, bibliography check, literature review, prior art) count
+# apart, at most $1 a day more: the paper search of the site, crawlers included, used up the shared 450 by noon.
+TOOL_SEARCHES_PER_DAY = 1000
+TOOL_SEARCH_KEY = 'openalex-tool-searches:%s'
 
 
 def _spend(key, limit):
@@ -889,9 +892,9 @@ def _spend(key, limit):
 
 
 def tool_search_allowed():
-    """Count one OpenAlex call of a research tool (team map, bibliography check); False once only the
-    TOOL_RESERVE searches of the day kept for the paper search are left."""
-    return _spend(OPENALEX_SEARCH_KEY, OPENALEX_SEARCHES_PER_DAY - TOOL_RESERVE)
+    """Count one OpenAlex call of a research tool (team map, bibliography check); False once the tools have
+    made TOOL_SEARCHES_PER_DAY today. The paper search of the site has its own count."""
+    return _spend(TOOL_SEARCH_KEY, TOOL_SEARCHES_PER_DAY)
 
 
 def openalex_content_allowed():

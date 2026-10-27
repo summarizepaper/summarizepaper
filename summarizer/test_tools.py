@@ -2165,10 +2165,14 @@ class ToolsPageTests(ToolsTestCase):
 
 
 class OpenAlexBudgetTests(ToolsTestCase):
-    def test_tools_leave_a_reserve_to_the_paper_search_and_say_when_limited(self):
+    def test_tools_count_apart_from_the_paper_search_and_say_when_limited(self):
         from summarizer import sources
-        with mock.patch('summarizer.sources.OPENALEX_SEARCHES_PER_DAY', 3), mock.patch('summarizer.sources.TOOL_RESERVE', 1):
-            self.assertEqual([sources.tool_search_allowed() for _ in range(3)], [True, True, False])
+        with mock.patch('summarizer.sources.OPENALEX_SEARCHES_PER_DAY', 2):
+            self.assertEqual([sources._spend(sources.OPENALEX_SEARCH_KEY, 2) for _ in range(3)], [True, True, False])
+            self.assertTrue(sources.tool_search_allowed())  # the site's searches used up theirs, not the tools'
+        with mock.patch('summarizer.sources.TOOL_SEARCHES_PER_DAY', 3):
+            self.assertEqual([sources.tool_search_allowed() for _ in range(2)], [True, True])
+            self.assertFalse(sources.tool_search_allowed())
             with mock.patch('summarizer.sources._json') as call:
                 self.assertIsNone(teams.works('exomoons', timezone.now().date()))
                 self.assertEqual(refcheck.by_title('A title'), ('', ''))
