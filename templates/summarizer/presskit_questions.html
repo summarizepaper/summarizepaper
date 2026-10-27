@@ -1,0 +1,4 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}{% for q in author_questions %}<li><span>{{ q.text }}</span>
+  {% if q.answer %}<div class="kit-answer"><strong>{% trans 'The paper already says:' %}</strong> {{ q.answer }}{% if q.passage %}<blockquote class="key-sentence">{{ q.passage.quote }}</blockquote>{% endif %}</div>{% endif %}
+  <a class="kit-ask" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ arxiv_id|urlencode }}&amp;ask={{ q.text|urlencode }}" rel="nofollow">{% trans 'Ask the paper first' %} →</a></li>
+{% endfor %}

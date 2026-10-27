@@ -1,22 +1,32 @@
 {% extends 'base.html' %}
 {% load i18n static_version %}
-{% load dash_slash %}
+{% load dash_slash rising %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Press kit' %} | {{ paper.title|truncatechars:70 }}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
-  <script defer src="{% static_v 'summarizer/js/publication-status.js' %}"></script><meta name="robots" content="noindex" />{% endblock %}
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/presskit.css' %}">
+  <script defer src="{% static_v 'summarizer/js/publication-status.js' %}"></script>
+  <script defer src="{% static_v 'summarizer/js/presskit.js' %}"></script><meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="page presskit" id="presskit" data-role="{{ role }}" data-citation="{{ citation }}"
+     data-copied="{% trans 'Copied' %}" data-report-sent="{% trans 'Thank you: we will check it.' %}"
+     data-failed="{% trans 'Something went wrong. Please try again.' %}"{% if kit and paid %} data-share="{% url 'presskit_share' arxiv_id %}" data-report="{% url 'presskit_report' arxiv_id %}"{% elif kit and demo and user.is_authenticated %} data-report="{% url 'presskit_report' arxiv_id %}"{% endif %}>
   <header class="page-header">
     <span class="eyebrow">{% trans 'Press kit' %} · Premium+</span>
     <h1>{{ paper.title }}</h1>
     <p class="lead">{% for a in paper.authors.all|slice:":6" %}{{ a.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if paper.authors.count > 6 %} et al.{% endif %}{% if paper.authors.count %} · {% endif %}{{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
   </header>
 
-  {% if paid %}{% csrf_token %}{% endif %}
+  {% if paid or user.is_authenticated %}{% csrf_token %}{% endif %}
+
+  {% if shared %}
+  <p class="kit-notice">{% trans 'A press kit shared by a SummarizePaper reader: read-only, as it was written.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
+  {% elif demo %}
+  <p class="kit-notice">{% trans 'An example kit, open to everyone. With Premium+, you write one for any paper: arXiv, journals and preprints.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
+  {% endif %}
 
   {% if editorial %}
   <section class="card section-card editorial-context">
@@ -32,68 +42,182 @@
   </section>
   {% endif %}
 
-  {% if not paid %}
+  {% if not paid and not kit %}
   <div class="upsell">
-    <p><strong>{% trans 'A press kit for every paper: arXiv, journals and preprints.' %}</strong> {% trans 'What is really new, a hype check (peer review, sample size, claims that go beyond the results), key sentences quoted word for word, questions to ask the authors, researchers who work on the same topic but did not sign the paper, and a glossary.' %}</p>
-    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>
+    <p><strong>{% trans 'Talk about a paper in public without overstating it: yours, or one you are asked to comment on.' %}</strong></p>
+    <ul>
+      <li>{% trans 'Your paper: a draft release for your press office, the questions journalists will ask with what the paper lets you answer, the likely misreadings, a lay summary and a short thread.' %}</li>
+      <li>{% trans 'Asked to comment: what the paper shows and does not, its strengths and weaknesses with their passages, and what would settle its main claim.' %}</li>
+      <li>{% trans 'For everyone: findings with their passages checked word for word, the novelty set against the closest earlier papers, a hype check, figures with their credit, and researchers for an outside view who have not signed with the authors.' %}</li>
+    </ul>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a>
+      {% for demo_id in demo_ids %}<a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/press-kit/{{ demo_id }}/">{% trans 'See an example kit' %}</a>{% endfor %}</p>
   </div>
   {% elif kit %}
-    <div id="kit-start" class="presskit-actions"{% if row.status == 'pending' %} hidden{% endif %}>
-      <a class="btn" href="{% url 'presskit_pdf' arxiv_id %}{% if editorial %}?letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download press kit as PDF' %}</a>
-      {% if kit.schema_version != 2 or row.status == 'failed' %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Enrich this kit with verified evidence' %}</button>{% endif %}
-    </div>
-    <section class="card section-card" id="publication-status" data-start="{% url 'presskit_publication_start' arxiv_id %}" data-result="{% url 'presskit_publication' arxiv_id %}" data-auto="{{ publication_stale|yesno:'1,0' }}">
-      {% include 'summarizer/publication_status.html' %}
-    </section>
-    {% if kit.source %}
-    <section class="card section-card">
-      <h2>{% trans 'Source and verification status' %}</h2>
-      <p><a href="{{ kit.source.url }}" rel="noopener noreferrer" target="_blank">{{ kit.source.paper_id }}</a>{% if kit.source.published %} · {{ kit.source.published }}{% endif %}</p>
-      <p>{% if kit.source.scope == 'abstract' %}{% trans 'Source read: abstract only.' %}{% elif kit.source.scope == 'excerpt' %}{% trans 'Source read: partial text. The analysis does not cover the entire paper.' %}{% else %}{% trans 'Source read: available full text.' %}{% endif %}</p>
-      <p class="muted">{% if kit.source.journal_ref %}{{ kit.source.journal_ref }} · {% endif %}{% trans 'Peer-review status is not independently confirmed. A journal reference alone does not establish it.' %}</p>
-    </section>
+    {% if newer %}
+    <p class="kit-notice kit-warning">{% blocktrans with old=newer.from new=newer.version %}This kit is about version {{ old }} of the paper; version {{ new }} exists.{% endblocktrans %}
+      <a href="/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id }}/?from={{ newer.from }}&amp;to={{ newer.version }}" rel="nofollow">{% trans 'What changed' %}</a> ·
+      <a href="/{{ LANGUAGE_CODE }}/press-kit/{{ newer.arxiv_id }}/" rel="nofollow">{% trans 'The kit of the latest version' %}</a></p>
     {% endif %}
-    {% if kit.abstract_only %}<p class="error">{% trans 'Only the abstract was available for this kit. Read the full paper before writing.' %}</p>{% endif %}
 
-    <section class="card section-card">
+    <nav class="kit-roles" role="tablist" aria-label="{% trans 'Your role' %}">
+      <span class="kit-roles-label">{% trans 'You are reading it as:' %}</span>
+      {% for key, label in roles %}<button type="button" role="tab" class="kit-role" data-role-tab="{{ key }}" aria-selected="{% if key == role %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}
+    </nav>
+
+    <section class="card section-card kit-brief" id="kit-brief">
+      <span class="eyebrow">{% trans 'In 30 seconds' %}</span>
       <h2>{{ kit.headline }}</h2>
       <p>{{ kit.plain_explanation }}</p>
-      <h3>{% trans "What's new" %}</h3>
-      <p>{{ kit.whats_new }}</p>
+      {% if kit.verdict %}<p class="kit-verdict"><strong>{% trans 'How solid' %}:</strong> {{ kit.verdict }}</p>{% endif %}
+      <ul class="kit-signals">
+        <li class="kit-scope {% if kit.source.scope == 'full_text' %}ok{% else %}warning{% endif %}">{% if kit.source.scope == 'abstract' or kit.abstract_only %}{% trans 'Read: abstract only' %}{% elif kit.source.scope == 'excerpt' %}{% trans 'Read: part of the text' %}{% elif kit.source.scope == 'full_text' %}{% trans 'Read: full text' %}{% else %}{% trans 'Read: not recorded' %}{% endif %}</li>
+        {% if publication_label %}<li>{{ publication_label }}</li>{% endif %}
+        {% for h in kit.hype_check %}{% if h.level == 'warning' %}<li class="warning">⚠ {{ h.signal }}</li>{% endif %}{% endfor %}
+      </ul>
+      {% if kit.numbers_absent %}<p class="error">{% blocktrans with values=kit.numbers_absent|join:', ' %}Numbers of this explanation that the paper text does not state: {{ values }}. Check them first.{% endblocktrans %}</p>{% endif %}
+      {% if kit.abstract_only %}<p class="error">{% trans 'Only the abstract was available for this kit. Read the full paper before writing.' %}</p>{% endif %}
     </section>
 
+    {% if paid %}
+    <div id="kit-start" class="presskit-actions"{% if row.status == 'pending' %} hidden{% endif %}>
+      <a class="btn" data-role-link href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}{% if editorial %}&amp;letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download as PDF' %}</a>
+      <a class="btn btn-ghost" data-role-link href="{% url 'presskit_markdown' arxiv_id %}?role={{ role }}">{% trans 'Markdown (to paste in a document)' %}</a>
+      <button type="button" class="btn btn-ghost" data-kit-share>{% if share_url %}{% trans 'Shared link' %}{% else %}{% trans 'Share a read-only link' %}{% endif %}</button>
+      {% if kit.schema_version != 3 or row.status == 'failed' %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Update this kit: roles, earlier papers, figures' %}</button>
+      {% elif can_read_full_text %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Read the full text again' %}</button>{% endif %}
+    </div>
+    <div class="kit-share-box" data-kit-share-box{% if not share_url %} hidden{% endif %}>
+      <label for="kit-share-url">{% trans 'Anyone with this link can read the kit, without an account, for 90 days: your press office, your co-authors.' %}</label>
+      <input id="kit-share-url" type="text" readonly value="{{ share_url }}">
+      <button type="button" class="btn btn-sm" data-copy-field="kit-share-url">{% trans 'Copy' %}</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-kit-unshare>{% trans 'Stop sharing' %}</button>
+    </div>
+    {% elif demo %}
+    <div class="presskit-actions"><a class="btn" data-role-link href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}">{% trans 'Download as PDF' %}</a>
+      <a class="btn btn-ghost" data-role-link href="{% url 'presskit_markdown' arxiv_id %}?role={{ role }}">{% trans 'Markdown (to paste in a document)' %}</a></div>
+    {% endif %}
+
+    <nav class="kit-toc" aria-label="{% trans 'Contents' %}">
+      <a href="#kit-role">{% trans 'For your role' %}</a>
+      {% if kit.evidence_cards %}<a href="#kit-evidence">{% trans 'Findings and passages' %}</a>{% endif %}
+      <a href="#kit-novelty">{% trans "What's new" %}</a>
+      <a href="#kit-hype">{% trans 'Hype check' %}</a>
+      {% if kit.figures %}<a href="#kit-figures">{% trans 'Figures' %}</a>{% endif %}
+      <a href="#kit-experts">{% trans 'Outside comment' %}</a>
+      {% if kit.glossary %}<a href="#kit-glossary">{% trans 'Glossary' %}</a>{% endif %}
+      <a href="#kit-source">{% trans 'Source and status' %}</a>
+    </nav>
+
+    <div id="kit-role">
+      <section class="card section-card" data-role-panel="author"{% if role != 'author' %} hidden{% endif %}>
+        {% with part=kit.roles.author %}
+        <h2>{% trans 'Your paper: talking about it' %}</h2>
+        {% if part.press_release.lede %}
+        <h3>{% trans 'Draft press release' %}</h3>
+        <p class="muted">{% trans 'A draft for your press office, written by AI from the paper: check every sentence, and add your own quote.' %}</p>
+        <article class="kit-release" id="kit-release">
+          <h4>{{ part.press_release.title }}</h4>
+          <p><strong>{{ part.press_release.lede }}</strong></p>
+          {% for paragraph in part.press_release.body %}<p>{{ paragraph }}</p>{% endfor %}
+          {% if part.press_release.quote_slot %}<p class="kit-slot">[{% trans 'Your quote' %}: {{ part.press_release.quote_slot }}]</p>{% endif %}
+        </article>
+        <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-release">{% trans 'Copy the release' %}</button>
+        {% endif %}
+        {% if part.likely_questions %}
+        <h3>{% trans 'Questions journalists are likely to ask' %}</h3>
+        <p class="muted">{% trans 'With what the paper itself lets you answer: prepare the rest.' %}</p>
+        <ol class="kit-list">{% for q in part.likely_questions %}<li><strong>{{ q.question }}</strong><p>{{ q.answer }}</p>{% include 'summarizer/presskit_passage.html' with p=q.passage %}</li>{% endfor %}</ol>
+        {% endif %}
+        {% if part.misreadings %}
+        <h3>{% trans 'Likely misreadings' %}</h3>
+        <ul class="kit-list">{% for m in part.misreadings %}<li><strong>{{ m.misreading }}</strong><p>{{ m.correction }}</p></li>{% endfor %}</ul>
+        {% endif %}
+        {% if part.lay_summary %}
+        <h3>{% trans 'Lay summary (institution news, grant report)' %}</h3>
+        <p id="kit-lay">{{ part.lay_summary }}</p>
+        <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-lay">{% trans 'Copy' %}</button>
+        {% endif %}
+        {% if part.social_posts %}
+        <h3>{% trans 'A short thread' %}</h3>
+        <ol class="kit-thread" id="kit-thread">{% for post in part.social_posts %}<li>{{ post }}</li>{% endfor %}</ol>
+        <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-thread">{% trans 'Copy the thread' %}</button>
+        {% endif %}
+        {% if not part.press_release.lede and not part.likely_questions %}<p class="muted">{% trans 'This kit was written before this part existed: update it to get a draft release and the questions journalists will ask.' %}</p>{% endif %}
+        {% endwith %}
+      </section>
+
+      <section class="card section-card" data-role-panel="commentator"{% if role != 'commentator' %} hidden{% endif %}>
+        {% with part=kit.roles.commentator %}
+        <h2>{% trans 'Asked to comment: what this paper shows' %}</h2>
+        {% if part.in_brief %}<ul class="kit-brief-lines">{% for line in part.in_brief %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+        {% if part.strengths %}
+        <h3>{% trans 'Strengths' %}</h3>
+        <ul class="kit-list">{% for s in part.strengths %}<li><strong>{{ s.point }}</strong>{% include 'summarizer/presskit_passage.html' with p=s.passage %}</li>{% endfor %}</ul>
+        {% endif %}
+        {% if part.weaknesses %}
+        <h3>{% trans 'Weaknesses and open questions' %}</h3>
+        <ul class="kit-list">{% for s in part.weaknesses %}<li><strong>{{ s.point }}</strong>{% include 'summarizer/presskit_passage.html' with p=s.passage %}</li>{% endfor %}</ul>
+        {% endif %}
+        {% if part.what_would_convince %}<h3>{% trans 'What would settle the main claim' %}</h3><p>{{ part.what_would_convince }}</p>{% endif %}
+        {% if part.comment_draft %}
+        <h3>{% trans 'A comment to adapt in your own words' %}</h3>
+        <p class="kit-slot" id="kit-comment">{{ part.comment_draft }}</p>
+        <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-comment">{% trans 'Copy' %}</button>
+        {% endif %}
+        {% if not part.in_brief and not part.strengths %}<p class="muted">{% trans 'This kit was written before this part existed: update it to get the strengths and weaknesses of the paper with their passages.' %}</p>{% endif %}
+        {% endwith %}
+      </section>
+
+      <section class="card section-card" data-role-panel="writer"{% if role != 'writer' %} hidden{% endif %}>
+        <h2>{% trans 'Writing about it' %}</h2>
+        {% if kit.angles %}
+        <h3>{% trans 'Reporting angles' %}</h3>
+        {% for a in kit.angles %}<h4>{{ a.angle }}</h4><p>{{ a.why_now }}</p><p><strong>{% trans 'Next reporting step' %}:</strong> {{ a.reporting_step }}</p>{% endfor %}
+        {% endif %}
+        {% if kit.wording_checks %}
+        <h3>{% trans 'Wording to check before publication' %}</h3>
+        {% for w in kit.wording_checks %}<div class="kit-wording"><p><strong>{% trans 'Avoid' %}:</strong> {{ w.avoid }}</p><p><strong>{% trans 'Prefer' %}:</strong> {{ w.prefer }}</p><p class="muted">{{ w.reason }}</p></div>{% endfor %}
+        {% endif %}
+        <h3>{% trans 'Questions to ask the authors' %}</h3>
+        <ol id="author-questions" class="kit-list">{% include 'summarizer/presskit_questions.html' %}</ol>
+      </section>
+    </div>
+
     {% if kit.evidence_cards %}
-    <section class="card section-card">
+    <section class="card section-card" id="kit-evidence">
       <h2>{% trans 'Findings and source evidence' %}</h2>
       <p class="muted">{% trans 'A matching quote confirms that the passage exists, not that the finding is independently validated.' %}</p>
       {% for e in kit.evidence_cards %}
       <article class="presskit-evidence">
-        <h3>{{ e.claim }}</h3>
+        <h3>{{ e.claim }} {% if e.kind == 'result' %}<span class="kit-kind result">{% trans 'Result' %}</span>{% elif e.kind == 'interpretation' %}<span class="kit-kind">{% trans 'Interpretation' %}</span>{% endif %}</h3>
         <p>{{ e.why_it_matters }}</p>
         {% if e.numeric_mismatch %}<p class="error">{% trans 'Numbers in this claim do not all match the cited passage. Check them before publication.' %}</p>{% endif %}
-        {% if e.verified %}<span class="eyebrow">{% trans 'Source passage verified' %}</span>
-        {% if e.location %}<p class="muted">{{ e.location }}</p>{% endif %}
-        <blockquote class="key-sentence">{{ e.quote }}</blockquote>
+        {% if e.verified %}{% include 'summarizer/presskit_passage.html' with p=e %}
         {% else %}<p class="error">{% trans 'Supporting passage not verified. Check this claim in the paper before using it.' %}</p>{% endif %}
         <p><strong>{% trans 'Limit of this finding' %}:</strong> {{ e.limitation }}</p>
+        <button type="button" class="kit-report" data-report-section="evidence" data-report-item="{{ e.claim|truncatechars:300 }}">{% trans 'Report a mistake' %}</button>
       </article>
       {% endfor %}
     </section>
     {% endif %}
-    {% if kit.angles %}
-    <section class="card section-card">
-      <h2>{% trans 'Reporting angles' %}</h2>
-      {% for a in kit.angles %}<h3>{{ a.angle }}</h3><p>{{ a.why_now }}</p><p><strong>{% trans 'Next reporting step' %}:</strong> {{ a.reporting_step }}</p>{% endfor %}
-    </section>
-    {% endif %}
-    {% if kit.wording_checks %}
-    <section class="card section-card">
-      <h2>{% trans 'Wording to check before publication' %}</h2>
-      {% for w in kit.wording_checks %}<p><strong>{% trans 'Avoid' %}:</strong> {{ w.avoid }}</p><p><strong>{% trans 'Prefer' %}:</strong> {{ w.prefer }}</p><p class="muted">{{ w.reason }}</p>{% endfor %}
-    </section>
-    {% endif %}
 
-    <section class="card section-card">
+    <section class="card section-card" id="kit-novelty">
+      <h2>{% trans "What's new" %}</h2>
+      <p>{{ kit.whats_new }}</p>
+      <p class="muted">{% trans 'As the paper itself states it.' %}</p>
+      {% if kit.novelty.comparisons or kit.novelty.assessment %}
+      <h3>{% trans 'Against the closest earlier papers' %}</h3>
+      {% if kit.novelty.assessment %}<p><strong>{{ kit.novelty.assessment }}</strong></p>{% endif %}
+      <ul class="kit-list">{% for c in kit.novelty.comparisons %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ c.arxiv_id }}/">{{ c.title }}</a>{% if c.date %} ({{ c.date|slice:":4" }}){% endif %}
+        <p><strong>{% trans 'Already done' %}:</strong> {{ c.already }}</p><p><strong>{% trans 'This paper adds' %}:</strong> {{ c.adds }}</p></li>{% endfor %}</ul>
+      <p class="muted">{% blocktrans count n=kit.novelty.compared %}Compared with the abstract of the closest paper we know, chosen automatically: not a literature review.{% plural %}Compared with the abstracts of the {{ n }} closest papers we know, chosen automatically: not a literature review.{% endblocktrans %}
+        <a href="/{{ LANGUAGE_CODE }}/literature-review/">{% trans 'A literature review on the question' %}</a></p>
+      <button type="button" class="kit-report" data-report-section="novelty" data-report-item="{{ kit.novelty.assessment|truncatechars:300 }}">{% trans 'Report a mistake' %}</button>
+      {% endif %}
+    </section>
+
+    <section class="card section-card" id="kit-hype">
       <h2>{% trans 'Hype check' %}</h2>
       <p><strong>{{ kit.verdict }}</strong></p>
       <ul class="hype-list">
@@ -103,43 +227,108 @@
       </ul>
     </section>
 
-    {% if kit.key_sentences %}
-    <section class="card section-card">
-      <h2>{% trans 'Key sentences from the paper' %}</h2>
-      <p class="muted">{% trans 'Copied word for word from the paper (checked against its text). Quote the paper, not us.' %}</p>
-      {% for sentence in kit.key_sentences %}<blockquote class="key-sentence">{{ sentence }}</blockquote>{% endfor %}
+    {% rising_topic arxiv_id as rising %}
+    {% if rising or editorial %}
+    <section class="card section-card" id="kit-now">
+      <h2>{% trans 'Why now' %}</h2>
+      {% if rising %}<p>{% blocktrans with title=rising.title g=rising.growth name=rising.scope_name %}This paper is part of "{{ title }}", rising in {{ name }} (×{{ g }} compared with usual).{% endblocktrans %}
+        <a href="/{{ LANGUAGE_CODE }}/trends/explore/?t={{ rising.main|urlencode }}" rel="nofollow">{% trans 'The history of the term' %}</a></p>{% endif %}
+      {% if editorial %}<p>{% blocktrans with name=editorial.heading %}Chosen in the weekly letter: "{{ name }}".{% endblocktrans %}</p>{% endif %}
     </section>
     {% endif %}
 
-    <section class="card section-card">
-      <h2>{% trans 'Questions to ask the authors' %}</h2>
-      <ol id="author-questions">{% for q in author_questions %}<li>{{ q }}</li>{% endfor %}</ol>
+    {% if kit.figures %}
+    <section class="card section-card" id="kit-figures">
+      <h2>{% trans 'Figures for the press' %}</h2>
+      {% for f in kit.figures %}
+      <figure class="kit-figure">
+        <a href="{{ f.source_url }}" target="_blank" rel="noopener noreferrer"><img src="{{ f.image }}" alt="{{ f.label }}" loading="lazy" referrerpolicy="no-referrer"></a>
+        <figcaption><strong>{{ f.label }}</strong>{% if f.why %} — {{ f.why }}{% endif %}
+          <span class="muted kit-caption">{{ f.caption|truncatechars:600 }}</span>
+          <span class="kit-credit" id="kit-credit-{{ forloop.counter }}">{% trans 'Credit' %}: {{ f.credit }}</span>
+          <span class="muted">{% for code, terms in license_terms.items %}{% if code == f.license_code %}{{ terms }}{% endif %}{% endfor %}</span>
+          <button type="button" class="btn btn-sm btn-ghost" data-copy-block="kit-credit-{{ forloop.counter }}">{% trans 'Copy the credit' %}</button></figcaption>
+      </figure>
+      {% endfor %}
     </section>
+    {% endif %}
 
-    <section class="card section-card">
+    <section class="card section-card" id="kit-experts">
       <h2>{% trans 'Researchers to approach for outside comment' %}</h2>
       {% if kit.experts %}
-      <p class="muted">{% trans 'These researchers are not listed as coauthors in our metadata. Their independence, affiliations and possible conflicts of interest still need to be checked.' %}</p>
-      <ul>
+      <p class="muted">{% if kit.experts_checked %}{% trans 'They sign close papers first, last or as corresponding author, and neither sign this paper nor have signed with its authors in the last five years (OpenAlex). Their independence and possible conflicts of interest still need to be checked.' %}{% if kit.experts_left_out %} {% blocktrans count n=kit.experts_left_out %}{{ n }} researcher left out: co-author of the authors or at their institution.{% plural %}{{ n }} researchers left out: co-authors of the authors or at their institution.{% endblocktrans %}{% endif %}{% else %}{% trans 'These researchers are not listed as coauthors in our metadata. Their independence, affiliations and possible conflicts of interest still need to be checked.' %}{% endif %}</p>
+      <ul class="kit-list">
         {% for e in kit.experts %}
-        <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}){% endif %} — <a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a></li>
+        <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}{% if e.country %}, {{ e.country }}{% endif %}){% endif %}{% if e.orcid %} · <a href="{{ e.orcid }}" target="_blank" rel="noopener noreferrer">ORCID</a>{% endif %}
+          <br><span class="muted">{% if e.roles %}{% if 'last' in e.roles %}{% trans 'last author of' %}{% elif 'first' in e.roles %}{% trans 'first author of' %}{% else %}{% trans 'corresponding author of' %}{% endif %} {% endif %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a>{% if e.year %} ({{ e.year }}){% endif %}{% if e.count > 1 %} · {% blocktrans count n=e.count %}{{ n }} close paper{% plural %}{{ n }} close papers{% endblocktrans %}{% endif %}</span></li>
         {% endfor %}
       </ul>
+      <p><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}&amp;mode=overview" rel="nofollow">{% trans 'Everyone who works on this topic' %} →</a></p>
+      <button type="button" class="kit-report" data-report-section="experts">{% trans 'Report a mistake' %}</button>
       {% else %}
       <p class="muted">{% trans 'We do not know enough papers close to this one yet.' %}</p>
       {% endif %}
     </section>
 
-    {% if kit.glossary %}
+    {% if kit.key_sentences %}
     <section class="card section-card">
+      <h2>{% trans 'Key sentences from the paper' %}</h2>
+      <p class="muted">{% trans 'Copied word for word from the paper (checked against its text). Quote the paper, not us.' %}</p>
+      {% for sentence in kit.key_sentences %}<figure class="kit-passage"><blockquote class="key-sentence">{{ sentence }}</blockquote>
+        <figcaption><button type="button" class="kit-copy" data-copy-quote="{{ sentence }}" data-copy-where="">{% trans 'Copy with reference' %}</button></figcaption></figure>{% endfor %}
+    </section>
+    {% endif %}
+
+    {% if kit.glossary %}
+    <section class="card section-card" id="kit-glossary">
       <h2>{% trans 'Glossary' %}</h2>
       <dl>{% for g in kit.glossary %}<dt><strong>{{ g.term }}</strong></dt><dd>{{ g.definition }}</dd>{% endfor %}</dl>
     </section>
     {% endif %}
+
+    <div id="kit-source">
+    {% if paid %}
+    <section class="card section-card" id="publication-status" data-start="{% url 'presskit_publication_start' arxiv_id %}" data-result="{% url 'presskit_publication' arxiv_id %}" data-auto="{{ publication_stale|yesno:'1,0' }}">
+      {% include 'summarizer/publication_status.html' %}
+    </section>
+    {% elif publication %}
+    <section class="card section-card kit-static-status">{% include 'summarizer/publication_status.html' %}</section>
+    {% endif %}
+    {% if kit.source %}
+    <section class="card section-card">
+      <h2>{% trans 'Source and verification status' %}</h2>
+      <p><a href="{{ kit.source.url }}" rel="noopener noreferrer" target="_blank">{{ kit.source.paper_id }}</a>{% if kit.source.published %} · {{ kit.source.published }}{% endif %}</p>
+      <p>{% if kit.source.scope == 'abstract' %}{% trans 'Source read: abstract only.' %}{% elif kit.source.scope == 'excerpt' %}{% trans 'Source read: partial text. The analysis does not cover the entire paper.' %}{% else %}{% trans 'Source read: available full text.' %}{% endif %}</p>
+      <p class="muted">{% if kit.source.journal_ref %}{{ kit.source.journal_ref }} · {% endif %}{% trans 'Peer-review status is not independently confirmed. A journal reference alone does not establish it.' %}</p>
+    </section>
+    {% endif %}
+    </div>
+
+    <section class="card section-card kit-next">
+      <h2>{% trans 'Next steps with this paper' %}</h2>
+      <ul>
+        <li><a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ arxiv_id|urlencode }}" rel="nofollow">{% trans 'Ask the paper your own questions, with the passages of each answer' %}</a></li>
+        <li><a href="/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id }}/" rel="nofollow">{% trans 'Slides to present it (journal club, seminar)' %}</a></li>
+        <li><a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/#tools" rel="nofollow">{% trans 'Be told who cites it, and of its new versions' %}</a></li>
+        {% if not arxiv_id|is_external %}<li><a href="/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id }}/" rel="nofollow">{% trans 'What changed between versions' %}</a></li>{% endif %}
+      </ul>
+    </section>
+
     <p class="muted"><small>{% blocktrans with date=row.updated|date:"j F Y" %}Written by AI on {{ date }} from the paper. Check every fact against the paper before publishing.{% endblocktrans %}</small></p>
+
+    <dialog class="kit-dialog" id="kit-report-dialog">
+      <form method="dialog">
+        <h2>{% trans 'Report a mistake' %}</h2>
+        <p class="muted" data-report-about></p>
+        <label for="kit-report-text">{% trans 'What is wrong? A quote, a number, a person, a misreading…' %}</label>
+        <textarea id="kit-report-text" rows="4" maxlength="2000" required></textarea>
+        <p class="error" data-report-error hidden></p>
+        <div class="presskit-actions"><button type="submit" class="btn" value="send">{% trans 'Send' %}</button><button type="button" class="btn btn-ghost" data-report-cancel>{% trans 'Cancel' %}</button></div>
+      </form>
+    </dialog>
   {% else %}
     <div class="card section-card" id="kit-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
-      <p>{% trans 'The press kit is written from the full paper. It takes about a minute.' %}</p>
+      <p>{% trans 'The press kit is written from the full paper, for its authors, for researchers asked to comment on it and for those who write about it. It takes one or two minutes.' %}</p>
       <button type="button" class="btn" id="kit-go">{% trans 'Write the press kit' %}</button>
       {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
     </div>
@@ -147,7 +336,7 @@
 {% if paid %}
     <p id="kit-request-error" class="error" role="status" hidden>{% trans 'Something went wrong. Please try again.' %}</p>
     {% trans 'Writing the press kit' as working_title %}
-    {% trans 'usually about a minute' as working_time %}
+    {% trans 'usually one or two minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='kit-working' working_steps=steps working_started=row.updated %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {

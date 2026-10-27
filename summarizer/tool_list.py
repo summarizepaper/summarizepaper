@@ -20,7 +20,7 @@ _GROUPS = [
         ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search: every new arXiv, bioRxiv, medRxiv and journal paper that matches it, ranked, by email, in your digest or by RSS, kept on its page. One watch free, five with Premium.')),
     ]),
     (_('Write and submit'), [
-        ('press-kit/', 'newspaper', _('Press kit'), 'plus', _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),
+        ('press-kit/', 'newspaper', _('Press kit'), 'plus', _('Talk about a paper in public without overstating it: a draft release and the questions journalists will ask for its authors, strengths and weaknesses for a researcher asked to comment, every quote checked against the paper.')),
         ('literature-review/', 'book-open', _('Literature review'), 'plus', _('From a research question: 15 to 30 founding and recent papers, grouped by approach, with a referenced synthesis.')),
         ('missed/', 'search', _('What did I miss?'), True, _('The papers close to your draft that it does not cite.')),
         ('refcheck/', 'tasks', _('Bibliography check'), True, _('Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.')),

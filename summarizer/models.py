@@ -1244,3 +1244,19 @@ class TopicMapWatch(models.Model):
 
     class Meta:
         unique_together = ('user', 'row')
+
+
+class PressKitReport(models.Model):
+    """A mistake a reader reports in a press kit (see presskit.py): a quote, a number, an expert..."""
+    arxiv_id = models.CharField(max_length=200)
+    lang = models.CharField(max_length=10)
+    section = models.CharField(max_length=20)
+    item = models.CharField(max_length=500, blank=True, default='')  # what the report is about: a claim, a name
+    text = models.TextField()
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    kit_updated = models.DateTimeField(null=True)  # the version of the kit that was read
+    created = models.DateTimeField(auto_now_add=True)
+    handled = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [models.Index(fields=['user', 'created'])]

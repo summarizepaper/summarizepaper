@@ -12,6 +12,7 @@
     <span class="eyebrow">Premium+</span>
     <h1>{{ tool_name }}</h1>
     <p class="lead">{{ description }}</p>
+    {% for example in examples %}<p><a class="btn btn-ghost" href="{% url tool_route example %}">{% trans 'See an example kit' %}</a></p>{% endfor %}
   </header>
   <section class="card section-card">
     <h2>{% trans 'Choose a paper' %}</h2>

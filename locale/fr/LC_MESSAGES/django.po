@@ -16859,3 +16859,425 @@ msgid "%(n)s paper that week"
 msgid_plural "%(n)s papers that week"
 msgstr[0] "%(n)s article cette semaine-là"
 msgstr[1] "%(n)s articles cette semaine-là"
+
+msgid "It is my paper"
+msgstr "C’est mon article"
+
+msgid "I am asked to comment"
+msgstr "On me demande de le commenter"
+
+msgid "I write about it"
+msgstr "J’écris à son sujet"
+
+msgid "Finding earlier papers and researchers for outside comment"
+msgstr ""
+"Recherche des articles antérieurs et de spécialistes pour un regard "
+"extérieur"
+
+msgid "Writing the kit and checking every quote against the paper"
+msgstr "Rédaction du kit et vérification de chaque citation dans l’article"
+
+msgid "Reuse allowed with this credit."
+msgstr "Réutilisation autorisée avec ce crédit."
+
+msgid "Reuse allowed with this credit, under the same license."
+msgstr "Réutilisation autorisée avec ce crédit, sous la même licence."
+
+msgid ""
+"Reuse with this credit for non-commercial use only: check with your outlet."
+msgstr ""
+"Réutilisation avec ce crédit pour un usage non commercial seulement : "
+"vérifiez avec votre média."
+
+msgid ""
+"Reuse with this credit for non-commercial use only, under the same license: "
+"check with your outlet."
+msgstr ""
+"Réutilisation avec ce crédit pour un usage non commercial seulement, sous la"
+" même licence : vérifiez avec votre média."
+
+msgid "Public domain."
+msgstr "Domaine public."
+
+msgid ""
+"AI-assisted brief. Verify facts, interpretation and quotations against the "
+"original paper before publication."
+msgstr ""
+"Fiche préparée avec l’IA. Vérifiez les faits, l’interprétation et les "
+"citations dans l’article original avant publication."
+
+#, python-format
+msgid ""
+"Numbers of this explanation that the paper text does not state: %s. Check "
+"them first."
+msgstr ""
+"Nombres de cette explication que le texte de l’article ne donne pas : %s. "
+"Vérifiez-les d’abord."
+
+#, python-format
+msgid ""
+"Numbers of this explanation that the paper text does not state: %(values)s. "
+"Check them first."
+msgstr ""
+"Nombres de cette explication que le texte de l’article ne donne pas : "
+"%(values)s. Vérifiez-les d’abord."
+
+msgid "Against the closest earlier papers"
+msgstr "Face aux articles antérieurs les plus proches"
+
+msgid "Already done"
+msgstr "Déjà fait"
+
+msgid "This paper adds"
+msgstr "Ce que cet article ajoute"
+
+msgid ""
+"Compared with the abstracts of the closest papers we know, chosen "
+"automatically: not a literature review."
+msgstr ""
+"Comparaison avec les résumés des articles les plus proches que nous "
+"connaissons, choisis automatiquement : ce n’est pas une revue de "
+"littérature."
+
+msgid "Interpretation"
+msgstr "Interprétation"
+
+msgid "Figures for the press"
+msgstr "Figures pour la presse"
+
+msgid "Credit"
+msgstr "Crédit"
+
+msgid ""
+"They sign close papers first, last or as corresponding author, and neither "
+"sign this paper nor have signed with its authors in the last five years "
+"(OpenAlex). Their independence and possible conflicts of interest still need"
+" to be checked."
+msgstr ""
+"Ils signent des articles proches en premier, en dernier ou comme auteur "
+"correspondant, et ne signent ni cet article ni, depuis cinq ans, avec ses "
+"auteurs (OpenAlex). Leur indépendance et leurs éventuels conflits d’intérêts"
+" restent à vérifier."
+
+msgid "For the authors: draft press release"
+msgstr "Pour les auteurs : projet de communiqué"
+
+msgid ""
+"A draft for your press office, written by AI from the paper: check every "
+"sentence, and add your own quote."
+msgstr ""
+"Un brouillon pour votre service de presse, rédigé par l’IA à partir de "
+"l’article : vérifiez chaque phrase et ajoutez votre propre citation."
+
+msgid "Your quote"
+msgstr "Votre citation"
+
+msgid "Questions journalists are likely to ask"
+msgstr "Questions que les journalistes poseront probablement"
+
+msgid "Likely misreadings"
+msgstr "Contresens probables"
+
+msgid "Lay summary (institution news, grant report)"
+msgstr ""
+"Résumé grand public (actualité de l’institution, rapport de financement)"
+
+msgid "A short thread"
+msgstr "Un fil court"
+
+msgid "Asked to comment: what this paper shows"
+msgstr "Sollicité pour commenter : ce que montre cet article"
+
+msgid "Weaknesses and open questions"
+msgstr "Faiblesses et questions ouvertes"
+
+msgid "What would settle the main claim"
+msgstr "Ce qui trancherait l’affirmation principale"
+
+msgid "A comment to adapt in your own words"
+msgstr "Un commentaire à reformuler avec vos mots"
+
+msgid "The paper already says"
+msgstr "L’article dit déjà"
+
+msgid "The paper already says:"
+msgstr "L’article dit déjà :"
+
+msgid ""
+"Talk about a paper in public without overstating it: a draft release and the"
+" questions journalists will ask for its authors, strengths and weaknesses "
+"for a researcher asked to comment, every quote checked against the paper."
+msgstr ""
+"Parler d’un article en public sans l’exagérer : un projet de communiqué et "
+"les questions des journalistes pour ses auteurs, ses points forts et ses "
+"faiblesses pour un chercheur sollicité pour le commenter, chaque citation "
+"vérifiée dans l’article."
+
+msgid "Thank you: we will check it."
+msgstr "Merci : nous allons vérifier."
+
+msgid ""
+"A press kit shared by a SummarizePaper reader: read-only, as it was written."
+msgstr ""
+"Un kit presse partagé par un lecteur de SummarizePaper : en lecture seule, "
+"tel qu’il a été rédigé."
+
+msgid ""
+"An example kit, open to everyone. With Premium+, you write one for any "
+"paper: arXiv, journals and preprints."
+msgstr ""
+"Un kit d’exemple, ouvert à tous. Avec Premium+, vous en rédigez un pour "
+"n’importe quel article : arXiv, revues et prépublications."
+
+msgid ""
+"Talk about a paper in public without overstating it: yours, or one you are "
+"asked to comment on."
+msgstr ""
+"Parler d’un article en public sans l’exagérer : le vôtre, ou celui qu’on "
+"vous demande de commenter."
+
+msgid ""
+"Your paper: a draft release for your press office, the questions journalists"
+" will ask with what the paper lets you answer, the likely misreadings, a lay"
+" summary and a short thread."
+msgstr ""
+"Votre article : un projet de communiqué pour votre service de presse, les "
+"questions des journalistes avec ce que l’article permet d’y répondre, les "
+"contresens probables, un résumé grand public et un fil court."
+
+msgid ""
+"Asked to comment: what the paper shows and does not, its strengths and "
+"weaknesses with their passages, and what would settle its main claim."
+msgstr ""
+"Sollicité pour commenter : ce que l’article montre et ne montre pas, ses "
+"points forts et ses faiblesses avec leurs passages, et ce qui trancherait "
+"son affirmation principale."
+
+msgid ""
+"For everyone: findings with their passages checked word for word, the "
+"novelty set against the closest earlier papers, a hype check, figures with "
+"their credit, and researchers for an outside view who have not signed with "
+"the authors."
+msgstr ""
+"Pour tous : les résultats avec leurs passages vérifiés mot pour mot, la "
+"nouveauté confrontée aux articles antérieurs les plus proches, un détecteur "
+"de hype, des figures avec leur crédit, et des spécialistes pour un regard "
+"extérieur qui n’ont pas signé avec les auteurs."
+
+msgid "See an example kit"
+msgstr "Voir un kit d’exemple"
+
+#, python-format
+msgid ""
+"This kit is about version %(old)s of the paper; version %(new)s exists."
+msgstr ""
+"Ce kit porte sur la version %(old)s de l’article ; la version %(new)s "
+"existe."
+
+msgid "The kit of the latest version"
+msgstr "Le kit de la dernière version"
+
+msgid "Your role"
+msgstr "Votre rôle"
+
+msgid "You are reading it as:"
+msgstr "Vous le lisez en tant que :"
+
+msgid "In 30 seconds"
+msgstr "En 30 secondes"
+
+msgid "How solid"
+msgstr "Solidité"
+
+msgid "Read: abstract only"
+msgstr "Lu : résumé seulement"
+
+msgid "Read: part of the text"
+msgstr "Lu : une partie du texte"
+
+msgid "Read: full text"
+msgstr "Lu : texte complet"
+
+msgid "Read: not recorded"
+msgstr "Lu : non enregistré"
+
+msgid "Download as PDF"
+msgstr "Télécharger en PDF"
+
+msgid "Markdown (to paste in a document)"
+msgstr "Markdown (à coller dans un document)"
+
+msgid "Update this kit: roles, earlier papers, figures"
+msgstr "Mettre ce kit à jour : rôles, articles antérieurs, figures"
+
+msgid "Read the full text again"
+msgstr "Relire avec le texte complet"
+
+msgid ""
+"Anyone with this link can read the kit, without an account, for 90 days: "
+"your press office, your co-authors."
+msgstr ""
+"Toute personne qui a ce lien peut lire le kit, sans compte, pendant 90 jours"
+" : votre service de presse, vos coauteurs."
+
+msgid "Contents"
+msgstr "Sommaire"
+
+msgid "For your role"
+msgstr "Pour votre rôle"
+
+msgid "Findings and passages"
+msgstr "Résultats et passages"
+
+msgid "Outside comment"
+msgstr "Regard extérieur"
+
+msgid "Source and status"
+msgstr "Source et statut"
+
+msgid "Your paper: talking about it"
+msgstr "Votre article : en parler"
+
+msgid "Draft press release"
+msgstr "Projet de communiqué"
+
+msgid "Copy the release"
+msgstr "Copier le communiqué"
+
+msgid "With what the paper itself lets you answer: prepare the rest."
+msgstr ""
+"Avec ce que l’article lui-même permet de répondre : préparez le reste."
+
+msgid "Copy the thread"
+msgstr "Copier le fil"
+
+msgid ""
+"This kit was written before this part existed: update it to get a draft "
+"release and the questions journalists will ask."
+msgstr ""
+"Ce kit a été rédigé avant cette partie : mettez-le à jour pour obtenir un "
+"projet de communiqué et les questions des journalistes."
+
+msgid ""
+"This kit was written before this part existed: update it to get the "
+"strengths and weaknesses of the paper with their passages."
+msgstr ""
+"Ce kit a été rédigé avant cette partie : mettez-le à jour pour obtenir les "
+"points forts et les faiblesses de l’article avec leurs passages."
+
+msgid "Writing about it"
+msgstr "Écrire à son sujet"
+
+msgid "Report a mistake"
+msgstr "Signaler une erreur"
+
+msgid "As the paper itself states it."
+msgstr "Telle que l’article la présente lui-même."
+
+msgid "A literature review on the question"
+msgstr "Une revue de littérature sur la question"
+
+msgid "Why now"
+msgstr "Pourquoi maintenant"
+
+#, python-format
+msgid "Chosen in the weekly letter: \"%(name)s\"."
+msgstr "Retenu dans la lettre hebdomadaire : « %(name)s »."
+
+msgid "Copy the credit"
+msgstr "Copier le crédit"
+
+msgid "last author of"
+msgstr "dernier auteur de"
+
+msgid "first author of"
+msgstr "premier auteur de"
+
+msgid "corresponding author of"
+msgstr "auteur correspondant de"
+
+msgid "Everyone who works on this topic"
+msgstr "Tous ceux qui travaillent sur ce sujet"
+
+msgid "Copy with reference"
+msgstr "Copier avec la référence"
+
+msgid "Next steps with this paper"
+msgstr "Pour aller plus loin avec cet article"
+
+msgid "Ask the paper your own questions, with the passages of each answer"
+msgstr ""
+"Posez vos propres questions à l’article, avec les passages de chaque réponse"
+
+msgid "Slides to present it (journal club, seminar)"
+msgstr "Des diapositives pour le présenter (journal club, séminaire)"
+
+msgid "Be told who cites it, and of its new versions"
+msgstr "Être averti de qui le cite et de ses nouvelles versions"
+
+msgid "What is wrong? A quote, a number, a person, a misreading…"
+msgstr ""
+"Qu’est-ce qui est faux ? Une citation, un nombre, une personne, un "
+"contresens…"
+
+msgid ""
+"The press kit is written from the full paper, for its authors, for "
+"researchers asked to comment on it and for those who write about it. It "
+"takes one or two minutes."
+msgstr ""
+"Le kit presse est rédigé à partir de l’article complet, pour ses auteurs, "
+"pour les chercheurs sollicités pour le commenter et pour ceux qui écrivent à"
+" son sujet. Cela prend une à deux minutes."
+
+msgid "usually one or two minutes"
+msgstr "en général une à deux minutes"
+
+msgid "Ask the paper first"
+msgstr "Posez-la d’abord à l’article"
+
+msgid "Talk about it in public"
+msgstr "En parler en public"
+
+msgid "Press kit: release, questions, hype check"
+msgstr "Kit presse : communiqué, questions, détecteur de hype"
+
+msgid ""
+"a draft release and likely questions for your own paper, strengths and "
+"weaknesses when asked to comment, source-checked quotes, hype check, figures"
+" with credits and independent commentators"
+msgstr ""
+"un projet de communiqué et les questions probables pour votre article, "
+"points forts et faiblesses quand on vous sollicite, citations vérifiées à la"
+" source, détecteur de hype, figures créditées et spécialistes indépendants"
+
+#, python-format
+msgid ""
+"Compared with the abstract of the closest paper we know, chosen "
+"automatically: not a literature review."
+msgid_plural ""
+"Compared with the abstracts of the %(n)s closest papers we know, chosen "
+"automatically: not a literature review."
+msgstr[0] ""
+"Comparaison avec le résumé de l’article le plus proche que nous connaissons,"
+" choisi automatiquement : ce n’est pas une revue de littérature."
+msgstr[1] ""
+"Comparaison avec les résumés des %(n)s articles les plus proches que nous "
+"connaissons, choisis automatiquement : ce n’est pas une revue de "
+"littérature."
+
+#, python-format
+msgid ""
+"%(n)s researcher left out: co-author of the authors or at their institution."
+msgid_plural ""
+"%(n)s researchers left out: co-authors of the authors or at their "
+"institution."
+msgstr[0] ""
+"%(n)s chercheur écarté : coauteur des auteurs ou dans leur institution."
+msgstr[1] ""
+"%(n)s chercheurs écartés : coauteurs des auteurs ou dans leur institution."
+
+#, python-format
+msgid "%(n)s close paper"
+msgid_plural "%(n)s close papers"
+msgstr[0] "%(n)s article proche"
+msgstr[1] "%(n)s articles proches"

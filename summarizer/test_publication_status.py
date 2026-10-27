@@ -8,7 +8,7 @@ from django.utils import timezone, translation
 
 from . import publication_status as status
 from .models import Generated
-from .test_tools import ToolsTestCase
+from .test_tools import ToolsTestCase, base_call, offline
 from .test_presskit_quality import pdf_text
 
 
@@ -146,13 +146,14 @@ class PublicationKitTests(ToolsTestCase):
         self.row.delete()
         with mock.patch.object(status, 'lookup', return_value=report()), \
              mock.patch('summarizer.paper_source.paper_text', return_value='## Results\nThis is the available scientific full text.'), \
-             mock.patch('summarizer.presskit.experts', return_value=[]), \
+             offline(), \
              mock.patch('summarizer.generated.chat_json', return_value={}) as llm:
             self.paid.post(self.base+'start/')
-        context = json.loads(llm.call_args.args[0])
+        call = base_call(llm)
+        context = json.loads(call.args[0])
         self.assertEqual(context['source_documents']['publication_check']['status'],'published')
-        self.assertNotIn('Example Journal',llm.call_args.kwargs['system'])
-        self.assertIn('Do not ask a generic question',llm.call_args.kwargs['system'])
+        self.assertNotIn('Example Journal',call.kwargs['system'])
+        self.assertIn('Do not ask a generic question',call.kwargs['system'])
         self.assertEqual(Generated.objects.get(kind='presskit').data()['publication_status']['doi'],'10.1234/published')
 
     def test_post_verification_requires_csrf(self):

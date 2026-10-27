@@ -1418,8 +1418,9 @@ def bibtex(request, arxiv_id):
 @require_GET
 def paper_tool_start(request, tool):
     """A discoverable entry point; generation still requires the existing explicit action."""
+    from .presskit import DEMO_KITS
     title, description = {
-        'presskit': (_('Press kit'), _('Prepare a factual press kit with verified quotes, limitations and questions for the authors.')),
+        'presskit': (_('Press kit'), _('Talk about a paper in public without overstating it: a draft release and the questions journalists will ask for its authors, strengths and weaknesses for a researcher asked to comment, every quote checked against the paper.')),
         'slides': (_('Journal club'), _('Prepare slides with figures, strengths, limitations and discussion questions, then edit or export them.')),
     }[tool]
     query = request.GET.get('q', '').strip()[:500]
@@ -1436,6 +1437,7 @@ def paper_tool_start(request, tool):
         return redirect(reverse('search_results') + '?' + urlencode({'q': query, 'src': 'all'}))
     return render(request, 'summarizer/paper_tool_start.html', {
         'tool_name': title, 'description': description, 'tool_route': tool,
+        'examples': sorted(DEMO_KITS) if tool == 'presskit' else [],
         'recent_papers': ArxivPaper.objects.exclude(title__isnull=True).exclude(title='').order_by('-created')[:6],
     })
 

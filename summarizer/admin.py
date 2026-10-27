@@ -23,7 +23,7 @@ from . import activity, guides, letters, usage
 from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestClick,
                      DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
-                     PaperScore, PaymentPlan, PDFHistory, PickledData, Search, SiteSettings, SummaryPaper,
+                     PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, UserPlan, PremiumGrant, Vote)
 
 admin.site.index_title = 'Tableau de bord'
@@ -446,6 +446,14 @@ class DigestFeedbackAdmin(ModelAdmin):
     list_filter = ('value', 'source')
     search_fields = ('arxiv_id', 'subscription__user__username')
     exclude = ('vector',)
+
+
+@admin.register(PressKitReport)
+class PressKitReportAdmin(ModelAdmin):
+    list_display = ('arxiv_id', 'lang', 'section', 'item', 'user', 'created', 'handled')
+    list_filter = ('handled', 'section', 'lang')
+    search_fields = ('arxiv_id', 'item', 'text', 'user__username')
+    list_editable = ('handled',)
 
 
 @admin.register(DigestEdition)

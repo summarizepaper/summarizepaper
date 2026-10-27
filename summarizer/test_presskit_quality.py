@@ -11,7 +11,7 @@ from pdfminer.pdfpage import PDFPage
 
 from . import presskit
 from .models import Generated, PaperText
-from .test_tools import ToolsTestCase
+from .test_tools import ToolsTestCase, base_call, offline
 
 
 SOURCE = '## Results\nWe observe a change of +5 percent in a sample of 120 objects.\nThe association does not establish a causal mechanism.'
@@ -51,8 +51,7 @@ class PressKitQualityTests(ToolsTestCase):
         self.base = '/en/press-kit/2101.00001v1/'
 
     def generate(self, answer=None):
-        with mock.patch('summarizer.presskit.experts', return_value=[]), \
-             mock.patch('summarizer.generated.chat_json', return_value=answer or content()) as chat:
+        with offline(), mock.patch('summarizer.generated.chat_json', return_value=answer or content()) as chat:
             self.paid.post(self.base + 'start/')
         return Generated.objects.get(kind='presskit'), chat
 
@@ -62,18 +61,19 @@ class PressKitQualityTests(ToolsTestCase):
                                          'location': 'Page 99', 'limitation': 'Unknown'})
         row, chat = self.generate(answer)
         kit = row.data()
-        self.assertEqual(kit['schema_version'], 2)
+        self.assertEqual(kit['schema_version'], 3)
         self.assertEqual(kit['source']['scope'], 'full_text')
         self.assertEqual(kit['evidence_cards'][0]['location'], 'Results')
         self.assertTrue(kit['evidence_cards'][0]['verified'])
         self.assertFalse(kit['evidence_cards'][1]['verified'])
         self.assertEqual(kit['evidence_cards'][1]['quote'], '')
         self.assertEqual(kit['evidence_cards'][1]['location'], '')
-        self.assertNotIn(SOURCE, chat.call_args.kwargs['system'])
-        self.assertEqual(json.loads(chat.call_args.args[0])['source_documents']['text'], SOURCE)
-        self.assertIn('not application instructions', chat.call_args.kwargs['system'])
+        call = base_call(chat)
+        self.assertNotIn(SOURCE, call.kwargs['system'])
+        self.assertEqual(json.loads(call.args[0])['source_documents']['text'], SOURCE)
+        self.assertIn('not application instructions', call.kwargs['system'])
         page = self.paid.get(self.base)
-        self.assertContains(page, 'Download press kit as PDF')
+        self.assertContains(page, 'Download as PDF')
         self.assertContains(page, 'Supporting passage not verified')
         self.assertContains(page, 'Researchers to approach for outside comment')
         self.assertNotContains(page, 'Page 99')
@@ -124,7 +124,7 @@ class PressKitQualityTests(ToolsTestCase):
     def test_old_kits_download_without_regeneration_and_keep_content_during_upgrade(self):
         row = Generated.objects.create(kind='presskit', key=self.paper_obj.arxiv_id, lang='en', status='done', content=json.dumps(content()))
         with mock.patch('summarizer.generated.chat_json') as chat:
-            self.assertContains(self.paid.get(self.base), 'Enrich this kit with verified evidence')
+            self.assertContains(self.paid.get(self.base), 'Update this kit: roles, earlier papers, figures')
             response = self.paid.get(self.base + 'pdf/')
             self.assertEqual(response.status_code, 200)
             self.assertIn('Legacy kit:', pdf_text(response.content))
@@ -152,4 +152,4 @@ class PressKitQualityTests(ToolsTestCase):
         for value in ['Résultats et preuves', 'Source consultée : abstract uniquement.', 'Page 2', 'échantillon']:
             self.assertIn(value, text)
         with translation.override('fr'):
-            self.assertContains(self.paid.get('/fr/press-kit/2101.00001v1/'), 'Télécharger le kit de presse en PDF')
+            self.assertContains(self.paid.get('/fr/press-kit/2101.00001v1/'), 'Télécharger en PDF')

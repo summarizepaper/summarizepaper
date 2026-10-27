@@ -23,7 +23,13 @@
           if (questions && Array.isArray(data.questions)) {
             if (window.MathJax && MathJax.typesetClear) MathJax.typesetClear([questions]);
             questions.replaceChildren();
-            data.questions.forEach(function (question) {var li = document.createElement('li'); li.textContent = question; questions.appendChild(li);});
+            if (data.questions_html) {  // each question with what the paper already says about it
+              var list = new DOMParser().parseFromString('<ol>' + data.questions_html + '</ol>', 'text/html');
+              list.querySelectorAll('script').forEach(function (script) {script.remove();});
+              Array.from(list.querySelector('ol').childNodes).forEach(function (node) {questions.appendChild(document.importNode(node, true));});
+            } else {
+              data.questions.forEach(function (question) {var li = document.createElement('li'); li.textContent = question; questions.appendChild(li);});
+            }
           }
           busy = false; state(false, false);
           if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise(questions ? [box, questions] : [box]).catch(function () {});

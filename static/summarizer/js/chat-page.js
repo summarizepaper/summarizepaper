@@ -839,4 +839,7 @@
     else addById(paper.id, true);
   });
   selectionChanged();
+  // a question proposed by another tool (the press kit's questions for the authors): the reader sends it
+  var ask = new URLSearchParams(location.search).get('ask');
+  if (ask && !input.value) input.value = ask.slice(0, 600);
 })();

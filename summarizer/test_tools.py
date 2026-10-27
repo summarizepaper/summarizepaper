@@ -1,5 +1,6 @@
 """Tests of the paper tools and Premium tools: reading levels, press kit, collections, exports, Zotero,
 'What did I miss?', literature review, citation alerts, audio digest, rising topics and weekly letters."""
+import contextlib
 import datetime
 import json
 import re
@@ -57,6 +58,22 @@ class ToolsTestCase(TestCase):
         if summary:
             SummaryPaper.objects.create(paper=paper, lang='en', summary=summary, notes=repr(['- Key: clouds are thick', 'Hot']))
         return paper
+
+
+@contextlib.contextmanager
+def offline():
+    """Generation without OpenAlex, arXiv's HTML, the trends or the embeddings of similar papers."""
+    with mock.patch('summarizer.presskit.openalex', return_value=None), \
+         mock.patch('summarizer.presskit.figures_of', return_value=[]), \
+         mock.patch('summarizer.presskit.rising', return_value=None), \
+         mock.patch('summarizer.similar.find_and_store', side_effect=RuntimeError('offline')):
+        yield
+
+
+def base_call(chat):
+    """The call that writes the kit itself (the other one writes the parts of each role)."""
+    return next(call for call in chat.call_args_list if 'publication_check' in call.args[0])
+
 
 
 class GeneratedTests(ToolsTestCase):
@@ -201,15 +218,16 @@ class PressKitTests(ToolsTestCase):
                     '', 'Original scientific abstract.', 'astro-ph.EP', '2021-01-01T00:00:00Z',
                     '2021-01-01T00:00:00Z', '', '', '']
         with mock.patch('summarizer.views.arxiv_metadata_or_none', return_value=metadata) as fetch, \
-             mock.patch('summarizer.presskit.experts', return_value=[]), \
+             offline(), \
              mock.patch('summarizer.generated.chat_json', return_value={'headline': 'Source headline'}) as chat:
             client.post('/en/press-kit/2101.00001v1/start/')
         fetch.assert_called_once_with('2101.00001v1')
         kit = Generated.objects.get(kind='presskit')
         self.assertEqual(kit.status, 'done')
-        self.assertIn('Original scientific abstract.', chat.call_args.args[0])
-        self.assertNotIn('Original scientific abstract.', chat.call_args.kwargs['system'])
-        self.assertNotIn('Editorial angle', chat.call_args.kwargs['system'])
+        for call in chat.call_args_list:  # the kit and the parts of each role
+            self.assertIn('Original scientific abstract.', call.args[0])
+            self.assertNotIn('Original scientific abstract.', call.kwargs['system'])
+            self.assertNotIn('Editorial angle', call.kwargs['system'])
         self.assertEqual(ArxivPaper.objects.get().authors.get().name, 'Ann Lee')
 
     def test_announced_source_outage_is_retryable_without_partial_paper(self):
@@ -247,7 +265,7 @@ class PressKitTests(ToolsTestCase):
             with mock.patch('summarizer.paper_source.paper_text', return_value=paper.abstract), \
                  mock.patch('summarizer.paper_source.read_again', return_value=(text, 'html')) as read, \
                  mock.patch('summarizer.paper_source.store_text') as store, \
-                 mock.patch('summarizer.presskit.experts', return_value=[]), \
+                 offline(), \
                  mock.patch('summarizer.generated.chat_json', return_value={}):
                 client.post('/en/press-kit/2101.00001v1/start/')
             read.assert_called_once_with(paper.arxiv_id)
@@ -271,17 +289,19 @@ class PressKitTests(ToolsTestCase):
             'questions_for_authors': ['Why?'], 'glossary': [{'term': 'Transit', 'definition': 'A passage.'}],
         }
         with mock.patch('summarizer.paper_source.paper_text', return_value='We observe clouds on a hot planet with a large telescope. More.'), \
-             mock.patch('summarizer.generated.chat_json', return_value=answer):
+             offline(), mock.patch('summarizer.generated.chat_json', return_value=answer):
             self.assertEqual(Client().post('/en/press-kit/2101.00001v1/start/').status_code, 403)
             client = self.client_for(self.user(paid=True))
             self.assertEqual(client.post('/en/press-kit/2101.00001v1/start/').status_code, 200)
         kit = Generated.objects.get(kind='presskit', key='2101.00001v1', lang='en').data()
         self.assertEqual(kit['key_sentences'], ['We observe clouds on a hot planet with a large telescope.'])
-        self.assertEqual([e['name'] for e in kit['experts']], ['Cid Moe', 'Dee Fox'])  # Bob Ray signed the paper
+        # without OpenAlex: the first and last authors of close papers, and Bob Ray signed this one
+        self.assertEqual([e['name'] for e in kit['experts']], ['Dee Fox'])
+        self.assertFalse(kit['experts_checked'])
         self.assertEqual(kit['hype_check'][1]['level'], 'caution')
         page = client.get('/en/press-kit/2101.00001v1/')
         self.assertContains(page, 'Clouds seen')
-        self.assertContains(page, 'Cid Moe')
+        self.assertContains(page, 'Dee Fox')
         self.assertNotContains(Client().get('/en/press-kit/2101.00001v1/'), 'Clouds seen')
 
 

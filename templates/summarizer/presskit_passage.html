@@ -1,0 +1,5 @@
+{% load i18n %}{% if p.quote %}<figure class="kit-passage">
+  <blockquote class="key-sentence">{{ p.quote }}</blockquote>
+  <figcaption>{% if p.link %}<a href="{{ p.link }}" target="_blank" rel="noopener noreferrer">{% endif %}{% trans 'Source passage verified' %}{% if p.location %} · {{ p.location }}{% endif %}{% if p.paragraph %} · ¶{{ p.paragraph }}{% endif %}{% if p.figure %} · {{ p.figure }}{% endif %}{% if p.link %} ↗</a>{% endif %}
+    <button type="button" class="kit-copy" data-copy-quote="{{ p.quote }}" data-copy-where="{{ p.location }}{% if p.figure %}, {{ p.figure }}{% endif %}">{% trans 'Copy with reference' %}</button></figcaption>
+</figure>{% endif %}
