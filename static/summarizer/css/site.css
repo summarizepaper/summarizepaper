@@ -900,7 +900,57 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .topic-card h2, .topic-card h3 { margin: 0 0 6px; }
 .growth { color: var(--success); font-weight: 700; font-size: 14px; }
 .terms { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-.terms span { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; }
+.terms span, .terms a { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; text-decoration: none; }
+.terms a:hover { background: var(--accent); color: #fff; }
+.topic-meta { margin: 0 0 4px; font-size: 13px; color: var(--text-muted); }
+.kind { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--bg-soft); color: var(--text-muted); }
+.kind-new { background: #dcfce7; color: #166534; }
+.kind-growing { background: #dbeafe; color: #1e40af; }
+.kind-recurring, .kind-comeback { background: #f3e8ff; color: #6b21a8; }
+.kind-spike { background: #fef3c7; color: #92400e; }
+.kind-note { font-size: 14px; margin: 4px 0 8px; }
+.topic-figures { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.topic-figures .growth { margin: 0; }
+.spark { display: block; max-width: 100%; height: auto; }
+.spark-base { stroke: var(--border); stroke-width: 1; }
+.spark-link { line-height: 0; }
+.topic-papers { margin: 8px 0; padding-left: 20px; }
+.first-use { font-size: 14px; }
+.topic-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; margin-top: 12px; }
+.topic-more { position: relative; }
+.topic-more summary { list-style: none; cursor: pointer; }
+.topic-more summary::-webkit-details-marker { display: none; }
+.topic-more ul { position: absolute; z-index: 5; right: 0; width: min(420px, 85vw); margin: 6px 0 0; padding: 12px 16px 12px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); font-size: 14px; }
+.topic-more li + li { margin-top: 6px; }
+.week-nav { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.kind-legend { padding-left: 20px; font-size: 15px; }
+.scope-links-inner a { font-size: 13px; padding: 3px 10px; }
+.explore-form { padding: 18px 20px; margin-bottom: 18px; }
+.explore-terms { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.explore-terms label { display: flex; align-items: center; gap: 6px; flex: 1 1 200px; }
+.explore-terms input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; }
+.explore-key, .legend-line { display: inline-block; width: 14px; height: 3px; border-radius: 2px; flex: none; }
+.term-figure { margin: 0 0 14px; padding: 16px 18px; }
+.term-figure figcaption { font-weight: 600; margin-bottom: 6px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; list-style: none; padding: 0; margin: 0 0 6px; font-size: 14px; }
+.chart-legend li { display: flex; align-items: center; gap: 6px; }
+.chart-wrap { position: relative; }
+.term-chart { display: block; width: 100%; height: auto; }
+.term-chart .grid { stroke: var(--border); stroke-width: 1; }
+.term-chart .axis { fill: var(--text-muted); font-size: 11px; }
+.term-chart .direct { fill: var(--text); font-size: 12px; font-weight: 600; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.term-chart .cross { stroke: var(--text-muted); stroke-width: 1; }
+.chart-tip { position: absolute; top: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); font-size: 13px; pointer-events: none; white-space: nowrap; }
+.chart-tip .tip-head { color: var(--text-muted); margin-bottom: 4px; }
+.chart-tip .tip-row { display: flex; align-items: center; gap: 6px; }
+.chart-actions { margin: 8px 0 0; }
+.trend-papers li { margin-bottom: 10px; }
+.trend-papers .muted { display: block; font-size: 14px; }
+.trend-badge { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 14px; margin: 0 0 14px; }
+.table-scroll { overflow-x: auto; }
+.data-table { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
+.data-table th, .data-table td { text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.actions-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .scope-links { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
 .scope-links a { padding: 4px 12px; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; font-size: 14px; color: var(--text); }
 .scope-links a.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }

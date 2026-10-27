@@ -1,4 +1,4 @@
-{% load i18n %}{% load dash_slash %}
+{% load i18n %}{% load dash_slash %}{% load rising %}
 <section class="card tools-card" id="tools" data-paper="{{ arxiv_id }}" data-base="/{{ LANGUAGE_CODE }}">
   <h3>{% trans 'Tools for this paper' %}</h3>
 
@@ -55,6 +55,15 @@
     <span class="tool-label">{% trans 'Who works on it?' %}</span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow">{% trans 'The people and institutions who publish on its topic' %}</a>
   </div>
+
+  {% rising_topic arxiv_id as rising %}{% if rising %}
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'A rising topic' %}</span>
+    <span>{% blocktrans with title=rising.title g=rising.growth name=rising.scope_name %}This paper is part of "{{ title }}", rising in {{ name }} (×{{ g }} compared with usual).{% endblocktrans %}
+      <a href="/{{ LANGUAGE_CODE }}/trends/?scope={{ rising.scope|urlencode }}&week={{ rising.week|date:'Y-m-d' }}" rel="nofollow">{% trans 'The rising topics of that week' %}</a> ·
+      <a href="/{{ LANGUAGE_CODE }}/trends/explore/?t={{ rising.main|urlencode }}" rel="nofollow">{% trans 'The history of the term' %}</a></span>
+  </div>
+  {% endif %}
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'Journal club' %} <span class="badge-premium">Premium+</span></span>

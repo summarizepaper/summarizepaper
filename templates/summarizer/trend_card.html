@@ -1,0 +1,29 @@
+{% load i18n %}<article class="card topic-card">
+  <p class="topic-meta"><span class="kind kind-{{ topic.kind }}" title="{{ topic.kind_note }}">{{ topic.kind_label }}</span>{% if topic.scope_name %} · <a href="?scope={{ topic.scope|urlencode }}">{{ topic.scope_name }}</a>{% endif %}</p>
+  <h2>{{ topic.title }}</h2>
+  <div class="topic-figures">
+    <p class="growth">{% blocktrans with g=topic.growth n=topic.count t=topic.teams %}×{{ g }} compared with usual · {{ n }} papers from {{ t }} teams{% endblocktrans %}</p>
+    {% if topic.spark %}<a class="spark-link" href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ topic.explore }}{% if topic.scope and topic.scope != '*' %}&scope={{ topic.scope|urlencode }}{% elif scope != '*' %}&scope={{ scope|urlencode }}{% endif %}" title="{% trans 'The whole history of these terms' %}">{{ topic.spark|safe }}</a>{% endif %}
+  </div>
+  <p class="muted kind-note">{{ topic.kind_note }}</p>
+  <p>{{ topic.text }}</p>
+  <div class="terms">{% for term in topic.terms %}<a href="/{{ LANGUAGE_CODE }}/trends/explore/?t={{ term|urlencode }}{% if topic.scope and topic.scope != '*' %}&scope={{ topic.scope|urlencode }}{% elif scope and scope != '*' %}&scope={{ scope|urlencode }}{% endif %}" title="{% trans 'The history of this term' %}">{{ term }}</a>{% endfor %}</div>
+  {% if topic.papers %}
+  <ul class="topic-papers">{% for p in topic.papers %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.arxiv_id }}/">{{ p.title }}</a></li>{% endfor %}</ul>
+  {% endif %}
+  {% if topic.first %}<p class="muted first-use">{% blocktrans with year=topic.first.year %}The oldest arXiv paper using these words ({{ year }}):{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/paper/{{ topic.first.arxiv_id }}/">{{ topic.first.title }}</a></p>{% endif %}
+  <div class="topic-actions">
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/trends/papers/?scope={{ topic.scope|default:scope|urlencode }}&week={{ topic.week|default:day|date:'Y-m-d' }}{% for term in topic.terms %}&t={{ term|urlencode }}{% endfor %}" rel="nofollow">{% blocktrans count n=topic.count %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</a>
+    {% if topic.chat_ids %}<a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ topic.chat_ids|urlencode }}" rel="nofollow">{% trans 'Ask these papers' %}</a>{% endif %}
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ topic.query|urlencode }}" rel="nofollow">{% trans 'Who works on it?' %}</a>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ topic.query|urlencode }}" rel="nofollow">{% trans 'Literature review' %}</a>
+    <details class="topic-more"><summary class="btn btn-sm btn-ghost">{% trans 'More' %}</summary>
+      <ul>
+        <li><a href="/{{ LANGUAGE_CODE }}/search-results/?q={{ topic.main|default:topic.terms.0|urlencode }}" rel="nofollow">{% trans 'Search these papers and follow the term' %}</a>: {% trans 'save the search to get an email when new papers use it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/" rel="nofollow">{% trans 'Scoop watch' %}</a>: {% trans 'if your own project is close, be told the day a new paper comes close to it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ topic.query|urlencode }}" rel="nofollow">{% trans 'Find a research placement' %}</a>: {% trans 'who leads this work, for an internship or a PhD.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ topic.explore }}{% if topic.scope and topic.scope != '*' %}&scope={{ topic.scope|urlencode }}{% elif scope and scope != '*' %}&scope={{ scope|urlencode }}{% endif %}">{% trans 'The history of its terms' %}</a>: {% trans 'compared week by week, to export.' %}</li>
+      </ul>
+    </details>
+  </div>
+</article>

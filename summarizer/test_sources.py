@@ -423,12 +423,10 @@ class BioDigestTests(TestCase):
         cache.clear()
 
     def test_rising_topics_of_all_arxiv_leave_bio_papers_out(self):
-        day = MONDAY.date()
-        AnnouncedPaper.objects.create(arxiv_id='2610.1v1', announced=day, title='Exoplanet atmospheres', categories='astro-ph.EP')
-        AnnouncedPaper.objects.create(arxiv_id='doi_10.64898--x', announced=day, title='Neuron spikes', categories='biorxiv.neuroscience')
-        trends.count_day(day)
-        scopes = {t.scope: t.papers for t in trends.TermDay.objects.filter(day=day)}
-        self.assertEqual(scopes, {'*': 1, 'astro-ph': 1, 'biorxiv': 1})
+        papers = [{'title': 'Exoplanet atmospheres', 'abstract': '', 'categories': ['astro-ph.EP']},
+                  {'title': 'Neuron spikes', 'abstract': '', 'categories': ['biorxiv.neuroscience']}]
+        scopes = {scope: n for scope, (n, _) in trends.count(papers).items()}
+        self.assertEqual(scopes, {'*': 1, 'astro-ph': 1, 'astro-ph.EP': 1, 'biorxiv': 1, 'biorxiv.neuroscience': 1})
 
 
 class PipelineTests(TestCase):

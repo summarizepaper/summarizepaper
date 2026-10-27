@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Is my topic rising on arXiv?' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'The share of new arXiv papers using a term, week by week: see whether a research topic is rising, and compare it with others.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/trends/explore/" />
+  {% if request.GET %}<meta name="robots" content="noindex" />{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'Is my topic rising?' %}</h1>
+    <p class="lead">{% trans 'The share of new papers using a term in their title or abstract, week by week: to check an impression, choose a subject, or back up a "growing interest" in a proposal.' %}</p>
+  </header>
+  <p><a href="/{{ LANGUAGE_CODE }}/trends/{% if scope != '*' %}?scope={{ scope|urlencode }}{% endif %}">&larr; {% trans 'The rising topics of the week' %}</a></p>
+
+  <form method="get" class="card explore-form">
+    <div class="explore-terms">
+      {% for value in typed %}{% if forloop.counter <= max_terms %}
+      <label><span class="explore-key" style="background:{% cycle '#2a78d6' '#eb6834' '#1baf7a' %}"></span>
+        <input type="text" name="t" value="{{ value }}" maxlength="80" placeholder="{% if forloop.first %}{% trans 'e.g. sparse autoencoder' %}{% else %}{% trans 'a term to compare (optional)' %}{% endif %}" {% if forloop.first %}required{% endif %}></label>
+      {% endif %}{% endfor %}
+    </div>
+    {% if paid %}<input type="hidden" name="scope" value="{{ scope }}">{% endif %}
+    <button class="btn" type="submit">{% trans 'Show the history' %}</button>
+    <p class="muted" style="margin:8px 0 0">{% blocktrans with name=scope_name %}In: {{ name }}.{% endblocktrans %} {% trans 'One to three words, as in a title; plurals count with their singular.' %}{% if not paid %} {% trans 'Premium compares three terms, in any field or category, and exports the counts.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a>{% endif %}</p>
+  </form>
+
+  {% if more_terms %}<p class="notice">{% trans 'Only the first term is shown: Premium compares three.' %}</p>{% endif %}
+  {% for term in refused %}<p class="notice">{% blocktrans %}"{{ term }}" cannot be counted: a term has one to three words, does not start or end with a common word (the, of, using...), and a single word has at least five letters unless it is an acronym.{% endblocktrans %}</p>{% endfor %}
+  {% for typed_term, term in renamed %}<p class="muted">{% blocktrans %}"{{ typed_term }}" is counted as "{{ term }}".{% endblocktrans %}</p>{% endfor %}
+
+  {% if series %}
+    {% if svg %}
+    <figure class="card term-figure">
+      <figcaption>{% trans 'Papers using the term per 10,000 papers of the week, averaged over 4 weeks' %}</figcaption>
+      {% if series|length > 1 %}<ul class="chart-legend">{% for s in series %}<li><span class="legend-line" style="background:{{ s.color }}"></span>{{ s.term }}</li>{% endfor %}</ul>{% endif %}
+      <div class="chart-wrap">{{ svg|safe }}<div class="chart-tip" hidden></div></div>
+      {% if paid %}<p class="chart-actions"><a class="btn btn-sm btn-ghost" href="?{{ csv_query }}">{% trans 'Download the counts (CSV)' %}</a></p>{% endif %}
+    </figure>
+    {% endif %}
+    <p class="muted">{% for s in series %}{% blocktrans with term=s.term n=s.total weeks=weeks|length %}"{{ term }}": {{ n }} papers in {{ weeks }} weeks.{% endblocktrans %} {% endfor %}{% if weeks %}{% blocktrans with first=weeks.0|date:"j F Y" %}Counted since the week of {{ first }}.{% endblocktrans %}{% endif %}</p>
+    <details class="card">
+      <summary>{% trans 'The weekly values' %}</summary>
+      <div class="table-scroll"><table class="data-table">
+        <thead><tr><th>{% trans 'Week of' %}</th>{% for s in series %}<th>{{ s.term }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in rows %}<tr><td>{{ row.week|date:"j M Y" }}</td>{% for n, share in row.values %}<td>{% blocktrans %}{{ n }} papers ({{ share }} per 10,000){% endblocktrans %}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table></div>
+    </details>
+    <p class="actions-row">
+      <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ series.0.term|urlencode }}" rel="nofollow">{% trans 'Who works on it?' %}</a>
+      <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ series.0.term|urlencode }}" rel="nofollow">{% trans 'Literature review' %}</a>
+      <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/search-results/?q={{ series.0.term|urlencode }}" rel="nofollow">{% trans 'Search and follow the term' %}</a>
+    </p>
+  {% endif %}
+
+  <h2>{% trans 'How to read it' %}</h2>
+  <p class="muted">{% trans 'Each point is the share of the papers submitted that week (first versions) that use the term in their title or abstract, so the growth of arXiv itself does not count. A week where a single paper used it counts as zero. Terms are matched as words, so a term with several meanings counts them all: compare with a more specific one. When citing these numbers, name the source and the period.' %}</p>
+</div>
+{% if svg %}
+{{ points|json_script:"chart-points" }}
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById('chart-points').textContent);
+  var wrap = document.querySelector('.chart-wrap'), svg = wrap.querySelector('svg'), tip = wrap.querySelector('.chart-tip');
+  var cross = svg.querySelector('.cross'), hit = svg.querySelector('.hit');
+  var left = {{ geometry.left }}, plotW = {{ geometry.plot_w }}, width = {{ geometry.width }}, n = data.weeks.length;
+  function show(evt) {
+    var box = svg.getBoundingClientRect(), x = (evt.clientX - box.left) * width / box.width;
+    var i = Math.max(0, Math.min(n - 1, Math.round((x - left) / plotW * (n - 1))));
+    var cx = left + i / Math.max(n - 1, 1) * plotW;
+    cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
+    tip.textContent = '';
+    var head = document.createElement('div'); head.className = 'tip-head'; head.textContent = data.weeks[i]; tip.appendChild(head);
+    data.series.forEach(function (s) {
+      var row = document.createElement('div'); row.className = 'tip-row';
+      var key = document.createElement('span'); key.className = 'legend-line'; key.style.background = s.color;
+      var value = document.createElement('strong'); value.textContent = s.values[i];
+      var label = document.createElement('span'); label.textContent = ' ' + s.term + ' (' + s.raw[i] + ')';
+      row.appendChild(key); row.appendChild(value); row.appendChild(label); tip.appendChild(row);
+    });
+    tip.hidden = false;
+    var px = cx * box.width / width;
+    tip.style.left = Math.min(px + 12, box.width - tip.offsetWidth - 4) + 'px';
+  }
+  hit.addEventListener('pointermove', show);
+  hit.addEventListener('pointerleave', function () { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); });
+})();
+</script>
+{% endif %}
+{% endblock %}

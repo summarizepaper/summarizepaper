@@ -1010,14 +1010,16 @@ def notable_shortlist(category, lang, day, week):
         count = len(json.loads(labels))
         if rows and count:
             profiles.append(np.frombuffer(bytes(rows), dtype=np.float32).reshape(count, -1))
-    _, topics = trends.latest(archive_of(category), lang, since=day - WEEK)
-    rising = {p.get('arxiv_id') for t in topics for p in t.get('papers', [])}
+    rising = set()
+    for scope in (category, archive_of(category)):
+        _, topics = trends.latest(scope, lang, since=day - 3 * WEEK)  # a week of submissions is written the Saturday after it
+        rising |= {key for t in topics for key in t.get('ids') or [p.get('arxiv_id') for p in t.get('papers', [])]}
     scored = []
     for paper in week:
         vector = vectors.get(paper['arxiv_id'])
         interest = 0 if vector is None else sum(
             1 for rows in profiles if rows.shape[1] == vector.shape[0] and float(np.max(rows @ vector)) >= THRESHOLDS['medium'])
-        scored.append(((interest, paper['arxiv_id'] in rising, len(paper['categories'])), paper))
+        scored.append(((interest, re.sub(r'v\d+$', '', paper['arxiv_id']) in rising, len(paper['categories'])), paper))
     scored.sort(key=lambda s: s[0], reverse=True)
     return [paper for _, paper in scored[:NOTABLE_SHORTLIST]]
 
@@ -1243,7 +1245,7 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
             'teaser': teaser,
             'listen_url': listen_url,
             'rising': rising,
-            'trends_url': tracked('%s/%s/trends/' % (base_url, lang), campaign, 'rising'),
+            'trends_url': tracked('%s/%s/trends/?view=foryou' % (base_url, lang), campaign, 'rising'),
             'premium_url': tracked('%s/%s/premium/' % (base_url, lang), campaign, 'premium-teaser'),
             'weekly': campaign == 'weekly',
             'base_url': base_url,

@@ -52,12 +52,13 @@ from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, citations, digest, generated, journal_taxonomy, mailcheck, missed, similar, sources
+from . import access, citations, digest, generated, journal_taxonomy, mailcheck, missed, similar, sources, trends
 from .models import ArxivBatch, Collection, DigestVector, ScoopMatch, WatchedProject
 
 logger = logging.getLogger(__name__)
 
 MAX_PROJECTS = 5
+RISING_CLOSE = 0.5  # a rising topic this close to a project is shown with it: more teams may be heading there
 MIN_CHARS = 300
 MAX_CHARS = 6000
 CANDIDATES = 8  # closest new papers the model reads, per project and announcement day
@@ -1014,6 +1015,10 @@ def scoops_page(request):
         project.dismissed = [m for m in matches if m.status == 'irrelevant']
         project.suggested = competitor_suggestions(project, matches)
         project.bars = activity_bars(project, now)
+        project.rising = [{'score': score, 'scope': scope, 'week': week, 'scope_name': trends.scope_name(scope), **topic}
+                          for score, scope, week, topic in trends.close_topics(
+                              np.frombuffer(bytes(project.vector), dtype=np.float32), get_language(), RISING_CLOSE)] \
+            if paid and project.vector else []
         # work still pending after a while was lost in a restart, or (a draft) was not readable
         stale = now - generated.STALE
         project.failed = not project.description and project.created < stale

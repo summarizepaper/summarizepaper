@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Papers of a rising topic' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% blocktrans count n=papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</h1>
+    <p class="lead">{% blocktrans with name=scope_name start=week|date:"j F" end=week_end|date:"j F Y" %}Submitted from {{ start }} to {{ end }} in {{ name }}, using:{% endblocktrans %}</p>
+    <div class="terms">{% for term in terms %}<a href="/{{ LANGUAGE_CODE }}/trends/explore/?t={{ term|urlencode }}">{{ term }}</a>{% endfor %}</div>
+  </header>
+  <p><a href="/{{ LANGUAGE_CODE }}/trends/?scope={{ scope|urlencode }}&week={{ week|date:'Y-m-d' }}">&larr; {% trans 'The rising topics of that week' %}</a></p>
+  {% if papers %}
+    <p class="actions-row"><a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ chat_ids|urlencode }}" rel="nofollow">{% trans 'Ask the first papers together' %}</a></p>
+    <ol class="trend-papers">{% for p in papers %}
+      <li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.key }}/">{{ p.title }}</a>
+        <span class="muted">{{ p.shown_authors }} · {{ p.day|date:"j M" }} · {{ p.categories|join:", " }} · {% trans 'uses' %} {{ p.matched|join:", " }}</span></li>
+    {% endfor %}</ol>
+  {% elif not kept %}
+    <p class="notice">{% trans 'The papers of older weeks are not kept: only their counts are.' %} <a href="/{{ LANGUAGE_CODE }}/search-results/?q={{ terms.0|urlencode }}">{% trans 'Search them' %}</a></p>
+  {% else %}
+    <p class="notice">{% trans 'No paper of this week uses these terms.' %}</p>
+  {% endif %}
+</div>
+{% endblock %}

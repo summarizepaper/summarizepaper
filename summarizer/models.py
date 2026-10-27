@@ -856,23 +856,39 @@ class ZoteroAccount(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
 
-class TermDay(models.Model):
-    """How many papers of one arXiv announcement used each term, for one archive or '*' (see trends.py)."""
-    day = models.DateField()
-    scope = models.CharField(max_length=20)
+class TermWeek(models.Model):
+    """How many papers submitted in one week (first versions, from Monday) used each term, for one scope: '*' (all
+    of arXiv), an archive (cs), a category (cs.LG), bioRxiv or medRxiv or one of their categories (see trends.py).
+    Terms used by fewer than 2 papers are left out. A large week is split by a hash of the term into `parts` rows,
+    so the history of one term reads one small row per week."""
+    scope = models.CharField(max_length=60)
+    week = models.DateField()
+    part = models.PositiveSmallIntegerField(default=0)
+    parts = models.PositiveSmallIntegerField(default=1)
     papers = models.PositiveIntegerField(default=0)
     counts = models.TextField()  # JSON {term: papers}
 
     class Meta:
-        unique_together = ('day', 'scope')
+        unique_together = ('scope', 'week', 'part')
+
+
+class TrendPaper(models.Model):
+    """A paper of the last weeks counted by the rising topics: their examples, teams and lists of papers."""
+    key = models.CharField(max_length=100, unique=True)  # arXiv id without version, or bioRxiv/medRxiv DOI key
+    week = models.DateField(db_index=True)
+    day = models.DateField()  # submission of version 1, or bioRxiv/medRxiv posting
+    title = models.TextField()
+    abstract = models.TextField(blank=True, default='')
+    authors = models.TextField(blank=True, default='')  # JSON list of names
+    categories = models.CharField(max_length=300, blank=True, default='')  # comma-separated
 
 
 class RisingTopics(models.Model):
-    """The topics rising in one archive (or '*') over the week before `day`, in plain language."""
-    scope = models.CharField(max_length=20)
+    """The topics rising in one scope (see TermWeek) in the week of submissions starting on `day`, in plain language."""
+    scope = models.CharField(max_length=60)
     lang = models.CharField(max_length=10)
     day = models.DateField()
-    content = models.TextField()  # JSON {"topics": [{"title", "text", "terms", "growth", "papers": [{arxiv_id, title}]}]}
+    content = models.TextField()  # JSON {"topics": [...]}, see trends.write
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

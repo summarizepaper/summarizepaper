@@ -15606,3 +15606,304 @@ msgstr[1] "Nouveaux articles sur %(n)s sujets que vous suivez"
 
 msgid "The map"
 msgstr "La carte"
+
+msgid "The terms that appear in many more new papers this week than in the eight weeks before, from several independent teams, grouped into topics and explained in plain language."
+msgstr "Les termes employés par beaucoup plus de nouveaux articles cette semaine que pendant les huit semaines précédentes, par plusieurs équipes indépendantes, regroupés en sujets et expliqués simplement."
+
+msgid "Views"
+msgstr "Vues"
+
+msgid "For you"
+msgstr "Pour vous"
+
+msgid "Is my topic rising?"
+msgstr "Mon sujet monte-t-il ?"
+
+msgid "The rising topics of each field are part of Premium."
+msgstr "Les sujets qui montent dans chaque domaine font partie de Premium."
+
+msgid "With Premium, this page gathers the rising topics of the fields of your digest, the closest to your research profile first, and those of your fields come in your Monday digest."
+msgstr "Avec Premium, cette page réunit les sujets qui montent dans les domaines de votre digest, les plus proches de votre profil de recherche d'abord, et ceux de vos domaines arrivent dans votre digest du lundi."
+
+msgid "Choose your fields in a daily digest, and describe your research there: this page then shows the rising topics closest to it."
+msgstr "Choisissez vos domaines dans un digest quotidien et décrivez-y votre recherche : cette page montre alors les sujets qui montent les plus proches."
+
+msgid "Set up my digest"
+msgstr "Configurer mon digest"
+
+msgid "The rising topics of the last weeks in the fields of your digests, the closest to your research profile first; topics far from it are left out."
+msgstr "Les sujets qui montent ces dernières semaines dans les domaines de vos digests, les plus proches de votre profil de recherche d'abord ; les sujets éloignés sont écartés."
+
+msgid "The rising topics of the last weeks in the fields of your digests. Describe your research in your digest to see the closest first."
+msgstr "Les sujets qui montent ces dernières semaines dans les domaines de vos digests. Décrivez votre recherche dans votre digest pour voir les plus proches d'abord."
+
+msgid "My digest"
+msgstr "Mon digest"
+
+msgid "Nothing close to your research rose in your fields these last weeks."
+msgstr "Rien de proche de votre recherche n'a monté dans vos domaines ces dernières semaines."
+
+msgid "Fields"
+msgstr "Domaines"
+
+msgid "Categories"
+msgstr "Catégories"
+
+msgid "Previous week"
+msgstr "Semaine précédente"
+
+msgid "Next week"
+msgstr "Semaine suivante"
+
+msgid "Nothing rose clearly this week: no term was used by twice as many papers as usual, from several teams, often enough to rule out chance."
+msgstr "Rien n'a nettement monté cette semaine : aucun terme n'a été employé par deux fois plus d'articles que d'habitude, par plusieurs équipes, assez souvent pour exclure le hasard."
+
+msgid "Premium shows them all, the rising topics of each field and category (cs.LG, astro-ph.EP, bioRxiv neuroscience...), those closest to your research, the history of any term compared with others, and puts those of your fields in your Monday digest."
+msgstr "Premium les montre tous, ainsi que les sujets qui montent dans chaque domaine et catégorie (cs.LG, astro-ph.EP, neurosciences de bioRxiv...), les plus proches de votre recherche, l'historique de n'importe quel terme comparé à d'autres, et met ceux de vos domaines dans votre digest du lundi."
+
+msgid "The first rising topics come out once we have counted a few weeks of papers."
+msgstr "Les premiers sujets qui montent paraissent une fois quelques semaines d'articles comptées."
+
+msgid "Each week, we count how many papers submitted that week (first versions) use each term of one to three words in their title and abstract; acronyms such as RAG or JWST count, and plurals with their singular. A term rises when its share of papers is at least twice its share over the eight weeks before, when so large a rise is very unlikely by chance (a log-likelihood ratio of at least 15), and when it comes from at least three teams, none signing more than half of the papers: one group posting a series is not a trend. An AI then groups the rising terms into topics and names them; it never decides what rises: the counts do."
+msgstr "Chaque semaine, nous comptons combien d'articles soumis cette semaine-là (premières versions) emploient chaque terme d'un à trois mots dans leur titre et leur résumé ; les acronymes comme RAG ou JWST comptent, et les pluriels avec leur singulier. Un terme monte quand sa part d'articles est au moins le double de sa part sur les huit semaines précédentes, quand une telle hausse est très improbable par hasard (un rapport de vraisemblance d'au moins 15), et quand elle vient d'au moins trois équipes, aucune ne signant plus de la moitié des articles : un groupe qui publie une série n'est pas une tendance. Une IA regroupe ensuite les termes en sujets et les nomme ; elle ne décide jamais de ce qui monte : ce sont les comptes."
+
+msgid "New"
+msgstr "Nouveau"
+
+msgid "the term was almost absent from these papers before."
+msgstr "le terme était presque absent de ces articles auparavant."
+
+msgid "Rising for several weeks"
+msgstr "En hausse depuis plusieurs semaines"
+
+msgid "up three weeks in a row or more, not a one-week event."
+msgstr "en hausse trois semaines de suite ou plus, pas un événement d'une semaine."
+
+msgid "Recurring"
+msgstr "Récurrent"
+
+msgid "as frequent at this time last year: perhaps a yearly cycle, such as a conference deadline."
+msgstr "aussi fréquent à la même époque l'an dernier : peut-être un cycle annuel, comme la date limite d'une conférence."
+
+msgid "Comeback"
+msgstr "Retour"
+
+msgid "as frequent some months ago, then less used."
+msgstr "aussi fréquent il y a quelques mois, puis moins employé."
+
+msgid "Sudden rise"
+msgstr "Hausse soudaine"
+
+msgid "new this week: often an event, a release, a data set or a deadline."
+msgstr "nouveau cette semaine : souvent un événement, une sortie, un jeu de données ou une date limite."
+
+msgid "The curve on each topic is the share of papers using its main term, per 10,000 papers, over the last six months. A week of papers is counted once all of them are announced, on the Saturday after it."
+msgstr "La courbe de chaque sujet est la part d'articles employant son terme principal, pour 10 000 articles, sur les six derniers mois. Une semaine d'articles est comptée une fois qu'ils sont tous annoncés, le samedi suivant."
+
+#, python-format
+msgid "Rising topics in %(name)s"
+msgstr "Les sujets qui montent en %(name)s"
+
+#, python-format
+msgid "Papers submitted from %(start)s to %(end)s"
+msgstr "Articles soumis du %(start)s au %(end)s"
+
+#, python-format
+msgid "We count the papers submitted every week since %(since)s. A rise only means something against several weeks of history: the first topics come out around %(ready)s."
+msgstr "Nous comptons les articles soumis chaque semaine depuis le %(since)s. Une hausse n'a de sens que face à plusieurs semaines d'historique : les premiers sujets paraissent vers le %(ready)s."
+
+msgid "The whole history of these terms"
+msgstr "Tout l'historique de ces termes"
+
+msgid "The history of this term"
+msgstr "L'historique de ce terme"
+
+msgid "Ask these papers"
+msgstr "Interroger ces articles"
+
+msgid "More"
+msgstr "Plus"
+
+msgid "Search these papers and follow the term"
+msgstr "Chercher ces articles et suivre le terme"
+
+msgid "save the search to get an email when new papers use it."
+msgstr "enregistrez la recherche pour recevoir un e-mail quand de nouveaux articles l'emploient."
+
+msgid "if your own project is close, be told the day a new paper comes close to it."
+msgstr "si votre propre projet est proche, soyez prévenu le jour où un nouvel article s'en approche."
+
+msgid "who leads this work, for an internship or a PhD."
+msgstr "qui mène ces travaux, pour un stage ou une thèse."
+
+msgid "The history of its terms"
+msgstr "L'historique de ses termes"
+
+msgid "compared week by week, to export."
+msgstr "comparés semaine par semaine, à exporter."
+
+#, python-format
+msgid "×%(g)s compared with usual · %(n)s papers from %(t)s teams"
+msgstr "×%(g)s par rapport à d'habitude · %(n)s articles de %(t)s équipes"
+
+#, python-format
+msgid "The oldest arXiv paper using these words (%(year)s):"
+msgstr "Le plus ancien article arXiv employant ces mots (%(year)s) :"
+
+msgid "Is my topic rising on arXiv?"
+msgstr "Mon sujet monte-t-il sur arXiv ?"
+
+msgid "The share of new arXiv papers using a term, week by week: see whether a research topic is rising, and compare it with others."
+msgstr "La part des nouveaux articles arXiv employant un terme, semaine par semaine : voyez si un sujet de recherche monte et comparez-le à d'autres."
+
+msgid "The share of new papers using a term in their title or abstract, week by week: to check an impression, choose a subject, or back up a \"growing interest\" in a proposal."
+msgstr "La part des nouveaux articles employant un terme dans leur titre ou leur résumé, semaine par semaine : pour vérifier une impression, choisir un sujet ou étayer un « intérêt croissant » dans un projet."
+
+msgid "The rising topics of the week"
+msgstr "Les sujets qui montent cette semaine"
+
+msgid "e.g. sparse autoencoder"
+msgstr "ex. sparse autoencoder"
+
+msgid "a term to compare (optional)"
+msgstr "un terme à comparer (facultatif)"
+
+msgid "Show the history"
+msgstr "Voir l'historique"
+
+msgid "One to three words, as in a title; plurals count with their singular."
+msgstr "Un à trois mots, comme dans un titre (en anglais) ; les pluriels comptent avec leur singulier."
+
+msgid "Premium compares three terms, in any field or category, and exports the counts."
+msgstr "Premium compare trois termes, dans tout domaine ou catégorie, et exporte les comptes."
+
+msgid "Only the first term is shown: Premium compares three."
+msgstr "Seul le premier terme est montré : Premium en compare trois."
+
+msgid "Papers using the term per 10,000 papers of the week, averaged over 4 weeks"
+msgstr "Articles employant le terme pour 10 000 articles de la semaine, moyenne sur 4 semaines"
+
+msgid "Download the counts (CSV)"
+msgstr "Télécharger les comptes (CSV)"
+
+msgid "The weekly values"
+msgstr "Les valeurs hebdomadaires"
+
+msgid "Week of"
+msgstr "Semaine du"
+
+msgid "Search and follow the term"
+msgstr "Chercher et suivre le terme"
+
+msgid "How to read it"
+msgstr "Comment le lire"
+
+msgid "Each point is the share of the papers submitted that week (first versions) that use the term in their title or abstract, so the growth of arXiv itself does not count. A week where a single paper used it counts as zero. Terms are matched as words, so a term with several meanings counts them all: compare with a more specific one. When citing these numbers, name the source and the period."
+msgstr "Chaque point est la part des articles soumis cette semaine-là (premières versions) qui emploient le terme dans leur titre ou leur résumé : la croissance d'arXiv elle-même ne compte pas. Une semaine où un seul article l'emploie compte zéro. Les termes sont cherchés comme des mots : un terme à plusieurs sens les compte tous, comparez avec un terme plus précis. Pour citer ces chiffres, nommez la source et la période."
+
+#, python-format
+msgid "In: %(name)s."
+msgstr "Dans : %(name)s."
+
+#, python-format
+msgid "\"%(term)s\" cannot be counted: a term has one to three words, does not start or end with a common word (the, of, using...), and a single word has at least five letters unless it is an acronym."
+msgstr "« %(term)s » ne peut pas être compté : un terme a un à trois mots, ne commence ni ne finit par un mot courant (the, of, using...), et un mot seul a au moins cinq lettres sauf s'il s'agit d'un acronyme."
+
+#, python-format
+msgid "\"%(typed_term)s\" is counted as \"%(term)s\"."
+msgstr "« %(typed_term)s » est compté comme « %(term)s »."
+
+#, python-format
+msgid "\"%(term)s\": %(n)s papers in %(weeks)s weeks."
+msgstr "« %(term)s » : %(n)s articles en %(weeks)s semaines."
+
+#, python-format
+msgid "Counted since the week of %(first)s."
+msgstr "Compté depuis la semaine du %(first)s."
+
+#, python-format
+msgid "%(n)s papers (%(share)s per 10,000)"
+msgstr "%(n)s articles (%(share)s pour 10 000)"
+
+msgid "Papers of a rising topic"
+msgstr "Les articles d'un sujet qui monte"
+
+msgid "The rising topics of that week"
+msgstr "Les sujets qui montaient cette semaine-là"
+
+msgid "Ask the first papers together"
+msgstr "Interroger les premiers articles ensemble"
+
+msgid "uses"
+msgstr "emploie"
+
+msgid "The papers of older weeks are not kept: only their counts are."
+msgstr "Les articles des semaines plus anciennes ne sont pas conservés : seuls leurs comptes le sont."
+
+msgid "Search them"
+msgstr "Les chercher"
+
+msgid "No paper of this week uses these terms."
+msgstr "Aucun article de cette semaine n'emploie ces termes."
+
+#, python-format
+msgid "Submitted from %(start)s to %(end)s in %(name)s, using:"
+msgstr "Soumis du %(start)s au %(end)s en %(name)s, employant :"
+
+msgid "See the topic and its papers"
+msgstr "Voir le sujet et ses articles"
+
+#, python-format
+msgid "A close topic is rising in %(name)s: \"%(title)s\", ×%(g)s compared with usual, %(n)s papers from %(t)s teams. More groups may be heading where your project goes."
+msgstr "Un sujet proche monte en %(name)s : « %(title)s », ×%(g)s par rapport à d'habitude, %(n)s articles de %(t)s équipes. D'autres groupes se dirigent peut-être là où va votre projet."
+
+msgid "A rising topic"
+msgstr "Un sujet qui monte"
+
+msgid "The history of the term"
+msgstr "L'historique du terme"
+
+#, python-format
+msgid "This paper is part of \"%(title)s\", rising in %(name)s (×%(g)s compared with usual)."
+msgstr "Cet article fait partie de « %(title)s », qui monte en %(name)s (×%(g)s par rapport à d'habitude)."
+
+msgid "Weekly letters, the top rising topics and the history of a term on the web"
+msgstr "Les lettres hebdomadaires, les principaux sujets qui montent et l'historique d'un terme sur le web"
+
+msgid "The rising topics of every field and category, those closest to your research, and the history of any term, compared and exported"
+msgstr "Les sujets qui montent dans chaque domaine et catégorie, les plus proches de votre recherche, et l'historique de n'importe quel terme, comparé et exporté"
+
+#, python-format
+msgid "%(n)s per 10,000 papers"
+msgstr "%(n)s pour 10 000 articles"
+
+msgid "Share of papers using the term, week by week"
+msgstr "Part des articles employant le terme, semaine par semaine"
+
+#, python-format
+msgid "Almost absent from these papers before: first counted the week of %(since)s."
+msgstr "Presque absent de ces articles auparavant : compté pour la première fois la semaine du %(since)s."
+
+#, python-format
+msgid "Rising for %(weeks)d weeks"
+msgstr "En hausse depuis %(weeks)d semaines"
+
+msgid "Up week after week, not a one-week event."
+msgstr "En hausse semaine après semaine, pas un événement d'une semaine."
+
+#, python-format
+msgid "Already this frequent the week of %(since)s, a year ago: perhaps a yearly cycle (a conference deadline, a season, an observing campaign)."
+msgstr "Déjà aussi fréquent la semaine du %(since)s, il y a un an : peut-être un cycle annuel (date limite d'une conférence, saison, campagne d'observation)."
+
+#, python-format
+msgid "Already this frequent the week of %(since)s."
+msgstr "Déjà aussi fréquent la semaine du %(since)s."
+
+msgid "New this week: often an event, a release, a data set or a deadline. The coming weeks will tell if it lasts."
+msgstr "Nouveau cette semaine : souvent un événement, une sortie, un jeu de données ou une date limite. Les semaines à venir diront si cela dure."
+
+msgid "Share of papers using each term, week by week"
+msgstr "Part des articles employant chaque terme, semaine par semaine"
+
+msgid "The topics rising on arXiv, bioRxiv and medRxiv each week, field by field, from several teams, with their history; and whether your own topic is rising."
+msgstr "Les sujets qui montent chaque semaine sur arXiv, bioRxiv et medRxiv, domaine par domaine, portés par plusieurs équipes, avec leur historique ; et si votre propre sujet monte."

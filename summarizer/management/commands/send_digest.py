@@ -29,8 +29,7 @@ class Command(BaseCommand):
         now = timezone.now()
         budget = digest.MAX_EMAILS_PER_RUN - sent
         # each step is independent: one failing must not stop the others
-        for name, step in (('trends', lambda: trends.update(now)),
-                           ('letters', lambda: letters.update(now)),
+        for name, step in (('letters', lambda: letters.update(now)),
                            ('scoop alerts', lambda: scoops.run(now, budget)),
                            ('citation alerts', lambda: citations.run(now, budget)),
                            ('version alerts', lambda: changes.run(now, budget)),
@@ -39,7 +38,9 @@ class Command(BaseCommand):
                            ('publication alerts', lambda: publication_alerts.run(now, budget)),
                            ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url'])),
                            ('placement new papers', lambda: students.watch_new_papers(now, budget, base_url=options['base_url'])),
-                           ('topic maps', lambda: teams.watch_maps(now, budget, base_url=options['base_url']))):
+                           ('topic maps', lambda: teams.watch_maps(now, budget, base_url=options['base_url'])),
+                           # last: once a week it reads two weeks of arXiv and writes topics for a few minutes
+                           ('trends', lambda: trends.update(now))):
             try:
                 with usage.task(name.replace(' ', '_')):
                     done = step()

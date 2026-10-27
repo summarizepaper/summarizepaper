@@ -16,7 +16,7 @@ from summarizer import audio, changes, citations, conference, digest, generated,
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
-                               SummaryPaper, TermDay, UserPlan, WatchedProject, ZoteroAccount)
+                               SummaryPaper, TermWeek, UserPlan, WatchedProject, ZoteroAccount)
 
 
 class ToolsTestCase(TestCase):
@@ -2349,58 +2349,218 @@ class AudioTests(ToolsTestCase):
 
 
 class TrendTests(ToolsTestCase):
-    def announce(self, day, titles, category='cs.LG'):
-        for i, title in enumerate(titles):
-            AnnouncedPaper.objects.create(arxiv_id='%s.%05d' % (day.strftime('%y%m%d'), i), announced=day, title=title,
-                                          abstract='Plain words here.', authors='[]', categories=category + ',stat.ML')
-        ArxivBatch.objects.get_or_create(day=day)
+    WEEK = datetime.date(2026, 10, 12)  # a Monday
+
+    def week_papers(self, week, titles, category='cs.LG', authors=None):
+        return [{'key': '%s.%05d' % (week.strftime('%y%m%d'), i), 'day': week + datetime.timedelta(days=i % 5),
+                 'title': title, 'abstract': 'Plain words here.', 'categories': [category, 'stat.ML'],
+                 'authors': authors[i] if authors else ['Author%d Smith%d' % (i, i)]} for i, title in enumerate(titles)]
+
+    def history(self, rising=10, team=None):
+        """Nine weeks of cs.LG papers: 'sparse autoencoders' rare, then used by `rising` papers in the last week;
+        team: so many papers of the last week on 'mamba state spaces', all by one group."""
+        for back in range(9, -1, -1):
+            week = self.WEEK - datetime.timedelta(weeks=back)
+            titles = ['Graph networks study %d' % i for i in range(60)]
+            titles += ['Sparse autoencoders for task %d' % i for i in range(rising if back == 0 else back % 2)]
+            authors = None
+            if back == 0 and team:
+                titles += ['Mamba state spaces, part %d' % i for i in range(team)]
+                authors = [['Author%d Smith%d' % (i, i)] for i in range(len(titles) - team)] + [['Ann Lee', 'Bob Ray']] * team
+            papers = self.week_papers(week, titles, authors=authors)
+            trends.store(week, trends.count(papers))
+            if back == 0:
+                trends.keep_papers(papers)
 
     def test_terms(self):
-        found = trends.terms('Sparse autoencoders for the interpretation of $x^2$ models. Plain words')
-        self.assertIn('sparse autoencoders', found)
+        found = trends.terms('Sparse autoencoders for the interpretation of $x^2$ models. Plain words. RAG with LLMs and LoRA')
+        self.assertIn('sparse autoencoder', found)
         self.assertNotIn('models plain', found)
         self.assertNotIn('for the', found)
         self.assertNotIn('the interpretation', found)
+        self.assertTrue({'rag', 'llm', 'lora', 'rag with llm'} <= found)
+        self.assertNotIn('with', found)
+        self.assertEqual(trends.fold('galaxies'), 'galaxy')
+        self.assertEqual(trends.fold('physics'), 'physics')
+        self.assertEqual(trends.fold('approaches'), 'approach')
+        self.assertEqual(trends.normalize('Large Language Models'), 'large language model')
+        self.assertEqual(trends.normalize('JWST'), 'jwst')
+        self.assertEqual(trends.normalize('the model'), '')
+        self.assertEqual(trends.normalize('large models'), '')
+        self.assertIn('diffusion model', trends.terms('Diffusion models for weather'))
+        self.assertEqual(trends.normalize('one two three four'), '')
 
-    def test_a_term_rises_against_its_history(self):
-        start = datetime.date(2026, 9, 7)  # a Monday
-        days = [start + datetime.timedelta(days=d) for d in range(35) if (start + datetime.timedelta(days=d)).weekday() < 5]
-        for day in days:
-            recent = day > days[-1] - datetime.timedelta(days=7)
-            titles = ['Graph networks study %d' % i for i in range(15)]
-            titles += ['Sparse autoencoders for task %d' % i for i in range(10 if recent else 1)]
-            self.announce(day, titles)
-        for day in days:
-            trends.count_day(day)
-        self.assertEqual(TermDay.objects.filter(scope='cs').count(), len(days))
-        rising = trends.rising_terms('*', days[-1])
-        self.assertEqual(rising[0][0], 'sparse autoencoders')
-        self.assertNotIn('graph networks', [t for t, _, _ in rising])
-        self.assertNotIn('sparse', [t for t, _, _ in rising])  # kept as part of the longer term
-        answer = {'topics': [{'title': 'Looking inside AI models', 'text': 'Why.', 'terms': ['sparse autoencoders', 'invented'],
-                              'papers': [trends.examples('*', days[-1], 'sparse autoencoders')[0]['arxiv_id'], 'x']},
-                             {'title': 'Noise', 'text': '', 'terms': ['not a rising term']}]}
-        with mock.patch('summarizer.generated.chat_json', return_value=answer):
-            content = trends.write('*', days[-1], 'en')
+    def test_weeks_close_the_saturday_after(self):
+        self.assertEqual(trends.closed_week(datetime.date(2026, 10, 24)), datetime.date(2026, 10, 12))  # Saturday
+        self.assertEqual(trends.closed_week(datetime.date(2026, 10, 23)), datetime.date(2026, 10, 5))
+
+    def test_a_term_rises_against_its_history_from_several_teams(self):
+        self.history(rising=12, team=12)
+        rising, left = trends.rising_terms('cs.LG', self.WEEK, verbose=True)
+        terms = [t['term'] for t in rising]
+        found = rising[terms.index('sparse autoencoder')]
+        self.assertGreaterEqual(found['llr'], trends.MIN_LLR)
+        self.assertEqual(found['teams'], 12)
+        self.assertNotIn('graph network', terms)
+        self.assertNotIn('sparse', terms)  # kept as part of the longer term
+        self.assertNotIn('mamba state space', terms)  # one group's series
+        self.assertIn('mamba state space', [t['term'] for t in left])
+        self.assertIsNone(trends.rising_terms('cs.LG', self.WEEK - datetime.timedelta(weeks=7)))  # too little history
+
+    def test_a_small_rise_is_not_significant(self):
+        self.history(rising=4)
+        self.assertNotIn('sparse autoencoder', [t['term'] for t in trends.rising_terms('cs.LG', self.WEEK) or []])
+
+    def test_history_reads_one_part_per_week(self):
+        with mock.patch('summarizer.trends.PART_TERMS', 5):
+            self.history()
+        self.assertGreater(TermWeek.objects.filter(scope='cs.LG', week=self.WEEK).count(), 1)
+        points = trends.history('cs.LG', ['sparse autoencoder', 'unknown term'])
+        self.assertEqual([n for _, _, n in points['sparse autoencoder']][-3:], [0, 0, 10])  # single uses are not stored
+        self.assertEqual(points['sparse autoencoder'][-1][1], 70)
+        self.assertEqual(sum(n for _, _, n in points['unknown term']), 0)
+
+    def test_a_week_is_counted_a_group_of_scopes_at_a_time(self):
+        papers = self.week_papers(self.WEEK, ['Graph networks %d' % i for i in range(5)])
+        papers += [dict(papers[0], key='bio', categories=['biorxiv.neuroscience'])]
+        trends.count_week(self.WEEK, papers)
+        stored = set(TermWeek.objects.filter(week=self.WEEK).values_list('scope', flat=True))
+        self.assertEqual(stored, set(trends.count(papers)))
+        self.assertEqual(TermWeek.objects.get(scope='*', week=self.WEEK).papers, 5)
+        trends.count_week(self.WEEK, papers[-1:], 'bio')  # bioRxiv read again apart: arXiv's counts stay
+        self.assertEqual(set(TermWeek.objects.filter(week=self.WEEK).values_list('scope', flat=True)), stored)
+        self.assertEqual(TermWeek.objects.get(scope='*', week=self.WEEK).papers, 5)
+
+    def test_kinds_of_rise(self):
+        week = self.WEEK
+
+        def points(values):
+            return [(week - datetime.timedelta(weeks=len(values) - 1 - i), 1000, n) for i, n in enumerate(values)]
+        self.assertEqual(trends.kind(points([0] * 20 + [1, 0, 3, 20]))['kind'], 'new')
+        growing = trends.kind(points([5] * 20 + [12, 15, 20]))
+        self.assertEqual((growing['kind'], growing['weeks']), ('growing', 3))
+        self.assertEqual(trends.kind(points([25] + [5] * 51 + [20]))['kind'], 'recurring')
+        comeback = trends.kind(points([5] * 10 + [22] + [5] * 20 + [20]))
+        self.assertEqual(comeback['kind'], 'comeback')
+        self.assertEqual(comeback['since'], (week - datetime.timedelta(weeks=21)).isoformat())
+        self.assertEqual(trends.kind(points([5] * 20 + [20]))['kind'], 'spike')
+
+    def written(self):
+        self.history(rising=12)
+        key = trends.stored_papers(self.WEEK, 'cs.LG')[-1]['key']
+        answer = {'topics': [{'title': {'en': 'Looking inside AI models', 'fr': 'Regarder dans les modèles'},
+                              'text': {'en': 'Why.', 'fr': 'Pourquoi.'}, 'query': 'sparse autoencoders for interpretability',
+                              'terms': ['sparse autoencoder', 'invented'], 'papers': [key, 'x']},
+                             {'title': {'en': 'Noise', 'fr': 'Bruit'}, 'text': {}, 'terms': ['not a rising term']}]}
+        vector = np.ones((1, 4), dtype=np.float32) / 2
+        with mock.patch('summarizer.generated.chat_json', return_value=answer), \
+             mock.patch('summarizer.trends.first_use', return_value={'arxiv_id': '1312.0001', 'title': 'The first one', 'year': 2013}), \
+             mock.patch('summarizer.similar.embed', return_value=vector):
+            content = trends.write('cs.LG', self.WEEK)
+        trends._RECENT.clear()
+        return content, key
+
+    def test_topics_are_written_in_every_language_with_their_history(self):
+        content, key = self.written()
+        topic = content['topics'][0]
         self.assertEqual(len(content['topics']), 1)
-        self.assertEqual(content['topics'][0]['terms'], ['sparse autoencoders'])
-        self.assertEqual(len(content['topics'][0]['papers']), 1)
-        page = Client().get('/en/trends/')
+        self.assertEqual(topic['terms'], ['sparse autoencoder'])
+        self.assertEqual((topic['count'], topic['teams'], topic['kind']), (12, 12, 'spike'))
+        self.assertEqual(topic['papers'][0]['arxiv_id'], key)
+        self.assertEqual(len(topic['papers']), 4)
+        self.assertEqual(len(topic['series']), 10)
+        self.assertEqual(topic['first']['year'], 2013)
+        self.assertEqual(topic['query'], 'sparse autoencoders for interpretability')
+        fr = json.loads(RisingTopics.objects.get(scope='cs.LG', lang='fr').content)['topics'][0]
+        self.assertEqual(fr['title'], 'Regarder dans les modèles')
+        self.assertEqual(trends.for_digest(['cs.LG'], 'en', self.WEEK + datetime.timedelta(days=14))[0]['archive'], 'cs.LG')
+        self.assertEqual(trends.topic_of_paper(key + 'v2', 'en')[0], 'cs.LG')
+        self.assertEqual(trends.close_topics(np.ones(4, dtype=np.float32) / 2, 'en')[0][1], 'cs.LG')
+
+    def test_pages(self):
+        _, key = self.written()
+        paid = self.client_for(self.user(paid=True))
+        page = paid.get('/en/trends/?scope=cs.LG')
         self.assertContains(page, 'Looking inside AI models')
-        self.assertEqual(trends.for_digest(['cs.LG'], 'en', days[-1]), [])  # nothing written for the cs archive yet
+        self.assertContains(page, 'from 12 teams')
+        self.assertContains(page, 'Sudden rise')
+        self.assertContains(page, '/en/teams/?topic=sparse%20autoencoders%20for%20interpretability')
+        self.assertContains(page, '<svg class="spark"')
+        self.assertContains(page, 'The oldest arXiv paper using these words (2013)')
+        self.assertContains(Client().get('/en/trends/?scope=cs.LG'), 'part of Premium')
+        self.assertEqual(Client().get('/en/trends/?scope=bogus').status_code, 404)
+        self.assertEqual(paid.get('/en/trends/?scope=cs.LG&week=2020-01-06').status_code, 404)
+        papers = paid.get('/en/trends/papers/?scope=cs.LG&week=2026-10-12&t=sparse+autoencoders')
+        self.assertContains(papers, '12 papers')
+        self.assertContains(papers, key)
+        explore = paid.get('/en/trends/explore/?scope=cs.LG&t=Sparse+Autoencoders&t=graph+networks&t=the')
+        self.assertContains(explore, '"Sparse Autoencoders" is counted as "sparse autoencoder"')
+        self.assertContains(explore, '"series": [{"term": "sparse autoencoder"')
+        self.assertContains(explore, 'cannot be counted')
+        self.assertContains(explore, 'class="term-chart"')
+        csv_page = paid.get('/en/trends/explore/?scope=cs.LG&t=sparse+autoencoder&format=csv')
+        self.assertIn('2026-10-12,72,12,', csv_page.content.decode())
+        free = Client().get('/en/trends/explore/?t=sparse+autoencoder&t=graph+network&format=csv')
+        self.assertContains(free, 'Only the first term is shown')
+        self.assertNotIn('text/csv', free['Content-Type'])
+        subscription = DigestSubscription.objects.create(user=User.objects.get(username='ann'), categories='cs.LG')
+        DigestSubscription.objects.filter(pk=subscription.pk).update(
+            profile_vector=(np.ones((1, 4), dtype=np.float32) / 2).tobytes(), profile_labels='["me"]')
+        self.assertContains(paid.get('/en/trends/?view=foryou'), 'Looking inside AI models')
+        self.assertContains(Client().get('/en/trends/?view=foryou'), 'With Premium')
+
+    def test_links_from_papers_and_projects(self):
+        from django.template import Context, Template
+        _, key = self.written()
+        with translation.override('en'):
+            shown = Template('{% load rising %}{% rising_topic key as r %}{{ r.title }} {{ r.scope }}').render(Context({'key': key + 'v1'}))
+        self.assertEqual(shown, 'Looking inside AI models cs.LG')
+        user = self.user(paid=True)
+        WatchedProject.objects.create(user=user, title='Probing features', description='x' * 300, last_day=self.WEEK,
+                                      vector=(np.ones(4, dtype=np.float32) / 2).tobytes())
+        self.assertContains(self.client_for(user).get('/en/scoops/'), 'A close topic is rising in Machine Learning (cs.LG)')
 
     def test_page_before_history(self):
         self.assertContains(Client().get('/en/trends/'), 'first rising topics')
         self.assertEqual(Client().get('/en/trends/?scope=bogus').status_code, 404)
 
     def test_free_visitors_see_three_topics(self):
-        topics = [{'title': 'Topic %d' % i, 'text': 't', 'terms': ['a'], 'count': 9, 'growth': 3.0, 'papers': []} for i in range(5)]
+        topics = [{'title': 'Topic %d' % i, 'text': 't', 'terms': ['a'], 'main': 'a', 'count': 9, 'growth': 3.0, 'papers': []}
+                  for i in range(5)]
         RisingTopics.objects.create(scope='*', lang='en', day=datetime.date(2026, 10, 19), content=json.dumps({'topics': topics}))
         page = Client().get('/en/trends/')
         self.assertContains(page, 'Topic 2')
         self.assertNotContains(page, 'Topic 3')
         self.assertContains(page, '2 more rising topics')
         self.assertContains(self.client_for(self.user(paid=True)).get('/en/trends/'), 'Topic 4')
+
+    def test_update_reads_the_completed_weeks_then_writes(self):
+        now = timezone.make_aware(datetime.datetime(2026, 10, 24, 12))
+        with mock.patch('summarizer.trends.harvest') as harvest, mock.patch('summarizer.trends.write', return_value=None):
+            trends.update(now)
+        self.assertEqual(sorted(harvest.call_args[0][0])[-1], self.WEEK)
+        self.assertEqual(len(harvest.call_args[0][0]), 4)
+
+    def test_oai_records_are_dated_by_their_first_version(self):
+        from summarizer import trend_sources
+        xml = b'''<?xml version="1.0"?><OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><ListRecords>
+          <record><header><identifier>oai:arXiv.org:2610.00001</identifier></header><metadata>
+            <arXivRaw xmlns="http://arxiv.org/OAI/arXivRaw/"><id>2610.00001</id>
+              <version version="v1"><date>Tue, 13 Oct 2026 10:00:00 GMT</date></version>
+              <title>A new  title</title><authors>A. Lee, B. Ray and C. Day</authors><categories>cs.LG stat.ML</categories>
+              <abstract>Text.</abstract></arXivRaw></metadata></record>
+          <record><header><identifier>oai:arXiv.org:0810.5176</identifier></header><metadata>
+            <arXivRaw xmlns="http://arxiv.org/OAI/arXivRaw/"><id>0810.5176</id>
+              <version version="v1"><date>Wed, 29 Oct 2008 01:34:26 GMT</date></version>
+              <version version="v2"><date>Tue, 13 Oct 2026 10:00:00 GMT</date></version>
+              <title>Old</title><authors>X</authors><categories>math.NT</categories><abstract>Old.</abstract></arXivRaw></metadata></record>
+          <resumptionToken></resumptionToken></ListRecords></OAI-PMH>'''
+        with mock.patch('summarizer.trend_sources.requests.get', return_value=mock.Mock(status_code=200, content=xml)):
+            papers = list(trend_sources.arxiv_papers(self.WEEK))
+        self.assertEqual(len(papers), 1)
+        self.assertEqual(papers[0]['day'], datetime.date(2026, 10, 13))
+        self.assertEqual(papers[0]['authors'], ['A. Lee', 'B. Ray', 'C. Day'])
+        self.assertEqual(papers[0]['title'], 'A new title')
 
 
 class LetterTests(ToolsTestCase):

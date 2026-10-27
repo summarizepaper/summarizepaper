@@ -1,7 +1,7 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 from . import (views, search_filters, saved_searches, billing, conference, digest, digest_web, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends)
+               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -130,7 +130,9 @@ urlpatterns = [
     path("refcheck/<str:key>/bib/", refcheck.refcheck_bib, name="refcheck_bib"),
     path("citations/follow/", citations.follow_view, name="citations_follow"),
     path("citations/<int:pk>/", citations.citation_detail, name="citation_detail"),
-    path("trends/", trends.trends_page, name="trends"),
+    path("trends/", trends_web.trends_page, name="trends"),
+    path("trends/explore/", trends_web.trends_explore, name="trends_explore"),
+    path("trends/papers/", trends_web.trends_papers, name="trends_papers"),
     path("letters/", letters.letters_page, name="letters"),
     path("letters/unsubscribe/<str:token>/", letters.unsubscribe, name="letters_unsubscribe"),
     path("letters/<slug:topic>/", letters.topic_page, name="letter_topic"),

@@ -104,6 +104,7 @@
     {% for project in projects %}
     <section class="card section-card" id="project-{{ project.pk }}"{% if project.working %} data-pending{% endif %}>
       <h2 style="margin-top:0">{{ project.title|default:_('Your draft') }}</h2>
+      {% for topic in project.rising %}<p class="trend-badge">{% blocktrans with title=topic.title g=topic.growth n=topic.count t=topic.teams name=topic.scope_name %}A close topic is rising in {{ name }}: "{{ title }}", ×{{ g }} compared with usual, {{ n }} papers from {{ t }} teams. More groups may be heading where your project goes.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/trends/?scope={{ topic.scope|urlencode }}&week={{ topic.week|date:'Y-m-d' }}">{% trans 'See the topic and its papers' %}</a></p>{% endfor %}
       {% if project.notice %}<p class="card scoop-notice" role="status">{{ project.notice.0 }}{% if project.notice.1 %} <a href="{{ project.notice.1 }}">{% trans 'Open the collection' %}</a>{% endif %}</p>{% endif %}
       <div class="meta muted">
         {% if project.failed %}{% trans 'We could not read this draft. Check that the PDF holds text (not only scanned images), or describe the project instead.' %}
