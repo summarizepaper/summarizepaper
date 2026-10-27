@@ -905,6 +905,23 @@ class CitationTests(ToolsTestCase):
           <td>thick</td></tr></table></figure></article>''')
         self.assertIn('Table 1: Cloud models. — Lee 2021 | thick', citations.find_contexts(table, '2101.00001', 'Short'))
 
+    def test_pieces_of_sentences_are_read_again_from_arxiv(self):
+        from .models import CitationContext
+        pieces = ['3 (Jiang et al., 2023); Gemma (Team, 2024).']
+        self.assertTrue(citations.fragmentary(pieces))
+        self.assertFalse(citations.fragmentary(['We use the model of [3] to fit the spectra of twelve planets.']))
+        c = dict(self.citing('c1')['c1'], contexts=pieces)
+        self.assertTrue(citations.needs_reading(c))
+        self.assertEqual(citations.with_contexts('2101.00001', {'c1': c})['c1']['contexts'], pieces)
+        CitationContext.objects.create(cited='2101.00001', citing='arxiv:2201.00001', checked=timezone.now(),
+                                       contexts=json.dumps(['We fine-tune Mistral 7B (Jiang et al., 2023) on code.']))
+        self.assertEqual(citations.with_contexts('2101.00001', {'c1': c})['c1']['context_source'], 'arxiv')
+
+    def test_self_citations_count_the_first_authors_of_a_large_collaboration(self):
+        team = ['Ann Lee%s%s' % (chr(97 + i // 26), chr(97 + i % 26)) for i in range(300)]
+        self.assertFalse(citations.shares_author(citations.self_keys(team), ['A. Leekn']))
+        self.assertTrue(citations.shares_author(citations.self_keys(team), ['A. Leeab']))
+
     def test_formulas_are_plain_text_when_they_can_be(self):
         self.assertEqual(citations.plain_math(r'\text{CO}{\vphantom{\text{X}}}_{\smash[t]{\text{2}}}'), 'CO₂')
         self.assertEqual(citations.plain_math(r'\sim'), '~')

@@ -62,14 +62,15 @@ class Command(BaseCommand):
         sample = {}
         for pid in newest:
             c = dict(citing[pid])
-            if c['contexts']:
+            if c['contexts'] and not citations.fragmentary(c['contexts']):
                 found['s2'] += 1
             else:
                 time.sleep(citations.ARXIV_SECONDS)
                 html = citations.fetch_html(c['arxiv_id'])
-                c['contexts'] = citations.find_contexts(html, arxiv_id, title, doi) if html else []
-                found['arxiv' if c['contexts'] else 'no_html' if not html else 'not_found'] += 1
-            c['self'] = citations.shares_author(citations.name_keys(authors), c['authors'])
+                read = citations.find_contexts(html, arxiv_id, title, doi) if html else []
+                found['arxiv' if read else 'no_html' if not html else 'not_found'] += 1
+                c['contexts'] = read or c['contexts']  # Semantic Scholar's pieces, when there is nothing better
+            c['self'] = citations.shares_author(citations.self_keys(authors), c['authors'])
             sample[pid] = c
         out('sentences: %(s2)d from Semantic Scholar, %(arxiv)d read on arXiv, %(not_found)d not found in the '
             'arXiv HTML, %(no_html)d without arXiv HTML' % found)

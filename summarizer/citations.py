@@ -74,6 +74,9 @@ DAILY_KEY = 'citations-refreshed:%s'
 STANCES = ('questions', 'supports', 'builds_on', 'uses', 'mentions')
 SCAN_AUTHORS = 100  # authors of a citing paper compared with the cited one's; the first ones are kept to show
 SHOWN_AUTHORS = 6
+# authors of the cited paper a self-citation shares: in a large collaboration, the 300th author sharing a name and an
+# initial with somebody citing it is a coincidence more often than not, and being in the team is no self-citation
+SELF_AUTHORS = 15
 LATE = datetime.timedelta(days=180)  # a citing paper older than this when first seen was indexed late
 ARXIV_HTML = 'https://arxiv.org/html/%s'
 ARXIV_SECONDS = 3  # arXiv asks for one request every 3 seconds
@@ -323,10 +326,14 @@ def shares_author(keys, names):
     return False
 
 
+def self_keys(cited_authors):
+    return name_keys(cited_authors[:SELF_AUTHORS])
+
+
 def mark_self(citing, before, cited_authors):
-    """Tell the self-citations (an author in common with the cited paper), then keep only the first authors to
-    show. A citation already known keeps what was found for it."""
-    keys = name_keys(cited_authors)
+    """Tell the self-citations (an author in common with the first ones of the cited paper), then keep only the
+    first authors to show. A citation already known keeps what was found for it."""
+    keys = self_keys(cited_authors)
     for pid, c in citing.items():
         if 'self' in before.get(pid, {}):
             c['self'] = before[pid]['self']
@@ -547,8 +554,14 @@ def read_context(cited_id, title, c, now, doi=''):
     return contexts
 
 
+def fragmentary(contexts):
+    """Whether Semantic Scholar's sentences are only cut pieces ('3 (Jiang et al., 2023); Gemma...'), as it often
+    gives: the arXiv HTML gives whole sentences."""
+    return bool(contexts) and all(len(x) < 60 or not re.match(r'[A-Z(\[]', x) for x in contexts)
+
+
 def needs_reading(c):
-    return not c.get('contexts') and bool(c.get('arxiv_id'))
+    return bool(c.get('arxiv_id')) and (not c.get('contexts') or fragmentary(c['contexts']))
 
 
 def tried_contexts(now, **filters):
@@ -578,8 +591,9 @@ def read_contexts(now, limit=MAX_CONTEXTS_PER_DAY):
 
 
 def with_contexts(cited_id, citations):
-    """The citations, those without sentences given the ones read from arXiv (marked context_source='arxiv')."""
-    missing = {identity(pid, c): pid for pid, c in citations.items() if not c.get('contexts')}
+    """The citations, those without whole sentences given the ones read from arXiv (marked context_source='arxiv')."""
+    missing = {identity(pid, c): pid for pid, c in citations.items()
+               if not c.get('contexts') or fragmentary(c['contexts'])}
     if not missing:
         return citations
     out = dict(citations)
