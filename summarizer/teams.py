@@ -500,6 +500,8 @@ def find(topic, lang, step=lambda name: None, options=None):
     result['conflicts'] = None if not options['orcids'] else {'checked': relations is not None,
                                                                 'papers': (relations or {}).get('papers', 0)}
     result['works'] = sorted((paper_record(w, labels[w['id']]) for w in kept), key=lambda p: p['date'], reverse=True)
+    # everyone who signs a paper of the map first, last or as corresponding author, shown or not: not a new name later
+    result['signers'] = sorted({aid for w in kept for aid, roles in student_papers.author_roles(w).items() if roles})
     step('write')
     result['approaches'], result['landscape'] = describe(topic, kept, members, lang)
     return result
@@ -646,7 +648,8 @@ def follow(user, row):
     result = row.data()
     TopicMapWatch.objects.get_or_create(user=user, row=row, defaults={
         'seen': json.dumps([w['id'] for w in result.get('works') or []]),
-        'known': json.dumps([aid for p in result.get('people') or [] for aid in p.get('aliases') or [p['key']]])})
+        'known': json.dumps(sorted(set(result.get('signers') or []) |
+                                   {aid for p in result.get('people') or [] for aid in p.get('aliases') or [p['key']]}))})
     return 'watching'
 
 

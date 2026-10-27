@@ -38,7 +38,7 @@
     </ul>
 
     {% elif not result.papers %}
-    <p class="notice">{% trans 'We found no recent paper with sufficiently clear evidence for this topic and its affiliations. Try other words.' %}</p>
+    {% if not result.limited %}<p class="notice">{% trans 'We found no recent paper with sufficiently clear evidence for this topic and its affiliations. Try other words.' %}</p>{% endif %}
     {% include 'summarizer/teams_searches.html' %}
 
     {% else %}

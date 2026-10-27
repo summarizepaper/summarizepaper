@@ -361,7 +361,8 @@ class TeamsWatchTests(ToolsTestCase):
         owner = self.user('pro', paid=True, tier='premium')
         known = author('1', 'Ann Lee', 'first')
         data = {'version': teams.RESULT_VERSION, 'title': 'Exomoons', 'topic': 'Exomoon astrometry', 'queries': ['moons'],
-                'works': [{'id': 'https://openalex.org/W1'}], 'people': [{'key': 'https://openalex.org/A1', 'aliases': ['https://openalex.org/A1']}]}
+                'works': [{'id': 'https://openalex.org/W1'}], 'people': [{'key': 'https://openalex.org/A1', 'aliases': ['https://openalex.org/A1']}],
+                'signers': ['https://openalex.org/A8']}
         row = Generated.objects.create(kind='teams', key='map', user=owner, lang='en', status='done', content=json.dumps(data))
         client = self.client_for(owner)
         client.post('/en/teams/map/', {'action': 'follow'})
@@ -374,7 +375,7 @@ class TeamsWatchTests(ToolsTestCase):
         watch.refresh_from_db()
         self.assertEqual(watch.checked, now.date())
         self.assertEqual(teams.watch_maps(now, 10), 0)  # not due before a month
-        new = work('3', 'A new exomoon', [known, author('9', 'New Name', 'last')])
+        new = work('3', 'A new exomoon', [known, author('8', 'Not Shown', 'middle', corresponding=True), author('9', 'New Name', 'last')])
         later = now + datetime.timedelta(days=teams.WATCH_EVERY)
         with mock.patch.object(teams, 'works', return_value=[old, first, new]), \
              mock.patch.object(teams.similar, 'embed', side_effect=flat), \
@@ -383,7 +384,8 @@ class TeamsWatchTests(ToolsTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('A new exomoon', mail.outbox[0].body)
         self.assertIn('On the map: Ann Lee', mail.outbox[0].body)
-        self.assertIn('New names: New Name', mail.outbox[0].body)
+        self.assertIn('New names: New Name', mail.outbox[0].body)  # who signs a paper of the map is not new, shown or not
+        self.assertIn('On the map: Ann Lee, Not Shown', mail.outbox[0].body)
         self.assertIn('/en/teams/map/', mail.outbox[0].body)
         client.post('/en/teams/map/', {'action': 'unfollow'})
         self.assertFalse(TopicMapWatch.objects.filter(user=owner).exists())
