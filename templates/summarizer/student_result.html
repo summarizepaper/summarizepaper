@@ -3,16 +3,45 @@
 {% block title %}{% trans 'Research placement search' %}{% endblock %}
 {% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
-<div class="page"><header class="page-header"><p><a href="{% url 'students' %}">← {% trans 'Find a research placement' %}</a></p><h1>{{ result.title|default:_('Research placement search') }}</h1></header>
+<div class="page"><header class="page-header">{% if shared %}<p class="muted">{% trans 'Shared search' %} · <a href="{% url 'students' %}">{% trans 'Find a research placement' %}</a></p>{% else %}<p><a href="{% url 'students' %}">← {% trans 'Find a research placement' %}</a> · <a href="{% url 'student_leads' %}">{% trans 'My leads' %}</a></p>{% endif %}<h1>{{ result.title|default:_('Research placement search') }}</h1></header>
 {% if result %}
-  <form method="post" action="{% url 'student_refresh' key=row.key %}" class="section-card">{% csrf_token %}{% if result.outdated %}<p class="notice">{% trans 'Refresh this search to discover first-author papers beyond the initial results and get a personalised profile. Your saved notes are kept.' %}</p>{% endif %}<button class="btn btn-secondary" type="submit">{% trans 'Refresh this search' %}</button></form>
-  <details class="card section-card student-criteria"><summary>{% trans 'Your criteria' %} · {{ result.profile.topic|truncatechars:100 }}</summary><p>{{ result.profile.level }} · {% if result.profile.kind == 'phd' %}{% trans 'PhD' %}{% else %}{% trans 'Research internship' %}{% endif %}</p><p>{{ result.profile.topic }}</p>
-  <p>{% if result.profile.country %}{{ result.profile.country }}{% endif %}{% if result.profile.city %} · {{ result.profile.city }}{% endif %}{% if not result.profile.country and not result.profile.city %}{% trans 'Any location' %}{% endif %}</p>
+  {% if not shared %}<form method="post" action="{% url 'student_refresh' key=row.key %}" class="section-card">{% csrf_token %}{% if result.outdated %}<p class="notice">{% trans 'This search was made by an earlier version of this tool. Refresh it to see how each person signs their papers, the teams and the funding their papers acknowledge. Your saved notes are kept.' %}</p>{% endif %}<button class="btn btn-secondary" type="submit">{% trans 'Refresh this search' %}</button></form>{% endif %}
+  <details class="card section-card student-criteria"><summary>{% trans 'Criteria' %} · {{ result.profile.topic|truncatechars:100 }}</summary><p>{{ result.profile.level }} · {% if result.profile.kind == 'phd' %}{% trans 'PhD' %}{% else %}{% trans 'Research internship' %}{% endif %}</p><p>{{ result.profile.topic }}</p>
+  <p>{% if result.country_name %}{{ result.country_name }}{% endif %}{% if result.profile.city %} · {{ result.profile.city }}{% endif %}{% if not result.profile.country and not result.profile.city %}{% trans 'Any location' %}{% endif %}</p>
   {% if result.profile.start %}<p>{% trans 'Desired start date (optional)' %} : {{ result.profile.start }}</p>{% endif %}{% if result.profile.duration %}<p>{% blocktrans with n=result.profile.duration %}Desired duration: {{ n }} months{% endblocktrans %}</p>{% endif %}{% if result.profile.skills %}<p>{{ result.profile.skills }}</p>{% endif %}
   <p class="muted">{% trans 'Dates, duration, skills and level are preferences, not verified eligibility or availability.' %}</p></details>
   {% if result.limited %}<p class="notice">{% trans 'This search is partial: the search budget, candidate limit or missing institution metadata prevented a complete check.' %}</p>{% endif %}
+  {% if result.unchecked %}<p class="notice">{% blocktrans count n=result.unchecked %}{{ n }} other author of these papers could not be checked (affiliation or location unknown, or beyond the search budget). They are not shown, not excluded on purpose.{% plural %}{{ n }} other authors of these papers could not be checked (affiliation or location unknown, or beyond the search budget). They are not shown, not excluded on purpose.{% endblocktrans %}</p>{% endif %}
   <p class="notice">{% trans 'Potential contacts: confirm the current position and availability before applying.' %}</p>
+  {% if result.overview %}
+  <section class="card section-card student-overview" aria-labelledby="overview-title"><h2 id="overview-title">{% trans 'At a glance' %}</h2>
+    <p class="muted">{% trans 'Ordered by the requested location, then by how many recent papers on your topic each person signs, weighted by relevance and by role, then by your skills found in their papers.' %}</p>
+    <div class="student-filters" data-student-filters><label><input type="checkbox" data-filter="location"> {% trans 'Requested location only' %}</label> <label><input type="checkbox" data-filter="lead"> {% trans 'Signs first, last or as corresponding author' %}</label></div>
+    <div class="student-table" role="region" aria-labelledby="overview-title" tabindex="0"><table>
+      <thead><tr><th scope="col">{% trans 'Person' %}</th><th scope="col">{% trans 'Institution' %}</th><th scope="col">{% trans 'Papers on your topic' %}</th><th scope="col">{% trans 'Signed first / last / corresponding' %}</th><th scope="col">{% trans 'Funding acknowledged' %}</th><th scope="col">{% trans 'Location' %}</th></tr></thead>
+      <tbody>{% for row in result.overview %}{% with p=row.person %}
+        {% if row.team_start %}<tr class="student-team-row" data-overview-team><th colspan="6" scope="rowgroup">{% blocktrans count n=row.team_size %}{{ n }} person{% plural %}{{ n }} people who sign papers together: probably one team, write to one of them{% endblocktrans %}</th></tr>{% endif %}
+        <tr data-overview-row data-card="{{ p.anchor }}" data-location="{% if p.location_match %}1{% endif %}" data-lead="{% if p.lead_count or p.role_counts.first or p.role_counts.last or p.role_counts.corresponding %}1{% endif %}"{% if row.in_team %} class="student-in-team"{% endif %}>
+          <th scope="row"><a href="#{{ p.anchor }}">{{ p.name }}</a>{% if p.saved %} <span class="student-badge">{% trans 'Saved' %}</span>{% endif %}</th>
+          <td>{{ p.institution }}{% if p.city %} · {{ p.city }}{% endif %}</td>
+          <td>{{ p.count|default:'—' }}{% if p.years %} <span class="muted">({{ p.years.1 }})</span>{% endif %}</td>
+          <td>{% if p.role_counts %}{{ p.role_counts.first }} / {{ p.role_counts.last }} / {{ p.role_counts.corresponding }}{% else %}—{% endif %}</td>
+          <td>{% if p.funding %}{% for grant in p.funding|slice:':2' %}{{ grant.funder }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %}</td>
+          <td>{% if p.location_match %}{% trans 'Requested area' %}{% else %}{% trans 'Other or not verified' %}{% endif %}</td>
+        </tr>{% endwith %}{% endfor %}</tbody></table></div>
+  </section>
+  {% endif %}
   {% for person in result.candidates %}{% include 'summarizer/student_card.html' %}{% empty %}<p class="notice">{% trans 'No sufficiently supported lead was found with these geographical criteria. Try a broader topic, country or region, or allow alternatives. No location filter has been silently removed.' %}</p>{% endfor %}
+  {% if result.offer_searches %}<section class="card section-card student-portals"><h2>{% trans 'Published offers on this topic' %}</h2>
+    <p class="muted">{% trans 'Spontaneous enquiries and advertised offers go together. These searches open on the sites that publish offers for your level and country; we do not check their results.' %}</p>
+    <ul>{% for portal in result.offer_searches %}<li><a href="{{ portal.url }}" target="_blank" rel="noopener">{{ portal.name }}</a>{% if not portal.keywords %} <span class="muted">{% trans '(their list of offers: search it with your keywords)' %}</span>{% endif %}</li>{% endfor %}</ul></section>{% endif %}
+  {% if not shared %}
+  <section class="card section-card student-next"><h2>{% trans 'Go further on this topic' %}</h2><ul>
+    <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ result.profile.topic|urlencode }}">{% trans 'A literature review of the topic' %}</a>: {% trans 'the founding and recent papers to know before an interview.' %}</li>
+    <li><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ result.profile.topic|urlencode }}">{% trans 'Who works on it?' %}</a>: {% trans 'every institution publishing on the topic, beyond the ten people shown here.' %}</li>
+  </ul></section>
+  {% trans 'Anyone with this link sees these leads, their papers and your criteria, never your drafts, your notes or who searched. To show a supervisor or a programme coordinator.' as what %}{% include 'summarizer/result_share.html' %}
+  {% endif %}
 {% elif row.status == 'failed' %}<p class="error">{% trans 'The search failed. Your saved leads are unchanged. Please start a new search.' %}</p><a class="btn" href="{% url 'students' %}">{% trans 'Try a new search' %}</a>
 {% else %}
   {% trans 'Finding publication-based research contacts' as working_title %}{% trans 'a few minutes' as working_time %}

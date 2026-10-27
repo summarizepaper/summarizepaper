@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load i18n static_version %}
+{% block title %}{% trans 'My leads' %}{% endblock %}
+{% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<div class="page">
+  <header class="page-header"><p><a href="{% url 'students' %}">← {% trans 'Find a research placement' %}</a></p><h1>{% trans 'My leads' %}</h1>
+    <p class="lead">{% trans 'Your saved leads, your notes, your drafts and where each application stands. Only you see them.' %}</p></header>
+  {% if message %}<p class="notice" role="status">{{ message }}</p>{% endif %}
+  <section id="leads" style="scroll-margin-top:90px">
+  {% if total %}
+    <nav class="student-pipeline" aria-label="{% trans 'Progress' %}"><a href="?#leads"{% if not status_filter %} aria-current="true"{% endif %}>{% trans 'All' %} <strong>{{ total }}</strong></a>{% for key, label, n in pipeline %}{% if n %}<a href="?status={{ key }}#leads"{% if status_filter == key %} aria-current="true"{% endif %}>{{ label }} <strong>{{ n }}</strong></a>{% endif %}{% endfor %}</nav>
+    <form method="get" action="#leads" class="student-filters"><input type="hidden" name="status" value="{{ status_filter }}"><label><input type="checkbox" name="due" value="1"{% if due_filter %} checked{% endif %} onchange="this.form.submit()"> {% trans 'Reminders due' %}</label> <noscript><button class="btn btn-secondary">{% trans 'Filter' %}</button></noscript></form>
+    <form id="student-compare" method="get" action="{% url 'student_compare' %}"><p>{% trans 'Select two to four saved leads to compare their evidence and your progress.' %} <button class="btn btn-secondary">{% trans 'Compare selected leads' %}</button></p></form>
+  {% endif %}
+  {% for item in shortlist %}
+    <details class="card section-card student-lead" id="lead-{{ item.pk }}" style="scroll-margin-top:90px" data-student-lead{% if shortlist|length <= 2 or saved_pk == item.pk or message_pk == item.pk %} open{% endif %}>
+      <summary><strong>{{ item.snapshot.name }}</strong> · {{ item.snapshot.institution }}{% if item.snapshot.city %} · {{ item.snapshot.city }}{% endif %} · <span class="student-badge">{% trans item.get_status_display %}</span>{% if item.due %} · <strong>{% trans 'Reminder due' %} : {{ item.remind_on|date:'j F Y' }}</strong>{% endif %}</summary>
+      <p><label><input type="checkbox" name="lead" value="{{ item.pk }}" form="student-compare"> {% blocktrans with name=item.snapshot.name %}Compare {{ name }}{% endblocktrans %}</label></p>
+      <form id="progress-{{ item.pk }}" class="student-progress" method="post" action="{% url 'student_shortlist_update' pk=item.pk %}" data-student-shortlist data-unsaved="{% trans 'Changes waiting to be saved…' %}" data-saved="{% trans 'Progress, notes and reminder saved.' %}" data-error="{% trans 'Save failed. Your changes are still here; retry before leaving.' %}" data-conflict="{% trans 'This lead changed in another tab. Copy your notes, then reload before editing again.' %}" data-saving="{% trans 'Saving…' %}" data-reminder-set="{% trans 'Reminder set in 10 days to follow up. Change the date if needed.' %}">{% csrf_token %}
+        <h3>{% blocktrans with name=item.snapshot.name %}Progress for {{ name }}{% endblocktrans %}</h3><input type="hidden" name="revision" value="{{ item.revision }}">
+        <div class="student-progress-grid"><p>{{ item.form.status.label_tag }} {{ item.form.status }}</p><p>{{ item.form.remind_on.label_tag }} {{ item.form.remind_on }}</p>
+        <p class="student-progress-wide">{{ item.form.notes.label_tag }} {{ item.form.notes }}</p>
+        <p class="student-progress-wide"><label>{{ item.form.email_reminder }} {{ item.form.email_reminder.label }}</label></p></div>
+        <p data-student-save-status role="status" aria-live="polite">{% if saved_pk == item.pk %}{% trans 'Progress and notes saved.' %}{% else %}{% trans 'Changes are saved automatically. Reminders appear here on the chosen date, and by email if you ask.' %}{% endif %}</p>
+        <button class="btn" type="submit" data-student-save>{% trans 'Save progress and notes' %}</button> <button class="btn btn-secondary" type="submit" name="action" value="remove">{% trans 'Remove from shortlist' %}</button>
+      </form>
+      {% if message and message_pk == item.pk %}<p class="notice" role="status">{{ message }}</p>{% endif %}
+      <div class="card section-card student-actions"><h3>{% trans 'Next steps' %}</h3>
+        {% if paid %}<form method="post" action="{% url 'student_update_lead' pk=item.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">{% trans 'Check this lead again' %}</button> <span class="muted">{% trans 'Affiliation, location, roles, funding and their new papers, without a new search.' %}</span></form>{% endif %}
+        {% if item.followed %}<p>{% trans 'Their new arXiv papers come first in your digest.' %}</p>
+        {% elif has_digest %}<form method="post" action="{% url 'student_follow' pk=item.pk %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">{% trans 'Follow their new papers in my digest' %}</button> <span class="muted">{% trans 'A new paper is a good reason to write or to follow up.' %}</span></form>
+        {% else %}<p><a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Create a digest' %}</a> {% trans 'to follow their new papers: a new paper is a good reason to write or to follow up.' %}</p>{% endif %}
+        {% if item.collectable %}<form method="post" action="{% url 'student_collection' pk=item.pk %}">{% csrf_token %}<label>{% trans 'Put the readings in' %} <select name="collection"><option value="new">{% trans 'a new collection' %}</option>{% for collection in collections %}<option value="{{ collection.pk }}">{{ collection.name }}</option>{% endfor %}</select></label> <button class="btn btn-secondary" type="submit">{% trans 'Add' %}</button> <span class="muted">{% trans 'to read them together, chat with them or export them to Zotero.' %}</span></form>{% endif %}
+        {% for talk in item.talks %}<p>{% trans 'Speaks in one of your conference programs:' %} <a href="{{ talk.url }}">{{ talk.conference|default:_('Your program') }}</a> · {{ talk.title }}{% if talk.session %} · {{ talk.session }}{% endif %}{% if talk.time %} · {{ talk.time }}{% endif %}</p>{% endfor %}
+      </div>
+      {% if paid %}{% include 'summarizer/student_source_form.html' %}{% endif %}
+      {% include 'summarizer/student_card.html' with person=item.snapshot saved_item=True %}
+    </details>
+  {% empty %}<p class="muted">{% if status_filter or due_filter %}{% trans 'No saved lead matches this filter.' %} <a href="?#leads">{% trans 'Show all' %}</a>{% else %}{% trans 'Save a lead from a search to keep its sources, reading suggestions and your private notes here.' %}{% endif %}</p>{% endfor %}
+  </section>
+</div>
+{% endblock %}

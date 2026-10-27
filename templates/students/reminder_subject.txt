@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans count n=items|length %}Reminder: {{ n }} research placement lead to follow up{% plural %}Reminder: {{ n }} research placement leads to follow up{% endblocktrans %}

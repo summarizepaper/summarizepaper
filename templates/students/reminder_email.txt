@@ -1,0 +1,8 @@
+{% load i18n %}{% trans 'You asked to be reminded of these leads today:' %}
+{% for item in items %}
+- {{ item.snapshot.name }}, {{ item.snapshot.institution }} · {% trans item.get_status_display %}{% if item.notes %}
+  {{ item.notes|truncatechars:300 }}{% endif %}
+{% endfor %}
+{% trans 'Your notes, drafts and progress:' %} {{ url }}
+
+{% trans 'You receive this email because you ticked “Also email me on that date” for these leads. Untick it on the page above to stop.' %}

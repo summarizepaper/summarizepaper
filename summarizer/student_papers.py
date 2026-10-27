@@ -15,6 +15,11 @@ from . import generated, similar, sources, teams
 AUTHOR_PAGE = 200
 AUTHOR_PAGES = 3
 FIRST_PER_AUTHOR = 12
+BIG_TEAM = 20  # authors beyond which a paper is a collaboration: only its first BIG_TEAM_KEPT and its leads count
+BIG_TEAM_KEPT = 15
+SMALL_TEAM = 12  # funding acknowledged by a larger paper says little about one of its authors
+FUNDING_YEARS = 4
+FUNDING = 4
 
 
 def normalized(value):
@@ -61,6 +66,61 @@ def first_author(work):
 def is_first(work, aid):
     return any((a.get('author') or {}).get('id') == aid and a.get('author_position') == 'first'
                for a in work.get('authorships') or [])
+
+
+def last_name(authorship):
+    name = teams.person_name((authorship.get('author') or {}).get('display_name') or authorship.get('raw_author_name') or '')
+    return normalized(name).split()[-1] if normalized(name) else ''
+
+
+def alphabetical(work):
+    """Authors listed by last name (mathematics, high-energy physics, consortia): their order says nothing."""
+    names = [last_name(a) for a in work.get('authorships') or []]
+    return len(names) >= 4 and all(names) and names == sorted(names)
+
+
+def author_roles(work):
+    """{author id: ['first' | 'last' | 'corresponding', ...]} as signed in this paper ([] for another position).
+    Positions are left out when the order is alphabetical, and so are the authors of a large collaboration
+    after its first BIG_TEAM_KEPT, unless they are corresponding authors or sign last."""
+    authorships = work.get('authorships') or []
+    ordered, big = not alphabetical(work), len(authorships) > BIG_TEAM
+    found = {}
+    for index, authorship in enumerate(authorships):
+        aid = (authorship.get('author') or {}).get('id') or ''
+        if not re.fullmatch(r'https://openalex.org/A\d+', aid):
+            continue
+        roles = [authorship['author_position']] if ordered and authorship.get('author_position') in ('first', 'last') else []
+        if authorship.get('is_corresponding') is True:
+            roles.append('corresponding')
+        if big and index >= BIG_TEAM_KEPT and not roles:
+            continue
+        kept = found.setdefault(aid, [])
+        kept.extend(r for r in roles if r not in kept)
+    return found
+
+
+def is_lead(work, aid):
+    return bool(author_roles(work).get(aid))
+
+
+def funding(works, aid):
+    """Awards acknowledged by the recent papers this author leads in a small team: evidence that a project was
+    funded, never that this person holds the grant or that a position is open."""
+    since = str(timezone.now().year - FUNDING_YEARS)
+    found = {}
+    for work in sorted(works, key=lambda w: w.get('publication_date') or '', reverse=True):
+        if (work.get('publication_date') or '') < since or len(work.get('authorships') or []) > SMALL_TEAM or not is_lead(work, aid):
+            continue
+        for award in work.get('awards') or []:
+            if not isinstance(award, dict) or not isinstance(award.get('funder_display_name'), str):
+                continue
+            key = (award.get('funder_display_name'), award.get('funder_award_id') or award.get('id') or title(work))
+            found.setdefault(key, {'funder': award['funder_display_name'][:200],
+                                   'award': str(award.get('funder_award_id') or '')[:100],
+                                   'project': str(award.get('display_name') or '')[:300],
+                                   'paper': dict(teams.title_data(work), url=url(work))})
+    return list(found.values())[:FUNDING]
 
 
 def research_paper(work):
@@ -120,7 +180,7 @@ def author_publications(aid):
     """Actual author identity, all years; recent pages plus cited work for older readings."""
     if not re.fullmatch(r'https://openalex.org/A\d+', aid or ''):
         return {'works': [], 'limited': True}
-    key = 'student-author-readings-v3:' + aid.rsplit('/', 1)[-1]
+    key = 'student-author-readings-v4:' + aid.rsplit('/', 1)[-1]
     cached = cache.get(key)
     if cached is not None:
         return cached
@@ -133,7 +193,7 @@ def author_publications(aid):
             body = sources._json(sources.OPENALEX+'/works', sources._openalex_params({
                 'filter': 'author.id:%s,to_publication_date:%s' % (aid.rsplit('/', 1)[-1], timezone.now().date()),
                 'sort': sort, 'page': page, 'per_page': AUTHOR_PAGE,
-                'select': teams.FIELDS+',abstract_inverted_index,locations,type'}))
+                'select': teams.FIELDS+',abstract_inverted_index,locations,type,awards'}))
         except sources.SourceUnavailable:
             limited = True
             break
@@ -141,7 +201,7 @@ def author_publications(aid):
             limited = True
             break
         count = (body.get('meta') or {}).get('count') or 0
-        works.extend(w for w in body['results'] if isinstance(w, dict) and w.get('id') and title(w) and is_first(w, aid)
+        works.extend(w for w in body['results'] if isinstance(w, dict) and w.get('id') and title(w) and is_lead(w, aid)
                      and research_paper(w))
         if count <= AUTHOR_PAGE or page == 2 and count <= AUTHOR_PAGE * 2:
             break
@@ -153,9 +213,30 @@ def author_publications(aid):
 
 
 def reading(work, aid):
-    return dict(teams.title_data(work), id=work['id'], url=url(work), first_author=is_first(work, aid),
+    roles = author_roles(work).get(aid, [])
+    return dict(teams.title_data(work), id=work['id'], url=url(work), first_author='first' in roles, roles=roles,
+                authors_count=len(work.get('authorships') or []),
                 abstract=sources.inverted_abstract(work.get('abstract_inverted_index') or {}),
                 alternate_links=work.get('alternate_links') or [])
+
+
+def site_key(paper):
+    """The key of the paper's page on the site (its summary, chat, collections): the arXiv id of the paper or of
+    its arXiv version, else its DOI; '' when neither can be read back."""
+    for link in [paper] + [{'url': link.get('url')} for link in paper.get('alternate_links') or [] if isinstance(link, dict)]:
+        found = arxiv(link)
+        if found:
+            return found.replace('/', '--')
+    value = doi(paper)
+    if value and not value.startswith('10.48550/'):
+        key = sources.doi_key(value)
+        return '' if key.startswith('doi_h') else key  # a hashed key is only known once stored
+    return ''
+
+
+def lead_paper(paper):
+    """Old readings only know whether they were signed first."""
+    return bool(paper.get('roles') or paper.get('first_author'))
 
 
 def topical(works, topic):
@@ -206,8 +287,10 @@ def complete(found, profile):
         first.sort(key=lambda p: p.get('year', ''), reverse=True)
         old = person.get('readings') or []
         combined = deduplicate(first + old, owner=person['author_url'])
-        combined.sort(key=lambda p: not p.get('first_author'))
+        combined.sort(key=lambda p: not lead_paper(p))
         person['readings'] = combined[:3]
         person['first_count'] = sum(p.get('first_author', False) for p in person['readings'])
+        person['lead_count'] = sum(lead_paper(p) for p in person['readings'])
+        person['funding'] = funding(record['works'], person['author_url'])
         person['first_author_checked'] = True
         person['first_author_limited'] = record['limited']

@@ -172,7 +172,7 @@ class StudentTests(ToolsTestCase):
         self.assertEqual(client.post(url, {'status': 'contacted', 'notes': '<script>private</script>'}).status_code, 302)
         item.refresh_from_db()
         self.assertEqual(item.status, 'contacted')
-        page = client.get('/en/students/')
+        page = client.get('/en/students/leads/')
         self.assertContains(page, '&lt;script&gt;private&lt;/script&gt;')
         self.assertNotContains(page, '<script>private</script>')
         self.assertEqual(client.post(url, {'status': 'fake', 'notes': 'x'}).status_code, 400)
@@ -186,9 +186,9 @@ class StudentTests(ToolsTestCase):
         self.assertFalse(Generated.objects.filter(kind='students').exists())
         with mock.patch.object(students, 'find', return_value={'title': 'Moons', 'profile': self.profile, 'candidates': []}) as find:
             for _ in range(students.PER_DAY):
-                response = client.post('/en/students/', self.profile)
+                response = client.post('/en/students/', dict(self.profile, country='FR'))
                 self.assertEqual(response.status_code, 302)
-            self.assertContains(client.post('/en/students/', self.profile), 'Daily search limit')
+            self.assertContains(client.post('/en/students/', dict(self.profile, country='FR')), 'Daily search limit')
         self.assertEqual(find.call_count, students.PER_DAY)
         self.assertContains(client.get(response['Location']), 'No sufficiently supported lead')
 
@@ -255,7 +255,7 @@ class StudentTests(ToolsTestCase):
         other = self.client_for(self.user('other', paid=True))
         self.assertEqual(other.post('/en/students/student-demo/refresh/').status_code, 404)
         self.assertEqual(client.get('/en/students/student-demo/refresh/').status_code, 405)
-        self.assertContains(client.get('/en/students/'), 'Save progress and notes')
+        self.assertContains(client.get('/en/students/leads/'), 'Save progress and notes')
         response = client.post('/en/students/shortlist/%d/' % saved.pk, {'status': 'read', 'notes': 'Updated'})
         self.assertTrue(response['Location'].endswith('#lead-%d' % saved.pk))
         self.assertContains(client.get(response['Location']), 'Progress and notes saved.')
@@ -264,6 +264,7 @@ class StudentTests(ToolsTestCase):
         person = self.candidate()
         person.pop('version')
         person['readings'][0].pop('first_author')
+        person['readings'][0].pop('roles')  # older snapshots knew neither
         students.context_cards([person], 'en', set())
         self.assertTrue(person['outdated'])
         self.assertEqual(person['city'], '')
@@ -353,7 +354,7 @@ class StudentWorkflowTests(ToolsTestCase):
         other = self.client_for(self.user('outsider', paid=True))
         self.assertEqual(other.post(url, fields, HTTP_ACCEPT='application/json').status_code, 404)
         self.assertEqual(client.post(url, dict(fields, revision=1, remind_on='invalid'), HTTP_ACCEPT='application/json').status_code, 400)
-        self.assertContains(client.get('/en/students/'), 'Changes are saved automatically.')
+        self.assertContains(client.get('/en/students/leads/'), 'Changes are saved automatically.')
 
     def test_comparison_filters_due_and_ownership(self):
         user = self.user('compare', paid=True)
@@ -367,8 +368,8 @@ class StudentWorkflowTests(ToolsTestCase):
         self.assertEqual(other.get(own).status_code, 404)
         self.assertEqual(client.get('/en/students/compare/?lead=%d&lead=%d' % (first.pk, first.pk)).status_code, 400)
         self.assertEqual(client.get('/en/students/compare/?lead=not-a-number&lead=1').status_code, 400)
-        self.assertNotContains(client.get('/en/students/?status=contacted&due=1'), 'Private Two')
-        self.assertContains(client.get('/en/students/?status=contacted&due=1'), 'Reminder due')
+        self.assertNotContains(client.get('/en/students/leads/?status=contacted&due=1'), 'Private Two')
+        self.assertContains(client.get('/en/students/leads/?status=contacted&due=1'), 'Reminder due')
 
     def test_source_import_is_owned_scoped_and_preserves_notes(self):
         user = self.user('sources', paid=True)
@@ -607,3 +608,271 @@ class StudentReadingDiscoveryTests(ToolsTestCase):
         self.assertTrue(students.umbrella({'display_name': 'European Space Agency', 'type': 'facility'}))
         self.assertFalse(students.location_matches({'country': 'France','city':'Paris'},
             {'display_name': 'European Space Agency'}, {'geo': {'city':'Paris'},'country_code':'FR'}))
+
+
+class StudentRoleAndRankingTests(ToolsTestCase):
+    """Who signs what, who is shown first, and what is said about it."""
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(students, 'latest_affiliations', side_effect=self.latest)
+        patch.start()
+        self.addCleanup(patch.stop)
+        patch = mock.patch.object(students, 'institution_details', return_value=StudentTests.details(None))
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    profile = StudentTests.profile
+
+    def latest(self, aid):
+        return StudentTests.latest(self, aid)
+
+    def aid(self, name):
+        import hashlib
+        return 'https://openalex.org/A%d' % int(hashlib.md5(name.encode()).hexdigest()[:8], 16)
+
+    def work(self, key, names, positions=None, corresponding=(), date='2026-03-01', title='Exomoon astrometry'):
+        positions = positions or ['first'] + ['middle'] * (len(names) - 2) + ['last'] * (len(names) > 1)
+        return {'id': 'https://openalex.org/' + key, 'display_name': title, 'publication_date': date,
+                'doi': 'https://doi.org/10.1/' + key, 'authorships': [
+                    {'author': {'id': self.aid(name), 'display_name': name}, 'author_position': position,
+                     'is_corresponding': i in corresponding,
+                     'institutions': [{'id': 'https://openalex.org/I1', 'display_name': 'Example University', 'country_code': 'FR', 'type': 'education'}]}
+                    for i, (name, position) in enumerate(zip(names, positions))]}
+
+    def test_roles_follow_the_signature_but_not_alphabetical_lists_or_large_collaborations(self):
+        from . import student_papers as papers
+        ordered = self.work('W1', ['Zoe Zed', 'Ann Abel', 'Max Moe'], corresponding=(1,))
+        roles = papers.author_roles(ordered)
+        self.assertEqual(roles[self.aid('Zoe Zed')], ['first'])
+        self.assertEqual(roles[self.aid('Ann Abel')], ['corresponding'])
+        self.assertEqual(roles[self.aid('Max Moe')], ['last'])
+        alphabetical = self.work('W2', ['Ann Abel', 'Bob Bell', 'Cy Cole', 'Dan Dorn'])
+        self.assertTrue(papers.alphabetical(alphabetical))
+        self.assertEqual(set(map(tuple, papers.author_roles(alphabetical).values())), {()})
+        names = ['Person %s Name%d' % (chr(90 - i % 26), i) for i in range(40)]
+        roles = papers.author_roles(self.work('W3', names, corresponding=(30,)))
+        self.assertIn(self.aid(names[0]), roles)
+        self.assertNotIn(self.aid(names[20]), roles)  # a middle author of a collaboration is not a contact
+        self.assertEqual(roles[self.aid(names[30])], ['corresponding'])
+        self.assertEqual(roles[self.aid(names[39])], ['last'])
+
+    def test_the_last_author_of_relevant_papers_comes_before_a_middle_author(self):
+        papers = [self.work('W1', ['Pat Student', 'Kim Middle', 'Lee Leader']),
+                  self.work('W2', ['Sam Other', 'Kim Middle', 'Lee Leader'], date='2025-01-01')]
+        found, _ = students.candidates(papers, dict(self.profile, city=''), scores={'https://openalex.org/W1': 0.9, 'https://openalex.org/W2': 0.5})
+        names = [p['name'] for p in found]
+        self.assertLess(names.index('Lee Leader'), names.index('Kim Middle'))
+        leader = found[names.index('Lee Leader')]
+        self.assertEqual(leader['role_counts'], {'first': 0, 'last': 2, 'corresponding': 0})
+        self.assertEqual(leader['years'], ['2025', '2026'])
+        self.assertEqual(leader['readings'][0]['roles'], ['last'])
+        self.assertEqual(found[names.index('Kim Middle')]['readings'][0]['roles'], [])
+
+    def test_people_signing_together_are_one_team_but_a_collaboration_is_not(self):
+        papers = [self.work('W1', ['Pat Student', 'Lee Leader']), self.work('W2', ['Lee Leader', 'Pat Student'], positions=['first', 'last']),
+                  self.work('W3', ['Solo Person'])]
+        found, _ = students.candidates(papers, dict(self.profile, city=''))
+        by_name = {p['name']: p for p in found}
+        self.assertEqual(by_name['Pat Student']['team_id'], by_name['Lee Leader']['team_id'])
+        self.assertEqual(by_name['Lee Leader']['team'], [{'key': by_name['Pat Student']['key'], 'name': 'Pat Student', 'shared': 2}])
+        self.assertIsNone(by_name['Solo Person']['team_id'])
+        rows = students.overview(found)
+        self.assertEqual(sum(r['team_start'] for r in rows), 1)
+        self.assertEqual(len(rows), 3)
+
+    def test_unchecked_authors_are_counted_and_open_mode_keeps_unknown_locations(self):
+        papers = [dict(StudentTests.paper_data(self, 'A%d' % i, 'I%d' % i), id='W%d' % i, doi='https://doi.org/10.1/u%d' % i) for i in range(30)]
+        report = {}
+        with mock.patch.object(students, 'institution_details', return_value=None):
+            found, limited = students.candidates(papers, self.profile, report=report)
+            self.assertEqual(found, [])
+            self.assertEqual(report['unchecked'], 30)
+            found, _ = students.candidates(papers[:2], dict(self.profile, mobility='open'))
+        self.assertEqual(len(found), 2)
+        self.assertFalse(found[0]['location_checked'])
+        self.assertFalse(found[0]['location_match'])
+
+    def test_funding_comes_only_from_recent_small_papers_the_person_leads(self):
+        from . import student_papers as papers
+        award = {'funder_display_name': 'Agence Nationale de la Recherche', 'funder_award_id': 'ANR-22-CE31-0020', 'display_name': 'Moons'}
+        led = dict(self.work('W1', ['Lee Leader', 'Pat Student'], positions=['last', 'first']), awards=[award])
+        middle = dict(self.work('W2', ['Lee Leader', 'Pat Student', 'Sam Other'], positions=['middle', 'first', 'last']),
+                      awards=[dict(award, funder_award_id='OTHER')])
+        old = dict(self.work('W3', ['Lee Leader'], date='2015-01-01'), awards=[dict(award, funder_award_id='OLD')])
+        big = dict(self.work('W4', ['Lee Leader'] + ['Person %d' % i for i in range(20)]), awards=[dict(award, funder_award_id='BIG')])
+        found = papers.funding([led, middle, old, big], self.aid('Lee Leader'))
+        self.assertEqual([f['award'] for f in found], ['ANR-22-CE31-0020'])
+        self.assertEqual(found[0]['paper']['title'], 'Exomoon astrometry')
+
+    def test_skills_written_in_the_readings_move_a_person_up(self):
+        person = {'readings': [{'title': 'Exomoons', 'abstract': 'We fit transit timing with MCMC sampling.'}]}
+        self.assertEqual(students.found_skills(person, {'skills': 'Python, MCMC; transit timing'}), ['MCMC', 'transit timing'])
+        first = {'name': 'B', 'score': 1.0, 'location_match': True, 'skills_found': ['MCMC', 'transit timing']}
+        second = {'name': 'A', 'score': 1.5, 'location_match': True, 'skills_found': []}
+        self.assertEqual(sorted([second, first], key=students.rank)[0]['name'], 'B')
+
+    def test_career_ignores_impossible_years(self):
+        author = {'works_count': 12, 'counts_by_year': [{'year': 10000, 'works_count': 3}, {'year': 2009, 'works_count': 1},
+                                                         {'year': 1850, 'works_count': 1}, {'year': 2004, 'works_count': 0}]}
+        self.assertEqual(students.career(author), (2009, 12))
+        self.assertEqual(students.career({}), (None, None))
+
+    def test_draft_names_the_role_and_offers_follow_level_and_country(self):
+        person = {'name': 'Lee Leader', 'institution': 'Example University', 'profile': self.profile,
+                  'readings': [{'title': 'Exomoon astrometry', 'roles': ['last']}]}
+        self.assertIn('which you signed as last author', students.draft(person, 'en'))
+        self.assertNotIn('first-author', students.draft(person, 'en'))
+        names = [p['name'] for p in students.offer_searches({'profile': dict(self.profile, kind='phd', country='FR'), 'queries': ['exomoon astrometry']})]
+        self.assertEqual(names, ['Euraxess', 'FindAPhD', 'ADUM', 'CNRS'])
+        internship = students.offer_searches({'profile': dict(self.profile, kind='internship', country='GB'), 'title': 'Lunes'})
+        self.assertEqual([p['name'] for p in internship], ['Euraxess', 'jobs.ac.uk'])
+        self.assertTrue(internship[0]['url'].endswith('keywords=Lunes'))
+
+    def test_reading_keys_open_the_summary_and_chat_pages(self):
+        from . import student_papers as papers
+        self.assertEqual(papers.site_key({'url': 'https://doi.org/10.1051/0004-6361/202452097',
+                                          'alternate_links': [{'url': 'https://arxiv.org/abs/2411.14241', 'kind': 'arxiv'}]}), '2411.14241')
+        self.assertEqual(papers.site_key({'url': 'https://doi.org/10.1093/mnras/stad1234'}), 'doi_10.1093--mnras--stad1234')
+        self.assertEqual(papers.site_key({'url': 'https://arxiv.org/abs/hep-th/9901001'}), 'hep-th--9901001')
+        self.assertEqual(papers.site_key({'url': ''}), '')
+
+
+class StudentLeadsPageTests(ToolsTestCase):
+    """The page of saved leads: drafts, reminders, next steps and links to the other tools."""
+    def setUp(self):
+        super().setUp()
+        self.owner = self.user('owner', paid=True)
+        self.client = self.client_for(self.owner)
+        with mock.patch.object(students, 'latest_affiliations', side_effect=lambda aid: StudentTests.latest(self, aid)):
+            self.person = StudentTests.candidate(self)
+        self.item = StudentShortlist.objects.create(user=self.owner, candidate_key=self.person['key'], snapshot=self.person)
+        self.url = '/en/students/shortlist/%d/' % self.item.pk
+
+    profile = StudentTests.profile
+    paper_data = StudentTests.paper_data
+    details = StudentTests.details
+
+    def test_saved_draft_is_kept_and_a_form_without_it_does_not_erase_it(self):
+        fields = {'status': 'read', 'notes': 'n', 'remind_on': '', 'revision': 0, 'draft': 'My own email'}
+        self.assertEqual(self.client.post(self.url, fields, HTTP_ACCEPT='application/json').json(), {'revision': 1})
+        fields.pop('draft')
+        self.client.post(self.url, dict(fields, revision=1), HTTP_ACCEPT='application/json')
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.draft, 'My own email')
+        self.assertContains(self.client.get('/en/students/leads/'), 'My own email')
+        self.assertContains(self.client.get('/en/students/leads/'), 'form="progress-%d"' % self.item.pk)
+
+    def test_saving_a_lead_keeps_an_edited_draft_only(self):
+        row = Generated.objects.create(user=self.owner, kind='students', key='search', lang='en', status='done', content=json.dumps({
+            'version': students.RESULT_VERSION, 'title': 'Exomoons', 'profile': self.profile, 'candidates': [self.person]}))
+        self.item.delete()
+        unchanged = students.draft(dict(self.person), 'en')
+        self.client.post('/en/students/search/save/', {'candidate': self.person['key'], 'draft': unchanged})
+        self.assertEqual(StudentShortlist.objects.get(user=self.owner).draft, '')
+        self.client.post('/en/students/search/save/', {'candidate': self.person['key'], 'draft': 'Edited'})
+        self.assertEqual(StudentShortlist.objects.get(user=self.owner).draft, 'Edited')
+        page = self.client.get('/en/students/search/')
+        self.assertContains(page, 'Edited')
+        self.assertContains(page, 'At a glance')
+        self.assertContains(page, 'euraxess.ec.europa.eu')
+        self.assertContains(page, '/en/teams/?topic=')
+
+    def test_email_reminders_are_sent_once_per_date_and_only_when_asked(self):
+        from django.core import mail
+        today = timezone.now()
+        StudentShortlist.objects.filter(pk=self.item.pk).update(remind_on=today.date(), email_reminder=True, notes='Follow up on Monday')
+        StudentShortlist.objects.create(user=self.owner, candidate_key='silent', snapshot=dict(self.person, name='Silent Lead'),
+                                        remind_on=today.date())
+        now = today.replace(hour=8)
+        self.assertEqual(students.send_reminders(now, 10), 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Alex Example', mail.outbox[0].body)
+        self.assertIn('Follow up on Monday', mail.outbox[0].body)
+        self.assertNotIn('Silent Lead', mail.outbox[0].body)
+        self.assertEqual(students.send_reminders(now, 10), 0)
+        # A new date is a new reminder.
+        fields = {'status': 'contacted', 'notes': '', 'remind_on': (today.date() + timezone.timedelta(days=1)).isoformat(),
+                  'email_reminder': 'on', 'revision': 0}
+        self.client.post(self.url, fields, HTTP_ACCEPT='application/json')
+        self.item.refresh_from_db()
+        self.assertIsNone(self.item.reminded)
+        self.assertTrue(self.item.email_reminder)
+        self.assertEqual(students.send_reminders(now + timezone.timedelta(days=1), 10), 1)
+        self.assertEqual(students.send_reminders(now.replace(hour=3), 10), 0)
+
+    def test_follow_in_the_digest_and_without_one(self):
+        from summarizer.models import DigestSubscription
+        follow = '/en/students/shortlist/%d/follow/' % self.item.pk
+        self.assertTrue(self.client.post(follow)['Location'].endswith('/en/digest/'))
+        subscription = DigestSubscription.objects.create(user=self.owner, categories='astro-ph.EP', authors='Ann Lee')
+        self.client.post(follow)
+        subscription.refresh_from_db()
+        self.assertEqual(subscription.authors, 'Ann Lee, Alex Example')
+        self.client.post(follow)
+        subscription.refresh_from_db()
+        self.assertEqual(subscription.authors, 'Ann Lee, Alex Example')
+        page = self.client.get('/en/students/leads/')
+        self.assertContains(page, 'Their new arXiv papers come first in your digest.')
+        other = self.client_for(self.user('intruder', paid=True))
+        self.assertEqual(other.post(follow).status_code, 404)
+
+    def test_readings_go_to_a_collection(self):
+        from summarizer.models import Collection
+        snapshot = dict(self.person, readings=[dict(self.person['readings'][0], url='https://arxiv.org/abs/2101.00001')])
+        StudentShortlist.objects.filter(pk=self.item.pk).update(snapshot=snapshot)
+        with mock.patch('summarizer.library.add_many') as add:
+            response = self.client.post('/en/students/shortlist/%d/collection/' % self.item.pk, {'collection': 'new'})
+        collection = Collection.objects.get(user=self.owner)
+        self.assertEqual(response['Location'], '/en/collections/%d/' % collection.pk)
+        self.assertEqual(collection.name, 'Placement: Alex Example')
+        self.assertEqual(add.call_args.args[1], ['2101.00001'])
+
+    def test_checking_a_lead_again_updates_its_sources_but_keeps_notes(self):
+        StudentShortlist.objects.filter(pk=self.item.pk).update(notes='Keep me')
+        latest = dict(StudentTests.latest(self, self.person['author_url']), since=2012, works_count=40)
+        work = {'id': 'https://openalex.org/W8', 'display_name': 'A newer paper', 'publication_date': '2099-01-01',
+                'doi': 'https://doi.org/10.1/new', 'authorships': [{'author': {'id': self.person['author_url'], 'display_name': 'Alex Example'},
+                                                                    'author_position': 'first'}]}
+        with mock.patch.object(students, 'latest_affiliations', return_value=latest), \
+             mock.patch.object(students, 'institution_details', return_value=self.details()), \
+             mock.patch.object(students.student_papers, 'author_publications', return_value={'works': [work], 'limited': False}):
+            response = self.client.post('/en/students/shortlist/%d/update/' % self.item.pk)
+        self.assertTrue(response['Location'].endswith('#lead-%d' % self.item.pk))
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.notes, 'Keep me')
+        self.assertEqual(self.item.snapshot['since'], 2012)
+        self.assertEqual([p['title'] for p in self.item.snapshot['new_papers']], ['A newer paper'])
+        page = self.client.get('/en/students/leads/')
+        self.assertContains(page, 'This lead was checked again')
+        self.assertContains(page, 'A newer paper')
+        with mock.patch.object(students, 'latest_affiliations', return_value=None):
+            self.client.post('/en/students/shortlist/%d/update/' % self.item.pk)
+        self.assertContains(self.client.get('/en/students/leads/'), 'could not be checked again')
+
+    def test_conference_talks_of_a_lead_are_shown(self):
+        Generated.objects.create(user=self.owner, kind='conference', key='conf', lang='en', status='done', content=json.dumps({
+            'name': 'EPSC 2026', 'talks': [{'title': 'Moons around giants', 'speakers': 'A. Example and B. Other', 'session': 'S1', 'time': ''}]}))
+        self.assertContains(self.client.get('/en/students/leads/'), 'Moons around giants')
+
+    def test_a_shared_search_hides_drafts_and_who_searched(self):
+        row = Generated.objects.create(user=self.owner, kind='students', key='search', lang='en', status='done', content=json.dumps({
+            'version': students.RESULT_VERSION, 'title': 'Exomoons', 'profile': self.profile, 'candidates': [self.person]}))
+        self.client.post('/en/students/search/', {'action': 'share'})
+        row.refresh_from_db()
+        page = Client().get('/en/students/shared/%s/' % row.share_token)
+        self.assertContains(page, 'Alex Example')
+        self.assertNotContains(page, 'data-student-draft')
+        self.assertNotContains(page, 'owner')
+        self.assertNotContains(page, 'Save this lead')
+        self.client.post('/en/students/search/', {'action': 'unshare'})
+        self.assertEqual(Client().get('/en/students/shared/%s/' % row.share_token).status_code, 404)
+
+    def test_other_tools_fill_the_form_and_old_country_names_still_refresh(self):
+        self.assertContains(self.client.get('/en/students/?topic=Exomoon+timing'), 'Exomoon timing</textarea>')
+        self.assertContains(self.client.get('/en/teams/?topic=Exomoon+timing'), 'Exomoon timing</textarea>')
+        self.assertContains(self.client.get('/en/literature-review/?question=Exomoon+timing'), 'Exomoon timing</textarea>')
+        row = Generated.objects.create(user=self.owner, kind='students', key='old', lang='en', status='done', content=json.dumps({
+            'version': 4, 'title': 'Exomoons', 'profile': dict(self.profile, country='France'), 'candidates': []}))
+        with mock.patch.object(students, 'find', return_value={'title': 'Fresh', 'profile': self.profile, 'candidates': []}) as find:
+            self.assertEqual(self.client.post('/en/students/old/refresh/').status_code, 302)
+        self.assertEqual(find.call_args.args[0]['country'], 'FR')

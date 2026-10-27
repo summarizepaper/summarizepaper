@@ -15,7 +15,8 @@
   </header>
 
   {% if result %}
-    {% if not shared %}{% trans 'Anyone with this link sees these institutions, their authors and papers, never who searched.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if not shared %}<p><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ result.topic|default:result.title|urlencode }}">{% trans 'Looking for an internship or a PhD on this topic? See who signs these papers, how, and prepare your enquiry.' %}</a></p>
+    {% trans 'Anyone with this link sees these institutions, their authors and papers, never who searched.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this search: some papers are missing. Run it again tomorrow for a complete map.' %}</p>{% endif %}
     {% if result.groups %}
     {% if result.version == result_version %}<p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). All affiliations declared in the publication metadata are counted; totals across institutions overlap.{% endblocktrans %}</p>{% endif %}

@@ -174,7 +174,8 @@ def search_papers(topic, lang, step=lambda name: None):
     truncated = len(candidates) > MAX_CANDIDATES
     kept = relevant_papers(topic, candidates[:MAX_CANDIDATES])
     return {'title': str(plan.get('title', '')).strip(), 'works': kept, 'since': since.year,
-            'limited': limited, 'truncated': truncated}
+            'limited': limited, 'truncated': truncated, 'queries': queries,
+            'scores': {papers[i]['id']: float(scores[i]) for i in order if scores[i] >= CLOSE}}
 
 
 def find(topic, lang, step=lambda name: None):
@@ -206,7 +207,7 @@ def find(topic, lang, step=lambda name: None):
     for i, g in enumerate(groups):
         note = by_id.get(str(i), {})
         g['focus'], g['approach'] = str(note.get('focus', '')).strip(), str(note.get('approach', '')).strip()
-    return {'title': title, 'groups': groups, 'papers': len(kept),
+    return {'title': title, 'groups': groups, 'papers': len(kept), 'topic': topic[:1500],
             'landscape': str(notes.get('landscape', '')).strip(), 'since': since, 'limited': limited, 'truncated': truncated, 'version': RESULT_VERSION}
 
 
@@ -242,7 +243,8 @@ def teams_page(request):
             return redirect('/%s/teams/%s/' % (get_language(), row.key))
     searches = Generated.objects.filter(kind='teams', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/teams.html', {'paid': paid, 'error': error, 'searches': searches,
-                                                     'projects': projects, 'per_day': PER_DAY})
+                                                     'projects': projects, 'per_day': PER_DAY,
+                                                     'topic': request.GET.get('topic', '').strip()[:MAX_CHARS]})
 
 
 @login_required

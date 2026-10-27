@@ -437,7 +437,7 @@ def literature_page(request):
         return render(request, 'summarizer/literature.html', {'anonymous': True, 'per_day': PER_DAY})
     paid = access.has_tool(request.user, 'literature')
     error = None
-    question = ''
+    question = ' '.join(request.GET.get('question', '').split())[:MAX_CHARS]  # from another tool's topic
     if request.method == 'POST' and paid:
         question = ' '.join(request.POST.get('question', '').split())
         if not MIN_CHARS <= len(question) <= MAX_CHARS:

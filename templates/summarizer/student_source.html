@@ -7,4 +7,4 @@
   {% else %}<p class="error" role="alert">{% trans 'This saved lead has no usable institution website. Refresh the search to update its institution sources.' %}</p>{% endif %}
 {% elif busy %}<p class="notice" role="alert">{% trans 'Please wait thirty seconds before checking another source.' %}</p>{% elif conflict %}<p class="notice" role="alert">{% trans 'The saved lead changed during this check. The evidence was not saved; reload and try again.' %}</p>{% else %}{% include 'summarizer/student_evidence.html' with evidence_open=True %}<p>{% trans 'The source check has been saved with this lead.' %}</p>{% endif %}
 {% if source_domain %}{% include 'summarizer/student_source_form.html' %}{% endif %}
-<a href="{% url 'students' %}#lead-{{ item.pk }}">{% trans 'Back to my shortlist' %}</a></div>{% endblock %}
+<a href="{% url 'student_leads' %}#lead-{{ item.pk }}">{% trans 'Back to my shortlist' %}</a></div>{% endblock %}

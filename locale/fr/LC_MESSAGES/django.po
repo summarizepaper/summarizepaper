@@ -14629,3 +14629,530 @@ msgstr "Comme vous êtes auteur de cet article, votre correction remplace le ver
 
 msgid "Your correction is shown to you instead of the verdict, and helps check the verdicts."
 msgstr "Votre correction s'affiche pour vous à la place du verdict, et aide à vérifier les verdicts."
+
+msgid "Finding the papers each person signs first, last or as corresponding author"
+msgstr "Recherche des articles que chaque personne signe en premier, en dernier ou comme auteur correspondant"
+
+msgid "South Africa"
+msgstr "Afrique du Sud"
+
+msgid "Algeria"
+msgstr "Algérie"
+
+msgid "Germany"
+msgstr "Allemagne"
+
+msgid "Saudi Arabia"
+msgstr "Arabie saoudite"
+
+msgid "Argentina"
+msgstr "Argentine"
+
+msgid "Australia"
+msgstr "Australie"
+
+msgid "Austria"
+msgstr "Autriche"
+
+msgid "Belgium"
+msgstr "Belgique"
+
+msgid "Brazil"
+msgstr "Brésil"
+
+msgid "Cameroon"
+msgstr "Cameroun"
+
+msgid "Canada"
+msgstr "Canada"
+
+msgid "Chile"
+msgstr "Chili"
+
+msgid "China"
+msgstr "Chine"
+
+msgid "Colombia"
+msgstr "Colombie"
+
+msgid "South Korea"
+msgstr "Corée du Sud"
+
+msgid "Ivory Coast"
+msgstr "Côte d'Ivoire"
+
+msgid "Croatia"
+msgstr "Croatie"
+
+msgid "Denmark"
+msgstr "Danemark"
+
+msgid "Egypt"
+msgstr "Égypte"
+
+msgid "United Arab Emirates"
+msgstr "Émirats arabes unis"
+
+msgid "Spain"
+msgstr "Espagne"
+
+msgid "Estonia"
+msgstr "Estonie"
+
+msgid "United States"
+msgstr "États-Unis"
+
+msgid "Finland"
+msgstr "Finlande"
+
+msgid "France"
+msgstr "France"
+
+msgid "Greece"
+msgstr "Grèce"
+
+msgid "Hong Kong"
+msgstr "Hong Kong"
+
+msgid "Hungary"
+msgstr "Hongrie"
+
+msgid "India"
+msgstr "Inde"
+
+msgid "Indonesia"
+msgstr "Indonésie"
+
+msgid "Ireland"
+msgstr "Irlande"
+
+msgid "Iceland"
+msgstr "Islande"
+
+msgid "Israel"
+msgstr "Israël"
+
+msgid "Italy"
+msgstr "Italie"
+
+msgid "Japan"
+msgstr "Japon"
+
+msgid "Kenya"
+msgstr "Kenya"
+
+msgid "Latvia"
+msgstr "Lettonie"
+
+msgid "Lebanon"
+msgstr "Liban"
+
+msgid "Lithuania"
+msgstr "Lituanie"
+
+msgid "Luxembourg"
+msgstr "Luxembourg"
+
+msgid "Malaysia"
+msgstr "Malaisie"
+
+msgid "Morocco"
+msgstr "Maroc"
+
+msgid "Mexico"
+msgstr "Mexique"
+
+msgid "Nigeria"
+msgstr "Nigeria"
+
+msgid "Norway"
+msgstr "Norvège"
+
+msgid "New Zealand"
+msgstr "Nouvelle-Zélande"
+
+msgid "Netherlands"
+msgstr "Pays-Bas"
+
+msgid "Peru"
+msgstr "Pérou"
+
+msgid "Poland"
+msgstr "Pologne"
+
+msgid "Portugal"
+msgstr "Portugal"
+
+msgid "Qatar"
+msgstr "Qatar"
+
+msgid "Czech Republic"
+msgstr "République tchèque"
+
+msgid "Romania"
+msgstr "Roumanie"
+
+msgid "United Kingdom"
+msgstr "Royaume-Uni"
+
+msgid "Senegal"
+msgstr "Sénégal"
+
+msgid "Serbia"
+msgstr "Serbie"
+
+msgid "Singapore"
+msgstr "Singapour"
+
+msgid "Slovakia"
+msgstr "Slovaquie"
+
+msgid "Slovenia"
+msgstr "Slovénie"
+
+msgid "Sweden"
+msgstr "Suède"
+
+msgid "Switzerland"
+msgstr "Suisse"
+
+msgid "Taiwan"
+msgstr "Taïwan"
+
+msgid "Thailand"
+msgstr "Thaïlande"
+
+msgid "Tunisia"
+msgstr "Tunisie"
+
+msgid "Turkey"
+msgstr "Turquie"
+
+msgid "Ukraine"
+msgstr "Ukraine"
+
+msgid "Vietnam"
+msgstr "Viêt Nam"
+
+msgid "This lead was checked again: affiliation, location, roles and new papers."
+msgstr "Cette piste a été revérifiée : affiliation, lieu, rôles et nouveaux articles."
+
+msgid "The lead could not be checked again: no recent affiliation was found or the sources are unavailable. Nothing was changed."
+msgstr "La piste n'a pas pu être revérifiée : aucune affiliation récente trouvée, ou sources indisponibles. Rien n'a été modifié."
+
+msgid "You have checked enough leads again today. Come back tomorrow."
+msgstr "Vous avez revérifié assez de pistes aujourd'hui. Revenez demain."
+
+msgid "Their new arXiv papers will now come first in your digest."
+msgstr "Ses nouveaux articles arXiv viendront désormais en tête de votre digest."
+
+msgid "Your digest already follows this person."
+msgstr "Votre digest suit déjà cette personne."
+
+msgid "Your digest already follows as many authors as it can. Remove one in your digest settings first."
+msgstr "Votre digest suit déjà le nombre maximal d'auteurs. Retirez-en un dans les réglages du digest d'abord."
+
+msgid "This name cannot be followed: it needs a first and a last name."
+msgstr "Ce nom ne peut pas être suivi : il faut un prénom et un nom."
+
+msgid "None of these readings has an arXiv identifier or a DOI to put in a collection."
+msgstr "Aucune de ces lectures n'a d'identifiant arXiv ou de DOI à mettre dans une collection."
+
+msgid "For example: detecting exomoons with astrometry and transit timing"
+msgstr "Par exemple : détecter des exolunes par astrométrie et variations des temps de transit"
+
+msgid "A region, for example Île-de-France, also includes the campuses around the city."
+msgstr "Une région, par exemple Île-de-France, inclut aussi les campus autour de la ville."
+
+msgid "Separate them with commas: the ones found in a person’s papers are shown and move them up."
+msgstr "Séparez-les par des virgules : celles qu'on trouve dans les articles d'une personne sont affichées et la font monter."
+
+msgid "For example: Python, MCMC, spectroscopy"
+msgstr "Par exemple : Python, MCMC, spectroscopie"
+
+msgid "Any country"
+msgstr "Tous les pays"
+
+msgid "Reminder date (optional)"
+msgstr "Date de rappel (facultatif)"
+
+msgid "Also email me on that date"
+msgstr "M'envoyer aussi un e-mail à cette date"
+
+msgid "last author"
+msgstr "dernier auteur"
+
+msgid "corresponding author"
+msgstr "auteur correspondant"
+
+msgid "Your publication “%(title)s”, which you signed as %(role)s, caught my attention. [After reading, add one specific point that interests you and a question about the method or results.]"
+msgstr "Votre publication « %(title)s », que vous avez signée comme %(role)s, a retenu mon attention. [Après lecture, ajoutez un point précis qui vous intéresse et une question sur la méthode ou les résultats.]"
+
+msgid "Placement: %(name)s"
+msgstr "Stage : %(name)s"
+
+msgid "This lead was found by an earlier version of this tool. Check it again or refresh the search to see how this person signs their papers, their team and the funding their papers acknowledge. Your saved notes are kept."
+msgstr "Cette piste a été trouvée par une version antérieure de l'outil. Revérifiez-la ou relancez la recherche pour voir comment cette personne signe ses articles, son équipe et les financements que ses articles remercient. Vos notes sont conservées."
+
+msgid "Why this person"
+msgstr "Pourquoi cette personne"
+
+msgid "(a record can merge namesakes or miss early papers)"
+msgstr "(une fiche peut fusionner des homonymes ou manquer les premiers articles)"
+
+msgid "Your skills written in their papers:"
+msgstr "Vos compétences présentes dans ses articles :"
+
+msgid "Signs papers on your topic with:"
+msgstr "Signe des articles sur votre sujet avec :"
+
+msgid "Probably one team: write to one of them rather than to each."
+msgstr "Sans doute une même équipe : écrivez à l'une de ces personnes plutôt qu'à chacune."
+
+msgid "Author order is a convention of each field: alphabetical lists and the authors of large collaborations are not counted, and the last author does not always lead the team. These are facts of the publications, not a judgement of seniority or of a right to supervise."
+msgstr "L'ordre des auteurs est une convention propre à chaque discipline : les listes alphabétiques et les auteurs des grandes collaborations ne sont pas comptés, et le dernier auteur ne dirige pas toujours l'équipe. Ce sont des faits de publication, pas un jugement d'ancienneté ni du droit d'encadrer."
+
+msgid "We search this author’s bibliography beyond the initial two-year search. Papers on your topic they sign first, last or as corresponding author come first; other coauthored papers only complete the selection."
+msgstr "Nous cherchons dans la bibliographie de cette personne au-delà de la recherche initiale sur deux ans. Les articles sur votre sujet qu'elle signe en premier, en dernier ou comme auteur correspondant passent en tête ; les autres articles cosignés ne font que compléter la sélection."
+
+msgid "The bibliography check is partial or unavailable. These readings are not a complete publication record."
+msgstr "La vérification de la bibliographie est partielle ou indisponible. Ces lectures ne sont pas une liste complète des publications."
+
+msgid "Last author"
+msgstr "Dernier auteur"
+
+msgid "Corresponding author"
+msgstr "Auteur correspondant"
+
+msgid "Summary"
+msgstr "Résumé"
+
+msgid "Ask this paper"
+msgstr "Interroger cet article"
+
+msgid "The summary and the chat read the whole paper when its licence allows it."
+msgstr "Le résumé et le chat lisent l'article entier quand sa licence le permet."
+
+msgid "Papers they sign first, last or as corresponding author, on any topic."
+msgstr "Articles signés en premier, en dernier ou comme auteur correspondant, sur tous les sujets."
+
+msgid "Funding acknowledged in their papers"
+msgstr "Financements remerciés dans ses articles"
+
+msgid "Acknowledged by recent papers of at most 12 authors that they sign first, last or as corresponding author. A funded project is something to ask about, not proof that a position is open or that this person holds the grant."
+msgstr "Remerciés par des articles récents d'au plus 12 auteurs qu'elle signe en premier, en dernier ou comme auteur correspondant. Un projet financé est une question à poser, pas la preuve qu'un poste est ouvert ni que cette personne porte le financement."
+
+msgid "Your changes to this draft are saved with the lead."
+msgstr "Vos modifications de ce brouillon sont enregistrées avec la piste."
+
+msgid "Save this lead to keep your changes to this draft."
+msgstr "Enregistrez cette piste pour garder vos modifications de ce brouillon."
+
+msgid "signed first: %(first)s, last: %(last)s, as corresponding author: %(corresponding)s"
+msgstr "signés en premier : %(first)s, en dernier : %(last)s, comme auteur correspondant : %(corresponding)s"
+
+msgid "Earliest work in their OpenAlex record: %(year)s"
+msgstr "Premier travail de sa fiche OpenAlex : %(year)s"
+
+msgid "Their new papers since %(date)s"
+msgstr "Ses nouveaux articles depuis le %(date)s"
+
+msgid "My leads"
+msgstr "Mes pistes"
+
+msgid "This search was made by an earlier version of this tool. Refresh it to see how each person signs their papers, the teams and the funding their papers acknowledge. Your saved notes are kept."
+msgstr "Cette recherche a été faite par une version antérieure de l'outil. Relancez-la pour voir comment chaque personne signe ses articles, les équipes et les financements que leurs articles remercient. Vos notes sont conservées."
+
+msgid "Criteria"
+msgstr "Critères"
+
+msgid "At a glance"
+msgstr "Vue d'ensemble"
+
+msgid "Ordered by the requested location, then by how many recent papers on your topic each person signs, weighted by relevance and by role, then by your skills found in their papers."
+msgstr "Classement par lieu demandé, puis selon les articles récents sur votre sujet que chaque personne signe, pondérés par leur pertinence et par son rôle, puis selon vos compétences trouvées dans ses articles."
+
+msgid "Requested location only"
+msgstr "Lieu demandé seulement"
+
+msgid "Signs first, last or as corresponding author"
+msgstr "Signe en premier, en dernier ou comme auteur correspondant"
+
+msgid "Person"
+msgstr "Personne"
+
+msgid "Institution"
+msgstr "Institution"
+
+msgid "Papers on your topic"
+msgstr "Articles sur votre sujet"
+
+msgid "Signed first / last / corresponding"
+msgstr "Signés premier / dernier / correspondant"
+
+msgid "Funding acknowledged"
+msgstr "Financements remerciés"
+
+msgid "Location"
+msgstr "Lieu"
+
+msgid "Requested area"
+msgstr "Zone demandée"
+
+msgid "Other or not verified"
+msgstr "Autre ou non vérifié"
+
+msgid "Published offers on this topic"
+msgstr "Offres publiées sur ce sujet"
+
+msgid "Spontaneous enquiries and advertised offers go together. These searches open on the sites that publish offers for your level and country; we do not check their results."
+msgstr "Candidatures spontanées et offres publiées vont ensemble. Ces recherches s'ouvrent sur les sites qui publient des offres pour votre niveau et votre pays ; nous ne vérifions pas leurs résultats."
+
+msgid "(their list of offers: search it with your keywords)"
+msgstr "(leur liste d’offres : cherchez-y avec vos mots-clés)"
+
+msgid "Go further on this topic"
+msgstr "Aller plus loin sur ce sujet"
+
+msgid "A literature review of the topic"
+msgstr "Une revue de littérature du sujet"
+
+msgid "the founding and recent papers to know before an interview."
+msgstr "les articles fondateurs et récents à connaître avant un entretien."
+
+msgid "every institution publishing on the topic, beyond the ten people shown here."
+msgstr "toutes les institutions qui publient sur le sujet, au-delà des dix personnes affichées ici."
+
+msgid "Anyone with this link sees these leads, their papers and your criteria, never your drafts, your notes or who searched. To show a supervisor or a programme coordinator."
+msgstr "Toute personne qui a ce lien voit ces pistes, leurs articles et vos critères, jamais vos brouillons, vos notes ni qui a cherché. Pour les montrer à un encadrant ou à un responsable de formation."
+
+msgid "Start from a project of your scoop watch:"
+msgstr "Partir d’un projet de votre veille anti-scoop :"
+
+msgid "Explore the people who sign recent papers on your topic, how they sign them, their team and the funding their papers acknowledge."
+msgstr "Explorez les personnes qui signent des articles récents sur votre sujet, comment elles les signent, leur équipe et les financements que leurs articles remercient."
+
+msgid "Read, save your leads, prepare a personal email and follow your applications."
+msgstr "Lisez, enregistrez vos pistes, préparez un e-mail personnel et suivez vos candidatures."
+
+msgid "Save a lead from a search to keep its sources, reading suggestions and your private notes in My leads."
+msgstr "Enregistrez une piste depuis une recherche pour garder ses sources, ses lectures et vos notes privées dans Mes pistes."
+
+msgid "Your saved leads, your notes, your drafts and where each application stands. Only you see them."
+msgstr "Vos pistes enregistrées, vos notes, vos brouillons et où en est chaque candidature. Vous seul les voyez."
+
+msgid "Reminder set in 10 days to follow up. Change the date if needed."
+msgstr "Rappel fixé dans 10 jours pour relancer. Changez la date si besoin."
+
+msgid "Changes are saved automatically. Reminders appear here on the chosen date, and by email if you ask."
+msgstr "Les modifications sont enregistrées automatiquement. Les rappels apparaissent ici à la date choisie, et par e-mail si vous le demandez."
+
+msgid "Next steps"
+msgstr "Étapes suivantes"
+
+msgid "Check this lead again"
+msgstr "Revérifier cette piste"
+
+msgid "Affiliation, location, roles, funding and their new papers, without a new search."
+msgstr "Affiliation, lieu, rôles, financements et nouveaux articles, sans nouvelle recherche."
+
+msgid "Their new arXiv papers come first in your digest."
+msgstr "Ses nouveaux articles arXiv viennent en tête de votre digest."
+
+msgid "Follow their new papers in my digest"
+msgstr "Suivre ses nouveaux articles dans mon digest"
+
+msgid "A new paper is a good reason to write or to follow up."
+msgstr "Un nouvel article est une bonne raison d’écrire ou de relancer."
+
+msgid "Create a digest"
+msgstr "Créez un digest"
+
+msgid "to follow their new papers: a new paper is a good reason to write or to follow up."
+msgstr "pour suivre ses nouveaux articles : un nouvel article est une bonne raison d'écrire ou de relancer."
+
+msgid "Put the readings in"
+msgstr "Mettre les lectures dans"
+
+msgid "a new collection"
+msgstr "une nouvelle collection"
+
+msgid "to read them together, chat with them or export them to Zotero."
+msgstr "pour les lire ensemble, discuter avec elles ou les exporter vers Zotero."
+
+msgid "Speaks in one of your conference programs:"
+msgstr "Intervient dans l'un de vos programmes de conférence :"
+
+msgid "No saved lead matches this filter."
+msgstr "Aucune piste enregistrée ne correspond à ce filtre."
+
+msgid "Show all"
+msgstr "Tout afficher"
+
+msgid "You asked to be reminded of these leads today:"
+msgstr "Vous avez demandé un rappel aujourd'hui pour ces pistes :"
+
+msgid "Your notes, drafts and progress:"
+msgstr "Vos notes, brouillons et avancement :"
+
+msgid "Your notes, drafts and progress"
+msgstr "Vos notes, brouillons et avancement"
+
+msgid "You receive this email because you ticked “Also email me on that date” for these leads. Untick it on the page above to stop."
+msgstr "Vous recevez cet e-mail parce que vous avez coché « M'envoyer aussi un e-mail à cette date » pour ces pistes. Décochez-la sur la page ci-dessus pour arrêter."
+
+msgid "Looking for an internship or a PhD on this topic? See who signs these papers, how, and prepare your enquiry."
+msgstr "Vous cherchez un stage ou une thèse sur ce sujet ? Voyez qui signe ces articles, comment, et préparez votre candidature."
+
+msgid "Followed up"
+msgstr "Relancé"
+
+msgid "Interview"
+msgstr "Entretien"
+
+msgid "Declined"
+msgstr "Refus"
+
+msgid "Accepted"
+msgstr "Accepté"
+
+msgid "Who signs recent papers on your topic and how, their team and acknowledged funding, readings, a first email, and your applications followed with reminders."
+msgstr "Qui signe les articles récents sur votre sujet et comment, son équipe et les financements remerciés, des lectures, un premier e-mail, et vos candidatures suivies avec rappels."
+
+msgid "who signs recent papers on your topic and how, their team and funding, readings, a first email and your applications followed"
+msgstr "qui signe les articles récents sur votre sujet et comment, son équipe et ses financements, des lectures, un premier e-mail et vos candidatures suivies"
+
+msgid "%(n)s recent paper on your topic"
+msgid_plural "%(n)s recent papers on your topic"
+msgstr[0] "%(n)s article récent sur votre sujet"
+msgstr[1] "%(n)s articles récents sur votre sujet"
+
+msgid "%(n)s work"
+msgid_plural "%(n)s works"
+msgstr[0] "%(n)s travail"
+msgstr[1] "%(n)s travaux"
+
+msgid "%(n)s other author of these papers could not be checked (affiliation or location unknown, or beyond the search budget). They are not shown, not excluded on purpose."
+msgid_plural "%(n)s other authors of these papers could not be checked (affiliation or location unknown, or beyond the search budget). They are not shown, not excluded on purpose."
+msgstr[0] "%(n)s autre auteur de ces articles n'a pas pu être vérifié (affiliation ou lieu inconnu, ou au-delà du budget de recherche). Il n'est pas affiché, sans avoir été écarté exprès."
+msgstr[1] "%(n)s autres auteurs de ces articles n'ont pas pu être vérifiés (affiliation ou lieu inconnu, ou au-delà du budget de recherche). Ils ne sont pas affichés, sans avoir été écartés exprès."
+
+msgid "%(n)s person"
+msgid_plural "%(n)s people who sign papers together: probably one team, write to one of them"
+msgstr[0] "%(n)s personne"
+msgstr[1] "%(n)s personnes qui signent des articles ensemble : sans doute une même équipe, écrivez à l'une d'elles"
+
+msgid "%(n)s saved lead"
+msgid_plural "%(n)s saved leads"
+msgstr[0] "%(n)s piste enregistrée"
+msgstr[1] "%(n)s pistes enregistrées"
+
+msgid "%(n)s reminder due"
+msgid_plural "%(n)s reminders due"
+msgstr[0] "%(n)s rappel à traiter"
+msgstr[1] "%(n)s rappels à traiter"
+
+msgid "Reminder: %(n)s research placement lead to follow up"
+msgid_plural "Reminder: %(n)s research placement leads to follow up"
+msgstr[0] "Rappel : %(n)s piste de stage ou de thèse à relancer"
+msgstr[1] "Rappel : %(n)s pistes de stage ou de thèse à relancer"

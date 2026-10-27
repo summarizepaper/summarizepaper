@@ -39,7 +39,7 @@
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
     <form method="post" class="card section-card">
       {% csrf_token %}
-      <p><label>{% trans 'The topic: a few keywords or a few sentences' %}<br><textarea name="topic" style="min-height:90px" placeholder="{% trans 'e.g. detection of exomoons by astrometry' %}"></textarea></label></p>
+      <p><label>{% trans 'The topic: a few keywords or a few sentences' %}<br><textarea name="topic" style="min-height:90px" placeholder="{% trans 'e.g. detection of exomoons by astrometry' %}">{{ topic }}</textarea></label></p>
       {% if projects %}
       <p><label>{% trans 'or a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.title }}</option>{% endfor %}</select></label></p>
       {% endif %}

@@ -1147,9 +1147,13 @@ class StudentShortlist(models.Model):
     snapshot = models.JSONField(default=dict)
     status = models.CharField(max_length=16, default='explore', choices=[
         ('explore', 'To explore'), ('read', 'Paper read'),
-        ('contacted', 'Contacted'), ('replied', 'Reply received')])
+        ('contacted', 'Contacted'), ('followed_up', 'Followed up'), ('replied', 'Reply received'),
+        ('interview', 'Interview'), ('declined', 'Declined'), ('accepted', 'Accepted')])
     notes = models.TextField(blank=True, default='')
+    draft = models.TextField(blank=True, default='')  # the email as its student edited it; '' for the one written from the lead
     remind_on = models.DateField(null=True, blank=True)
+    email_reminder = models.BooleanField(default=False)  # also emailed on remind_on (students.send_reminders)
+    reminded = models.DateField(null=True, blank=True)  # the remind_on date already emailed
     revision = models.PositiveIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
