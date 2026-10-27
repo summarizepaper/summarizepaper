@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load dash_slash %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% blocktrans with title=followed.title|default:followed.arxiv_id|truncatechars:60 %}Citations of {{ title }}{% endblocktrans %}{% endblock %}
+{% block extra_head_tags %}
+  {% include 'summarizer/mathjax.html' %}
+  <meta name="robots" content="noindex" />
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <p><a href="/{{ LANGUAGE_CODE }}/citations/">← {% trans 'Citation alerts' %}</a></p>
+  <header class="page-header">
+    <span class="eyebrow">{% if followed.mine %}{% trans 'My paper' %}{% else %}{% trans 'Followed paper' %}{% endif %}</span>
+    <h1>{{ followed.title|default:followed.arxiv_id }}</h1>
+    <p class="meta"><a href="{{ followed.arxiv_id|paper_url }}" target="_blank" rel="noopener">{{ followed.arxiv_id|paper_ref }}</a>
+      {% if cached.checked %} · {% blocktrans with date=cached.checked|date:'SHORT_DATE_FORMAT' %}checked {{ date }}{% endblocktrans %}{% endif %}</p>
+  </header>
+
+  {% if cached is None or not cached.checked %}
+    <p>{% trans 'first check in progress' %}</p>
+  {% else %}
+  <section class="card section-card">
+    <h2>{% blocktrans count n=total %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}</h2>
+    {% if years %}
+    <div class="cite-years" role="img" aria-label="{% trans 'Citations per year' %}">
+      {% for y in years %}<div class="cite-year" title="{{ y.year }}: {{ y.count }}"><a href="?{% if year_query %}{{ year_query }}&amp;{% endif %}year={{ y.year }}"><span class="cite-bar" style="height:{{ y.height }}%"></span></a><small>{{ y.count }}</small><small class="muted">{{ y.year|slice:'2:' }}</small></div>{% endfor %}
+    </div>
+    {% endif %}
+    <p>{% if judged %}<strong>{% trans 'What the judged citations do with it:' %}</strong> {% include 'citations/summary.txt' with summary=summary %}.{% endif %}
+      {% if self_count %}{% blocktrans count n=self_count %}{{ n }} self-citation in all.{% plural %}{{ n }} self-citations in all.{% endblocktrans %}{% endif %}</p>
+    <p class="muted"><small>{% blocktrans with judged=judged excerpts=with_excerpt %}{{ judged }} judged, out of {{ excerpts }} with a citation sentence. A citation without a sentence cannot be judged.{% endblocktrans %}</small></p>
+    {% if limit == 'analyze' %}<p class="error">{% blocktrans with n=analyses_per_day %}You have run {{ n }} analyses today, the most there can be in a day: try again tomorrow.{% endblocktrans %}</p>{% endif %}
+    {% if analyzing %}<p>{% trans 'Analysis in progress: reload the page in a few minutes.' %}</p>
+    {% else %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="analyze">
+      <button class="btn btn-sm" type="submit">{% trans 'Read and judge the newest citations' %}</button>
+      <small class="muted">{% trans 'Reads the missing citation sentences of the newest arXiv papers, then judges up to 60 citations not judged yet.' %}</small></form>{% endif %}
+  </section>
+
+  {% if top_authors or fields %}
+  <section class="card section-card">
+    <h2>{% trans 'Who cites it' %}</h2>
+    {% if top_authors %}<p><strong>{% trans 'Authors citing it most, self-citations apart:' %}</strong>
+      {% for name, n in top_authors %}{% if not forloop.first %} · {% endif %}{{ name }} ({{ n }}){% endfor %}</p>{% endif %}
+    {% if fields %}<p><strong>{% trans 'Fields of the citing papers:' %}</strong>
+      {% for field, n in fields %}{% if not forloop.first %} · {% endif %}{{ field }} ({{ n }}){% endfor %}</p>{% endif %}
+    {% if unmatched %}<details><summary>{% blocktrans count n=unmatched|length %}{{ n }} citing paper known to Semantic Scholar only{% plural %}{{ n }} citing papers known to Semantic Scholar only{% endblocktrans %}</summary>
+      <p class="muted"><small>{% trans 'ADS does not list them as citing this paper: often a citation matched to the wrong paper, sometimes one ADS has not linked yet. They are not counted above.' %}</small></p>
+      <ul>{% for u in unmatched %}<li><a href="{% if u.arxiv_id %}https://arxiv.org/abs/{{ u.arxiv_id }}{% elif u.doi %}https://doi.org/{{ u.doi }}{% else %}https://www.semanticscholar.org/paper/{{ u.id }}{% endif %}" target="_blank" rel="noopener">{{ u.title }}</a>{% if u.date %} <small class="muted">{{ u.date }}</small>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+    {% if followed.mine %}<p class="muted"><small>{% url 'scoops' as scoops_url %}{% url 'missed' as missed_url %}{% blocktrans %}For your next paper: <a href="{{ scoops_url }}">watch who works on the same thing</a>, or <a href="{{ missed_url }}">find the papers your draft does not cite</a>.{% endblocktrans %}</small></p>{% endif %}
+  </section>
+  {% elif followed.mine %}
+  <p class="muted"><small>{% url 'scoops' as scoops_url %}{% url 'missed' as missed_url %}{% blocktrans %}For your next paper: <a href="{{ scoops_url }}">watch who works on the same thing</a>, or <a href="{{ missed_url }}">find the papers your draft does not cite</a>.{% endblocktrans %}</small></p>
+  {% endif %}
+
+  <form method="get" class="item-actions" style="align-items:center">
+    <label>{% trans 'Verdict' %} <select name="stance">
+      <option value="">{% trans 'All' %}</option>
+      {% for s in stances %}<option value="{{ s.stance }}"{% if filters.stance == s.stance %} selected{% endif %}>{% include 'citations/stance_label.txt' with c=s %}</option>{% endfor %}
+      <option value="none"{% if filters.stance == 'none' %} selected{% endif %}>{% trans 'Not judged' %}</option></select></label>
+    <label>{% trans 'Self-citations' %} <select name="self">
+      <option value="">{% trans 'Shown' %}</option>
+      <option value="hide"{% if filters.self == 'hide' %} selected{% endif %}>{% trans 'Hidden' %}</option>
+      <option value="only"{% if filters.self == 'only' %} selected{% endif %}>{% trans 'Only them' %}</option></select></label>
+    <label>{% trans 'Year' %} <input type="text" name="year" value="{{ filters.year }}" inputmode="numeric" style="width:5em;display:inline-block"></label>
+    <label>{% trans 'Order' %} <select name="sort">
+      <option value="">{% trans 'Newest first' %}</option>
+      <option value="weight"{% if filters.sort == 'weight' %} selected{% endif %}>{% trans 'Most influential first' %}</option></select></label>
+    <button class="btn btn-sm" type="submit">{% trans 'Filter' %}</button>
+    {% if filters.stance or filters.self or filters.year or filters.sort %}<a href="?">{% trans 'Clear' %}</a>{% endif %}
+  </form>
+  <p class="item-actions"><span>{% blocktrans count n=shown_count %}{{ n }} citation shown{% plural %}{{ n }} citations shown{% endblocktrans %}</span>
+    <a href="?{% if query %}{{ query }}&amp;{% endif %}export=csv" rel="nofollow">{% trans 'Export (CSV)' %}</a>
+    <a href="?{% if query %}{{ query }}&amp;{% endif %}export=bib" rel="nofollow">{% trans 'Export (BibTeX)' %}</a></p>
+
+  {% if error == 'none_chosen' %}<p class="error">{% trans 'Tick the papers to add, and choose a collection.' %}</p>
+  {% elif error == 'too_many_collections' %}<p class="error">{% trans 'You have as many collections as your plan allows: choose an existing one.' %}</p>{% endif %}
+  <form method="post" id="correct-form">{% csrf_token %}</form>
+  <form method="post">
+    {% csrf_token %}<input type="hidden" name="action" value="collect">
+    <ul class="item-list">
+      {% for c in page %}
+      <li class="card">
+        <label style="float:right" title="{% trans 'Add to a collection' %}"><input type="checkbox" name="ids" value="{{ c.id }}"{% if not c.arxiv_id and not c.doi %} disabled{% endif %}></label>
+        <a href="{{ c.url }}"{% if not c.arxiv_id %} target="_blank" rel="noopener"{% endif %}><strong>{{ c.title }}</strong></a>
+        <p class="meta">{{ c.authors|join:', ' }}{% if c.date %} · {{ c.date }}{% endif %}{% if c.cited_by %} · {% blocktrans count n=c.cited_by %}cited {{ n }} time{% plural %}cited {{ n }} times{% endblocktrans %}{% endif %}{% if c.queued %} · {% trans 'in your next email' %}{% endif %}</p>
+        <p>{% include 'citations/badges.html' %}</p>
+        {% if c.note %}<p>{{ c.note }}</p>{% endif %}
+        {% if c.contexts %}<details><summary>{% trans 'Citation excerpts' %}{% if c.context_source == 'arxiv' %} <small class="muted">({% trans 'from the arXiv version' %})</small>{% endif %}</summary>{% for excerpt in c.contexts %}<blockquote>{{ excerpt }}</blockquote>{% endfor %}</details>
+        {% else %}<p class="muted"><small>{% trans 'No citation sentence available yet: no verdict.' %}</small></p>{% endif %}
+        {% if c.stance %}<details class="muted"><summary><small>{% trans 'Wrong verdict?' %}</small></summary>
+          <small>{% if followed.mine %}{% trans 'As an author of this paper, your correction replaces the verdict for everyone who follows it.' %}{% else %}{% trans 'Your correction is shown to you instead of the verdict, and helps check the verdicts.' %}{% endif %}</small><br>
+          <select name="stance_{{ c.key }}" form="correct-form">{% for s in stances %}<option value="{{ s.stance }}"{% if s.stance == c.stance %} selected{% endif %}>{% include 'citations/stance_label.txt' with c=s %}</option>{% endfor %}</select>
+          <button class="btn btn-sm" type="submit" form="correct-form" name="correct" value="{{ c.key }}">{% trans 'Correct' %}</button></details>{% endif %}
+      </li>
+      {% empty %}
+      <li class="muted">{% trans 'No citation matches these filters.' %}</li>
+      {% endfor %}
+    </ul>
+    {% if page.paginator.count %}
+    <p class="item-actions" style="align-items:center"><strong>{% trans 'Add the ticked papers to' %}</strong>
+      <select name="collection">{% for col in collections %}<option value="{{ col.pk }}">{{ col.name }}</option>{% endfor %}<option value="new">{% trans 'A new collection:' %}</option></select>
+      <input type="text" name="name" placeholder="{% trans 'Name of the new collection' %}">
+      <button class="btn btn-sm" type="submit">{% trans 'Add' %}</button></p>
+    {% endif %}
+  </form>
+  {% if page.has_other_pages %}
+  <nav class="item-actions" aria-label="{% trans 'Pages' %}">
+    {% if page.has_previous %}<a href="?{% if query %}{{ query }}&amp;{% endif %}page={{ page.previous_page_number }}">{% trans 'Previous' %}</a>{% endif %}
+    <span>{{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?{% if query %}{{ query }}&amp;{% endif %}page={{ page.next_page_number }}">{% trans 'Next' %}</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

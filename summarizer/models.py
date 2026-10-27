@@ -728,6 +728,7 @@ class FollowedPaper(models.Model):
     title = models.TextField(blank=True, default='')
     known = models.TextField(blank=True, default='')  # JSON list of the citing papers already reported
     pending = models.TextField(blank=True, default='')  # JSON list of citing papers not emailed yet
+    mine = models.BooleanField(default=False)  # the user's own paper, not only one they watch
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -746,9 +747,75 @@ class CitationCache(models.Model):
     # 'ads' or 's2': where `citing` came from, kept even when there are no citations to tell it by their ids
     source = models.CharField(max_length=10, blank=True, default='')
     checked = models.DateTimeField(blank=True, null=True)
+    # the cited paper itself, for the model judging its citations and to tell self-citations
+    authors = models.TextField(blank=True, default='')  # JSON list of names, '' until looked up
+    abstract = models.TextField(blank=True, default='')
+    doi = models.CharField(max_length=200, blank=True, default='')  # its journal version, to find it in bibliographies
+    # JSON list of the citing papers Semantic Scholar has and ADS does not: often a wrong match, or not linked yet
+    unmatched = models.TextField(blank=True, default='')
 
     def __str__(self):
         return '%s (%d citations)' % (self.arxiv_id, self.total)
+
+
+class CitationContext(models.Model):
+    """The sentences of a citing arXiv paper around its citation of a followed paper, read from its arXiv HTML
+    when Semantic Scholar has none; an empty list once tried and not found."""
+    cited = models.CharField(max_length=100)
+    citing = models.CharField(max_length=120)  # see citations.identity
+    contexts = models.TextField(default='[]')
+    checked = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('cited', 'citing')
+
+
+class CitationVerdict(models.Model):
+    """What a citing paper does with a followed paper, judged once from the citation sentences and shared by
+    every follower; the one-sentence note is written per language."""
+    cited = models.CharField(max_length=100)
+    citing = models.CharField(max_length=120)  # see citations.identity
+    stance = models.CharField(max_length=20)
+    confidence = models.CharField(max_length=10, default='low')
+    notes = models.JSONField(default=dict)  # {lang: note}
+    basis = models.CharField(max_length=16, blank=True, default='')  # the sentences judged (citations.basis)
+    # 'reader' once an author of the cited paper corrected it: kept whatever the sentences
+    source = models.CharField(max_length=10, blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('cited', 'citing')
+
+
+class CitationCorrection(models.Model):
+    """A reader's correction of a verdict: shown to them instead of the model's, and read by citations_calibrate."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='citation_corrections')
+    cited = models.CharField(max_length=100)
+    citing = models.CharField(max_length=120)  # see citations.identity
+    stance = models.CharField(max_length=20)  # what the reader says it does
+    model_stance = models.CharField(max_length=20, blank=True, default='')  # what the model had said
+    created = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'cited', 'citing')
+
+
+class CitationPreference(models.Model):
+    """How often a user hears about new citations, and whether a paper contesting one of theirs is sent at once."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='citation_preference')
+    every = models.PositiveSmallIntegerField(default=7)  # days: 1, 7 or 30
+    urgent = models.BooleanField(default=True)
+
+
+class CitationAuthorWatch(models.Model):
+    """An ORCID iD or arXiv author identifier whose papers a user follows as their own, new ones included."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='citation_author_watches')
+    ident = models.CharField(max_length=100)
+    checked = models.DateTimeField(blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'ident')
 
 
 class CitationAlertLog(models.Model):

@@ -1,0 +1,1 @@
+{% load i18n %}{% if c.stance == 'questions' %}{% trans 'questions it' %}{% elif c.stance == 'supports' %}{% trans 'supports it' %}{% elif c.stance == 'builds_on' %}{% trans 'builds on it' %}{% elif c.stance == 'uses' %}{% trans 'uses it' %}{% elif c.stance %}{% trans 'mentions it' %}{% endif %}{% if c.stance and c.confidence == 'low' %} ({% trans 'uncertain' %}){% endif %}

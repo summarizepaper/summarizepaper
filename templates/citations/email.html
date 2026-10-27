@@ -4,19 +4,23 @@
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
     <p style="margin:0 0 24px;color:#666;">{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}</p>
+    {% if urgent %}<p style="margin:0 0 20px;padding:10px 12px;background:#fee2e2;color:#991b1b;border-radius:6px;font-size:14px;">{% trans 'A new paper questions one of the papers you follow, so this alert is sent now rather than at its usual time.' %}</p>{% endif %}
     {% for paper in papers %}
-    <p style="margin:20px 0 8px;font-size:16px;font-weight:bold;">{{ paper.followed.title|default:paper.followed.arxiv_id }}</p>
+    <p style="margin:20px 0 2px;font-size:16px;font-weight:bold;">{% if paper.followed.mine %}<span style="color:#666;font-weight:normal;font-size:13px;">{% trans 'Your paper' %} · </span>{% endif %}{{ paper.followed.title|default:paper.followed.arxiv_id }}</p>
+    {% if paper.summary %}<p style="margin:0 0 10px;color:#666;font-size:13px;">{% include 'citations/summary.txt' with summary=paper.summary %}</p>{% endif %}
     {% for c in paper.items %}
-    <div style="border-left:3px solid {% if c.stance == 'questions' %}#dc2626{% elif c.stance == 'supports' %}#16a34a{% elif c.stance == 'builds_on' %}#4f46e5{% else %}#ddd{% endif %};padding:4px 0 4px 12px;margin:0 0 12px;">
+    <div style="border-left:3px solid {% if c.stance == 'questions' %}#dc2626{% elif c.stance == 'supports' %}#16a34a{% elif c.stance == 'builds_on' or c.stance == 'uses' %}#4f46e5{% else %}#ddd{% endif %};padding:4px 0 4px 12px;margin:0 0 14px;">
       <a href="{{ c.url }}" style="color:#1a0dab;font-weight:bold;text-decoration:none;">{{ c.title }}</a>
-      <div style="color:#666;font-size:13px;">{{ c.authors|join:", " }}{% if c.date %} · {{ c.date }}{% endif %}{% if c.stance %} · {% if c.stance == 'builds_on' %}{% trans 'builds on it' %}{% elif c.stance == 'supports' %}{% trans 'supports it' %}{% elif c.stance == 'questions' %}{% trans 'questions it' %}{% else %}{% trans 'mentions it' %}{% endif %}{% endif %}</div>
+      <div style="color:#666;font-size:13px;">{{ c.authors|join:", " }}{% if c.date %} · {{ c.date }}{% endif %}{% if c.stance %} · <strong style="color:{% if c.stance == 'questions' %}#991b1b{% elif c.stance == 'supports' %}#166534{% else %}#444{% endif %};">{% include 'citations/stance_label.txt' %}</strong>{% endif %}{% if c.self %} · {% trans 'self-citation' %}{% endif %}{% if c.late %} · {% trans 'indexed late' %}{% endif %}{% if c.influential %} · {% trans 'influential' %}{% endif %}</div>
       {% if c.note %}<div style="font-size:14px;line-height:1.5;margin-top:4px;">{{ c.note }}</div>{% endif %}
+      {% if c.contexts %}<div style="font-size:13px;line-height:1.5;margin-top:4px;color:#555;font-style:italic;">“{{ c.contexts.0|truncatechars:320 }}”</div>{% elif c.no_excerpt %}<div style="font-size:12px;margin-top:4px;color:#888;">{% trans 'No citation sentence available yet: no verdict.' %}</div>{% endif %}
+      {% if c.also %}<div style="font-size:13px;margin-top:4px;color:#555;">{% trans 'Also cites:' %} {% for a in c.also %}{% if not forloop.first %}; {% endif %}{{ a.title }}{% if a.stance %} ({% include 'citations/stance_label.txt' with c=a %}){% endif %}{% endfor %}</div>{% endif %}
     </div>
     {% endfor %}
-    {% if paper.more %}<p style="color:#666;font-size:13px;">{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}</p>{% endif %}
+    {% if paper.more %}<p style="color:#666;font-size:13px;">{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %} · <a href="{{ base_url }}/{{ lang }}/citations/{{ paper.followed.pk }}/" style="color:#666;">{% trans 'See all its citations' %}</a></p>{% endif %}
     {% endfor %}
     <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
-      {% trans 'Citations from Semantic Scholar.' %} <a href="{{ manage_url }}" style="color:#888;">{% trans 'Manage the papers you follow' %}</a>
+      {% trans 'Citations from NASA ADS and Semantic Scholar; citation sentences from Semantic Scholar or the arXiv version of the citing paper. The verdict is an AI reading of those sentences: check the excerpt.' %} <a href="{{ manage_url }}" style="color:#888;">{% trans 'Manage the papers you follow' %}</a>
     </p>
   </div>
 </body>

@@ -12,7 +12,7 @@ _GROUPS = [
     (_('Follow your field'), [
         ('digest/', 'envelope', _('Daily digest'), False, _('The new arXiv, bioRxiv, medRxiv and journal papers of your fields, ranked for you, every morning.')),
         ('scoops/', 'user-secret', _('Scoop watch'), True, _('Describe your project in progress: we email you the day a new paper comes close to it.')),
-        ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they say about them, and what changed when they get a new version.')),
+        ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they do with them, with the citing sentence and self-citations apart, and what changed when they get a new version.')),
         ('students/', 'graduation-cap', _('Find a research placement'), 'plus', _('Potential research contacts, supporting publications, reading suggestions and a private shortlist.')),
         ('teams/', 'users', _('Who works on it?'), True, _('Institutions and authors publishing on your topic, with supporting papers and methods.')),
         ('trends/', 'chart-line', _('Rising topics'), False, _('The terms that rise on arXiv week after week, field by field.')),

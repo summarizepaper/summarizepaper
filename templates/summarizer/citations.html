@@ -6,7 +6,7 @@
 {% block title %}{% trans 'Citation alerts' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
-  <meta name="description" content="{% trans 'Get an email when new papers cite your papers, on arXiv or in journals, with what they say about them: building on them, confirming them or questioning them.' %}" />
+  <meta name="description" content="{% trans 'Get an email when new papers cite your papers, on arXiv or in journals, with what they do with them (questioning, confirming, building on or using them) and the sentence that cites them.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/citations/" />
 {% endblock %}
 
@@ -15,15 +15,17 @@
   <header class="page-header">
     <span class="eyebrow">Premium</span>
     <h1>{% trans 'Citation alerts' %}</h1>
-    <p class="lead">{% trans 'Follow your papers, or any paper: once a week, we email you the new papers that cite them, and what they say about them (building on it, supporting it, questioning it, or a simple mention).' %}</p>
+    <p class="lead">{% trans 'Follow your papers, or any paper: we email you the new papers that cite them and what they do with them (questioning it, supporting it, building on it, using it, or a simple mention), with the sentence that cites them.' %}</p>
   </header>
 
   {% if anonymous or not paid %}
     <h2>{% trans 'What you can do' %}</h2>
     <ul class="tool-features">
-      <li>{% trans 'Follow your own papers, those of your team, or any paper you care about: paste their arXiv identifiers or DOIs, or click "Tell me who cites it" on a paper page.' %}</li>
-      <li>{% trans 'Once a week, one email lists the new papers that cite them, with their authors, date and link.' %}</li>
-      <li>{% trans 'For each citation, an AI reads the sentences around it and tells you whether the new paper builds on yours, confirms it, questions it, or only mentions it.' %}</li>
+      <li>{% trans 'Follow all your papers at once from your ORCID iD or arXiv author identifier, and your new papers as they appear; or follow your team\'s papers or any paper: paste their arXiv identifiers or DOIs, or click "Tell me who cites it" on a paper page.' %}</li>
+      <li>{% trans 'One email a day, a week or a month lists the new papers that cite them, the most telling first; a paper that questions one of yours is sent at once.' %}</li>
+      <li>{% trans 'For each citation, an AI reads the sentences that cite your paper, from Semantic Scholar or from the arXiv version of the citing paper, and tells you whether it questions it, supports it, builds on it, uses it or only mentions it, and how sure it is. The sentence is shown, so you can check.' %}</li>
+      <li>{% trans 'Self-citations are told apart, and so are old papers the sources only indexed now.' %}</li>
+      <li>{% trans 'Each followed paper has a page with all its citations per year and by verdict, to filter, export (CSV, BibTeX) or add to a collection.' %}</li>
       <li>{% trans 'When a paper you follow gets a new version on arXiv, an email tells you what changed: results, conclusions, method, data or errors fixed.' %}</li>
       <li>{% blocktrans with n=max_followed %}Up to {{ n }} papers followed.{% endblocktrans %}</li>
     </ul>
@@ -34,33 +36,68 @@
       <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% endif %}
   {% else %}
-    <p><a href="#citation-alert-history">{% trans 'View past citation alerts' %}</a></p>
+    <p><a href="#my-papers">{% trans 'Follow my papers' %}</a> · <a href="#citation-settings">{% trans 'Email settings' %}</a> · <a href="#citation-alert-history">{% trans 'View past citation alerts' %}</a></p>
     {% if error == 'too_many' %}<p class="error">{% blocktrans with n=max_followed %}You can follow {{ n }} papers at most.{% endblocktrans %}</p>{% endif %}
+    {% if notice %}<p class="card section-card">{% blocktrans count n=notice.found %}{{ n }} paper found.{% plural %}{{ n }} papers found.{% endblocktrans %} {% blocktrans count n=notice.new %}{{ n }} newly followed as yours.{% plural %}{{ n }} newly followed as yours.{% endblocktrans %}{% if notice.missed %} {% blocktrans with max=max_followed count n=notice.missed %}{{ n }} could not be followed: {{ max }} papers at most.{% plural %}{{ n }} could not be followed: {{ max }} papers at most.{% endblocktrans %}{% endif %} {% trans 'Your new papers will be followed as they appear.' %}</p>{% endif %}
+
+    <section id="my-papers" class="card section-card" style="scroll-margin-top:90px">
+      <h2>{% trans 'Follow my papers' %}</h2>
+      <form method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="import">
+        <p><label>{% trans 'Your ORCID iD or arXiv author identifier:' %}<br>
+          <input type="text" name="author" placeholder="0000-0002-1825-0097 · lee_a_1" style="max-width:360px;width:100%"></label>
+          <button class="btn" type="submit">{% trans 'Follow my papers' %}</button></p>
+        {% if error == 'author_format' %}<p class="error">{% trans 'This is neither an ORCID iD (0000-0002-1825-0097) nor an arXiv author identifier (lee_a_1, at arxiv.org/a/).' %}</p>
+        {% elif error == 'author_unavailable' %}<p class="error">{% trans 'ORCID or arXiv did not answer. Try again in a moment.' %}</p>
+        {% elif error == 'author_empty' %}<p class="error">{% trans 'No paper with an arXiv identifier or a DOI was found for this identifier.' %}</p>{% endif %}
+        <p class="muted"><small>{% trans 'Your papers are marked as yours, and your new papers are followed as they appear. A citation by a paper sharing an author with yours is shown as a self-citation.' %}</small></p>
+      </form>
+      {% if watches %}<ul class="item-list">{% for w in watches %}<li>{{ w.ident }}{% if w.checked %} · <span class="muted">{% blocktrans with date=w.checked|date:'SHORT_DATE_FORMAT' %}checked {{ date }}{% endblocktrans %}</span>{% endif %}
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="pk" value="{{ w.pk }}"><button class="link-button" name="action" value="unwatch">{% trans 'Stop following new papers' %}</button></form></li>{% endfor %}</ul>{% endif %}
+    </section>
+
     <form method="post" class="card section-card">
       {% csrf_token %}
       <p><strong>{% trans 'Papers to follow' %}</strong></p>
       {% include 'summarizer/arxiv_picker.html' with target='follow-ids' %}
       <p><label>{% trans 'Or paste their arXiv identifiers, DOIs or links:' %}<br>
         <textarea id="follow-ids" name="ids" style="min-height:80px" placeholder="{% trans 'arXiv identifiers, DOIs or links, separated by spaces or new lines' %}"></textarea></label></p>
+      <p><label><input type="checkbox" name="mine" value="1"> {% trans 'These are my papers' %}</label></p>
       <p><button class="btn" type="submit">{% trans 'Follow' %}</button></p>
-      <p class="muted"><small>{% trans 'Citations come from Semantic Scholar and are checked once a day. The citations a paper already has when you follow it are not reported.' %}</small></p>
+      <p class="muted"><small>{% trans 'Citations come from NASA ADS, or Semantic Scholar for the papers ADS does not know, and are checked once a day. The citations a paper already has when you follow it are not reported.' %}</small></p>
     </form>
 
     <h2>{% blocktrans count n=followed|length %}{{ n }} paper followed{% plural %}{{ n }} papers followed{% endblocktrans %}</h2>
     <ul class="item-list">
       {% for f in followed %}
       <li class="card">
-        <a href="{{ f.arxiv_id|paper_url }}" target="_blank" rel="noopener"><strong>{{ f.title|default:f.arxiv_id }}</strong></a>
-        <div class="meta">{{ f.arxiv_id|paper_ref }} ·
+        {% if f.mine %}<span class="importance info">{% trans 'My paper' %}</span> {% endif %}<a href="/{{ LANGUAGE_CODE }}/citations/{{ f.pk }}/"><strong>{{ f.title|default:f.arxiv_id }}</strong></a>
+        <div class="meta"><a href="{{ f.arxiv_id|paper_url }}" target="_blank" rel="noopener">{{ f.arxiv_id|paper_ref }}</a> ·
           {% if f.total is None %}{% trans 'first check in progress' %}{% else %}{% blocktrans count n=f.total %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}{% endif %}
           {% if f.queued %} · {% blocktrans count n=f.queued %}{{ n }} new in your next email{% plural %}{{ n }} new in your next email{% endblocktrans %}{% endif %}</div>
         <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="pk" value="{{ f.pk }}">
+          <a href="/{{ LANGUAGE_CODE }}/citations/{{ f.pk }}/">{% trans 'See its citations' %}</a>
+          <input type="hidden" name="mine" value="{% if f.mine %}0{% else %}1{% endif %}">
+          <button class="link-button" name="action" value="mine">{% if f.mine %}{% trans 'Not my paper' %}{% else %}{% trans 'This is my paper' %}{% endif %}</button>
           <button class="link-button" name="action" value="unfollow">{% trans 'Stop following' %}</button></form>
       </li>
       {% empty %}
       <li class="muted">{% trans 'You follow no paper yet.' %}</li>
       {% endfor %}
     </ul>
+
+    <section id="citation-settings" class="card section-card" style="scroll-margin-top:90px;margin-top:24px">
+      <h2>{% trans 'Email settings' %}</h2>
+      {% if saved == 'prefs' %}<p class="muted">{% trans 'Saved.' %}</p>{% endif %}
+      <form method="post">
+        {% csrf_token %}<input type="hidden" name="action" value="prefs">
+        <p><label>{% trans 'Send me the new citations' %}
+          <select name="every">{% for d in every_choices %}<option value="{{ d }}"{% if pref.every == d %} selected{% endif %}>{% if d == 1 %}{% trans 'every day' %}{% elif d == 7 %}{% trans 'every week' %}{% else %}{% trans 'every month' %}{% endif %}</option>{% endfor %}</select></label></p>
+        <p><label><input type="checkbox" name="urgent" value="1"{% if pref.urgent %} checked{% endif %}> {% trans 'Email me at once when a new paper clearly questions a paper I follow' %}</label></p>
+        {% if bundled %}<p class="muted"><small>{% trans 'Your digest carries your citation alerts: they come with it, whatever the rhythm chosen here. Urgent alerts are still sent at once.' %}</small></p>{% endif %}
+        <p><button class="btn btn-sm" type="submit">{% trans 'Save' %}</button></p>
+      </form>
+    </section>
     <section id="citation-alert-history" class="section-card" style="scroll-margin-top:90px">
       <h2>{% trans 'Citation alert history' %}</h2>
       <p class="muted">{% trans 'Your sent alerts are saved here, including the citations beyond the email limit. They remain available when you stop following a paper.' %}</p>
@@ -72,8 +109,8 @@
           <ul class="item-list">
           {% for c in paper.items %}<li class="card">
             <a href="{{ c.url }}"><strong>{{ c.title }}</strong></a>
-            <p class="meta">{{ c.authors|join:', ' }}{% if c.date %} · {{ c.date }}{% endif %}
-              {% if c.stance %} · {% if c.stance == 'builds_on' %}{% trans 'builds on it' %}{% elif c.stance == 'supports' %}{% trans 'supports it' %}{% elif c.stance == 'questions' %}{% trans 'questions it' %}{% else %}{% trans 'mentions it' %}{% endif %}{% endif %}</p>
+            <p class="meta">{{ c.authors|join:', ' }}{% if c.date %} · {{ c.date }}{% endif %}</p>
+            <p>{% include 'citations/badges.html' %}</p>
             {% if c.note %}<p>{{ c.note }}</p>{% endif %}
             {% if c.contexts %}<details><summary>{% trans 'Citation excerpts' %}</summary>{% for excerpt in c.contexts %}<blockquote>{{ excerpt }}</blockquote>{% endfor %}</details>{% endif %}
           </li>{% endfor %}

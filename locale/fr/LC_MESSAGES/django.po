@@ -14291,3 +14291,341 @@ msgid ""
 msgstr ""
 "Toute personne qui a ce lien voit ces institutions, leurs auteurs et leurs "
 "articles, sans jamais savoir qui a fait la recherche."
+
+msgid "Follow your papers, or any paper: we email you the new papers that cite them and what they do with them (questioning it, supporting it, building on it, using it, or a simple mention), with the sentence that cites them."
+msgstr "Suivez vos articles, ou n'importe quel article : nous vous envoyons par email les nouveaux articles qui les citent et ce qu'ils en font (le remettre en question, le confirmer, s'appuyer dessus, l'utiliser, ou une simple mention), avec la phrase qui les cite."
+
+msgid "Follow all your papers at once from your ORCID iD or arXiv author identifier, and your new papers as they appear; or follow your team's papers or any paper: paste their arXiv identifiers or DOIs, or click \"Tell me who cites it\" on a paper page."
+msgstr "Suivez tous vos articles d'un coup depuis votre identifiant ORCID ou votre identifiant d'auteur arXiv, et vos nouveaux articles dès leur parution ; ou suivez les articles de votre équipe ou n'importe quel article : collez leurs identifiants arXiv ou DOI, ou cliquez sur « Dites-moi qui le cite » sur la page d'un article."
+
+msgid "One email a day, a week or a month lists the new papers that cite them, the most telling first; a paper that questions one of yours is sent at once."
+msgstr "Un email par jour, par semaine ou par mois liste les nouveaux articles qui les citent, les plus parlants d'abord ; un article qui remet en question l'un des vôtres vous est envoyé tout de suite."
+
+msgid "For each citation, an AI reads the sentences that cite your paper, from Semantic Scholar or from the arXiv version of the citing paper, and tells you whether it questions it, supports it, builds on it, uses it or only mentions it, and how sure it is. The sentence is shown, so you can check."
+msgstr "Pour chaque citation, une IA lit les phrases qui citent votre article, venant de Semantic Scholar ou de la version arXiv de l'article citant, et vous dit s'il le remet en question, le confirme, s'appuie dessus, l'utilise ou le mentionne seulement, et avec quelle certitude. La phrase est affichée : vous pouvez vérifier."
+
+msgid "Self-citations are told apart, and so are old papers the sources only indexed now."
+msgstr "Les autocitations sont signalées à part, tout comme les articles anciens que les sources viennent seulement d'indexer."
+
+msgid "Each followed paper has a page with all its citations per year and by verdict, to filter, export (CSV, BibTeX) or add to a collection."
+msgstr "Chaque article suivi a une page avec toutes ses citations par année et par verdict, à filtrer, exporter (CSV, BibTeX) ou ajouter à une collection."
+
+msgid "Follow my papers"
+msgstr "Suivre mes articles"
+
+msgid "Email settings"
+msgstr "Réglages des emails"
+
+msgid "Your new papers will be followed as they appear."
+msgstr "Vos nouveaux articles seront suivis dès leur parution."
+
+msgid "Your ORCID iD or arXiv author identifier:"
+msgstr "Votre identifiant ORCID ou votre identifiant d'auteur arXiv :"
+
+msgid "This is neither an ORCID iD (0000-0002-1825-0097) nor an arXiv author identifier (lee_a_1, at arxiv.org/a/)."
+msgstr "Ce n'est ni un identifiant ORCID (0000-0002-1825-0097) ni un identifiant d'auteur arXiv (lee_a_1, sur arxiv.org/a/)."
+
+msgid "ORCID or arXiv did not answer. Try again in a moment."
+msgstr "ORCID ou arXiv n'a pas répondu. Réessayez dans un instant."
+
+msgid "No paper with an arXiv identifier or a DOI was found for this identifier."
+msgstr "Aucun article avec un identifiant arXiv ou un DOI n'a été trouvé pour cet identifiant."
+
+msgid "Your papers are marked as yours, and your new papers are followed as they appear. A citation by a paper sharing an author with yours is shown as a self-citation."
+msgstr "Vos articles sont marqués comme les vôtres, et vos nouveaux articles sont suivis dès leur parution. Une citation par un article qui partage un auteur avec le vôtre est signalée comme autocitation."
+
+msgid "Stop following new papers"
+msgstr "Ne plus suivre les nouveaux articles"
+
+msgid "These are my papers"
+msgstr "Ce sont mes articles"
+
+msgid "Citations come from NASA ADS, or Semantic Scholar for the papers ADS does not know, and are checked once a day. The citations a paper already has when you follow it are not reported."
+msgstr "Les citations viennent de NASA ADS, ou de Semantic Scholar pour les articles qu'ADS ne connaît pas, et sont vérifiées une fois par jour. Les citations qu'un article a déjà quand vous commencez à le suivre ne sont pas signalées."
+
+msgid "My paper"
+msgstr "Mon article"
+
+msgid "See its citations"
+msgstr "Voir ses citations"
+
+msgid "Not my paper"
+msgstr "Pas mon article"
+
+msgid "This is my paper"
+msgstr "C'est mon article"
+
+msgid "Saved."
+msgstr "Enregistré."
+
+msgid "Send me the new citations"
+msgstr "M'envoyer les nouvelles citations"
+
+msgid "every day"
+msgstr "chaque jour"
+
+msgid "every week"
+msgstr "chaque semaine"
+
+msgid "every month"
+msgstr "chaque mois"
+
+msgid "Email me at once when a new paper clearly questions a paper I follow"
+msgstr "M'écrire tout de suite quand un nouvel article remet clairement en question un article que je suis"
+
+msgid "Your digest carries your citation alerts: they come with it, whatever the rhythm chosen here. Urgent alerts are still sent at once."
+msgstr "Votre digest regroupe vos alertes de citations : elles arrivent avec lui, quel que soit le rythme choisi ici. Les alertes urgentes sont tout de même envoyées tout de suite."
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Next"
+msgstr "Suivant"
+
+#, python-format
+msgid "%(n)s paper found."
+msgid_plural "%(n)s papers found."
+msgstr[0] "%(n)s article trouvé."
+msgstr[1] "%(n)s articles trouvés."
+
+#, python-format
+msgid "%(n)s newly followed as yours."
+msgid_plural "%(n)s newly followed as yours."
+msgstr[0] "%(n)s nouvellement suivi comme le vôtre."
+msgstr[1] "%(n)s nouvellement suivis comme les vôtres."
+
+#, python-format
+msgid "%(n)s could not be followed: %(max)s papers at most."
+msgid_plural "%(n)s could not be followed: %(max)s papers at most."
+msgstr[0] "%(n)s n'a pas pu être suivi : %(max)s articles au plus."
+msgstr[1] "%(n)s n'ont pas pu être suivis : %(max)s articles au plus."
+
+#, python-format
+msgid "checked %(date)s"
+msgstr "vérifié le %(date)s"
+
+msgid "Followed paper"
+msgstr "Article suivi"
+
+msgid "Citations per year"
+msgstr "Citations par année"
+
+msgid "What the judged citations do with it:"
+msgstr "Ce qu'en font les citations jugées :"
+
+msgid "Analysis in progress: reload the page in a few minutes."
+msgstr "Analyse en cours : rechargez la page dans quelques minutes."
+
+msgid "Read and judge the newest citations"
+msgstr "Lire et juger les citations les plus récentes"
+
+msgid "Reads the missing citation sentences of the newest arXiv papers, then judges up to 60 citations not judged yet."
+msgstr "Lit les phrases de citation manquantes des articles arXiv les plus récents, puis juge jusqu'à 60 citations pas encore jugées."
+
+msgid "Verdict"
+msgstr "Verdict"
+
+msgid "Not judged"
+msgstr "Non jugées"
+
+msgid "Self-citations"
+msgstr "Autocitations"
+
+msgid "Shown"
+msgstr "Affichées"
+
+msgid "Hidden"
+msgstr "Masquées"
+
+msgid "Only them"
+msgstr "Elles seules"
+
+msgid "Filter"
+msgstr "Filtrer"
+
+msgid "Clear"
+msgstr "Effacer"
+
+msgid "Export (CSV)"
+msgstr "Exporter (CSV)"
+
+msgid "Export (BibTeX)"
+msgstr "Exporter (BibTeX)"
+
+msgid "Tick the papers to add, and choose a collection."
+msgstr "Cochez les articles à ajouter, et choisissez une collection."
+
+msgid "You have as many collections as your plan allows: choose an existing one."
+msgstr "Vous avez autant de collections que votre formule le permet : choisissez-en une existante."
+
+msgid "Add to a collection"
+msgstr "Ajouter à une collection"
+
+msgid "in your next email"
+msgstr "dans votre prochain email"
+
+msgid "from the arXiv version"
+msgstr "tirés de la version arXiv"
+
+msgid "No citation sentence available yet: no verdict."
+msgstr "Pas encore de phrase de citation disponible : pas de verdict."
+
+msgid "No citation matches these filters."
+msgstr "Aucune citation ne correspond à ces filtres."
+
+msgid "Add the ticked papers to"
+msgstr "Ajouter les articles cochés à"
+
+msgid "A new collection:"
+msgstr "Une nouvelle collection :"
+
+#, python-format
+msgid "Citations of %(title)s"
+msgstr "Citations de %(title)s"
+
+#, python-format
+msgid "%(n)s self-citation in all."
+msgid_plural "%(n)s self-citations in all."
+msgstr[0] "%(n)s autocitation en tout."
+msgstr[1] "%(n)s autocitations en tout."
+
+#, python-format
+msgid "%(judged)s judged, out of %(excerpts)s with a citation sentence. A citation without a sentence cannot be judged."
+msgstr "%(judged)s jugées, sur %(excerpts)s avec une phrase de citation. Une citation sans phrase ne peut pas être jugée."
+
+#, python-format
+msgid "%(n)s citation shown"
+msgid_plural "%(n)s citations shown"
+msgstr[0] "%(n)s citation affichée"
+msgstr[1] "%(n)s citations affichées"
+
+msgid "It shares an author with the cited paper."
+msgstr "Il partage un auteur avec l'article cité."
+
+msgid "self-citation"
+msgstr "autocitation"
+
+msgid "Published long before the sources listed it: not a new paper."
+msgstr "Publié bien avant que les sources ne le listent : ce n'est pas un nouvel article."
+
+msgid "indexed late"
+msgstr "indexé tardivement"
+
+msgid "A new paper questions one of the papers you follow, so this alert is sent now rather than at its usual time."
+msgstr "Un nouvel article remet en question l'un des articles que vous suivez : cette alerte est donc envoyée maintenant plutôt qu'à son heure habituelle."
+
+msgid "Your paper"
+msgstr "Votre article"
+
+msgid "Also cites:"
+msgstr "Cite aussi :"
+
+msgid "See all its citations"
+msgstr "Voir toutes ses citations"
+
+msgid "Citations from NASA ADS and Semantic Scholar; citation sentences from Semantic Scholar or the arXiv version of the citing paper. The verdict is an AI reading of those sentences: check the excerpt."
+msgstr "Citations de NASA ADS et Semantic Scholar ; phrases de citation de Semantic Scholar ou de la version arXiv de l'article citant. Le verdict est une lecture de ces phrases par une IA : vérifiez l'extrait."
+
+msgid "uses it"
+msgstr "l'utilise"
+
+msgid "uncertain"
+msgstr "incertain"
+
+msgid "A new paper questions one you follow"
+msgstr "Un nouvel article remet en question un article que vous suivez"
+
+#, python-format
+msgid "%(n)s questions it"
+msgid_plural "%(n)s question it"
+msgstr[0] "%(n)s le remet en question"
+msgstr[1] "%(n)s le remettent en question"
+
+#, python-format
+msgid "%(n)s supports it"
+msgid_plural "%(n)s support it"
+msgstr[0] "%(n)s le confirme"
+msgstr[1] "%(n)s le confirment"
+
+#, python-format
+msgid "%(n)s builds on it"
+msgid_plural "%(n)s build on it"
+msgstr[0] "%(n)s s'appuie dessus"
+msgstr[1] "%(n)s s'appuient dessus"
+
+#, python-format
+msgid "%(n)s uses it"
+msgid_plural "%(n)s use it"
+msgstr[0] "%(n)s l'utilise"
+msgstr[1] "%(n)s l'utilisent"
+
+#, python-format
+msgid "%(n)s mentions it"
+msgid_plural "%(n)s mention it"
+msgstr[0] "%(n)s le mentionne"
+msgstr[1] "%(n)s le mentionnent"
+
+#, python-format
+msgid "%(n)s self-citation"
+msgid_plural "%(n)s self-citations"
+msgstr[0] "%(n)s autocitation"
+msgstr[1] "%(n)s autocitations"
+
+msgid "Citing papers"
+msgstr "Articles citants"
+
+msgid "Who cites your papers and what they do with them, with the citing sentence and self-citations apart, and what changed when they get a new version."
+msgstr "Qui cite vos articles et ce qu'ils en font, avec la phrase qui les cite et les autocitations à part, et ce qui a changé quand ils ont une nouvelle version."
+
+msgid "Get an email when new papers cite your papers, on arXiv or in journals, with what they do with them (questioning, confirming, building on or using them) and the sentence that cites them."
+msgstr "Recevez un email quand de nouveaux articles citent les vôtres, sur arXiv ou dans des revues, avec ce qu'ils en font (les remettre en question, les confirmer, s'appuyer dessus ou les utiliser) et la phrase qui les cite."
+
+msgid "Semantic Scholar finds that this paper relies on it substantially, not in passing."
+msgstr "Selon Semantic Scholar, cet article s'appuie vraiment dessus, pas en passant."
+
+msgid "influential"
+msgstr "influent"
+
+msgid "verdict corrected by you"
+msgstr "verdict corrigé par vous"
+
+msgid "verdict corrected by an author"
+msgstr "verdict corrigé par un auteur"
+
+msgid "You have run %(n)s analyses today, the most there can be in a day: try again tomorrow."
+msgstr "Vous avez lancé %(n)s analyses aujourd'hui, le maximum pour une journée : réessayez demain."
+
+msgid "Who cites it"
+msgstr "Qui le cite"
+
+msgid "Authors citing it most, self-citations apart:"
+msgstr "Auteurs qui le citent le plus, autocitations à part :"
+
+msgid "Fields of the citing papers:"
+msgstr "Domaines des articles citants :"
+
+msgid "%(n)s citing paper known to Semantic Scholar only"
+msgid_plural "%(n)s citing papers known to Semantic Scholar only"
+msgstr[0] "%(n)s article citant connu de Semantic Scholar seulement"
+msgstr[1] "%(n)s articles citants connus de Semantic Scholar seulement"
+
+msgid "ADS does not list them as citing this paper: often a citation matched to the wrong paper, sometimes one ADS has not linked yet. They are not counted above."
+msgstr "ADS ne les compte pas parmi les articles qui le citent : souvent une citation rattachée au mauvais article, parfois une qu'ADS n'a pas encore reliée. Ils ne sont pas comptés plus haut."
+
+msgid "For your next paper: <a href=\"%(scoops_url)s\">watch who works on the same thing</a>, or <a href=\"%(missed_url)s\">find the papers your draft does not cite</a>."
+msgstr "Pour votre prochain article : <a href=\"%(scoops_url)s\">surveillez qui travaille sur le même sujet</a>, ou <a href=\"%(missed_url)s\">trouvez les articles que votre brouillon ne cite pas</a>."
+
+msgid "Order"
+msgstr "Ordre"
+
+msgid "Most influential first"
+msgstr "Les plus influents d'abord"
+
+msgid "Wrong verdict?"
+msgstr "Verdict erroné ?"
+
+msgid "As an author of this paper, your correction replaces the verdict for everyone who follows it."
+msgstr "Comme vous êtes auteur de cet article, votre correction remplace le verdict pour tous ceux qui le suivent."
+
+msgid "Your correction is shown to you instead of the verdict, and helps check the verdicts."
+msgstr "Votre correction s'affiche pour vous à la place du verdict, et aide à vérifier les verdicts."

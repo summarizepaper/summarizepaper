@@ -1,11 +1,15 @@
 {% load i18n %}{% autoescape off %}{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}
-{% for paper in papers %}
-== {{ paper.followed.title|default:paper.followed.arxiv_id }} ==
+{% if urgent %}
+{% trans 'A new paper questions one of the papers you follow, so this alert is sent now rather than at its usual time.' %}
+{% endif %}{% for paper in papers %}
+== {% if paper.followed.mine %}{% trans 'Your paper' %}: {% endif %}{{ paper.followed.title|default:paper.followed.arxiv_id }} ==
 {% for c in paper.items %}
-- {{ c.title }}{% if c.authors %} ({{ c.authors|join:", " }}){% endif %}{% if c.date %}, {{ c.date }}{% endif %}
+- {{ c.title }}{% if c.authors %} ({{ c.authors|join:", " }}){% endif %}{% if c.date %}, {{ c.date }}{% endif %}{% if c.stance %} [{% include 'citations/stance_label.txt' %}]{% endif %}{% if c.self %} [{% trans 'self-citation' %}]{% endif %}{% if c.late %} [{% trans 'indexed late' %}]{% endif %}{% if c.influential %} [{% trans 'influential' %}]{% endif %}
   {% if c.note %}{{ c.note }}
+  {% endif %}{% if c.contexts %}"{{ c.contexts.0|truncatechars:320 }}"
+  {% endif %}{% if c.also %}{% trans 'Also cites:' %} {% for a in c.also %}{% if not forloop.first %}; {% endif %}{{ a.title }}{% if a.stance %} ({% include 'citations/stance_label.txt' with c=a %}){% endif %}{% endfor %}
   {% endif %}{{ c.url }}
-{% endfor %}{% if paper.more %}{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}
+{% endfor %}{% if paper.more %}{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}: {{ base_url }}/{{ lang }}/citations/{{ paper.followed.pk }}/
 {% endif %}{% endfor %}
 {% trans 'Manage the papers you follow:' %} {{ manage_url }}
 {% endautoescape %}

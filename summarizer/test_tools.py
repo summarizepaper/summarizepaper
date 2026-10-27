@@ -26,6 +26,8 @@ class ToolsTestCase(TestCase):
         cache.clear()
         patches = [mock.patch('summarizer.generated.background', side_effect=lambda work, *args: work(*args)),
                    mock.patch('summarizer.generated.release_connection'),
+                   mock.patch('summarizer.citations.fetch_meta', return_value=None),
+                   mock.patch('summarizer.citations.fetch_html', return_value=''),
                    mock.patch('summarizer.publication_status.lookup', return_value={
                        'status': 'unknown', 'checked_at': timezone.now().isoformat(), 'sources': [],
                        'checked_sources': [], 'unavailable': [], 'peer_review': 'not_independently_verified'})]
@@ -667,8 +669,10 @@ class CitationTests(ToolsTestCase):
         row = CitationAlertHistory.objects.get()
         self.assertEqual(row.count, 3)
         self.assertEqual(len(row.papers[0]['items']), 3)
-        self.assertNotIn('Paper c3', mail.outbox[-1].alternatives[0][0])
-        self.assertContains(self.client_for(user).get('/en/citations/'), 'Paper c3')
+        html = mail.outbox[-1].alternatives[0][0]
+        self.assertLess(html.index('Paper c3'), html.index('Paper c1'))  # the one with a citation sentence first
+        self.assertNotIn('Paper c2', html)
+        self.assertContains(self.client_for(user).get('/en/citations/'), 'Paper c2')
 
     def test_history_is_private_paginated_and_does_not_invent_old_alerts(self):
         from .models import CitationAlertHistory, CitationAlertLog
@@ -757,6 +761,40 @@ class CitationTests(ToolsTestCase):
         self.assertEqual(FollowedPaper.objects.get(user=user).title, 'A new disc')
 
     @override_settings(ADS_TOKEN='token')
+    def test_ads_names_are_turned_around_to_tell_self_citations(self):
+        self.assertEqual(citations.ads_name('Kral, Q.'), 'Q. Kral')
+        self.assertEqual(citations.ads_name('Planck Collaboration'), 'Planck Collaboration')
+        self.assertTrue(citations.shares_author(citations.name_keys(['Quentin Kral']), [citations.ads_name('Kral, Q.')]))
+
+    @override_settings(ADS_TOKEN='token')
+    def test_papers_only_semantic_scholar_has_are_kept_apart(self):
+        def ads(params):
+            if params['q'].startswith('identifier:'):
+                return {'numFound': 1, 'docs': [{'bibcode': '2021A&A...1K'}]}
+            return {'numFound': 1, 'docs': [{'bibcode': '2026MNRAS.1A', 'title': ['Thick clouds'], 'author': ['Q, Zoe'],
+                                             'identifier': ['arXiv:2201.00003'], 'citation_count': 12}]}
+        s2 = self.citing('c3', 'c5')
+        s2['c3'].update(influential=True, fields=['Physics'])
+        s2['c4'] = dict(s2['c5'], arxiv_id='', title='Thick  Clouds')  # the same paper, told by its title
+        with mock.patch('summarizer.citations.ads_get', side_effect=ads), \
+             mock.patch('summarizer.citations.fetch_s2', return_value=s2):
+            citing = citations.fetch('2101.00001')
+        paper = citing['ads:2026MNRAS.1A']
+        self.assertEqual((paper['authors'], paper['cited_by'], paper['influential'], paper['fields']),
+                         (['Zoe Q'], 12, True, ['Physics']))
+        self.assertEqual([u['id'] for u in citing.unmatched], ['c5'])
+        user = self.user(paid=True)
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', known='')
+        with mock.patch('summarizer.citations.fetch', return_value=citing), \
+             mock.patch('summarizer.library.lookup_many', return_value={}):
+            citations.refresh('2101.00001', timezone.now())
+        followed = FollowedPaper.objects.get(user=user)
+        page = self.client_for(user).get('/en/citations/%d/' % followed.pk)
+        self.assertContains(page, '1 citing paper known to Semantic Scholar only')
+        self.assertContains(page, 'cited 12 times')
+        self.assertContains(page, 'influential')
+
+    @override_settings(ADS_TOKEN='token')
     def test_ads_counts_with_semantic_scholar_sentences(self):
         def ads(params):
             if params['q'] == 'identifier:"arXiv:2101.00001"':
@@ -822,6 +860,291 @@ class CitationTests(ToolsTestCase):
              mock.patch('summarizer.library.lookup_many', return_value={}):
             self.assertEqual(citations.refresh_due(timezone.now()), 1)
         fetch.assert_called_once_with('2101.00001')
+
+    def test_refresh_due_takes_the_never_then_the_oldest_checked_first(self):
+        user = self.user(paid=True)
+        now = timezone.now()
+        for aid in ('2101.00001', '2101.00002', '2101.00003'):
+            FollowedPaper.objects.create(user=user, arxiv_id=aid, known='[]')
+        CitationCache.objects.create(arxiv_id='2101.00001', checked=now - datetime.timedelta(days=1))
+        CitationCache.objects.create(arxiv_id='2101.00002', checked=now - datetime.timedelta(days=3))
+        with mock.patch('summarizer.citations.fetch', return_value={}) as fetch, \
+             mock.patch('summarizer.citations.time.sleep'), \
+             mock.patch('summarizer.library.lookup_many', return_value={}):
+            citations.refresh_due(now, limit=2)
+            self.assertEqual([c.args[0] for c in fetch.call_args_list], ['2101.00003', '2101.00002'])
+            fetch.reset_mock()
+            # the next day the one left out comes first, instead of the same ones again
+            citations.refresh_due(now + datetime.timedelta(days=1), limit=1)
+            self.assertEqual(fetch.call_args_list[0].args[0], '2101.00001')
+
+    HTML = '''<html><body><article>
+      <div class="ltx_para"><p class="ltx_p">Hot planets have clouds. Thick clouds were first seen by Lee et al.
+        <cite class="ltx_cite">(<a href="#bib.bib2" class="ltx_ref">2021</a>)</cite> with a large telescope, see Fig. 2.
+        Other work <cite class="ltx_cite">[<a href="#bib.bib1" class="ltx_ref">1</a>]</cite> found none.</p></div>
+      <div class="ltx_para"><p class="ltx_p">We find thinner clouds than <cite class="ltx_cite"><a href="#bib.bib2" class="ltx_ref">Lee et al. 2021</a></cite>, with <math alttext="T&gt;1000">x</math> K.</p></div>
+      <ul class="ltx_biblist">
+        <li id="bib.bib1" class="ltx_bibitem">Max P. 2019, Protein folding, Nature</li>
+        <li id="bib.bib2" class="ltx_bibitem">Lee A., Ray B. 2021, Clouds on a hot planet seen with a large telescope, <a href="https://arxiv.org/abs/2101.00001">arXiv:2101.00001</a></li>
+      </ul></article></body></html>'''
+
+    def test_citation_sentences_are_read_from_the_arxiv_html(self):
+        found = citations.find_contexts(self.HTML, '2101.00001', 'Clouds on a hot planet')
+        self.assertEqual(found, ['Thick clouds were first seen by Lee et al. (2021) with a large telescope, see Fig. 2.',
+                                 'We find thinner clouds than Lee et al. 2021, with T>1000 K.'])
+        # by its title when the entry has no identifier, and nothing for a paper not in the bibliography
+        by_title = self.HTML.replace('<a href="https://arxiv.org/abs/2101.00001">arXiv:2101.00001</a>', '')
+        self.assertEqual(len(citations.find_contexts(by_title, '2101.00009', 'Clouds on a hot planet seen with a large telescope')), 2)
+        self.assertEqual(citations.find_contexts(self.HTML, '2101.00009', 'Another paper entirely, on stars'), [])
+        self.assertEqual(citations.find_contexts(self.HTML, '2101.0000', 'Short'), [])
+        # by its journal DOI, and a citation in a table gives its row after the caption
+        journal = self.HTML.replace('<a href="https://arxiv.org/abs/2101.00001">arXiv:2101.00001</a>', 'doi: 10.1093/MNRAS/X1')
+        self.assertEqual(len(citations.find_contexts(journal, '2101.00001', 'Short', doi='10.1093/mnras/x1')), 2)
+        table = self.HTML.replace('</article>', '''<figure class="ltx_table"><figcaption>Table 1: Cloud models. Second sentence.
+          </figcaption><table><tr><th>Lee <cite class="ltx_cite"><a href="#bib.bib2" class="ltx_ref">2021</a></cite></th>
+          <td>thick</td></tr></table></figure></article>''')
+        self.assertIn('Table 1: Cloud models. — Lee 2021 | thick', citations.find_contexts(table, '2101.00001', 'Short'))
+
+    def test_formulas_are_plain_text_when_they_can_be(self):
+        self.assertEqual(citations.plain_math(r'\text{CO}{\vphantom{\text{X}}}_{\smash[t]{\text{2}}}'), 'CO₂')
+        self.assertEqual(citations.plain_math(r'\sim'), '~')
+        self.assertEqual(citations.plain_math(r'T_{\rm eq}^{2}'), r'$T_{\rm eq}^{2}$')
+
+    def test_a_citing_paper_without_arxiv_html_is_read_again_a_month_later(self):
+        from .models import CitationContext
+        user = self.user(paid=True)
+        now = timezone.now()
+        self.queue(user, now, 'c1')
+        CitationContext.objects.create(cited='2101.00001', citing='arxiv:2201.00001', contexts='[]', checked=now)
+        with mock.patch('summarizer.citations.read_context') as read:
+            self.assertEqual(citations.read_contexts(now), 0)
+            self.assertEqual(citations.read_contexts(now + citations.RETRY + datetime.timedelta(days=1)), 1)
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_missing_sentences_are_read_from_arxiv_judged_once_with_the_abstract(self):
+        self.paper()
+        now = timezone.now()
+        user, other = self.user(paid=True), self.user('bob', paid=True)
+        citing = self.citing('c1', 'c2')
+        CitationCache.objects.create(arxiv_id='2101.00001', citing=json.dumps(citing), total=2, checked=now)
+        for u in (user, other):
+            FollowedPaper.objects.create(user=u, arxiv_id='2101.00001', title='Clouds on a hot planet', known='[]',
+                                         pending='["c1", "c2"]')
+        with mock.patch('summarizer.citations.fetch_html', side_effect=[self.HTML, '']) as html, \
+             mock.patch('summarizer.citations.time.sleep'):
+            self.assertEqual(citations.read_contexts(now), 2)
+            self.assertEqual(citations.read_contexts(now), 0)  # tried once, for every follower
+        self.assertEqual(html.call_args_list[0].args[0], '2201.00001')
+        CitationCache.objects.filter(arxiv_id='2101.00001').update(abstract='We observe clouds on a hot planet.')
+        answer = {'items': [{'id': 'c1', 'stance': 'questions', 'confidence': 'high', 'note': 'Finds thinner clouds.'}]}
+        with mock.patch('summarizer.generated.chat_json', return_value=answer) as chat:
+            self.assertEqual(citations.send_alerts(now, 5), 2)
+        chat.assert_called_once()  # judged once for both followers
+        self.assertTrue(chat.call_args.kwargs['paid'])
+        self.assertIn('We observe clouds on a hot planet.', chat.call_args.kwargs['system'])
+        self.assertIn('We find thinner clouds than Lee et al. 2021', chat.call_args.kwargs['system'])
+        html = mail.outbox[0].alternatives[0][0]
+        self.assertIn('questions it', html)
+        self.assertIn('Finds thinner clouds.', html)
+        self.assertIn('No citation sentence available yet', html)  # c2: arXiv has no HTML for it
+        self.assertIn('1 questions it', html)
+        page = self.client_for(user).get('/en/citations/%d/' % FollowedPaper.objects.get(user=user).pk)
+        self.assertContains(page, 'from the arXiv version')
+        self.assertContains(page, 'Finds thinner clouds.')
+
+    def test_self_citations_are_told_apart_and_listed_last(self):
+        self.paper()  # by Ann Lee and Bob Ray
+        user = self.user(paid=True)
+        now = timezone.now()
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='Clouds', known='[]')
+        many = ['Author %s Number' % chr(65 + n) for n in range(10)]
+        citing = {'c1': dict(self.citing('c1')['c1'], authors=many + ['A. Lee']),
+                  'c2': dict(self.citing('c2')['c2'], authors=['Zoe Quinn'], date='2023-01-05')}
+        with mock.patch('summarizer.citations.fetch', return_value=citing):
+            citations.refresh('2101.00001', now)
+        cached = CitationCache.objects.get(arxiv_id='2101.00001')
+        self.assertEqual(json.loads(cached.authors), ['Ann Lee', 'Bob Ray'])
+        stored = json.loads(cached.citing)
+        self.assertEqual((stored['c1']['self'], stored['c2']['self']), (True, False))
+        self.assertEqual(len(stored['c1']['authors']), citations.SHOWN_AUTHORS)
+        FollowedPaper.objects.filter(user=user).update(pending='["c1", "c2"]')
+        context, _ = citations.pending(user, '', 'en', now)
+        items = context['papers'][0]['items']
+        self.assertEqual([i['id'] for i in items], ['c2', 'c1'])
+        self.assertTrue(items[0]['late'])  # published in 2023, seen now
+        self.assertEqual(context['papers'][0]['summary'], [('self', 1)])
+
+    def test_a_paper_citing_several_followed_papers_is_shown_once(self):
+        user = self.user(paid=True)
+        now = timezone.now()
+        for aid, title in (('2101.00001', 'First'), ('2101.00002', 'Second')):
+            CitationCache.objects.create(arxiv_id=aid, citing=json.dumps(self.citing('c1')), total=1, checked=now)
+            FollowedPaper.objects.create(user=user, arxiv_id=aid, title=title, known='[]', pending='["c1"]')
+        context, _ = citations.pending(user, '', 'en', now)
+        self.assertEqual(context['count'], 2)
+        self.assertEqual(sum(len(p['items']) for p in context['papers']), 1)
+        shown = next(i for p in context['papers'] for i in p['items'])
+        self.assertEqual([a['title'] for a in shown['also']], ['First'])
+
+    def test_rhythm_is_chosen_and_urgent_alerts_go_at_once(self):
+        from .models import CitationAlertLog, CitationPreference
+        now = timezone.now()
+        user = self.user(paid=True)
+        client = self.client_for(user)
+        client.post('/en/citations/', {'action': 'prefs', 'every': '30'})
+        self.assertEqual((user.citation_preference.every, user.citation_preference.urgent), (30, False))
+        self.queue(user, now, 'c3')
+        CitationAlertLog.objects.create(user=user, sent=now - datetime.timedelta(days=8))
+        self.assertEqual(citations.due_users(now), [])
+        CitationPreference.objects.filter(user=user).update(every=1)
+        self.assertEqual(citations.due_users(now), [user.pk])
+        CitationAlertLog.objects.filter(user=user).update(sent=now - datetime.timedelta(hours=23, minutes=30))
+        self.assertEqual(citations.due_users(now), [user.pk])  # the hourly run does not push it to the next day
+        # urgent: only a paper clearly questioning a followed one, and only when the user wants it
+        CitationAlertLog.objects.filter(user=user).update(sent=now)
+        questions = {'items': [{'id': 'c3', 'stance': 'questions', 'confidence': 'high', 'note': 'Disputes it.'}]}
+        with mock.patch('summarizer.generated.chat_json', return_value=questions):
+            self.assertEqual(citations.send_urgent(now, 5), 0)
+            CitationPreference.objects.filter(user=user).update(urgent=True)
+            with override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+                self.assertEqual(citations.send_urgent(now, 5), 1)
+        self.assertIn('A new paper questions one you follow', mail.outbox[-1].subject)
+        self.assertIn('sent now rather than at its usual time', mail.outbox[-1].body)
+        self.assertEqual(FollowedPaper.objects.get(user=user).pending, '')
+        # it does not move the usual day
+        CitationAlertLog.objects.filter(user=user).update(sent=now - datetime.timedelta(hours=5))
+        FollowedPaper.objects.filter(user=user).update(pending='["c3"]')
+        with mock.patch('summarizer.generated.chat_json', return_value=questions), \
+             override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+            citations.send_urgent(now, 5)
+        self.assertEqual(CitationAlertLog.objects.get(user=user).sent, now - datetime.timedelta(hours=5))
+
+    def test_mentions_are_not_urgent(self):
+        now = timezone.now()
+        user = self.user(paid=True)
+        self.queue(user, now, 'c3')
+        low = {'items': [{'id': 'c3', 'stance': 'questions', 'confidence': 'low', 'note': 'Maybe.'}]}
+        with mock.patch('summarizer.generated.chat_json', return_value=low):
+            self.assertEqual(citations.send_urgent(now, 5), 0)
+        self.assertEqual(json.loads(FollowedPaper.objects.get(user=user).pending), ['c3'])
+
+    def test_my_papers_are_followed_from_an_orcid_and_new_ones_as_they_appear(self):
+        from .models import CitationAuthorWatch
+        user = self.user(paid=True)
+        client = self.client_for(user)
+        FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', known='[]')
+        self.assertContains(client.post('/en/citations/', {'action': 'import', 'author': 'not an id'}), 'neither an ORCID')
+        with mock.patch('summarizer.citations.author_works', return_value=['2101.00001', 'doi_10.1--a']) as works, \
+             mock.patch('summarizer.citations.fetch', return_value={}), \
+             mock.patch('summarizer.citations.time.sleep'), \
+             mock.patch('summarizer.library.lookup_many', return_value={}):
+            page = client.post('/en/citations/', {'action': 'import', 'author': 'https://orcid.org/0000-0002-1825-009x'})
+        works.assert_called_once_with('orcid:0000-0002-1825-009X')
+        self.assertContains(page, '2 papers found.')
+        self.assertEqual(sorted(FollowedPaper.objects.filter(user=user, mine=True).values_list('arxiv_id', flat=True)),
+                         ['2101.00001', 'doi_10.1--a'])
+        watch = CitationAuthorWatch.objects.get(user=user)
+        CitationAuthorWatch.objects.filter(pk=watch.pk).update(checked=timezone.now() - datetime.timedelta(days=2))
+        with mock.patch('summarizer.citations.author_works', return_value=['2610.00001', '2101.00001']):
+            self.assertEqual(citations.watch_authors(timezone.now()), 1)
+        self.assertTrue(FollowedPaper.objects.get(user=user, arxiv_id='2610.00001').mine)
+        self.assertEqual(FollowedPaper.objects.get(user=user, arxiv_id='2610.00001').known, '')  # its first check comes
+        UserPlan.objects.filter(user=user).update(paid=False)
+        CitationAuthorWatch.objects.filter(pk=watch.pk).update(checked=None)
+        with mock.patch('summarizer.citations.author_works') as works:
+            citations.watch_authors(timezone.now())
+        works.assert_not_called()
+
+    def test_verdicts_are_judged_again_on_new_sentences_and_corrected_by_readers(self):
+        from .models import CitationCorrection, CitationVerdict
+        user = self.user(paid=True)
+        now = timezone.now()
+        citing = self.citing('c3', 'c4')
+        citing['c4'].update(contexts=['Like [3], we see clouds.'], authors=['Ann Lee'])
+        CitationCache.objects.create(arxiv_id='2101.00001', citing=json.dumps(citing), total=2, checked=now)
+        followed = FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='Clouds', known='[]')
+        answer = {'items': [{'id': 'c3', 'stance': 'questions', 'confidence': 'high', 'note': 'Disputes it.'},
+                            {'id': 'c4', 'stance': 'supports', 'confidence': 'high', 'note': 'Agrees.'}]}
+        with mock.patch('summarizer.generated.chat_json', return_value=answer) as chat:
+            citations.stances('2101.00001', 'Clouds', citing, 'en')
+            citations.stances('2101.00001', 'Clouds', citing, 'en')
+            self.assertEqual(chat.call_count, 1)
+            citing['c3']['contexts'] = ['A better sentence about [3].']
+            citations.stances('2101.00001', 'Clouds', citing, 'en')
+            self.assertIn('c3', chat.call_args.kwargs['system'])
+            self.assertNotIn('c4', chat.call_args.kwargs['system'])
+        # a follower's correction is theirs alone
+        url = '/en/citations/%d/' % followed.pk
+        client = self.client_for(user)
+        client.post(url, {'correct': 'arxiv:2201.00003', 'stance_arxiv:2201.00003': 'builds_on'})
+        self.assertEqual(CitationCorrection.objects.get().model_stance, 'questions')
+        self.assertContains(client.get(url + '?stance=builds_on'), 'verdict corrected by you')
+        self.assertEqual(CitationVerdict.objects.get(citing='arxiv:2201.00003').stance, 'questions')
+        client.post(url, {'correct': 'arxiv:2201.00003', 'stance_arxiv:2201.00003': 'questions'})
+        self.assertFalse(CitationCorrection.objects.exists())  # back to the model's verdict
+        # an author's is everybody's, and the model does not judge it again
+        FollowedPaper.objects.filter(pk=followed.pk).update(mine=True)
+        client.post(url, {'correct': 'arxiv:2201.00003', 'stance_arxiv:2201.00003': 'builds_on'})
+        other = self.user('bob', paid=True)
+        theirs = FollowedPaper.objects.create(user=other, arxiv_id='2101.00001', title='Clouds', known='[]')
+        self.assertContains(self.client_for(other).get('/en/citations/%d/?stance=builds_on' % theirs.pk),
+                            'verdict corrected by an author')
+        with mock.patch('summarizer.generated.chat_json') as chat:
+            self.assertEqual(citations.stances('2101.00001', 'Clouds', citing, 'fr')['c3']['stance'], 'builds_on')
+        self.assertNotIn('c3', chat.call_args.kwargs['system'])
+        self.assertEqual(citations.who_cites(citations.all_items(followed, 'en')[1])[0], [])  # one paper each
+
+    def test_analyses_are_limited_per_day(self):
+        user = self.user(paid=True)
+        CitationCache.objects.create(arxiv_id='2101.00001', citing='{}', checked=timezone.now())
+        followed = FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='Clouds', known='[]')
+        client = self.client_for(user)
+        url = '/en/citations/%d/' % followed.pk
+        for _ in range(citations.ANALYZE_PER_DAY):
+            client.post(url, {'action': 'analyze'})
+        r = client.post(url, {'action': 'analyze'})
+        self.assertEqual(r['Location'], url + '?limit=analyze')
+        self.assertContains(client.get(r['Location']), 'the most there can be in a day')
+
+    def test_page_of_a_followed_paper_filters_exports_and_collects(self):
+        from .models import CitationVerdict
+        user = self.user(paid=True)
+        now = timezone.now()
+        citing = self.citing('c1', 'c3')
+        citing['c1'].update(self=True, date='2025-03-01', doi='10.1/x')
+        CitationCache.objects.create(arxiv_id='2101.00001', citing=json.dumps(citing), total=2, checked=now)
+        followed = FollowedPaper.objects.create(user=user, arxiv_id='2101.00001', title='Clouds', known='[]')
+        CitationVerdict.objects.create(cited='2101.00001', citing='arxiv:2201.00003', stance='supports',
+                                       confidence='high', notes={'en': 'Confirms it.'}, basis=citations.basis(citing['c3']))
+        client = self.client_for(user)
+        url = '/en/citations/%d/' % followed.pk
+        page = client.get(url)
+        self.assertContains(page, '2 citations')
+        self.assertContains(page, 'Confirms it.')
+        self.assertContains(page, 'self-citation')
+        self.assertEqual([y['count'] for y in page.context['years']], [1, 1])
+        self.assertNotContains(client.get(url + '?self=hide'), 'Paper c1')
+        self.assertNotContains(client.get(url + '?stance=supports'), 'Paper c1')
+        self.assertContains(client.get(url + '?stance=none'), 'Paper c1')
+        self.assertContains(client.get(url + '?year=2025'), 'Paper c1')
+        csv_text = client.get(url + '?export=csv').content.decode('utf-8-sig')
+        self.assertIn('Paper c3', csv_text)
+        self.assertIn('supports', csv_text)
+        self.assertIn('As shown by [3], clouds are thick.', csv_text)
+        bib = client.get(url + '?export=bib&stance=supports').content.decode()
+        self.assertIn('eprint={2201.00003}', bib)
+        self.assertNotIn('Paper c1', bib)
+        with mock.patch('summarizer.library.lookup_many', side_effect=lambda ids: {a: ('Title ' + a, 'A') for a in ids}):
+            r = client.post(url, {'action': 'collect', 'ids': ['c1', 'c3'], 'collection': 'new', 'name': 'Cites me'})
+        collection = Collection.objects.get(user=user)
+        self.assertEqual(r['Location'], '/en/collections/%d/' % collection.pk)
+        self.assertEqual(collection.name, 'Cites me')
+        self.assertEqual(collection.papers.count(), 2)
+        with mock.patch('summarizer.generated.chat_json', return_value={'items': []}) as chat:
+            client.post(url, {'action': 'analyze'})
+        chat.assert_not_called()  # c3 already judged, c1 has no sentence (arXiv HTML: none)
+        self.assertEqual(self.client_for(self.user('eve', paid=True)).get(url).status_code, 404)
+        self.assertContains(client.get('/fr/citations/%d/' % followed.pk), 'le confirme')
 
 
 class ScoopTests(ToolsTestCase):

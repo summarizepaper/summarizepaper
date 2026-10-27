@@ -119,6 +119,7 @@ urlpatterns = [
     path("refcheck/<str:key>/", refcheck.refcheck_result, name="refcheck_result"),
     path("refcheck/<str:key>/bib/", refcheck.refcheck_bib, name="refcheck_bib"),
     path("citations/follow/", citations.follow_view, name="citations_follow"),
+    path("citations/<int:pk>/", citations.citation_detail, name="citation_detail"),
     path("trends/", trends.trends_page, name="trends"),
     path("letters/", letters.letters_page, name="letters"),
     path("letters/unsubscribe/<str:token>/", letters.unsubscribe, name="letters_unsubscribe"),

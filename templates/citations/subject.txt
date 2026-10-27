@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}
+{% load i18n %}{% if urgent %}{% trans 'A new paper questions one you follow' %} · {% endif %}{% blocktrans count n=count %}{{ n }} new citation of the papers you follow{% plural %}{{ n }} new citations of the papers you follow{% endblocktrans %}
