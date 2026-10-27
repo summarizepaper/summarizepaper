@@ -31,3 +31,4 @@ PyYAML==6.0.3
 dnspython==2.9.0
 python-pptx==1.0.2
 resvg_py==0.5.0
+cryptography==50.0.2
