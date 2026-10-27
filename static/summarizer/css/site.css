@@ -981,6 +981,11 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .letter-rising .muted { display: block; font-size: 14px; }
 .letter-actions { margin: 24px 0 8px; }
 .letter-actions form { margin: 0; }
+.letter-vote { margin: 6px 0 0; font-size: 14px; color: var(--text-muted); }
+.letter-vote-button { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 1px 10px; cursor: pointer; font: inherit; }
+.letter-vote-button.is-chosen { border-color: var(--accent); background: var(--accent-soft); }
+.letter-feedback { margin: 24px 0 0; padding: 12px 16px; }
+.letter-feedback .letter-vote { font-size: 16px; color: var(--text); }
 .letter-pager { display: flex; justify-content: space-between; gap: 12px; margin: 16px 0; font-size: 15px; }
 .letter-pager a[rel="next"] { margin-left: auto; }
 

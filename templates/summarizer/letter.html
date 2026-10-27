@@ -37,7 +37,7 @@
   <details class="card letter-method">
     <summary>{% blocktrans count n=selection.screened %}How these papers were chosen among the week's {{ n }} paper{% plural %}How these papers were chosen among the week's {{ n }} papers{% endblocktrans %}</summary>
     <p>{% blocktrans with n=selection.screened kept=selection.kept short=selection.shortlist %}All {{ n }} papers of the week whose main category is in this field were read, title and start of the abstract, and {{ kept }} were kept. They were then ordered by what can be counted: how many research profiles of our readers they come close to, whether a rising topic of the field includes them, and how many categories they were posted in. The abstracts of the first {{ short }} were read in full to choose these, no more than two from one category and one per team.{% endblocktrans %}</p>
-    <p>{% if selection.rising %}{% blocktrans count n=selection.rising %}{{ n }} of them belongs to a rising topic.{% plural %}{{ n }} of them belong to a rising topic.{% endblocktrans %} {% endif %}{% if selection.numbers %}{% blocktrans count n=selection.numbers %}The {{ n }} number of the text was checked against the abstracts.{% plural %}The {{ n }} numbers of the text were checked against the abstracts.{% endblocktrans %}{% endif %}{% if selection.dropped %} {% blocktrans count n=selection.dropped %}{{ n }} section that kept a number the abstracts do not state was left out.{% plural %}{{ n }} sections that kept a number the abstracts do not state were left out.{% endblocktrans %}{% endif %}</p>
+    <p>{% if selection.rising %}{% blocktrans count n=selection.rising %}{{ n }} of them belongs to a rising topic.{% plural %}{{ n }} of them belong to a rising topic.{% endblocktrans %} {% endif %}{% if selection.numbers %}{% blocktrans count n=selection.numbers %}The {{ n }} number of the text was checked against the abstracts.{% plural %}The {{ n }} numbers of the text were checked against the abstracts.{% endblocktrans %}{% endif %}{% if selection.claims %} {% blocktrans count n=selection.claims %}{{ n }} statement on what the papers found was looked for word for word in their abstracts.{% plural %}{{ n }} statements on what the papers found were looked for word for word in their abstracts.{% endblocktrans %}{% endif %}{% if selection.dropped %} {% blocktrans count n=selection.dropped %}{{ n }} section that the abstracts did not support was left out.{% plural %}{{ n }} sections that the abstracts did not support were left out.{% endblocktrans %}{% endif %}</p>
     {% if selection.sources %}<p class="muted">{% trans 'Sources:' %} {{ selection.sources|join:", " }}.</p>{% endif %}
   </details>
   {% endif %}
@@ -60,7 +60,7 @@
         {% if f.limit %}<p class="letter-facts"><strong>{% trans 'Main limit:' %}</strong> {{ f.limit }}</p>{% endif %}
         {% endif %}{% endwith %}
         {% for mark in p.marks %}<p class="trend-badge letter-mark"><a href="/{{ LANGUAGE_CODE }}/{{ mark.url }}">{{ mark.text }}</a></p>{% endfor %}
-        {% if p.earlier %}<p class="letter-facts"><strong>{% trans 'Read with it:' %}</strong> {% for e in p.earlier %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a> ({{ e.year }}){% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+        {% if p.earlier %}<p class="letter-facts"><strong>{% trans 'Read with it:' %}</strong> {% for e in p.earlier %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a> ({% if e.venue and e.venue != 'arXiv' %}{{ e.venue }}, {% endif %}{{ e.year }}){% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
         <div class="letter-paper-actions">
           {% if p.facts.url %}<a href="{{ p.facts.url }}" rel="noopener nofollow" data-funnel="letter_source">{{ p.facts.source }}</a>{% endif %}
           {% if p.facts.pdf %}<a href="{{ p.facts.pdf }}" rel="noopener nofollow" data-funnel="letter_pdf">PDF</a>{% endif %}
@@ -70,6 +70,7 @@
           <a href="/{{ LANGUAGE_CODE }}/export/{{ p.arxiv_id }}/ris/" rel="nofollow" data-funnel="letter_export">{% trans 'Cite (RIS)' %}</a>
           <a href="/{{ LANGUAGE_CODE }}/journal-club/{{ p.arxiv_id }}/" rel="nofollow" data-funnel="letter_slides">{% trans 'Journal club' %} <small>Premium+</small></a>
         </div>
+        <p class="letter-vote" data-paper="{{ p.arxiv_id }}">{% trans 'Worth knowing?' %} <button type="button" class="letter-vote-button" data-value="1" aria-label="{% trans 'Useful' %}">👍</button> <button type="button" class="letter-vote-button" data-value="-1" aria-label="{% trans 'Not useful' %}">👎</button></p>
         {% if p.presskit_id %}<a class="letter-kit-link" data-funnel="letter_presskit_click" href="/{{ LANGUAGE_CODE }}/press-kit/{{ p.presskit_id }}/?letter={{ letter.pk }}">{% trans 'Prepare a press kit' %} <small>Premium+ →</small></a>{% endif %}
       </li>{% endfor %}
     </ul>{% endif %}
@@ -107,6 +108,12 @@
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/feed/">RSS</a>
   </div>
 
+  <div class="card letter-feedback" id="feedback" data-url="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/feedback/">
+    {% csrf_token %}
+    <p class="letter-vote" data-paper="">{% trans 'Was this letter useful to you?' %} <button type="button" class="letter-vote-button" data-value="1">👍 {% trans 'Yes' %}</button> <button type="button" class="letter-vote-button" data-value="-1">👎 {% trans 'No' %}</button></p>
+    <p class="muted letter-vote-thanks" hidden>{% trans 'Thank you: your answers help choose the papers of the next letters.' %}</p>
+  </div>
+
   <nav class="letter-pager">
     {% if older %}<a href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ older|date:'Y-m-d' }}/" rel="prev">← {% trans 'The week before' %}</a>{% endif %}
     {% if newer %}<a href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ newer|date:'Y-m-d' }}/" rel="next">{% trans 'The week after' %} →</a>{% endif %}
@@ -115,6 +122,26 @@
   <p class="muted"><small>{% blocktrans count n=count %}Written by AI from {{ n }} paper of the week in this field. Most are preprints, not yet peer reviewed: the text says what their authors report.{% plural %}Written by AI from the {{ n }} papers of the week in this field. Most are preprints, not yet peer reviewed: the text says what their authors report.{% endblocktrans %}</small></p>
   <div class="upsell"><p>{% if paid %}<a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Get this letter by email every week' %}</a>{% elif request.user.is_authenticated %}<a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Get one letter by email every week, free' %}</a> · {% trans 'All of them, read aloud, with the papers close to your work marked, with Premium.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a>{% else %}{% trans 'Get one letter by email every week with a free account, all of them with Premium.' %} <a href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a>{% endif %}</p></div>
 </article>
+<script>
+(function () {
+  var box = document.getElementById('feedback');
+  if (!box) return;
+  var token = box.querySelector('input[name=csrfmiddlewaretoken]').value;
+  document.querySelectorAll('.letter-vote-button').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var row = button.closest('.letter-vote');
+      var body = new URLSearchParams({value: button.dataset.value, arxiv_id: row.dataset.paper});
+      fetch(box.dataset.url, {method: 'POST', credentials: 'same-origin', body: body, headers: {'X-CSRFToken': token}})
+        .then(function (response) {
+          if (!response.ok) return;
+          row.querySelectorAll('.letter-vote-button').forEach(function (b) { b.classList.toggle('is-chosen', b === button); });
+          box.querySelector('.letter-vote-thanks').hidden = false;
+        });
+      try { if (window.umami) window.umami.track(row.dataset.paper ? 'letter_vote_paper' : 'letter_vote'); } catch (_) {}
+    });
+  });
+}());
+</script>
 {% if audio %}
 <script>
 (function () {

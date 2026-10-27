@@ -141,6 +141,7 @@ urlpatterns = [
     path("letters/<slug:topic>/<str:day>/", letters.letter_page, name="letter"),
     path("letters/<slug:topic>/<str:day>/audio/", letters.letter_audio, name="letter_audio"),
     path("letters/<slug:topic>/<str:day>/collection/", letters.letter_collection, name="letter_collection"),
+    path("letters/<slug:topic>/<str:day>/feedback/", letters.letter_feedback, name="letter_feedback"),
     path("premium/", billing.premium, name="premium"),
     path("premium/checkout/", billing.checkout, name="premium_checkout"),
     path("premium/portal/", billing.portal, name="premium_portal"),

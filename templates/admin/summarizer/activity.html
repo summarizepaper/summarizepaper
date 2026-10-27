@@ -75,6 +75,34 @@
         </div>
     {% endif %}
 
+    {% if letters %}
+        <div class="mb-6">
+            {% component "unfold/components/card.html" with title="Lettres hebdomadaires" %}
+                <p class="text-subtle mb-3">Les lettres des deux dernières semaines. « Lus » : articles du domaine lus au tri ; « Affirmations » : cherchées mot pour mot dans les résumés ; « Non vérifiées » : passage introuvable, section gardée ; « Retirées » : sections avec un chiffre absent des résumés ou une affirmation non étayée. Votes : lettre, puis articles. Ligne en gras : à relire.</p>
+                <div style="overflow-x:auto">
+                <table class="w-full text-sm">
+                    <tr class="text-left text-subtle">
+                        <th class="py-2 pr-3">Semaine</th><th class="py-2 pr-3">Lettre</th><th class="py-2 pr-3">Lus</th><th class="py-2 pr-3">Retenus</th>
+                        <th class="py-2 pr-3">Chiffres</th><th class="py-2 pr-3">Affirmations</th><th class="py-2 pr-3">Réécrites</th>
+                        <th class="py-2 pr-3">Non vérifiées</th><th class="py-2 pr-3">Retirées</th><th class="py-2 pr-3">Lettre 👍/👎</th><th class="py-2">Articles 👍/👎</th>
+                    </tr>
+                    {% for r in letters %}
+                    <tr class="{% if r.flag %}font-semibold{% endif %}">
+                        <td class="py-1 pr-3">{{ r.letter.day|date:"d/m" }}</td>
+                        <td class="py-1 pr-3"><a class="text-primary-600 dark:text-primary-500" href="{{ r.url }}">{{ r.letter.topic }} {{ r.letter.lang }}</a> · {{ r.letter.title|truncatechars:60 }}</td>
+                        <td class="py-1 pr-3">{{ r.selection.screened|default:"–" }}</td><td class="py-1 pr-3">{{ r.selection.kept|default:"–" }}</td>
+                        <td class="py-1 pr-3">{{ r.selection.numbers|default:"–" }}</td><td class="py-1 pr-3">{{ r.selection.claims|default:"–" }}</td>
+                        <td class="py-1 pr-3">{{ r.selection.rewritten|default:"0" }}</td><td class="py-1 pr-3">{{ r.selection.unverified|default:"0" }}</td>
+                        <td class="py-1 pr-3">{{ r.selection.dropped|default:"0" }}</td>
+                        <td class="py-1 pr-3">{{ r.up }}/{{ r.down }}</td><td class="py-1">{{ r.paper_up }}/{{ r.paper_down }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                </div>
+            {% endcomponent %}
+        </div>
+    {% endif %}
+
     {% component "unfold/components/card.html" with title="Fil d’activité" %}
         <div class="flex flex-wrap items-center gap-2 mb-4">
             <a href="?jour={{ day|date:'Y-m-d' }}{% if members %}&membres=1{% endif %}" class="rounded-default px-3 py-1 border {% if not kind %}border-primary-600 text-primary-600 dark:text-primary-500{% else %}border-base-200 dark:border-base-700{% endif %}">Tout</a>

@@ -917,6 +917,18 @@ class Letter(models.Model):
         return '%s %s (%s)' % (self.topic, self.day, self.lang)
 
 
+class LetterFeedback(models.Model):
+    """'Useful' (+1) or 'not useful' (-1) on a weekly letter, or on one of its papers, by a reader (see letters.py)."""
+    letter = models.ForeignKey(Letter, on_delete=models.CASCADE, related_name='feedback')
+    arxiv_id = models.CharField(max_length=100, blank=True, default='')  # '' for the whole letter
+    value = models.SmallIntegerField()
+    visitor = models.CharField(max_length=80)  # 'u<user id>', or the hashed IP address of a visitor without an account
+    created = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('letter', 'arxiv_id', 'visitor')
+
+
 class LetterSubscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='letter_subscriptions')
     topic = models.CharField(max_length=20)

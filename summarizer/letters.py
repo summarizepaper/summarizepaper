@@ -38,8 +38,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from . import access, digest, generated, mailcheck, similar, sources
-from .models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Collection, DigestSubscription, Letter, LetterSubscription,
-                     PaperAudio, PaperEmbedding, RisingTopics, WatchedProject)
+from .models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Collection, DigestSubscription, Letter, LetterFeedback,
+                     LetterSubscription, PaperAudio, PaperEmbedding, PaperHistory, RisingTopics, WatchedProject)
 
 logger = logging.getLogger(__name__)
 
@@ -73,12 +73,16 @@ LETTERS_PER_RUN = 4
 SCREEN_CHUNK = 200  # papers the model screens in one call
 SCREEN_RATE = 25  # it keeps about one paper in this many, at least SCREEN_MIN per chunk
 SCREEN_MIN = 4
+SHORTLIST_MIN = 25  # a small field's chunks keep more, so that the model still chooses among this many
 SCREEN_THREADS = 4
 SHORTLIST = 40  # papers whose abstracts the model reads to choose the six
 SHORTLIST_PER_CATEGORY = 10
 PER_CATEGORY = 2  # papers of one category in a letter, when the theme spans several
 RELATED = 2  # earlier papers shown with each paper
 RELATED_MIN = 0.6
+RELATED_SEARCHED = 10  # OpenAlex works read per paper to find earlier ones
+CLAIMS_PER_SECTION = 4
+SUMMARIES_PER_RUN = 6  # papers of the week's letters summarized per hourly run, so that their pages are ready
 PROFILE_CLOSE = digest.THRESHOLDS['medium']
 PROJECT_CLOSE = 0.5
 RISING_SHOWN = 3
@@ -160,8 +164,8 @@ def _in_thread(work, *args):
     return run
 
 
-def _screen_chunk(name, chunk):
-    keep = max(SCREEN_MIN, round(len(chunk) / SCREEN_RATE))
+def _screen_chunk(name, chunk, rate):
+    keep = max(SCREEN_MIN, math.ceil(len(chunk) * rate))
     try:
         answer = generated.chat_json(
             'Here are %d new papers in "%s" (ID | title | start of the abstract). Keep up to %d that report the most '
@@ -182,10 +186,11 @@ def _screen_chunk(name, chunk):
 def screen(topic, papers):
     """The ids the model keeps after reading every paper, by chunks, a few chunks at a time."""
     name = str(TOPICS[topic]['name'])
+    rate = max(1 / SCREEN_RATE, SHORTLIST_MIN / max(1, len(papers)))
     chunks = [papers[i:i + SCREEN_CHUNK] for i in range(0, len(papers), SCREEN_CHUNK)]
     if len(chunks) == 1:
-        return _screen_chunk(name, chunks[0])
-    runners = [_in_thread(_screen_chunk, name, chunk) for chunk in chunks]  # each with a copy of this thread's context
+        return _screen_chunk(name, chunks[0], rate)
+    runners = [_in_thread(_screen_chunk, name, chunk, rate) for chunk in chunks]  # each with a copy of this thread's context
     with ThreadPoolExecutor(SCREEN_THREADS) as pool:
         found = list(pool.map(lambda run: run(), runners))
     return [a for ids in found for a in ids]
@@ -222,19 +227,40 @@ def rising_rows(topic, lang, day):
     return found
 
 
+def readers(papers, day):
+    """{bare id: distinct visitors who opened the paper's page on the site since its announcement week}."""
+    keys = {bare(p['arxiv_id']) for p in papers}
+    seen = {}
+    for arxiv_id, visitor in PaperHistory.objects.filter(created__date__gt=day - WEEK).values_list('arxiv_id', 'ip_address'):
+        key = bare((arxiv_id or '').replace('/', '--'))
+        if key in keys:
+            seen.setdefault(key, set()).add(visitor)
+    return {k: len(v) for k, v in seen.items()}
+
+
 def signals(topic, day, papers, vectors):
-    """{arxiv_id: (profiles close to it, in a rising topic, categories)}: what can be counted about each paper."""
-    rising = set()
+    """{arxiv_id: (interest, in a rising topic, categories)}: what can be counted about each paper. Interest is how
+    many research profiles of our digests it comes close to plus how many visitors opened it; a paper is in a rising
+    topic when it uses the main term of one of the theme's last weeks (its own week is not counted yet when the
+    letter is written: a week of submissions is complete the Saturday after it)."""
+    from . import trends
+    rising_ids, rising_terms = set(), set()
     for _scope, _week, topics in rising_rows(topic, 'en', day):
-        rising |= {key for t in topics for key in t.get('ids') or [p.get('arxiv_id') for p in t.get('papers', [])]}
+        for t in topics:
+            rising_ids |= {key for key in t.get('ids') or [p.get('arxiv_id') for p in t.get('papers', [])]}
+            if t.get('main'):
+                rising_terms.add(t['main'])
     matrix, owners = profile_matrix()
+    visitors = readers(papers, day)
     found = {}
     for paper in papers:
         vector = vectors.get(paper['arxiv_id'])
-        interest = 0
+        interest = visitors.get(bare(paper['arxiv_id']), 0)
         if matrix is not None and vector is not None and vector.shape[0] == matrix.shape[1]:
-            interest = len(set(owners[(matrix @ vector) >= PROFILE_CLOSE]))
-        found[paper['arxiv_id']] = (interest, bare(paper['arxiv_id']) in rising, len(paper['categories']))
+            interest += len(set(owners[(matrix @ vector) >= PROFILE_CLOSE]))
+        rising = bare(paper['arxiv_id']) in rising_ids or bool(
+            rising_terms and rising_terms & trends.terms('%s. %s' % (paper['title'], paper['abstract'])))
+        found[paper['arxiv_id']] = (interest, rising, len(paper['categories']))
     return found
 
 
@@ -358,43 +384,106 @@ def facts_of(papers):
             'authors': [authors[0], authors[-1]] if len(authors) > 1 else authors, 'n_authors': len(authors),
             'source': source, 'url': url, 'pdf': pdf, 'category': paper['categories'][0] if paper['categories'] else '',
             'code': code.group(0).rstrip('.') if code else '',
-            'journal': journal or (accepted.group(1).strip() if accepted else ''),
+            'journal': plain_math(journal or (accepted.group(1).strip() if accepted else '')),
             'status': 'published' if journal or entry.get('doi') else 'accepted' if accepted else 'preprint',
             'doi': entry.get('doi', ''), 'first': published.date().isoformat() if published else '',
         }
     return found
 
 
-def earlier(chosen, vectors, day):
-    """{arxiv_id: [{arxiv_id, title}]}: the closest papers summarized on the site before the week, from the same category."""
+def site_candidates(paper, vector, by_category):
+    """[(similarity, arxiv_id)]: the papers summarized on the site, of the paper's category, closest to it."""
+    category = paper['categories'][0] if paper['categories'] else ''
+    if not category or sources.is_external(paper['arxiv_id']):
+        return []
+    if category not in by_category:
+        rows = list(PaperEmbedding.objects.filter(model=similar.MODEL, category=category).values_list('arxiv_id', 'vector'))
+        by_category[category] = ([a for a, _ in rows], np.stack([np.frombuffer(bytes(v), dtype=np.float32) for _, v in rows])
+                                 if rows else None)
+    ids, matrix = by_category[category]
+    if matrix is None or matrix.shape[1] != vector.shape[0]:
+        return []
+    scores = matrix @ vector
+    return [(float(scores[i]), ids[i]) for i in np.argsort(-scores)[:20]]
+
+
+def openalex_candidates(query, vector, day):
+    """[(similarity, paper)]: works OpenAlex finds for the subject, published a month or more before the letter,
+    compared with the paper by their title and abstract. Counted in the research tools' daily OpenAlex budget."""
+    from . import literature
+    limited = []
+    works = literature.works({'search': query, 'per_page': RELATED_SEARCHED, 'filter': 'to_publication_date:%s,has_abstract:true'
+                              % (day - 30 * datetime.timedelta(days=1)).isoformat()}, limited)
+    found = [p for p in (literature.from_openalex(w) for w in works) if p and p['abstract']]
+    if not found:
+        return []
+    try:
+        vectors = similar.embed([short('%s. %s' % (p['title'], p['abstract']), similar.MAX_INPUT_CHARS) for p in found])
+    except (requests.RequestException, KeyError, ValueError):
+        logger.exception('Embedding earlier works failed')
+        return []
+    return [(float(v @ vector), p) for p, v in zip(found, vectors) if v.shape == vector.shape]
+
+
+def earlier(chosen, vectors, day, queries):
+    """{arxiv_id: [{arxiv_id, title, year, venue}]}: the closest earlier papers, among those summarized on the site
+    (same category) and those OpenAlex finds for the subject of the paper's section (queries: {arxiv_id: query})."""
     week = {bare(p['arxiv_id']) for p in chosen}
     found, by_category = {}, {}
     for paper in chosen:
         vector = vectors.get(paper['arxiv_id'])
-        category = paper['categories'][0] if paper['categories'] else ''
-        if vector is None or not category or sources.is_external(paper['arxiv_id']):
+        if vector is None:
             continue
-        if category not in by_category:
-            rows = list(PaperEmbedding.objects.filter(model=similar.MODEL, category=category).values_list('arxiv_id', 'vector'))
-            by_category[category] = ([a for a, _ in rows], np.stack([np.frombuffer(bytes(v), dtype=np.float32) for _, v in rows])
-                                     if rows else None)
-        ids, matrix = by_category[category]
-        if matrix is None or matrix.shape[1] != vector.shape[0]:
-            continue
-        scores = matrix @ vector
-        best = [ids[i] for i in np.argsort(-scores)[:20] if scores[i] >= RELATED_MIN and bare(ids[i]) not in week]
-        papers = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=best, published_arxiv__lt=day - WEEK)}
+        candidates = []
+        site = [(score, a) for score, a in site_candidates(paper, vector, by_category) if score >= RELATED_MIN and bare(a) not in week]
+        known = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=[a for _, a in site], published_arxiv__lt=day - WEEK)}
+        for score, arxiv_id in site:
+            if arxiv_id in known and known[arxiv_id].title:
+                candidates.append((score, {'arxiv_id': arxiv_id, 'title': ' '.join(known[arxiv_id].title.split()),
+                                           'year': known[arxiv_id].published_arxiv.year, 'venue': 'arXiv'}))
+        query = queries.get(paper['arxiv_id']) or paper['title']
+        for score, work in openalex_candidates(query, vector, day):
+            if score >= RELATED_MIN and bare(work['key']) not in week:
+                candidates.append((score, {'arxiv_id': work['key'], 'title': ' '.join(work['title'].split()),
+                                           'year': work['year'], 'venue': work['venue']}))
         related, seen = [], set()
-        for arxiv_id in best:
-            if arxiv_id in papers and bare(arxiv_id) not in seen and papers[arxiv_id].title:
-                seen.add(bare(arxiv_id))
-                related.append({'arxiv_id': arxiv_id, 'title': ' '.join(papers[arxiv_id].title.split()),
-                                'year': papers[arxiv_id].published_arxiv.year})
+        for _score, item in sorted(candidates, key=lambda c: -c[0]):
+            title = re.sub(r'\W+', ' ', item['title'].lower()).strip()
+            if bare(item['arxiv_id']) in seen or title in seen:
+                continue
+            seen |= {bare(item['arxiv_id']), title}
+            related.append(item)
             if len(related) == RELATED:
                 break
         if related:
             found[paper['arxiv_id']] = related
     return found
+
+
+# --- plain text ------------------------------------------------------------------------------------------------
+
+SUPERSCRIPT = str.maketrans('0123456789+-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻')
+SYMBOLS = {'\\left': '', '\\right': '', '\\to': '→', '\\rightarrow': '→', '\\pm': '±', '\\sim': '~', '\\simeq': '≃',
+           '\\approx': '≈', '\\times': '×', '\\le': '≤', '\\leq': '≤', '\\ge': '≥', '\\geq': '≥', '\\alpha': 'α',
+           '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\Delta': 'Δ', '\\epsilon': 'ε', '\\mu': 'μ', '\\nu': 'ν',
+           '\\pi': 'π', '\\sigma': 'σ', '\\tau': 'τ', '\\lambda': 'λ', '\\Omega': 'Ω', '\\omega': 'ω', '\\odot': '☉',
+           '\\infty': '∞', '\\%': '%', '\\,': ' ', '\\;': ' ', '\\!': '', '\\ ': ' '}
+
+
+def _plain_formula(match):
+    text = match.group(1)
+    text = re.sub(r'\^\{([0-9+\-]+)\}|\^([0-9+\-])', lambda m: (m.group(1) or m.group(2)).translate(SUPERSCRIPT), text)
+    for command in sorted(SYMBOLS, key=len, reverse=True):
+        text = text.replace(command, SYMBOLS[command])
+    text = re.sub(r'\\(?:mathcal|mathrm|mathbf|mathit|mathsf|text|textrm|rm|it|bf)\s*\{([^{}]*)\}', r'\1', text)
+    text = re.sub(r'_\{([^{}]*)\}|_(\w)', lambda m: m.group(1) or m.group(2), text)
+    text = re.sub(r'\\[A-Za-z]+', '', text)
+    return ' '.join(text.replace('{', '').replace('}', '').split())
+
+
+def plain_math(text):
+    """'$10^6$ s and $\\mathcal{F}t$ values' -> '10⁶ s and Ft values': formulas as text, for emails and feeds."""
+    return re.sub(r'\$([^$]+)\$', _plain_formula, text or '')
 
 
 # --- checking the numbers --------------------------------------------------------------------------------------
@@ -484,27 +573,30 @@ def write(topic, day, lang, save=True, reuse=True):
     texts = {'dek': str(answer.get('dek', '')).strip(), 'closing': str(answer.get('closing', '')).strip()}
     sections, texts, check = verify(sections, texts, chosen, len(papers), lang, listing)
     if len(sections) < 3:
-        logger.warning('Letter %s %s %s: only %d sections hold their numbers', topic, day, lang, len(sections))
+        logger.warning('Letter %s %s %s: only %d sections hold against the abstracts', topic, day, lang, len(sections))
         return None
     known = known_numbers(chosen)
     written_facts = answer.get('papers') if isinstance(answer.get('papers'), dict) else {}
     for arxiv_id, written in written_facts.items():
         if arxiv_id in facts and isinstance(written, dict):
-            evidence = str(written.get('evidence') or '').strip()[:200]
+            evidence = plain_math(str(written.get('evidence') or '').strip())[:200]
             facts[arxiv_id].update({
                 'study': written.get('study') if written.get('study') in STUDY_TYPES else 'other',
                 'evidence': '' if unsupported(evidence, known) else evidence,
-                'limit': str(written.get('limit') or '').strip()[:400]})
+                'limit': plain_math(str(written.get('limit') or '').strip())[:400]})
     title = str(answer['title']).strip()[:300]
     if lang != 'en':  # the model sometimes keeps the English 'this week' of the prompt's examples
         title = title.replace('%s this week' % name, heading)
     if lang == 'fr':
         title = re.sub(r'\s*:\s*', '\u00a0: ', title, count=1)
-    selection = dict(selection, numbers=check['numbers'], rewritten=check['rewritten'], dropped=check['dropped'],
-                     sources=sorted({facts[p['arxiv_id']]['source'] for p in chosen}))
+    selection = dict(selection, sources=sorted({facts[p['arxiv_id']]['source'] for p in chosen}), **check)
     order = [p['arxiv_id'] for p in chosen]
+    queries = {}
+    for section in sections:
+        for arxiv_id in section['papers']:
+            queries.setdefault(arxiv_id, section['query'])
     content = {'sections': sections, 'closing': texts['closing'], 'papers': titles, 'count': len(papers),
-               'order': order, 'facts': facts, 'earlier': earlier(chosen, vectors, day), 'selection': selection}
+               'order': order, 'facts': facts, 'earlier': earlier(chosen, vectors, day, queries), 'selection': selection}
     stacked = [vectors[a] for a in order if a in vectors]
     fields = {'title': title, 'dek': texts['dek'], 'content': json.dumps(content), 'papers': ',%s,' % ','.join(bare(a) for a in order),
               'vectors': np.stack(stacked).astype(np.float32).tobytes() if len(stacked) == len(order) else None}
@@ -514,35 +606,96 @@ def write(topic, day, lang, save=True, reuse=True):
     return letter
 
 
+def claim_problems(sections, chosen, lang, listing, keys):
+    """({key: [statement]}, statements checked): the statements of these sections ('s0', 's1'...) about what their
+    papers found or did that no passage of the abstracts supports. The model names the passage of each statement;
+    it is accepted only when it is in the abstract word for word (evidence.find), and 'unsupported' is kept apart
+    from a passage that was not found."""
+    from . import evidence
+    by_id = {p['arxiv_id']: p for p in chosen}
+    if not keys:
+        return {}, {}, 0
+    try:
+        answer = generated.chat_json(
+            'Check these sections of a letter written in %s from the papers above. For each section, list its statements '
+            'about what the papers found, measured or did, %d at most; leave out background explanations and why it '
+            'matters. For each statement give "claim": the statement in English, one sentence; "paper": the ID of the '
+            'paper it is about; "basis": "abstract" when the abstract states it, "unsupported" when no passage of the '
+            'abstract supports it as stated (never stretch a passage to fit); "quote": for "abstract", the sentence of '
+            'the abstract that supports it, copied word for word, with no ellipsis. Answer with a JSON object '
+            '{"sections": [{"key": "s0", "claims": [{"claim": "...", "paper": "ID", "basis": "...", "quote": "..."}]}]}.\n\n%s'
+            % (generated.language_name(lang), CLAIMS_PER_SECTION, '\n\n'.join(
+                '[%s]\n%s\n%s' % (k, sections[int(k[1:])]['heading'], sections[int(k[1:])]['text']) for k in keys)),
+            paid=True, max_tokens=5000, system=listing)
+    except (requests.RequestException, ValueError, KeyError, generated.GenerationError):
+        logger.exception('Checking the statements of a letter failed')
+        return {}, {}, 0
+    unsupported_claims, unfound, checked = {}, {}, 0
+    for item in answer.get('sections') or []:
+        key = item.get('key') if isinstance(item, dict) else None
+        if key not in keys:
+            continue
+        own = [by_id[a] for a in sections[int(key[1:])]['papers'] if a in by_id] or chosen
+        for claim in (item.get('claims') or [])[:CLAIMS_PER_SECTION]:
+            if not isinstance(claim, dict) or not claim.get('claim'):
+                continue
+            checked += 1
+            statement = str(claim['claim'])[:300]
+            if claim.get('basis') == 'unsupported':
+                unsupported_claims.setdefault(key, []).append(statement)
+            elif not any(evidence.find(str(claim.get('quote') or ''), p['abstract']) for p in own):
+                unfound.setdefault(key, []).append(statement)
+    return unsupported_claims, unfound, checked
+
+
 def verify(sections, texts, chosen, count, lang, listing):
-    """(sections, texts, check): every number of the letter must be in the papers' abstracts. The model rewrites the
-    parts that have others once; the sections still holding one are dropped, the subtitle or closing emptied."""
-    known = known_numbers(chosen, extra=(count, len(chosen)))
+    """(sections, texts, check): every number of a section must be in the abstracts of its own papers (those of the
+    subtitle and closing in any), and every statement of a section on what its papers found must be in their
+    abstracts. The model rewrites the parts that fail once; the sections still holding a number the abstracts do
+    not state, or a statement the model itself calls unsupported, are dropped, the subtitle or closing emptied.
+    A statement whose passage is still not found is only counted ('unverified'): the model may misquote."""
+    by_id = {p['arxiv_id']: p for p in chosen}
+    extra = (count, len(chosen))
+    every = known_numbers(chosen, extra=extra)
+
+    def known(i):
+        own = [by_id[a] for a in sections[i]['papers'] if a in by_id]
+        return known_numbers(own, extra=extra) if own else every
     numbers = sum(len(numbers_in(s['text']) + numbers_in(s['heading'])) for s in sections) + \
         sum(len(numbers_in(t)) for t in texts.values())
 
-    def flagged():
-        found = {'s%d' % i: unsupported(s['heading'] + ' ' + s['text'], known) for i, s in enumerate(sections)}
-        found.update({k: unsupported(v, known) for k, v in texts.items()})
-        return {k: v for k, v in found.items() if v}
-    bad = flagged()
-    rewritten = 0
-    if bad:
+    def number_problems(keys=None):
+        found = {'s%d' % i: unsupported(s['heading'] + ' ' + s['text'], known(i)) for i, s in enumerate(sections)}
+        found.update({k: unsupported(v, every) for k, v in texts.items()})
+        return {k: v for k, v in found.items() if v and (keys is None or k in keys)}
+    section_keys = ['s%d' % i for i in range(len(sections))]
+    bad_numbers = number_problems()
+    bad_claims, unfound, claims = claim_problems(sections, chosen, lang, listing, section_keys)
+    rewritten = set()
+    flagged = set(bad_numbers) | set(bad_claims) | set(unfound)
+    if flagged:
         parts = {k: (sections[int(k[1:])]['heading'] + '\n' + sections[int(k[1:])]['text']) if k.startswith('s') else texts[k]
-                 for k in bad}
+                 for k in flagged}
+        problems = []
+        for k in sorted(flagged):
+            if bad_numbers.get(k):
+                problems.append('%s: numbers that are not in the abstracts of its papers: %s' % (k, ', '.join(bad_numbers[k])))
+            for statement in bad_claims.get(k, []) + unfound.get(k, []):
+                problems.append('%s: statement the abstracts do not support as written: %s' % (k, statement))
         try:
             answer = generated.chat_json(
-                'In these parts of a letter written in %s from the papers above, some numbers are not in any abstract: %s. '
-                'Rewrite each part, in the same language and style, without those numbers or with the exact figures of '
-                'the abstracts; change nothing else. For a section, the first line is its heading. Answer with a JSON '
-                'object {"parts": {"key": "text"}}.\n\n%s'
-                % (generated.language_name(lang), '; '.join('%s: %s' % (k, ', '.join(v)) for k, v in bad.items()),
+                'Some parts of a letter written in %s from the papers above do not hold against the abstracts:\n%s\n\n'
+                'Rewrite each of these parts, in the same language and style, so that every number and every statement on '
+                'what the papers found is in their abstracts: drop or soften what is not, use the exact figures of the '
+                'abstracts; change nothing else. For a section, the first line is its heading. Answer with a JSON object '
+                '{"parts": {"key": "text"}}.\n\n%s'
+                % (generated.language_name(lang), '\n'.join('- ' + p for p in problems),
                    '\n\n'.join('[%s]\n%s' % (k, v) for k, v in parts.items())),
                 paid=True, max_tokens=4000, system=listing)
             for key, text in (answer.get('parts') or {}).items():
                 text = str(text or '').strip()
-                if key in bad and text:
-                    rewritten += 1
+                if key in flagged and text:
+                    rewritten.add(key)
                     if key.startswith('s'):
                         heading, _sep, body = text.partition('\n')
                         section = sections[int(key[1:])]
@@ -550,14 +703,23 @@ def verify(sections, texts, chosen, count, lang, listing):
                     else:
                         texts[key] = text
         except (requests.RequestException, ValueError, KeyError, generated.GenerationError):
-            logger.exception('Rewriting the numbers of a letter failed')
-        bad = flagged()
-    dropped = [int(k[1:]) for k in bad if k.startswith('s')]
-    for key in bad:
+            logger.exception('Rewriting a letter against its abstracts failed')
+        bad_numbers = number_problems()
+        again = sorted(k for k in rewritten if k.startswith('s'))
+        if again:
+            claims_again, unfound_again, more = claim_problems(sections, chosen, lang, listing, again)
+            claims += more
+            for key in again:
+                bad_claims[key], unfound[key] = claims_again.get(key, []), unfound_again.get(key, [])
+    dropped = sorted({int(k[1:]) for k in bad_numbers if k.startswith('s')} |
+                     {int(k[1:]) for k, v in bad_claims.items() if v})
+    for key in bad_numbers:
         if not key.startswith('s'):
             texts[key] = ''
     kept = [s for i, s in enumerate(sections) if i not in dropped]
-    return kept, texts, {'numbers': numbers, 'rewritten': rewritten, 'dropped': len(dropped)}
+    unverified = sum(len(v) for k, v in unfound.items() if int(k[1:]) not in dropped)
+    return kept, texts, {'numbers': numbers, 'claims': claims, 'rewritten': len(rewritten), 'dropped': len(dropped),
+                         'unverified': unverified}
 
 
 def update(now=None):
@@ -588,6 +750,22 @@ def update(now=None):
         return written
     finally:
         cache.delete(LOCK)
+
+
+def presummarize_due(budget=SUMMARIES_PER_RUN):
+    """From the hourly digest run: write the summary of a few papers of the latest letters that have none yet in
+    the letter's language, so that their pages open on a summary and show which letter presents them. How many."""
+    day = Letter.objects.order_by('-day').values_list('day', flat=True).first()
+    if day is None:
+        return 0
+    left = [budget]
+    for letter in Letter.objects.filter(day=day).order_by('topic', 'lang').only('lang', 'content'):
+        if left[0] <= 0:
+            break
+        from .presskit import paper_id
+        ids = [paper_id(a) or a for a in json.loads(letter.content).get('order') or []]
+        digest.presummarize(ids, letter.lang, left)
+    return budget - left[0]
 
 
 # --- email -----------------------------------------------------------------------------------------------------
@@ -630,6 +808,8 @@ def send(now, budget, base_url=digest.BASE_URL):
         for section in context['sections']:
             for link in section['links']:
                 link['tracked'] = tracked('%s/%s/paper/%s/' % (base_url, letter.lang, link['arxiv_id']), 'paper')
+                link['title'] = plain_math(link['title'])
+        context['feedback_url'] = tracked(url + '#feedback', 'feedback')
         with translation.override(letter.lang):
             text = render_to_string('letters/email.txt', context)
             html = render_to_string('letters/email.html', context)
@@ -812,6 +992,45 @@ def letter_collection(request, topic, day):
     return redirect('/%s/collections/%s/' % (get_language(), collection.pk))
 
 
+@require_POST
+def letter_feedback(request, topic, day):
+    """'Useful' or 'not useful' on the letter (no arxiv_id) or one of its papers; a reader may change their vote."""
+    letter = _letter(topic, day, get_language())
+    try:
+        value = int(request.POST.get('value', ''))
+    except ValueError:
+        value = 0
+    arxiv_id = request.POST.get('arxiv_id', '')
+    order = json.loads(letter.content).get('order') or list(json.loads(letter.content).get('papers', {}))
+    if value not in (1, -1) or (arxiv_id and arxiv_id not in order):
+        return JsonResponse({'status': 'invalid'}, status=400)
+    visitor = 'u%d' % request.user.pk if request.user.is_authenticated else 'ip' + access.hash_ip(access.client_ip(request))[:64]
+    LetterFeedback.objects.update_or_create(letter=letter, arxiv_id=arxiv_id, visitor=visitor, defaults={'value': value})
+    return JsonResponse({'status': 'saved'})
+
+
+def review(weeks=2):
+    """For the staff activity page: the letters of the last weeks, with how their papers were chosen and checked,
+    and what readers said of them."""
+    from django.db.models import Count, Q
+    day = Letter.objects.order_by('-day').values_list('day', flat=True).first()
+    if day is None:
+        return []
+    rows = []
+    letters = Letter.objects.filter(day__gt=day - weeks * WEEK).order_by('-day', 'topic', 'lang').annotate(
+        up=Count('feedback', filter=Q(feedback__value=1, feedback__arxiv_id='')),
+        down=Count('feedback', filter=Q(feedback__value=-1, feedback__arxiv_id='')),
+        paper_up=Count('feedback', filter=Q(feedback__value=1) & ~Q(feedback__arxiv_id='')),
+        paper_down=Count('feedback', filter=Q(feedback__value=-1) & ~Q(feedback__arxiv_id='')))
+    for letter in letters:
+        selection = json.loads(letter.content).get('selection') or {}
+        rows.append({'letter': letter, 'url': '/%s/letters/%s/%s/' % (letter.lang, letter.topic, letter.day.isoformat()),
+                     'selection': selection, 'up': letter.up, 'down': letter.down, 'paper_up': letter.paper_up,
+                     'paper_down': letter.paper_down,
+                     'flag': bool(selection.get('dropped') or selection.get('unverified') or letter.down > letter.up)})
+    return rows
+
+
 # --- audio -----------------------------------------------------------------------------------------------------
 
 def audio_parts(letter):
@@ -903,6 +1122,8 @@ class LetterFeed(Feed):
         for section in context['sections']:
             paragraphs.append('<h3>%s</h3>' % escape(section['heading']))
             paragraphs += ['<p>%s</p>' % escape(p) for p in section['text'].split('\n') if p.strip()]
+            paragraphs += ['<p>→ <a href="https://www.summarizepaper.com/%s/paper/%s/">%s</a></p>' % (
+                item.lang, link['arxiv_id'], escape(plain_math(link['title']))) for link in section['links']]
         return ''.join(paragraphs)
 
     def item_link(self, item):

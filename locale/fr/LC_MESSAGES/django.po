@@ -16148,3 +16148,36 @@ msgid "Written by AI from %(n)s paper of the week in this field. Most are prepri
 msgid_plural "Written by AI from the %(n)s papers of the week in this field. Most are preprints, not yet peer reviewed: the text says what their authors report."
 msgstr[0] "Écrit par une IA à partir de %(n)s article de la semaine dans ce domaine. La plupart sont des prépublications, pas encore évaluées par les pairs : le texte rapporte ce que leurs auteurs annoncent."
 msgstr[1] "Écrit par une IA à partir des %(n)s articles de la semaine dans ce domaine. La plupart sont des prépublications, pas encore évaluées par les pairs : le texte rapporte ce que leurs auteurs annoncent."
+
+msgid "Worth knowing?"
+msgstr "Bon à savoir ?"
+
+msgid "Useful"
+msgstr "Utile"
+
+msgid "Not useful"
+msgstr "Pas utile"
+
+msgid "Was this letter useful to you?"
+msgstr "Cette lettre vous a-t-elle été utile ?"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Thank you: your answers help choose the papers of the next letters."
+msgstr "Merci : vos réponses aident à choisir les articles des prochaines lettres."
+
+#, python-format
+msgid "%(n)s statement on what the papers found was looked for word for word in their abstracts."
+msgid_plural "%(n)s statements on what the papers found were looked for word for word in their abstracts."
+msgstr[0] "%(n)s affirmation sur ce que les articles ont trouvé a été cherchée mot pour mot dans leurs résumés."
+msgstr[1] "%(n)s affirmations sur ce que les articles ont trouvé ont été cherchées mot pour mot dans leurs résumés."
+
+#, python-format
+msgid "%(n)s section that the abstracts did not support was left out."
+msgid_plural "%(n)s sections that the abstracts did not support were left out."
+msgstr[0] "%(n)s section que les résumés n’étayaient pas a été retirée."
+msgstr[1] "%(n)s sections que les résumés n’étayaient pas ont été retirées."

@@ -15,7 +15,7 @@ from django.utils import timezone, translation
 from summarizer import audio, changes, citations, conference, digest, generated, letters, library, literature, missed, presskit, questions, refcheck, scoops, slides, sources, teams, trends, usage
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
                                CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
-                               Letter, LetterSubscription, PaperAudio, PaperAuthor, PaperScore, RisingTopics, ScoopMatch,
+                               Letter, LetterFeedback, LetterSubscription, PaperAudio, PaperAuthor, PaperHistory, PaperScore, RisingTopics, ScoopMatch,
                                SummaryPaper, TermWeek, UserPlan, WatchedProject, ZoteroAccount)
 
 
@@ -2586,7 +2586,8 @@ class LetterTests(ToolsTestCase):
                                       authors='[]', categories='cs.LG')
         ArxivBatch.objects.create(day=day)
         self.day = day
-        for target, value in (('summarizer.similar.embed', fake_vectors), ('summarizer.digest.fetch_ids', lambda ids, **o: [])):
+        for target, value in (('summarizer.similar.embed', fake_vectors), ('summarizer.digest.fetch_ids', lambda ids, **o: []),
+                              ('summarizer.literature.works', lambda params, limited: [])):
             patch = mock.patch(target, side_effect=value)
             patch.start()
             self.addCleanup(patch.stop)
@@ -2599,10 +2600,21 @@ class LetterTests(ToolsTestCase):
                 'papers': {'2610.00001': {'study': 'observation', 'evidence': '8 grams', 'limit': 'Small sample.'},
                            '2610.00003': {'study': 'nonsense', 'evidence': '12 grams', 'limit': ''}}}
 
-    def answers(self):
-        return [{'ids': ['2610.00001', '2610.00002', '2610.00003', '2610.00004', 'bogus']},
-                {'ids': ['2610.00001', '2610.00002', '2610.00003', '2610.00004', 'bogus']},
-                self.letter_answer()]
+    def answers(self, letter=None, claims=None, rewrite=None, calls=None):
+        """A stand-in for the model, answering each step of a letter by what its prompt asks."""
+        def chat(prompt, **kwargs):
+            if calls is not None:
+                calls.append(prompt[:40])
+            if 'Keep up to' in prompt or 'Rank the' in prompt:
+                return {'ids': ['2610.00001', '2610.00002', '2610.00003', '2610.00004', 'bogus']}
+            if prompt.startswith('Write, in'):
+                return letter or self.letter_answer()
+            if prompt.startswith('Check these sections'):
+                return (claims.pop(0) if claims else {'sections': []})
+            if 'do not hold against the abstracts' in prompt:
+                return rewrite or {'parts': {}}
+            raise AssertionError(prompt[:80])
+        return chat
 
     def test_letter_written_once_per_topic_and_shared_choice_across_languages(self):
         with mock.patch('summarizer.generated.chat_json', side_effect=self.answers()):
@@ -2619,9 +2631,10 @@ class LetterTests(ToolsTestCase):
         self.assertEqual(content['facts']['2610.00003']['evidence'], '')  # 12 is in no abstract
         self.assertEqual(content['facts']['2610.00001']['authors'], ['Author 1', 'Shared Name'])
         self.assertEqual(content['selection']['screened'], 30)
-        with mock.patch('summarizer.generated.chat_json', side_effect=[self.letter_answer()]) as chat:
+        calls = []
+        with mock.patch('summarizer.generated.chat_json', side_effect=self.answers(calls=calls)):
             letters.write('space', self.day, 'fr')
-        self.assertEqual(chat.call_count, 1)  # the papers chosen in English are reused
+        self.assertEqual([c[:10] for c in calls], ['Write, in ', 'Check thes'])  # the papers chosen in English are reused
         self.assertIsNone(letters.write('quantum', self.day, 'en'))  # too few papers
         page = Client().get('/en/letters/space/2026-10-19/')
         self.assertContains(page, 'It shines')
@@ -2641,19 +2654,16 @@ class LetterTests(ToolsTestCase):
         self.assertEqual(Client().get('/en/letters/nonsense/feed/').status_code, 404)
 
     def test_french_title_keeps_no_english(self):
-        answers = self.answers()
-        answers[2] = self.letter_answer(title='Astronomie et espace this week : des étoiles')
+        answers = self.answers(letter=self.letter_answer(title='Astronomie et espace this week : des étoiles'))
         with mock.patch('summarizer.generated.chat_json', side_effect=answers):
             letter = letters.write('space', self.day, 'fr')
         self.assertEqual(letter.title, 'Astronomie et espace cette semaine\u00a0: des étoiles')
 
     def test_numbers_missing_from_the_abstracts_are_rewritten_or_dropped(self):
-        answers = self.answers()
         answer = self.letter_answer(text='It shines with 64 elements.')
         answer['sections'].append({'heading': 'Fourth', 'text': 'In 2015, 9 stars.', 'papers': ['2610.00001']})
-        answers[2] = answer
         rewrite = {'parts': {'s0': 'A star\nIt shines with 63 elements.', 's3': 'Fourth\nStill 9 stars.'}}
-        with mock.patch('summarizer.generated.chat_json', side_effect=answers + [rewrite]):
+        with mock.patch('summarizer.generated.chat_json', side_effect=self.answers(letter=answer, rewrite=rewrite)):
             letter = letters.write('space', self.day, 'en')
         content = json.loads(letter.content)
         self.assertEqual([s['heading'] for s in content['sections']], ['A star', 'Another', 'Third'])
@@ -2794,6 +2804,84 @@ class LetterTests(ToolsTestCase):
         self.assertEqual(speak.call_count, 5)  # title, three sections, closing
         self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/?check=1').json(), {'status': 'ready'})
         self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/').content, b'ID3' * 5)
+
+    def test_statements_the_abstracts_do_not_support_are_rewritten_then_dropped(self):
+        answer = self.letter_answer()
+        answer['sections'].append({'heading': 'Fourth', 'text': 'Stars sing.', 'papers': ['2610.00004']})
+        quote = 'About stars: we measured 63 elements in 8 grams, seven samples.'
+        claims = [{'sections': [
+            {'key': 's0', 'claims': [{'claim': 'They measured 63 elements.', 'paper': '2610.00001', 'basis': 'abstract', 'quote': quote}]},
+            {'key': 's1', 'claims': [{'claim': 'Seven samples.', 'paper': '2610.00003', 'basis': 'abstract', 'quote': 'not in the abstract at all, made up'}]},
+            {'key': 's3', 'claims': [{'claim': 'Stars sing.', 'paper': '2610.00004', 'basis': 'unsupported', 'quote': ''}]}]},
+            {'sections': [{'key': 's1', 'claims': [{'claim': 'Seven samples.', 'paper': '2610.00003', 'basis': 'abstract', 'quote': 'still made up, nowhere'}]},
+                          {'key': 's3', 'claims': [{'claim': 'Stars sing.', 'paper': '2610.00004', 'basis': 'unsupported'}]}]}]
+        rewrite = {'parts': {'s1': 'Another\nSeven samples, again.', 's3': 'Fourth\nStars still sing.'}}
+        with mock.patch('summarizer.generated.chat_json', side_effect=self.answers(letter=answer, claims=claims, rewrite=rewrite)):
+            letter = letters.write('space', self.day, 'en')
+        content = json.loads(letter.content)
+        self.assertEqual([s['heading'] for s in content['sections']], ['A star', 'Another', 'Third'])
+        selection = content['selection']
+        self.assertEqual((selection['claims'], selection['unverified'], selection['dropped'], selection['rewritten']), (5, 1, 1, 2))
+
+    def test_numbers_are_checked_against_the_section_own_papers(self):
+        AnnouncedPaper.objects.filter(arxiv_id='2610.00004').update(abstract='About stars: 12 grams of dust.')
+        answer = self.letter_answer()
+        answer['sections'][1]['text'] = 'Seven samples, 12 grams.'  # 12 is in 2610.00004, not in 2610.00003
+        answer['sections'].append({'heading': 'Fourth', 'text': 'Dust.', 'papers': ['2610.00004']})
+        with mock.patch('summarizer.generated.chat_json', side_effect=self.answers(letter=answer)):
+            content = json.loads(letters.write('space', self.day, 'en').content)
+        self.assertEqual(content['selection']['dropped'], 1)
+
+    def test_rising_by_terms_readers_and_small_fields(self):
+        RisingTopics.objects.create(scope='astro-ph.SR', lang='en', day=self.day - datetime.timedelta(days=14), content=json.dumps(
+            {'topics': [{'title': 'Dust', 'main': 'interstellar dust', 'ids': []}]}))
+        AnnouncedPaper.objects.filter(arxiv_id='2610.00005').update(abstract='We map interstellar dust in the halo.')
+        PaperHistory.objects.create(arxiv_id='2610.00007v1', ip_address='a')
+        PaperHistory.objects.create(arxiv_id='2610.00007v1', ip_address='b')
+        papers = letters.week_papers('space', self.day)
+        scores = letters.signals('space', self.day, papers, {})
+        self.assertEqual(scores['2610.00005'][1], True)
+        self.assertEqual(scores['2610.00007'][0], 2)
+        self.assertEqual(scores['2610.00006'][:2], (0, False))
+        keeps = []
+        with mock.patch('summarizer.generated.chat_json', side_effect=lambda prompt, **k: keeps.append(
+                int(re.search(r'Keep up to (\d+)', prompt).group(1))) or {'ids': []}):
+            letters.screen('space', papers)
+        self.assertEqual(keeps, [25])  # 30 papers: enough kept to choose among 25
+
+    def test_plain_math_and_earlier_works_from_openalex(self):
+        self.assertEqual(letters.plain_math('more than $10^6$ s, $\\mathcal{F}t$, $0^+\\to0^+$, $M_{\\odot}$'),
+                         'more than 10⁶ s, Ft, 0⁺→0⁺, M☉')
+        papers = letters.week_papers('space', self.day)[:1]
+        vector = fake_vectors(['Space,'])[0]  # the fake embedding follows the first word of the work's text
+        work = {'id': 'https://openalex.org/W1', 'doi': 'https://doi.org/10.1/old', 'display_name': 'Space, an older study',
+                'publication_date': '2020-01-01', 'abstract_inverted_index': {'Space': [0], 'dust.': [1]}, 'cited_by_count': 9}
+        with mock.patch('summarizer.literature.works', return_value=[work]) as works:
+            found = letters.earlier(papers, {papers[0]['arxiv_id']: vector}, self.day, {papers[0]['arxiv_id']: 'stellar dust'})
+        self.assertEqual(works.call_args[0][0]['search'], 'stellar dust')
+        self.assertIn('to_publication_date:2026-09-19', works.call_args[0][0]['filter'])
+        self.assertEqual(found[papers[0]['arxiv_id']][0]['title'], 'Space, an older study')
+
+    def test_feedback_presummaries_and_review(self):
+        letter = self.write_space()
+        url = '/en/letters/space/2026-10-19/feedback/'
+        self.assertEqual(Client().post(url, {'value': 1}).status_code, 200)
+        self.assertEqual(Client().post(url, {'value': -1}).status_code, 200)  # the same visitor changes their mind
+        user = self.user('ann')
+        self.client_for(user).post(url, {'value': 1, 'arxiv_id': '2610.00003'})
+        self.assertEqual(Client().post(url, {'value': 1, 'arxiv_id': '2610.00099'}).status_code, 400)
+        self.assertEqual(Client().post(url, {'value': 5}).status_code, 400)
+        self.assertEqual(LetterFeedback.objects.filter(letter=letter, arxiv_id='').get().value, -1)
+        row = letters.review()[0]
+        self.assertEqual((row['up'], row['down'], row['paper_up'], row['flag']), (0, 1, 1, True))
+        with mock.patch('summarizer.digest.presummarize') as presummarize:
+            letters.presummarize_due()
+        self.assertEqual(presummarize.call_args[0][:2], (['2610.00001v1', '2610.00003v1', '2610.00004v1'], 'en'))
+        page = Client().get('/en/letters/space/2026-10-19/')
+        self.assertContains(page, 'Was this letter useful to you?')
+        self.assertContains(page, 'data-paper="2610.00003"')
+        staff = User.objects.create_superuser('boss', 'boss@example.com', 'x')
+        self.assertContains(self.client_for(staff).get('/admin/activite/'), 'Lettres hebdomadaires')
 
     def test_weekly_update_writes_a_few_per_run(self):
         with mock.patch('summarizer.letters.write', return_value=None) as write:

@@ -19,7 +19,7 @@ from unfold.admin import ModelAdmin, StackedInline
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from unfold.widgets import UnfoldAdminTextareaWidget
 
-from . import activity, guides, usage
+from . import activity, guides, letters, usage
 from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestClick,
                      DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
@@ -69,7 +69,8 @@ def activity_view(request):
                    is_today=day == activity.today(), kind=kind, members=members,
                    kinds=[(k, label) for k, (label, _) in activity.KINDS.items()],
                    numbers=activity.numbers(day), events=activity.feed(day, kind, members),
-                   watch=activity.watch(), feed_limit=activity.FEED_LIMIT, quality=activity.answer_quality(day))
+                   watch=activity.watch(), feed_limit=activity.FEED_LIMIT, quality=activity.answer_quality(day),
+                   letters=letters.review())
     return render(request, 'admin/summarizer/activity.html', context)
 
 

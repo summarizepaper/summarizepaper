@@ -58,8 +58,9 @@ class Command(BaseCommand):
                           'topic, %s close to a research profile' % (
                               content.get('count'), selection.get('screened'), selection.get('kept'), selection.get('shortlist'),
                               selection.get('rising'), selection.get('interest')))
-        self.stdout.write('numbers: %s checked, %s parts rewritten, %s sections dropped' % (
-            selection.get('numbers'), selection.get('rewritten'), selection.get('dropped')))
+        self.stdout.write('numbers: %s checked; statements: %s checked, %s unverified; %s parts rewritten, %s sections dropped' % (
+            selection.get('numbers'), selection.get('claims'), selection.get('unverified'), selection.get('rewritten'),
+            selection.get('dropped')))
         for arxiv_id in content.get('order', []):
             facts = content.get('facts', {}).get(arxiv_id, {})
             self.stdout.write('- %s %s\n  %s · %s · %s %s · code %s · rests on: %s\n  limit: %s\n  earlier: %s' % (

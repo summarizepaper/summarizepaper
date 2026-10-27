@@ -30,6 +30,7 @@ class Command(BaseCommand):
         budget = digest.MAX_EMAILS_PER_RUN - sent
         # each step is independent: one failing must not stop the others
         for name, step in (('letters', lambda: letters.update(now)),
+                           ('letter summaries', lambda: letters.presummarize_due()),
                            ('scoop alerts', lambda: scoops.run(now, budget)),
                            ('citation alerts', lambda: citations.run(now, budget)),
                            ('version alerts', lambda: changes.run(now, budget)),
