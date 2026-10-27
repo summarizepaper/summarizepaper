@@ -9,7 +9,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.utils import formats
 from django.utils.html import escape
-from django.utils.translation import get_language, gettext as _, gettext_lazy
+from django.utils.translation import get_language, gettext as _, gettext_lazy, ngettext
 
 from . import access, trends
 from .digest import THRESHOLDS, archive_of
@@ -19,6 +19,11 @@ MAX_TERMS = 3  # compared at once; the first three hues of the palette stay apar
 FREE_TERMS = 1
 COLORS = ('#2a78d6', '#eb6834', '#1baf7a')
 SMOOTH = 4  # weeks averaged on the chart
+RECENT_WEEKS = 13  # the verdict compares the last three months with the three months before
+MIN_CHANGE = 1.2
+VERDICT_LLR = 10.8  # about p < 0.001
+VERDICT_MIN = 10  # papers in the two periods, below which nothing can be told
+EXAMPLES = ('sparse autoencoder', 'mixture of experts', 'state space model', 'JWST', 'quantum error correction')
 
 
 def _week(value):
@@ -196,6 +201,35 @@ def chart(weeks, series, width=760, height=300):
     return ''.join(parts), {'left': left, 'width': width, 'plot_w': plot_w}
 
 
+def verdict(raw):
+    """Whether a term's share of papers [(papers, n)] rose over the last three months compared with the three before,
+    as for the rising topics: a clear change (×1.2) too large to be chance; with the same weeks a year before."""
+    weeks = min(RECENT_WEEKS, len(raw) // 2)
+    if weeks < SMOOTH:
+        return None
+    recent, before = raw[-weeks:], raw[-2 * weeks:-weeks]
+    p, n = sum(r[0] for r in recent), sum(r[1] for r in recent)
+    p0, n0 = sum(r[0] for r in before), sum(r[1] for r in before)
+    if not p or not p0:
+        return None
+    result = {'weeks': weeks, 'n': n, 'n0': n0, 'share': n * 10000 / p, 'before': n0 * 10000 / p0, 'kind': 'flat'}
+    if n + n0 < VERDICT_MIN:
+        result['kind'] = 'few'
+        return result
+    expected = max(n0, 0.5) / p0 * p
+    growth = n / expected
+    llr = 2 * ((n * np.log(n / expected) if n else 0) - (n - expected))
+    if llr >= VERDICT_LLR and growth >= MIN_CHANGE:
+        result.update(kind='up', growth=round(growth, 1))
+    elif llr >= VERDICT_LLR and growth <= 1 / MIN_CHANGE:
+        result['kind'] = 'down'
+    if len(raw) >= 52 + weeks:
+        year = raw[-52 - weeks:-52]
+        papers = sum(r[0] for r in year)
+        result['year'] = sum(r[1] for r in year) * 10000 / papers if papers else None
+    return result
+
+
 def trends_explore(request):
     paid = access.has_tool(request.user, 'trends')
     scope = request.GET.get('scope', '*') if paid else '*'
@@ -206,7 +240,8 @@ def trends_explore(request):
     wanted = list(dict.fromkeys(n for _, n in counted if n))
     context = {'paid': paid, 'scope': scope, 'scope_name': trends.scope_name(scope), 'typed': typed + [''] * (MAX_TERMS - len(typed)),
                'max_terms': MAX_TERMS if paid else FREE_TERMS, 'refused': [t for t, n in counted if not n],
-               'renamed': [(t, n) for t, n in counted if n and n != t.lower()], 'more_terms': len(request.GET.getlist('t')) > len(typed)}
+               'renamed': [(t, n) for t, n in counted if n and n != t.lower()], 'more_terms': len(request.GET.getlist('t')) > len(typed),
+               'examples': [(t, urlencode({'t': t})) for t in EXAMPLES], 'smooth': SMOOTH, 'recent_weeks': RECENT_WEEKS}
     if wanted:
         found = trends.history(scope, wanted)
         weeks = [w for w, _, _ in found[wanted[0]]]
@@ -215,7 +250,7 @@ def trends_explore(request):
             raw = [(p, n) for _, p, n in found[term]]
             shares = [n * 10000 / p if p else 0 for p, n in raw]
             series.append({'term': term, 'color': color, 'raw': raw, 'shares': shares, 'smooth': _smooth(shares),
-                           'total': sum(n for _, n in raw)})
+                           'total': sum(n for _, n in raw), 'verdict': verdict(raw)})
         if request.GET.get('format') == 'csv' and paid:
             response = HttpResponse(content_type='text/csv; charset=utf-8')
             response['Content-Disposition'] = 'attachment; filename="rising-topics-%s.csv"' % scope.replace('*', 'arxiv')
@@ -230,9 +265,10 @@ def trends_explore(request):
         svg, geometry = chart(weeks, series) if len(weeks) > 1 else ('', {})
         context.update(series=series, weeks=weeks, svg=svg, geometry=geometry, rows=[
             {'week': w, 'values': [(s['raw'][i][1], round(s['shares'][i], 1)) for s in series]} for i, w in enumerate(weeks)][::-1],
-            points=({'weeks': [_date(w) for w in weeks], 'series': [
-                {'term': s['term'], 'color': s['color'], 'values': [round(v, 1) for v in s['smooth']],
-                 'raw': [n for _, n in s['raw']]} for s in series]}),
+            points=({'weeks': [_date(w) for w in weeks], 'unit': _('per 10,000 papers, averaged over 4 weeks'), 'series': [
+                {'term': s['term'], 'color': s['color'], 'values': [formats.number_format(round(v, 1), 1) for v in s['smooth']],
+                 'raw': [ngettext('%(n)s paper that week', '%(n)s papers that week', n) % {'n': n} for _, n in s['raw']]}
+                for s in series]}),
             csv_query=request.GET.urlencode() + '&format=csv')
     return render(request, 'summarizer/trends_explore.html', context)
 

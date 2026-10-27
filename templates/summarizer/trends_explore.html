@@ -13,7 +13,7 @@
 <div class="page">
   <header class="page-header">
     <h1>{% trans 'Is my topic rising?' %}</h1>
-    <p class="lead">{% trans 'The share of new papers using a term in their title or abstract, week by week: to check an impression, choose a subject, or back up a "growing interest" in a proposal.' %}</p>
+    <p class="lead">{% trans 'Type a research term: the curve shows, week after week, how many of the new arXiv papers use it in their title or abstract, out of 10,000. If the curve climbs, more and more researchers write about it.' %}</p>
   </header>
   <p><a href="/{{ LANGUAGE_CODE }}/trends/{% if scope != '*' %}?scope={{ scope|urlencode }}{% endif %}">&larr; {% trans 'The rising topics of the week' %}</a></p>
 
@@ -27,6 +27,7 @@
     {% if paid %}<input type="hidden" name="scope" value="{{ scope }}">{% endif %}
     <button class="btn" type="submit">{% trans 'Show the history' %}</button>
     <p class="muted" style="margin:8px 0 0">{% blocktrans with name=scope_name %}In: {{ name }}.{% endblocktrans %} {% trans 'One to three words, as in a title; plurals count with their singular.' %}{% if not paid %} {% trans 'Premium compares three terms, in any field or category, and exports the counts.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a>{% endif %}</p>
+    {% if not series %}<p class="explore-examples"><span class="muted">{% trans 'Examples:' %}</span> {% for term, query in examples %}<a href="?{{ query }}">{{ term }}</a>{% endfor %}</p>{% endif %}
   </form>
 
   {% if more_terms %}<p class="notice">{% trans 'Only the first term is shown: Premium compares three.' %}</p>{% endif %}
@@ -34,11 +35,26 @@
   {% for typed_term, term in renamed %}<p class="muted">{% blocktrans %}"{{ typed_term }}" is counted as "{{ term }}".{% endblocktrans %}</p>{% endfor %}
 
   {% if series %}
+    <div class="explore-verdicts">{% for s in series %}{% with v=s.verdict %}{% if v %}
+    <p class="explore-verdict verdict-{{ v.kind }}" style="border-left-color:{{ s.color }}">
+      {% if v.kind == 'up' %}<strong>{% blocktrans with term=s.term %}"{{ term }}" is rising.{% endblocktrans %}</strong>
+      {% elif v.kind == 'down' %}<strong>{% blocktrans with term=s.term %}"{{ term }}" is declining.{% endblocktrans %}</strong>
+      {% elif v.kind == 'flat' %}<strong>{% blocktrans with term=s.term %}"{{ term }}" is not clearly rising.{% endblocktrans %}</strong>
+      {% else %}<strong>{% blocktrans with term=s.term %}"{{ term }}": too few papers to tell.{% endblocktrans %}</strong>{% endif %}
+      {% blocktrans with share=v.share|floatformat:1 before=v.before|floatformat:1 weeks=v.weeks n=v.n n0=v.n0 %}{{ share }} papers per 10,000 over the last {{ weeks }} weeks ({{ n }} papers), against {{ before }} over the {{ weeks }} weeks before ({{ n0 }} papers).{% endblocktrans %}
+      {% if v.kind == 'up' %}{% blocktrans with g=v.growth %}A share ×{{ g }}, too large to be chance.{% endblocktrans %}
+      {% elif v.kind == 'down' %}{% trans 'A fall too large to be chance.' %}
+      {% elif v.kind == 'flat' %}{% trans 'The difference is too small, or too uncertain, to say it rises.' %}
+      {% else %}{% trans 'With so few papers, a change of one or two papers would move the curve: look at a broader term.' %}{% endif %}
+      {% if v.year is not None %}{% blocktrans with year=v.year|floatformat:1 %}A year before, over the same weeks: {{ year }} per 10,000.{% endblocktrans %}{% endif %}
+    </p>
+    {% endif %}{% endwith %}{% endfor %}</div>
     {% if svg %}
     <figure class="card term-figure">
       <figcaption>{% trans 'Papers using the term per 10,000 papers of the week, averaged over 4 weeks' %}</figcaption>
       {% if series|length > 1 %}<ul class="chart-legend">{% for s in series %}<li><span class="legend-line" style="background:{{ s.color }}"></span>{{ s.term }}</li>{% endfor %}</ul>{% endif %}
       <div class="chart-wrap">{{ svg|safe }}<div class="chart-tip" hidden></div></div>
+      <p class="muted chart-note">{% trans 'Left axis: out of 10,000 papers submitted in a week, how many use the term. Each point averages that week with the three before, as the count of a single week jumps with holidays and conference deadlines. Hover over the curve to read each week and its number of papers.' %}</p>
       {% if paid %}<p class="chart-actions"><a class="btn btn-sm btn-ghost" href="?{{ csv_query }}">{% trans 'Download the counts (CSV)' %}</a></p>{% endif %}
     </figure>
     {% endif %}
@@ -57,8 +73,31 @@
     </p>
   {% endif %}
 
-  <h2>{% trans 'How to read it' %}</h2>
-  <p class="muted">{% trans 'Each point is the share of the papers submitted that week (first versions) that use the term in their title or abstract, so the growth of arXiv itself does not count. A week where a single paper used it counts as zero. Terms are matched as words, so a term with several meanings counts them all: compare with a more specific one. When citing these numbers, name the source and the period.' %}</p>
+  <section class="explore-help">
+    <h2>{% trans 'How it works' %}</h2>
+    <ol>
+      <li>{% trans 'Every week, we read the title and abstract of every new paper on arXiv (first versions only, not updates) and note the terms of one to three words they use.' %}</li>
+      <li>{% trans 'For your term, we count the papers using it each week, and divide by all the papers of that week. A share rather than a number: arXiv grows every year, so the number of papers would rise for almost every topic, while the share rises only when the topic takes a larger place.' %}</li>
+      <li>{% blocktrans with weeks=recent_weeks %}The answer at the top compares the last {{ weeks }} weeks with the {{ weeks }} weeks before. The topic "rises" only when its share is at least ×1.2 and the gap is too large to come from chance, a test of the same kind as for the rising topics of the week; it "declines" in the same way the other way round.{% endblocktrans %}</li>
+    </ol>
+
+    <h2>{% trans 'How to read it' %}</h2>
+    <ul>
+      <li>{% trans 'A curve that climbs over several months: more and more teams write about the topic. A peak that falls back after a few weeks: an event, a release, a data set or a conference deadline.' %}</li>
+      <li>{% trans 'The height matters less than the trend: a broad term (graph neural network) is always higher than a precise one (equivariant message passing). To compare two topics, compare how their curves move.' %}</li>
+      <li>{% trans 'The terms are counted as words, in English, plurals with their singular. A term with several meanings counts them all (transformer, in electrical engineering and in AI): then try a more specific term. A week where a single paper uses the term counts as zero.' %}</li>
+      <li>{% trans 'The curve says how much the topic is written about, not whether the papers are good or cited, nor what is published outside arXiv.' %}</li>
+    </ul>
+
+    <h2>{% trans 'Why it is useful' %}</h2>
+    <ul>
+      <li>{% trans 'Check an impression: "everyone is working on it" — true, or only in the papers you happen to see?' %}</li>
+      <li>{% trans 'Choose a thesis or project subject: a rising topic draws funding and competition; a declining one may be maturing, or being left aside.' %}</li>
+      <li>{% trans 'Back up a "growing interest" in a grant proposal or an introduction with a number. When citing it, name the source and the period.' %}</li>
+      <li>{% trans 'Compare competing methods or instruments week by week, to see which one is taking over.' %}{% if not paid %} <span class="badge-premium">Premium</span>{% endif %}</li>
+    </ul>
+    <p class="muted">{% trans 'The rising topics of the week work the other way round: instead of checking a term you chose, they find by themselves the terms that jumped this week.' %} <a href="/{{ LANGUAGE_CODE }}/trends/">{% trans 'The rising topics of the week' %}</a></p>
+  </section>
 </div>
 {% if svg %}
 {{ points|json_script:"chart-points" }}
@@ -79,9 +118,10 @@
       var row = document.createElement('div'); row.className = 'tip-row';
       var key = document.createElement('span'); key.className = 'legend-line'; key.style.background = s.color;
       var value = document.createElement('strong'); value.textContent = s.values[i];
-      var label = document.createElement('span'); label.textContent = ' ' + s.term + ' (' + s.raw[i] + ')';
+      var label = document.createElement('span'); label.textContent = (data.series.length > 1 ? s.term + ' · ' : '') + s.raw[i];
       row.appendChild(key); row.appendChild(value); row.appendChild(label); tip.appendChild(row);
     });
+    var unit = document.createElement('div'); unit.className = 'tip-head'; unit.textContent = data.unit; tip.appendChild(unit);
     tip.hidden = false;
     var px = cx * box.width / width;
     tip.style.left = Math.min(px + 12, box.width - tip.offsetWidth - 4) + 'px';

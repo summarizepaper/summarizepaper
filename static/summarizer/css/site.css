@@ -944,6 +944,13 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .chart-tip .tip-head { color: var(--text-muted); margin-bottom: 4px; }
 .chart-tip .tip-row { display: flex; align-items: center; gap: 6px; }
 .chart-actions { margin: 8px 0 0; }
+.chart-note { font-size: 14px; margin: 8px 0 0; }
+.explore-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 14px; }
+.explore-examples a { padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); text-decoration: none; }
+.explore-verdict { margin: 0 0 12px; padding: 12px 16px; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); }
+.explore-verdict strong { display: block; font-size: 18px; margin-bottom: 2px; }
+.explore-help { margin-top: 28px; }
+.explore-help li + li { margin-top: 6px; }
 .trend-papers li { margin-bottom: 10px; }
 .trend-papers .muted { display: block; font-size: 14px; }
 .trend-badge { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 14px; margin: 0 0 14px; }
