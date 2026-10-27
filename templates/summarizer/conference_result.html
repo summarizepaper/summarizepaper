@@ -9,11 +9,13 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
+    {% if shared %}<p class="muted">{% trans 'Shared conference program' %} · <a href="/{{ LANGUAGE_CODE }}/conference/">{% trans 'Make your own program' %}</a></p>
+    {% else %}<p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>{% endif %}
     <h1>{% if result.name %}{{ result.name }}{% else %}{% trans 'Your program' %}{% endif %}</h1>
   </header>
 
   {% if result %}
+    {% if not shared %}{% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
     {% if result.talks %}
     <p class="muted">{% blocktrans count n=result.listed with chosen=result.talks|length %}{{ chosen }} talks for you, out of {{ n }} in the program.{% plural %}{{ chosen }} talks for you, out of {{ n }} in the program.{% endblocktrans %}</p>
     <ul class="item-list">

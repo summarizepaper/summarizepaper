@@ -218,8 +218,20 @@
     update();
   }
 
+  // A button with data-copy copies the field it names (a shared link) and says so
+  function copyButton(copy) {
+    copy.addEventListener('click', function () {
+      var field = document.getElementById(copy.dataset.copy);
+      field.select();
+      (navigator.clipboard ? navigator.clipboard.writeText(field.value) : Promise.reject()).catch(function () {
+        document.execCommand('copy');
+      }).then(function () { copy.textContent = copy.dataset.copied; });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('.arxiv-picker'), picker);
+    Array.prototype.forEach.call(document.querySelectorAll('button[data-copy]'), copyButton);
     Array.prototype.forEach.call(document.querySelectorAll('textarea[data-min-chars]'), minChars);
   });
 

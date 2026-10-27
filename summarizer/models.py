@@ -651,6 +651,8 @@ class Generated(models.Model):
     step = models.CharField(max_length=40, blank=True, default='')  # what the background work is doing now
     content = models.TextField(blank=True, default='')  # JSON
     error = models.TextField(blank=True, default='')
+    share_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # read-only public link (see result_share.py)
+    share_expires = models.DateTimeField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

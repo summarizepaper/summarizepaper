@@ -9,11 +9,14 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <p><a href="/{{ LANGUAGE_CODE }}/refcheck/">← {% trans 'Bibliography check' %}</a></p>
-    <h1>{% trans 'Your references' %}</h1>
+    {% if shared %}<p class="muted">{% trans 'Shared bibliography check' %} · <a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Check your own bibliography' %}</a></p>
+    <h1>{% trans 'References checked' %}</h1>
+    {% else %}<p><a href="/{{ LANGUAGE_CODE }}/refcheck/">← {% trans 'Bibliography check' %}</a></p>
+    <h1>{% trans 'Your references' %}</h1>{% endif %}
   </header>
 
   {% if result %}
+    {% if not shared %}{% if result.with_tex %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check. The report quotes the sentences of your manuscript whose citations are flagged.' as what %}{% else %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check.' as what %}{% endif %}{% include 'summarizer/result_share.html' %}{% endif %}
     {% if not result.summary %}<p class="notice">{% trans 'This report predates the extended metadata checks. Run a new check to compare titles, years, journals, volumes, pages and entry types.' %} <a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Run a new check' %}</a></p>{% endif %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this check: retractions and titles were not checked for some references. Run it again tomorrow for a complete check.' %}</p>{% endif %}
     <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference analysed.{% plural %}{{ n }} references analysed.{% endblocktrans %}
@@ -26,7 +29,7 @@
     {% if result.lookup_limited %}<p class="notice">{% trans 'The lookup limit was reached. Some references could not be checked; no conclusion is drawn about their validity.' %}</p>{% endif %}
     {% if result.sources_unavailable %}<p class="notice">{% trans 'Some sources did not respond:' %} {{ result.sources_unavailable|join:', ' }}. {% trans 'Unresolved references can be checked again later.' %}</p>{% endif %}
     {% if result.fixed_bib %}
-    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{{ row.key }}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
     {% endif %}
 
     {% if result.problems %}

@@ -14205,3 +14205,89 @@ msgid ""
 msgstr ""
 "Un digest des articles arXiv, bioRxiv, medRxiv et des revues, quotidien ou "
 "hebdomadaire"
+
+msgid "It works until %(d)s."
+msgstr "Il fonctionne jusqu'au %(d)s."
+
+msgid "The link works for 90 days."
+msgstr "Le lien fonctionne 90 jours."
+
+msgid "Shared literature review"
+msgstr "Revue de littérature partagée"
+
+msgid "Review the literature on your own question"
+msgstr "Faire la revue de littérature de votre propre question"
+
+msgid ""
+"Anyone with this link reads the review as it is now, with its papers and its"
+" references, never who asked it."
+msgstr ""
+"Toute personne qui a ce lien lit la revue telle qu'elle est maintenant, avec"
+" ses articles et ses références, sans jamais savoir qui l'a demandée."
+
+msgid "Shared bibliography check"
+msgstr "Vérification de bibliographie partagée"
+
+msgid "Check your own bibliography"
+msgstr "Vérifier votre propre bibliographie"
+
+msgid "References checked"
+msgstr "Références vérifiées"
+
+msgid ""
+"Anyone with this link reads this report and downloads the corrected .bib, "
+"never who ran the check. The report quotes the sentences of your manuscript "
+"whose citations are flagged."
+msgstr ""
+"Toute personne qui a ce lien lit ce rapport et télécharge le .bib corrigé, "
+"sans jamais savoir qui a lancé la vérification. Le rapport cite les phrases "
+"de votre manuscrit dont les citations sont signalées."
+
+msgid ""
+"Anyone with this link reads this report and downloads the corrected .bib, "
+"never who ran the check."
+msgstr ""
+"Toute personne qui a ce lien lit ce rapport et télécharge le .bib corrigé, "
+"sans jamais savoir qui a lancé la vérification."
+
+msgid "Shared search for uncited papers"
+msgstr "Recherche partagée d'articles non cités"
+
+msgid "Find the papers your own draft does not cite"
+msgstr "Trouver les articles que votre propre brouillon ne cite pas"
+
+msgid ""
+"Anyone with this link sees these papers and how they relate to your draft, "
+"never who sent it. The page shows the title found for your draft; the draft "
+"itself is not shown."
+msgstr ""
+"Toute personne qui a ce lien voit ces articles et leur lien avec votre "
+"brouillon, sans jamais savoir qui l'a envoyé. La page montre le titre trouvé "
+"pour votre brouillon ; le brouillon lui-même n'est pas montré."
+
+msgid "Shared conference program"
+msgstr "Programme de conférence partagé"
+
+msgid "Make your own program"
+msgstr "Faire votre propre programme"
+
+msgid ""
+"Anyone with this link sees these talks, why they were chosen and the people "
+"to meet, never who made the program. The interests you wrote are not shown."
+msgstr ""
+"Toute personne qui a ce lien voit ces présentations, pourquoi elles ont été "
+"choisies et les personnes à rencontrer, sans jamais savoir qui a fait le "
+"programme. Les intérêts que vous avez écrits ne sont pas montrés."
+
+msgid "Shared search"
+msgstr "Recherche partagée"
+
+msgid "Find who works on your own topic"
+msgstr "Trouver qui travaille sur votre propre sujet"
+
+msgid ""
+"Anyone with this link sees these institutions, their authors and papers, "
+"never who searched."
+msgstr ""
+"Toute personne qui a ce lien voit ces institutions, leurs auteurs et leurs "
+"articles, sans jamais savoir qui a fait la recherche."

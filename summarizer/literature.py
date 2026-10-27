@@ -31,7 +31,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, digest, evidence, generated, library, similar, sources
+from . import access, digest, evidence, generated, library, result_share, similar, sources
 from .models import Collection, Generated
 
 logger = logging.getLogger(__name__)
@@ -463,22 +463,36 @@ def _row(request, key):
     return row
 
 
-@login_required
-def literature_result(request, key):
-    row = _row(request, key)
-    if request.method == 'POST' and row.status == 'done':
-        return save_collection(request, row)
-    if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
-        row.status = 'failed'  # lost in a restart
+def _shown(row):
+    """The review as its page shows it: each theme with its papers."""
     result = row.data() if row.status == 'done' else None
     if result:
         numbers = {p['n']: p for p in result['papers']}
         for theme in result['themes']:
             theme['entries'] = [numbers[n] for n in theme['papers'] if n in numbers]
+    return result
+
+
+@login_required
+def literature_result(request, key):
+    row = _row(request, key)
+    if request.method == 'POST' and row.status == 'done':
+        if result_share.act(row, request.POST.get('action')):
+            return redirect('/%s/literature-review/%s/' % (get_language(), row.key))
+        return save_collection(request, row)
+    if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
+        row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/literature_result.html', {
-        'row': row, 'result': result, 'steps': STEPS, 'message': request.GET.get('m'),
+        'row': row, 'result': _shown(row), 'steps': STEPS, 'message': request.GET.get('m'),
+        'share_url': result_share.shared_url(request, row, 'literature-review'),
         'collection': Collection.objects.filter(pk=request.GET.get('c'), user=request.user).first()
         if request.GET.get('c', '').isdigit() else None})
+
+
+def literature_shared(request, token):
+    """The read-only page of a shared review, for anyone with its link: never who asked it."""
+    row = result_share.shared_row('literature', token)
+    return render(request, 'summarizer/literature_result.html', {'row': row, 'result': _shown(row), 'shared': True})
 
 
 def save_collection(request, row):

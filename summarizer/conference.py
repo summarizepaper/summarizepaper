@@ -23,7 +23,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, generated, missed, similar, sources
+from . import access, generated, missed, result_share, similar, sources
 from .models import Generated, WatchedProject
 
 MAX_PROGRAM = 120000  # characters of the program read
@@ -203,7 +203,16 @@ def conference_result(request, key):
     row = Generated.objects.filter(kind='conference', key=key, user=request.user).first()
     if row is None:
         raise Http404
+    if request.method == 'POST' and result_share.act(row, request.POST.get('action')):
+        return redirect('/%s/conference/%s/' % (get_language(), row.key))
     if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
         row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/conference_result.html', {
-        'row': row, 'result': result_data(row.data()) if row.status == 'done' else None, 'steps': STEPS})
+        'row': row, 'result': result_data(row.data()) if row.status == 'done' else None, 'steps': STEPS,
+        'share_url': result_share.shared_url(request, row, 'conference')})
+
+
+def conference_shared(request, token):
+    """The read-only page of a shared program, for a team going to the conference: never whose interests chose it."""
+    row = result_share.shared_row('conference', token)
+    return render(request, 'summarizer/conference_result.html', {'row': row, 'result': result_data(row.data()), 'shared': True})

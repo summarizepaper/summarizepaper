@@ -10,11 +10,13 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <p><a href="/{{ LANGUAGE_CODE }}/missed/">← {% trans 'What did I miss?' %}</a></p>
+    {% if shared %}<p class="muted">{% trans 'Shared search for uncited papers' %} · <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'Find the papers your own draft does not cite' %}</a></p>
+    {% else %}<p><a href="/{{ LANGUAGE_CODE }}/missed/">← {% trans 'What did I miss?' %}</a></p>{% endif %}
     <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Your draft' %}{% endif %}</h1>
   </header>
 
   {% if result %}
+    {% if not shared %}{% trans 'Anyone with this link sees these papers and how they relate to your draft, never who sent it. The page shows the title found for your draft; the draft itself is not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
     <p class="muted">{% blocktrans with searched=result.searched cited=result.cited %}{{ searched }} papers found by our searches; {{ cited }} of them are already cited by your draft.{% endblocktrans %}</p>
     {% if result.items %}
     <ul class="item-list">

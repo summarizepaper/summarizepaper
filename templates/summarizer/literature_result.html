@@ -10,12 +10,14 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <p><a href="{% url 'literature' %}">← {% trans 'Literature review' %}</a></p>
+    {% if shared %}<p class="muted">{% trans 'Shared literature review' %} · <a href="{% url 'literature' %}">{% trans 'Review the literature on your own question' %}</a></p>
+    {% else %}<p><a href="{% url 'literature' %}">← {% trans 'Literature review' %}</a></p>{% endif %}
     <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Your question' %}{% endif %}</h1>
     {% if result.question %}<p class="lead">{{ result.question }}</p>{% endif %}
   </header>
 
   {% if result %}
+    {% if not shared %}{% trans 'Anyone with this link reads the review as it is now, with its papers and its references, never who asked it.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
     {% with c=result.coverage %}
     <section class="card section-card lit-coverage" aria-labelledby="coverage-title">
       <h2 id="coverage-title">{% trans 'How this review was searched' %}</h2>
@@ -103,10 +105,10 @@
       <h2>{% trans 'References' %}</h2>
       {% if message == 'saved' and collection %}<p class="notice" role="status">{% trans 'The papers are in a new collection:' %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/">{{ collection.name }}</a></p>
       {% elif message == 'too_many' %}<p class="error">{% trans 'You have reached your number of collections. Delete one to save these papers.' %}</p>{% endif %}
-      <form method="post" class="item-actions">{% csrf_token %}
+      {% if not shared %}<form method="post" class="item-actions">{% csrf_token %}
         <button class="btn btn-sm btn-ghost" type="submit">{% trans 'Save these papers in a collection' %}</button>
         <span class="muted"><small>{% trans 'to compare them in a table, find their open questions or chat with them' %}</small></span>
-      </form>
+      </form>{% endif %}
       <ol class="item-list lit-references">
         {% for p in result.papers %}
         <li class="card" id="ref-{{ p.n }}">

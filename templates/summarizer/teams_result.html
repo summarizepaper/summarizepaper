@@ -9,11 +9,13 @@
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <p><a href="/{{ LANGUAGE_CODE }}/teams/">← {% trans 'Who works on it?' %}</a></p>
+    {% if shared %}<p class="muted">{% trans 'Shared search' %} · <a href="/{{ LANGUAGE_CODE }}/teams/">{% trans 'Find who works on your own topic' %}</a></p>
+    {% else %}<p><a href="/{{ LANGUAGE_CODE }}/teams/">← {% trans 'Who works on it?' %}</a></p>{% endif %}
     <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Who works on it?' %}{% endif %}</h1>
   </header>
 
   {% if result %}
+    {% if not shared %}{% trans 'Anyone with this link sees these institutions, their authors and papers, never who searched.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this search: some papers are missing. Run it again tomorrow for a complete map.' %}</p>{% endif %}
     {% if result.groups %}
     {% if result.version == result_version %}<p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). All affiliations declared in the publication metadata are counted; totals across institutions overlap.{% endblocktrans %}</p>{% endif %}

@@ -25,7 +25,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, generated, similar, sources
+from . import access, generated, result_share, similar, sources
 from .models import Generated, WatchedProject
 
 logger = logging.getLogger(__name__)
@@ -252,8 +252,17 @@ def teams_result(request, key):
     row = Generated.objects.filter(kind='teams', key=key, user=request.user).first()
     if row is None:
         raise Http404
+    if request.method == 'POST' and result_share.act(row, request.POST.get('action')):
+        return redirect('/%s/teams/%s/' % (get_language(), row.key))
     if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
         row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/teams_result.html', {
         'row': row, 'result': row.data() if row.status == 'done' else None, 'steps': STEPS,
-        'result_version': RESULT_VERSION})
+        'result_version': RESULT_VERSION, 'share_url': result_share.shared_url(request, row, 'teams')})
+
+
+def teams_shared(request, token):
+    """The read-only page of a shared map of who works on a topic, never who searched it."""
+    row = result_share.shared_row('teams', token)
+    return render(request, 'summarizer/teams_result.html', {'row': row, 'result': row.data(), 'shared': True,
+                                                            'result_version': RESULT_VERSION})

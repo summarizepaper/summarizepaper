@@ -31,7 +31,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, bibliography, digest, generated, sources
+from . import access, bibliography, digest, generated, result_share, sources
 from .models import Generated
 
 MAX_UPLOAD = 5 * 1024 * 1024
@@ -481,16 +481,32 @@ def _row(request, key):
 @login_required
 def refcheck_result(request, key):
     row = _row(request, key)
+    if request.method == 'POST' and result_share.act(row, request.POST.get('action')):
+        return redirect('/%s/refcheck/%s/' % (get_language(), row.key))
     return render(request, 'summarizer/refcheck_result.html', {
-        'row': row, 'result': row.data() if row.status == 'done' else None, 'steps': STEPS})
+        'row': row, 'result': row.data() if row.status == 'done' else None, 'steps': STEPS,
+        'share_url': result_share.shared_url(request, row, 'refcheck')})
 
 
-@login_required
-def refcheck_bib(request, key):
-    row = _row(request, key)
+def _bib(row):
     bib = row.data().get('fixed_bib') if row.status == 'done' else ''
     if not bib:
         raise Http404
     response = HttpResponse(bib, content_type='application/x-bibtex; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="references-corrected.bib"'
     return response
+
+
+@login_required
+def refcheck_bib(request, key):
+    return _bib(_row(request, key))
+
+
+def refcheck_shared(request, token):
+    """The read-only page of a shared check, for co-authors: the report and its corrected .bib, never who ran it."""
+    row = result_share.shared_row('refcheck', token)
+    return render(request, 'summarizer/refcheck_result.html', {'row': row, 'result': row.data(), 'shared': True})
+
+
+def refcheck_shared_bib(request, token):
+    return _bib(result_share.shared_row('refcheck', token))

@@ -23,7 +23,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, digest, generated, similar, sources
+from . import access, digest, generated, result_share, similar, sources
 from .models import Generated
 
 logger = logging.getLogger(__name__)
@@ -204,8 +204,16 @@ def missed_result(request, key):
     row = Generated.objects.filter(kind='missed', key=key, user=request.user).first()
     if row is None:
         raise Http404
+    if request.method == 'POST' and result_share.act(row, request.POST.get('action')):
+        return redirect('/%s/missed/%s/' % (get_language(), row.key))
     if row.status == 'pending' and row.updated < timezone.now() - generated.STALE:
         row.status = 'failed'  # lost in a restart
     return render(request, 'summarizer/missed_result.html', {
         'row': row, 'result': row.data() if row.status == 'done' else None, 'paid': access.has_tool(request.user, 'missed'),
-        'steps': STEPS})
+        'steps': STEPS, 'share_url': result_share.shared_url(request, row, 'missed')})
+
+
+def missed_shared(request, token):
+    """The read-only page of a shared search, for co-authors: the papers the draft does not cite, never who sent it."""
+    row = result_share.shared_row('missed', token)
+    return render(request, 'summarizer/missed_result.html', {'row': row, 'result': row.data(), 'shared': True})

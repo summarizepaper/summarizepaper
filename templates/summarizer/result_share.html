@@ -1,0 +1,23 @@
+{% load i18n %}
+{# The owner's read-only link to a finished result. Expects row, share_url and what (what the link shows). #}
+<section class="card section-card result-share" aria-labelledby="share-title">
+  <h2 id="share-title">{% trans 'Share a read-only link' %}</h2>
+  {% if share_url %}
+    <p>{{ what }} {% blocktrans with d=row.share_expires|date:"j F Y" %}It works until {{ d }}.{% endblocktrans %}</p>
+    <div class="tool-row link-row">
+      <input type="text" readonly value="{{ share_url }}" id="share-url" aria-label="{% trans 'Shared link' %}">
+      <button type="button" class="btn btn-sm" data-copy="share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
+    </div>
+    <form method="post" class="item-actions">
+      {% csrf_token %}
+      <button class="btn btn-sm btn-ghost" name="action" value="share">{% trans 'Update the link for 90 more days' %}</button>
+      <button class="btn btn-sm btn-danger" name="action" value="unshare">{% trans 'Stop sharing' %}</button>
+    </form>
+  {% else %}
+    <p>{{ what }} {% trans 'The link works for 90 days.' %}</p>
+    <form method="post" class="item-actions">
+      {% csrf_token %}
+      <button class="btn btn-sm" name="action" value="share">{% trans 'Create a link' %}</button>
+    </form>
+  {% endif %}
+</section>

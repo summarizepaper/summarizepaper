@@ -573,6 +573,31 @@ class LiteratureTests(ToolsTestCase):
         self.assertEqual(Client().get('/en/literature-review/abc/').status_code, 302)
         self.assertEqual(self.client_for(self.user('free2')).get(r['Location']).status_code, 404)
 
+    def test_a_review_is_shared_read_only_until_stopped(self):
+        owner = self.client_for(self.user('pro', paid=True))
+        row = Generated.objects.create(kind='literature', key='k1', user=User.objects.get(username='pro'), status='done',
+                                       content=json.dumps({'question': 'Why do microplastics persist?', 'title': 'Microplastics',
+                                                           'coverage': {'labels': {}, 'queries': [], 'by_source': {}},
+                                                           'overview': [], 'themes': [], 'consensus': [], 'disagreements': [],
+                                                           'gaps': [], 'papers': [{'n': 1, 'key': '2101.00001', 'title': 'Sinks',
+                                                                                    'authors': 'Ann Lee', 'labels': []}]}))
+        self.assertContains(owner.get('/en/literature-review/k1/'), 'Create a link')
+        self.assertEqual(owner.post('/en/literature-review/k1/', {'action': 'share'}).status_code, 302)
+        row.refresh_from_db()
+        link = '/en/literature-review/shared/%s/' % row.share_token
+        self.assertContains(owner.get('/en/literature-review/k1/'), link)
+        page = Client().get(link)  # no account needed, and nothing to save or share again
+        self.assertContains(page, 'Sinks')
+        self.assertContains(page, 'Shared literature review')
+        self.assertNotContains(page, 'Save these papers in a collection')
+        self.assertNotContains(page, 'Create a link')
+        self.assertFalse(CollectionPaper.objects.exists())
+        owner.post('/en/literature-review/k1/', {'action': 'share'})  # again: the same link, 90 more days
+        self.assertEqual(Generated.objects.get(pk=row.pk).share_token, row.share_token)
+        self.assertEqual(self.client_for(self.user('other', paid=True)).post('/en/literature-review/k1/', {'action': 'unshare'}).status_code, 404)
+        owner.post('/en/literature-review/k1/', {'action': 'unshare'})
+        self.assertEqual(Client().get(link).status_code, 404)
+
 
 class CitationTests(ToolsTestCase):
     def queue(self, user, now, *ids):
@@ -1169,6 +1194,41 @@ class ScoopSourceTests(ScoopEngineTests):
         self.assertIn('entity: relevant 0, not relevant 1', out.getvalue())
 
 
+class ResultShareTests(ToolsTestCase):
+    RESULTS = {  # path: kind, a finished result, a text the shared page shows
+        'missed': ('missed', {'title': 'Clouds draft', 'searched': 3, 'cited': 2, 'items': [
+            {'arxiv_id': '2101.00001', 'title': 'Thick clouds', 'authors': 'Ann Lee', 'importance': 'high',
+             'similarity': 80, 'relation': 'Measures the same clouds.'}]}, 'Thick clouds'),
+        'conference': ('conference', {'name': 'AAS 247', 'listed': 40, 'people': ['Bob Ray'], 'talks': [
+            {'title': 'Cloudy hot Jupiters', 'speakers': 'Ann Lee', 'priority': 'must', 'why': 'Your topic.'}]},
+            'Cloudy hot Jupiters'),
+        'teams': ('teams', {'title': 'Exoplanet clouds', 'groups': [{'institution': 'Lab of clouds', 'papers': 2,
+                                                                     'citations': 5, 'titles': []}]}, 'Lab of clouds'),
+    }
+
+    def test_each_result_is_shared_read_only_until_stopped(self):
+        user = self.user('pro', paid=True)
+        owner = self.client_for(user)
+        for path, (kind, data, shown) in self.RESULTS.items():
+            row = Generated.objects.create(kind=kind, key='k-' + kind, user=user, status='done', content=json.dumps(data))
+            mine = '/en/%s/k-%s/' % (path, kind)
+            self.assertContains(owner.get(mine), 'Create a link')
+            self.assertEqual(owner.post(mine, {'action': 'share'})['Location'], mine)
+            row.refresh_from_db()
+            link = '/en/%s/shared/%s/' % (path, row.share_token)
+            self.assertContains(owner.get(mine), link)
+            page = Client().get(link)
+            self.assertContains(page, shown)
+            self.assertNotContains(page, 'Create a link')
+            self.assertNotContains(page, mine)
+            owner.post(mine, {'action': 'unshare'})
+            self.assertEqual(Client().get(link).status_code, 404)
+        pending = Generated.objects.create(kind='teams', key='k-pending', user=user, status='pending')
+        owner.post('/en/teams/k-pending/', {'action': 'share'})  # nothing to share before it is done
+        pending.refresh_from_db()
+        self.assertEqual(pending.share_token, '')
+
+
 class RefcheckTests(ToolsTestCase):
     BIB = """@article{retracted, title = {A retracted result}, journal = {J}, doi = {10.1000/RETRACTED}}
 @misc{pre, author = {Lee, Ann}, title = {{Clouds} on a "hot" planet}, eprint = {2101.00001v1}, archivePrefix = {arXiv}}
@@ -1225,6 +1285,26 @@ Earlier work found no clouds at all \citet[see][]{pre,again}.
         self.assertContains(client.get(r['Location']), 'No discrepancy detected')
         self.assertEqual(client.get(r['Location'] + 'bib/').content, b'@article{a,\n}')
         self.assertEqual(self.client_for(self.user('other', paid=True)).get(r['Location']).status_code, 404)
+
+    def test_a_report_is_shared_with_its_corrected_bib_until_it_expires(self):
+        owner = self.client_for(self.user('pro', paid=True))
+        row = Generated.objects.create(kind='refcheck', key='k1', user=User.objects.get(username='pro'), status='done',
+                                       content=json.dumps({'entries': 1, 'problems': [], 'claims': [], 'claims_checked': 0,
+                                                           'with_tex': True, 'counts': {'error': 0, 'warning': 0},
+                                                           'fixed_bib': '@article{a,\n}', 'corrected': 1}))
+        self.assertContains(owner.get('/en/refcheck/k1/'), 'quotes the sentences of your manuscript')
+        owner.post('/en/refcheck/k1/', {'action': 'share'})
+        row.refresh_from_db()
+        link = '/en/refcheck/shared/%s/' % row.share_token
+        page = Client().get(link)
+        self.assertContains(page, 'Shared bibliography check')
+        self.assertContains(page, link + 'bib/')
+        self.assertNotContains(page, '/refcheck/k1/')
+        self.assertEqual(Client().get(link + 'bib/').content, b'@article{a,\n}')
+        Generated.objects.filter(pk=row.pk).update(share_expires=timezone.now() - datetime.timedelta(days=1))
+        self.assertEqual(Client().get(link).status_code, 404)
+        self.assertEqual(Client().get(link + 'bib/').status_code, 404)
+        self.assertNotContains(owner.get('/en/refcheck/k1/'), link)
 
 
 class ChangesTests(ToolsTestCase):
