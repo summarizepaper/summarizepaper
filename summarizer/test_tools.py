@@ -2757,7 +2757,7 @@ class LetterTests(ToolsTestCase):
         self.assertContains(page, 'Stellar flares')
         self.assertNotContains(page, 'Not space')
         self.assertContains(page, '/en/letters/space/2026-10-12/')
-        self.assertContains(page, 'All 30 papers of the week were read')
+        self.assertContains(page, 'All 30 papers of the week whose main category is in this field were read')
         self.assertNotContains(page, 'Listen to this letter')
         self.assertEqual(letters.letter_of_paper('2610.00001v2', 'en'), letter)
         self.assertIsNone(letters.letter_of_paper('2610.00002', 'en'))
