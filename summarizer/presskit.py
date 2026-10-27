@@ -64,8 +64,9 @@ DEMO_KITS = {'2307.01574v1'}  # open to every visitor, so that a kit can be seen
 STEPS = [
     ('read', _('Reading the full paper')),
     ('publication', _('Checking publication records')),
-    ('experts', _('Finding earlier papers and researchers for outside comment')),
+    ('context', _('Finding the closest earlier papers and the figures')),
     ('write', _('Writing the kit and checking every quote against the paper')),
+    ('experts', _('Finding researchers for outside comment')),
 ]
 LEVELS = ('ok', 'caution', 'warning')
 LICENSE_TERMS = {
@@ -100,7 +101,8 @@ Answer with a JSON object:
                              "in_paper": "what the paper already says about it, 1 or 2 sentences, or an empty string",
                              "quote": "the exact passage that says it, or an empty string"}}],
   "press_figures": [{{"label": "a figure label exactly as in figures", "why": "what it shows a general reader, 1 sentence"}}],
-  "glossary": [{{"term": "...", "definition": "one sentence"}}]}}
+  "glossary": [{{"term": "...", "definition": "one sentence"}}],
+  "search_query": "3 to 6 English keywords a literature search would use to find recent papers on the same topic"}}
 Give 3 to 4 evidence cards, 2 to 3 distinct reporting angles, 2 to 3 wording checks and 4 to 6 questions.
 "result" is what the authors measured, computed or proved; "interpretation" what they conclude, suggest or speculate.
 For hype_check, look at least at: peer-review status (unknown unless established in the supplied source), size of the
@@ -356,12 +358,13 @@ def found_in(works):
 WORK_FIELDS = 'id,doi,display_name,authorships,publication_date,corresponding_author_ids,locations'
 
 
-def topic_works(paper):
-    """Recent works on this paper's topic: an OpenAlex search of its title over the last RECENT_YEARS years, kept
-    when their title is close to its title and abstract (embeddings); [] when unavailable."""
+def topic_works(paper, query):
+    """Recent works on this paper's topic: an OpenAlex search of a few keywords (a whole title finds nothing) over
+    the last RECENT_YEARS years, kept when their title is close to its title and abstract (embeddings); [] when
+    unavailable."""
     since = (timezone.now().date() - datetime.timedelta(days=365 * RECENT_YEARS)).isoformat()
     works = [w for w in openalex('from_publication_date:%s,type:article|preprint|review|letter' % since, WORK_FIELDS,
-                                 TOPIC_WORKS, search=clean(paper.title, 200)) or [] if w.get('display_name')]
+                                 TOPIC_WORKS, search=query) or [] if w.get('display_name')]
     if not works:
         return []
     vectors = similar.embed([clean('%s %s' % (paper.title, paper.abstract or ''), similar.MAX_INPUT_CHARS)] +
@@ -374,7 +377,7 @@ def recent(year):
     return str(year or '') >= str(timezone.now().year - RECENT_YEARS)
 
 
-def openalex_experts(paper, papers):
+def openalex_experts(paper, papers, query=''):
     """{'experts', 'left_out': people left out because they sign with the authors or share their institution,
     'checked': whether the co-authors were (not when OpenAlex does not know this paper), 'orcids': the authors'},
     or None.
@@ -409,9 +412,9 @@ def openalex_experts(paper, papers):
     people, left_out = {}, set()
     candidates = [(neighbour, work) for neighbour, work in found if neighbour is not None and neighbour is not paper]
     collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions)
-    if sum(any(recent(x['year']) for x in p['papers']) for p in people.values()) < EXPERTS:
+    if query and sum(any(recent(x['year']) for x in p['papers']) for p in people.values()) < EXPERTS:
         try:
-            more = topic_works(paper)
+            more = topic_works(paper, query)
         except Exception:
             logger.exception('Topic search for the commentators of %s failed', paper.arxiv_id)
             more = []
@@ -478,12 +481,12 @@ def local_experts(paper, papers):
     return found
 
 
-def experts(paper, papers=None):
+def experts(paper, papers=None, query=''):
     """{'experts': researchers to approach for outside comment, 'checked': whether their co-authorships with the
     authors were, 'left_out': how many people were for that, 'orcids': the authors' ORCID iDs}."""
     papers = neighbours(paper) if papers is None else papers
     try:
-        found = openalex_experts(paper, papers)
+        found = openalex_experts(paper, papers, query)
     except Exception:
         logger.exception('Outside commentators of %s failed', paper.arxiv_id)
         found = None
@@ -668,10 +671,9 @@ def write(arxiv_id, lang):
         source = {'text': source_text, 'source': origin, 'arxiv_id': paper.arxiv_id}
         generated.progress(pk, 'publication')
         publication = publication_status.for_generation(paper)
-        generated.progress(pk, 'experts')
+        generated.progress(pk, 'context')
         papers = neighbours(paper)
         related = related_work(paper, papers)
-        people = experts(paper, papers)
         figures = figures_of(paper)
         topic = rising(paper, lang)
         generated.progress(pk, 'write')
@@ -694,6 +696,8 @@ def write(arxiv_id, lang):
         if isinstance(roles, Exception):
             logger.warning('Press kit roles of %s failed: %r', arxiv_id, roles)
             roles = {}
+        generated.progress(pk, 'experts')
+        people = experts(paper, papers, clean(re.sub(r'[^\w\s-]', ' ', str(answer.get('search_query') or '')), 120))
         kit = {
             'headline': clean(answer.get('headline'), 300),
             'plain_explanation': clean(answer.get('plain_explanation'), 2000),

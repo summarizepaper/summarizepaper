@@ -96,6 +96,12 @@ class PressKitRoleTests(ToolsTestCase):
         self.reader.save()
         self.assertEqual(self.paid.get(self.base).context['role'], 'author')
 
+    def test_commentators_are_searched_with_the_keywords_the_model_wrote(self):
+        found = {'experts': [], 'checked': False, 'left_out': 0, 'orcids': []}
+        with mock.patch('summarizer.presskit.experts', return_value=found) as search:
+            self.generate(answers(kit_answer(search_query='hot planet clouds; <b>')))
+        self.assertEqual(search.call_args.args[2], 'hot planet clouds b')
+
     def test_role_call_failure_keeps_the_kit(self):
         def chat(prompt, **kwargs):
             if 'evidence_cards' in kwargs['system']:
@@ -263,8 +269,9 @@ class PressKitRoleTests(ToolsTestCase):
         vectors = __import__('numpy').array([[1.0, 0.0], [0.8, 0.6], [0.0, 1.0]], dtype='float32')
         with mock.patch('summarizer.presskit.openalex', side_effect=openalex), \
              mock.patch('summarizer.similar.embed', return_value=vectors):
-            found = presskit.experts(self.paper_obj)
-        self.assertEqual(searches, ['Clouds on a hot planet'])
+            self.assertEqual(presskit.experts(self.paper_obj)['experts'][0]['name'], 'Old Last')  # no keywords, no search
+            found = presskit.experts(self.paper_obj, query='hot planet clouds')
+        self.assertEqual(searches, ['hot planet clouds'])
         self.assertEqual([e['name'] for e in found['experts']], ['New Lead', 'Old Last', 'Old Lead'])
         self.assertEqual((found['experts'][0]['arxiv_id'], found['experts'][0]['url']), ('', 'https://doi.org/10.1/new'))
 
