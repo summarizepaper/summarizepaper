@@ -306,9 +306,9 @@ def select(topic, day, papers):
     return chosen, notes, vectors
 
 
-def pick(topic, day, papers, lang):
+def pick(topic, day, papers, lang, reuse=True):
     """(chosen papers, selection notes, vectors): the papers already chosen for this week in another language, or new ones."""
-    other = Letter.objects.filter(topic=topic, day=day).exclude(lang=lang).first()
+    other = Letter.objects.filter(topic=topic, day=day).exclude(lang=lang).first() if reuse else None
     by_id = {p['arxiv_id']: p for p in papers}
     if other is not None:
         content = json.loads(other.content)
@@ -445,11 +445,13 @@ def localized_name(topic, lang):
         return str(TOPICS[topic]['name']), gettext('%(name)s this week') % {'name': str(TOPICS[topic]['name'])}
 
 
-def write(topic, day, lang, save=True):
+def write(topic, day, lang, save=True, reuse=True):
+    """The letter of a theme, week and language, stored unless save=False; reuse=False chooses the papers again
+    even when another language already has them."""
     papers = week_papers(topic, day)
     if len(papers) < MIN_PAPERS:
         return None
-    chosen, selection, vectors = pick(topic, day, papers, lang)
+    chosen, selection, vectors = pick(topic, day, papers, lang, reuse)
     if len(chosen) < 3:
         return None
     name, heading = localized_name(topic, lang)
@@ -467,7 +469,7 @@ def write(topic, day, lang, save=True):
         'write IDs in the texts. For each section also give "query": its subject as a researcher would type it in a '
         'search engine, in English, 4 to 12 words. For each paper give "study": one of %s; "evidence": what the result '
         'rests on in a few words (a sample, a data set, a number of runs), copied from the abstract, or "" if it does '
-        'not say; "limit": its main limit in one sentence, from the abstract. Answer with a JSON object {"title": "...", '
+        'not say; "limit": in one sentence, what the result does not show yet or the main caveat a referee would raise (a small sample, simulations only, one data set, no independent test, a proxy measure...), from the abstract, not a restatement of its scope. Answer with a JSON object {"title": "...", '
         '"dek": "...", "sections": [{"heading": "...", "text": "...", "papers": ["ID"], "query": "..."}], "closing": '
         '"...", "papers": {"ID": {"study": "...", "evidence": "...", "limit": "..."}}}.'
         % (generated.language_name(lang), heading, len(papers), heading, ', '.join(STUDY_TYPES)),

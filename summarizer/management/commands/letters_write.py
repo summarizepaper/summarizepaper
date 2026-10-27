@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 if not options['force'] and not options['dry_run'] and Letter.objects.filter(topic=topic, day=day, lang=lang).exists():
                     self.stdout.write('%s %s %s: already written' % (topic, lang, day))
                     continue
-                letter = letters.write(topic, day, lang, save=not options['dry_run'])
+                letter = letters.write(topic, day, lang, save=not options['dry_run'], reuse=not options['dry_run'])
                 if letter is None:
                     self.stdout.write('%s %s %s: no letter (too few papers, or too few sections holding their numbers)' % (topic, lang, day))
                     continue
