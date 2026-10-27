@@ -2848,6 +2848,10 @@ class LetterTests(ToolsTestCase):
                 int(re.search(r'Keep up to (\d+)', prompt).group(1))) or {'ids': []}):
             letters.screen('space', papers)
         self.assertEqual(keeps, [25])  # 30 papers: enough kept to choose among 25
+        one_category = [dict(p, categories=['astro-ph.SR']) for p in papers]
+        scores = {p['arxiv_id']: (0, False, 1) for p in one_category}
+        listed = letters.shortlist('space', self.day, one_category, [p['arxiv_id'] for p in one_category[:20]], scores)
+        self.assertEqual(len(listed), 20)  # not stopped at SHORTLIST_PER_CATEGORY
 
     def test_plain_math_and_earlier_works_from_openalex(self):
         self.assertEqual(letters.plain_math('more than $10^6$ s, $\\mathcal{F}t$, $0^+\\to0^+$, $M_{\\odot}$'),

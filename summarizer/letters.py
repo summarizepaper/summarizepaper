@@ -266,7 +266,8 @@ def signals(topic, day, papers, vectors):
 
 def shortlist(topic, day, papers, screened, scores):
     """The papers whose abstracts the model reads: the screened ones, then the ones the signals put first, ordered
-    by the signals, no more than SHORTLIST_PER_CATEGORY of one category."""
+    by the signals, no more than SHORTLIST_PER_CATEGORY of one category while others are left; then the rest, when
+    a field lives mostly in one category (bioRxiv neuroscience for the brain)."""
     noise = random.Random('%s%s' % (topic, day))
     tie = {p['arxiv_id']: noise.random() for p in papers}  # so that equal papers are not ordered by their ID
     by_signal = sorted(papers, key=lambda p: (scores[p['arxiv_id']], tie[p['arxiv_id']]), reverse=True)
@@ -280,6 +281,8 @@ def shortlist(topic, day, papers, screened, scores):
         found.append(paper)
         if len(found) == SHORTLIST:
             break
+    chosen = {p['arxiv_id'] for p in found}
+    found += [p for p in by_signal if p['arxiv_id'] in kept and p['arxiv_id'] not in chosen][:SHORTLIST - len(found)]
     return found
 
 
