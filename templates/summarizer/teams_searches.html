@@ -1,0 +1,16 @@
+{% load i18n %}{# The searches of a topic map, and for its owner a form to run it again with other searches. #}
+{% if result.queries %}
+<details class="teams-searches"><summary>{% blocktrans count n=result.queries|length %}The search run on OpenAlex{% plural %}The {{ n }} searches run on OpenAlex{% endblocktrans %}{% if result.mode %} · {% for value, label in modes %}{% if value == result.mode %}{{ label }}{% endif %}{% endfor %}{% endif %}</summary>
+  <ul>{% for q in result.queries %}<li>{{ q }}{% for query, count in result.hits.items %}{% if query == q %} <span class="meta">— {% blocktrans count n=count %}OpenAlex finds {{ n }} paper{% plural %}OpenAlex finds {{ n }} papers{% endblocktrans %}</span>{% endif %}{% endfor %}</li>{% endfor %}</ul>
+  {% if not shared %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="rerun">
+    <p><label>{% trans 'Edit the searches, one per line (up to four), to run the map again' %}<br><textarea name="queries" rows="4">{% for q in result.queries %}{{ q }}
+{% endfor %}</textarea></label></p>
+    <p><label>{% trans 'What for?' %} <select name="mode">{% for value, label in modes %}<option value="{{ value }}"{% if value == result.mode %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>{% trans 'Papers of the last' %} <select name="years">{% for y in year_choices %}<option value="{{ y }}"{% if y == result.years %} selected{% endif %}>{% blocktrans count n=y %}{{ n }} year{% plural %}{{ n }} years{% endblocktrans %}</option>{% endfor %}</select></label></p>
+    <p><label>{% trans 'Your ORCID iD (optional)' %} <input type="text" name="orcid" value="{{ orcid }}" placeholder="0000-0002-1825-0097" style="max-width:22em"></label></p>
+    <p><button class="btn btn-sm" type="submit">{% trans 'Run the map again' %}</button> <small class="muted">{% trans 'This counts as one of your searches of the day.' %}</small></p>
+  </form>
+  {% endif %}
+</details>
+{% endif %}

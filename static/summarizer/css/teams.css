@@ -1,0 +1,17 @@
+.teams-toolbar{position:sticky;top:0;z-index:2;background:var(--bg,#fff);padding:10px 0;margin:0 0 12px;border-bottom:1px solid var(--border)}
+.teams-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.teams-tabs button{padding:6px 12px;border:1px solid var(--border);border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.teams-tabs button[aria-selected=true]{background:var(--accent,#6554c0);border-color:var(--accent,#6554c0);color:#fff}
+.teams-tabs button:focus-visible{outline:2px solid var(--accent,#6554c0);outline-offset:2px}
+.teams-filters{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;font-size:.92rem}
+.teams-filters select{max-width:16em}
+.teams-badge{display:inline-block;padding:1px 8px;border-radius:5px;background:var(--bg-soft,#f3f3f7);font-size:.8rem;line-height:1.6}
+.teams-badge-lead{background:#edf5ef;color:#256641}.teams-badge-mine{background:#fef3c7;color:#92400e}
+.teams-chips{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 0}
+.teams-papers{padding-left:20px;line-height:1.55}.teams-papers>li{margin:6px 0}.teams-papers .meta{font-size:.85rem}
+.teams-actions{margin:8px 0 0}.teams-searches{margin:8px 0}.teams-searches summary{cursor:pointer;font-weight:600}
+.teams-searches textarea{box-sizing:border-box;width:100%}
+.teams-competitor-form select{max-width:20em}
+.page details>summary{cursor:pointer}
+[data-panel]{margin:0 0 28px}[data-panel] a{overflow-wrap:anywhere}
+@media(max-width:600px){.teams-toolbar{position:static}.teams-filters{gap:6px 12px}}

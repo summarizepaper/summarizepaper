@@ -25,6 +25,7 @@
         <p style="margin:8px 0 4px"><strong>{{ t.title }}</strong></p>
         <div class="meta">{{ t.speakers }}{% if t.session %} · {{ t.session }}{% endif %}{% if t.time %} · {{ t.time }}{% endif %}</div>
         {% if t.why %}<p style="margin:8px 0 0">{{ t.why }}</p>{% endif %}
+        {% if not shared %}<p style="margin:6px 0 0"><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ t.title|urlencode }}">{% trans 'Who else works on it?' %}</a></p>{% endif %}
       </li>
       {% endfor %}
     </ul>

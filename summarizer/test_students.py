@@ -578,7 +578,7 @@ class StudentReadingDiscoveryTests(ToolsTestCase):
         from . import student_papers as papers
         work = self.work('W1', title='Observations of Beta Pictoris')
         work['abstract_inverted_index'] = {'Debris': [0], 'disk': [1], 'observations': [2]}
-        with mock.patch.object(papers.generated, 'chat_json', return_value={'relevant_ids': [work['id'], 'invented']}) as chat:
+        with mock.patch.object(papers.generated, 'chat_json', return_value={'relevant_ids': ['P1', 'invented']}) as chat:
             self.assertEqual(papers.topical([work], 'Debris disks'), [work])
         payload = json.loads(chat.call_args.args[0])
         self.assertEqual(payload['papers'][0]['abstract'], 'Debris disk observations')

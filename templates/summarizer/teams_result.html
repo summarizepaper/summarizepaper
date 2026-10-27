@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Who works on it?' %}{% endblock %}
 {% block extra_head_tags %}
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/teams.css' %}"><script defer src="{% static_v 'summarizer/js/teams.js' %}"></script>
   {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
@@ -15,48 +16,164 @@
   </header>
 
   {% if result %}
-    {% if not shared %}<p><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ result.topic|default:result.title|urlencode }}">{% trans 'Looking for an internship or a PhD on this topic? See who signs these papers, how, and prepare your enquiry.' %}</a></p>
-    {% trans 'Anyone with this link sees these institutions, their authors and papers, never who searched.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if message %}<p class="notice">{{ message }}</p>{% endif %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this search: some papers are missing. Run it again tomorrow for a complete map.' %}</p>{% endif %}
-    {% if result.groups %}
-    {% if result.version == result_version %}<p class="muted">{% blocktrans with n=result.papers year=result.since %}From {{ n }} papers on this topic published since {{ year }} (OpenAlex). All affiliations declared in the publication metadata are counted; totals across institutions overlap.{% endblocktrans %}</p>{% endif %}
-    <p class="notice">{% trans 'These are publication affiliations, not identified research teams. A national organization such as CNRS can include several independent laboratories. Author order does not establish who leads a team.' %}</p>
-    {% if result.truncated %}<p class="notice">{% trans 'Topical relevance was checked for the 120 closest candidate papers. This is a partial view, not an exhaustive ranking.' %}</p>{% endif %}
-    {% if result.version != result_version %}<p class="notice">{% trans 'This saved search uses the previous grouping method. Its inferred descriptions and people ranking are hidden. Run a new search to obtain stricter topical matches and the papers supporting each person.' %}</p>{% endif %}
-    {% if result.version == result_version and result.landscape %}<section class="card section-card"><p style="margin:0">{{ result.landscape }}</p></section>{% endif %}
+
+    {% if result.version != result_version and not result.groups %}
+    <p class="notice">{% trans 'We found no recent paper with sufficiently clear evidence for this topic and its affiliations. Try other words.' %}</p>
+
+    {% elif result.version != result_version %}
+    {# A map made by an earlier version: its institutions and papers only, counted the old way. #}
+    <p class="notice">{% trans 'This saved search was made by an earlier version of this tool: a preprint and its published version could count twice, and large collaborations counted for each of their institutions. Its people and descriptions are hidden.' %}{% if not shared %} <a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ result.topic|default:result.title|urlencode }}">{% trans 'Run it again' %}</a>{% endif %}</p>
     <ul class="item-list">
       {% for g in result.groups %}
       <li class="card">
         <p style="margin:0 0 4px"><strong>{{ g.institution }}</strong>{% if g.country %} · {{ g.country }}{% endif %}</p>
-        <div class="meta">{% blocktrans count n=g.papers %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% blocktrans count n=g.citations %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}</div>
-        {% if result.version == result_version %}
-        {% if g.focus %}<p style="margin:8px 0 0"><strong>{% trans 'Themes in the selected papers:' %}</strong> {{ g.focus }}</p>{% endif %}
-        {% if g.approach %}<p style="margin:4px 0 0"><strong>{% trans 'Approach:' %}</strong> {{ g.approach }}</p>{% endif %}
-        <p style="margin:8px 0 0"><strong>{% trans 'Authors affiliated on these papers:' %}</strong></p>
-        <p class="muted"><small>{% trans 'Up to five authors, ordered by the number of matching papers, then alphabetically. These are not recommendations or identified team leaders.' %}</small></p>
-        <ul>
-          {% for p in g.people %}<li>
-            <details><summary>{{ p.name }} — {% blocktrans count n=p.papers %}{{ n }} matching paper{% plural %}{{ n }} matching papers{% endblocktrans %}</summary>
-              <ul>{% for t in p.titles %}<li>{% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.year %} ({{ t.year }}){% endif %}</li>{% endfor %}</ul>
-            </details>
-          </li>{% endfor %}
-        </ul>
-        {% endif %}
-        <details style="margin-top:6px"><summary>{% if result.version == result_version %}{% trans 'Most cited matching papers with this affiliation' %}{% else %}{% trans 'Papers from the saved search' %}{% endif %}</summary>
+        <div class="meta">{% blocktrans count n=g.papers %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</div>
+        <details style="margin-top:6px"><summary>{% trans 'Papers from the saved search' %}</summary>
           <ul>{% for t in g.titles %}<li>{% if t.url %}<a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.title }}</a>{% else %}{{ t.title }}{% endif %}{% if t.year %} ({{ t.year }}){% endif %}</li>{% endfor %}</ul>
         </details>
       </li>
       {% endfor %}
     </ul>
-    <p class="muted"><small>{% trans 'From the paper metadata of OpenAlex, which can be incomplete (affiliations, homonyms). Check before contacting anyone.' %}</small></p>
-    {% else %}
+
+    {% elif not result.papers %}
     <p class="notice">{% trans 'We found no recent paper with sufficiently clear evidence for this topic and its affiliations. Try other words.' %}</p>
+    {% include 'summarizer/teams_searches.html' %}
+
+    {% else %}
+    <section class="card section-card teams-read">
+      <p style="margin-top:0">{% blocktrans count n=result.papers with year=result.since retrieved=result.retrieved %}From {{ n }} paper on this topic published since {{ year }}, kept out of the {{ retrieved }} most relevant results of our searches on OpenAlex.{% plural %}From {{ n }} papers on this topic published since {{ year }}, kept out of the {{ retrieved }} most relevant results of our searches on OpenAlex.{% endblocktrans %}
+        {% if result.duplicates %}{% blocktrans count n=result.duplicates %}{{ n }} preprint counted once with its published version.{% plural %}{{ n }} preprints counted once with their published versions.{% endblocktrans %}{% endif %}
+        {% if result.truncated %}{% trans 'Relevance was checked for the 120 closest papers only.' %}{% endif %}</p>
+      <p class="muted">{% trans 'This is a sample of the field, not a census: a broad topic has many more papers than a map reads. Narrow the topic or edit the searches to map one part of it well.' %}</p>
+      {% include 'summarizer/teams_searches.html' %}
+      {% if result.conflicts and not shared %}
+        {% if result.conflicts.checked %}<p>{% blocktrans count n=result.conflicts.papers %}Your ORCID iD: {{ n }} paper of the last five years read.{% plural %}Your ORCID iD: {{ n }} papers of the last five years read.{% endblocktrans %}
+          {% if result.mode == 'overview' %}{% trans 'You, your co-authors and your colleagues are marked.' %}{% elif result.mode == 'referees' %}{% trans 'You, your co-authors and your colleagues of the same institution are left out.' %}{% else %}{% trans 'You and your co-authors are left out; your colleagues are marked.' %}{% endif %}</p>
+          {% if excluded %}<details><summary>{% blocktrans count n=excluded|length %}{{ n }} person left out{% plural %}{{ n }} people left out{% endblocktrans %}</summary>
+            <ul>{% for p in excluded %}<li>{{ p.name }} — {% if p.relation == 'self' %}{% trans 'you' %}{% elif p.relation == 'coauthor' %}{% trans 'co-author' %}{% else %}{% trans 'same institution' %}{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+        {% else %}<p class="notice">{% trans 'Your ORCID iD could not be read on OpenAlex: co-authors are neither marked nor left out. Run the map again later.' %}</p>{% endif %}
+      {% endif %}
+    </section>
+
+    {% if result.landscape %}<section class="card section-card"><h2>{% trans 'The landscape' %}</h2><p style="margin:0">{{ result.landscape }}</p></section>{% endif %}
+
+    <div class="teams-toolbar" data-teams-toolbar hidden>
+      <div class="teams-tabs" role="tablist">
+        <button type="button" role="tab" data-tab="people" aria-selected="true">{% trans 'People' %} ({{ people|length }})</button>
+        <button type="button" role="tab" data-tab="institutions" aria-selected="false">{% trans 'Institutions' %} ({{ institutions|length }})</button>
+        {% if approaches %}<button type="button" role="tab" data-tab="approaches" aria-selected="false">{% trans 'Approaches' %} ({{ approaches|length }})</button>{% endif %}
+        <button type="button" role="tab" data-tab="papers" aria-selected="false">{% trans 'Papers' %} ({{ result.papers }})</button>
+      </div>
+      <div class="teams-filters">
+        {% if countries|length > 1 %}<label>{% trans 'Country' %} <select data-filter="country"><option value="">{% trans 'All' %}</option>{% for c in countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></label>{% endif %}
+        {% if approaches %}<label>{% trans 'Approach' %} <select data-filter="approach"><option value="">{% trans 'All' %}</option>{% for a in approaches %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}</select></label>{% endif %}
+        <label><input type="checkbox" data-filter="lead"> {% trans 'Signs first, last or as corresponding author' %}</label>
+        {% if result.conflicts.checked and not shared and result.mode == 'overview' %}<label><input type="checkbox" data-filter="mine"> {% trans 'Hide me, my co-authors and colleagues' %}</label>{% endif %}
+        <span class="muted" data-filter-count></span>
+      </div>
+    </div>
+
+    <section data-panel="people" aria-labelledby="teams-people">
+      <h2 id="teams-people">{% trans 'People' %}</h2>
+      <p class="muted"><small>{% if result.mode == 'competitors' %}{% trans 'Ordered by the papers of the map they sign, those of the last twelve months counting double, and first those they sign first, last or as corresponding author.' %}{% elif result.mode == 'referees' %}{% trans 'People who sign at least one paper of the map first, last or as corresponding author, ordered by these papers. Check their recent work and any other conflict of interest before suggesting them.' %}{% else %}{% trans 'Ordered by the papers of the map they sign, counting more those they sign first, last or as corresponding author. Author order says who did what in many fields, not who leads a team; it is not used in alphabetical author lists, nor after the first fifteen authors of a large collaboration.' %}{% endif %}</small></p>
+      {% if scoop_projects and not shared %}
+      <p class="teams-competitor-form" data-competitor-form data-url="/{{ LANGUAGE_CODE }}/scoops/" data-failed="{% trans 'Something went wrong. Please try again.' %}">{% csrf_token %}
+        <label>{% trans 'Competing teams you follow go to the scoop watch project' %} <select name="pk">{% for project in scoop_projects %}<option value="{{ project.pk }}">{{ project.title }}</option>{% endfor %}</select></label></p>
+      {% endif %}
+      <ul class="item-list">
+        {% for p in people %}
+        <li class="card" data-item data-country="{{ p.country }}" data-approaches="{{ p.approach_ids }}" data-lead="{{ p.lead }}" data-relation="{{ p.relation }}">
+          <p style="margin:0 0 4px"><strong>{{ p.name }}</strong>{% if p.relation %} <span class="teams-badge teams-badge-mine">{% if p.relation == 'self' %}{% trans 'you' %}{% elif p.relation == 'coauthor' %}{% trans 'co-author' %}{% else %}{% trans 'same institution' %}{% endif %}</span>{% endif %}
+            {% if p.institution %}<span class="meta"> · {{ p.institution }}{% if p.country %} · {{ p.country }}{% endif %}</span>{% endif %}</p>
+          <div class="meta">{% blocktrans count n=p.papers %}{{ n }} paper of the map{% plural %}{{ n }} papers of the map{% endblocktrans %}{% if p.lead %} · {% blocktrans with first=p.roles.first last=p.roles.last corresponding=p.roles.corresponding %}first author {{ first }}, last {{ last }}, corresponding {{ corresponding }}{% endblocktrans %}{% endif %}{% if p.years %} · {{ p.years.0 }}{% if p.years.1 != p.years.0 %}–{{ p.years.1 }}{% endif %}{% endif %}
+            {% if p.orcid %} · <a href="{{ p.orcid }}" target="_blank" rel="noopener">ORCID</a>{% endif %} · <a href="{{ p.key }}" target="_blank" rel="noopener">OpenAlex</a></div>
+          {% if p.approach_list %}<p class="teams-chips">{% for name, n in p.approach_list %}<span class="teams-badge">{{ name }} · {{ n }}</span>{% endfor %}</p>{% endif %}
+          <details><summary>{% trans 'Their papers on the topic' %}</summary><ul class="teams-papers">{% for paper in p.papers_list %}{% include 'summarizer/teams_paper.html' %}{% endfor %}</ul></details>
+          {% if scoop_projects and not shared and p.relation != 'self' %}<p class="teams-actions"><button type="button" class="link-button" data-competitor="{{ p.name }}">{% trans 'Follow as a competing team in my scoop watch' %}</button> <span class="muted" data-competitor-status></span></p>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% if not people %}<p class="notice">{% trans 'Nobody is left once the people you asked to leave out are.' %}</p>{% endif %}
+    </section>
+
+    <section data-panel="institutions" aria-labelledby="teams-institutions">
+      <h2 id="teams-institutions">{% trans 'Institutions' %}</h2>
+      <p class="notice">{% trans 'These are publication affiliations, not identified research teams. A national organization such as CNRS can include several independent laboratories.' %}</p>
+      <p class="muted"><small>{% trans 'Ordered by the papers one of their authors signs first, last or as corresponding author, then by their share of the papers: a paper signed by four institutions counts a quarter for each, so a large collaboration does not make each of its members look central.' %}</small></p>
+      <ul class="item-list">
+        {% for g in institutions %}
+        <li class="card" data-item data-country="{{ g.country }}" data-approaches="{{ g.approach_ids }}" data-lead="{{ g.lead }}" data-relation="">
+          <p style="margin:0 0 4px"><strong>{{ g.institution }}</strong>{% if g.country %} · {{ g.country }}{% endif %}</p>
+          <div class="meta">{% blocktrans count n=g.papers with share=g.share %}{{ share }} papers by share, out of {{ n }} paper with an author there{% plural %}{{ share }} papers by share, out of {{ n }} papers with an author there{% endblocktrans %} · {% blocktrans count n=g.lead %}{{ n }} signed first, last or as corresponding author{% plural %}{{ n }} signed first, last or as corresponding author{% endblocktrans %}</div>
+          {% if g.approach_list %}<p class="teams-chips">{% for name, n in g.approach_list %}<span class="teams-badge">{{ name }} · {{ n }}</span>{% endfor %}</p>{% endif %}
+          {% if g.people %}<p style="margin:8px 0 0"><strong>{% trans 'Signing first, last or as corresponding author here:' %}</strong> {% for person in g.people %}{{ person.name }} ({{ person.papers }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+          <details style="margin-top:6px"><summary>{% trans 'Matching papers with this affiliation' %}</summary><ul class="teams-papers">{% for paper in g.papers_list %}{% include 'summarizer/teams_paper.html' %}{% endfor %}</ul></details>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% if approaches %}
+    <section data-panel="approaches" aria-labelledby="teams-approaches">
+      <h2 id="teams-approaches">{% trans 'Approaches' %}</h2>
+      <p class="muted"><small>{% trans 'The papers are grouped by the similarity of their titles and abstracts; an AI names each group from its papers. A paper is in one group only.' %}</small></p>
+      <ul class="item-list">
+        {% for a in approaches %}
+        <li class="card" data-approach-card="{{ a.id }}">
+          <p style="margin:0 0 4px"><strong>{{ a.name }}</strong> <span class="meta">· {% blocktrans count n=a.papers %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}</span></p>
+          {% if a.description %}<p style="margin:4px 0">{{ a.description }}</p>{% endif %}
+          {% if a.people_list %}<p style="margin:8px 0 0"><strong>{% trans 'People:' %}</strong> {% for p in a.people_list %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+          {% if a.institutions_list %}<p style="margin:4px 0 0"><strong>{% trans 'Institutions:' %}</strong> {% for g in a.institutions_list %}{{ g.institution }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+          <details style="margin-top:6px"><summary>{% trans 'Its papers' %}</summary><ul class="teams-papers">{% for paper in a.papers_list %}{% include 'summarizer/teams_paper.html' with hide_approach=True %}{% endfor %}</ul></details>
+          {% if not shared %}<form method="post" class="teams-actions">{% csrf_token %}<input type="hidden" name="action" value="collection"><input type="hidden" name="approach" value="{{ a.id }}"><input type="hidden" name="collection" value="new"><button class="link-button" type="submit">{% trans 'Put these papers in a new collection' %}</button></form>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
     {% endif %}
+
+    <section data-panel="papers" aria-labelledby="teams-papers">
+      <h2 id="teams-papers">{% trans 'Papers' %}</h2>
+      <ul class="teams-papers">{% for paper in result.works %}{% include 'summarizer/teams_paper.html' %}{% endfor %}</ul>
+    </section>
+
+    <section class="card section-card">
+      <h2>{% trans 'Use this map' %}</h2>
+      <p>{% trans 'Export:' %}
+        <a href="{% if shared %}{% url 'teams_shared_export' token=row.share_token what='people' %}{% else %}{% url 'teams_export' key=row.key what='people' %}{% endif %}">{% trans 'people (CSV)' %}</a> ·
+        <a href="{% if shared %}{% url 'teams_shared_export' token=row.share_token what='institutions' %}{% else %}{% url 'teams_export' key=row.key what='institutions' %}{% endif %}">{% trans 'institutions (CSV)' %}</a> ·
+        <a href="{% if shared %}{% url 'teams_shared_export' token=row.share_token what='papers' %}{% else %}{% url 'teams_export' key=row.key what='papers' %}{% endif %}">{% trans 'papers (CSV)' %}</a> ·
+        <a href="{% if shared %}{% url 'teams_shared_export' token=row.share_token what='bib' %}{% else %}{% url 'teams_export' key=row.key what='bib' %}{% endif %}">BibTeX</a> ·
+        <a href="{% if shared %}{% url 'teams_shared_export' token=row.share_token what='ris' %}{% else %}{% url 'teams_export' key=row.key what='ris' %}{% endif %}">RIS (Zotero, Mendeley, EndNote)</a></p>
+      {% if not shared %}
+      {% if collectable %}<form method="post" class="tool-row">{% csrf_token %}<input type="hidden" name="action" value="collection">
+        <span>{% blocktrans count n=collectable %}Put its {{ n }} paper with an arXiv identifier or a DOI in{% plural %}Put its {{ n }} papers with an arXiv identifier or a DOI in{% endblocktrans %}</span>
+        <select name="collection" aria-label="{% trans 'Collection' %}"><option value="new">{% trans 'a new collection' %}</option>{% for c in collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select>
+        <button class="btn btn-sm" type="submit">{% trans 'Add' %}</button>
+        <small class="muted">{% trans 'then chat with them, compare them in a table and find their open questions.' %}</small></form>{% endif %}
+      <form method="post" class="tool-row">{% csrf_token %}
+        {% if followed %}<span>{% trans 'Followed: every month, the new papers on this topic and the new names, by email.' %}</span> <button class="btn btn-sm btn-ghost" name="action" value="unfollow">{% trans 'Stop following' %}</button>
+        {% else %}<button class="btn btn-sm" name="action" value="follow">{% trans 'Follow this map' %}</button> <small class="muted">{% trans 'Every month, the new papers on this topic, those of the people of the map apart from the new names, by email.' %}</small>{% endif %}
+      </form>
+      <ul>
+        <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ result.topic|default:result.title|urlencode }}">{% trans 'A literature review of the topic' %}</a>: {% trans 'the founding and recent papers, grouped by approach, with a referenced synthesis.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>: {% trans 'the papers close to your draft that it does not cite.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/">{% trans 'Scoop watch' %}</a>: {% trans 'an email the day a new paper comes close to your project, and the new papers of the competing teams you follow.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ result.topic|default:result.title|urlencode }}">{% trans 'Find a research placement' %}</a>: {% trans 'for an internship or a PhD, where these people are now, their teams, readings and a first email.' %}</li>
+      </ul>
+      {% endif %}
+    </section>
+
+    <p class="muted"><small>{% trans 'From the paper metadata of OpenAlex, which can be incomplete (affiliations, homonyms). Check before contacting anyone.' %}</small></p>
+    {% endif %}
+    {% if not shared %}{% trans 'Anyone with this link sees these people, institutions and papers, never who searched nor whom your ORCID iD left out.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The search failed. Please try again.' %}</p>
   {% else %}
-    {% trans 'Finding the groups that work on this topic' as working_title %}
-    {% trans 'usually about a minute' as working_time %}
+    {% trans 'Finding the people who work on this topic' as working_title %}
+    {% trans 'usually one to two minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='teams-working' working_steps=steps working_visible=True working_started=row.created %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {

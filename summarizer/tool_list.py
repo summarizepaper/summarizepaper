@@ -14,7 +14,7 @@ _GROUPS = [
         ('scoops/', 'user-secret', _('Scoop watch'), True, _('Describe your project in progress: we email you the day a new paper comes close to it.')),
         ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they do with them, with the citing sentence and self-citations apart, and what changed when they get a new version.')),
         ('students/', 'graduation-cap', _('Find a research placement'), 'plus', _('Who signs recent papers on your topic and how, their team and acknowledged funding, readings, a first email, and your applications followed with reminders.')),
-        ('teams/', 'users', _('Who works on it?'), True, _('Institutions and authors publishing on your topic, with supporting papers and methods.')),
+        ('teams/', 'users', _('Who works on it?'), True, _('The people and institutions who sign the recent papers on your topic, how they sign them and with which approaches; referees without your co-authors, and the new names every month.')),
         ('trends/', 'chart-line', _('Rising topics'), False, _('The terms that rise on arXiv week after week, field by field.')),
         ('letters/', 'feather-alt', _('Weekly letters'), False, _('Each week, an article per theme (AI, space, health...) on the papers that matter, for curious readers; by email with Premium.')),
         ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search and get an email when new papers match it: one with a free account, five with Premium.')),

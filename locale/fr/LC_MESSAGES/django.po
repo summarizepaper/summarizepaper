@@ -15262,3 +15262,347 @@ msgid "We check the people who sign these papers most prominently; %(n)s other c
 msgid_plural "We check the people who sign these papers most prominently; %(n)s other coauthors were not checked."
 msgstr[0] "Nous vérifions les personnes qui signent ces articles de la façon la plus visible ; %(n)s autre coauteur n'a pas été vérifié."
 msgstr[1] "Nous vérifions les personnes qui signent ces articles de la façon la plus visible ; %(n)s autres coauteurs n'ont pas été vérifiés."
+
+msgid "An overview of the field"
+msgstr "Une vue d'ensemble du domaine"
+
+msgid "Collaborators"
+msgstr "Des collaborateurs"
+
+msgid "Referees to suggest to a journal"
+msgstr "Des rapporteurs à suggérer à une revue"
+
+msgid "Checking relevance and merging preprints with their published versions"
+msgstr "Vérification de la pertinence et fusion des prépublications avec leurs versions publiées"
+
+msgid "Grouping the papers by approach and counting who signs what"
+msgstr "Regroupement des articles par approche et décompte de qui signe quoi"
+
+msgid "An AI names the approaches from their papers"
+msgstr "Une IA nomme les approches à partir de leurs articles"
+
+msgid "Approach %(n)d"
+msgstr "Approche %(n)d"
+
+msgid "You will get an email every month with the new papers on this topic, apart those of the people already on this map and the new names."
+msgstr "Vous recevrez chaque mois un email avec les nouveaux articles sur ce sujet, ceux des personnes déjà sur cette carte à part des nouveaux noms."
+
+msgid "This map is no longer followed."
+msgstr "Cette carte n'est plus suivie."
+
+msgid "You follow five maps at most. Stop following one first."
+msgstr "Vous suivez cinq cartes au plus. Arrêtez d'abord d'en suivre une."
+
+msgid "None of these papers has an arXiv identifier or a DOI to put in a collection."
+msgstr "Aucun de ces articles n'a d'identifiant arXiv ou de DOI pour être mis dans une collection."
+
+msgid "This is not an ORCID iD (0000-0000-0000-0000)."
+msgstr "Ce n'est pas un identifiant ORCID (0000-0000-0000-0000)."
+
+msgid "You can run %(n)d searches a day. Come back tomorrow."
+msgstr "Vous pouvez lancer %(n)d recherches par jour. Revenez demain."
+
+msgid "The people and institutions who sign the recent papers on your topic, how they sign them and with which approaches; referees without your co-authors, and the new names every month."
+msgstr "Les personnes et les institutions qui signent les articles récents sur votre sujet, comment elles les signent et avec quelles approches ; des rapporteurs sans vos co-auteurs, et les nouveaux noms chaque mois."
+
+msgid "Describe a research topic: the people and institutions who sign the matching papers of the last two or five years, how they sign them, the approaches of these papers and the evidence. To find collaborators, competing teams or referees without conflicts of interest."
+msgstr "Décrivez un sujet de recherche : les personnes et les institutions qui signent les articles correspondants des deux ou cinq dernières années, comment elles les signent, les approches de ces articles et les preuves. Pour trouver des collaborateurs, les équipes concurrentes ou des rapporteurs sans conflit d'intérêts."
+
+msgid "Describe a research topic: we find the people and institutions who sign the matching papers of the last years, in journals and on preprint servers, how they sign them, and the approaches these papers take."
+msgstr "Décrivez un sujet de recherche : nous trouvons les personnes et les institutions qui signent les articles correspondants des dernières années, dans les revues et sur les serveurs de prépublications, comment elles les signent, et les approches de ces articles."
+
+msgid "We write several searches from your topic and run them on OpenAlex, which knows the papers of journals and preprint servers with the institutions of their authors. You see the searches and can change them."
+msgstr "Nous écrivons plusieurs recherches à partir de votre sujet et les lançons sur OpenAlex, qui connaît les articles des revues et des serveurs de prépublications avec les institutions de leurs auteurs. Vous voyez les recherches et pouvez les modifier."
+
+msgid "An AI reads the titles and abstracts and keeps the papers that address the topic. A preprint and its published version count once."
+msgstr "Une IA lit les titres et les résumés et garde les articles qui traitent du sujet. Une prépublication et sa version publiée comptent une fois."
+
+msgid "For each person: the papers they sign first, last or as corresponding author, apart from alphabetical author lists and the long lists of large collaborations; one person per ORCID. Each institution counts for its share of each paper."
+msgstr "Pour chaque personne : les articles qu'elle signe en premier, en dernier ou comme auteur correspondant, hors listes d'auteurs alphabétiques et longues listes des grandes collaborations ; une personne par ORCID. Chaque institution compte pour sa part de chaque article."
+
+msgid "The papers are grouped by approach (method, data, instrument or theory), so you see who does what."
+msgstr "Les articles sont regroupés par approche (méthode, données, instrument ou théorie) : vous voyez qui fait quoi."
+
+msgid "With your ORCID iD, you and your co-authors of the last five years are left out when you look for referees, collaborators or competing teams."
+msgstr "Avec votre identifiant ORCID, vous et vos co-auteurs des cinq dernières années êtes écartés quand vous cherchez des rapporteurs, des collaborateurs ou les équipes concurrentes."
+
+msgid "To find collaborators, the competing teams, or referees to suggest to a journal."
+msgstr "Pour trouver des collaborateurs, les équipes concurrentes, ou des rapporteurs à suggérer à une revue."
+
+msgid "Exports for spreadsheets and reference managers, papers saved in a collection, competing teams followed in your scoop watch."
+msgstr "Des exports pour tableurs et gestionnaires de références, les articles enregistrés dans une collection, les équipes concurrentes suivies dans votre veille anti-scoop."
+
+msgid "Follow a map: every month, the new papers on the topic and the new names."
+msgstr "Suivez une carte : chaque mois, les nouveaux articles sur le sujet et les nouveaux noms."
+
+msgid "You can start from a project of your scoop watch or the research profile of your digest."
+msgstr "Vous pouvez partir d'un projet de votre veille anti-scoop ou du profil de recherche de votre digest."
+
+msgid "or the research profile of my digest"
+msgstr "ou le profil de recherche de mon digest"
+
+msgid "What for?"
+msgstr "Pour quoi faire ?"
+
+msgid "Papers of the last"
+msgstr "Articles publiés depuis"
+
+msgid "%(n)s year"
+msgid_plural "%(n)s years"
+msgstr[0] "%(n)s an"
+msgstr[1] "%(n)s ans"
+
+msgid "Your ORCID iD (optional)"
+msgstr "Votre identifiant ORCID (facultatif)"
+
+msgid "You and your co-authors of the last five years are marked on the map, and left out for referees, collaborators and competing teams (your colleagues too, for referees). Your ORCID iD is not kept with the map, and a shared map does not show whom it left out."
+msgstr "Vous et vos co-auteurs des cinq dernières années êtes signalés sur la carte, et écartés pour les rapporteurs, les collaborateurs et les équipes concurrentes (vos collègues aussi, pour les rapporteurs). Votre identifiant ORCID n'est pas gardé avec la carte, et une carte partagée ne montre pas qui elle a écarté."
+
+msgid "Find who works on it"
+msgstr "Trouver qui travaille dessus"
+
+msgid "Followed every month"
+msgstr "Suivie chaque mois"
+
+msgid "This saved search was made by an earlier version of this tool: a preprint and its published version could count twice, and large collaborations counted for each of their institutions. Its people and descriptions are hidden."
+msgstr "Cette recherche enregistrée a été faite par une version précédente de cet outil : une prépublication et sa version publiée pouvaient compter deux fois, et les grandes collaborations comptaient pour chacune de leurs institutions. Ses personnes et descriptions sont masquées."
+
+msgid "Run it again"
+msgstr "La relancer"
+
+msgid "From %(n)s paper on this topic published since %(year)s, kept out of the %(retrieved)s most relevant results of our searches on OpenAlex."
+msgid_plural "From %(n)s papers on this topic published since %(year)s, kept out of the %(retrieved)s most relevant results of our searches on OpenAlex."
+msgstr[0] "D'après %(n)s article sur ce sujet publié depuis %(year)s, retenu parmi les %(retrieved)s résultats les plus pertinents de nos recherches sur OpenAlex."
+msgstr[1] "D'après %(n)s articles sur ce sujet publiés depuis %(year)s, retenus parmi les %(retrieved)s résultats les plus pertinents de nos recherches sur OpenAlex."
+
+msgid "%(n)s preprint counted once with its published version."
+msgid_plural "%(n)s preprints counted once with their published versions."
+msgstr[0] "%(n)s prépublication comptée une fois avec sa version publiée."
+msgstr[1] "%(n)s prépublications comptées une fois avec leurs versions publiées."
+
+msgid "Relevance was checked for the 120 closest papers only."
+msgstr "La pertinence n'a été vérifiée que pour les 120 articles les plus proches."
+
+msgid "This is a sample of the field, not a census: a broad topic has many more papers than a map reads. Narrow the topic or edit the searches to map one part of it well."
+msgstr "C'est un échantillon du domaine, pas un recensement : un sujet large compte bien plus d'articles qu'une carte n'en lit. Resserrez le sujet ou modifiez les recherches pour bien en cartographier une partie."
+
+msgid "Your ORCID iD: %(n)s paper of the last five years read."
+msgid_plural "Your ORCID iD: %(n)s papers of the last five years read."
+msgstr[0] "Votre identifiant ORCID : %(n)s article des cinq dernières années lu."
+msgstr[1] "Votre identifiant ORCID : %(n)s articles des cinq dernières années lus."
+
+msgid "You, your co-authors and your colleagues are marked."
+msgstr "Vous, vos co-auteurs et vos collègues êtes signalés."
+
+msgid "You, your co-authors and your colleagues of the same institution are left out."
+msgstr "Vous, vos co-auteurs et vos collègues de la même institution êtes écartés."
+
+msgid "You and your co-authors are left out; your colleagues are marked."
+msgstr "Vous et vos co-auteurs êtes écartés ; vos collègues sont signalés."
+
+msgid "%(n)s person left out"
+msgid_plural "%(n)s people left out"
+msgstr[0] "%(n)s personne écartée"
+msgstr[1] "%(n)s personnes écartées"
+
+msgid "you"
+msgstr "vous"
+
+msgid "co-author"
+msgstr "co-auteur"
+
+msgid "same institution"
+msgstr "même institution"
+
+msgid "Your ORCID iD could not be read on OpenAlex: co-authors are neither marked nor left out. Run the map again later."
+msgstr "Votre identifiant ORCID n'a pas pu être lu sur OpenAlex : les co-auteurs ne sont ni signalés ni écartés. Relancez la carte plus tard."
+
+msgid "The landscape"
+msgstr "Le paysage"
+
+msgid "People"
+msgstr "Personnes"
+
+msgid "Institutions"
+msgstr "Institutions"
+
+msgid "Approaches"
+msgstr "Approches"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "Hide me, my co-authors and colleagues"
+msgstr "Masquer moi, mes co-auteurs et collègues"
+
+msgid "Ordered by the papers of the map they sign, those of the last twelve months counting double, and first those they sign first, last or as corresponding author."
+msgstr "Classées selon les articles de la carte qu'elles signent, ceux des douze derniers mois comptant double, et d'abord ceux qu'elles signent en premier, en dernier ou comme auteur correspondant."
+
+msgid "People who sign at least one paper of the map first, last or as corresponding author, ordered by these papers. Check their recent work and any other conflict of interest before suggesting them."
+msgstr "Les personnes qui signent au moins un article de la carte en premier, en dernier ou comme auteur correspondant, classées selon ces articles. Vérifiez leurs travaux récents et tout autre conflit d'intérêts avant de les suggérer."
+
+msgid "Ordered by the papers of the map they sign, counting more those they sign first, last or as corresponding author. Author order says who did what in many fields, not who leads a team; it is not used in alphabetical author lists, nor after the first fifteen authors of a large collaboration."
+msgstr "Classées selon les articles de la carte qu'elles signent, en comptant davantage ceux qu'elles signent en premier, en dernier ou comme auteur correspondant. L'ordre des auteurs dit qui a fait quoi dans beaucoup de domaines, pas qui dirige une équipe ; il n'est pas utilisé dans les listes d'auteurs alphabétiques, ni après les quinze premiers auteurs d'une grande collaboration."
+
+msgid "Competing teams you follow go to the scoop watch project"
+msgstr "Les équipes concurrentes que vous suivez vont dans le projet de veille anti-scoop"
+
+msgid "%(n)s paper of the map"
+msgid_plural "%(n)s papers of the map"
+msgstr[0] "%(n)s article de la carte"
+msgstr[1] "%(n)s articles de la carte"
+
+msgid "first author %(first)s, last %(last)s, corresponding %(corresponding)s"
+msgstr "premier auteur %(first)s, dernier %(last)s, correspondant %(corresponding)s"
+
+msgid "Their papers on the topic"
+msgstr "Ses articles sur le sujet"
+
+msgid "Follow as a competing team in my scoop watch"
+msgstr "Suivre comme équipe concurrente dans ma veille anti-scoop"
+
+msgid "Nobody is left once the people you asked to leave out are."
+msgstr "Il ne reste personne une fois écartées les personnes que vous avez demandé d'écarter."
+
+msgid "These are publication affiliations, not identified research teams. A national organization such as CNRS can include several independent laboratories."
+msgstr "Ce sont des affiliations de publication, pas des équipes de recherche identifiées. Un organisme national comme le CNRS peut regrouper plusieurs laboratoires indépendants."
+
+msgid "Ordered by the papers one of their authors signs first, last or as corresponding author, then by their share of the papers: a paper signed by four institutions counts a quarter for each, so a large collaboration does not make each of its members look central."
+msgstr "Classées selon les articles qu'un de leurs auteurs signe en premier, en dernier ou comme auteur correspondant, puis selon leur part des articles : un article signé par quatre institutions compte un quart pour chacune, si bien qu'une grande collaboration ne fait pas paraître central chacun de ses membres."
+
+msgid "%(share)s papers by share, out of %(n)s paper with an author there"
+msgid_plural "%(share)s papers by share, out of %(n)s papers with an author there"
+msgstr[0] "%(share)s articles en part, sur %(n)s article avec un auteur sur place"
+msgstr[1] "%(share)s articles en part, sur %(n)s articles avec un auteur sur place"
+
+msgid "%(n)s signed first, last or as corresponding author"
+msgid_plural "%(n)s signed first, last or as corresponding author"
+msgstr[0] "%(n)s signé en premier, en dernier ou comme auteur correspondant"
+msgstr[1] "%(n)s signés en premier, en dernier ou comme auteur correspondant"
+
+msgid "Signing first, last or as corresponding author here:"
+msgstr "Signent ici en premier, en dernier ou comme auteur correspondant :"
+
+msgid "Matching papers with this affiliation"
+msgstr "Articles correspondants avec cette affiliation"
+
+msgid "The papers are grouped by the similarity of their titles and abstracts; an AI names each group from its papers. A paper is in one group only."
+msgstr "Les articles sont regroupés selon la similarité de leurs titres et résumés ; une IA nomme chaque groupe à partir de ses articles. Un article n'est que dans un groupe."
+
+msgid "Institutions:"
+msgstr "Institutions :"
+
+msgid "Its papers"
+msgstr "Ses articles"
+
+msgid "Put these papers in a new collection"
+msgstr "Mettre ces articles dans une nouvelle collection"
+
+msgid "Use this map"
+msgstr "Utiliser cette carte"
+
+msgid "Export:"
+msgstr "Exporter :"
+
+msgid "people (CSV)"
+msgstr "personnes (CSV)"
+
+msgid "institutions (CSV)"
+msgstr "institutions (CSV)"
+
+msgid "papers (CSV)"
+msgstr "articles (CSV)"
+
+msgid "Put its %(n)s paper with an arXiv identifier or a DOI in"
+msgid_plural "Put its %(n)s papers with an arXiv identifier or a DOI in"
+msgstr[0] "Mettre son article avec un identifiant arXiv ou un DOI dans"
+msgstr[1] "Mettre ses %(n)s articles avec un identifiant arXiv ou un DOI dans"
+
+msgid "then chat with them, compare them in a table and find their open questions."
+msgstr "puis dialoguer avec eux, les comparer dans un tableau et trouver leurs questions ouvertes."
+
+msgid "Followed: every month, the new papers on this topic and the new names, by email."
+msgstr "Suivie : chaque mois, les nouveaux articles sur ce sujet et les nouveaux noms, par email."
+
+msgid "Follow this map"
+msgstr "Suivre cette carte"
+
+msgid "Every month, the new papers on this topic, those of the people of the map apart from the new names, by email."
+msgstr "Chaque mois, les nouveaux articles sur ce sujet, ceux des personnes de la carte à part des nouveaux noms, par email."
+
+msgid "the founding and recent papers, grouped by approach, with a referenced synthesis."
+msgstr "les articles fondateurs et récents, regroupés par approche, avec une synthèse référencée."
+
+msgid "the papers close to your draft that it does not cite."
+msgstr "les articles proches de votre brouillon qu'il ne cite pas."
+
+msgid "an email the day a new paper comes close to your project, and the new papers of the competing teams you follow."
+msgstr "un email le jour où un nouvel article se rapproche de votre projet, et les nouveaux articles des équipes concurrentes que vous suivez."
+
+msgid "for an internship or a PhD, where these people are now, their teams, readings and a first email."
+msgstr "pour un stage ou une thèse, où sont ces personnes aujourd'hui, leurs équipes, des lectures et un premier email."
+
+msgid "Anyone with this link sees these people, institutions and papers, never who searched nor whom your ORCID iD left out."
+msgstr "Toute personne ayant ce lien voit ces personnes, institutions et articles, jamais qui a cherché ni qui votre identifiant ORCID a écarté."
+
+msgid "Finding the people who work on this topic"
+msgstr "Recherche des personnes qui travaillent sur ce sujet"
+
+msgid "usually one to two minutes"
+msgstr "en général une à deux minutes"
+
+msgid "%(n)s author"
+msgid_plural "%(n)s authors"
+msgstr[0] "%(n)s auteur"
+msgstr[1] "%(n)s auteurs"
+
+msgid "The search run on OpenAlex"
+msgid_plural "The %(n)s searches run on OpenAlex"
+msgstr[0] "La recherche lancée sur OpenAlex"
+msgstr[1] "Les %(n)s recherches lancées sur OpenAlex"
+
+msgid "OpenAlex finds %(n)s paper"
+msgid_plural "OpenAlex finds %(n)s papers"
+msgstr[0] "OpenAlex trouve %(n)s article"
+msgstr[1] "OpenAlex trouve %(n)s articles"
+
+msgid "Edit the searches, one per line (up to four), to run the map again"
+msgstr "Modifiez les recherches, une par ligne (quatre au plus), pour relancer la carte"
+
+msgid "Run the map again"
+msgstr "Relancer la carte"
+
+msgid "This counts as one of your searches of the day."
+msgstr "Cela compte comme une de vos recherches du jour."
+
+msgid "The people and institutions who publish on its topic"
+msgstr "Les personnes et institutions qui publient sur son sujet"
+
+msgid "Who else works on it?"
+msgstr "Qui d'autre travaille dessus ?"
+
+msgid "The new papers on the topics you follow, signed by people already on your maps or by new names (first, last or corresponding authors)."
+msgstr "Les nouveaux articles sur les sujets que vous suivez, signés par des personnes déjà sur vos cartes ou par de nouveaux noms (premiers, derniers ou auteurs correspondants)."
+
+msgid "On the map:"
+msgstr "Sur la carte :"
+
+msgid "New names:"
+msgstr "Nouveaux noms :"
+
+msgid "The map:"
+msgstr "La carte :"
+
+msgid "You receive this email because you follow these maps. Stop following them on their pages:"
+msgstr "Vous recevez cet email parce que vous suivez ces cartes. Arrêtez de les suivre sur leurs pages :"
+
+msgid "New papers on %(title)s"
+msgstr "Nouveaux articles sur %(title)s"
+
+msgid "New papers on %(n)s topic you follow"
+msgid_plural "New papers on %(n)s topics you follow"
+msgstr[0] "Nouveaux articles sur %(n)s sujet que vous suivez"
+msgstr[1] "Nouveaux articles sur %(n)s sujets que vous suivez"
+
+msgid "The map"
+msgstr "La carte"

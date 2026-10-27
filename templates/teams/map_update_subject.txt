@@ -1,0 +1,1 @@
+{% load i18n %}{% if maps|length == 1 %}{% blocktrans with title=maps.0.title %}New papers on {{ title }}{% endblocktrans %}{% else %}{% blocktrans count n=maps|length %}New papers on {{ n }} topic you follow{% plural %}New papers on {{ n }} topics you follow{% endblocktrans %}{% endif %}

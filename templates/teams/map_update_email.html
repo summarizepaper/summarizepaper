@@ -1,0 +1,16 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 24px;color:#666;">{% trans 'The new papers on the topics you follow, signed by people already on your maps or by new names (first, last or corresponding authors).' %}</p>
+    {% for map in maps %}
+    <p style="margin:20px 0 6px;font-size:16px;font-weight:bold;"><a href="{{ map.url }}" style="color:#222;text-decoration:none;">{{ map.title }}</a></p>
+    {% for paper in map.papers %}<div style="border-left:3px solid #4f46e5;padding:4px 0 4px 12px;margin:0 0 10px;">{% if paper.url %}<a href="{{ paper.url }}" style="color:#1a0dab;text-decoration:none;font-weight:bold;">{{ paper.title }}</a>{% else %}<strong>{{ paper.title }}</strong>{% endif %}{% if paper.year %} <span style="color:#666;font-size:13px;">· {{ paper.year }}</span>{% endif %}
+      {% if paper.known %}<br><span style="font-size:13px;color:#444;">{% trans 'On the map:' %} {{ paper.known|join:", " }}</span>{% endif %}
+      {% if paper.new %}<br><span style="font-size:13px;color:#92400e;">{% trans 'New names:' %} {{ paper.new|join:", " }}</span>{% endif %}</div>{% endfor %}
+    <p style="margin:0 0 16px;"><a href="{{ map.url }}" style="color:#1a0dab;">{% trans 'The map' %}</a></p>
+    {% endfor %}
+    <p style="color:#888;font-size:12px;">{% trans 'You receive this email because you follow these maps. Stop following them on their pages:' %} <a href="{{ url }}" style="color:#888;">{{ url }}</a></p>
+  </div>
+</body></html>

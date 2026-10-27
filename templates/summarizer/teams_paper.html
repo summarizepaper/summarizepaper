@@ -1,0 +1,9 @@
+{% load i18n %}{# One paper of a topic map. Expects paper (a work of the map, with roles when it is a person's). #}
+<li>{% if paper.url %}<a href="{{ paper.url }}" target="_blank" rel="noopener">{{ paper.title }}</a>{% else %}{{ paper.title }}{% endif %}
+  <span class="meta">{% if paper.year %}({{ paper.year }}){% endif %}{% if paper.venue %} · {{ paper.venue }}{% endif %}
+  {% if paper.roles %} · <span class="teams-badge teams-badge-lead">{% if 'first' in paper.roles %}{% trans 'First author' %}{% elif 'last' in paper.roles %}{% trans 'Last author' %}{% else %}{% trans 'Corresponding author' %}{% endif %}</span>{% endif %}
+  {% if paper.collaboration %} · <span class="teams-badge">{% blocktrans count n=paper.authors_count %}{{ n }} author{% plural %}{{ n }} authors{% endblocktrans %}</span>{% endif %}
+  {% if paper.approach_name and not hide_approach %} · <span class="teams-badge">{{ paper.approach_name }}</span>{% endif %}
+  {% for link in paper.alternate_links %} · <a href="{{ link.url }}" target="_blank" rel="noopener">{% if link.kind == 'arxiv' %}arXiv{% else %}{% trans 'Published version' %}{% endif %}</a>{% endfor %}
+  {% if paper.site_key %} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.site_key }}/">{% trans 'Summary' %}</a> · <a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ paper.site_key|urlencode }}">{% trans 'Ask this paper' %}</a>{% endif %}</span>
+</li>

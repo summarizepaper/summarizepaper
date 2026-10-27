@@ -50,6 +50,7 @@ WATCH_PER_RUN = 60  # followed people whose new papers one hourly run looks for 
 WATCH_KEEP = 10
 REMINDER_HOUR = 8  # local hour from which a due reminder is emailed
 SHARE_DAYS = 90
+add_work, merge_namesakes = student_papers.add_work, student_papers.merge_namesakes
 STEPS = teams.STEPS[:2] + [
     ('group', _('Checking relevance and publication affiliations')),
     ('location', _('Checking institution locations')),
@@ -386,35 +387,6 @@ def candidates(papers, profile, step=lambda name: None, scores=None, report=None
         for other in person['team']:
             other['shown'] = other['key'] in shown
     return chosen, limited
-
-
-def add_work(person, work, roles, weight, aid):
-    """A paper of the person, or the roles it adds to the same paper under another record (a preprint, a
-    conference version), counted once."""
-    twin = next((wid for wid, other in person['works'].items() if student_papers.same(work, other, owner=aid)), None)
-    if twin is None:
-        person['works'][work['id']], person['signed'][work['id']], person['weights'][work['id']] = work, set(roles), weight
-    else:
-        person['signed'][twin] |= set(roles)
-        person['weights'][twin] = max(person['weights'][twin], weight)
-
-
-def merge_namesakes(people):
-    """OpenAlex sometimes splits one person into several author records: those with one ORCID are one person,
-    under the record with the most papers."""
-    by_orcid = defaultdict(list)
-    for aid, person in people.items():
-        if person['orcid']:
-            by_orcid[person['orcid']].append(aid)
-    for aids in by_orcid.values():
-        if len(aids) < 2:
-            continue
-        main, *others = sorted(aids, key=lambda aid: (-len(people[aid]['works']), aid))
-        for aid in others:
-            other = people.pop(aid)
-            people[main]['country_hint'] |= other['country_hint']
-            for wid, work in other['works'].items():
-                add_work(people[main], work, other['signed'][wid], other['weights'][wid], main)
 
 
 def group_teams(people):

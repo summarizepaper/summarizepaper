@@ -4,7 +4,7 @@
 
 {% block title %}{% trans 'Who works on it?' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Describe a research topic: we find the institutions represented in matching papers from the last two years, their authors and the evidence for their approaches. To find a postdoc, collaborators, competitors or referees.' %}" />
+  <meta name="description" content="{% trans 'Describe a research topic: the people and institutions who sign the matching papers of the last two or five years, how they sign them, the approaches of these papers and the evidence. To find collaborators, competing teams or referees without conflicts of interest.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/teams/" />
 {% endblock %}
 
@@ -13,21 +13,24 @@
   <header class="page-header">
     <span class="eyebrow">Premium</span>
     <h1>{% trans 'Who works on it?' %}</h1>
-    <p class="lead">{% trans 'Describe a research topic: we find the institutions represented in matching papers from the last two years, in journals and on preprint servers, with their authors, supporting papers and approaches.' %}</p>
+    <p class="lead">{% trans 'Describe a research topic: we find the people and institutions who sign the matching papers of the last years, in journals and on preprint servers, how they sign them, and the approaches these papers take.' %}</p>
   </header>
 
   <p><a href="{% url 'students' %}">{% trans 'Looking for an internship or PhD? Explore research placement leads.' %}</a></p>
   {% if anonymous or not paid %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
-      <li>{% trans 'We write several searches from your topic and run them on OpenAlex, which knows the papers of journals and preprint servers with the institutions of their authors.' %}</li>
-      <li>{% trans 'We check topical relevance and group matching papers by all declared affiliations. An institution is not necessarily one research team.' %}</li>
-      <li>{% trans 'For each institution: matching papers and citations, plus authors linked to their supporting papers. Author order is not used to infer leadership.' %}</li>
-      <li>{% trans 'An AI summarizes only the themes and methods evidenced by the selected titles, without attributing a research program to an entire institution.' %}</li>
+      <li>{% trans 'We write several searches from your topic and run them on OpenAlex, which knows the papers of journals and preprint servers with the institutions of their authors. You see the searches and can change them.' %}</li>
+      <li>{% trans 'An AI reads the titles and abstracts and keeps the papers that address the topic. A preprint and its published version count once.' %}</li>
+      <li>{% trans 'For each person: the papers they sign first, last or as corresponding author, apart from alphabetical author lists and the long lists of large collaborations; one person per ORCID. Each institution counts for its share of each paper.' %}</li>
+      <li>{% trans 'The papers are grouped by approach (method, data, instrument or theory), so you see who does what.' %}</li>
+      <li>{% trans 'With your ORCID iD, you and your co-authors of the last five years are left out when you look for referees, collaborators or competing teams.' %}</li>
     </ol>
     <ul class="tool-features">
-      <li>{% trans 'To find a postdoc or a lab for a PhD, collaborators, the competing teams, or referees to suggest to a journal.' %}</li>
-      <li>{% trans 'You can start from a project of your scoop watch.' %}</li>
+      <li>{% trans 'To find collaborators, the competing teams, or referees to suggest to a journal.' %}</li>
+      <li>{% trans 'Exports for spreadsheets and reference managers, papers saved in a collection, competing teams followed in your scoop watch.' %}</li>
+      <li>{% trans 'Follow a map: every month, the new papers on the topic and the new names.' %}</li>
+      <li>{% trans 'You can start from a project of your scoop watch or the research profile of your digest.' %}</li>
     </ul>
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
@@ -36,6 +39,7 @@
     {% endif %}
   {% else %}
     {% if error == 'empty' %}<p class="error">{% trans 'Describe the topic in a few words at least.' %}</p>
+    {% elif error == 'orcid' %}<p class="error">{% trans 'This is not an ORCID iD (0000-0000-0000-0000).' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
     <form method="post" class="card section-card">
       {% csrf_token %}
@@ -43,7 +47,14 @@
       {% if projects %}
       <p><label>{% trans 'or a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.title }}</option>{% endfor %}</select></label></p>
       {% endif %}
-      <p><button class="btn" type="submit">{% trans 'Find the groups' %}</button></p>
+      {% if profile %}
+      <p><label><input type="checkbox" name="use_profile" value="1"> {% trans 'or the research profile of my digest' %}</label><br><small class="muted">{{ profile|truncatechars:160 }}</small></p>
+      {% endif %}
+      <p><label>{% trans 'What for?' %}<br><select name="mode">{% for value, label in modes %}<option value="{{ value }}"{% if value == mode %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></p>
+      <p><label>{% trans 'Papers of the last' %} <select name="years">{% for y in year_choices %}<option value="{{ y }}">{% blocktrans count n=y %}{{ n }} year{% plural %}{{ n }} years{% endblocktrans %}</option>{% endfor %}</select></label></p>
+      <p><label>{% trans 'Your ORCID iD (optional)' %}<br><input type="text" name="orcid" value="{{ orcid }}" placeholder="0000-0002-1825-0097" style="max-width:22em"></label><br>
+        <small class="muted">{% trans 'You and your co-authors of the last five years are marked on the map, and left out for referees, collaborators and competing teams (your colleagues too, for referees). Your ORCID iD is not kept with the map, and a shared map does not show whom it left out.' %}</small></p>
+      <p><button class="btn" type="submit">{% trans 'Find who works on it' %}</button></p>
     </form>
 
     {% if searches %}
@@ -51,7 +62,7 @@
     <ul class="item-list">
       {% for s in searches %}
       <li class="card"><a href="/{{ LANGUAGE_CODE }}/teams/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.title|default:_('Topic') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ s.created|date:"j F Y H:i" }}</div></li>
+        <div class="meta">{{ s.created|date:"j F Y H:i" }}{% if s.followed %} · {% trans 'Followed every month' %}{% endif %}</div></li>
       {% endfor %}
     </ul>
     {% endif %}

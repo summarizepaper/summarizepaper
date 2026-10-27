@@ -1176,3 +1176,17 @@ class StudentShortlist(models.Model):
     class Meta:
         unique_together = ('user', 'candidate_key')
         ordering = ('-updated', '-pk')
+
+
+class TopicMapWatch(models.Model):
+    """A map of who works on a topic its owner follows: its searches are run again every month and the new
+    papers emailed (teams.watch_maps)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='topic_map_watches')
+    row = models.ForeignKey(Generated, on_delete=models.CASCADE, related_name='watches')
+    checked = models.DateField(null=True, blank=True)  # None until the first check, which only learns what exists
+    seen = models.TextField(blank=True, default='')  # JSON list of the OpenAlex work ids already known, newest first
+    known = models.TextField(blank=True, default='')  # JSON list of the OpenAlex author ids already on the map or told
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'row')

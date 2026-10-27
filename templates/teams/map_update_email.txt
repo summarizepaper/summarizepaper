@@ -1,0 +1,9 @@
+{% load i18n %}{% trans 'The new papers on the topics you follow, signed by people already on your maps or by new names (first, last or corresponding authors).' %}
+{% for map in maps %}
+{{ map.title }}
+{% for paper in map.papers %}- {{ paper.title }}{% if paper.year %} ({{ paper.year }}){% endif %}{% if paper.url %} {{ paper.url }}{% endif %}
+{% if paper.known %}  {% trans 'On the map:' %} {{ paper.known|join:", " }}
+{% endif %}{% if paper.new %}  {% trans 'New names:' %} {{ paper.new|join:", " }}
+{% endif %}{% endfor %}{% trans 'The map:' %} {{ map.url }}
+{% endfor %}
+{% trans 'You receive this email because you follow these maps. Stop following them on their pages:' %} {{ url }}
