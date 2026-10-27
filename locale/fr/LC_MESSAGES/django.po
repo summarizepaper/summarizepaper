@@ -16627,3 +16627,26 @@ msgstr "Oui : %(url)s"
 #, python-format
 msgid "No: %(url)s"
 msgstr "Non : %(url)s"
+
+#, python-format
+msgid "All the papers found, with your marks of relevance: %(url)s"
+msgstr "Tous les articles trouvés, avec vos avis de pertinence : %(url)s"
+
+#, python-format
+msgid "Open the search: %(url)s"
+msgstr "Ouvrir la recherche : %(url)s"
+
+#, python-format
+msgid "Manage saved searches: %(url)s"
+msgstr "Gérer les recherches enregistrées : %(url)s"
+
+#, python-format
+msgid "Pause this watch: %(url)s"
+msgstr "Mettre cette veille en pause : %(url)s"
+
+#, python-format
+msgid "%(n)s more new paper on the page of the search: %(url)s"
+msgid_plural "%(n)s more new papers on the page of the search: %(url)s"
+msgstr[0] "%(n)s autre nouvel article sur la page de la recherche : %(url)s"
+msgstr[1] ""
+"%(n)s autres nouveaux articles sur la page de la recherche : %(url)s"

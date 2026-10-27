@@ -924,7 +924,8 @@ def search_papers(query, kind='', per_page=25, abstracts=False, field='all', fil
     papers = cache.get(cache_key)
     if papers is not None:
         return papers
-    filters = ['is_oa:true', 'has_doi:true'] + ([SEARCH_TYPES[kind]] if kind in SEARCH_TYPES else [])
+    filters = ['is_oa:true', 'has_doi:true'] + ([SEARCH_TYPES[kind]] if kind in SEARCH_TYPES else
+                                               ['type:article|preprint|review|letter'] if watch else [])  # no data sets
     params = {'search': query, 'filter': ','.join(filters), 'per_page': per_page,
               'select': OPENALEX_FIELDS if abstracts else SEARCH_FIELDS, 'page': page}
     if not query:

@@ -9,13 +9,13 @@
 {{ base_url }}/{{ saved.lang }}/paper/{{ paper.key }}/
 {% trans 'Relevant?' %} {% blocktrans with url=paper.vote_yes %}Yes: {{ url }}{% endblocktrans %} · {% blocktrans with url=paper.vote_no %}No: {{ url }}{% endblocktrans %}
 {% endfor %}{% if more %}
-{% blocktrans count n=more %}{{ n }} more new paper on the page of the search:{% plural %}{{ n }} more new papers on the page of the search:{% endblocktrans %} {{ page_url }}
+{% blocktrans count n=more with url=page_url %}{{ n }} more new paper on the page of the search: {{ url }}{% plural %}{{ n }} more new papers on the page of the search: {{ url }}{% endblocktrans %}
 {% endif %}{% if truncated %}
 {% trans 'This search is too broad for the watch to read all its matches: add a word or restrict it to categories.' %}
 {% endif %}
-{% trans 'All the papers found, with your marks of relevance' %}: {{ page_url }}
-{% trans 'Open the search' %}: {{ search_url }}
-{% trans 'Manage saved searches' %}: {{ manage_url }}
-{% trans 'Pause this watch' %}: {{ unsubscribe_url }}
+{% blocktrans with url=page_url %}All the papers found, with your marks of relevance: {{ url }}{% endblocktrans %}
+{% blocktrans with url=search_url %}Open the search: {{ url }}{% endblocktrans %}
+{% blocktrans with url=manage_url %}Manage saved searches: {{ url }}{% endblocktrans %}
+{% blocktrans with url=unsubscribe_url %}Pause this watch: {{ url }}{% endblocktrans %}
 
 {% endautoescape %}
