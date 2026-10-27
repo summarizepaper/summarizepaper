@@ -1,4 +1,4 @@
-{% load i18n %}{% load dash_slash %}{% load rising %}
+{% load i18n %}{% load dash_slash %}{% load rising %}{% load weekly_letter %}
 <section class="card tools-card" id="tools" data-paper="{{ arxiv_id }}" data-base="/{{ LANGUAGE_CODE }}">
   <h3>{% trans 'Tools for this paper' %}</h3>
 
@@ -55,6 +55,14 @@
     <span class="tool-label">{% trans 'Who works on it?' %}</span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow">{% trans 'The people and institutions who publish on its topic' %}</a>
   </div>
+
+  {% weekly_letter arxiv_id as weekly %}{% if weekly %}
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Weekly letter' %}</span>
+    <span>{% blocktrans with name=weekly.name day=weekly.letter.day|date:"j F Y" %}Presented in "{{ name }}" of {{ day }}.{% endblocktrans %}
+      <a href="/{{ LANGUAGE_CODE }}/letters/{{ weekly.letter.topic }}/{{ weekly.letter.day|date:'Y-m-d' }}/">{{ weekly.letter.title }}</a></span>
+  </div>
+  {% endif %}
 
   {% rising_topic arxiv_id as rising %}{% if rising %}
   <div class="tool-row">

@@ -16,7 +16,7 @@ _GROUPS = [
         ('students/', 'graduation-cap', _('Find a research placement'), 'plus', _('Who signs recent papers on your topic and how, their team and acknowledged funding, readings, a first email, and your applications followed with reminders.')),
         ('teams/', 'users', _('Who works on it?'), True, _('The people and institutions who sign the recent papers on your topic, how they sign them and with which approaches; referees without your co-authors, and the new names every month.')),
         ('trends/', 'chart-line', _('Rising topics'), False, _('The topics rising on arXiv, bioRxiv and medRxiv each week, field by field, from several teams, with their history; and whether your own topic is rising.')),
-        ('letters/', 'feather-alt', _('Weekly letters'), False, _('Each week, an article per theme (AI, space, health...) on the papers that matter, for curious readers; by email with Premium.')),
+        ('letters/', 'feather-alt', _('Weekly letters'), False, _('What happens next door: each week, an article per field on the papers that matter beyond it, each number checked against the abstracts; on the web, by RSS, one by email for free.')),
         ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search and get an email when new papers match it: one with a free account, five with Premium.')),
     ]),
     (_('Write and submit'), [

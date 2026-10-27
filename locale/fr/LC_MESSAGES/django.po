@@ -15907,3 +15907,244 @@ msgstr "Part des articles employant chaque terme, semaine par semaine"
 
 msgid "The topics rising on arXiv, bioRxiv and medRxiv each week, field by field, from several teams, with their history; and whether your own topic is rising."
 msgstr "Les sujets qui montent chaque semaine sur arXiv, bioRxiv et medRxiv, domaine par domaine, portés par plusieurs équipes, avec leur historique ; et si votre propre sujet monte."
+
+msgid "Physics of matter and light"
+msgstr "Physique de la matière et de la lumière"
+
+msgid "Particles, nuclei and gravitation"
+msgstr "Particules, noyaux et gravitation"
+
+msgid "Brain and behaviour"
+msgstr "Cerveau et comportement"
+
+msgid "Mathematics and statistics"
+msgstr "Mathématiques et statistiques"
+
+msgid "Computing beyond AI"
+msgstr "Informatique hors IA"
+
+msgid "Observation"
+msgstr "Observation"
+
+msgid "Experiment"
+msgstr "Expérience"
+
+msgid "Simulation"
+msgstr "Simulation"
+
+msgid "Theory"
+msgstr "Théorie"
+
+msgid "Clinical study"
+msgstr "Étude clinique"
+
+msgid "Trial"
+msgstr "Essai"
+
+msgid "Benchmark"
+msgstr "Banc d’essai"
+
+msgid "New method"
+msgstr "Nouvelle méthode"
+
+msgid "Data set"
+msgstr "Jeu de données"
+
+msgid "Other"
+msgstr "Autre"
+
+#, python-format
+msgid "Close to your project \"%(title)s\""
+msgstr "Proche de votre projet « %(title)s »"
+
+msgid "Every week, what is new in research, told like a magazine article from the latest papers."
+msgstr "Chaque semaine, les nouveautés de la recherche, racontées comme un article de magazine à partir des derniers articles."
+
+msgid "On the web, by RSS and one by email"
+msgstr "Sur le web, en RSS et une par e-mail"
+
+msgid "All by email, read aloud"
+msgstr "Toutes par e-mail, lues à voix haute"
+
+msgid "What happens next door: each week, an article per field on the papers that matter beyond it, each number checked against the abstracts; on the web, by RSS, one by email for free."
+msgstr "Ce qui se passe à côté : chaque semaine, un article par domaine sur les travaux qui comptent au-delà de lui, chaque chiffre vérifié dans les résumés ; sur le web, en RSS, une par e-mail gratuitement."
+
+msgid "Listen to this letter"
+msgstr "Écouter cette lettre"
+
+msgid "Being read aloud, it takes a minute…"
+msgstr "Lecture à voix haute en préparation, cela prend une minute…"
+
+msgid "Sources:"
+msgstr "Sources :"
+
+msgid "Link to this section"
+msgstr "Lien vers cette section"
+
+msgid "and"
+msgstr "et"
+
+msgid "Published"
+msgstr "Publié"
+
+msgid "Preprint, not yet peer reviewed"
+msgstr "Prépublication, pas encore évaluée par les pairs"
+
+msgid "Rests on:"
+msgstr "Repose sur :"
+
+msgid "Main limit:"
+msgstr "Principale limite :"
+
+msgid "Read with it:"
+msgstr "À lire avec :"
+
+msgid "Code or data"
+msgstr "Code ou données"
+
+msgid "Cite (RIS)"
+msgstr "Citer (RIS)"
+
+msgid "Save the search to get an email when new papers match it."
+msgstr "Enregistrez la recherche pour recevoir un e-mail quand de nouveaux articles y répondent."
+
+msgid "Follow this subject"
+msgstr "Suivre ce sujet"
+
+msgid "Rising in this field"
+msgstr "En hausse dans ce domaine"
+
+msgid "Ask all the papers of this letter"
+msgstr "Interroger tous les articles de cette lettre"
+
+msgid "Save the papers in a collection"
+msgstr "Enregistrer les articles dans une collection"
+
+msgid "The week before"
+msgstr "La semaine précédente"
+
+msgid "The week after"
+msgstr "La semaine suivante"
+
+msgid "Get one letter by email every week, free"
+msgstr "Recevoir une lettre par e-mail chaque semaine, gratuitement"
+
+msgid "All of them, read aloud, with the papers close to your work marked, with Premium."
+msgstr "Toutes, lues à voix haute, avec les articles proches de vos travaux signalés, avec Premium."
+
+msgid "Get one letter by email every week with a free account, all of them with Premium."
+msgstr "Recevez une lettre par e-mail chaque semaine avec un compte gratuit, toutes avec Premium."
+
+#, python-format
+msgid "All %(n)s papers of the week were read, title and start of the abstract, and %(kept)s were kept. They were then ordered by what can be counted: how many research profiles of our readers they come close to, whether a rising topic of the field includes them, and how many categories they were posted in. The abstracts of the first %(short)s were read in full to choose these, no more than two from one category and one per team."
+msgstr "Les %(n)s articles de la semaine ont tous été lus, titre et début du résumé, et %(kept)s ont été retenus. Ils ont ensuite été classés selon ce qui se compte : le nombre de profils de recherche de nos lecteurs dont ils sont proches, leur appartenance à un sujet en hausse du domaine et le nombre de catégories où ils ont été publiés. Les résumés des %(short)s premiers ont été lus en entier pour choisir ceux-ci, deux au plus par catégorie et un par équipe."
+
+#, python-format
+msgid "%(name)s · ×%(g)s compared with usual · %(n)s papers from %(t)s teams"
+msgstr "%(name)s · ×%(g)s par rapport à l’habitude · %(n)s articles de %(t)s équipes"
+
+msgid "Every week, the new research of eleven fields, from AI and space to the brain, mathematics and economics, told like a magazine article from the papers of arXiv, bioRxiv and medRxiv, each number checked against the abstracts."
+msgstr "Chaque semaine, les nouveautés de onze domaines, de l’IA et l’espace au cerveau, aux mathématiques et à l’économie, racontées comme un article de magazine à partir des articles d’arXiv, bioRxiv et medRxiv, chaque chiffre vérifié dans les résumés."
+
+msgid "What happens next door: every week, the papers of a field that matter beyond it, told like a magazine article for researchers of other fields and curious readers."
+msgstr "Ce qui se passe à côté de chez vous : chaque semaine, les travaux d’un domaine qui comptent au-delà de lui, racontés comme un article de magazine pour les chercheurs d’autres disciplines et les lecteurs curieux."
+
+msgid "Every paper of the week is read before six are chosen. Each comes with what it rests on, its main limit, its code and whether it is published, and every number of the text is checked against the abstracts."
+msgstr "Tous les articles de la semaine sont lus avant d’en choisir six. Chacun est présenté avec ce sur quoi il repose, sa principale limite, son code et son statut de publication, et chaque chiffre du texte est vérifié dans les résumés."
+
+msgid "None"
+msgstr "Aucune"
+
+msgid "Premium sends you all the letters you choose, read aloud, with the papers close to your research profile or your watched projects marked."
+msgstr "Premium vous envoie toutes les lettres de votre choix, lues à voix haute, avec les articles proches de votre profil de recherche ou de vos projets surveillés signalés."
+
+msgid "Get one letter of your choice by email every week with a free account, or all of them with Premium."
+msgstr "Recevez par e-mail une lettre de votre choix chaque semaine avec un compte gratuit, ou toutes avec Premium."
+
+msgid "With a free account, one letter of your choice every week. With Premium, as many as you want."
+msgstr "Avec un compte gratuit, une lettre de votre choix chaque semaine. Avec Premium, autant que vous voulez."
+
+#, python-format
+msgid "Or follow them in a feed reader: <a href=\"/%(lang)s/letters/feed/\">every letter</a>, or the RSS of one theme on its page."
+msgstr "Ou suivez-les dans un lecteur de flux : <a href=\"/%(lang)s/letters/feed/\">toutes les lettres</a>, ou le flux RSS d’un thème sur sa page."
+
+msgid "Get it by email"
+msgstr "La recevoir par e-mail"
+
+msgid "Read it with the tools for each paper"
+msgstr "La lire avec les outils de chaque article"
+
+msgid "On the page: summaries, questions to the papers, who works on each subject, a literature review, the rising topics of the field, and the papers in a collection."
+msgstr "Sur la page : résumés, questions aux articles, qui travaille sur chaque sujet, revue de littérature, sujets en hausse du domaine, et les articles dans une collection."
+
+msgid "Choose your letters"
+msgstr "Choisir vos lettres"
+
+msgid "Next door this week"
+msgstr "À côté de chez vous cette semaine"
+
+msgid "The weekly letters of every field"
+msgstr "Les lettres hebdomadaires de tous les domaines"
+
+msgid "Weekly letter"
+msgstr "Lettre hebdomadaire"
+
+#, python-format
+msgid "Presented in \"%(name)s\" of %(day)s."
+msgstr "Présenté dans « %(name)s » du %(day)s."
+
+msgid "What the papers found, field by field:"
+msgstr "Ce que les articles ont trouvé, domaine par domaine :"
+
+msgid "the weekly letters"
+msgstr "les lettres hebdomadaires"
+
+#, python-format
+msgid "What these papers found, told for readers of other fields: the weekly letter \"%(name)s\"."
+msgstr "Ce que ces articles ont trouvé, raconté pour les lecteurs d’autres domaines : la lettre hebdomadaire « %(name)s »."
+
+msgid "Weekly letters on the web, by RSS and one by email, the top rising topics and the history of a term"
+msgstr "Les lettres hebdomadaires sur le web, en RSS et une par e-mail, les principaux sujets en hausse et l’historique d’un terme"
+
+msgid "A smarter digest, read aloud, and every weekly letter by email, read aloud"
+msgstr "Un digest plus intelligent, lu à voix haute, et toutes les lettres hebdomadaires par e-mail, lues à voix haute"
+
+#, python-format
+msgid "<a href=\"/%(LANGUAGE_CODE)s/letters/\">Weekly letters</a>: what happens in other fields, an article per theme on the papers that matter beyond it, on the web and by RSS for everyone, one by email with a free account and all of them with Premium."
+msgstr "<a href=\"/%(LANGUAGE_CODE)s/letters/\">Lettres hebdomadaires</a> : ce qui se passe dans les autres domaines, un article par thème sur les travaux qui comptent au-delà de lui, sur le web et en RSS pour tous, une par e-mail avec un compte gratuit et toutes avec Premium."
+
+#, python-format
+msgid "%(n)s min read"
+msgid_plural "%(n)s min read"
+msgstr[0] "%(n)s min de lecture"
+msgstr[1] "%(n)s min de lecture"
+
+#, python-format
+msgid "How these papers were chosen among the week's %(n)s paper"
+msgid_plural "How these papers were chosen among the week's %(n)s papers"
+msgstr[0] "Comment ces articles ont été choisis parmi les %(n)s de la semaine"
+msgstr[1] "Comment ces articles ont été choisis parmi les %(n)s de la semaine"
+
+#, python-format
+msgid "%(n)s of them belongs to a rising topic."
+msgid_plural "%(n)s of them belong to a rising topic."
+msgstr[0] "%(n)s d’entre eux appartient à un sujet en hausse."
+msgstr[1] "%(n)s d’entre eux appartiennent à un sujet en hausse."
+
+#, python-format
+msgid "The %(n)s number of the text was checked against the abstracts."
+msgid_plural "The %(n)s numbers of the text were checked against the abstracts."
+msgstr[0] "Le %(n)s chiffre du texte a été vérifié dans les résumés."
+msgstr[1] "Les %(n)s chiffres du texte ont été vérifiés dans les résumés."
+
+#, python-format
+msgid "%(n)s section that kept a number the abstracts do not state was left out."
+msgid_plural "%(n)s sections that kept a number the abstracts do not state were left out."
+msgstr[0] "%(n)s section qui gardait un chiffre absent des résumés a été retirée."
+msgstr[1] "%(n)s sections qui gardaient un chiffre absent des résumés ont été retirées."
+
+#, python-format
+msgid "Written by AI from %(n)s paper of the week in this field. Most are preprints, not yet peer reviewed: the text says what their authors report."
+msgid_plural "Written by AI from the %(n)s papers of the week in this field. Most are preprints, not yet peer reviewed: the text says what their authors report."
+msgstr[0] "Écrit par une IA à partir de %(n)s article de la semaine dans ce domaine. La plupart sont des prépublications, pas encore évaluées par les pairs : le texte rapporte ce que leurs auteurs annoncent."
+msgstr[1] "Écrit par une IA à partir des %(n)s articles de la semaine dans ce domaine. La plupart sont des prépublications, pas encore évaluées par les pairs : le texte rapporte ce que leurs auteurs annoncent."

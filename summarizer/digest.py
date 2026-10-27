@@ -1183,8 +1183,9 @@ def reasons(entry, wanted=(), private=True):
 
 
 def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready=(), now=None, paid=False, via=None,
-             teaser=None, listen_url=None, rising=(), edition=None, entries=None, sections=()):
-    """entries: {arxiv_id: entry of rank_papers}, to say why each paper is there; sections: alerts sent with it."""
+             teaser=None, listen_url=None, rising=(), edition=None, entries=None, sections=(), next_door=()):
+    """entries: {arxiv_id: entry of rank_papers}, to say why each paper is there; sections: alerts sent with it;
+    next_door: weekly letters of other fields close to the user's research profile."""
     lang = subscription.lang
     campaign = 'weekly' if subscription.frequency == 'weekly' else 'daily'
     unsubscribe_url = '%s/%s/digest/unsubscribe/%s/' % (base_url, lang, unsubscribe_token(subscription))
@@ -1246,6 +1247,9 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
             'listen_url': listen_url,
             'rising': rising,
             'trends_url': tracked('%s/%s/trends/?view=foryou' % (base_url, lang), campaign, 'rising'),
+            'next_door': [{'title': letter.title, 'dek': letter.dek, 'url': tracked('%s/%s/letters/%s/%s/' % (
+                base_url, lang, letter.topic, letter.day.isoformat()), campaign, 'letter')} for letter in next_door],
+            'letters_url': tracked('%s/%s/letters/' % (base_url, lang), campaign, 'letters'),
             'premium_url': tracked('%s/%s/premium/' % (base_url, lang), campaign, 'premium-teaser'),
             'weekly': campaign == 'weekly',
             'base_url': base_url,
@@ -1464,7 +1468,10 @@ def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dr
                 if content:
                     syntheses.append(content)
         all_ids = [i.arxiv_id for i in author_items + ordered]
-        listen_url, rising = None, []
+        listen_url, rising, next_door = None, [], []
+        if plan.synthesis or plan.teaser:
+            from . import letters  # letters reads the thresholds of this module
+            next_door = letters.for_digest(subscription.user, plan.categories, subscription.lang, plan.today)
         if plan.paid:
             presummarize(all_ids[:PRESUMMARIZED], subscription.lang, budget)
             listen_url = listen_link(subscription, author_items + ordered, base_url, audio_budget or [0])
@@ -1479,7 +1486,7 @@ def deliver(plan, batches, papers, index, base_url, now, budget, stdout=None, dr
         try:
             send_one(subscription, ordered, base_url, author_items, syntheses, summarized(all_ids, subscription.lang), now,
                      paid=plan.paid, via=via, teaser=premium_teaser(plan) if plan.teaser else None,
-                     listen_url=listen_url, rising=rising, edition=edition,
+                     listen_url=listen_url, rising=rising, edition=edition, next_door=next_door,
                      entries={e['paper']['arxiv_id']: e for e in entries}, sections=sections)
         except Exception:
             logger.exception('Digest email to %s failed', subscription.user.username)

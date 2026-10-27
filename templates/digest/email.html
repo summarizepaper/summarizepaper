@@ -33,6 +33,15 @@
       <a href="{{ trends_url }}" style="color:#4f46e5;font-size:14px;">{% trans 'All the rising topics' %} &rarr;</a>
     </div>
     {% endif %}
+    {% if next_door %}
+    <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin-bottom:16px;">
+      <p style="margin:0 0 10px;font-size:16px;font-weight:bold;">{% trans 'Next door this week' %}</p>
+      {% for letter in next_door %}
+      <p style="margin:0 0 8px;line-height:1.5;"><a href="{{ letter.url }}" style="color:#4f46e5;font-weight:bold;">{{ letter.title }}</a><br><span style="color:#555;font-size:14px;">{{ letter.dek }}</span></p>
+      {% endfor %}
+      <a href="{{ letters_url }}" style="color:#4f46e5;font-size:14px;">{% trans 'The weekly letters of every field' %} &rarr;</a>
+    </div>
+    {% endif %}
     {% for synthesis in syntheses %}
     <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-bottom:16px;">
       <p style="margin:0 0 10px;font-size:16px;font-weight:bold;">{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}</p>

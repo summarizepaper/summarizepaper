@@ -147,7 +147,7 @@ def features():
         (_('Follow your field'), [
             (_('Daily digest'), 'digest/', _('One digest'), _('Up to 5, ranked for you, read aloud'),
              _('Up to 5, ranked for you, read aloud')),
-            (_('Weekly letters'), 'letters/', _('On the web'), _('On the web and by email'), _('On the web and by email')),
+            (_('Weekly letters'), 'letters/', _('On the web, by RSS and one by email'), _('All by email, read aloud'), _('All by email, read aloud')),
             (_('Rising topics'), 'trends/', _('The top ones'), _('All, field by field'), _('All, field by field')),
             (_('Saved searches with email alerts'), 'saved-searches/', '1', '5', '5'),
             (_('Citation and version alerts'), 'citations/', False, True, True),

@@ -7,6 +7,7 @@
   {% include 'summarizer/mathjax.html' %}
   <meta name="description" content="{% blocktrans %}The weekly letter on {{ name }}: what is new in research, from the latest arXiv papers.{% endblocktrans %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{{ topic }}/" />
+  <link rel="alternate" type="application/rss+xml" title="{% blocktrans %}{{ name }} this week{% endblocktrans %}" href="/{{ LANGUAGE_CODE }}/letters/{{ topic }}/feed/" />
 {% endblock %}
 
 {% block content %}
@@ -14,6 +15,7 @@
   <header class="page-header">
     <p><a href="/{{ LANGUAGE_CODE }}/letters/">← {% trans 'Weekly letters' %}</a></p>
     <h1>{% blocktrans %}{{ name }} this week{% endblocktrans %}</h1>
+    <p><a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Get it by email' %}</a> · <a href="/{{ LANGUAGE_CODE }}/letters/{{ topic }}/feed/">RSS</a></p>
   </header>
   <ul class="item-list">
     {% for letter in letters %}

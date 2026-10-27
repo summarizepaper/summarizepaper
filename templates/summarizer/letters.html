@@ -5,15 +5,17 @@
 {% block title %}{% trans 'Weekly science letters from arXiv' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
-  <meta name="description" content="{% trans 'Every week, the new research in AI, space, quantum physics, biology, climate and economics, told like a magazine article from the latest arXiv papers.' %}" />
+  <meta name="description" content="{% trans 'Every week, the new research of eleven fields, from AI and space to the brain, mathematics and economics, told like a magazine article from the papers of arXiv, bioRxiv and medRxiv, each number checked against the abstracts.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/" />
+  <link rel="alternate" type="application/rss+xml" title="{% trans 'Weekly letters' %}" href="/{{ LANGUAGE_CODE }}/letters/feed/" />
 {% endblock %}
 
 {% block content %}
 <div class="page">
   <header class="page-header">
     <h1>{% trans 'Weekly letters' %}</h1>
-    <p class="lead">{% trans 'Every week, what is new in research, told like a magazine article from the latest arXiv papers, for curious readers.' %}</p>
+    <p class="lead">{% trans 'What happens next door: every week, the papers of a field that matter beyond it, told like a magazine article for researchers of other fields and curious readers.' %}</p>
+    <p class="muted">{% trans 'Every paper of the week is read before six are chosen. Each comes with what it rests on, its main limit, its code and whether it is published, and every number of the text is checked against the abstracts.' %}</p>
   </header>
   {% if saved %}<p class="notice">{% trans 'Your choices are saved.' %}</p>{% endif %}
 
@@ -22,9 +24,10 @@
     <article class="card topic-card">
       <h2>{{ t.name }}</h2>
       {% if t.letter %}
+      <p class="muted"><small>{{ t.letter.day|date:"j F Y" }}</small></p>
       <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/{{ t.letter.day|date:'Y-m-d' }}/"><strong>{{ t.letter.title }}</strong></a></p>
       <p class="muted">{{ t.letter.dek }}</p>
-      <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/">{% trans 'All the letters' %}</a></p>
+      <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/">{% trans 'All the letters' %}</a> · <a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/feed/">RSS</a></p>
       {% else %}
       <p class="muted">{% trans 'The first letter comes out next week.' %}</p>
       {% endif %}
@@ -32,20 +35,22 @@
     {% endfor %}
   </div>
 
-  <h2>{% trans 'Get them by email' %} <span class="badge-premium">Premium</span></h2>
-  {% if paid %}
-  <form method="post" class="card section-card">
+  <h2>{% trans 'Get them by email' %}</h2>
+  {% if request.user.is_authenticated %}
+  <form method="post" class="card section-card" data-funnel="letters_subscribe">
     {% csrf_token %}
+    {% if not paid %}<p class="muted">{% blocktrans %}With a free account, one letter of your choice every week. With Premium, as many as you want.{% endblocktrans %}</p>{% endif %}
     {% for t in topics %}
-    <p><label><input type="checkbox" name="topics" value="{{ t.slug }}"{% if t.subscribed %} checked{% endif %}> {{ t.name }}</label></p>
+    <p><label><input type="{% if paid %}checkbox{% else %}radio{% endif %}" name="topics" value="{{ t.slug }}"{% if t.subscribed %} checked{% endif %}> {{ t.name }}</label></p>
     {% endfor %}
+    {% if not paid %}<p><label><input type="radio" name="topics" value=""> {% trans 'None' %}</label></p>{% endif %}
     <p><button class="btn" type="submit">{% trans 'Save' %}</button></p>
     <p class="muted"><small>{% trans 'The letters are sent in the language of this page, once a week.' %}</small></p>
   </form>
-  {% elif request.user.is_authenticated %}
-  <div class="upsell"><p>{% trans 'Premium sends you the letters of your choice by email every week.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% if not paid %}<div class="upsell"><p>{% trans 'Premium sends you all the letters you choose, read aloud, with the papers close to your research profile or your watched projects marked.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>{% endif %}
   {% else %}
-  <div class="upsell"><p>{% trans 'Premium sends you the letters of your choice by email every week.' %} <a href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a> · <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  <div class="upsell"><p>{% trans 'Get one letter of your choice by email every week with a free account, or all of them with Premium.' %} <a href="/{{ LANGUAGE_CODE }}/register/">{% trans 'Create a free account' %}</a> · <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
   {% endif %}
+  <p class="muted">{% blocktrans with lang=LANGUAGE_CODE %}Or follow them in a feed reader: <a href="/{{ lang }}/letters/feed/">every letter</a>, or the RSS of one theme on its page.{% endblocktrans %}</p>
 </div>
 {% endblock %}

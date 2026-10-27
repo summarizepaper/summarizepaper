@@ -959,6 +959,30 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .letter .dek { font-size: 20px; color: var(--text-muted); }
 .letter h2 { font-size: 22px; margin-top: 32px; }
 .letter .sources { font-size: 14px; color: var(--text-muted); }
+.letter-nav { color: var(--text-muted); font-size: 14px; }
+.letter h2 .anchor { font-size: 16px; color: var(--text-muted); text-decoration: none; visibility: hidden; }
+.letter h2:hover .anchor, .letter h2 .anchor:focus { visibility: visible; }
+.letter-audio { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.letter-audio audio { width: 100%; max-width: 480px; }
+.letter-method { padding: 12px 16px; margin: 0 0 24px; font-size: 15px; }
+.letter-method summary { cursor: pointer; font-weight: 600; }
+.letter-method p { margin: 10px 0 0; }
+.letter-facts { margin: 4px 0 0; font-size: 14px; color: var(--text-muted); }
+.letter-facts strong { color: var(--text); font-weight: 600; }
+.letter-paper-title { font-weight: 600; }
+.letter-paper-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 14px; }
+.letter-paper-actions small { color: var(--text-muted); }
+.letter-mark { margin: 6px 0 0; padding: 6px 10px; }
+.letter-section-actions { margin: -1rem 0 1.5rem; }
+.letter-rising { margin: 32px 0 0; padding: 16px 20px; }
+.letter-rising h2 { margin-top: 0; font-size: 18px; }
+.letter-rising ul { padding-left: 18px; margin: 0 0 8px; }
+.letter-rising li + li { margin-top: 6px; }
+.letter-rising .muted { display: block; font-size: 14px; }
+.letter-actions { margin: 24px 0 8px; }
+.letter-actions form { margin: 0; }
+.letter-pager { display: flex; justify-content: space-between; gap: 12px; margin: 16px 0; font-size: 15px; }
+.letter-pager a[rel="next"] { margin-left: auto; }
 
 .nav-dropdown { position: relative; }
 .nav-dropdown > button {

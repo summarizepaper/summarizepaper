@@ -2,17 +2,20 @@
 <html lang="{{ letter.lang }}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Georgia,'Times New Roman',serif;color:#222;">
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
-    <p style="margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#666;">Summarize<span style="color:#34a853">Paper</span> · {% blocktrans with name=topic_name %}{{ name }} this week{% endblocktrans %} · {{ letter.day|date:"j F Y" }}</p>
+    <p style="margin:0 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#666;">Summarize<span style="color:#34a853">Paper</span> · {% blocktrans with name=topic_name %}{{ name }} this week{% endblocktrans %} · {{ letter.day|date:"j F Y" }} · {% blocktrans count n=minutes %}{{ n }} min read{% plural %}{{ n }} min read{% endblocktrans %}</p>
     <h1 style="font-size:26px;line-height:1.25;margin:12px 0 8px;">{{ letter.title }}</h1>
     <p style="font-size:18px;color:#555;margin:0 0 20px;">{{ letter.dek }}</p>
     {% for section in sections %}
     <h2 style="font-size:20px;margin:24px 0 8px;">{{ section.heading }}</h2>
     <div style="font-size:16px;line-height:1.6;">{{ section.text|linebreaks }}</div>
-    {% if section.links %}<p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#666;">{% for p in section.links %}<a href="{{ base_url }}/{{ letter.lang }}/paper/{{ p.arxiv_id }}/" style="color:#1a0dab;">{{ p.title }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    {% for p in section.links %}<p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#666;margin:4px 0;"><a href="{{ p.tracked }}" style="color:#1a0dab;">{{ p.title }}</a>{% with f=p.facts %}{% if f %}<br>{% if f.authors %}{{ f.authors.0 }}{% if f.n_authors > 1 %} … {{ f.authors.1 }}{% endif %} · {% endif %}{{ f.source }}{% if f.study_label %} · {{ f.study_label }}{% endif %} · {% if f.status == 'published' %}{% trans 'Published' %}{% if f.journal %}: {{ f.journal }}{% endif %}{% elif f.status == 'accepted' %}{% trans 'Accepted' %}: {{ f.journal }}{% else %}{% trans 'Preprint, not yet peer reviewed' %}{% endif %}{% if f.limit %}<br>{% trans 'Main limit:' %} {{ f.limit }}{% endif %}{% endif %}{% endwith %}</p>{% endfor %}
     {% endfor %}
     {% if closing %}<div style="font-size:16px;line-height:1.6;border-top:1px solid #eee;margin-top:20px;padding-top:12px;">{{ closing|linebreaks }}</div>{% endif %}
+    <p style="font-family:Arial,Helvetica,sans-serif;font-size:14px;margin:20px 0;"><a href="{{ tools_url }}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">{% trans 'Read it with the tools for each paper' %}</a></p>
+    <p style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#666;">{% trans 'On the page: summaries, questions to the papers, who works on each subject, a literature review, the rising topics of the field, and the papers in a collection.' %}</p>
     <p style="border-top:1px solid #eee;padding-top:16px;font-family:Arial,Helvetica,sans-serif;color:#888;font-size:12px;">
       <a href="{{ url }}" style="color:#888;">{% trans 'Read it on the web' %}</a> &middot;
+      <a href="{{ manage_url }}" style="color:#888;">{% trans 'Choose your letters' %}</a> &middot;
       <a href="{{ unsubscribe_url }}" style="color:#888;">{% trans 'Unsubscribe' %}</a>
     </p>
   </div>

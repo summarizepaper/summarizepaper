@@ -4,10 +4,11 @@
 {{ section.heading }}
 
 {{ section.text }}
-{% for p in section.links %}- {{ p.title }}: {{ base_url }}/{{ letter.lang }}/arxiv-id/{{ p.arxiv_id }}/
+{% for p in section.links %}- {{ p.title }}{% if p.facts %} ({% if p.facts.status == 'published' %}{% trans 'Published' %}{% elif p.facts.status == 'accepted' %}{% trans 'Accepted' %}{% else %}{% trans 'Preprint, not yet peer reviewed' %}{% endif %}){% endif %}: {{ p.tracked }}
 {% endfor %}{% endfor %}
 {{ closing }}
 
-{% trans 'Read it on the web:' %} {{ url }}
+{% trans 'Read it with the tools for each paper' %}: {{ tools_url }}
+{% trans 'Choose your letters' %}: {{ manage_url }}
 {% trans 'Unsubscribe:' %} {{ unsubscribe_url }}
 {% endautoescape %}

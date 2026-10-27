@@ -7,6 +7,10 @@
 {% for topic in rising %}* {{ topic.title }} (x{{ topic.growth }}, {{ topic.archive }}). {{ topic.text }}
 {% endfor %}{% trans 'All the rising topics' %}: {{ trends_url }}
 
+{% endif %}{% if next_door %}{% trans 'Next door this week' %}
+{% for letter in next_door %}* {{ letter.title }}: {{ letter.url }}
+{% endfor %}{% trans 'The weekly letters of every field' %}: {{ letters_url }}
+
 {% endif %}{% for synthesis in syntheses %}{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}
 {% for trend in synthesis.trends %}* {{ trend.title }}. {{ trend.text }}{% for paper in trend.papers %}
   - {{ paper.title }}: {{ paper.url }}{% endfor %}

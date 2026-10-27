@@ -902,7 +902,11 @@ class Letter(models.Model):
     day = models.DateField()  # the Monday announcement it was written after
     title = models.CharField(max_length=300)
     dek = models.TextField(blank=True, default='')
-    content = models.TextField()  # JSON {"sections": [{"heading", "text", "papers": [arxiv_id]}], "closing", "papers": {id: title}}
+    # JSON {"sections": [{"heading", "text", "papers": [arxiv_id], "query"}], "closing", "papers": {id: title}, "order": [id],
+    # "facts": {id: {...}}, "earlier": {id: [paper]}, "selection": {...}, "count"}
+    content = models.TextField()
+    papers = models.TextField(blank=True, default='')  # ',id,id,': the papers without version, to find a paper's letter
+    vectors = models.BinaryField(blank=True, null=True)  # float32 embeddings of the papers, in that order
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

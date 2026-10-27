@@ -146,6 +146,10 @@ def trends_page(request):
         'older': weeks[index + 1] if index + 1 < len(weeks) else None, 'newer': weeks[index - 1] if index > 0 else None,
         'since': first, 'ready_on': first + trends.WEEK * (trends.MIN_BASE_WEEKS + 1) + trends.CLOSE if first else None,
     })
+    from . import letters
+    letter = letters.latest_for_scope(scope, lang)
+    if letter is not None:
+        context.update(letter=letter, letter_name=letters.localized_name(letter.topic, lang)[1])
     return render(request, 'summarizer/trends.html', context)
 
 
