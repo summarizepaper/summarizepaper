@@ -101,7 +101,7 @@ These publications analyze the same observing campaign. Comparing them clarifies
 With **Premium**, click **“Comparison table”** and replace the default columns with your criteria, one per line. For this case, we chose:
 
 ```text
-Role of the paper in the analysis of Sagittarius A&#42;
+Role of the paper in the analysis of Sagittarius A*
 Ring or shadow size and definition of the quantity
 Scope and limitations of the Kerr test
 ```

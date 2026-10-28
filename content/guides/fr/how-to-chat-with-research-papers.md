@@ -101,7 +101,7 @@ Ces deux publications analysent la même campagne d’observation. La comparaiso
 Avec **Premium**, cliquez sur **« Tableau comparatif »** et remplacez les colonnes par défaut par vos critères, à raison d’une colonne par ligne. Pour ce cas, nous avons choisi :
 
 ```text
-Rôle du papier dans l’analyse de Sagittarius A&#42;
+Rôle du papier dans l’analyse de Sagittarius A*
 Taille de l’anneau ou de l’ombre et définition de la grandeur
 Portée et limites du test de Kerr
 ```
