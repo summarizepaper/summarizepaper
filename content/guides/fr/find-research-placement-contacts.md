@@ -22,7 +22,7 @@ Dans **Thème de recherche**, donnez un objet, une question et éventuellement u
 Cette formulation est plus exploitable que « astronomie ». Adaptez les termes à ce que vous voulez apprendre : vous n’avez pas besoin de maîtriser toutes ces méthodes avant de chercher.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/students/topic-fr.jpg"><img src="/static/summarizer/img/guides/students/topic-fr.jpg" alt="Choisir M2, un stage et un sujet précis ; la préférence France reste distincte de l’ouverture à d’autres pays." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/students/topic-v2-fr.jpg"><img src="/static/summarizer/img/guides/students/topic-v2-fr.jpg" alt="Choisir M2, un stage et un sujet précis ; la préférence France reste distincte de l’ouverture à d’autres pays." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Choisir M2, un stage et un sujet précis ; la préférence France reste distincte de l’ouverture à d’autres pays.</figcaption>
 </figure>
 
@@ -33,7 +33,7 @@ Choisissez **France**, puis **Privilégier cette localisation et signaler les au
 Renseignez la date de début souhaitée, la durée en mois et vos compétences **séparées par des virgules**. Ici : Python, modélisation numérique, analyse de données, transfert radiatif. Ces informations aident à préparer le rapprochement avec les travaux et le premier message ; elles ne prouvent pas qu’un établissement accepte ce calendrier ou ce niveau.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/students/schedule-fr.jpg"><img src="/static/summarizer/img/guides/students/schedule-fr.jpg" alt="Six mois à partir d’avril 2027, avec des compétences séparées par des virgules : le profil prépare la recherche et le premier contact." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/students/schedule-v2-fr.jpg"><img src="/static/summarizer/img/guides/students/schedule-v2-fr.jpg" alt="Six mois à partir d’avril 2027, avec des compétences séparées par des virgules : le profil prépare la recherche et le premier contact." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Six mois à partir d’avril 2027, avec des compétences séparées par des virgules : le profil prépare la recherche et le premier contact.</figcaption>
 </figure>
 

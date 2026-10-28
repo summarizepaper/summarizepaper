@@ -22,7 +22,7 @@ In **Research topic**, combine an object, a question and useful methods. Our exa
 That gives the search more to work with than “astronomy”. Include what you want to learn; you do not need to claim expertise in every method.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/students/topic-en.jpg"><img src="/static/summarizer/img/guides/students/topic-en.jpg" alt="Choose the level, placement type and a focused topic; keep the preferred country separate from permission to show alternatives." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/students/topic-v2-en.jpg"><img src="/static/summarizer/img/guides/students/topic-v2-en.jpg" alt="Choose the level, placement type and a focused topic; keep the preferred country separate from permission to show alternatives." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Choose the level, placement type and a focused topic; keep the preferred country separate from permission to show alternatives.</figcaption>
 </figure>
 
@@ -33,7 +33,7 @@ Choose **France** and **Prefer this location; show other locations separately** 
 Enter the preferred start date, duration in months, and skills **separated by commas**. Here we use Python, numerical modelling, data analysis and radiative transfer. These preferences help prepare a meaningful enquiry; they do not establish that an institution accepts the proposed dates or level.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/students/schedule-en.jpg"><img src="/static/summarizer/img/guides/students/schedule-en.jpg" alt="Six months from April 2027 and comma-separated skills give the search and first enquiry a concrete starting point." width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/students/schedule-v2-en.jpg"><img src="/static/summarizer/img/guides/students/schedule-v2-en.jpg" alt="Six months from April 2027 and comma-separated skills give the search and first enquiry a concrete starting point." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Six months from April 2027 and comma-separated skills give the search and first enquiry a concrete starting point.</figcaption>
 </figure>
 
