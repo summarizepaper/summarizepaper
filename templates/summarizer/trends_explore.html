@@ -13,6 +13,7 @@
 <div class="page">
   <header class="page-header">
     <h1>{% trans 'Is my topic rising?' %}</h1>
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/rising-research-topics/">Comment lire les courbes et comparer les termes ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/rising-research-topics/">How to read the curves and compare terms? Illustrated guide</a></p>{% endif %}
     <p class="lead">{% trans 'Type a research term: the curve shows, week after week, how many of the new arXiv papers use it in their title or abstract, out of 10,000. If the curve climbs, more and more researchers write about it.' %}</p>
   </header>
   <p><a href="/{{ LANGUAGE_CODE }}/trends/{% if scope != '*' %}?scope={{ scope|urlencode }}{% endif %}">&larr; {% trans 'The rising topics of the week' %}</a></p>

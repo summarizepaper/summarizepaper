@@ -13,6 +13,7 @@
     <div class="terms">{% for term in terms %}<a href="/{{ LANGUAGE_CODE }}/trends/explore/?t={{ term|urlencode }}">{{ term }}</a>{% endfor %}</div>
   </header>
   <p><a href="/{{ LANGUAGE_CODE }}/trends/?scope={{ scope|urlencode }}&week={{ week|date:'Y-m-d' }}">&larr; {% trans 'The rising topics of that week' %}</a></p>
+  {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/rising-research-topics/">Que vérifier dans les articles d’un sujet en hausse ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/rising-research-topics/">What to check in a rising topic’s papers? Illustrated guide</a></p>{% endif %}
   {% if papers %}
     <p class="actions-row"><a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ chat_ids|urlencode }}" rel="nofollow">{% trans 'Ask the first papers together' %}</a></p>
     <ol class="trend-papers">{% for p in papers %}

@@ -15,6 +15,7 @@
   <header class="page-header">
     <h1>{% if scope == '*' %}{% trans 'Rising topics on arXiv' %}{% else %}{% blocktrans with name=scope_name %}Rising topics in {{ name }}{% endblocktrans %}{% endif %}</h1>
     <p class="lead">{% trans 'The terms that appear in many more new papers this week than in the eight weeks before, from several independent teams, grouped into topics and explained in plain language.' %}</p>
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/rising-research-topics/">Comment interpréter une hausse et explorer ses articles ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/rising-research-topics/">How to interpret a rise and explore its papers? Illustrated guide</a></p>{% endif %}
   </header>
 
   <nav class="scope-links" aria-label="{% trans 'Views' %}">
