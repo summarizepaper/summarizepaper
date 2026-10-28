@@ -121,7 +121,7 @@
         <form method="post" class="paper-form" data-id="{{ p.arxiv_id }}">
           {% csrf_token %}
           <input type="hidden" name="arxiv_id" value="{{ p.arxiv_id }}">
-          <div class="paper-head">
+          <div class="collection-paper-head">
             <span class="drag-handle" title="{% trans 'Drag to reorder' %}" aria-hidden="true">⠿</span>
             <label class="paper-select" title="{% trans 'Read by the comparison table, the open questions and the chat' %}">
               <input type="hidden" name="selected" value="0">

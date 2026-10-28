@@ -797,6 +797,26 @@ def arxiv_text(arxiv_id):
     return _pdf_text(_download('https://arxiv.org/pdf/%s' % arxiv_id)), 'pdf'
 
 
+def later_places(key, paper):
+    """Places to read a paper found by asking again: OpenAlex lists a new paper's PDF and copy days after its DOI,
+    while the publisher's text-mining links are in Crossref from the start."""
+    places = []
+    try:
+        fresh = metadata(key, refresh=True)
+    except SourceUnavailable:
+        fresh = None
+    if fresh:
+        places += fresh['text']
+    if paper['doi'] and paper['source'] != 'crossref':
+        try:
+            crossref = fetch_crossref(paper['doi'])
+        except SourceUnavailable:
+            crossref = None
+        if crossref:
+            places += crossref['text']
+    return places
+
+
 def full_text(key):
     """(text, source) of the paper: 'xml' or 'pdf', or its header and abstract with 'abstract' when no copy could be read.
 
@@ -805,14 +825,16 @@ def full_text(key):
     paper = metadata(key)
     if paper is None:
         return '', 'abstract'
-    tei_read = False
-    for kind, where in paper['text']:
-        if kind == 'openalex_pdf' and tei_read:
-            continue  # its TEI was made from this PDF: the PDF has no more text, and costs as much
-        text, source = read_candidate(kind, where)
-        if len(text) > MIN_TEXT:
-            return text, source
-        tei_read = tei_read or (kind == 'openalex_tei' and bool(text))
+    tried, tei_read = set(), False
+    for places in (lambda: paper['text'], lambda: later_places(key, paper)):
+        for kind, where in places():
+            if (kind, where) in tried or (kind == 'openalex_pdf' and tei_read):
+                continue  # a TEI was made from this PDF: the PDF has no more text, and costs as much
+            tried.add((kind, where))
+            text, source = read_candidate(kind, where)
+            if len(text) > MIN_TEXT:
+                return text, source
+            tei_read = tei_read or (kind == 'openalex_tei' and bool(text))
     logger.warning('No full text could be read for %s, summarizing its abstract', key)
     return 'Authors: %s. Title: %s. Abstract: %s.' % (paper['authors'], paper['title'], paper['abstract']), 'abstract'
 

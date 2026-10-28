@@ -825,7 +825,7 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .selection-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px; }
 .selection-bar span { flex: 1 1 280px; }
 .meta-row { border-top: 0; padding-top: 0; }
-.paper-head { display: flex; gap: 12px; align-items: flex-start; }
+.collection-paper-head { display: flex; gap: 12px; align-items: flex-start; }
 .paper-select { padding-top: 2px; cursor: pointer; }
 .paper-select input { width: 18px; height: 18px; }
 .paper-main { flex: 1; min-width: 0; }

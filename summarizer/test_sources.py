@@ -137,10 +137,24 @@ class FullTextTests(TestCase):
             text, source = sources.full_text(MNRAS_KEY)
         self.assertEqual(source, 'xml')
         self.assertIn('## Introduction', text)
-        with mock.patch('summarizer.sources._download', return_value=None):
+        with mock.patch('summarizer.sources._download', return_value=None), \
+             mock.patch('summarizer.sources.later_places', return_value=[]):
             text, source = sources.full_text(MNRAS_KEY)
         self.assertEqual(source, 'abstract')
         self.assertIn('We reconstruct colours.', text)
+
+    def test_a_paper_listed_without_copy_is_looked_up_again(self):
+        # OpenAlex lists a new paper's PDF days after its DOI; Crossref has the publisher's text-mining link at once
+        ExternalPaper.objects.create(key=MNRAS_KEY, source='openalex', doi=MNRAS, fetched=datetime.datetime.now(datetime.timezone.utc),
+                                     metadata=json.dumps(journal_paper(text=[('epmc_doi', MNRAS)])))
+        crossref = journal_paper(source='crossref', text=[('pdf', 'https://publisher/x.pdf')])
+        read = mock.Mock(side_effect=lambda kind, where: ('very ' * 500, 'pdf') if where == 'https://publisher/x.pdf' else ('', ''))
+        with mock.patch('summarizer.sources.fetch', return_value=journal_paper(text=[('epmc_doi', MNRAS)])) as fetch, \
+             mock.patch('summarizer.sources.fetch_crossref', return_value=crossref), \
+             mock.patch('summarizer.sources.read_candidate', read):
+            self.assertEqual(sources.full_text(MNRAS_KEY)[1], 'pdf')
+        fetch.assert_called_once_with(MNRAS_KEY)
+        self.assertEqual([c.args for c in read.call_args_list], [('epmc_doi', MNRAS), ('pdf', 'https://publisher/x.pdf')])
 
     def test_openalex_copy_needs_a_key(self):
         with self.settings(OPENALEX_API_KEY=''), mock.patch('summarizer.sources._download') as download:
@@ -169,7 +183,7 @@ class FullTextTests(TestCase):
         cache.clear()
         ExternalPaper.objects.create(key=MNRAS_KEY, source='openalex', doi=MNRAS, fetched=datetime.datetime.now(datetime.timezone.utc),
                                      metadata=json.dumps(journal_paper(text=[('openalex_tei', 'W1'), ('openalex_pdf', 'W1')])))
-        with self.settings(OPENALEX_API_KEY='k'), \
+        with self.settings(OPENALEX_API_KEY='k'), mock.patch('summarizer.sources.later_places', return_value=[]), \
              mock.patch('summarizer.sources._download', return_value=TEI) as download:
             self.assertEqual(sources.full_text(MNRAS_KEY)[1], 'abstract')
         self.assertEqual(download.call_count, 1)  # the TEI only: figures, no text
