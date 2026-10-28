@@ -74,7 +74,7 @@ The result is a three-sentence explanation that retains a concrete limitation: s
 
 ## Bring two papers into the conversation
 
-[Open a comparison with Papers I and VI](/en/chat/?ids=2311.08680v2,2311.09484v1), or add `2311.09484v1` to your selection. Both cards show **“Full text”** here. The **[Collaboration 2023a]** and **[Collaboration 2023b]** tags distinguish the texts; their displayed year follows the arXiv deposits, while the publications date from 2022.
+[Open a comparison with Papers I and VI](/en/chat/?ids=2311.08680v2,2311.09484v1), or add `2311.09484v1` to your selection. Both cards show **“Full text”** here. The **[Collaboration 2022a]** and **[Collaboration 2022b]** tags distinguish the texts; 2022 is their journal publication year. The November 2023 arXiv submission dates are labeled separately on the cards. When no publication year is known, the chat falls back to the deposit year.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/chat/two-papers-en.jpg"><img src="/static/summarizer/img/guides/chat/two-papers-en.jpg" alt="Both selected papers are available in full. Tags, versions and identifiers help keep their sources distinct." width="1280" height="720" loading="lazy" /></a>

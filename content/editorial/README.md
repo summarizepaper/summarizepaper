@@ -52,3 +52,7 @@ Le paramètre `?ask=` écrasait la fonction d’envoi des questions : nom de var
 Les 24 guides sont rendus avec le template existant ; métadonnées, dates, descriptions, JSON-LD, images et liens internes sont contrôlés. Les nouvelles figures utilisent les dimensions réelles des JPEG et s’ouvrent en taille originale. Les 15 tests existants des guides passent. Les liens des 12 outils sont vérifiés en français et en anglais, sans lien dans les langues qui ne disposent pas de ces guides. Les captures des résultats ont été inspectées ; les titres des publications et les passages scientifiques cités gardent leur langue originale.
 
 Les boutons des guides conservent leurs événements fixes `guide_tool_<slug>`, gérés par le script analytics existant. Aucune donnée de projet ou de profil n’est incluse dans ces événements. La collecte et l’attribution complète des conversions n’ont pas été vérifiées en production.
+
+### Année des citations dans le chat
+
+Les repères bibliographiques privilégient désormais l’année de publication issue du contrôle éditeur existant ou de la référence de revue ; l’année du dépôt sert de repli. Les papiers EHT I et VI portent donc les repères 2022a et 2022b. La date arXiv est explicitement nommée sur les fiches. Dix captures des comparaisons et tableaux ont été refaites dans les deux langues après cette correction, avec de nouvelles conversations privées. Les anciennes conversations conservent leurs réponses historiques.

@@ -74,7 +74,7 @@ La relance obtenue tient en trois phrases et conserve une limite concrète : la 
 
 ## Croiser deux papiers sans mélanger leurs conclusions
 
-[Ouvrez une comparaison avec les papiers I et VI](/fr/chat/?ids=2311.08680v2,2311.09484v1), ou ajoutez `2311.09484v1` à la sélection. Les deux fiches indiquent ici **« Texte intégral »**. Les repères **[Collaboration 2023a]** et **[Collaboration 2023b]** distinguent les textes ; l’année affichée vient de leur dépôt arXiv, tandis que les publications datent de 2022.
+[Ouvrez une comparaison avec les papiers I et VI](/fr/chat/?ids=2311.08680v2,2311.09484v1), ou ajoutez `2311.09484v1` à la sélection. Les deux fiches indiquent ici **« Texte intégral »**. Les repères **[Collaboration 2022a]** et **[Collaboration 2022b]** distinguent les textes ; l’année 2022 correspond à leur publication en revue. La date de dépôt arXiv, en novembre 2023, est indiquée séparément sur les fiches. Pour un article sans année de publication connue, le chat utilise celle du dépôt.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/chat/two-papers-fr.jpg"><img src="/static/summarizer/img/guides/chat/two-papers-fr.jpg" alt="Les deux papiers sélectionnés sont disponibles en texte intégral. Leurs repères, versions et identifiants évitent de confondre les sources." width="1280" height="720" loading="lazy" /></a>
