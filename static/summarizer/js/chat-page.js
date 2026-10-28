@@ -254,7 +254,7 @@
     title.appendChild(link);
     item.appendChild(title);
     if (entry.author) item.appendChild(node('small', '', entry.author));
-    var when = [entry.published ? day(entry.published) : '', entry.label].filter(Boolean).join(' · ');
+    var when = [entry.published ? (external(entry.id) ? T.published : T.arxivDate) + ' ' + day(entry.published) : '', entry.label].filter(Boolean).join(' · ');
     if (when) item.appendChild(node('small', '', when));
     item.appendChild(node('div', 'paper-badges'));
     var actions = node('div', 'paper-actions');

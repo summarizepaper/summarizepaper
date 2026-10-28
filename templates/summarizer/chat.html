@@ -138,6 +138,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   data-ai="{% trans 'AI -' %}" data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
   data-error="{% trans 'Connection interrupted. Please try again.' %}"
   data-first-author="{% trans 'First author:' %}" data-published="{% trans 'Published:' %}"
+  data-arxiv-date="{% trans 'Submitted to arXiv on' %}"
   data-reading="{% trans 'Reading the paper…' %}" data-failed="{% trans 'Could not be read: remove it or try again later' %}"
   data-full="{% trans 'Full text' %}" data-partial="{% trans '{n}% of the text' %}"
   data-partial-title="{% trans 'Too long to be read whole with the other papers. Left out: {parts}' %}"

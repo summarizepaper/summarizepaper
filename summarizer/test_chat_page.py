@@ -12,7 +12,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.test import Client, TransactionTestCase, override_settings
 
 from summarizer import access, activity, assistant, chat_page, chat_table, evidence
-from summarizer.models import AIassistant, ArxivPaper, ChatConversation, ChatShare, PaperText
+from summarizer.models import AIassistant, ArxivPaper, ChatConversation, ChatShare, PaperText, Generated
 from summarizer.routing import websocket_urlpatterns
 from summarizer.test_tools import ToolsTestCase
 
@@ -108,6 +108,28 @@ class SourcesTests(TransactionTestCase):  # the answers run in a thread of their
         self.assertEqual(summary['missing'], ['unknown'])
         self.assertEqual([(p['kind'], p['coverage']) for p in summary['papers']],
                          [('full', 100), ('full', 100), ('restricted', 100)])
+
+    def test_journal_year_precedes_later_arxiv_deposit(self):
+        self.a.published_arxiv = datetime.date(2023, 11, 15)
+        self.a.journal_ref = 'The Astrophysical Journal Letters, Volume 930, Number 2, id L12, 21pp., 2022 May 12'
+        self.a.save()
+        self.b.published_arxiv = datetime.date(2023, 11, 16)
+        self.b.journal_ref = 'ApJL 930, L17 (2022)'
+        self.b.save()
+        context, supplied = assistant.build_sources([self.a.arxiv_id, self.b.arxiv_id])
+        self.assertEqual([p['tag'] for p in supplied], ['[Lee et al. 2022a]', '[Lee et al. 2022b]'])
+        self.assertIn('Publication year (use for citations): 2022', context)
+        self.assertIn('first submitted to arXiv on 2023-11-15', context)
+
+    def test_publisher_date_wins_and_preprints_fall_back_without_guessing(self):
+        self.a.journal_ref = 'ApJ 900 (2020)'
+        Generated.objects.create(kind='presskit_status', key=self.a.arxiv_id, lang='en', status='done',
+                                 content=json.dumps({'status': 'published', 'date': '2019-12-31'}))
+        self.assertEqual(assistant.publication_year(self.a), 2019)
+        for reference in ('', 'ApJ 900, 1', 'doi:10.1234/2020.1234', 'ApJ 2001 (2022)'):
+            self.b.journal_ref = reference
+            self.assertIsNone(assistant.publication_year(self.b))
+            self.assertIn('2021]', assistant.cite_tags([self.b])[self.b.arxiv_id])
 
     def test_a_single_paper_has_no_tag_and_no_multi_paper_rules(self):
         async def complete(messages, paid, max_tokens, on_delta=None, **kwargs):

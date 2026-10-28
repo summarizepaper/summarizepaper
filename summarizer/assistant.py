@@ -24,7 +24,7 @@ from django.utils.translation import get_language_info
 
 from .models import AIassistant, ArxivPaper, PaperText
 from .paper_source import paper_text
-from . import sources, usage, chat_vision
+from . import sources, usage, chat_vision, publication_status
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -288,6 +288,21 @@ def fit(text, budget, question=''):
     return body, max(min(kept / content, 1.0), 0.0) if content else 1.0, left_out
 
 
+def publication_year(paper):
+    """Publication metadata first; never substitute the arXiv deposit date for it.
+
+    Use an existing publisher check, or an unambiguous year in the journal
+    reference supplied by arXiv. No network request in the chat path.
+    """
+    report = publication_status.latest(paper.arxiv_id) or {}
+    date = str(report.get('date') or '')
+    if report.get('status') in ('published', 'forthcoming') and re.fullmatch(r'(?:19|20)\d{2}(?:-\d{2}){0,2}', date):
+        return int(date[:4])
+    reference = paper.journal_ref or ''
+    years = set(re.findall(r'(?<![\w./-])((?:19|20)\d{2})(?![\w./-])', reference))
+    return int(years.pop()) if len(years) == 1 else None
+
+
 def cite_tags(papers):
     """{arxiv_id: '[Smith et al. 2021]'}: how answers about several papers name each of them."""
     tags = {}
@@ -295,7 +310,7 @@ def cite_tags(papers):
         names = [a.name.split()[-1] for a in paper.authors.all()[:3] if a.name.split()]
         name = (names[0] + (' et al.' if len(names) > 2 else ' & %s' % names[1] if len(names) == 2 else '')
                 if names else ' '.join((paper.title or paper.arxiv_id).split()[:3]))
-        year = paper.published_arxiv.year if paper.published_arxiv else ''
+        year = publication_year(paper) or (paper.published_arxiv.year if paper.published_arxiv else '')
         tags[paper.arxiv_id] = ('%s %s' % (name, year)).strip()
     seen = {}
     for arxiv_id, tag in tags.items():
@@ -330,6 +345,9 @@ def _paper_source(paper, budget, tag='', readable=None, question=''):
     if tag:
         header += 'Cite as: %s\n' % tag
     header += 'Title: %s\nAuthors: %s\n' % (' '.join((paper.title or '').split()), authors)
+    year = publication_year(paper)
+    if year:
+        header += 'Publication year (use for citations): %s\n' % year
     if paper.published_arxiv:
         if sources.is_external(paper.arxiv_id):
             header += 'Date: %s\n' % paper.published_arxiv.isoformat()
