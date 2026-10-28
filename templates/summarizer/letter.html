@@ -29,6 +29,11 @@
       <button class="btn btn-sm btn-ghost" type="button">&#127911; {% trans 'Listen to this letter' %}</button>
       <span class="muted letter-audio-status" hidden>{% trans 'Being read aloud, it takes a minute…' %}</span>
       <audio controls preload="none" hidden></audio>
+      <ol class="letter-chapters" hidden>
+        <li><button type="button"><span class="letter-chapter-time"></span>{{ letter.title }}</button></li>
+        {% for section in sections %}<li><button type="button"><span class="letter-chapter-time"></span>{{ section.heading }}</button></li>
+        {% endfor %}{% if closing %}<li><button type="button"><span class="letter-chapter-time"></span>{% trans 'Conclusion' %}</button></li>{% endif %}
+      </ol>
     </div>
     {% endif %}
   </header>
@@ -148,6 +153,28 @@
   var box = document.querySelector('.letter-audio');
   if (!box) return;
   var button = box.querySelector('button'), status = box.querySelector('.letter-audio-status'), player = box.querySelector('audio');
+  var list = box.querySelector('.letter-chapters'), chapters = list.querySelectorAll('li'), starts = [];
+  function clock(seconds) {
+    seconds = Math.floor(seconds);
+    return Math.floor(seconds / 60) + ':' + ('0' + seconds % 60).slice(-2);
+  }
+  function showChapters(times) {
+    if (!times || times.length !== chapters.length) return;
+    starts = times;
+    chapters.forEach(function (row, i) {
+      row.querySelector('.letter-chapter-time').textContent = clock(times[i]);
+      row.querySelector('button').addEventListener('click', function () {
+        player.currentTime = times[i];
+        player.play().catch(function () {});
+      });
+    });
+    list.hidden = false;
+  }
+  player.addEventListener('timeupdate', function () {
+    var current = 0;
+    starts.forEach(function (start, i) { if (player.currentTime >= start) current = i; });
+    chapters.forEach(function (row, i) { row.classList.toggle('is-current', i === current); });
+  });
   function check() {
     fetch(box.dataset.url + '?check=1', {credentials: 'same-origin'}).then(function (response) {
       if (response.status === 200) {
@@ -155,6 +182,7 @@
         player.src = box.dataset.url;
         player.hidden = false;
         player.play().catch(function () {});
+        response.json().then(function (data) { showChapters(data.chapters); });
       } else if (response.status === 202) {
         status.hidden = false;
         setTimeout(check, 5000);

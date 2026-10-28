@@ -2819,11 +2819,15 @@ class LetterTests(ToolsTestCase):
         self.assertEqual(add.call_args[0][1], ['2610.00001v1', '2610.00003v1', '2610.00004v1'])
         self.assertRedirects(response, '/en/collections/%d/' % collection.pk, fetch_redirect_response=False)
         self.assertEqual(Client().get('/en/letters/space/2026-10-19/audio/').status_code, 404)
-        with mock.patch('summarizer.audio.speak', return_value=b'ID3') as speak:
+        frame = b'\xff\xf3\xc4\x00' + b'\x00' * 380  # 128 kbit/s at 24 kHz, as the speech model sends: 24 ms
+        with mock.patch('summarizer.audio.speak', return_value=frame * 50) as speak:
             self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/?check=1').status_code, 202)
         self.assertEqual(speak.call_count, 5)  # title, three sections, closing
-        self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/?check=1').json(), {'status': 'ready'})
-        self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/').content, b'ID3' * 5)
+        self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/?check=1').json(),
+                         {'status': 'ready', 'chapters': [0.0, 1.2, 2.4, 3.6, 4.8]})
+        self.assertEqual(client.get('/en/letters/space/2026-10-19/audio/').content, frame * 250)
+        part = client.get('/en/letters/space/2026-10-19/audio/', HTTP_RANGE='bytes=384-767')
+        self.assertEqual((part.status_code, part.content), (206, frame))
 
     def test_statements_the_abstracts_do_not_support_are_rewritten_then_dropped(self):
         answer = self.letter_answer()

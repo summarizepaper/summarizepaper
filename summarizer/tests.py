@@ -2157,3 +2157,40 @@ class SearchThrottleTests(TestCase):
         robots = Client().get('/robots.txt').content.decode()
         for rule in ('Disallow: /*/search-results/', 'Disallow: /*/export/', 'Disallow: /*/bibtex/'):
             self.assertIn(rule, robots)
+
+
+from summarizer import audio as _audio
+
+
+class AudioTests(TestCase):
+    FRAME = b'\xff\xf3\xe4\x00' + b'\x00' * 476  # MPEG-2 layer III, 160 kbit/s, 24 kHz: 480 bytes, 24 ms
+
+    def test_chunks_cut_at_sentences(self):
+        text = ' '.join(['Sentence number %d is here.' % i for i in range(200)])
+        pieces = _audio.chunks(text)
+        self.assertGreater(len(pieces), 1)
+        self.assertTrue(all(len(p) <= _audio.CHUNK for p in pieces))
+        self.assertTrue(all(p.endswith('.') for p in pieces))
+        self.assertEqual(' '.join(pieces), text)
+        self.assertEqual(_audio.chunks('Short.'), ['Short.'])
+
+    def test_retry_after_timeout(self):
+        ok = mock.Mock(content=b'mp3')
+        with mock.patch('summarizer.audio.requests.post', side_effect=[_audio.requests.Timeout(), ok]), \
+                mock.patch('summarizer.audio.usage.add'):
+            self.assertEqual(_audio.speak('Hello.'), b'mp3')
+
+    def test_mp3_seconds(self):
+        id3 = b'ID3\x04\x00\x00\x00\x00\x00\x0a' + b'\x00' * 10
+        self.assertAlmostEqual(_audio.mp3_seconds(id3 + self.FRAME * 50), 1.2)
+
+    def test_mp3_ranges(self):
+        data = bytes(range(100))
+        factory = RequestFactory()
+        whole = _audio.mp3_response(factory.get('/'), data)
+        self.assertEqual((whole.status_code, whole['Accept-Ranges']), (200, 'bytes'))
+        part = _audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=10-19'), data)
+        self.assertEqual((part.status_code, part.content, part['Content-Range']), (206, data[10:20], 'bytes 10-19/100'))
+        self.assertEqual(_audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=90-'), data).content, data[90:])
+        self.assertEqual(_audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=-5'), data).content, data[95:])
+        self.assertEqual(_audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=200-'), data).status_code, 416)

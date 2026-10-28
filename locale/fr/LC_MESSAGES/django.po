@@ -17348,3 +17348,6 @@ msgstr "Partager le kit actuel"
 
 msgid "Finding the closest earlier papers and the figures"
 msgstr "Recherche des articles antérieurs les plus proches et des figures"
+
+msgid "Conclusion"
+msgstr "Conclusion"

@@ -1072,7 +1072,9 @@ def make_audio(letter_pk):
 
 
 def letter_audio(request, topic, day):
-    """The letter read aloud (Premium): the MP3 once every clip is made, else {'status': 'pending'} while they are."""
+    """The letter read aloud (Premium): the MP3 once every clip is made, else {'status': 'pending'} while they are.
+    The check answers with the second each clip starts at, for the chapters under the player."""
+    from . import audio
     letter = _letter(topic, day, get_language())
     if not access.has_tool(request.user, 'letters'):
         raise Http404
@@ -1080,10 +1082,12 @@ def letter_audio(request, topic, day):
     clips = {a.arxiv_id: a for a in PaperAudio.objects.filter(arxiv_id__in=keys, lang=letter.lang)}
     if len(clips) == len(keys):
         if request.GET.get('check'):
-            return JsonResponse({'status': 'ready'})
-        response = HttpResponse(b''.join(bytes(clips[k].mp3) for k in keys), content_type='audio/mpeg')
-        response['Cache-Control'] = 'private, max-age=86400'
-        return response
+            starts, at = [], 0.0
+            for key in keys:
+                starts.append(round(at, 1))
+                at += audio.mp3_seconds(clips[key].mp3)
+            return JsonResponse({'status': 'ready', 'chapters': starts})
+        return audio.mp3_response(request, b''.join(bytes(clips[k].mp3) for k in keys))
     if cache.add(AUDIO_LOCK % letter.pk, True, 600):
         generated.background(make_audio, letter.pk)
     return JsonResponse({'status': 'pending', 'ready': len(clips), 'total': len(keys)}, status=202)
