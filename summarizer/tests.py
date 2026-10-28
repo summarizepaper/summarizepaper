@@ -66,6 +66,11 @@ class PaidTests(TestCase):
 
 
 class QuotaTests(TestCase):
+    def test_superuser_can_afford_a_table_of_all_selected_papers(self):
+        from summarizer.assistant import MAX_PAPERS
+        admin = User.objects.create_superuser('quota-admin', 'quota@example.org', 'x')
+        self.assertGreaterEqual(access.chat_quota_left(admin, 'unused'), MAX_PAPERS)
+
     def test_run_quota(self):
         ip = access.hash_ip('81.0.0.9')
         self.assertEqual(access.run_quota(None, ip), (True, None))

@@ -175,7 +175,7 @@ def anonymous_searches_over(request):
 
 def chat_quota_left(user, hashed_ip):
     if user is not None and user.is_superuser:
-        return 1
+        return float('inf')  # unlimited, including tables costing one question per paper
     since = timezone.now() - timezone.timedelta(days=1)
     if user is not None and user.is_authenticated:
         tier = "paid" if is_paid(user) else "user"
