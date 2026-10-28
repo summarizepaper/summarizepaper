@@ -17401,3 +17401,27 @@ msgstr ""
 "points forts et faiblesses quand on vous sollicite, angles de sujet et "
 "questions aux auteurs pour les journalistes, citations vérifiées à la "
 "source, détecteur de hype, figures créditées et spécialistes indépendants"
+
+msgid "Where they work"
+msgstr "Où ils travaillent"
+
+msgid "Anywhere"
+msgstr "Partout"
+
+msgid "Looking for researchers in this country…"
+msgstr "Recherche de chercheurs dans ce pays…"
+
+#, python-format
+msgid ""
+"No researcher found working in %(country)s among the close papers and the "
+"recent papers on this topic."
+msgstr ""
+"Aucun chercheur trouvé en poste dans ce pays (%(country)s) parmi les "
+"articles proches et les articles récents sur ce sujet."
+
+#, python-format
+msgid "Working in %(country)s."
+msgstr "En poste dans ce pays : %(country)s."
+
+msgid "No researcher found working in this country."
+msgstr "Aucun chercheur trouvé en poste dans ce pays."

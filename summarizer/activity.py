@@ -23,7 +23,7 @@ ARXIV_ID = re.compile(r'^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?(/|--)\d{7})(v\d+)
 RESULT_URLS = {'literature': 'literature_result', 'missed': 'missed_result', 'students': 'student_result',
                'conference': 'conference_result', 'teams': 'teams_result', 'refcheck': 'refcheck_result'}
 TOOL_NAMES = {
-    'presskit': 'Kit presse', 'presskit_status': 'Kit presse (statut)', 'presskit_share': 'Kit presse (partage)', 'slides': 'Journal club',
+    'presskit': 'Kit presse', 'presskit_status': 'Kit presse (statut)', 'presskit_share': 'Kit presse (partage)', 'presskit_experts': 'Kit presse (contacts par pays)', 'slides': 'Journal club',
     'slides_edit': 'Journal club (édition)', 'literature': 'Revue de littérature', 'missed': 'Qu’ai-je manqué ?',
     'refcheck': 'Vérification de bibliographie', 'students': 'Stage ou thèse', 'teams': 'Qui travaille dessus ?',
     'conference': 'Compagnon de conférence', 'reading': 'Niveau de lecture', 'compare': 'Comparaison',

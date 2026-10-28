@@ -1,0 +1,16 @@
+{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
+{% if kit.experts %}
+<p class="muted">{% if kit.experts_checked %}{% trans 'They sign close papers first, last or as corresponding author, and neither sign this paper nor have signed with its authors in the last five years (OpenAlex). Their independence and possible conflicts of interest still need to be checked.' %}{% if kit.experts_left_out %} {% blocktrans count n=kit.experts_left_out %}{{ n }} researcher left out: co-author of the authors or at their institution.{% plural %}{{ n }} researchers left out: co-authors of the authors or at their institution.{% endblocktrans %}{% endif %}{% else %}{% trans 'These researchers are not listed as coauthors in our metadata. Their independence, affiliations and possible conflicts of interest still need to be checked.' %}{% endif %}</p>
+<ul class="kit-list">
+  {% for e in kit.experts %}
+  <li><strong>{{ e.name }}</strong>{% if e.affiliation %} ({{ e.affiliation }}{% if e.country %}, {{ e.country }}{% endif %}){% endif %}{% if e.orcid %} · <a href="{{ e.orcid }}" target="_blank" rel="noopener noreferrer">ORCID</a>{% endif %}
+    <br><span class="muted">{% if e.roles %}{% if 'last' in e.roles %}{% trans 'last author of' %}{% elif 'first' in e.roles %}{% trans 'first author of' %}{% else %}{% trans 'corresponding author of' %}{% endif %} {% endif %}{% if e.arxiv_id %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ e.arxiv_id }}/">{{ e.title }}</a>{% elif e.url %}<a href="{{ e.url }}" target="_blank" rel="noopener noreferrer">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}{% if e.year %} ({{ e.year }}){% endif %}{% if e.count > 1 %} · {% blocktrans count n=e.count %}{{ n }} close paper{% plural %}{{ n }} close papers{% endblocktrans %}{% endif %}</span></li>
+  {% endfor %}
+</ul>
+<p><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}&amp;mode=overview" rel="nofollow">{% trans 'Everyone who works on this topic' %} →</a></p>
+<button type="button" class="kit-report" data-report-section="experts">{% trans 'Report a mistake' %}</button>
+{% elif kit.experts_country %}
+<p class="muted">{% blocktrans with country=kit.experts_country %}No researcher found working in {{ country }} among the close papers and the recent papers on this topic.{% endblocktrans %}</p>
+{% else %}
+<p class="muted">{% trans 'We do not know enough papers close to this one yet.' %}</p>
+{% endif %}

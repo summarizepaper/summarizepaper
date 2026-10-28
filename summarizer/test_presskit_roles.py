@@ -275,6 +275,48 @@ class PressKitRoleTests(ToolsTestCase):
         self.assertEqual([e['name'] for e in found['experts']], ['New Lead', 'Old Last', 'Old Lead'])
         self.assertEqual((found['experts'][0]['arxiv_id'], found['experts'][0]['url']), ('', 'https://doi.org/10.1/new'))
 
+    def test_a_journalist_picks_the_country_of_the_researchers_to_approach(self):
+        self.generate()
+        year = str(datetime.date.today().year)
+        close = self.paper('2101.00002v1', 'Other clouds', authors=('Cid Moe', 'Dee Fox'))
+        PaperScore.objects.create(from_paper=self.paper_obj, to_paper=close, score=0.1)
+
+        def authorship(aid, name, position, country):
+            return {'author': {'id': 'https://openalex.org/%s' % aid, 'display_name': name}, 'author_position': position,
+                    'institutions': [{'id': 'i' + aid, 'display_name': 'Lab ' + aid, 'country_code': country}]}
+        own = {'id': 'W1', 'doi': 'https://doi.org/10.48550/arxiv.2101.00001', 'primary_topic': {'id': 'https://openalex.org/T42'},
+               'authorships': [authorship('A1', 'Ann Lee', 'first', 'GB')]}
+        other = {'id': 'W2', 'doi': 'https://doi.org/10.48550/arxiv.2101.00002', 'publication_date': '2021-03-01',
+                 'authorships': [authorship('A2', 'Cid Moe', 'first', 'FR'), authorship('A3', 'Dee Fox', 'last', 'US')]}
+        recent = {'id': 'W3', 'doi': 'https://doi.org/10.1/new', 'display_name': 'New clouds', 'publication_date': year + '-01-01',
+                  'authorships': [authorship('A4', 'Eve Paris', 'first', 'FR')]}
+        calls = []
+
+        def openalex(filters, select, per_page, sort='', search='', page=1):
+            calls.append(filters)
+            if filters.startswith('doi:'):
+                return [own, other]
+            return [recent] if 'primary_topic.id:T42' in filters else []
+        vectors = __import__('numpy').array([[1.0, 0.0], [0.9, 0.1]], dtype='float32')
+        with mock.patch('summarizer.presskit.openalex', side_effect=openalex), \
+             mock.patch('summarizer.similar.embed', return_value=vectors):
+            self.assertEqual(self.paid.post(self.base + 'experts/start/', {'country': 'XX'}).status_code, 400)
+            self.paid.post(self.base + 'experts/start/', {'country': 'FR'})
+        self.assertEqual(Generated.objects.get(kind='presskit_experts').key, '2101.00001v1:FR')
+        # the kit wrote no keywords: the topic is searched by this paper's OpenAlex topic, in France only
+        self.assertIn(',authorships.institutions.country_code:fr,primary_topic.id:T42', calls[-1])
+        html = self.paid.get(self.base + 'experts/?country=FR').json()['html']
+        self.assertIn('Eve Paris', html)
+        self.assertIn('Cid Moe', html)
+        self.assertNotIn('Dee Fox', html)
+        self.assertNotIn('Eve Paris', self.paid.get(self.base + 'experts/').json()['html'])  # anywhere: the kit's own
+        self.assertEqual(self.paid.get(self.base + 'experts/?country=DE').status_code, 404)  # not looked for yet
+        text = self.paid.get(self.base + 'markdown/?country=FR').content.decode()
+        self.assertIn('Working in France.', text)
+        self.assertIn('Eve Paris', text)
+        self.assertIn('data-experts-start', self.paid.get(self.base).content.decode())
+        self.assertEqual(self.client_for(self.user('free-reader')).post(self.base + 'experts/start/', {'country': 'FR'}).status_code, 404)
+
     def test_markdown_export_follows_the_role(self):
         self.generate()
         text = self.paid.get(self.base + 'markdown/?role=author').content.decode()

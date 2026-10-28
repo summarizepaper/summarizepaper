@@ -358,13 +358,17 @@ def found_in(works):
 WORK_FIELDS = 'id,doi,display_name,authorships,publication_date,corresponding_author_ids,locations'
 
 
-def topic_works(paper, query):
-    """Recent works on this paper's topic: an OpenAlex search of a few keywords (a whole title finds nothing) over
-    the last RECENT_YEARS years, kept when their title is close to its title and abstract (embeddings); [] when
-    unavailable."""
+def topic_works(paper, query, country='', topic=''):
+    """Recent works on this paper's topic: an OpenAlex search of a few keywords (a whole title finds nothing), or
+    of its OpenAlex topic id, over the last RECENT_YEARS years, signed in this country when one is given, kept when
+    their title is close to its title and abstract (embeddings); [] when unavailable."""
     since = (timezone.now().date() - datetime.timedelta(days=365 * RECENT_YEARS)).isoformat()
-    works = [w for w in openalex('from_publication_date:%s,type:article|preprint|review|letter' % since, WORK_FIELDS,
-                                 TOPIC_WORKS, search=query) or [] if w.get('display_name')]
+    filters = 'from_publication_date:%s,type:article|preprint|review|letter' % since
+    if country:
+        filters += ',authorships.institutions.country_code:' + country.lower()
+    if topic and not query:
+        filters += ',primary_topic.id:' + topic
+    works = [w for w in openalex(filters, WORK_FIELDS, TOPIC_WORKS, search=query) or [] if w.get('display_name')]
     if not works:
         return []
     vectors = similar.embed([clean('%s %s' % (paper.title, paper.abstract or ''), similar.MAX_INPUT_CHARS)] +
@@ -377,18 +381,20 @@ def recent(year):
     return str(year or '') >= str(timezone.now().year - RECENT_YEARS)
 
 
-def openalex_experts(paper, papers, query=''):
+def openalex_experts(paper, papers, query='', country=''):
     """{'experts', 'left_out': people left out because they sign with the authors or share their institution,
     'checked': whether the co-authors were (not when OpenAlex does not know this paper), 'orcids': the authors'},
     or None.
 
     Candidates sign one of the closest papers, or a recent paper of the topic when they give too few, first, last or
     as corresponding author (student_papers.author_roles), and are neither authors of this paper nor their co-authors
-    of the last years. Those who signed one since RECENT_YEARS come first."""
+    of the last years. Those who signed one since RECENT_YEARS come first. With a country (a journalist wants people
+    they can meet), only those signing from an institution there, and the topic is searched in that country: by the
+    kit's keywords, else by this paper's OpenAlex topic."""
     dois = {doi: p for p in papers[::-1] + [paper] for doi in paper_dois(p)}  # this paper wins a shared DOI
     if not dois:
         return None
-    works = openalex('doi:' + '|'.join(list(dois)[-100:]), WORK_FIELDS, 100)
+    works = openalex('doi:' + '|'.join(list(dois)[-100:]), WORK_FIELDS + (',primary_topic' if country else ''), 100)
     if works is None:
         return None
     # OpenAlex merges a preprint into its publication: a work found by its arXiv DOI may come back with the journal's
@@ -411,15 +417,17 @@ def openalex_experts(paper, papers, query=''):
         return None
     people, left_out = {}, set()
     candidates = [(neighbour, work) for neighbour, work in found if neighbour is not None and neighbour is not paper]
-    collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions)
-    if query and sum(any(recent(x['year']) for x in p['papers']) for p in people.values()) < EXPERTS:
+    collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions, country)
+    topic = '' if query else re.sub(r'.*/', '', ((own or {}).get('primary_topic') or {}).get('id') or '') if country else ''
+    if (query or topic) and sum(any(recent(x['year']) for x in p['papers']) for p in people.values()) < EXPERTS:
         try:
-            more = topic_works(paper, query)
+            more = topic_works(paper, query, country, topic)
         except Exception:
             logger.exception('Topic search for the commentators of %s failed', paper.arxiv_id)
             more = []
         known = {w['id'] for _n, w in found}
-        collect([(None, w) for w in more if w['id'] not in known], people, left_out, own_ids, linked, own_names, own_institutions)
+        collect([(None, w) for w in more if w['id'] not in known], people, left_out, own_ids, linked, own_names,
+                own_institutions, country)
     ranked = sorted(people.values(), key=lambda p: (not any(recent(x['year']) for x in p['papers']), -len(p['papers']),
                                                    -max(int(x['year'] or 0) for x in p['papers']), p['name']))
     experts = []
@@ -429,8 +437,9 @@ def openalex_experts(paper, papers, query=''):
     return {'experts': experts, 'left_out': len(left_out - set(people)), 'checked': bool(own_ids), 'orcids': orcids}
 
 
-def collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions):
-    """Add the lead signers of these (close paper or None, OpenAlex work) to people, or to left_out."""
+def collect(candidates, people, left_out, own_ids, linked, own_names, own_institutions, country=''):
+    """Add the lead signers of these (close paper or None, OpenAlex work) to people, or to left_out; with a country,
+    only those signing from an institution there."""
     for neighbour, work in candidates:
         roles = student_papers.author_roles(work)
         for authorship in work.get('authorships') or []:
@@ -445,7 +454,11 @@ def collect(candidates, people, left_out, own_ids, linked, own_names, own_instit
             if institution_ids(authorship) & own_institutions:
                 left_out.add(aid)  # same institution as an author: not an outside view
                 continue
-            institution = next((i for i in authorship.get('institutions') or [] if i.get('display_name')), {})
+            institution = next((i for i in authorship.get('institutions') or []
+                                if i.get('display_name') and (not country or i.get('country_code') == country)), None)
+            if institution is None and country:
+                continue
+            institution = institution or {}
             person = people.setdefault(aid, {'name': name, 'affiliation': institution.get('display_name') or '',
                                              'country': institution.get('country_code') or '',
                                              'orcid': author.get('orcid') or '', 'papers': [], 'checked': True})
@@ -481,15 +494,20 @@ def local_experts(paper, papers):
     return found
 
 
-def experts(paper, papers=None, query=''):
+def experts(paper, papers=None, query='', country=''):
     """{'experts': researchers to approach for outside comment, 'checked': whether their co-authorships with the
-    authors were, 'left_out': how many people were for that, 'orcids': the authors' ORCID iDs}."""
+    authors were, 'left_out': how many people were for that, 'orcids': the authors' ORCID iDs}. In a country, only
+    from OpenAlex (our own metadata does not say where people work); raises when it is unavailable."""
     papers = neighbours(paper) if papers is None else papers
     try:
-        found = openalex_experts(paper, papers, query)
+        found = openalex_experts(paper, papers, query, country)
     except Exception:
         logger.exception('Outside commentators of %s failed', paper.arxiv_id)
         found = None
+    if country:
+        if found is None:
+            raise RuntimeError('OpenAlex unavailable for the commentators of %s in %s' % (paper.arxiv_id, country))
+        return found
     if found is not None and found['experts']:
         return found
     return {'experts': local_experts(paper, papers), 'checked': False, 'left_out': 0,
@@ -697,7 +715,8 @@ def write(arxiv_id, lang):
             logger.warning('Press kit roles of %s failed: %r', arxiv_id, roles)
             roles = {}
         generated.progress(pk, 'experts')
-        people = experts(paper, papers, clean(re.sub(r'[^\w\s-]', ' ', str(answer.get('search_query') or '')), 120))
+        query = clean(re.sub(r'[^\w\s-]', ' ', str(answer.get('search_query') or '')), 120)
+        people = experts(paper, papers, query)
         kit = {
             'headline': clean(answer.get('headline'), 300),
             'plain_explanation': clean(answer.get('plain_explanation'), 2000),
@@ -713,7 +732,7 @@ def write(arxiv_id, lang):
             'glossary': [{'term': clean(g.get('term'), 120), 'definition': clean(g.get('definition'), 600)}
                          for g in answer.get('glossary', []) if isinstance(g, dict) and g.get('term')][:10],
             'experts': people['experts'], 'experts_checked': people['checked'], 'experts_left_out': people['left_out'],
-            'author_orcids': people['orcids'],
+            'author_orcids': people['orcids'], 'experts_query': query,
             'figures': press_figures(answer.get('press_figures'), figures, paper),
             'publication_status': publication,
             'abstract_only': abstract_only, 'schema_version': SCHEMA, 'source': provenance(paper, scope),
@@ -862,7 +881,7 @@ def presskit_page(request, arxiv_id):
         'can_read_full_text': bool(kit and isinstance(paper, ArxivPaper) and kit.get('source', {}).get('scope') == 'abstract'
                                    and sources.is_open_license(paper.license)),
         **share_context(request, row if paid and kit else None),
-        'demo_ids': sorted(DEMO_KITS),
+        'demo_ids': sorted(DEMO_KITS), 'countries': countries() if paid and kit else [],
     })
     return render(request, 'summarizer/presskit.html', context)
 
@@ -948,7 +967,8 @@ def presskit_pdf(request, arxiv_id):
     editorial = editorial_context(request.GET.get('letter'), arxiv_id, request.LANGUAGE_CODE)
     role = request.GET.get('role') if request.GET.get('role') in ROLE_KEYS else None
     response = HttpResponse(document(paper, row, editorial, publication=publication_status.latest(arxiv_id, row.data()),
-                                     role=role), content_type='application/pdf')
+                                     role=role, experts=experts_in(arxiv_id, request.GET.get('country'))),
+                            content_type='application/pdf')
     response['Content-Disposition'] = export_name(arxiv_id, request.LANGUAGE_CODE, 'pdf')
     return private(response)
 
@@ -961,7 +981,8 @@ def presskit_markdown(request, arxiv_id):
         return HttpResponse(status=403)
     from .presskit_pdf import markdown
     role = request.GET.get('role') if request.GET.get('role') in ROLE_KEYS else None
-    text = markdown(paper, row, publication=publication_status.latest(arxiv_id, row.data()), role=role)
+    text = markdown(paper, row, publication=publication_status.latest(arxiv_id, row.data()), role=role,
+                    experts=experts_in(arxiv_id, request.GET.get('country')))
     response = HttpResponse(text, content_type='text/markdown; charset=utf-8')
     response['Content-Disposition'] = export_name(arxiv_id, request.LANGUAGE_CODE, 'md')
     return private(response)
@@ -995,6 +1016,65 @@ def presskit_share(request, arxiv_id):
         row.save(update_fields=['content', 'updated'])
     result_share.act(row, 'unshare' if action == 'unshare' else 'share')
     return JsonResponse({'status': 'ok', 'url': result_share.shared_url(request, row, 'press-kit')})
+
+
+EXPERTS_KIND = 'presskit_experts'
+
+
+def countries():
+    """[(code, name)] a reader picks the country of the researchers to approach from, by name in their language."""
+    from .students import COUNTRY_NAMES, normalized
+    return sorted(COUNTRY_NAMES, key=lambda c: normalized(str(c[1])))
+
+
+def country_of(value):
+    from .students import COUNTRY_NAMES
+    return value if value in dict(COUNTRY_NAMES) else ''
+
+
+def experts_in(arxiv_id, country):
+    """The kit's experts fields for the researchers found in this country, or None (no country, or not found yet).
+    Found once per paper and country, whatever the language of the kit."""
+    from .students import COUNTRY_NAMES
+    country = country_of(country)
+    row = Generated.objects.filter(kind=EXPERTS_KIND, key='%s:%s' % (arxiv_id, country), lang='en',
+                                   status='done').exclude(content='').first() if country else None
+    if row is None:
+        return None
+    found = row.data()
+    return {'experts': found.get('experts') or [], 'experts_checked': found.get('checked', False),
+            'experts_left_out': found.get('left_out', 0), 'experts_country': str(dict(COUNTRY_NAMES)[country])}
+
+
+@require_POST
+def experts_start(request, arxiv_id):
+    """Look for researchers to approach in the country the reader picks (a journalist wants people they can meet),
+    in the background: OpenAlex only, no model call."""
+    query = status_kit(request, arxiv_id).data().get('experts_query', '')
+    country = country_of(request.POST.get('country'))
+    if not country:
+        return JsonResponse({'status': 'invalid'}, status=400)
+
+    def work(pk):
+        paper = ArxivPaper.objects.prefetch_related('authors').get(arxiv_id=arxiv_id)
+        return experts(paper, None, query, country)
+    row = generated.start(EXPERTS_KIND, '%s:%s' % (arxiv_id, country), 'en', work)
+    return JsonResponse({'status': row.status, 'id': row.pk})
+
+
+@require_GET
+def experts_result(request, arxiv_id):
+    """The list of researchers to approach, in a country (?country=) or anywhere (the kit's own)."""
+    from django.template.loader import render_to_string
+    kit = status_kit(request, arxiv_id).data()
+    if request.GET.get('country'):
+        found = experts_in(arxiv_id, request.GET.get('country'))
+        if found is None:
+            raise Http404
+        kit.update(found)
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    return JsonResponse({'html': render_to_string('summarizer/presskit_experts.html', {'kit': kit, 'paper': paper},
+                                                  request=request)})
 
 
 REPORT_SECTIONS = ('evidence', 'novelty', 'hype', 'experts', 'figures', 'author', 'commentator', 'writer', 'questions',

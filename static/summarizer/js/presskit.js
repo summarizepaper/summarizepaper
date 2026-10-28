@@ -94,6 +94,53 @@
       }
     });
 
+    // researchers to approach in the country the reader picks: found once per paper and country, then shown
+    var place = root.querySelector('[data-experts-start]');
+    if (place) {
+      var select = place.querySelector('[data-experts-country]');
+      var progress = place.querySelector('[data-experts-progress]');
+      var failure = place.querySelector('[data-experts-error]');
+      var list = document.getElementById('kit-experts-list');
+      var asked = 0;
+      function state(working, error) {
+        select.disabled = working;
+        progress.hidden = !working;
+        failure.hidden = !error;
+      }
+      function exportsIn(country) {
+        root.querySelectorAll('[data-role-link]').forEach(function (link) {
+          var url = new URL(link.href, location.href);
+          if (country) url.searchParams.set('country', country); else url.searchParams.delete('country');
+          link.href = url.pathname + url.search;
+        });
+      }
+      function result(country, ask) {
+        return function () {
+          if (ask !== asked) return;
+          fetch(place.dataset.expertsResult + (country ? '?country=' + encodeURIComponent(country) : ''), {cache: 'no-store', credentials: 'same-origin'})
+            .then(function (r) { if (!r.ok) throw r; return r.json(); })
+            .then(function (data) {
+              if (ask !== asked) return;
+              var parsed = new DOMParser().parseFromString(data.html, 'text/html');
+              parsed.querySelectorAll('script').forEach(function (script) { script.remove(); });
+              list.replaceChildren.apply(list, Array.from(parsed.body.childNodes).map(function (node) { return document.importNode(node, true); }));
+              exportsIn(country);
+              state(false, false);
+            }).catch(function () { if (ask === asked) state(false, true); });
+        };
+      }
+      select.addEventListener('change', function () {
+        var country = select.value, ask = ++asked;
+        state(true, false);
+        track('presskit_experts_country', {country: country || 'any'});
+        if (!country) return result('', ask)();
+        SP.post(place.dataset.expertsStart, {country: country}).then(function (json) {
+          if (!json.id) throw json;
+          SP.wait(json.id, result(country, ask), function () { if (ask === asked) state(false, true); });
+        }).catch(function () { if (ask === asked) state(false, true); });
+      });
+    }
+
     // read-only link for a press office or co-authors
     var shareBox = root.querySelector('[data-kit-share-box]');
     function share(action) {

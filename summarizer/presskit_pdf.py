@@ -21,9 +21,10 @@ def where(found):
     return ' · '.join(p for p in parts if p)
 
 
-def outline(paper, row, publication=None, role=None, editorial=None):
-    """[(kind, text, extra)]: 'title', 'meta', 'h', 'h3', 'p', 'note', 'warn', 'quote' (extra: where), 'item', 'link' (extra: url)."""
-    kit = row.data()
+def outline(paper, row, publication=None, role=None, editorial=None, experts=None):
+    """[(kind, text, extra)]: 'title', 'meta', 'h', 'h3', 'p', 'note', 'warn', 'quote' (extra: where), 'item', 'link' (extra: url).
+    experts: the researchers found in the country the reader picked (presskit.experts_in), instead of the kit's."""
+    kit = dict(row.data(), **(experts or {}))
     publication = publication or kit.get('publication_status')
     out = []
     add = lambda kind, text, extra='': out.append((kind, str(text or ''), extra)) if text else None
@@ -103,6 +104,8 @@ def outline(paper, row, publication=None, role=None, editorial=None):
             add('quote', sentence)
 
     add('h', _('Researchers to approach for outside comment'))
+    if kit.get('experts_country'):
+        add('p', _('Working in %(country)s.') % {'country': kit['experts_country']})
     if kit.get('experts_checked'):
         add('note', _('They sign close papers first, last or as corresponding author, and neither sign this paper nor have signed with its authors in the last five years (OpenAlex). Their independence and possible conflicts of interest still need to be checked.'))
     else:
@@ -113,7 +116,8 @@ def outline(paper, row, publication=None, role=None, editorial=None):
         link = sources.ref_url(person['arxiv_id']) if person.get('arxiv_id') else person.get('url', '')
         add('link', link, link)
     if not kit.get('experts'):
-        add('p', _('We do not know enough papers close to this one yet.'))
+        add('p', _('No researcher found working in this country.') if kit.get('experts_country') else
+            _('We do not know enough papers close to this one yet.'))
 
     if kit.get('glossary'):
         add('h', _('Glossary'))
@@ -233,7 +237,7 @@ class PressPDF(FPDF):
         self.cell(0, 6, 'SummarizePaper  ·  %s %s' % (_('Page'), self.page_no()), align='R')
 
 
-def document(paper, row, editorial=None, publication=None, role=None):
+def document(paper, row, editorial=None, publication=None, role=None, experts=None):
     pdf = PressPDF(format='A4')
     pdf.set_margins(18, 17, 18)
     pdf.set_auto_page_break(True, margin=21)
@@ -265,7 +269,7 @@ def document(paper, row, editorial=None, publication=None, role=None):
             pdf.set_x(pdf.l_margin)
         pdf.ln(2)
 
-    for kind, value, extra in outline(paper, row, publication, role, editorial):
+    for kind, value, extra in outline(paper, row, publication, role, editorial, experts):
         if kind == 'title':
             text(value, 'B', 18)
         elif kind == 'meta':
@@ -296,9 +300,9 @@ def document(paper, row, editorial=None, publication=None, role=None):
     return bytes(pdf.output())
 
 
-def markdown(paper, row, publication=None, role=None, editorial=None):
+def markdown(paper, row, publication=None, role=None, editorial=None, experts=None):
     lines = []
-    for kind, value, extra in outline(paper, row, publication, role, editorial):
+    for kind, value, extra in outline(paper, row, publication, role, editorial, experts):
         value = ' '.join(value.split())
         if kind == 'title':
             lines += ['# ' + value, '']

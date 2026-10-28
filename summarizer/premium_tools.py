@@ -28,7 +28,7 @@ TOOL_KEYS = frozenset(k for k, _ in TOOL_CHOICES)
 # Premium+ only, at twice the price of Premium. A grant of one of them still opens it alone.
 PLUS_TOOLS = frozenset({'literature', 'students', 'conference', 'presskit', 'journal_club'})
 GENERATED_TOOLS = {
-    'presskit': 'presskit', 'presskit_status': 'presskit',
+    'presskit': 'presskit', 'presskit_status': 'presskit', 'presskit_experts': 'presskit',
     'slides': 'journal_club', 'slides_v2': 'journal_club',
     'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club',
     'compare': 'collections', 'questions': 'collections', 'collection_meta': 'collections', 'suggest': 'collections',
