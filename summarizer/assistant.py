@@ -288,13 +288,13 @@ def fit(text, budget, question=''):
     return body, max(min(kept / content, 1.0), 0.0) if content else 1.0, left_out
 
 
-def publication_year(paper):
+def publication_year(paper, report=None):
     """Publication metadata first; never substitute the arXiv deposit date for it.
 
     Use an existing publisher check, or an unambiguous year in the journal
     reference supplied by arXiv. No network request in the chat path.
     """
-    report = publication_status.latest(paper.arxiv_id) or {}
+    report = (publication_status.latest(paper.arxiv_id) or {}) if report is None else report
     date = str(report.get('date') or '')
     if report.get('status') in ('published', 'forthcoming') and re.fullmatch(r'(?:19|20)\d{2}(?:-\d{2}){0,2}', date):
         return int(date[:4])

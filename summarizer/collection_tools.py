@@ -73,6 +73,7 @@ def _mine(request, pk):
 def facts(papers, versions=None):
     """{arxiv_id: {year, venue, status, label, tone, notices, citations, newer}} from stored data only.
     versions: {arXiv base id: latest version} found by the last refresh."""
+    from .assistant import publication_year
     ids = [p.arxiv_id for p in papers]
     arxiv = {p.arxiv_id: p for p in ArxivPaper.objects.filter(arxiv_id__in=ids)}
     external = {}
@@ -97,6 +98,8 @@ def facts(papers, versions=None):
     for aid in ids:
         paper, meta, report = arxiv.get(aid), external.get(aid) or {}, reports.get(aid) or {}
         year = paper.published_arxiv.year if paper is not None and paper.published_arxiv else (meta.get('published') or '')[:4]
+        if paper is not None:
+            year = publication_year(paper, report) or year
         status = report.get('status', '')
         venue = report.get('journal') if status in ('published', 'forthcoming') else ''
         venue = venue or (paper.journal_ref if paper is not None else '') or meta.get('journal', '')

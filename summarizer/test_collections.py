@@ -290,6 +290,17 @@ class ComparisonTableTests(CollectionsTestCase):
 
 
 class PaperFactsTests(CollectionsTestCase):
+    def test_collection_uses_publication_year_and_keeps_preprint_fallback(self):
+        collection = self.make_collection(self.user())
+        paper = ArxivPaper.objects.get(arxiv_id='2101.00001v1')
+        paper.journal_ref = 'ApJL 930, L12, 2022 May 12'
+        paper.published_arxiv = datetime.date(2023, 11, 15)
+        paper.save()
+        with mock.patch('summarizer.publication_status.latest', side_effect=AssertionError('Reports are already loaded')):
+            facts = collection_tools.facts(list(collection.papers.all()))
+        self.assertEqual(facts[paper.arxiv_id]['year'], '2022')
+        self.assertEqual(facts['2101.00002v1']['year'], '2021')
+
     def test_status_retraction_citations_and_newer_version_are_shown_from_stored_data(self):
         user = self.user()
         collection = self.make_collection(user, ('2101.00001v2', '2101.00002v1'))

@@ -13,6 +13,9 @@
   <header class="page-header">
     <h1>{% if anonymous %}{% trans 'Collections of research papers' %}{% else %}{% trans 'My collections' %}{% endif %}</h1>
     <p class="lead">{% trans 'Group papers by project to compare them in one table, chat with all of them at once, and export them to your reference manager.' %}</p>
+    {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}
+    <p><a href="/{{ LANGUAGE_CODE }}/guides/organize-research-paper-collections/" data-funnel="collections_usage_guide"><i class="fas fa-question-circle" aria-hidden="true"></i> {% if LANGUAGE_CODE == 'fr' %}Comment organiser ses articles ? Guide illustré{% else %}How to organize your papers? Illustrated guide{% endif %}</a></p>
+    {% endif %}
   </header>
 
   {% if anonymous %}
