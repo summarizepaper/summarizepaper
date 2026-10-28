@@ -14,6 +14,7 @@
 <div class="page">
   <header class="page-header">
     <h1>{% trans 'Weekly letters' %}</h1>
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/weekly-science-letters/">Comment choisir une lettre et approfondir ses sources ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/weekly-science-letters/">How to choose a letter and explore its sources? Illustrated guide</a></p>{% endif %}
     <p class="lead">{% trans 'What happens next door: every week, the papers of a field that matter beyond it, told like a magazine article for researchers of other fields and curious readers.' %}</p>
     <p class="muted">{% trans 'Every paper of the week is read before six are chosen. Each comes with what it rests on, its main limit, its code and whether it is published, and every number of the text is checked against the abstracts.' %}</p>
   </header>

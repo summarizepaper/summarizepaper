@@ -24,6 +24,7 @@
     <p class="letter-nav"><a href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/">← {% blocktrans with name=topic_name %}{{ name }} this week{% endblocktrans %}</a> · {{ letter.day|date:"j F Y" }} · {% blocktrans count n=minutes %}{{ n }} min read{% plural %}{{ n }} min read{% endblocktrans %}</p>
     <h1>{{ letter.title }}</h1>
     <p class="dek">{{ letter.dek }}</p>
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/weekly-science-letters/">Comment vérifier les résultats et poursuivre la lecture ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/weekly-science-letters/">How to check the findings and keep reading? Illustrated guide</a></p>{% endif %}
     {% if audio %}
     <div class="letter-audio" data-url="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/audio/">
       <button class="btn btn-sm btn-ghost" type="button">&#127911; {% trans 'Listen to this letter' %}</button>

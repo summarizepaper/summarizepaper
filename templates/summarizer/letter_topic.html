@@ -15,6 +15,7 @@
   <header class="page-header">
     <p><a href="/{{ LANGUAGE_CODE }}/letters/">← {% trans 'Weekly letters' %}</a></p>
     <h1>{% blocktrans %}{{ name }} this week{% endblocktrans %}</h1>
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/weekly-science-letters/">Comment lire et suivre cette lettre ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/weekly-science-letters/">How to read and follow this letter? Illustrated guide</a></p>{% endif %}
     <p><a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Get it by email' %}</a> · <a href="/{{ LANGUAGE_CODE }}/letters/{{ topic }}/feed/">RSS</a></p>
   </header>
   <ul class="item-list">
