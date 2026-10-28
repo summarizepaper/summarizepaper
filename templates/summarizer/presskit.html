@@ -44,10 +44,11 @@
 
   {% if not paid and not kit %}
   <div class="upsell">
-    <p><strong>{% trans 'Talk about a paper in public without overstating it: yours, or one you are asked to comment on.' %}</strong></p>
+    <p><strong>{% trans 'Talk about a paper in public without overstating it: yours, one you are asked to comment on, or one you write about as a journalist.' %}</strong></p>
     <ul>
       <li>{% trans 'Your paper: a draft release for your press office, the questions journalists will ask with what the paper lets you answer, the likely misreadings, a lay summary and a short thread.' %}</li>
       <li>{% trans 'Asked to comment: what the paper shows and does not, its strengths and weaknesses with their passages, and what would settle its main claim.' %}</li>
+      <li>{% trans 'Writing about it as a journalist: reporting angles, the wording to check before publication, and the questions to ask the authors.' %}</li>
       <li>{% trans 'For everyone: findings with their passages checked word for word, the novelty set against the closest earlier papers, a hype check, figures with their credit, and researchers for an outside view who have not signed with the authors.' %}</li>
     </ul>
     <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a>
@@ -332,7 +333,7 @@
     </dialog>
   {% else %}
     <div class="card section-card" id="kit-start"{% if row and row.status == 'pending' %} hidden{% endif %}>
-      <p>{% trans 'The press kit is written from the full paper, for its authors, for researchers asked to comment on it and for those who write about it. It takes one or two minutes.' %}</p>
+      <p>{% trans 'The press kit is written from the full paper, for its authors, for researchers asked to comment on it and for journalists who write about it. It takes one or two minutes.' %}</p>
       <button type="button" class="btn" id="kit-go">{% trans 'Write the press kit' %}</button>
       {% if row and row.status == 'failed' %}<p class="error" style="margin-top:12px">{% trans 'Something went wrong. Please try again.' %}</p>{% endif %}
     </div>

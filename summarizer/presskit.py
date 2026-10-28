@@ -1,4 +1,4 @@
-"""Press kit of a paper (Premium+): what a researcher needs to talk about a paper in public, or to answer for it.
+"""Press kit of a paper (Premium+): what a researcher or a journalist needs to talk about a paper in public, or to answer for it.
 
 Three readers use it, and the page shows the part of the reader's role (ROLES) above what they share:
 - the authors: a draft release for their press office (with a place for their own quotes, never written for
@@ -6,7 +6,7 @@ Three readers use it, and the page shows the part of the reader's role (ROLES) a
   misreadings, a lay summary and a short thread;
 - a researcher asked to comment on someone else's paper: what it shows and does not, its strengths and
   weaknesses each with its passage, what would settle the main claim;
-- whoever writes about it: reporting angles, wording to check, questions for the authors.
+- a journalist, or whoever writes about it: reporting angles, wording to check, questions for the authors.
 
 One kit per paper and language, shared by every reader, written from the full text (or only the abstract when
 the license does not let us read more) in two model calls made at the same time. What is checked rather than
@@ -58,7 +58,7 @@ TOPIC_WORKS = 50  # recent works of a topic search, when the closest papers give
 TOPIC_CLOSE = 0.5  # cosine of their title to this paper's title and abstract, below which they are about something else
 MAX_AUTHOR_IDS = 25  # authors of this paper whose co-authors are looked up (OpenAlex takes 100 values)
 KINDS = ('result', 'interpretation')  # as insight.KINDS: measured, computed or proved / concluded or suggested
-ROLES = [('author', _('It is my paper')), ('commentator', _('I am asked to comment')), ('writer', _('I write about it'))]
+ROLES = [('author', _('It is my paper')), ('commentator', _('I am asked to comment')), ('writer', _('I write about it (journalist)'))]
 ROLE_KEYS = [key for key, _label in ROLES]
 DEMO_KITS = {'2307.01574v1'}  # open to every visitor, so that a kit can be seen before subscribing
 STEPS = [
@@ -78,7 +78,7 @@ LICENSE_TERMS = {
 }
 
 PROMPT = """You prepare a press kit about the paper in source_documents, for researchers who will talk about it in public
-and for the people who write about it. Write in {language}.
+and for the journalists who write about it. Write in {language}.
 Be precise and sober: no hype, no claim the paper does not make. Flag what a careful reader must check.
 Answer with a JSON object:
 {{"headline": "a factual headline, 12 words at most",

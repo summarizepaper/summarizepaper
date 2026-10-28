@@ -1420,7 +1420,7 @@ def paper_tool_start(request, tool):
     """A discoverable entry point; generation still requires the existing explicit action."""
     from .presskit import DEMO_KITS
     title, description = {
-        'presskit': (_('Press kit'), _('Talk about a paper in public without overstating it: a draft release and the questions journalists will ask for its authors, strengths and weaknesses for a researcher asked to comment, every quote checked against the paper.')),
+        'presskit': (_('Press kit'), _('Talk about a paper in public without overstating it: a draft release and the questions journalists will ask for its authors, strengths and weaknesses for a researcher asked to comment, reporting angles and questions for the authors for a journalist, every quote checked against the paper.')),
         'slides': (_('Journal club'), _('Prepare slides with figures, strengths, limitations and discussion questions, then edit or export them.')),
     }[tool]
     query = request.GET.get('q', '').strip()[:500]
