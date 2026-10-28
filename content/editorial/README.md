@@ -1,10 +1,10 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 103 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 122 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
-Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Le deuxième outil, Discuter avec les articles, a été repris avec les papiers I et VI sur Sagittarius A*, une analyse visuelle réellement exécutée, des preuves consultables et un tableau à trois colonnes. Il comporte neuf captures par langue. Collections et Digest quotidien ont également été repris individuellement ; les huit autres articles restent à reprendre.
+Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Le deuxième outil, Discuter avec les articles, a été repris avec les papiers I et VI sur Sagittarius A*, une analyse visuelle réellement exécutée, des preuves consultables et un tableau à trois colonnes. Il comporte neuf captures par langue. Collections, Digest quotidien et Veille anti-scoop ont également été repris individuellement ; les sept autres articles restent à reprendre.
 
 ## Relecture
 
@@ -17,7 +17,7 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 | Saved searches | [Lire](../guides/fr/saved-searches-research-alerts.md) | [Read](../guides/en/saved-searches-research-alerts.md) | Requête sauvegardée et aperçu sur deux semaines exécuté : zéro résultat, montré sans inventer de correspondances |
 | Weekly letters | [Lire](../guides/fr/weekly-science-letters.md) | [Read](../guides/en/weekly-science-letters.md) | Éditions Astronomie et espace du 26 octobre 2026, ouvertes dans les deux langues |
 | Rising topics | [Lire](../guides/fr/rising-research-topics.md) | [Read](../guides/en/rising-research-topics.md) | Vue Premium Astrophysique, semaine du 12 octobre 2026, dans les deux langues |
-| Scoop watch | [Lire](../guides/fr/scoop-watch-research-project.md) | [Read](../guides/en/scoop-watch-research-project.md) | Deux projets fictifs créés ; contrôle des annonces terminé ; recherche historique française terminée avec 67 articles proches, anglaise en échec après une relance |
+| Scoop watch | [Lire](../guides/fr/scoop-watch-research-project.md) | [Read](../guides/en/scoop-watch-research-project.md) | Repris le 28 octobre : fort recouvrement Mitani et al. (2026) en français, recouvrement partiel Nakatani et al. (2023) en anglais ; comparaisons intégrales CC BY, figures et notes enregistrées ; 10 captures FR et 12 EN |
 | Citation alerts | [Lire](../guides/fr/track-research-paper-citations.md) | [Read](../guides/en/track-research-paper-citations.md) | Fiche d’un papier déjà suivi : 135 citations, analyse des contextes lancée dans les deux langues et extraits ouverts ; aucune nouvelle alerte email prétendument reçue |
 | Who works on it? | [Lire](../guides/fr/find-research-teams-by-topic.md) | [Read](../guides/en/find-research-teams-by-topic.md) | Deux générations indépendantes terminées : 24 articles / 2 approches en français, 22 / 3 en anglais |
 | Find a research placement | [Lire](../guides/fr/find-research-placement-contacts.md) | [Read](../guides/en/find-research-placement-contacts.md) | Deux recherches fictives L3/Bachelor, six mois, sans restriction géographique ; contacts obtenus et limites de couverture explicites |
@@ -37,7 +37,7 @@ La connexion a été réalisée par l’utilisateur dans le navigateur intégré
 
 ## Limites des démonstrations
 
-Le projet Scoop Watch français a terminé sa recherche historique sur trois ans : 67 articles proches. Le projet anglais a échoué, y compris après une relance ; le guide anglais décrit honnêtement la configuration et le contrôle quotidien, puis renvoie au cas français pour les recouvrements historiques.
+Le projet Scoop Watch français affiche 67 articles proches. La recherche anglaise interrompue a pu être relancée après correction du verrou d’état périmé : 62 articles proches lors du premier passage terminé, puis 58 lors du passage sur la description précisée, les résultats antérieurs restant conservés. Ces nombres ne s’additionnent pas en nombre d’études indépendantes ; des versions de revue et de prépublication peuvent apparaître séparément.
 
 Plusieurs sources étaient indisponibles pendant la session ; les résultats incomplets, absents ou limités à l’abstract restent signalés. Une capture de « zéro résultat » ne prouve pas une absence de littérature.
 
@@ -68,3 +68,13 @@ Collections privées de démonstration : 100 (français) et 101 (anglais), trois
 Article 2610.37540v1 : prépublication déposée le 27 octobre 2026, CC BY 4.0, synthèses intégrales et quatre figures vérifiées dans les deux langues. Figure 2 agrandie ; distinction entre fraction de l’émission et fraction de masse pour la limite supérieure de 5,3 %. Génération française relancée après un échec, puis terminée et contrôlée ; aucune capture d’attente présentée comme résultat.
 
 Collections privées 133 (français) et 134 (anglais) : un article, statut À lire/To read et note sur la limite et la figure, vérifiés après rechargement. Liens d’aide ajoutés aux réglages du digest et aux éditions web. Onze captures distinctes dans chaque langue.
+
+### Refonte du guide Veille anti-scoop — 28 octobre 2026
+
+Projets privés de démonstration existants 34 (français) et 35 (anglais). Aucun changement du projet personnel préexistant. Options d’équipes, références et emails illustrées en brouillon, sans nouvel enregistrement d’abonnement ni envoi manuel. La description du projet 35 a été précisée puis enregistrée, en gardant ses réglages d’email : comparaison de scénarios primordial et secondaire, thermochimie, profils CO/C I et HCO+, même faisceau et sensibilité. Les résultats déjà présents sont conservés, sans réécriture de leurs premières analyses.
+
+Le bouton Relancer refusait un état pending périmé alors que la page le présentait comme échoué. Le garde de relance reconnaît désormais les traitements périmés ou sans date de départ, pour la recherche d’antériorité comme pour la comparaison intégrale ; un traitement récent ou une comparaison terminée reste protégé. Cinq tests de récupération ajoutés ; les 34 tests Scoop Watch passent.
+
+Comparaisons intégrales effectivement terminées : match 103, Mitani et al. (2026), CC BY 4.0, pour le projet 34 ; match 177, Nakatani et al. (2023), CC BY 4.0, pour le projet 35. Tous deux marqués pertinents. Collections privées créées 166 et 167, une référence chacune, statut À lire/To read et note vérifiés après rechargement. Aucune invitation, aucun lien de partage, aucun contact aux auteurs.
+
+Les fiches arXiv 2608.22781v1 ont été générées dans les deux langues avec texte intégral confirmé ; les captures de galerie montrent les figures 10 à 12, pas une promesse que toutes les figures de l’article sont affichées. La fiche DOI du même préprint ne fournit pas la galerie ; les guides renvoient donc à la fiche arXiv pour cette lecture visuelle. Dépôt du 24 août 2026 explicitement distingué d’une acceptation en revue. Le guide anglais traite un autre article principal et présente Mitani comme lecture complémentaire, sans prétendre que sa recherche l’a signalé.
