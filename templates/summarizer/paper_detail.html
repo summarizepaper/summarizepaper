@@ -153,6 +153,9 @@
   <div class="chatbot-container" id="assistant">
     <div class="chatbot-header">
       <h3>{% trans 'Ask questions about this paper to our AI assistant' %}</h3>
+      {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}
+      <p class="paper-chat-guide"><a href="/{{ LANGUAGE_CODE }}/guides/how-to-chat-with-research-papers/#single-paper-chat" data-funnel="paper_chat_guide"><i class="fas fa-question-circle" aria-hidden="true"></i> {% if LANGUAGE_CODE == 'fr' %}Comment discuter avec cet article ? Guide illustré{% else %}How to chat with this paper? Illustrated guide{% endif %}</a></p>
+      {% endif %}
       <p class="chat-reading" id="chat-reading" hidden></p>
       {% if not arxiv_id|is_external %}<p><a href="https://arxiv.org/pdf/{{ arxiv_id|dash_slash }}" target="_blank" rel="noopener" class="chat-pdf-link" data-pdf-panel><i class="fas fa-file-pdf"></i> {% trans 'Compare with the PDF' %}</a></p>{% endif %}
       <p><small>{% blocktrans %}You can also <a href="/{{ LANGUAGE_CODE }}/chat/" class="btn btn-primary">chat with multiple papers at once here</a>.{% endblocktrans %}</small></p>

@@ -24,7 +24,11 @@ Below the Sagittarius A&#42; image sit four smaller images that look similar but
 
 The examples use two EHT collaboration publications from 2022: **Paper I**, presenting the image and overall findings, and **Paper VI**, examining tests of the black hole metric. We use arXiv versions **2311.08680v2** and **2311.09484v1**. Both are licensed **CC BY 4.0**, and both were actually read in full during these demonstrations.
 
+<span id="single-paper-chat"></span>
+
 ## Start with a paper whose full text is available
+
+Already on a paper’s page? Ask your question in its chat box: the paper is already selected. The steps in this guide about figures, source passages and follow-up questions also apply there. The screenshots show the Chat page; comparing several papers and building tables require that page.
 
 [Open the chat with Paper I](/en/chat/?ids=2311.08680v2). Alternatively, paste `2311.08680v2` into **“Add a paper directly”** and click **“Add”**. A DOI or a paper link also works.
 

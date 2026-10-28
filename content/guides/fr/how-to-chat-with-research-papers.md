@@ -24,7 +24,11 @@ Sous l’image de Sagittarius A&#42;, quatre petites images se ressemblent sans 
 
 Le parcours utilise deux publications de la collaboration EHT, parues en 2022 : le **papier I**, qui présente l’image et les résultats d’ensemble, et le **papier VI**, consacré aux tests de la métrique du trou noir. Les versions arXiv choisies sont **2311.08680v2** et **2311.09484v1**. Toutes deux sont en **CC BY 4.0** et ont été effectivement lues en texte intégral pendant ces démonstrations.
 
+<span id="single-paper-chat"></span>
+
 ## Commencer par un papier dont le texte est disponible
+
+Vous êtes sur la page d’un article ? Posez votre question dans sa boîte de dialogue : le papier est déjà sélectionné. Les étapes de ce guide consacrées aux figures, aux passages sources et aux relances s’y appliquent également. Les captures montrent la page Chat ; la comparaison de plusieurs papiers et les tableaux nécessitent cette page.
 
 [Ouvrez le chat avec le papier I](/fr/chat/?ids=2311.08680v2). Vous pouvez aussi coller `2311.08680v2` dans **« Ajouter un article directement »**, puis cliquer sur **« Ajouter »**. Un DOI ou un lien est également accepté.
 
