@@ -464,6 +464,8 @@ img { max-width: 100%; }
 .chatbot-header h3::before { content: "\f086"; font: 900 16px "Font Awesome 5 Free"; color: var(--accent); }
 .chatbot-header p { margin: 0; color: var(--text-muted); }
 .chatbot-header .paper-chat-guide { margin: 8px 0; font-size: 14px; }
+#assistant, #single-paper-chat { scroll-margin-top: 88px; }
+#single-paper-chat { display: block; }
 .chatbot-header .btn { padding: 0; background: none; color: var(--accent); font-size: inherit; font-weight: 600; display: inline; }
 .chatbot-header .btn:hover { background: none; text-decoration: underline; }
 .chatbot-body .chatbot-messages { height: 300px; overflow-y: auto; padding: 16px 24px; }
