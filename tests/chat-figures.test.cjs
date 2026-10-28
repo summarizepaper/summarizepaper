@@ -11,7 +11,7 @@ class Element {
     this.classList = {add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x)};
   }
   addEventListener(type, fn) {this.events[type] = fn;}
-  fire(type) {return this.events[type]?.();}
+  fire(type, event) {return this.events[type]?.(event);}
   appendChild(e) {this.children.push(e); return e;}
   replaceChildren(...children) {this.children = children; this._value = '';}
   setAttribute(key, value) {this[key] = key === 'open' ? true : value;}
@@ -179,4 +179,19 @@ test('both websocket handlers preserve figure metadata through the final answer'
     assert.match(template, /SPChatFigures\.render\(currentResponse, pendingFigures\.figures, pendingFigures\.status\)/);
     assert.match(template, /pendingFigures = null/);
   }
+});
+
+
+test('figure zoom closes with Escape, native cancel or the backdrop, preserving clicks inside', async () => {
+  const h = harness(); h.open(); h.requests[0].reply(ready()); await settle();
+  const thumb = h['.chat-figures-grid'].children[0].children[0];
+  h.dialog.getBoundingClientRect = () => ({left: 10, right: 100, top: 10, bottom: 100});
+  const key = {key: 'Escape', preventDefault() {}, stopPropagation() {}};
+  thumb.fire('click'); h.dialog.fire('keydown', key);
+  assert.equal(h.dialog.open, false); assert.equal(thumb.focused, true);
+  thumb.fire('click'); h.dialog.fire('cancel', key); assert.equal(h.dialog.open, false);
+  thumb.fire('click');
+  h.dialog.fire('click', {target: h.dialog, clientX: 50, clientY: 50}); assert.equal(h.dialog.open, true);
+  h.dialog.fire('click', {target: {}, clientX: 0, clientY: 0}); assert.equal(h.dialog.open, true);
+  h.dialog.fire('click', {target: h.dialog, clientX: 0, clientY: 50}); assert.equal(h.dialog.open, false);
 });

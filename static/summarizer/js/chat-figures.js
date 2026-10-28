@@ -155,6 +155,15 @@
     select.addEventListener('change', function () {load(false);});
     retry.addEventListener('click', function () {load(true);});
     dialog.querySelector('.chat-figure-close').addEventListener('click', close);
+    dialog.addEventListener('cancel', function (event) {event.preventDefault(); close();});
+    dialog.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {event.preventDefault(); event.stopPropagation(); close();}
+    });
+    dialog.addEventListener('click', function (event) {
+      if (event.target !== dialog) return;
+      var rect = dialog.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) close();
+    });
     dialog.addEventListener('close', function () {if (opener && opener.isConnected) opener.focus();});
     if (selected) new MutationObserver(function () {refresh(false);}).observe(selected, {childList: true, subtree: true});
     window.SPChatFigures.render = function (element, items, result) {

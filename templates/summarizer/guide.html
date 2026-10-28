@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{{ guide.title }} | SummarizePaper{% endblock %}
@@ -26,6 +26,11 @@
 
   {{ guide.html|safe }}
 
+  <dialog id="guide-image-dialog" class="guide-image-dialog" aria-label="{% trans 'Enlarged figure' %}">
+    <button type="button" class="btn btn-sm guide-image-close">{% trans 'Close' %}</button>
+    <figure><img alt="" /><figcaption></figcaption></figure>
+  </dialog>
+
   {% if guide.faq %}
   <h2>{% trans 'FAQ' %}</h2>
   <div class="accordion">
@@ -49,6 +54,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script defer src="{% static_v 'summarizer/js/guide-images.js' %}"></script>
 <script>
   // Tooltip for chart marks carrying a data-tip attribute
   document.querySelectorAll('.viz').forEach(function (fig) {

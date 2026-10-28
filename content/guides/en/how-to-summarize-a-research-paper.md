@@ -14,7 +14,7 @@ sources:
   url: https://creativecommons.org/licenses/by/4.0/
 ---
 
-An orange ring around a dark center: the image of Sagittarius A\* invites a closer look at how astronomers observe a black hole. The accompanying paper explains image reconstruction, comparisons with simulations and the remaining uncertainties. With **Summaries**, you can enter the study through its figures, read a synthesis, then return to the scientific passages supporting its findings.
+An orange ring around a dark center: the image of Sagittarius A&#42; invites a closer look at how astronomers observe a black hole. The accompanying paper explains image reconstruction, comparisons with simulations and the remaining uncertainties. With **Summaries**, you can enter the study through its figures, read a synthesis, then return to the scientific passages supporting its findings.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/summaries/figure-en.jpg"><img src="/static/summarizer/img/guides/summaries/figure-en.jpg" alt="Figure 5 enlarged inside SummarizePaper: compare a simulation, its average and its reconstruction. Figures: EHT collaboration et al., 2022, CC BY 4.0; source and license below." width="1280" height="720" loading="lazy" /></a>
@@ -22,7 +22,7 @@ An orange ring around a dark center: the image of Sagittarius A\* invites a clos
 </figure>
 
 
-This walkthrough follows one paper: *First Sagittarius A\* Event Horizon Telescope Results. I*, published by the EHT collaboration in 2022 and available on arXiv as **2311.08680v2**. It has 24 pages and six figures. Its **CC BY 4.0** license permits full-text analysis and display of its figures. Both syntheses generated for this guide explicitly confirm that the full text was used.
+This walkthrough follows one paper: *First Sagittarius A&#42; Event Horizon Telescope Results. I*, published by the EHT collaboration in 2022 and available on arXiv as **2311.08680v2**. It has 24 pages and six figures. Its **CC BY 4.0** license permits full-text analysis and display of its figures. Both syntheses generated for this guide explicitly confirm that the full text was used.
 
 [Open this paper in Summaries](/en/paper/2311.08680v2/) to follow along with the same results.
 
@@ -30,7 +30,7 @@ This walkthrough follows one paper: *First Sagittarius A\* Event Horizon Telesco
 
 On the paper page, open **“Figures and plots”** in the assistant area. The gallery contains all six figures, their captions and a link to the original. Scroll through it to explore the telescope array, the data, the reconstructed image and the model comparisons: each offers a different way into the study.
 
-Figure 3 is a particularly useful starting point: the representative image of Sagittarius A\*. Locate the bright ring before tackling the terminology of interferometry.
+Figure 3 is a particularly useful starting point: the representative image of Sagittarius A&#42;. Locate the bright ring before tackling the terminology of interferometry.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/summaries/gallery-en.jpg"><img src="/static/summarizer/img/guides/summaries/gallery-en.jpg" alt="The paper’s gallery: the first figures show the EHT array, observations and reconstructed image of Sagittarius A*. Scroll through the gallery to access all six figures." width="1280" height="720" loading="lazy" /></a>
@@ -38,7 +38,7 @@ Figure 3 is a particularly useful starting point: the representative image of Sa
 </figure>
 
 
-Click a thumbnail to enlarge it. In **Figure 5**, shown at the start, three panels compare an instantaneous simulated image, its time average and a reconstruction produced from synthetic data. This helps connect a simulation to what an observation can reconstruct. These panels show a simulation and its reconstruction, rather than three photographs of the sky.
+Click a thumbnail to enlarge it. To return to the page, press **Escape**, use **“Close”**, or click outside the enlarged window. In **Figure 5**, shown at the start, three panels compare an instantaneous simulated image, its time average and a reconstruction produced from synthetic data. This helps connect a simulation to what an observation can reconstruct. These panels show a simulation and its reconstruction, rather than three photographs of the sky.
 
 
 
@@ -72,7 +72,7 @@ A verified passage establishes that the wording exists in the source; scientific
 
 Under **“Read further”**, choose **“Comprehensive Summary”**. This version develops the study’s reasoning: observations, variability, reconstruction, simulation comparisons and the scope of its conclusions.
 
-Sagittarius A\* changes rapidly, which makes reconstruction difficult. The detailed summary follows this problem and the methods used to address it. Choose this format when preparing a discussion of the methods or noting sections to revisit in the paper.
+Sagittarius A&#42; changes rapidly, which makes reconstruction difficult. The detailed summary follows this problem and the methods used to address it. Choose this format when preparing a discussion of the methods or noting sections to revisit in the paper.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/summaries/detailed-en.jpg"><img src="/static/summarizer/img/guides/summaries/detailed-en.jpg" alt="The comprehensive summary develops the methods and qualifications of the study from its full text." width="1280" height="720" loading="lazy" /></a>
@@ -119,7 +119,7 @@ Paste a paper link, DOI or identifier into SummarizePaper. Check the license and
 Read the essentials, open a supporting passage, then choose the explanation format you need. If a figure raises a specific question, continue in the paper’s assistant; the [scientific chat guide](../how-to-chat-with-research-papers/) covers that next step.
 
 <div class="cta-box">
-<p>Explore the results and all six figures of Sagittarius A\* yourself.</p>
+<p>Explore the results and all six figures of Sagittarius A&#42; yourself.</p>
 <a class="btn btn-lg" data-funnel="guide_tool_how_to_summarize_a_research_paper" href="/en/paper/2311.08680v2/">Read the paper with Summaries</a>
 </div>
 

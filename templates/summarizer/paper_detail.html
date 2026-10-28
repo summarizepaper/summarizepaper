@@ -34,6 +34,9 @@
       {% if sumlang %}<span class="info-text"><i class="fas fa-language"></i> {% trans 'Also in:' %} {% for l in sumlang %}<a href="/{{ l }}/paper/{{ arxiv_id }}/">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
     </div>
     {% include 'summarizer/source_scope.html' %}
+    {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}
+    <p class="paper-guide-help"><a href="/{{ LANGUAGE_CODE }}/guides/how-to-summarize-a-research-paper/" data-funnel="paper_summary_guide"><i class="fas fa-question-circle" aria-hidden="true"></i> {% if LANGUAGE_CODE == 'fr' %}Comment lire ce résumé ? Guide illustré{% else %}How to read this summary? Illustrated guide{% endif %}</a></p>
+    {% endif %}
     {% if saved_matches %}<p class="saved-match-note"><i class="fas fa-bookmark" aria-hidden="true"></i> {% trans 'Found by your saved search' %} {% for s in saved_matches %}<a href="{% url 'saved_search' s.pk %}">{{ s.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
   </header>
 

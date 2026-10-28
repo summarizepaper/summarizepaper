@@ -1259,3 +1259,10 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .guide .guide-screenshot { margin: 26px 0; padding: 18px; background: var(--surface, #fff); border: 1px solid var(--border); border-radius: 12px; }
 .guide .guide-screenshot img { display: block; width: auto; max-width: 100%; height: auto; max-height: 620px; margin: 0 auto; border-radius: 6px; }
 .guide .guide-screenshot figcaption { margin-top: 14px; font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+.guide-image-dialog { width: min(1200px, 94vw); max-height: 92vh; max-height: 92dvh; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.guide-image-dialog::backdrop { background: rgb(15 23 42 / .75); }
+.guide-image-close { display: block; position: sticky; top: 0; margin-left: auto; }
+.guide-image-dialog figure { margin: 12px 0 0; }
+.guide-image-dialog img { display: block; max-width: 100%; max-height: 74vh; max-height: 74dvh; width: auto; height: auto; margin: 0 auto; }
+.guide-image-dialog figcaption { margin-top: 12px; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+.paper-guide-help { margin: 12px 0 0; font-size: 14px; }
