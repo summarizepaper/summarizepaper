@@ -1,12 +1,16 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 40 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 53 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+
+## Reprise éditoriale du 28 octobre
+
+Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Les autres articles restent dans leur version précédente ; ils devront être repris individuellement sur le même principe de cas réels adaptés à chaque outil.
 
 ## Relecture
 
 | Outil | Français | English | Démonstration réelle |
 |---|---|---|---|
-| Summaries | [Lire](../guides/fr/how-to-summarize-a-research-paper.md) | [Read](../guides/en/how-to-summarize-a-research-paper.md) | Synthèses française et anglaise terminées ; sources limitées à l’abstract sur le papier choisi |
+| Summaries | [Lire](../guides/fr/how-to-summarize-a-research-paper.md) | [Read](../guides/en/how-to-summarize-a-research-paper.md) | Repris le 28 octobre : Sagittarius A*, 2311.08680v2, CC-BY 4.0 ; lecture intégrale confirmée, six figures accessibles, huit captures distinctes par langue |
 | Chat with papers | [Lire](../guides/fr/how-to-chat-with-research-papers.md) | [Read](../guides/en/how-to-chat-with-research-papers.md) | Questions exécutées dans chaque langue, sur un puis trois articles ; réponse et vérification des sources |
 | Collections | [Lire](../guides/fr/organize-research-paper-collections.md) | [Read](../guides/en/organize-research-paper-collections.md) | Collection dédiée et tableaux sourcés terminés dans les deux langues |
 | Daily digest | [Lire](../guides/fr/daily-digest-research-papers.md) | [Read](../guides/en/daily-digest-research-papers.md) | Édition web française du 27 octobre ; aperçu non enregistré réellement configuré en anglais |
