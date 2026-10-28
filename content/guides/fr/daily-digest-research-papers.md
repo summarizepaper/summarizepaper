@@ -1,7 +1,6 @@
 ---
 title: 'Digest quotidien : des nouveautés à une lecture sur 3I/ATLAS'
-description: 'Testez une veille sur les comètes : filtrez dix annonces, examinez un
-  papier JWST en texte intégral CC BY et gardez une question de lecture.'
+description: 'Créez votre digest pas à pas : catégories, résumés, options Premium et horaire, puis explorez un papier JWST CC BY sur 3I/ATLAS.'
 date: 2026-10-27
 draft: false
 updated: 2026-10-28
@@ -14,67 +13,115 @@ sources:
   url: https://creativecommons.org/licenses/by/4.0/
 ---
 
-Vous ouvrez votre veille du matin. Dix nouveaux articles parlent de planètes, de poussières, d’atmosphères ou d’instruments. Lequel mérite une vraie lecture aujourd’hui ?
+Vous souhaitez recevoir une sélection d’articles adaptée à vos recherches ? Commencez par créer votre **digest quotidien**, puis découvrez comment transformer les nouveautés du matin en une lecture utile sur la comète interstellaire **3I/ATLAS**.
 
-Avec le **digest quotidien**, passez d’une liste de nouveautés à une question de recherche à creuser. Nous suivons ici la comète interstellaire **3I/ATLAS**, observée avec JWST : un aperçu à tester, une fiche à examiner, un spectre à ouvrir et une lecture à conserver.
+Ce guide suit d’abord le formulaire, bloc par bloc, puis une édition réelle du **28 octobre 2026**. Les captures utilisent l’interface et les synthèses en français ; les titres et les légendes scientifiques conservent leur langue d’origine.
 
-Les captures ont été réalisées le **28 octobre 2026**, avec l’interface et les synthèses en français. Les titres et les légendes des figures scientifiques gardent leur langue d’origine.
+## Créer son digest : remplir le formulaire pas à pas
+
+Ouvrez [le digest quotidien](/fr/digest/) et connectez-vous à votre compte. Pour un premier digest, le formulaire de création s’affiche directement. Si vous disposez déjà d’un digest et que votre formule permet d’en créer un autre, cliquez sur **« + Nouveau digest »**. Pour modifier une sélection existante, ouvrez plutôt son onglet.
+
+Pour commencer simplement, il suffit de **choisir au moins une catégorie**, de vérifier **le format et la langue des résumés**, puis **la fréquence, l’heure et le fuseau d’envoi**. Les mots-clés, l’ORCID et les réglages de recherche Premium ne sont pas obligatoires. Voici comment parcourir les blocs dans l’ordre.
+
+### 1. Nommer sa veille et choisir comment partir
+
+Avec Premium, le champ **« Nom de ce digest »** permet de distinguer plusieurs veilles : par exemple, « Comètes et poussières — veille du matin ». Ce nom est facultatif.
+
+Le bloc **« Partir de vos publications »** est lui aussi facultatif. Si vous souhaitez l’utiliser, indiquez votre identifiant ORCID ou d’auteur arXiv, puis cliquez sur **« Importer »** : l’outil propose des réglages à partir de vos publications. Vérifiez les propositions avant de continuer. Vous pouvez aussi laisser ce champ vide et choisir vos domaines vous-même, comme dans ce parcours.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/create-fr.jpg"><img src="/static/summarizer/img/guides/digest/create-fr.jpg" alt="Le formulaire d’un nouveau digest : le nom est facultatif, et le bloc d’import ORCID ou arXiv peut être ignoré pour choisir manuellement ses domaines." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Le formulaire d’un nouveau digest : le nom est facultatif, et le bloc d’import ORCID ou arXiv peut être ignoré pour choisir manuellement ses domaines.</figcaption>
+</figure>
+
+### 2. Cocher au moins une catégorie et regarder l’aperçu
+
+Dans **« Trouver une catégorie »**, saisissez un domaine ou un code, puis **cochez la catégorie correspondante**. Écrire dans le champ de recherche sert à retrouver les cases ; cela ne sélectionne pas encore un domaine. Pour suivre notre exemple, recherchez `astro-ph.EP` et cochez **« Astrophysique terrestre et planétaire »**.
+
+Les catégories arXiv sont regroupées par discipline. Le formulaire propose aussi des domaines bioRxiv et medRxiv, puis des sous-domaines de revues et d’autres serveurs de prépublications. Commencez par un périmètre que vous pourrez réellement lire, plutôt que de tout cocher.
+
+L’encadré **« Ce que vous auriez reçu »** affiche la dernière annonce arXiv avec vos réglages et évolue à mesure que vous les modifiez. Dans l’exemple du 28 octobre, sans profil ni votes, dix articles apparaissent. Leur nombre varie selon les annonces : ce n’est pas une quantité garantie chaque matin.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/categories-fr.jpg"><img src="/static/summarizer/img/guides/digest/categories-fr.jpg" alt="La catégorie astro-ph.EP est cochée ; à droite, l’aperçu permet d’examiner la sélection avant de valider le formulaire." width="1280" height="720" loading="lazy" /></a>
+<figcaption>La catégorie astro-ph.EP est cochée ; à droite, l’aperçu permet d’examiner la sélection avant de valider le formulaire.</figcaption>
+</figure>
+
+### 3. Affiner avec des mots-clés, puis choisir le format des résumés
+
+Le bloc **« Mots-clés »** peut rester vide pour découvrir tout le domaine sélectionné. Pour une veille plus étroite sur les comètes, saisissez **`comet`**, le terme employé dans les sources scientifiques. Sans profil de recherche, l’outil conserve les articles qui mentionnent au moins un des mots demandés : dans notre exemple, la sélection passe de **10 à 1 article**, celui sur 3I/ATLAS.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/keywords-fr.jpg"><img src="/static/summarizer/img/guides/digest/keywords-fr.jpg" alt="Le mot-clé comet resserre la sélection sur le papier JWST/MIRI consacré à 3I/ATLAS." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Le mot-clé comet resserre la sélection sur le papier JWST/MIRI consacré à 3I/ATLAS.</figcaption>
+</figure>
+
+Les virgules séparent des alternatives : `comet, silicate` élargit la sélection. Les guillemets recherchent une expression exacte et `-review` écarte les textes qui emploient ce mot. Si l’aperçu est vide, retirez d’abord une contrainte.
+
+Dans **« Résumés »**, choisissez ensuite le format adapté à votre lecture : **« Pour chercheurs : contribution, méthode, résultat principal »** pour évaluer les apports, ou **« En langage simple, 2 phrases »** pour une première découverte. La langue se choisit plus bas, dans un autre bloc.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/reading-level-fr.jpg"><img src="/static/summarizer/img/guides/digest/reading-level-fr.jpg" alt="Le bloc Résumés règle le niveau de lecture. Le format Pour chercheurs est sélectionné ; les mots-clés et les réglages Premium sont des choix distincts." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Le bloc Résumés règle le niveau de lecture. Le format Pour chercheurs est sélectionné ; les mots-clés et les réglages Premium sont des choix distincts.</figcaption>
+</figure>
+
+### 4. Avec Premium, personnaliser le classement et le volume
+
+Vous pouvez passer directement à l’étape suivante si vous souhaitez commencer par une veille de catégories. Avec Premium, **« Vos recherches »** permet de décrire un projet en quelques phrases :
+
+> Je compare la composition des poussières dans les comètes et les disques de débris, à partir de spectres infrarouges JWST.
+
+Pour cet essai, effacez le mot-clé `comet` afin de rouvrir la sélection. Avec le profil ci-dessus, les dix articles restent présents, mais le papier sur 3I/ATLAS remonte en première position. Chaque ligne explique son lien avec le profil.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/profile-fr.jpg"><img src="/static/summarizer/img/guides/digest/profile-fr.jpg" alt="Le profil de recherche personnalise le classement : le papier sur 3I/ATLAS arrive en tête de l’aperçu." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Le profil de recherche personnalise le classement : le papier sur 3I/ATLAS arrive en tête de l’aperçu.</figcaption>
+</figure>
+
+Les champs suivants servent à préciser cette personnalisation :
+
+| Champ | Comment le remplir |
+| --- | --- |
+| Articles proches de votre travail | Ajoutez des identifiants arXiv, DOI ou liens, séparés par des virgules, ou utilisez la recherche de titres. Exemple : `2610.37540v1`. |
+| Auteurs à suivre | Indiquez les noms, séparés par des virgules, si vous souhaitez suivre leurs nouveaux articles dans toutes les catégories. Exemple : Cristina A. Thomas. |
+| Combien d’articles | Gardez le nombre fixe proposé pour commencer, ou choisissez un seuil strict, normal ou large avec un profil de recherche. |
+| Regrouper les alertes dans le digest | Cochez cette option si vous souhaitez recevoir vos alertes de scoop, citation, version et publication dans le digest plutôt que séparément. |
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/advanced-fr.jpg"><img src="/static/summarizer/img/guides/digest/advanced-fr.jpg" alt="Exemple de champs Premium : une référence arXiv, une autrice à suivre et le volume Les 25 meilleurs articles. Ces champs sont facultatifs pour créer sa première veille." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Exemple de champs Premium : une référence arXiv, une autrice à suivre et le volume Les 25 meilleurs articles. Ces champs sont facultatifs pour créer sa première veille.</figcaption>
+</figure>
+
+**Avec un profil de recherche, les mots-clés renforcent les articles correspondants au lieu d’exclure tous les autres.** La proximité reflète vos intérêts ; elle ne note pas la qualité scientifique d’un article. Un volume fixe est un maximum, pas une promesse de recevoir autant d’articles à chaque envoi.
+
+### 5. Choisir la langue, la fréquence et l’horaire
+
+Dans **« Langue des résumés »**, sélectionnez **Français**. Dans **« Heure d’envoi »**, choisissez **« Chaque jour de semaine »** ou **« Une fois par semaine »** ; dans ce second cas, sélectionnez aussi le jour souhaité. Réglez ensuite l’heure et vérifiez le fuseau, en ouvrant **« Fuseau horaire … (modifier) »** si nécessaire.
+
+Notre routine de lecture : **chaque jour de semaine à 07:00, Europe/Paris**. Le jour du digest hebdomadaire ne concerne que la fréquence hebdomadaire. Changer la langue du site ne traduit pas une édition déjà préparée : sa langue de synthèse dépend du réglage choisi pour le digest.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/schedule-fr.jpg"><img src="/static/summarizer/img/guides/digest/schedule-fr.jpg" alt="Les derniers réglages : résumés en français, envoi chaque jour de semaine à 07:00, fuseau Europe/Paris, puis bouton Lancer mon digest." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Les derniers réglages : résumés en français, envoi chaque jour de semaine à 07:00, fuseau Europe/Paris, puis bouton Lancer mon digest.</figcaption>
+</figure>
+
+### 6. Valider avec « Lancer mon digest »
+
+Avant de valider, vérifiez qu’une catégorie est cochée, que l’aperçu correspond à vos intérêts, et que la langue, la fréquence, l’heure et le fuseau vous conviennent. Cliquez ensuite sur **« Lancer mon digest »** : vos réglages sont enregistrés et les envois sont programmés à l’adresse email de votre compte.
+
+Pour modifier ensuite ce digest, revenez sur son onglet et cliquez sur **« Enregistrer »** après vos changements. Le bouton **« M’envoyer un aperçu maintenant »**, disponible sur un digest enregistré, sert à demander un email d’essai ; il est distinct de l’aperçu interactif affiché à droite du formulaire.
+
+<span id="read-your-edition"></span>
+## Lire l’édition : qu’est-ce que ce papier apporte ?
+
+Une fois votre digest reçu, ouvrez sa page web. Voici une **édition réelle du 28 octobre**, qui contenait dix articles.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/edition-fr.jpg"><img src="/static/summarizer/img/guides/digest/edition-fr.jpg" alt="Une édition réelle du 28 octobre : dix articles en astrophysique terrestre et planétaire, avec une raison de sélection et une fiche de lecture pour chacun." width="1280" height="720" loading="lazy" /></a>
 <figcaption>Une édition réelle du 28 octobre : dix articles en astrophysique terrestre et planétaire, avec une raison de sélection et une fiche de lecture pour chacun.</figcaption>
 </figure>
 
-## Partir d’un domaine, puis tester une question
-
-Ouvrez [le digest quotidien](/fr/digest/). Pour reproduire notre exemple, recherchez **astro-ph.EP** dans les catégories et cochez « Astrophysique terrestre et planétaire ». L’aperçu « Ce que vous auriez reçu » montre la dernière annonce disponible avec vos réglages, même avant l’enregistrement.
-
-Dans notre brouillon, sans profil de recherche ni votes, dix articles apparaissent. C’est une photographie de cette annonce, pas une promesse de dix articles chaque matin. Vos catégories et la date de consultation feront varier la sélection.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/categories-fr.jpg"><img src="/static/summarizer/img/guides/digest/categories-fr.jpg" alt="La catégorie astro-ph.EP est cochée. À droite, le brouillon affiche les dix articles de la dernière annonce, sans créer d’abonnement." width="1280" height="720" loading="lazy" /></a>
-<figcaption>La catégorie astro-ph.EP est cochée. À droite, le brouillon affiche les dix articles de la dernière annonce, sans créer d’abonnement.</figcaption>
-</figure>
-
-Votre question du moment porte sur les comètes ? Saisissez **`comet`** dans « Mots-clés ». Sans profil de recherche, ce champ conserve les articles qui mentionnent au moins un des mots demandés : ici, l’aperçu passe de **10 à 1 article**, celui sur 3I/ATLAS.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/keywords-fr.jpg"><img src="/static/summarizer/img/guides/digest/keywords-fr.jpg" alt="Le mot-clé anglais comet, présent dans les sources scientifiques, isole le papier JWST/MIRI sur 3I/ATLAS. Ce filtre agit sur le brouillon du digest." width="1280" height="720" loading="lazy" /></a>
-<figcaption>Le mot-clé anglais comet, présent dans les sources scientifiques, isole le papier JWST/MIRI sur 3I/ATLAS. Ce filtre agit sur le brouillon du digest.</figcaption>
-</figure>
-
-Utilisez les termes employés dans les titres et abstracts. Les virgules séparent des alternatives : `comet, silicate` élargit la sélection. Les guillemets recherchent une expression exacte et `-review` écarte les textes qui emploient ce mot. Si rien ne remonte, retirez d’abord une contrainte avant de conclure qu’il n’y a rien à lire.
-
-## Avec Premium, décrire ses recherches pour élargir sans se perdre
-
-Un filtre sur « comet » est utile pour une question étroite, mais peut faire manquer des méthodes intéressantes publiées sur les disques de débris. **Effacez le mot-clé**, puis décrivez votre travail dans « Vos recherches » :
-
-> Je compare la composition des poussières dans les comètes et les disques de débris, à partir de spectres infrarouges JWST.
-
-Dans cet autre essai, les dix articles restent présents, mais le papier sur 3I/ATLAS remonte en première position. Chaque ligne explique son lien avec le profil. Vous pouvez aussi donner des articles représentatifs dans le champ prévu à cet effet.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/profile-fr.jpg"><img src="/static/summarizer/img/guides/digest/profile-fr.jpg" alt="Le profil Premium rapproche la sélection d’une question scientifique : 3I/ATLAS arrive en tête, suivi de travaux sur d’autres objets. Le formulaire reste non enregistré." width="1280" height="720" loading="lazy" /></a>
-<figcaption>Le profil Premium rapproche la sélection d’une question scientifique : 3I/ATLAS arrive en tête, suivi de travaux sur d’autres objets. Le formulaire reste non enregistré.</figcaption>
-</figure>
-
-**Avec un profil de recherche, les mots-clés renforcent les articles correspondants au lieu d’exclure tous les autres.** La proximité mesure un rapprochement avec vos intérêts ; elle ne note ni la qualité d’un article ni la certitude de ses résultats. Le menu « Combien d’articles » permet de choisir un nombre fixe ou, avec un profil, un seuil de proximité.
-
-## Choisir une langue et un rendez-vous réaliste
-
-Sélectionnez « Pour chercheurs : contribution, méthode, résultat principal » pour examiner rapidement les apports ; le mode en langage simple propose deux phrases pour une première découverte. Choisissez ensuite **Français**, une fréquence et un horaire dans votre fuseau. Ici : **chaque jour de semaine à 07:00, Europe/Paris**.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/schedule-fr.jpg"><img src="/static/summarizer/img/guides/digest/schedule-fr.jpg" alt="La langue des résumés est Français ; l’envoi est réglé pour chaque jour de semaine à 07:00 dans le fuseau Europe/Paris." width="1280" height="720" loading="lazy" /></a>
-<figcaption>La langue des résumés est Français ; l’envoi est réglé pour chaque jour de semaine à 07:00 dans le fuseau Europe/Paris.</figcaption>
-</figure>
-
-Si une lecture quotidienne est trop fréquente, choisissez l’édition hebdomadaire. Enregistrez avec « Lancer mon digest » lorsque vos réglages vous conviennent. Les essais ci-dessus n’ont pas été enregistrés et n’ont envoyé aucun email. Changer la langue du site ne traduit pas une ancienne édition : sa langue de synthèse dépend de celle choisie lors de sa préparation.
-
-<span id="read-your-edition"></span>
-## Lire l’édition : qu’est-ce que ce papier apporte ?
-
-Revenons à une **édition déjà reçue**, distincte du brouillon. Dans sa page web, recherchez **`3I/ATLAS`** : le compteur indique **1 / 10**. Cette recherche filtre seulement l’affichage de cette édition ; elle ne change pas votre abonnement.
+Recherchez **`3I/ATLAS`** : le compteur indique **1 / 10**. Cette recherche filtre seulement l’affichage de cette édition ; elle ne change pas votre abonnement.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/comet-fr.jpg"><img src="/static/summarizer/img/guides/digest/comet-fr.jpg" alt="La recherche dans l’édition isole la fiche 3I/ATLAS : contribution, méthode, résultat et raison de sa présence restent visibles." width="1280" height="720" loading="lazy" /></a>

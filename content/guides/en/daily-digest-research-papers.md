@@ -1,7 +1,6 @@
 ---
 title: 'Daily digest: from new papers to a closer look at 3I/ATLAS'
-description: 'Test a comet research feed: filter ten announcements, inspect a CC BY
-  JWST paper and its figures, and save a focused reading task.'
+description: 'Create a digest step by step: categories, summaries, Premium options and delivery time, then explore a CC BY JWST paper on 3I/ATLAS.'
 date: 2026-10-27
 draft: false
 updated: 2026-10-28
@@ -14,67 +13,115 @@ sources:
   url: https://creativecommons.org/licenses/by/4.0/
 ---
 
-You open your morning research feed. Ten new papers cover planets, dust, atmospheres and instruments. Which one deserves a closer read today?
+Want a paper selection tailored to your research? Start by creating your **daily digest**, then see how the morning announcements can lead to a closer reading of **interstellar comet 3I/ATLAS**.
 
-Use the **daily digest** to turn new announcements into a research question worth pursuing. This walkthrough follows **interstellar comet 3I/ATLAS**, observed with JWST: test a selection, inspect a research brief, open a spectrum and save a useful reading task.
+This guide first walks through the form, block by block, then follows an actual **28 October 2026** edition. Screenshots use the English interface and generated summaries; scientific titles and figure captions retain their original language.
 
-Screenshots were captured on **28 October 2026**, with the interface and generated summaries in English. Scientific titles and figure captions retain their original language.
+## Create your digest: complete the form step by step
+
+Open [the daily digest](/en/digest/) and sign in. For your first digest, the creation form opens directly. If you already have a digest and your plan allows another one, choose **“+ New digest”**. To edit an existing selection, open its tab instead.
+
+A simple setup needs **at least one category**, your preferred **summary format and language**, and a **frequency, delivery time and time zone**. Keywords, ORCID and the Premium research settings are optional. Here is how to work through the form in order.
+
+### 1. Name the feed and choose a starting point
+
+With Premium, **“Name of this digest”** helps distinguish multiple feeds, such as “Comets and dust — morning reading”. The name is optional.
+
+**“Start from your publications”** is optional too. Enter your ORCID iD or arXiv author identifier and choose **“Import”** if you want suggestions based on your publications. Review those suggestions before proceeding. You can also leave this field empty and select your fields manually, as in this walkthrough.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/create-en.jpg"><img src="/static/summarizer/img/guides/digest/create-en.jpg" alt="A new digest form: naming is optional, and the ORCID or arXiv import can be skipped when selecting fields manually." width="1280" height="720" loading="lazy" /></a>
+<figcaption>A new digest form: naming is optional, and the ORCID or arXiv import can be skipped when selecting fields manually.</figcaption>
+</figure>
+
+### 2. Select at least one category and check the preview
+
+Under **“Find a category”**, enter a field or category code, then **tick the matching checkbox**. Typing in the search field finds categories; it does not select one. To follow this example, search for `astro-ph.EP` and tick **“Earth and Planetary Astrophysics”**.
+
+arXiv categories are grouped by discipline. The form also offers bioRxiv and medRxiv fields, followed by journal subfields and other preprint sources. Start with a scope you can realistically read rather than selecting everything.
+
+**“What you would have received”** previews the latest arXiv announcement using your settings and changes as you edit them. In our 28 October example, without a research profile or feedback, ten papers appear. This is a snapshot of that announcement, not a guaranteed daily quantity.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/categories-en.jpg"><img src="/static/summarizer/img/guides/digest/categories-en.jpg" alt="The astro-ph.EP category is selected. The preview on the right lets you review the selection before submitting the form." width="1280" height="720" loading="lazy" /></a>
+<figcaption>The astro-ph.EP category is selected. The preview on the right lets you review the selection before submitting the form.</figcaption>
+</figure>
+
+### 3. Add optional keywords and choose a summary format
+
+Leave **“Keywords”** empty to discover the whole selected field. For a narrower comet feed, enter **`comet`**, a term used in the scientific sources. Without a research profile, the tool keeps papers mentioning at least one requested word: here the selection changes from **10 papers to 1**, the JWST study of 3I/ATLAS.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/keywords-en.jpg"><img src="/static/summarizer/img/guides/digest/keywords-en.jpg" alt="The keyword comet narrows the selection to the JWST/MIRI paper on 3I/ATLAS." width="1280" height="720" loading="lazy" /></a>
+<figcaption>The keyword comet narrows the selection to the JWST/MIRI paper on 3I/ATLAS.</figcaption>
+</figure>
+
+Commas separate alternatives: `comet, silicate` broadens the selection. Quotation marks match an exact phrase, and `-review` excludes papers using that word. If the preview is empty, remove a constraint first.
+
+Under **“Summaries”**, choose **“For researchers: contribution, method, main result”** to assess the work, or **“In plain language, 2 sentences”** for an initial introduction. The language is selected separately further down the form.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/reading-level-en.jpg"><img src="/static/summarizer/img/guides/digest/reading-level-en.jpg" alt="The Summaries block sets the reading level. The researcher format is selected; keywords and Premium research settings are separate choices." width="1280" height="720" loading="lazy" /></a>
+<figcaption>The Summaries block sets the reading level. The researcher format is selected; keywords and Premium research settings are separate choices.</figcaption>
+</figure>
+
+### 4. With Premium, personalize ranking and reading volume
+
+Skip to the next step if you want to start with a category-based feed. With Premium, **“Your research”** lets you describe a project in a few sentences:
+
+> I compare dust composition in comets and debris disks using JWST infrared spectra.
+
+For this trial, clear the keyword `comet` to broaden the selection again. With this profile, all ten papers remain, but the 3I/ATLAS paper moves to first place. Each line explains its connection to the profile.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/profile-en.jpg"><img src="/static/summarizer/img/guides/digest/profile-en.jpg" alt="The research profile personalizes the ranking: the 3I/ATLAS paper appears first in the preview." width="1280" height="720" loading="lazy" /></a>
+<figcaption>The research profile personalizes the ranking: the 3I/ATLAS paper appears first in the preview.</figcaption>
+</figure>
+
+Use the following fields to refine that personalization:
+
+| Field | What to enter |
+| --- | --- |
+| Papers close to your work | Add arXiv identifiers, DOIs or links separated by commas, or use the title search. Example: `2610.37540v1`. |
+| Authors to follow | Enter names separated by commas to follow their new papers across categories. Example: Cristina A. Thomas. |
+| How many papers | Start with the suggested fixed maximum, or choose a strict, normal or broad closeness threshold with a research profile. |
+| Put alerts in this digest | Select this if you want scoop, citation, version and publication alerts in the digest rather than separate emails. |
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/advanced-en.jpg"><img src="/static/summarizer/img/guides/digest/advanced-en.jpg" alt="Example Premium settings: an arXiv reference, a followed author and The 25 best papers volume. These fields are optional when creating your first feed." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Example Premium settings: an arXiv reference, a followed author and The 25 best papers volume. These fields are optional when creating your first feed.</figcaption>
+</figure>
+
+**With a research profile, keywords boost matching papers instead of excluding all the others.** Closeness reflects your interests; it is not a scientific-quality score. A fixed volume is a maximum, not a promise to receive that many papers in each email.
+
+### 5. Choose the language, frequency and delivery time
+
+Select **English** under **“Language of the summaries”**. Under **“Delivery time”**, choose **“Every weekday”** or **“Once a week”**; for the latter, also choose the weekly delivery day. Set the time and check the time zone, opening **“Time zone … (change)”** if needed.
+
+Our reading routine uses **every weekday at 7:00 AM, Europe/Paris**. The weekly-day setting only applies to weekly delivery. Changing the website language does not translate an edition already prepared: its generated summaries use the language chosen for the digest.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/digest/schedule-en.jpg"><img src="/static/summarizer/img/guides/digest/schedule-en.jpg" alt="The final settings: English summaries, every-weekday delivery at 7:00 AM, Europe/Paris time zone, and the Start my digest button." width="1280" height="720" loading="lazy" /></a>
+<figcaption>The final settings: English summaries, every-weekday delivery at 7:00 AM, Europe/Paris time zone, and the Start my digest button.</figcaption>
+</figure>
+
+### 6. Submit with “Start my digest”
+
+Before submitting, check that a category is selected, that the preview matches your interests, and that the language, frequency, time and time zone suit you. Then choose **“Start my digest”**: your settings are saved and delivery is scheduled to your account's email address.
+
+To change it later, return to its tab and choose **“Save”** after editing. **“Send me a preview now”**, available on a saved digest, requests a test email. It is separate from the interactive preview on the right of the form.
+
+<span id="read-your-edition"></span>
+## Read an edition: what does this paper contribute?
+
+Once your digest arrives, open its web page. Here is an **actual 28 October edition** containing ten papers.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/edition-en.jpg"><img src="/static/summarizer/img/guides/digest/edition-en.jpg" alt="An actual 28 October edition: ten Earth and Planetary Astrophysics papers, each with a selection reason and a short research brief." width="1280" height="720" loading="lazy" /></a>
 <figcaption>An actual 28 October edition: ten Earth and Planetary Astrophysics papers, each with a selection reason and a short research brief.</figcaption>
 </figure>
 
-## Start with a field, then test a question
-
-Open [the daily digest](/en/digest/). To follow this example, search the categories for **astro-ph.EP** and select “Earth and Planetary Astrophysics”. “What you would have received” previews the latest announcement using your current settings, even before you save them.
-
-Our draft starts without a research profile or feedback and shows ten papers. That is a snapshot of this announcement, not a promise of ten papers every morning. The selection depends on your categories and when you look.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/categories-en.jpg"><img src="/static/summarizer/img/guides/digest/categories-en.jpg" alt="The astro-ph.EP category is selected. The draft previews ten papers from the latest announcement without creating a subscription." width="1280" height="720" loading="lazy" /></a>
-<figcaption>The astro-ph.EP category is selected. The draft previews ten papers from the latest announcement without creating a subscription.</figcaption>
-</figure>
-
-Focusing on comets this week? Enter **`comet`** under “Keywords”. Without a research profile, this field keeps papers mentioning at least one requested word. Here, the preview changes from **10 papers to 1**, the JWST study of 3I/ATLAS.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/keywords-en.jpg"><img src="/static/summarizer/img/guides/digest/keywords-en.jpg" alt="The keyword comet isolates the JWST/MIRI paper on 3I/ATLAS. This filter changes the digest draft." width="1280" height="720" loading="lazy" /></a>
-<figcaption>The keyword comet isolates the JWST/MIRI paper on 3I/ATLAS. This filter changes the digest draft.</figcaption>
-</figure>
-
-Use terms that appear in scientific titles and abstracts. Commas separate alternatives: `comet, silicate` broadens the selection. Quotation marks match an exact phrase, while `-review` excludes papers using that word. If nothing appears, remove a constraint before concluding there is nothing to read.
-
-## With Premium, describe your research to find useful connections
-
-A “comet” filter is useful for a narrow question, but it can miss relevant methods developed for debris disks. **Clear the keyword**, then describe your work under “Your research”:
-
-> I compare dust composition in comets and debris disks using JWST infrared spectra.
-
-In this separate trial, all ten papers remain, but the 3I/ATLAS paper moves to first place. Each line explains its connection to the profile. You can also supply representative papers in the reference-paper field.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/profile-en.jpg"><img src="/static/summarizer/img/guides/digest/profile-en.jpg" alt="The Premium profile connects the selection to a scientific question: 3I/ATLAS ranks first, followed by research on other objects. These settings remain unsaved." width="1280" height="720" loading="lazy" /></a>
-<figcaption>The Premium profile connects the selection to a scientific question: 3I/ATLAS ranks first, followed by research on other objects. These settings remain unsaved.</figcaption>
-</figure>
-
-**With a research profile, keywords boost matching papers instead of excluding all the others.** Closeness measures a connection to your interests; it is neither a paper-quality score nor a measure of scientific certainty. “How many papers” offers a fixed number or, with a profile, a closeness threshold.
-
-## Choose a language and a realistic reading schedule
-
-Choose “For researchers: contribution, method, main result” for a quick assessment of the work. The plain-language setting gives two sentences for an initial introduction. Then choose **English**, a frequency and a delivery time in your time zone. Here: **every weekday at 7:00 AM, Europe/Paris**.
-
-<figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/schedule-en.jpg"><img src="/static/summarizer/img/guides/digest/schedule-en.jpg" alt="The summary language is English; delivery is set to every weekday at 7:00 AM in the Europe/Paris time zone." width="1280" height="720" loading="lazy" /></a>
-<figcaption>The summary language is English; delivery is set to every weekday at 7:00 AM in the Europe/Paris time zone.</figcaption>
-</figure>
-
-If daily reading is too frequent, choose a weekly edition. Save with “Start my digest” when the settings suit you. The trials above were not saved and sent no email. Changing the website language does not translate an older edition: its generated summaries use the language selected when it was prepared.
-
-<span id="read-your-edition"></span>
-## Read an edition: what does this paper contribute?
-
-Now return to an **edition already received**, separate from the draft. Search its web page for **`3I/ATLAS`**: the counter shows **1 / 10**. This search only filters this edition’s display; it does not change the subscription.
+Search for **`3I/ATLAS`**: the counter shows **1 / 10**. This search only filters this edition’s display; it does not change the subscription.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/comet-en.jpg"><img src="/static/summarizer/img/guides/digest/comet-en.jpg" alt="Searching within the edition isolates the 3I/ATLAS brief, retaining its contribution, method, result and selection reason." width="1280" height="720" loading="lazy" /></a>

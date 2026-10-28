@@ -1,6 +1,6 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 122 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 128 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
@@ -13,7 +13,7 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 | Summaries | [Lire](../guides/fr/how-to-summarize-a-research-paper.md) | [Read](../guides/en/how-to-summarize-a-research-paper.md) | Repris le 28 octobre : Sagittarius A*, 2311.08680v2, CC-BY 4.0 ; lecture intégrale confirmée, six figures accessibles, huit captures distinctes par langue |
 | Chat with papers | [Lire](../guides/fr/how-to-chat-with-research-papers.md) | [Read](../guides/en/how-to-chat-with-research-papers.md) | Repris le 28 octobre : deux papiers CC-BY lus intégralement, figure 3 transmise, relance, comparaison et tableau à six cellules sourcées, neuf captures par langue |
 | Collections | [Lire](../guides/fr/organize-research-paper-collections.md) | [Read](../guides/en/organize-research-paper-collections.md) | Dossiers de journal club EHT I, III, VI (CC BY, publication 2022), dix captures par langue ; tableaux à neuf cellules sourcées, questions ouvertes et suggestions réellement générées |
-| Daily digest | [Lire](../guides/fr/daily-digest-research-papers.md) | [Read](../guides/en/daily-digest-research-papers.md) | Repris le 28 octobre : 3I/ATLAS, aperçu de 10 à 1 article, classement par profil, lecture intégrale CC BY et figure 2, sauvegarde avec note ; onze captures par langue |
+| Daily digest | [Lire](../guides/fr/daily-digest-research-papers.md) | [Read](../guides/en/daily-digest-research-papers.md) | Repris le 28 octobre : 3I/ATLAS, aperçu de 10 à 1 article, classement par profil, lecture intégrale CC BY et figure 2, sauvegarde avec note ; quatorze captures par langue |
 | Saved searches | [Lire](../guides/fr/saved-searches-research-alerts.md) | [Read](../guides/en/saved-searches-research-alerts.md) | Requête sauvegardée et aperçu sur deux semaines exécuté : zéro résultat, montré sans inventer de correspondances |
 | Weekly letters | [Lire](../guides/fr/weekly-science-letters.md) | [Read](../guides/en/weekly-science-letters.md) | Éditions Astronomie et espace du 26 octobre 2026, ouvertes dans les deux langues |
 | Rising topics | [Lire](../guides/fr/rising-research-topics.md) | [Read](../guides/en/rising-research-topics.md) | Vue Premium Astrophysique, semaine du 12 octobre 2026, dans les deux langues |
@@ -67,7 +67,7 @@ Collections privées de démonstration : 100 (français) et 101 (anglais), trois
 
 Article 2610.37540v1 : prépublication déposée le 27 octobre 2026, CC BY 4.0, synthèses intégrales et quatre figures vérifiées dans les deux langues. Figure 2 agrandie ; distinction entre fraction de l’émission et fraction de masse pour la limite supérieure de 5,3 %. Génération française relancée après un échec, puis terminée et contrôlée ; aucune capture d’attente présentée comme résultat.
 
-Collections privées 133 (français) et 134 (anglais) : un article, statut À lire/To read et note sur la limite et la figure, vérifiés après rechargement. Liens d’aide ajoutés aux réglages du digest et aux éditions web. Onze captures distinctes dans chaque langue.
+Collections privées 133 (français) et 134 (anglais) : un article, statut À lire/To read et note sur la limite et la figure, vérifiés après rechargement. Liens d’aide ajoutés aux réglages du digest et aux éditions web. Quatorze captures distinctes dans chaque langue après ajout du parcours de création.
 
 ### Refonte du guide Veille anti-scoop — 28 octobre 2026
 
@@ -78,3 +78,7 @@ Le bouton Relancer refusait un état pending périmé alors que la page le prés
 Comparaisons intégrales effectivement terminées : match 103, Mitani et al. (2026), CC BY 4.0, pour le projet 34 ; match 177, Nakatani et al. (2023), CC BY 4.0, pour le projet 35. Tous deux marqués pertinents. Collections privées créées 166 et 167, une référence chacune, statut À lire/To read et note vérifiés après rechargement. Aucune invitation, aucun lien de partage, aucun contact aux auteurs.
 
 Les fiches arXiv 2608.22781v1 ont été générées dans les deux langues avec texte intégral confirmé ; les captures de galerie montrent les figures 10 à 12, pas une promesse que toutes les figures de l’article sont affichées. La fiche DOI du même préprint ne fournit pas la galerie ; les guides renvoient donc à la fiche arXiv pour cette lecture visuelle. Dépôt du 24 août 2026 explicitement distingué d’une acceptation en revue. Le guide anglais traite un autre article principal et présente Mitani comme lecture complémentaire, sans prétendre que sa recherche l’a signalé.
+
+### Création du digest expliquée avant la lecture d’une édition
+
+À la demande de l’utilisateur, suppression de la phrase sur les essais non enregistrés et sans email, ainsi que de son équivalent anglais. Le début du guide suit maintenant six étapes : entrée dans le formulaire, nom/import facultatifs, catégories à cocher, mots-clés et format de lecture, options Premium, langue/horaire/fuseau et validation. Les références, auteurs, volume et regroupement des alertes sont expliqués ; l’aperçu interactif est distingué de l’email d’essai. Trois nouvelles captures par langue (début, niveau de lecture, options avancées), soit quatorze par langue. Aucun nouvel abonnement activé et aucun email d’essai demandé pendant ces captures.
