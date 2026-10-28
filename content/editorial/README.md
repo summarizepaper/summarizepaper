@@ -1,6 +1,6 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 67 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 85 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
@@ -12,7 +12,7 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 |---|---|---|---|
 | Summaries | [Lire](../guides/fr/how-to-summarize-a-research-paper.md) | [Read](../guides/en/how-to-summarize-a-research-paper.md) | Repris le 28 octobre : Sagittarius A*, 2311.08680v2, CC-BY 4.0 ; lecture intégrale confirmée, six figures accessibles, huit captures distinctes par langue |
 | Chat with papers | [Lire](../guides/fr/how-to-chat-with-research-papers.md) | [Read](../guides/en/how-to-chat-with-research-papers.md) | Repris le 28 octobre : deux papiers CC-BY lus intégralement, figure 3 transmise, relance, comparaison et tableau à six cellules sourcées, neuf captures par langue |
-| Collections | [Lire](../guides/fr/organize-research-paper-collections.md) | [Read](../guides/en/organize-research-paper-collections.md) | Collection dédiée et tableaux sourcés terminés dans les deux langues |
+| Collections | [Lire](../guides/fr/organize-research-paper-collections.md) | [Read](../guides/en/organize-research-paper-collections.md) | Dossiers de journal club EHT I, III, VI (CC BY, publication 2022), dix captures par langue ; tableaux à neuf cellules sourcées, questions ouvertes et suggestions réellement générées |
 | Daily digest | [Lire](../guides/fr/daily-digest-research-papers.md) | [Read](../guides/en/daily-digest-research-papers.md) | Édition web française du 27 octobre ; aperçu non enregistré réellement configuré en anglais |
 | Saved searches | [Lire](../guides/fr/saved-searches-research-alerts.md) | [Read](../guides/en/saved-searches-research-alerts.md) | Requête sauvegardée et aperçu sur deux semaines exécuté : zéro résultat, montré sans inventer de correspondances |
 | Weekly letters | [Lire](../guides/fr/weekly-science-letters.md) | [Read](../guides/en/weekly-science-letters.md) | Éditions Astronomie et espace du 26 octobre 2026, ouvertes dans les deux langues |
@@ -56,3 +56,7 @@ Les boutons des guides conservent leurs événements fixes `guide_tool_<slug>`, 
 ### Année des citations dans le chat
 
 Les repères bibliographiques privilégient désormais l’année de publication issue du contrôle éditeur existant ou de la référence de revue ; l’année du dépôt sert de repli. Les papiers EHT I et VI portent donc les repères 2022a et 2022b. La date arXiv est explicitement nommée sur les fiches. Dix captures des comparaisons et tableaux ont été refaites dans les deux langues après cette correction, avec de nouvelles conversations privées. Les anciennes conversations conservent leurs réponses historiques.
+
+### Refonte du guide Collections — 28 octobre 2026
+
+Collections privées de démonstration : 100 (français) et 101 (anglais), trois papiers 2311.08680v2, 2311.09479v1 et 2311.09484v1. Les notes, étiquettes et statuts ont été enregistrés et vérifiés après rechargement. Le filtre exposé/talk a servi à sélectionner I et III pour ouvrir le chat (deux textes intégraux), puis les trois articles ont été resélectionnés pour les analyses. Trois colonnes personnalisées, neuf cellules sourcées dans chaque langue ; les trois sources sont les sections clés des articles, et non seulement leurs abstracts. Huit questions et trois projets en français ; neuf questions et trois projets en anglais. Les suggestions de références communes ont été obtenues et inspectées, sans ajout au corpus. Aucun lien de partage, invitation, envoi Zotero ou veille email activé. Liens d’aide ajoutés sur la liste et les pages de collections ; les années affichées privilégient la publication en revue (2022 ici).
