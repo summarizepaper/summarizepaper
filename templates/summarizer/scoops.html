@@ -50,6 +50,11 @@
     <span class="eyebrow">Premium</span>
     <h1>{% trans 'Scoop watch' %}</h1>
     <p class="lead">{% trans 'Describe the project you are working on, before it is published: every day, we compare it with the new papers of arXiv, bioRxiv and medRxiv, and email you as soon as one comes close.' %}</p>
+    {% if LANGUAGE_CODE == 'fr' %}
+    <p><a href="/fr/guides/scoop-watch-research-project/">Comment interpréter un recouvrement ? Guide illustré de la veille anti-scoop</a></p>
+    {% elif LANGUAGE_CODE == 'en' %}
+    <p><a href="/en/guides/scoop-watch-research-project/">How to interpret an overlap? Illustrated Scoop Watch guide</a></p>
+    {% endif %}
   </header>
 
   {% if anonymous or not paid %}

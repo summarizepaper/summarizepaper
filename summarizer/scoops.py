@@ -913,7 +913,8 @@ def act(request, projects, action):
         return back, _('Project saved. What we look for is computed again, and the search for prior art starts again: '
                        'its results appear in this project in one to three minutes.'), ''
     if action == 'prior':
-        if project.prior_status == 'pending':
+        if (project.prior_status == 'pending' and project.prior_checked
+                and project.prior_checked > timezone.now() - generated.STALE):
             return back, _('A search for prior art is already running for this project.'), ''
         project.prior_status, project.prior_checked = 'pending', timezone.now()
         project.save(update_fields=['prior_status', 'prior_checked'])
@@ -951,7 +952,9 @@ def act(request, projects, action):
                                       'to the papers marked not relevant at the bottom of the project.'),
                       '': _('Your verdict on this paper was removed.')}[match.status], ''
     if action == 'deep':
-        if match.deep_status not in ('pending', 'done'):
+        running = (match.deep_status == 'pending' and match.deep_started
+                   and match.deep_started > timezone.now() - generated.STALE)
+        if match.deep_status != 'done' and not running:
             match.deep_status = 'pending'
             match.deep_started = timezone.now()
             match.save(update_fields=['deep_status', 'deep_started'])
