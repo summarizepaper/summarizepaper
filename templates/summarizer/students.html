@@ -13,6 +13,8 @@
 <div class="page">
   <header class="page-header"><span class="eyebrow">Premium+</span><h1>{% trans 'Find a research placement' %}</h1>
     <p class="lead">{% trans 'Explore potential contacts for a research internship or PhD, understand their connection to your topic and prepare your first enquiry.' %}</p>
+
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/find-research-placement-contacts/">Comment remplir la recherche et choisir une piste ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/find-research-placement-contacts/">How to search and choose a lead? Illustrated guide</a></p>{% endif %}
   </header>
   <p class="notice">{% trans 'These are publication-based leads, not advertised vacancies. Affiliation metadata does not prove a current position or a right to supervise. Dates, duration, level and skills help prepare your enquiry; their compatibility must be confirmed with the institution.' %}</p>
   {% if request.user.is_authenticated and leads %}<p class="card section-card student-leads-link"><a href="{% url 'student_leads' %}"><strong>{% trans 'My leads' %}</strong></a> · {% blocktrans count n=leads %}{{ n }} saved lead{% plural %}{{ n }} saved leads{% endblocktrans %}{% if due %} · <strong>{% blocktrans count n=due %}{{ n }} reminder due{% plural %}{{ n }} reminders due{% endblocktrans %}</strong>{% endif %}</p>{% endif %}
