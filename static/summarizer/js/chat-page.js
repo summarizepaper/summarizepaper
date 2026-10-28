@@ -254,6 +254,9 @@
     title.appendChild(link);
     item.appendChild(title);
     if (entry.author) item.appendChild(node('small', '', entry.author));
+    var publication = node('small', 'paper-publication');
+    publication.hidden = true;
+    item.appendChild(publication);
     var when = [entry.published ? (external(entry.id) ? T.published : T.arxivDate) + ' ' + day(entry.published) : '', entry.label].filter(Boolean).join(' · ');
     if (when) item.appendChild(node('small', '', when));
     item.appendChild(node('div', 'paper-badges'));
@@ -306,6 +309,9 @@
       return b;
     }
     var supply = entry.supply;
+    var publication = entry.item.querySelector('.paper-publication');
+    publication.textContent = supply && supply.publication_year ? T.published + ' ' + supply.publication_year : '';
+    publication.hidden = !publication.textContent;
     if (supply && supply.tag && readyIds().length > 1) badge('tag', supply.tag);
     if (entry.state === 'reading') badge('', T.reading).prepend(node('i', 'fas fa-spinner fa-spin'));
     else if (entry.state === 'failed') {

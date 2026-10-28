@@ -376,7 +376,7 @@ def _paper_source(paper, budget, tag='', readable=None, question=''):
     header += 'Text supplied: %s\n' % supplied
     return {'arxiv_id': paper.arxiv_id, 'label': sources.label(paper.arxiv_id), 'text': text, 'source': source,
             'kind': kind, 'coverage': round(coverage * 100), 'left_out': left_out, 'tag': tag,
-            'title': ' '.join((paper.title or '').split()),
+            'title': ' '.join((paper.title or '').split()), 'publication_year': year,
             'block': '<paper>\n%s\n%s\n</paper>' % (header, body)}
 
 
@@ -411,7 +411,7 @@ def supplied_summary(supplied, arxiv_ids):
     """What the reader is told the assistant read: each paper's kind of text and coverage, and the asked
     papers it could not read at all (not in our tables yet)."""
     given = {s['arxiv_id'] for s in supplied}
-    return {'papers': [{k: s[k] for k in ('arxiv_id', 'label', 'title', 'tag', 'kind', 'coverage', 'left_out', 'source')}
+    return {'papers': [{k: s[k] for k in ('arxiv_id', 'label', 'title', 'tag', 'kind', 'coverage', 'left_out', 'source', 'publication_year')}
                        for s in supplied],
             'missing': [i for i in dict.fromkeys(arxiv_ids) if i not in given]}
 

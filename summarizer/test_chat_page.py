@@ -120,6 +120,8 @@ class SourcesTests(TransactionTestCase):  # the answers run in a thread of their
         self.assertEqual([p['tag'] for p in supplied], ['[Lee et al. 2022a]', '[Lee et al. 2022b]'])
         self.assertIn('Publication year (use for citations): 2022', context)
         self.assertIn('first submitted to arXiv on 2023-11-15', context)
+        summary = assistant.supplied_summary(supplied, [self.a.arxiv_id, self.b.arxiv_id])
+        self.assertEqual([p['publication_year'] for p in summary['papers']], [2022, 2022])
 
     def test_publisher_date_wins_and_preprints_fall_back_without_guessing(self):
         self.a.journal_ref = 'ApJ 900 (2020)'
