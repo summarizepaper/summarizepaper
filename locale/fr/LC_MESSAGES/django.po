@@ -15697,8 +15697,8 @@ msgstr "Hausse soudaine"
 msgid "new this week: often an event, a release, a data set or a deadline."
 msgstr "nouveau cette semaine : souvent un événement, une sortie, un jeu de données ou une date limite."
 
-msgid "The curve on each topic is the share of papers using its main term, per 10,000 papers, over the last six months. A week of papers is counted once all of them are announced, on the Saturday after it."
-msgstr "La courbe de chaque sujet est la part d'articles employant son terme principal, pour 10 000 articles, sur les six derniers mois. Une semaine d'articles est comptée une fois qu'ils sont tous annoncés, le samedi suivant."
+msgid "The curve on each topic is the share of papers using its main term, per 10,000 papers, over the last six months. Counting the previous Monday-to-Sunday submission week starts on Tuesday at 06:00 UTC, after the normal Monday arXiv announcement. Delayed announcements may still be missing from the first count."
+msgstr "La courbe de chaque sujet est la part d’articles employant son terme principal, pour 10 000 articles, sur les six derniers mois. Le calcul de la semaine de soumissions précédente, du lundi au dimanche, commence le mardi à 06 h UTC, après l’annonce arXiv habituelle du lundi. Les annonces retardées peuvent encore manquer au premier calcul."
 
 #, python-format
 msgid "Rising topics in %(name)s"

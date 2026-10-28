@@ -134,3 +134,9 @@ Audio réellement prêt dans les deux langues, chapitres testés puis lecteurs m
 Neethirajan et al., arXiv 2610.31952v1, dépôt du 22 octobre 2026 : CC BY 4.0 vérifié dans le HTML arXiv, synthèses intégrales existantes relues en FR/EN. Dix figures disponibles, annexes comprises ; figure 3 agrandie, panneaux a à d visibles, autres panneaux accessibles par défilement. Distinction entre reconstruction/schéma et cœur atomique, observation d’une chaîne et manipulation des défauts. Les questions proposées ne sont pas présentées comme des réponses générées.
 
 Collections privées créées depuis les lettres : 298 FR, 299 EN, six articles chacune. Sur le papier magnétique uniquement : statut À lire/To read et note localisée sur figure 3, observation/contrôle, résolution et artefacts ; persistance vérifiée après rechargement. Aucun partage, invitation ou export Zotero activé. Aides ajoutées à l’index, à la page du thème et à chaque édition. Treize captures par langue.
+
+### Calcul des tendances dès le mardi matin — 28 octobre 2026
+
+La semaine précédente devient éligible le mardi à 06:00 UTC (Paris 07:00 en hiver, 08:00 en été), après l’annonce habituelle arXiv du lundi soir américain. Le traitement horaire et le backfill utilisent le même seuil UTC ; les dates sans heure conservent une lecture par jour calendaire. Le nettoyage des listes d’articles suit également ce seuil. La fenêtre du 19–25 octobre est donc éligible dès le 27 à 06:00 UTC, au lieu du 31 octobre. Les tests couvrent la minute précédant le seuil, le seuil, un décalage horaire et le passage d’année.
+
+Guide FR/EN et explication de l’outil actualisés : les annonces de modération retardées ne sont pas garanties au premier calcul. Les captures du 12–18 octobre restent un exemple d’archive explicite, avec liens vers la bonne semaine, plutôt qu’une illustration prétendument courante.

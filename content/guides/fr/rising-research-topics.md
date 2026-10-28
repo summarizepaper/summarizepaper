@@ -14,7 +14,11 @@ Partons d’un cas concret : le terme **millimeter** en astrophysique. Nous allo
 
 Ouvrez [Les sujets qui montent](/fr/trends/) puis sélectionnez **Astrophysique (astro-ph)**. La vue d’ensemble de tout arXiv et l’historique d’un terme sont accessibles gratuitement ; Premium ouvre les vues par domaine, la sélection personnalisée, la comparaison de trois termes et l’export des comptes.
 
-Dans cet exemple observé le 28 octobre 2026, la vue porte sur les **articles soumis du 12 au 18 octobre 2026**. Il s’agit de la semaine de soumission, pas de la semaine où vous ouvrez la page. Les comptes portent sur les premières versions, sans recompter les mises à jour, et attendent que les annonces de la semaine soient complètes. Les dates doivent accompagner toute interprétation.
+Le calcul de la semaine précédente, **du lundi au dimanche, commence dès le mardi à 06 h UTC** — 7 h à Paris en hiver, 8 h en été. Il laisse passer l’annonce arXiv du lundi soir américain, qui comprend normalement les dernières soumissions du week-end. Les premières versions sont comptées, sans recompter leurs mises à jour. Des annonces retardées par la modération peuvent encore manquer au premier calcul ; les résultats apparaissent à mesure que les domaines sont traités.
+
+Ainsi, la semaine du **19 au 25 octobre 2026** devient éligible le **mardi 27 octobre à 06 h UTC**, sans attendre le samedi 31.
+
+Les captures de ce guide, réalisées le 28 octobre avant ce changement de calendrier, conservent volontairement **l’archive des soumissions du 12 au 18 octobre 2026**. Pour reproduire leurs valeurs, [ouvrez cette semaine d’archive](/fr/trends/?scope=astro-ph&week=2026-10-12). Ce n’est pas la date attendue de la semaine courante : gardez toujours le périmètre et la date avec votre interprétation.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/rising/scope-fr.jpg"><img src="/static/summarizer/img/guides/rising/scope-fr.jpg" alt="Vue française Astrophysique avec la semaine de soumission du 12 au 18 octobre 2026" width="1280" height="720" loading="lazy" /></a>

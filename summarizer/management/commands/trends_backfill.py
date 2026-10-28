@@ -39,8 +39,7 @@ class Command(BaseCommand):
             cache.delete(trends.LOCK)
 
     def backfill(self, options):
-        today = timezone.now().date()
-        last = trends.closed_week(today)
+        last = trends.closed_week(timezone.now())
         first = last - trends.WEEK * (options['weeks'] - 1)
         db = sqlite3.connect(options['store'])
         db.execute('CREATE TABLE IF NOT EXISTS papers (key TEXT PRIMARY KEY, week TEXT, body TEXT)')

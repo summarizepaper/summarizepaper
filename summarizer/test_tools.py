@@ -2410,9 +2410,20 @@ class TrendTests(ToolsTestCase):
         self.assertIn('diffusion model', trends.terms('Diffusion models for weather'))
         self.assertEqual(trends.normalize('one two three four'), '')
 
-    def test_weeks_close_the_saturday_after(self):
-        self.assertEqual(trends.closed_week(datetime.date(2026, 10, 24)), datetime.date(2026, 10, 12))  # Saturday
-        self.assertEqual(trends.closed_week(datetime.date(2026, 10, 23)), datetime.date(2026, 10, 5))
+    def test_weeks_close_on_tuesday_morning_utc(self):
+        utc = datetime.timezone.utc
+        self.assertEqual(trends.closed_week(datetime.datetime(2026, 10, 27, 5, 59, tzinfo=utc)), self.WEEK)
+        self.assertEqual(trends.closed_week(datetime.datetime(2026, 10, 27, 6, tzinfo=utc)), datetime.date(2026, 10, 19))
+        self.assertEqual(trends.closed_week(datetime.datetime(2026, 10, 28, 12, tzinfo=utc)), datetime.date(2026, 10, 19))
+        self.assertEqual(trends.closed_week(datetime.date(2026, 10, 26)), self.WEEK)
+        self.assertEqual(trends.closed_week(datetime.date(2026, 10, 27)), datetime.date(2026, 10, 19))
+
+    def test_week_cutoff_uses_utc_across_offsets_and_years(self):
+        before = datetime.datetime(2026, 10, 27, 6, 59, tzinfo=datetime.timezone(datetime.timedelta(hours=1)))
+        self.assertEqual(trends.closed_week(before), self.WEEK)
+        self.assertEqual(trends.closed_week(before + datetime.timedelta(minutes=1)), datetime.date(2026, 10, 19))
+        self.assertEqual(trends.closed_week(datetime.datetime(2027, 1, 5, 6, tzinfo=datetime.timezone.utc)),
+                         datetime.date(2026, 12, 28))
 
     def test_a_term_rises_against_its_history_from_several_teams(self):
         self.history(rising=12, team=12)
@@ -2555,11 +2566,13 @@ class TrendTests(ToolsTestCase):
         self.assertContains(self.client_for(self.user(paid=True)).get('/en/trends/'), 'Topic 4')
 
     def test_update_reads_the_completed_weeks_then_writes(self):
-        now = timezone.make_aware(datetime.datetime(2026, 10, 24, 12))
-        with mock.patch('summarizer.trends.harvest') as harvest, mock.patch('summarizer.trends.write', return_value=None):
-            trends.update(now)
-        self.assertEqual(sorted(harvest.call_args[0][0])[-1], self.WEEK)
-        self.assertEqual(len(harvest.call_args[0][0]), 4)
+        for hour, minute, expected in ((5, 59, self.WEEK - trends.WEEK), (6, 0, self.WEEK)):
+            with self.subTest(hour=hour, minute=minute):
+                now = datetime.datetime(2026, 10, 20, hour, minute, tzinfo=datetime.timezone.utc)
+                with mock.patch('summarizer.trends.harvest') as harvest, mock.patch('summarizer.trends.write', return_value=None):
+                    trends.update(now)
+                self.assertEqual(sorted(harvest.call_args[0][0])[-1], expected)
+                self.assertEqual(len(harvest.call_args[0][0]), 4)
 
     def test_oai_records_are_dated_by_their_first_version(self):
         from summarizer import trend_sources

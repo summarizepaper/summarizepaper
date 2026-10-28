@@ -1,8 +1,8 @@
 """Rising topics: the terms papers use much more this week than in the weeks before.
 
 Every paper is dated by the submission of its first version (arXiv's OAI-PMH, see trend_sources.py), so
-a week of submissions is complete the Saturday after it, and years of history can be counted the same
-way. For each week and scope (all of arXiv '*', an archive like cs, a category like cs.LG, bioRxiv,
+we count a week of submissions from the following Tuesday at 06:00 UTC, after Monday's normal
+arXiv announcement. For each week and scope (all of arXiv '*', an archive like cs, a category like cs.LG, bioRxiv,
 medRxiv and their categories), we count how many papers use each term of 1 to 3 words of their title
 and abstract (TermWeek). A term rises when this week's count is both at least twice what its share over
 the previous eight weeks predicts and very unlikely by chance (a Poisson log-likelihood ratio), and when
@@ -36,7 +36,8 @@ from .digest import ARCHIVES, BIO_ARCHIVES, BIO_CODES, SERVER_NAMES, archive_of
 logger = logging.getLogger(__name__)
 
 WEEK = datetime.timedelta(days=7)
-CLOSE = datetime.timedelta(days=5)  # the papers submitted in a week are all announced by the Saturday after it
+CLOSE = datetime.timedelta(days=1)  # Tuesday after the Monday-to-Sunday submission week
+CLOSE_TIME = datetime.timedelta(hours=6)  # after Monday's 20:00 US Eastern announcement, in either DST season
 BASE_WEEKS = 8  # the weeks a rise is measured against
 MIN_BASE_WEEKS = 4
 SERIES_WEEKS = 26  # the history drawn on each topic
@@ -141,7 +142,13 @@ def week_of(day):
 
 
 def closed_week(today):
-    """The Monday of the last week of submissions that is complete on `today`."""
+    """Latest eligible submission week, from Tuesday 06:00 UTC.
+
+    Datetimes observe the UTC cutoff; date-only callers select by calendar day.
+    Delayed moderation can still make papers public after this first count.
+    """
+    if isinstance(today, datetime.datetime):
+        today = (today.astimezone(datetime.timezone.utc) - CLOSE_TIME).date()
     week = week_of(today) - WEEK
     return week if week + WEEK + CLOSE <= today else week - WEEK
 
@@ -591,8 +598,9 @@ def update(now=None):
     if not cache.add(LOCK, True, 3 * 3600):
         return 0
     try:
-        today = (now or timezone.now()).date()
-        target = closed_week(today)
+        now = now or timezone.now()
+        today = now.astimezone(datetime.timezone.utc).date()
+        target = closed_week(now)
         stored = set(TermWeek.objects.filter(scope='*', week__gt=target - 4 * WEEK).values_list('week', flat=True))
         missing = [target - WEEK * i for i in range(4) if target - WEEK * i not in stored]
         if missing:

@@ -14,7 +14,11 @@ We will follow **millimeter** in astrophysics, compare its history with **JWST**
 
 Open [Rising topics](/en/trends/) and select **Astrophysics (astro-ph)**. The all-arXiv overview and a single term’s history are available for free. Premium adds field views, personalization, comparison of three terms and count exports.
 
-In this example, observed on 28 October 2026, the page covers **papers submitted from 12 to 18 October 2026**. This is their submission week, rather than the week you open the page. Counts use first versions rather than updates, and wait until all announcements for that week are available. Keep these dates with any interpretation.
+Counting the previous **Monday-to-Sunday submission week starts on Tuesday at 06:00 UTC** — 07:00 in Paris in winter, 08:00 in summer. This follows the normal Monday evening arXiv announcement in US Eastern time, which includes the last weekend submissions. Counts use first versions rather than updates. Moderation-delayed announcements may still be missing from the first count; results appear as each field is processed.
+
+The **19–25 October 2026** submission week therefore becomes eligible on **Tuesday 27 October at 06:00 UTC**, without waiting until Saturday 31 October.
+
+The guide’s screenshots were taken on 28 October before this scheduling change and deliberately retain the **12–18 October 2026 archive**. To reproduce their values, [open that archived week](/en/trends/?scope=astro-ph&week=2026-10-12). It is not the expected current week: keep the scope and date with any interpretation.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/rising/scope-en.jpg"><img src="/static/summarizer/img/guides/rising/scope-en.jpg" alt="English Astrophysics view with the submission week of 12–18 October 2026" width="1280" height="720" loading="lazy" /></a>

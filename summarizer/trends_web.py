@@ -8,6 +8,7 @@ import numpy as np
 from django.http import Http404, HttpResponse
 from django.shortcuts import render
 from django.utils import formats
+from django.utils import timezone
 from django.utils.html import escape
 from django.utils.translation import get_language, gettext as _, gettext_lazy, ngettext
 
@@ -295,4 +296,4 @@ def trends_papers(request):
     return render(request, 'summarizer/trends_papers.html', {
         'scope': scope, 'scope_name': trends.scope_name(scope), 'week': week, 'week_end': week + datetime.timedelta(days=6),
         'terms': wanted, 'papers': papers, 'chat_ids': ','.join(p['key'] for p in papers[:10]), 'kept': week >= trends.closed_week(
-            datetime.date.today()) - trends.WEEK * (trends.KEEP_PAPERS - 1)})
+            timezone.now()) - trends.WEEK * (trends.KEEP_PAPERS - 1)})
