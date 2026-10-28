@@ -1,10 +1,10 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 172 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 192 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
-Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Le deuxième outil, Discuter avec les articles, a été repris avec les papiers I et VI sur Sagittarius A*, une analyse visuelle réellement exécutée, des preuves consultables et un tableau à trois colonnes. Il comporte neuf captures par langue. Collections, Digest quotidien et Veille anti-scoop ont également été repris individuellement ; les sept autres articles restent à reprendre.
+Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Le deuxième outil, Discuter avec les articles, a été repris avec les papiers I et VI sur Sagittarius A*, une analyse visuelle réellement exécutée, des preuves consultables et un tableau à trois colonnes. Il comporte neuf captures par langue. Collections, Digest quotidien, Veille anti-scoop, Alertes de citations, Trouver un stage et Qui travaille dessus ? ont également été repris individuellement ; quatre articles restent à reprendre.
 
 ## Relecture
 
@@ -19,7 +19,7 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 | Rising topics | [Lire](../guides/fr/rising-research-topics.md) | [Read](../guides/en/rising-research-topics.md) | Vue Premium Astrophysique, semaine du 12 octobre 2026, dans les deux langues |
 | Scoop watch | [Lire](../guides/fr/scoop-watch-research-project.md) | [Read](../guides/en/scoop-watch-research-project.md) | Repris le 28 octobre : fort recouvrement Mitani et al. (2026) en français, recouvrement partiel Nakatani et al. (2023) en anglais ; comparaisons intégrales CC BY, figures et notes enregistrées ; 10 captures FR et 12 EN |
 | Citation alerts | [Lire](../guides/fr/track-research-paper-citations.md) | [Read](../guides/en/track-research-paper-citations.md) | Repris le 28 octobre : démarrage du suivi, import ORCID, emails, alerte archivée réelle, 136 citations / 74 contextes / 61 verdicts, μ = 14 et réserve incertaine, texte intégral et figures CC BY ; 13 captures FR et 12 EN |
-| Who works on it? | [Lire](../guides/fr/find-research-teams-by-topic.md) | [Read](../guides/en/find-research-teams-by-topic.md) | Deux générations indépendantes terminées : 24 articles / 2 approches en français, 22 / 3 en anglais |
+| Who works on it? | [Lire](../guides/fr/find-research-teams-by-topic.md) | [Read](../guides/en/find-research-teams-by-topic.md) | Repris le 28 octobre : exolunes, 72 articles / 5 approches FR et 59 / 3 EN ; filtres, publications, texte intégral CC BY et figure 6, collections de 10 et 14 entrées ; 12 captures par langue |
 | Find a research placement | [Lire](../guides/fr/find-research-placement-contacts.md) | [Read](../guides/en/find-research-placement-contacts.md) | Repris le 28 octobre : M2, six mois dès avril 2027, France avec alternatives ; 10 pistes par langue, lectures intégrales CC BY, brouillons personnalisés, notes et comparaisons ; 12 captures FR et 11 EN |
 | Press kit | [Lire](../guides/fr/research-paper-press-kit.md) | [Read](../guides/en/research-paper-press-kit.md) | Kits actualisés dans les deux langues sur 1703.10693v1 ; brief et parcours chercheur avec points forts et passages sources ; restriction à l’abstract indiquée |
 
@@ -104,3 +104,11 @@ Articles CC BY 4.0 vérifiés sur arXiv : 2411.14241v1 (Bergez-Casalou & Kral, 2
 ### Lisibilité du choix de localisation — 28 octobre 2026
 
 Le libellé français de préférence géographique dépassait dans le select en demi-largeur. Il est désormais présenté dans un groupe de deux boutons radio avec légende, sur toute la largeur et avec retour à la ligne autorisé. Le choix strict reste celui proposé initialement ; les valeurs POST et le traitement géographique ne changent pas. Les 67 tests étudiants passent. Quatre captures du formulaire ont été refaites sur les pages de production FR/EN ; les guides utilisent de nouvelles URL d’images pour éviter les anciennes versions en cache. Les formulaires de capture n’ont pas été soumis.
+
+### Refonte du guide Qui travaille dessus ? — 28 octobre 2026
+
+Cartes privées terminées : 1c40703e0ca04b37bb0f933b2013d36d FR, 477c41da022c4b6696cc4bb28326f889 EN. Sujet exolunes, comparaison astrométrie/transits/TTV/TDV, vue d’ensemble cinq ans. ORCID public prérempli conservé ; 47 articles lus, personnes liées signalées. FR : 72/201, 12 versions rapprochées, 30 personnes/15 institutions/5 approches ; EN : 59/219, neuf versions rapprochées, 30/15/3. Pertinence vérifiée sur 120 articles maximum. Filtres US + rôle de signature : 12 FR, neuf EN. Fiches David Kipping développées : quatre publications FR, sept EN. Les institutions sont expliquées comme affiliations à contribution fractionnée ; les exports portent sur toute la carte malgré les filtres d’affichage.
+
+Collections réellement créées : 232 FR (Modélisation des courbes de transit, 10 entrées) et 233 EN (Light-curve Modeling and Timing Interpretation, 14). Un doublon préprint/revue subsiste dans le corpus FR ; le guide explique la vérification des titres et DOI sans promettre une déduplication parfaite. Aucun suivi mensuel, suivi d’équipe concurrente ou partage public activé.
+
+Papier arXiv 2511.20091v1, Kral et al. : CC BY 4.0, publication A&A 705 A217 (2026), dépôt arXiv 25 novembre 2025. Synthèses intégrales générées et terminées dans les deux langues ; 18 figures disponibles, figure 6 agrandie pour la comparaison masse/période/détectabilité. Signal candidat explicitement non confirmé, rôle possible des erreurs systématiques rappelé. Les questions de lecture proposées ne sont pas présentées comme des réponses déjà générées. Douze captures réelles distinctes par langue. Aides ajoutées au formulaire et aux cartes.

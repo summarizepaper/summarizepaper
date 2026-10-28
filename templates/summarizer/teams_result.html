@@ -13,6 +13,7 @@
     {% if shared %}<p class="muted">{% trans 'Shared search' %} · <a href="/{{ LANGUAGE_CODE }}/teams/">{% trans 'Find who works on your own topic' %}</a></p>
     {% else %}<p><a href="/{{ LANGUAGE_CODE }}/teams/">← {% trans 'Who works on it?' %}</a></p>{% endif %}
     <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Who works on it?' %}{% endif %}</h1>
+    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/find-research-teams-by-topic/">Comment lire cette carte et vérifier ses sources ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/find-research-teams-by-topic/">How to read this map and check its sources? Illustrated guide</a></p>{% endif %}
   </header>
 
   {% if result %}
