@@ -63,6 +63,11 @@
   <p class="lead">{% blocktrans %}Every morning, up to {{ papers_per_email }} new papers from the categories you follow, each with its contribution, method and main result, a link to the full AI summary, and every other paper of the day ranked on the web. Free.{% endblocktrans %}</p>
   {% endif %}
   {% if not paid %}<p class="muted"><span class="badge">Premium</span> {% blocktrans with papers=premium.papers categories=premium.categories digests=premium.digests %}Papers ranked by closeness to your research, alerts on the authors you follow, a weekly synthesis of each field, full summaries ready before you open them, up to {{ papers }} papers, {{ categories }} categories and {{ digests }} digests.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>{% endif %}
+  {% if LANGUAGE_CODE == 'fr' %}
+  <p><a href="/fr/guides/daily-digest-research-papers/">Comment organiser sa veille ? Guide illustré du digest quotidien</a></p>
+  {% elif LANGUAGE_CODE == 'en' %}
+  <p><a href="/en/guides/daily-digest-research-papers/">How to build your reading routine? Illustrated daily digest guide</a></p>
+  {% endif %}
   </header>
 
   {% if not request.user.is_authenticated %}

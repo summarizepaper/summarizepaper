@@ -37,6 +37,11 @@
     <p class="muted">{% blocktrans count counter=total %}{{ shown }} papers were in the email, out of {{ counter }} paper of these announcements. Here they all are, ranked as the email was, with why each one is there.{% plural %}{{ shown }} papers were in the email, out of {{ counter }} papers of these announcements. Here they all are, ranked as the email was, with why each one is there.{% endblocktrans %}
     {% if threshold %}{% blocktrans with t=threshold|floatformat:2 %}Your digest sends the papers of closeness {{ t }} or more.{% endblocktrans %}{% endif %}</p>
     {% endif %}
+    {% if LANGUAGE_CODE == 'fr' %}
+    <p><a href="/fr/guides/daily-digest-research-papers/#read-your-edition">Comment lire cette sélection ? Guide illustré du digest</a></p>
+    {% elif LANGUAGE_CODE == 'en' %}
+    <p><a href="/en/guides/daily-digest-research-papers/#read-your-edition">How to read this selection? Illustrated digest guide</a></p>
+    {% endif %}
   </header>
   {% if expired %}
   <p class="notice">{% trans 'The papers of this email are no longer kept: the list of an email stays available for two weeks.' %}</p>
