@@ -187,6 +187,9 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 <header class="page-header">
   <h1>{% trans 'Chat with research papers' %}</h1>
   <p class="lead">{% trans 'Chat with one or several papers at once: arXiv papers, but also journal articles and bioRxiv, medRxiv, PsyArXiv or HAL preprints. Ask your questions in plain language; the assistant answers from the full text when the license allows it, from the abstract otherwise.' %}</p>
+  {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}
+  <a class="tool-guide" href="/{{ LANGUAGE_CODE }}/guides/how-to-chat-with-research-papers/" data-funnel="chat_usage_guide"><i class="fas fa-question-circle" aria-hidden="true"></i> {% if LANGUAGE_CODE == 'fr' %}Comment discuter avec les articles ? Guide illustré{% else %}How to chat with papers? Illustrated guide{% endif %}</a>
+  {% endif %}
 </header>
 
 {% if conversations %}

@@ -1,17 +1,17 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 53 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 67 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
-Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Les autres articles restent dans leur version précédente ; ils devront être repris individuellement sur le même principe de cas réels adaptés à chaque outil.
+Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un parcours propre au papier, huit captures par langue, une preuve issue du corps de l’article et la galerie des six figures. Le deuxième outil, Discuter avec les articles, a été repris avec les papiers I et VI sur Sagittarius A*, une analyse visuelle réellement exécutée, des preuves consultables et un tableau à trois colonnes. Il comporte neuf captures par langue. Les dix autres articles restent dans leur version précédente et devront être repris individuellement.
 
 ## Relecture
 
 | Outil | Français | English | Démonstration réelle |
 |---|---|---|---|
 | Summaries | [Lire](../guides/fr/how-to-summarize-a-research-paper.md) | [Read](../guides/en/how-to-summarize-a-research-paper.md) | Repris le 28 octobre : Sagittarius A*, 2311.08680v2, CC-BY 4.0 ; lecture intégrale confirmée, six figures accessibles, huit captures distinctes par langue |
-| Chat with papers | [Lire](../guides/fr/how-to-chat-with-research-papers.md) | [Read](../guides/en/how-to-chat-with-research-papers.md) | Questions exécutées dans chaque langue, sur un puis trois articles ; réponse et vérification des sources |
+| Chat with papers | [Lire](../guides/fr/how-to-chat-with-research-papers.md) | [Read](../guides/en/how-to-chat-with-research-papers.md) | Repris le 28 octobre : deux papiers CC-BY lus intégralement, figure 3 transmise, relance, comparaison et tableau à six cellules sourcées, neuf captures par langue |
 | Collections | [Lire](../guides/fr/organize-research-paper-collections.md) | [Read](../guides/en/organize-research-paper-collections.md) | Collection dédiée et tableaux sourcés terminés dans les deux langues |
 | Daily digest | [Lire](../guides/fr/daily-digest-research-papers.md) | [Read](../guides/en/daily-digest-research-papers.md) | Édition web française du 27 octobre ; aperçu non enregistré réellement configuré en anglais |
 | Saved searches | [Lire](../guides/fr/saved-searches-research-alerts.md) | [Read](../guides/en/saved-searches-research-alerts.md) | Requête sauvegardée et aperçu sur deux semaines exécuté : zéro résultat, montré sans inventer de correspondances |
@@ -42,6 +42,10 @@ Le projet Scoop Watch français a terminé sa recherche historique sur trois ans
 Plusieurs sources étaient indisponibles pendant la session ; les résultats incomplets, absents ou limités à l’abstract restent signalés. Une capture de « zéro résultat » ne prouve pas une absence de littérature.
 
 Les lignes `Guide` en base prennent le pas sur les fichiers Markdown de même langue et slug. La publication repose sur les fichiers ; vérifier les 24 URLs anonymes après le déploiement avant de considérer la publication comme terminée. Aucun écrasement global des guides en base n’est nécessaire.
+
+## Correctifs découverts en testant le chat
+
+Le paramètre `?ask=` écrasait la fonction d’envoi des questions : nom de variable corrigé, tests avec et sans question préremplie. L’exemption de quota de l’administrateur renvoyait `1`, ce qui bloquait les tableaux de plusieurs papiers ; elle renvoie désormais une valeur illimitée, cohérente avec l’interface. Les règles des abonnements restent identiques. Les deux correctifs ont été déployés avant les nouvelles démonstrations.
 
 ## Vérifications
 
