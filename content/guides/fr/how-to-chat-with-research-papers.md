@@ -31,8 +31,8 @@ Le parcours utilise deux publications de la collaboration EHT, parues en 2022 : 
 Attendez l’indication **« Texte intégral »** sur la fiche sélectionnée avant d’envoyer la question. La version est affichée à côté : elle permet de retrouver le même contenu. Quand le service n’a accès qu’à l’abstract, cette limite est indiquée au même endroit ; pour ce cas, le texte entier est disponible.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/chat/full-text-fr.jpg"><img src="/static/summarizer/img/guides/chat/full-text-fr.jpg" alt="Le papier I est chargé et porte l’indication « Texte intégral ». La fiche donne aussi sa version, le lien PDF et l’accès aux références." width="1280" height="720" loading="lazy" /></a>
-<figcaption>Le papier I est chargé et porte l’indication « Texte intégral ». La fiche donne aussi sa version, le lien PDF et l’accès aux références.</figcaption>
+<a href="/static/summarizer/img/guides/chat/full-text-publication-fr.jpg"><img src="/static/summarizer/img/guides/chat/full-text-publication-fr.jpg" alt="Le papier I, publié en 2022, est chargé en texte intégral. La fiche distingue l’année de publication du dépôt arXiv en 2023 et donne la version, le PDF et les références." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Le papier I, publié en 2022, est chargé en texte intégral. La fiche distingue l’année de publication du dépôt arXiv en 2023 et donne la version, le PDF et les références.</figcaption>
 </figure>
 
 

@@ -31,8 +31,8 @@ The examples use two EHT collaboration publications from 2022: **Paper I**, pres
 Wait for **“Full text”** on the selected paper’s card before sending your question. Its version appears alongside it, so you can identify the same source later. When only an abstract is available, that limitation is indicated in the same place; this example uses the full text.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/chat/full-text-en.jpg"><img src="/static/summarizer/img/guides/chat/full-text-en.jpg" alt="Paper I is loaded and marked “Full text”. Its card also provides the version, PDF link and access to its references." width="1280" height="720" loading="lazy" /></a>
-<figcaption>Paper I is loaded and marked “Full text”. Its card also provides the version, PDF link and access to its references.</figcaption>
+<a href="/static/summarizer/img/guides/chat/full-text-publication-en.jpg"><img src="/static/summarizer/img/guides/chat/full-text-publication-en.jpg" alt="Paper I, published in 2022, is loaded in full. Its card distinguishes the publication year from the 2023 arXiv submission and gives the version, PDF and references." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Paper I, published in 2022, is loaded in full. Its card distinguishes the publication year from the 2023 arXiv submission and gives the version, PDF and references.</figcaption>
 </figure>
 
 
