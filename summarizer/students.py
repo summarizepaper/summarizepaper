@@ -132,7 +132,7 @@ class PlacementForm(forms.Form):
     country = forms.ChoiceField(label=_('Country (optional)'), required=False)
     city = forms.CharField(label=_('City or region (optional)'), max_length=100, required=False,
                            help_text=_('A region, for example Île-de-France, also includes the campuses around the city.'))
-    mobility = forms.ChoiceField(label=_('Geographical preference'), choices=[('strict', _('Only the requested location')), ('open', _('Prefer this location; show other locations separately'))])
+    mobility = forms.ChoiceField(label=_('Geographical preference'), widget=forms.RadioSelect, initial='strict', choices=[('strict', _('Only the requested location')), ('open', _('Prefer this location; show other locations separately'))])
     start = forms.DateField(label=_('Desired start date (optional)'), required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     duration = forms.IntegerField(label=_('Duration in months (optional)'), min_value=1, max_value=60, required=False)
     skills = forms.CharField(label=_('Your skills and interests (optional)'), max_length=1000, required=False,

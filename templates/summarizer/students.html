@@ -4,8 +4,10 @@
 {% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><style>
 .student-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px}
 .student-form-field label{display:block;font-weight:600;margin-bottom:6px}
-.student-form-field input,.student-form-field select,.student-form-field textarea{box-sizing:border-box;width:100%;min-width:0}
+.student-form-field input,.student-form-field select,.student-mobility{border:0;padding:0;margin:0;min-width:0}.student-mobility legend{font-weight:600;margin-bottom:6px}.student-mobility label{display:flex;align-items:flex-start;gap:10px;font-weight:400;line-height:1.5;overflow-wrap:anywhere}.student-mobility input[type=radio]{width:auto;flex:none;margin:5px 0 0}
+.student-form-field textarea{box-sizing:border-box;width:100%;min-width:0}
 .student-form-field input[type=date],.student-form-field input[type=number]{padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font:15px var(--font)}
+.student-mobility{border:0;padding:0;margin:0;min-width:0}.student-mobility legend{font-weight:600;margin-bottom:6px}.student-mobility label{display:flex;align-items:flex-start;gap:10px;font-weight:400;line-height:1.5;overflow-wrap:anywhere}.student-mobility input[type=radio]{width:auto;flex:none;margin:5px 0 0}
 .student-form-field textarea{min-height:100px}.student-form-wide{grid-column:1/-1}.student-form-field .helptext{display:block;margin-top:6px;font-size:.85rem;color:var(--text-muted,#666)}
 @media(max-width:600px){.student-form-grid{grid-template-columns:1fr}}
 </style><meta name="description" content="{% trans 'Explore potential research contacts for an internship or PhD, with publication evidence, reading suggestions and a private shortlist.' %}"><link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/students/">{% if request.user.is_authenticated %}<meta name="robots" content="noindex">{% endif %}{% endblock %}
@@ -24,7 +26,11 @@
     <form method="post" class="card section-card">{% csrf_token %}
       {{ form.non_field_errors }}
       <div class="student-form-grid">{% for field in form %}
+        {% if field.name == 'mobility' %}
+        <fieldset class="student-form-field student-form-wide student-mobility"><legend>{{ field.label }}</legend>{{ field.errors }}{{ field }}</fieldset>
+        {% else %}
         <div class="student-form-field{% if field.name == 'topic' or field.name == 'skills' %} student-form-wide{% endif %}">{{ field.label_tag }}{{ field.errors }}{{ field }}{% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}</div>
+        {% endif %}
       {% endfor %}</div>
       <p class="muted">{% blocktrans %}Up to {{ per_day }} searches a day. We check recent publications and institution metadata, then suggest up to ten people and three readings per person. This may take a few minutes.{% endblocktrans %}</p>
       <button type="submit" class="btn">{% trans 'Find potential contacts' %}</button>
