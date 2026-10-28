@@ -49,6 +49,7 @@
     <span class="tool-label">{% trans 'Citation alerts' %}</span>
     <button type="button" class="btn btn-sm btn-ghost" id="follow-go" data-following="{{ following|yesno:'1,0' }}">{% if following %}{% trans 'Stop following its citations' %}{% else %}{% trans 'Tell me who cites it' %}{% endif %}</button>
     <span class="tool-status" id="follow-status"></span>
+    {% if LANGUAGE_CODE == 'fr' %}<a href="/fr/guides/track-research-paper-citations/">Guide des alertes de citations</a>{% elif LANGUAGE_CODE == 'en' %}<a href="/en/guides/track-research-paper-citations/">Citation alerts guide</a>{% endif %}
   </div>
 
   <div class="tool-row">

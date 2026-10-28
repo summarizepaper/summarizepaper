@@ -1,6 +1,6 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 128 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 12 articles existent en français et en anglais, avec 151 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
@@ -18,7 +18,7 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 | Weekly letters | [Lire](../guides/fr/weekly-science-letters.md) | [Read](../guides/en/weekly-science-letters.md) | Éditions Astronomie et espace du 26 octobre 2026, ouvertes dans les deux langues |
 | Rising topics | [Lire](../guides/fr/rising-research-topics.md) | [Read](../guides/en/rising-research-topics.md) | Vue Premium Astrophysique, semaine du 12 octobre 2026, dans les deux langues |
 | Scoop watch | [Lire](../guides/fr/scoop-watch-research-project.md) | [Read](../guides/en/scoop-watch-research-project.md) | Repris le 28 octobre : fort recouvrement Mitani et al. (2026) en français, recouvrement partiel Nakatani et al. (2023) en anglais ; comparaisons intégrales CC BY, figures et notes enregistrées ; 10 captures FR et 12 EN |
-| Citation alerts | [Lire](../guides/fr/track-research-paper-citations.md) | [Read](../guides/en/track-research-paper-citations.md) | Fiche d’un papier déjà suivi : 135 citations, analyse des contextes lancée dans les deux langues et extraits ouverts ; aucune nouvelle alerte email prétendument reçue |
+| Citation alerts | [Lire](../guides/fr/track-research-paper-citations.md) | [Read](../guides/en/track-research-paper-citations.md) | Repris le 28 octobre : démarrage du suivi, import ORCID, emails, alerte archivée réelle, 136 citations / 74 contextes / 61 verdicts, μ = 14 et réserve incertaine, texte intégral et figures CC BY ; 13 captures FR et 12 EN |
 | Who works on it? | [Lire](../guides/fr/find-research-teams-by-topic.md) | [Read](../guides/en/find-research-teams-by-topic.md) | Deux générations indépendantes terminées : 24 articles / 2 approches en français, 22 / 3 en anglais |
 | Find a research placement | [Lire](../guides/fr/find-research-placement-contacts.md) | [Read](../guides/en/find-research-placement-contacts.md) | Deux recherches fictives L3/Bachelor, six mois, sans restriction géographique ; contacts obtenus et limites de couverture explicites |
 | Press kit | [Lire](../guides/fr/research-paper-press-kit.md) | [Read](../guides/en/research-paper-press-kit.md) | Kits actualisés dans les deux langues sur 1703.10693v1 ; brief et parcours chercheur avec points forts et passages sources ; restriction à l’abstract indiquée |
@@ -82,3 +82,11 @@ Les fiches arXiv 2608.22781v1 ont été générées dans les deux langues avec t
 ### Création du digest expliquée avant la lecture d’une édition
 
 À la demande de l’utilisateur, suppression de la phrase sur les essais non enregistrés et sans email, ainsi que de son équivalent anglais. Le début du guide suit maintenant six étapes : entrée dans le formulaire, nom/import facultatifs, catégories à cocher, mots-clés et format de lecture, options Premium, langue/horaire/fuseau et validation. Les références, auteurs, volume et regroupement des alertes sont expliqués ; l’aperçu interactif est distingué de l’email d’essai. Trois nouvelles captures par langue (début, niveau de lecture, options avancées), soit quatorze par langue. Aucun nouvel abonnement activé et aucun email d’essai demandé pendant ces captures.
+
+### Refonte du guide Alertes de citations — 28 octobre 2026
+
+Papier déjà suivi 1703.10693 (suivi privé 1) : 136 citations, 74 contextes, 61 verdicts et 58 autocitations. Aucune nouvelle analyse nécessaire : explications françaises et anglaises disponibles pour les exemples choisis. Filtres vérifiés : uses / self hide / 2026 → 2 ; questions → 2, tous deux incertains ; none / self hide / 2025 → 2 sans contexte. Aucun verdict corrigé ni propriété d’article changée.
+
+Alerte réellement archivée le 28 octobre à 00:01 : Mitani et al. (2026), arXiv 2608.22781, mentions ; extrait ouvert et capture française. Cette archive conserve le texte français de l’email ; la capture anglaise des réglages présente l’entrée repliée, sans prétendre qu’un autre email anglais a été envoyé. Aucun abonnement ni réglage d’email modifié ; aucun email d’essai envoyé. Suivi d’un article illustré avec l’identifiant saisi sans nouvelle validation ; import ORCID existant montré sans réimport.
+
+Worthen et al., arXiv 2511.11535 : extrait sur μ = 14, ajouté aux collections privées 199 FR et 200 EN ; notes et statut À lire/To read enregistrés puis vérifiés après rechargement. Hales et al. (2022), arXiv 2210.12275 : différence de masse de CO de plus de deux ordres de grandeur, verdict explicitement incertain, sans en déduire une réfutation globale. Licences CC BY 4.0 vérifiées sur les trois fiches arXiv des sources. Mitani : synthèses intégrales existantes et figures 4–6 capturées dans chaque langue ; aucune affirmation de couverture des 13 figures de la source. Liens d’aide sur la liste, le détail des citations et les outils de la fiche article.

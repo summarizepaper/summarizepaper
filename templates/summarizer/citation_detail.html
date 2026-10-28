@@ -17,6 +17,11 @@
     <h1>{{ followed.title|default:followed.arxiv_id }}</h1>
     <p class="meta"><a href="{{ followed.arxiv_id|paper_url }}" target="_blank" rel="noopener">{{ followed.arxiv_id|paper_ref }}</a>
       {% if cached.checked %} · {% blocktrans with date=cached.checked|date:'SHORT_DATE_FORMAT' %}checked {{ date }}{% endblocktrans %}{% endif %}</p>
+    {% if LANGUAGE_CODE == 'fr' %}
+    <p><a href="/fr/guides/track-research-paper-citations/">Comment interpréter ces citations ? Guide illustré</a></p>
+    {% elif LANGUAGE_CODE == 'en' %}
+    <p><a href="/en/guides/track-research-paper-citations/">How to interpret these citations? Illustrated guide</a></p>
+    {% endif %}
   </header>
 
   {% if cached is None or not cached.checked %}
