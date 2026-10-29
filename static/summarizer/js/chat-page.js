@@ -856,4 +856,8 @@
   // a question proposed by another tool (the press kit's questions for the authors): the reader sends it
   var proposedQuestion = new URLSearchParams(location.search).get('ask');
   if (proposedQuestion && !input.value) input.value = proposedQuestion.slice(0, 600);
+  if (T.guided === '1' && proposedQuestion) {
+    input.focus({preventScroll: true});
+    input.scrollIntoView({block: 'center'});
+  }
 })();
