@@ -123,8 +123,11 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
 {% block header_class %}{% endblock %}
 
 {% block content %}
+{% if guided %}<div class="container notice" role="status" style="margin-top:24px;padding:16px">
+{% if LANGUAGE_CODE == 'fr' %}Votre article d’exemple est sélectionné. Relisez la question préremplie, puis envoyez-la pour essayer l’assistant.{% else %}Your example paper is selected. Review the draft question, then send it to try the assistant.{% endif %}
+<a href="{% url 'getting_started' %}#question">{% if LANGUAGE_CODE == 'fr' %}Revenir au parcours guidé{% else %}Back to the walkthrough{% endif %}</a></div>{% endif %}
 <div class="chat-page" id="chat-page"
-  data-lang="{{ LANGUAGE_CODE }}" data-room="{{ room }}" data-max="{{ max_nb_paper }}"
+  data-guided="{% if guided %}1{% else %}0{% endif %}" data-lang="{{ LANGUAGE_CODE }}" data-room="{{ room }}" data-max="{{ max_nb_paper }}"
   data-api="{% url 'arxiv_api' %}" data-sources-url="{% url 'chat_sources' %}"
   data-quota-url="{% url 'chat_quota' %}" data-share-url="{% url 'chat_share' %}"
   data-delete-url="{% url 'chat_delete' 'ROOM' %}" data-rename-url="{% url 'chat_rename' 'ROOM' %}"

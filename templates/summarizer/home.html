@@ -48,7 +48,7 @@
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
     </form>
     <div class="home-actions">
-      <a href="{% if example_paper %}{% url 'arxividpage' example_paper.paper.arxiv_id %}{% else %}#paper-example{% endif %}" data-funnel="home_example_click" data-placement="hero">{% trans 'Try an example' %} <span aria-hidden="true">↗</span></a>
+      <a href="{% url 'getting_started' %}" data-funnel="getting_started_entry" data-placement="hero">{% trans 'Try an example' %} <span aria-hidden="true">↗</span></a>
       <a href="{% url 'premium' %}" data-funnel="premium_click" data-placement="hero">Premium{% if home_price %} · {{ home_price }}{% endif %}</a>
     </div>
   </div>

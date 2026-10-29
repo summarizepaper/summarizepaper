@@ -336,6 +336,8 @@ def open_search_results(request, query, kind, page_num, filter_context=None):
 
 @never_cache
 def summarize(request):
+    if request.method == 'GET' and request.user.is_authenticated and request.GET.get('activated') == 'True':
+        return redirect('getting_started')
     stuff_for_frontend = {}
     lang = get_language()
 

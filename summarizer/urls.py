@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
-from . import (views, user_outreach, search_filters, saved_searches, billing, conference, digest, digest_web, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+from . import (views, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -8,6 +8,7 @@ from django.views.generic import TemplateView
 
 
 urlpatterns = [
+    path("getting-started/", getting_started.page, name="getting_started"),
     path("updates/unsubscribe/<str:token>/", user_outreach.unsubscribe, name="outreach_unsubscribe"),
     path("paper-live/<str:arxiv_id>/", synthesis.state, name="synthesis_state"),
     path("paper-live/<str:arxiv_id>/detail/", synthesis.fragment, name="synthesis_fragment"),

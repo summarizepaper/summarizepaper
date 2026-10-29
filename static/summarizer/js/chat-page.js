@@ -7,6 +7,12 @@
   var root = document.getElementById('chat-page');
   if (!root) return;
   var T = root.dataset;
+  var guidedEvents = {};
+  function guidedTrack(name) {
+    if (T.guided !== '1' || guidedEvents[name]) return;
+    guidedEvents[name] = true;
+    try {if (window.umami) Promise.resolve(window.umami.track(name)).catch(function () {});} catch (_) {}
+  }
   var MAX = Number(T.max) || 10;
   var WS = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
   var $ = function (selector) {return root.querySelector(selector);};
@@ -492,6 +498,7 @@
     stopButton.hidden = true;
     loading.style.display = 'none';
     if (response) {
+      guidedTrack('getting_started_answer_view');
       actions(response, lastQuestion);
       tools.linkTags(response, tagLinks());
       refreshQuota();
@@ -515,6 +522,7 @@
     question = String(question || '').trim();
     var ids = readyIds();
     if (!question || busy || sendButton.disabled) return;
+    guidedTrack('getting_started_question_sent');
     lastQuestion = question;
     asked(question, ids);
     input.value = '';

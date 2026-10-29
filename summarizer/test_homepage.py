@@ -40,7 +40,7 @@ class HomepageTests(TestCase):
         self.assertContains(response, 'href="/en/paper/1706.03762v1/"')
         response = self.client.get('/fr/')
         self.assertIsNone(response.context['example_paper'])
-        self.assertContains(response, 'href="#paper-example"')
+        self.assertContains(response, 'href="/fr/getting-started/"')
 
     def test_blank_search_never_calls_external_sources(self):
         with mock.patch('summarizer.views.sources.resolve') as resolve:

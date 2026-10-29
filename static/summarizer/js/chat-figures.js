@@ -47,8 +47,15 @@
     }
     function question(figure, data) {
       close();
-      var input = box.closest('.chatbot-body').querySelector('.chatbot-form textarea, .chatbot-form input');
       var prefix = box.dataset.question.replace('{figure}', figure.label.replace(/[:：]\s*$/, '')).replace('{paper}', data.title).replace('{id}', data.paper_id);
+      if (box.dataset.chatUrl) {
+        var destination = new URL(box.dataset.chatUrl, window.location.origin);
+        if (destination.origin !== window.location.origin) return;
+        destination.searchParams.set('ask', prefix.slice(0, 600));
+        window.location.assign(destination.href);
+        return;
+      }
+      var input = box.closest('.chatbot-body').querySelector('.chatbot-form textarea, .chatbot-form input');
       var draft = questionPrefix && input.value.indexOf(questionPrefix) === 0 ? input.value.slice(questionPrefix.length) : input.value;
       questionPrefix = prefix;
       input.value = (prefix + draft).slice(0, input.maxLength > 0 ? input.maxLength : 6000);

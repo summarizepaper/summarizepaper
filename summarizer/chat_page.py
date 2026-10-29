@@ -103,6 +103,7 @@ def page(request):
     asked = [i.strip().replace('/', '--') for i in request.GET.get('ids', '').split(',') if i.strip()]
     asked = [i for i in asked if ID_RE.match(i)][:assistant.MAX_PAPERS]
     return render(request, 'summarizer/chat.html', {
+        'guided': request.GET.get('tour') == '1',
         'room': room, 'chathistory': history, 'preset': preset_papers(list(dict.fromkeys(asked or papers))),
         'conversations': recent_conversations(request, room), 'max_nb_paper': assistant.MAX_PAPERS,
         'table_columns': [str(label) for _, label in TABLE_COLUMNS],

@@ -1,6 +1,7 @@
 {% load i18n static_version %}
 <div class="chat-figures-widget">
 <details class="chat-figures" data-paper="{{ figure_paper|default:'' }}" data-title="{% firstof paper.title details.title figure_paper %}" data-url="{% url 'paper_figures' 'PAPER_ID' %}"
+  {% if figure_chat_url %}data-chat-url="{{ figure_chat_url }}"{% endif %}
   data-loading="{% trans 'Loading figures…' %}" data-empty="{% trans 'No figures are available in this paper’s HTML version. Open the original paper to view them.' %}"
   data-license="{% trans 'This paper’s license does not allow us to display its figures here. View them in the original paper.' %}"
   data-error="{% trans 'Figures could not be loaded. You can retry without interrupting the chat.' %}"

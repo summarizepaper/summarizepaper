@@ -208,3 +208,20 @@ test('publisher figures from Springer Nature can be displayed and enlarged', asy
   card.children[0].fire('click');
   assert.equal(h['.chat-figure-enlarged'].children.filter(e => e.tagName === 'img')[0].src, image);
 });
+
+test('walkthrough figure opens a same-origin chat draft without sending or changing other origins', async () => {
+  const h = harness(), visits = [];
+  h.window.location = {origin: 'https://www.summarizepaper.com', assign: url => visits.push(url)};
+  h.box.dataset.chatUrl = '/fr/chat/?ids=2401.04088v1&tour=1';
+  h.open(); h.requests[0].reply(ready()); await settle();
+  const card = h['.chat-figures-grid'].children[0];
+  card.children[2].fire('click');
+  const url = new URL(visits[0]);
+  assert.equal(url.pathname, '/fr/chat/');
+  assert.equal(url.searchParams.get('tour'), '1');
+  assert.match(url.searchParams.get('ask'), /^About Figure 3/);
+  assert.equal(h.requests.length, 1);
+  h.box.dataset.chatUrl = 'https://evil.example/chat/';
+  card.children[2].fire('click');
+  assert.equal(visits.length, 1);
+});
