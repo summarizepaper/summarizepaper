@@ -31,6 +31,19 @@ class GettingStartedTests(TestCase):
             self.assertTrue(form.select_one('textarea[name=ask]').get_text().strip())
             self.assertEqual(SummaryPaper.objects.count(), 2)
 
+    def test_scientific_findings_keep_verified_quotes_and_label_interpretations(self):
+        data = {'tldr': 'Scientific overview', 'findings': [
+            {'text': 'An observed result', 'kind': 'result', 'quote': '<script>untrusted</script>'},
+            {'text': 'A proposed explanation', 'kind': 'interpretation', 'quote': ''}],
+            'limitations': [{'text': 'The objects were not directly detected'}]}
+        with mock.patch('summarizer.getting_started.insight.for_page', return_value=data):
+            response = self.client.get('/fr/getting-started/')
+        self.assertContains(response, 'Scientific overview')
+        self.assertContains(response, 'Interprétation des auteurs')
+        self.assertContains(response, 'The objects were not directly detected')
+        self.assertContains(response, '&lt;script&gt;untrusted&lt;/script&gt;')
+        self.assertNotContains(response, '<script>untrusted</script>')
+
     def test_untrusted_summary_is_escaped(self):
         SummaryPaper.objects.filter(lang='fr').update(lay_summary='<script>alert(1)</script>')
         response = self.client.get('/fr/getting-started/')

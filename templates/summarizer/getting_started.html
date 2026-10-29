@@ -15,7 +15,7 @@
   </header>
   {% if example_ready %}
   <div class="getting-started-paper"><span class="getting-started-badge">CC-BY · {% if LANGUAGE_CODE == 'fr' %}Texte intégral disponible{% else %}Full text available{% endif %}</span>
-    <h2>{{ paper.title }}</h2><p>{% for author in paper.authors.all %}{% if forloop.counter <= 3 %}{{ author.name }}{% if not forloop.last and forloop.counter < 3 %}, {% endif %}{% elif forloop.counter == 4 %} et al.{% endif %}{% endfor %}</p><p>{% if LANGUAGE_CODE == 'fr' %}Un exemple d’astronomie pour apprendre à utiliser les outils, quel que soit votre domaine.{% else %}An astronomy example to learn how the tools work, whatever your field.{% endif %}</p>
+    <h2>{{ paper.title }}</h2><p>{% for author in paper.authors.all %}{% if forloop.counter <= 3 %}{{ author.name }}{% if not forloop.last and forloop.counter < 3 %}, {% endif %}{% elif forloop.counter == 4 %} et al.{% endif %}{% endfor %}</p>
     <p class="muted">{{ paper.journal_ref|default:'Nature Astronomy' }} · <a href="{% url 'arxividpage' paper.arxiv_id %}" data-funnel="getting_started_paper_open">{% if LANGUAGE_CODE == 'fr' %}Ouvrir la fiche de l’article{% else %}Open the paper page{% endif %} ↗</a> · <a href="{{ paper.license }}" target="_blank" rel="noopener noreferrer">{% if LANGUAGE_CODE == 'fr' %}Licence et attribution{% else %}License and attribution{% endif %} ↗</a></p>
   </div>
   <nav class="getting-started-steps" aria-label="{% if LANGUAGE_CODE == 'fr' %}Étapes de la découverte{% else %}Discovery steps{% endif %}" hidden>
@@ -25,9 +25,16 @@
   </nav>
   <section class="getting-started-panel" id="step-summary" data-panel="summary" aria-labelledby="summary-heading">
     <p class="getting-started-kicker">01 / {% if LANGUAGE_CODE == 'fr' %}Comprendre{% else %}Understand{% endif %}</p>
-    <h2 id="summary-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Le cœur de l’article, en langage clair{% else %}The heart of the paper, in plain language{% endif %}</h2>
-    <p>{% if LANGUAGE_CODE == 'fr' %}Commencez par le résumé vulgarisé ci-dessous. Sur la fiche complète, vous trouverez aussi la synthèse détaillée et les points clés.{% else %}Start with the plain-language summary below. The full paper page also offers a detailed synthesis and key points.{% endif %}</p>
-    <div class="getting-started-summary">{{ summary_html|safe }}</div>
+    <h2 id="summary-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Les résultats à retenir{% else %}The findings to take away{% endif %}</h2>
+    <p>{% if LANGUAGE_CODE == 'fr' %}Commencez par l’essentiel ci-dessous. Sur la fiche complète, retrouvez la synthèse détaillée, les points clés et une version simplifiée.{% else %}Start with the essentials below. The full paper page offers a detailed synthesis, key points and a simplified version.{% endif %}</p>
+    <div class="getting-started-summary">
+    {% if insight %}<p><strong>{{ insight.tldr }}</strong></p>
+    <ul>{% for item in insight.findings|slice:':3' %}<li><span class="getting-started-claim">{% if item.kind == 'result' %}{% if LANGUAGE_CODE == 'fr' %}Résultat{% else %}Finding{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Interprétation des auteurs{% else %}Authors’ interpretation{% endif %}{% endif %}</span> {{ item.text }}
+    {% if item.quote %}<details class="getting-started-evidence"><summary>{% if LANGUAGE_CODE == 'fr' %}Vérifier le passage dans l’article{% else %}Check the passage in the paper{% endif %}</summary><blockquote>{{ item.quote }}</blockquote></details>{% endif %}</li>{% endfor %}</ul>
+    {% if insight.limitations %}<p><strong>{% if LANGUAGE_CODE == 'fr' %}Une limite à garder en tête :{% else %}A limitation to keep in mind:{% endif %}</strong> {{ insight.limitations.0.text }}</p>{% endif %}
+    {% else %}<p class="muted">{% if LANGUAGE_CODE == 'fr' %}Extrait du résumé{% else %}Summary excerpt{% endif %}</p>{{ summary_html|safe }}{% endif %}
+    </div>
+    {% if simple_html %}<details class="getting-started-simple"><summary>{% if LANGUAGE_CODE == 'fr' %}Voir aussi la version très simplifiée{% else %}Also see the simplified version{% endif %}</summary>{{ simple_html|safe }}</details>{% endif %}
     <p class="getting-started-tip">{% if LANGUAGE_CODE == 'fr' %}À vérifier pendant la lecture : qu’est-ce qui a été observé, et qu’est-ce qui reste une interprétation ? Un résumé généré par IA se vérifie dans l’article original.{% else %}As you read, check what was observed and what remains an interpretation. Verify an AI-generated summary against the original paper.{% endif %}</p>
     <button class="btn" type="button" data-next="figures" hidden>{% if LANGUAGE_CODE == 'fr' %}Voir les figures{% else %}Explore the figures{% endif %} →</button>
     <a class="getting-started-help" href="/{{ LANGUAGE_CODE }}/guides/how-to-summarize-a-research-paper/">{% if LANGUAGE_CODE == 'fr' %}Le guide illustré des résumés{% else %}Illustrated guide to summaries{% endif %}</a>

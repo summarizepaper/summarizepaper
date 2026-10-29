@@ -28,7 +28,7 @@
   root.querySelector('.getting-started-suggestions').hidden = false;
   root.querySelectorAll('[data-next]').forEach(function (button) {button.hidden = false; button.addEventListener('click', function () {go(button.dataset.next);});});
   root.querySelectorAll('[data-step]').forEach(function (button) {button.addEventListener('click', function () {go(button.dataset.step);});});
-  root.querySelectorAll('[data-question]').forEach(function (button) {
+  root.querySelectorAll('.getting-started-suggestions [data-question]').forEach(function (button) {
     button.addEventListener('click', function () {var input = root.querySelector('textarea'); input.value = button.dataset.question; input.focus();});
   });
   window.addEventListener('hashchange', function () {show(location.hash.slice(1), true);});
