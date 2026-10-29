@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% load static i18n %}
+{% load static_version i18n %}
 {% block title %}{% trans 'My activity' %} — SummarizePaper{% endblock %}
 {% block extra_head_tags %}
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="{% static 'summarizer/css/personal-activity.css' %}">
+<link rel="stylesheet" href="{% static_v 'summarizer/css/personal-activity.css' %}">
 {% endblock %}
 {% block content %}
 <div class="page activity">
