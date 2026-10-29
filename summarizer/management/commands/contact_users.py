@@ -3,7 +3,7 @@ from summarizer import user_outreach
 
 
 class Command(BaseCommand):
-    help = 'Relance de retour utilisateur : aperçu par défaut, 6 messages maximum, 48 h entre deux lots.'
+    help = 'Relance de retour utilisateur : aperçu par défaut, 6 messages maximum, 24 h entre deux lots.'
 
     def add_arguments(self, parser):
         parser.add_argument('--send', action='store_true')

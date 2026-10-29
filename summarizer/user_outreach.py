@@ -24,7 +24,7 @@ from .models import AIassistant, AnnouncementSent, OutreachContact, PaperHistory
 BASE = 'https://www.summarizepaper.com'
 SALT = 'summarizer.feedback-optout.v1'
 MAX_BATCH = 6
-COOLDOWN = datetime.timedelta(hours=48)
+COOLDOWN = datetime.timedelta(hours=24)
 
 
 class BatchStopped(Exception):
@@ -119,7 +119,7 @@ def send_batch(limit=MAX_BATCH, segment='recent'):
     with batch_lock():
         latest = OutreachContact.objects.order_by('-created').first()
         if latest and latest.created > timezone.now()-COOLDOWN:
-            raise BatchStopped('Attendre au moins 48 heures et vérifier les retours du prestataire avant le lot suivant.')
+            raise BatchStopped('Attendre au moins 24 heures et vérifier les retours du prestataire avant le lot suivant.')
         if segment == 'older' and latest is None:
             raise BatchStopped('Commencer par un lot récent avant de contacter les anciens comptes.')
         sent = []

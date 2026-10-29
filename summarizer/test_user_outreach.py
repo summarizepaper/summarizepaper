@@ -61,6 +61,15 @@ class OutreachTests(TestCase):
         self.assertEqual(len(outreach.send_batch()), 2)
         self.assertEqual(len(mail.outbox), 8)
 
+    def test_next_batch_is_blocked_before_24_hours_and_allowed_after(self):
+        self.user()
+        row = OutreachContact.objects.create(email='previous@example.com', status='sent')
+        OutreachContact.objects.filter(pk=row.pk).update(created=timezone.now()-datetime.timedelta(hours=23))
+        with self.assertRaises(outreach.BatchStopped): outreach.send_batch()
+        self.assertFalse(getattr(mail, 'outbox', []))
+        OutreachContact.objects.filter(pk=row.pk).update(created=timezone.now()-datetime.timedelta(hours=25))
+        self.assertEqual(len(outreach.send_batch()), 1)
+
     def test_older_segment_requires_recent_pilot(self):
         with self.assertRaises(outreach.BatchStopped): outreach.send_batch(segment='older')
 
