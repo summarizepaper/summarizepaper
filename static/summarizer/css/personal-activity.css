@@ -17,3 +17,21 @@
 .activity-empty { padding:28px; margin-top:24px; }
 .activity a:focus-visible { outline:3px solid #7773dd; outline-offset:4px; }
 @media(max-width:520px) { .activity-item { padding:16px; } .activity-actions { align-items:flex-start; flex-direction:column; gap:12px; } }
+/* Keep the search and reading list compact, with a clear primary action. */
+.activity .activity-search-row { display:flex; gap:10px; }
+.activity .activity-search-field { display:flex; align-items:center; flex:1; min-width:0; gap:10px; padding:0 12px; border:1px solid var(--border,#ccc); border-radius:10px; background:var(--surface,#fff); color:var(--text-muted,#666); }
+.activity .activity-search-field:focus-within { border-color:var(--accent,#554ed4); outline:2px solid var(--accent-soft,#e7e5ff); }
+.activity .activity-search-field input { width:100%; border:0; outline:0; background:transparent; color:var(--text); padding:12px 0; }
+.activity .activity-search button { border:0; border-radius:10px; background:var(--accent,#554ed4); color:#fff; font:inherit; font-weight:600; padding:12px 20px; }
+.activity .activity-search button:hover { background:var(--accent-hover,#423ab9); }
+.activity .activity-search button:focus-visible { outline:3px solid #7773dd; outline-offset:3px; }
+.activity-search .activity-help { margin:8px 0; }
+.activity-clear { display:inline-block; margin:2px 0 8px; font-size:14px; }
+.activity-count { font-size:14px; font-weight:600; margin:20px 0 10px; overflow-wrap:anywhere; }
+.activity .activity-item { padding:16px 20px; }
+.activity .activity-item h2 { margin:0 0 6px; font-size:17px; line-height:1.4; }
+.activity .activity-meta { margin:0; font-size:13px; }
+.activity .activity-actions { margin-top:10px; }
+.activity-period { list-style:none; margin-top:12px; }
+.activity-period h2 { font-size:15px; margin:6px 0 0; color:var(--text-muted,#666); }
+@media(max-width:520px) { .activity .activity-search-row { flex-direction:column; } .activity .activity-item { padding:14px; } .activity .activity-search button { align-self:flex-end; } }

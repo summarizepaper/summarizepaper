@@ -90,3 +90,61 @@ class ActivityTests(ToolsTestCase):
         self.client.logout()
         self.client.get('/en/paper/' + self.article.arxiv_id + '/')
         self.assertEqual(PaperVisit.objects.count(), 1)
+
+    def test_identifiers_links_versions_and_word_order(self):
+        doi = self.paper('doi_10.1038--s41550-026-03004-3', title='A double debris disc around a white dwarf', authors=('Chris Fox',))
+        personal_activity.record_visit(self.reader, doi.arxiv_id)
+        for text in ('10.1038/s41550-026-03004-3', 'https://doi.org/10.1038/s41550-026-03004-3',
+                     'https://www.summarizepaper.com/fr/paper/' + doi.arxiv_id + '/', 'dwarf debris double'):
+            with self.subTest(text=text):
+                items = self.client.get('/en/history/', {'q': text}).context['items']
+                self.assertEqual([r['id'] for r in items], [doi.arxiv_id])
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        for text in ('2101.00001', '2101.00001v2', 'https://arxiv.org/abs/2101.00001v3',
+                     'https://arxiv.org/pdf/2101.00001.pdf?download=1',
+                     'https://www.summarizepaper.com/en/paper/2101.00001v1/', 'Ann Lee'):
+            with self.subTest(text=text):
+                items = self.client.get('/en/history/', {'q': text}).context['items']
+                self.assertEqual([r['id'] for r in items], [self.article.arxiv_id])
+
+    def test_multi_paper_search_includes_past_selection_and_respects_boundaries(self):
+        room = 'multipaperroom123'
+        AIassistant.objects.create(user=self.reader, arxiv_id=room, papers=self.article.arxiv_id,
+                                   query='Old selection', response='Answer')
+        AIassistant.objects.create(user=self.reader, arxiv_id=room, papers='2101.99999v1',
+                                   query='New selection', response='Answer')
+        AIassistant.objects.create(user=self.other, arxiv_id='otherroom1234', papers=self.article.arxiv_id,
+                                   query='Private', response='Answer')
+        for text in ('hot clouds', 'Ann Lee', 'https://arxiv.org/abs/2101.00001'):
+            with self.subTest(text=text):
+                items = self.client.get('/en/history/', {'tab': 'conversations', 'q': text}).context['items']
+                self.assertEqual(len(items), 1)
+                self.assertIn(room, items[0]['url'])
+        AIassistant.objects.filter(user=self.reader, papers=self.article.arxiv_id).update(papers=self.article.arxiv_id + '9')
+        items = self.client.get('/en/history/', {'tab': 'conversations', 'q': 'hot clouds'}).context['items']
+        self.assertEqual(items, [])
+
+    def test_clear_search_empty_result_and_time_groups(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        response = self.client.get('/en/history/', {'q': 'clouds'})
+        self.assertContains(response, 'Clear search')
+        self.assertContains(response, '1 paper found')
+        self.assertEqual(response.context['items'][0]['period'], 'Today')
+        PaperVisit.objects.update(visited=timezone.now() - timedelta(days=50))
+        response = self.client.get('/en/history/')
+        self.assertEqual(response.context['items'][0]['period'], 'Earlier')
+        response = self.client.get('/en/history/', {'tab': 'conversations', 'q': 'missing'})
+        self.assertContains(response, 'Clear search')
+        self.assertIn('conversations', response.context['clear_url'])
+
+    def test_french_search_feedback_and_identifiers_are_escaped(self):
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        response = self.client.get('/fr/history/', {'q': 'clouds'})
+        self.assertContains(response, '1 article trouvé')
+        self.assertContains(response, 'pour « clouds »')
+        self.assertContains(response, 'Effacer la recherche')
+        self.assertContains(response, 'Aujourd’hui')
+        response = self.client.get('/fr/history/', {'q': '<script>alert(1)</script>'})
+        self.assertNotContains(response, '<script>alert(1)</script>')

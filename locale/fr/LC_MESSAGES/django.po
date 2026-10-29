@@ -17563,3 +17563,53 @@ msgstr "Ouvrez un article en étant connecté pour le retrouver ici plus tard."
 
 msgid "Explore an example"
 msgstr "Découvrir un exemple"
+
+msgid "Search my readings"
+msgstr "Rechercher dans mes lectures"
+
+msgid "Search my conversations"
+msgstr "Rechercher dans mes conversations"
+
+msgid "Title, author, DOI or arXiv link…"
+msgstr "Titre, auteur, DOI ou lien arXiv…"
+
+msgid "Search questions, conversation names or the papers discussed."
+msgstr ""
+"Recherchez dans vos questions, les noms de conversations ou les articles "
+"discutés."
+
+msgid "Paste a paper link or enter a few words, in any order."
+msgstr ""
+"Collez le lien d’un article ou saisissez quelques mots, dans l’ordre de "
+"votre choix."
+
+msgid "Clear search"
+msgstr "Effacer la recherche"
+
+msgid "for “%(query)s”"
+msgstr "pour « %(query)s »"
+
+msgid "Today"
+msgstr "Aujourd’hui"
+
+msgid "Yesterday"
+msgstr "Hier"
+
+msgid "This week"
+msgstr "Cette semaine"
+
+msgid "This month"
+msgstr "Ce mois-ci"
+
+msgid "Earlier"
+msgstr "Plus ancien"
+
+msgid "%(counter)s paper found"
+msgid_plural "%(counter)s papers found"
+msgstr[0] "%(counter)s article trouvé"
+msgstr[1] "%(counter)s articles trouvés"
+
+msgid "%(counter)s conversation found"
+msgid_plural "%(counter)s conversations found"
+msgstr[0] "%(counter)s conversation trouvée"
+msgstr[1] "%(counter)s conversations trouvées"
