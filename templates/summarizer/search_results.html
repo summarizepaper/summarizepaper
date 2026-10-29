@@ -86,6 +86,7 @@
       {% if not search_limited %}<span class="search-filter-note">{% trans 'A free account gives full access: every source without limit, saved searches and their watches.' %} <a href="{% url 'register' %}?next={{ search_return|urlencode }}">{% trans 'Create a free account' %}</a></span>{% endif %}{% endif %}
     <a href="{% url 'saved_searches' %}">{% trans 'Saved searches' %}</a>
   </div>{% endif %}
+  {% if LANGUAGE_CODE == 'fr' %}<p class="search-filter-note"><a href="/fr/guides/saved-searches-research-alerts/">Comment créer une veille ciblée ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="search-filter-note"><a href="/en/guides/saved-searches-research-alerts/">How to create a focused research watch? Illustrated guide</a></p>{% endif %}
   {% if restricted_sources %}<p class="search-filter-note">{% trans 'These filters search indexed publication records. The direct arXiv feed is not included.' %}</p>{% endif %}
   {% if search_limited %}<p class="notice" role="status">{% trans 'Without an account, the search is limited: these results come from arXiv only, without the journals and preprint servers.' %} <a href="{% url 'register' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Create a free account for full access' %}</a> · <a href="{% url 'login' %}?next={{ request.get_full_path|urlencode }}">{% trans 'Log in' %}</a></p>
   {% elif failed %}<p role="status">{% trans 'Some sources are temporarily unavailable. Results may be incomplete; please try again shortly.' %}</p>{% endif %}

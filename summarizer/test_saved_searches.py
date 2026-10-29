@@ -468,6 +468,9 @@ class WatchTests(TestCase):
         part = self.client.get('/en/saved-searches/%d/preview/' % saved.pk)
         self.assertContains(part, 'Exoplanet atmospheres in transit')
         self.assertContains(part, '1 new paper')
+        self.assertContains(part, 'href="/en/paper/2610.00001v1/"')
+        french_part = self.client.get('/fr/saved-searches/%d/preview/' % saved.pk)
+        self.assertContains(french_part, 'href="/fr/paper/2610.00001v1/"')
         self.assertContains(self.client.get('/en/saved-searches/%d/' % saved.pk), 'Exoplanet atmospheres in transit')  # cached
         self.assertContains(page, 'form method="post" action="/en/saved-searches/" class="watch-controls" data-watch-activation')
         self.assertContains(page, '/en/teams/?topic=exoplanet%20atmospheres')
