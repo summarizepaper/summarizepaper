@@ -81,6 +81,21 @@
       {% if kit.abstract_only %}<p class="error">{% trans 'Only the abstract was available for this kit. Read the full paper before writing.' %}</p>{% endif %}
     </section>
 
+    {% if shared %}
+    <aside class="card section-card kit-premium-preview" aria-labelledby="kit-premium-title" id="kit-premium-preview">
+      <div>
+        <span class="eyebrow">{% trans 'Your own press kit' %} · Premium+</span>
+        <h2 id="kit-premium-title">{% trans 'Create your own press kits with Premium+' %}</h2>
+        <ul>
+          <li>{% trans 'Choose the country of researchers to approach for outside comment.' %}</li>
+          <li>{% trans 'Create kits for your own papers or the stories you want to cover next.' %}</li>
+          <li>{% trans 'Prepare a draft release, reporting angles and questions, then export to PDF or Markdown.' %}</li>
+        </ul>
+      </div>
+      <a class="btn" data-funnel="presskit_shared_premium" href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover the Premium+ press kit' %}</a>
+    </aside>
+    {% endif %}
+
     {% if paid %}
     <div id="kit-start" class="presskit-actions"{% if row.status == 'pending' %} hidden{% endif %}>
       <a class="btn" data-role-link data-funnel="presskit_pdf" href="{% url 'presskit_pdf' arxiv_id %}?role={{ role }}{% if editorial %}&amp;letter={{ editorial.letter.pk }}{% endif %}">{% trans 'Download as PDF' %}</a>
@@ -263,6 +278,11 @@
 
     <section class="card section-card" id="kit-experts">
       <h2>{% trans 'Researchers to approach for outside comment' %}</h2>
+      {% if shared %}
+      <p class="kit-experts-preview">{% trans 'Looking for an outside expert in a particular country? Premium+ lets you choose where the suggested researchers work.' %}
+        <a href="/{{ LANGUAGE_CODE }}/premium/#plus" data-funnel="presskit_shared_experts_premium">{% trans 'Explore Premium+' %} →</a>
+      </p>
+      {% endif %}
       {% if countries %}
       <div class="kit-experts-place" data-experts-start="{% url 'presskit_experts_start' arxiv_id %}" data-experts-result="{% url 'presskit_experts' arxiv_id %}">
         <label>{% trans 'Where they work' %}

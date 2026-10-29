@@ -17466,3 +17466,28 @@ msgstr "Le statut de l’évaluation par les pairs n’a pas pu être détermin�
 
 msgid "Journal peer-review policy"
 msgstr "Politique d’évaluation par les pairs de la revue"
+
+
+msgid "Your own press kit"
+msgstr "Votre propre kit presse"
+
+msgid "Create your own press kits with Premium+"
+msgstr "Créez vos propres kits presse avec Premium+"
+
+msgid "Choose the country of researchers to approach for outside comment."
+msgstr "Choisissez le pays des spécialistes à solliciter pour un regard extérieur."
+
+msgid "Create kits for your own papers or the stories you want to cover next."
+msgstr "Créez des kits pour vos propres articles ou vos prochains sujets."
+
+msgid "Prepare a draft release, reporting angles and questions, then export to PDF or Markdown."
+msgstr "Préparez un communiqué, des angles et des questions, puis exportez en PDF ou en Markdown."
+
+msgid "Discover the Premium+ press kit"
+msgstr "Découvrir le kit presse Premium+"
+
+msgid "Looking for an outside expert in a particular country? Premium+ lets you choose where the suggested researchers work."
+msgstr "Vous cherchez un regard extérieur dans un pays précis ? Avec Premium+, choisissez le pays où travaillent les spécialistes proposés."
+
+msgid "Explore Premium+"
+msgstr "Voir les possibilités de Premium+"
