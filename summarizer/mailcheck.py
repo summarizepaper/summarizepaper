@@ -51,7 +51,7 @@ def domain_accepts_mail(domain):
     return False
 
 
-def undeliverable_reason(email, suppressed_set=None):
+def undeliverable_reason(email, suppressed_set=None, *, check_dns=None):
     email = (email or '').strip().lower()
     if suppressed_set is None:
         suppressed_set = suppressed()
@@ -68,7 +68,7 @@ def undeliverable_reason(email, suppressed_set=None):
         return 'gmail dots'
     if domain in GMAIL_DOMAINS and not re.fullmatch(r'[a-z0-9.+]+', local):
         return 'invalid'
-    if settings.MAILCHECK_DNS and not domain_accepts_mail(domain):
+    if (settings.MAILCHECK_DNS if check_dns is None else check_dns) and not domain_accepts_mail(domain):
         return 'no mail server'
     return ''
 

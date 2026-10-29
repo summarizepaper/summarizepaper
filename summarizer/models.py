@@ -1260,3 +1260,24 @@ class PressKitReport(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=['user', 'created'])]
+
+
+class OutreachContact(models.Model):
+    """One initial feedback invitation per address; silence is never an invalid-address verdict."""
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    email = models.EmailField(unique=True)
+    lang = models.CharField(max_length=10, default='en')
+    status = models.CharField(max_length=20, default='sending', choices=[
+        ('sending', 'Envoi en cours / à vérifier'), ('sent', 'Accepté par le serveur SMTP'),
+        ('replied', 'Réponse reçue'), ('bounced', 'Adresse rejetée définitivement'),
+        ('unsubscribed', 'Désinscrit'), ('failed', 'Erreur / livraison à vérifier')])
+    subject = models.CharField(max_length=200)
+    body = models.TextField(blank=True)
+    error = models.TextField(blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    sent = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = 'contact de relance'
+        verbose_name_plural = 'relances et retours'

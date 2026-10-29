@@ -27,7 +27,7 @@ from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, 
                      DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
-                     SuppressedEmail, UserPlan, PremiumGrant, Vote)
+                     SuppressedEmail, OutreachContact, UserPlan, PremiumGrant, Vote)
 
 admin.site.index_title = 'Tableau de bord'
 
@@ -647,3 +647,30 @@ class AIUsageAdmin(ModelAdmin):
             usage_hidden=[(k, v) for k, values in request.GET.lists() for v in values
                           if not k.startswith('day__') and k not in ('p', 'all', 'periode')])
         return response
+
+
+@admin.register(OutreachContact)
+class OutreachContactAdmin(ModelAdmin):
+    list_display = ('email', 'user', 'lang', 'status', 'created', 'sent')
+    list_filter = ('status', 'lang')
+    search_fields = ('email', 'user__username')
+    readonly_fields = ('user', 'email', 'lang', 'subject', 'body', 'error', 'created', 'sent', 'status')
+    actions = ('mark_replied', 'mark_bounced')
+
+    def has_add_permission(self, request): return False
+
+    def has_delete_permission(self, request, obj=None): return False
+
+    @admin.action(description='Marquer une réponse reçue', permissions=['change'])
+    def mark_replied(self, request, queryset):
+        count = queryset.filter(status='sent').update(status='replied')
+        self.message_user(request, '%d réponse(s) enregistrée(s).' % count)
+
+    @admin.action(description='Bloquer une adresse après rejet définitif confirmé', permissions=['change'])
+    def mark_bounced(self, request, queryset):
+        from . import mailcheck
+        for row in queryset.exclude(status='unsubscribed'):
+            mailcheck.suppress(row.email, 'outreach: hard bounce confirmed by administrator')
+            row.status = 'bounced'
+            row.save(update_fields=['status'])
+        self.message_user(request, 'Adresses bloquées ; comptes conservés pour permettre une correction de leur email.')

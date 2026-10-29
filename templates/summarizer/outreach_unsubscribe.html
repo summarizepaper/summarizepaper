@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% load i18n %}{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% if LANGUAGE_CODE == 'fr' %}Emails d’actualité{% else %}Product updates{% endif %} | SummarizePaper{% endblock %}
+{% block content %}<div class="page"><section class="card section-card">
+{% if LANGUAGE_CODE == 'fr' %}
+<h1>Emails d’actualité de SummarizePaper</h1>
+{% if stopped %}<p>Vous ne recevrez plus ces messages. Votre compte et vos abonnements aux alertes restent disponibles.</p>{% else %}<p>Vous pouvez arrêter ces messages sans supprimer votre compte ni vos alertes.</p><form method="post"><button class="btn">Ne plus recevoir ces messages</button></form>{% endif %}
+{% else %}
+<h1>SummarizePaper product updates</h1>
+{% if stopped %}<p>You will no longer receive these messages. Your account and alert subscriptions remain available.</p>{% else %}<p>You can stop these messages without deleting your account or your alerts.</p><form method="post"><button class="btn">Stop receiving these messages</button></form>{% endif %}
+{% endif %}</section></div>{% endblock %}
