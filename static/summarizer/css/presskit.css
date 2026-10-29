@@ -38,6 +38,7 @@
 .kit-figure figcaption { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 .kit-figure .btn { align-self: flex-start; }
 .kit-credit { font-weight: 600; }
+.presskit [hidden] { display: none !important; }
 .kit-share-box { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: -12px 0 22px; }
 .kit-share-box label { flex-basis: 100%; font-size: 14px; color: var(--text-muted); }
 .kit-share-box input { flex: 1 1 260px; min-width: 0; }

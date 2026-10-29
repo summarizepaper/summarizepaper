@@ -12,6 +12,7 @@
     <span class="eyebrow">Premium+</span>
     <h1>{{ tool_name }}</h1>
     <p class="lead">{{ description }}</p>
+    {% if tool_route == 'presskit' %}{% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/research-paper-press-kit/">Comment préparer une communication fidèle au papier ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/research-paper-press-kit/">How to prepare an accurate paper press kit? Illustrated guide</a></p>{% endif %}{% endif %}
     {% for example in examples %}<p><a class="btn btn-ghost" href="{% url tool_route example %}">{% trans 'See an example kit' %}</a></p>{% endfor %}
   </header>
   <section class="card section-card">

@@ -89,6 +89,7 @@
   <div class="tool-row">
     <span class="tool-label">{% trans 'Talk about it in public' %} <span class="badge-premium">Premium+</span></span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/press-kit/{{ arxiv_id }}/" rel="nofollow">{% trans 'Press kit: release, questions, hype check' %}</a>
+    {% if LANGUAGE_CODE == 'fr' %}<a class="tool-guide-link" href="/fr/guides/research-paper-press-kit/">Guide du kit presse</a>{% elif LANGUAGE_CODE == 'en' %}<a class="tool-guide-link" href="/en/guides/research-paper-press-kit/">Press kit guide</a>{% endif %}
   </div>
 
   </div>
