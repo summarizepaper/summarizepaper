@@ -1,0 +1,15 @@
+<table>
+  <thead><tr><th>{% if kind == 'models' %}Modèle · tarifs $/M{% elif kind == 'combinations' %}Tâche / modèle{% elif kind == 'daily' %}Jour{% elif kind == 'users' %}Utilisateur{% else %}Tâche{% endif %}</th><th>Appels</th>{% if not compact %}<th>Unités entrée</th><th>Unités sortie</th><th>Entrée $</th><th>Sortie $</th>{% endif %}<th>Total $</th><th>Part</th><th>$/appel</th></tr></thead>
+  <tbody>{% for row in rows %}<tr>
+    <td>{% if row.url %}<a href="{{ row.url }}">{% endif %}{% if kind == 'combinations' %}{{ row.label|default:row.task }}<small>{{ row.model }}</small>{% elif kind == 'daily' %}{{ row.name|date:'d/m/Y' }}{% else %}{{ row.label|default:row.name }}{% endif %}{% if row.url %}</a>{% endif %}
+      {% if kind == 'models' and row.price_input != None %}<small>{{ row.price_input }} / {{ row.price_output }}</small>{% endif %}
+      {% if row.unpriced_calls %}<small>{{ row.unpriced_calls }} appel(s) sans tarif</small>{% endif %}
+      <div class="ai-cost-bar" style="width:{{ row.share|floatformat:'0' }}%"></div>
+    </td>
+    <td>{{ row.calls }}</td>{% if not compact %}<td>{{ row.prompt }}</td><td>{{ row.completion }}</td>
+    <td>{% if row.calls == row.unpriced_calls %}—{% else %}{{ row.input_cost|floatformat:4 }}{% endif %}</td>
+    <td>{% if row.calls == row.unpriced_calls %}—{% else %}{{ row.output_cost|floatformat:4 }}{% endif %}</td>
+    {% endif %}<td><strong>{% if row.calls == row.unpriced_calls %}—{% else %}{{ row.cost|floatformat:4 }}{% endif %}</strong></td>
+    <td>{{ row.share|floatformat:1 }} %</td><td>{% if row.average != None %}{{ row.average|floatformat:6 }}{% else %}—{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="9">Aucun usage enregistré pour cette sélection.</td></tr>{% endfor %}</tbody>
+</table>

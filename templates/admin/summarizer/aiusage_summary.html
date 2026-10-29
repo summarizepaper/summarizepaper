@@ -1,17 +1,44 @@
-<div class="grid lg:grid-cols-2 gap-6 mb-6">
-  <div class="border border-base-200 rounded-default p-4 dark:border-base-800">
-    <p class="font-semibold mb-2">Par tâche, {{ usage.days }} derniers jours : ${{ usage.total|floatformat:2 }}</p>
-    <table class="w-full text-sm">
-      <tr class="text-left text-subtle"><th>Tâche</th><th>Appels</th><th>Tokens entrée</th><th>Tokens sortie</th><th>$</th></tr>
-      {% for t in usage.tasks %}<tr><td>{{ t.name }}</td><td>{{ t.calls }}</td><td>{{ t.prompt }}</td><td>{{ t.completion }}</td><td>{{ t.cost|floatformat:2 }}</td></tr>{% endfor %}
-    </table>
-    {% if usage.unpriced %}<p class="text-subtle mt-2">Sans prix (comptés 0 $) : {{ usage.unpriced|join:", " }}. Ajoutez-les dans « prix des modèles IA ».</p>{% endif %}
+<style>
+.ai-cost{margin:0 0 24px}.ai-cost-box{border:1px solid #94a3b844;border-radius:8px;padding:16px;margin-bottom:16px;overflow:auto}.ai-cost-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}.ai-cost-kpis{display:flex;flex-wrap:wrap;gap:24px;margin:16px 0}.ai-cost-kpis strong{display:block;font-size:22px}.ai-cost small{display:block;opacity:.75}.ai-cost table{width:100%;font-size:13px;border-collapse:collapse}.ai-cost th,.ai-cost td{padding:8px;text-align:right;border-bottom:1px solid #94a3b833;vertical-align:top;white-space:nowrap}.ai-cost th:first-child,.ai-cost td:first-child{text-align:left;white-space:normal;min-width:130px}.ai-cost h2,.ai-cost summary{font-weight:600;margin-bottom:12px}.ai-cost a{text-decoration:underline;text-underline-offset:3px}.ai-cost-bar{height:4px;background:#7c3aed;margin-top:6px;border-radius:4px;max-width:100%}.ai-cost form{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.ai-cost input{border:1px solid #94a3b866;border-radius:6px;padding:6px;color:inherit;background:transparent}.ai-cost button{border:1px solid #94a3b866;border-radius:6px;padding:7px 12px}.ai-cost-warning{border-left:4px solid #d97706;padding:10px 14px;background:#d9770610;margin-bottom:16px}
+</style>
+<div class="ai-cost">
+  <div class="ai-cost-box">
+    <h2>Coût API OpenAI · sélection courante</h2>
+    <p>Les tableaux et l’export suivent la période, les filtres et la recherche de cette liste. Les montants sont des estimations en USD aux tarifs actuellement configurés.</p>
+    <p class="mt-4">Période : {% for label, url in usage_presets %}<a href="{{ url }}">{{ label }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    <form method="get" class="mt-4">
+      {% for key, value in usage_hidden %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+      <label>Du <input type="date" name="day__gte" value="{{ usage_date_from }}" required></label>
+      <label>Au <input type="date" name="day__lte" value="{{ usage_date_to }}" required></label>
+      <button type="submit">Appliquer les dates</button>
+      <a href="{{ usage_export }}">Exporter cette sélection en CSV</a>
+      <a href="{{ usage_prices }}">Tarifs d’estimation</a>
+      <a href="{{ usage_settings }}">Quotas et modèles utilisés</a>
+    </form>
+    <div class="ai-cost-kpis">
+      <div><small>Coût chiffré{% if usage.unpriced %} · partiel{% endif %}</small><strong>${{ usage.total|floatformat:4 }}</strong></div>
+      <div><small>Entrée</small><strong>${{ usage.totals.input_cost|floatformat:4 }}</strong></div>
+      <div><small>Sortie</small><strong>${{ usage.totals.output_cost|floatformat:4 }}</strong></div>
+      <div><small>Appels enregistrés</small><strong>{{ usage.totals.calls }}</strong></div>
+      <div><small>Appels sans tarif</small><strong>{{ usage.totals.unpriced_calls }}</strong></div>
+    </div>
+    <small>Les résumés regroupent synthèse, fiche L’essentiel et preuves ; les sous-tâches restent détaillées ci-dessous. Audio et appels non attribués sont transversaux. Unités : tokens pour les modèles texte et embeddings ; caractères en entrée pour la synthèse vocale. Les estimations ne distinguent pas les tokens en cache et ne reconstituent pas les tarifs historiques. Les autres fournisseurs d’API ne sont pas inclus.</small>
   </div>
-  <div class="border border-base-200 rounded-default p-4 dark:border-base-800">
-    <p class="font-semibold mb-2">Utilisateurs qui coûtent le plus, {{ usage.days }} derniers jours</p>
-    <table class="w-full text-sm">
-      <tr class="text-left text-subtle"><th>Utilisateur</th><th>Appels</th><th>Tokens entrée</th><th>Tokens sortie</th><th>$</th></tr>
-      {% for u in usage.users %}<tr><td>{{ u.name }}</td><td>{{ u.calls }}</td><td>{{ u.prompt }}</td><td>{{ u.completion }}</td><td>{{ u.cost|floatformat:2 }}</td></tr>{% endfor %}
-    </table>
+  {% if usage.unpriced %}<div class="ai-cost-warning"><strong>Coût incomplet : {{ usage.totals.unpriced_calls }} appel(s) non chiffré(s).</strong> Modèles sans tarif : {{ usage.unpriced|join:", " }}. <a href="{{ usage_prices }}">Renseigner leurs tarifs</a>. Ils restent visibles dans les volumes ; ils ne sont pas considérés comme gratuits.</div>{% endif %}
+  <div class="ai-cost-grid">
+    <section class="ai-cost-box"><h2>Par tâche / outil · les plus coûteux d’abord</h2>
+      {% include 'admin/summarizer/aiusage_table.html' with rows=usage.tools kind='tasks' compact=True %}
+    </section>
+    <section class="ai-cost-box"><h2>Par modèle</h2>
+      {% include 'admin/summarizer/aiusage_table.html' with rows=usage.models kind='models' compact=True %}
+    </section>
+  </div>
+  <section class="ai-cost-box"><h2>Détail tâche × modèle · où agir</h2>
+    <p class="mb-2 text-sm">Cliquez sur une ligne pour isoler ce poste. La part est calculée sur le coût chiffré ; le coût moyen n’est affiché que si tous les appels de la ligne ont un tarif.</p>
+    {% include 'admin/summarizer/aiusage_table.html' with rows=usage.combinations kind='combinations' %}
+  </section>
+  <div class="ai-cost-grid">
+    <details class="ai-cost-box"><summary>Évolution quotidienne</summary>{% include 'admin/summarizer/aiusage_table.html' with rows=usage.daily kind='daily' compact=True %}</details>
+    <details class="ai-cost-box"><summary>Utilisateurs qui coûtent le plus · 15 premiers</summary>{% include 'admin/summarizer/aiusage_table.html' with rows=usage.users kind='users' compact=True %}</details>
   </div>
 </div>

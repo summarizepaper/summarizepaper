@@ -1,3 +1,4 @@
+import csv
 import datetime
 
 import requests
@@ -7,6 +8,8 @@ from django.contrib import admin, messages
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.db import models
 from django.db.models import Count, Exists, IntegerField, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -49,7 +52,7 @@ def dashboard_callback(request, context):
     week_cost = usage.summary(7)
     context['kpis'].append(('Coût IA (7 j)', '$%.2f' % week_cost['total'],
                             'modèles sans prix : %s' % ', '.join(week_cost['unpriced']) if week_cost['unpriced']
-                            else 'résumés, assistant, outils, digests', reverse('admin:summarizer_aiusage_changelist')))
+                            else 'Ventilation par outil et modèle · estimation USD', reverse('admin:summarizer_aiusage_changelist') + '?periode=7'))
     context['site_settings'] = cfg
     context['recent_users'] = User.objects.order_by('-date_joined')[:8]
     return context
@@ -510,29 +513,137 @@ admin.site.register(PickledData, PickledDataAdmin)
 
 # --- AI usage and prices (usage.py) ----------------------------------------
 
+class UsagePeriodFilter(admin.SimpleListFilter):
+    title = 'période'
+    parameter_name = 'periode'
+
+    def lookups(self, request, model_admin):
+        return [('7', '7 derniers jours'), ('30', '30 derniers jours'),
+                ('90', '90 derniers jours'), ('all', 'Tout l’historique')]
+
+    def queryset(self, request, queryset):
+        if any(key.startswith('day__') for key in request.GET) or self.value() == 'all':
+            return queryset
+        days = int(self.value()) if self.value() in ('7', '30', '90') else 30
+        today = timezone.localdate()
+        return queryset.filter(day__gte=today - datetime.timedelta(days=days - 1), day__lte=today)
+
+    def choices(self, changelist):
+        dated = any(key.startswith('day__') for key in changelist.params)
+        for value, label in self.lookup_choices:
+            yield {'selected': not dated and (self.value() == value or not self.value() and value == '30'),
+                   'query_string': changelist.get_query_string({'periode': value},
+                       [k for k in changelist.params if k.startswith('day__')] + ['p']),
+                   'display': label}
+
+
 @admin.register(AIPrice)
 class AIPriceAdmin(ModelAdmin):
     list_display = ('model', 'input_per_million', 'output_per_million')
     list_editable = ('input_per_million', 'output_per_million')
+    search_fields = ('model',)
 
 
 @admin.register(AIUsage)
 class AIUsageAdmin(ModelAdmin):
     list_display = ('day', 'task', 'model', 'user', 'calls', 'prompt_tokens', 'completion_tokens', 'dollars')
-    list_filter = ('task', 'model')
+    list_filter = (UsagePeriodFilter, 'task', 'model')
     date_hierarchy = 'day'
-    search_fields = ('user__username', 'user__email')
+    search_fields = ('task', 'model', 'user__username', 'user__email')
     list_before_template = 'admin/summarizer/aiusage_summary.html'
     readonly_fields = [f.name for f in AIUsage._meta.fields]
 
     def has_add_permission(self, request):
         return False
 
-    @admin.display(description='coût ($)')
+    def get_urls(self):
+        return [path('export.csv', self.admin_site.admin_view(self.export_csv),
+                     name='summarizer_aiusage_export')] + super().get_urls()
+
+    @admin.display(description='coût estimé ($)')
     def dollars(self, obj):
-        cost = obj.cost()
+        cost = obj.cost(getattr(obj, '_admin_prices', None))
         return '—' if cost is None else '%.4f' % cost
 
+    def export_csv(self, request):
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+        from django.contrib.admin.options import IncorrectLookupParameters
+        try:
+            cl = self.get_changelist_instance(request)
+        except IncorrectLookupParameters:
+            return HttpResponse('Filtres invalides.', status=400)
+        prices = {p.model: p for p in AIPrice.objects.all()}
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="couts-api.csv"'
+        response.write('\ufeff')
+        writer = csv.writer(response)
+        writer.writerow(['Jour', 'Tâche', 'Modèle', 'Utilisateur', 'Appels', 'Unités entrée', 'Unités sortie',
+                         'Coût entrée USD', 'Coût sortie USD', 'Coût total USD', 'Tarif connu'])
+        for row in cl.queryset.select_related('user').iterator():
+            split = usage.costs(row, prices)
+            # Keep spreadsheet cells as text if a username begins with a formula character.
+            def cell(value):
+                value = str(value)
+                return "'" + value if value.startswith(('=', '+', '-', '@', '\t', '\r', '\n')) else value
+            writer.writerow([row.day.isoformat(), cell(row.task), cell(row.model),
+                             cell(row.user.username) if row.user else '', row.calls, row.prompt_tokens,
+                             row.completion_tokens, *(['%.8f' % n for n in (*split, sum(split))]
+                                                      if split is not None else ['', '', '']),
+                             'oui' if split is not None else 'non'])
+        return response
+
     def changelist_view(self, request, extra_context=None):
-        extra_context = dict(extra_context or {}, usage=usage.summary(30))
-        return super().changelist_view(request, extra_context)
+        response = super().changelist_view(request, extra_context)
+        context = getattr(response, 'context_data', None)
+        if context is None or 'cl' not in context:
+            return response
+        cl = context['cl']
+        prices = {p.model: p for p in AIPrice.objects.all()}
+        report = usage.summary(days=None, queryset=cl.queryset, prices=prices)
+        def filtered(**updates):
+            params = request.GET.copy()
+            for key in ('p', 'all'):
+                params.pop(key, None)
+            for key, value in updates.items():
+                params[key] = str(value)
+            return '?' + params.urlencode()
+        for row in report['tools']:
+            tasks = [r['name'] for r in report['tasks']
+                     if usage.TOOL_GROUPS.get(r['name'], r['name']) == row['name']]
+            row['url'] = filtered(task__in=','.join(tasks or [row['name']]))
+        for row in report['tasks']:
+            row['url'] = filtered(task__exact=row['name'])
+        for row in report['models']:
+            row['url'] = filtered(model__exact=row['name'])
+            price = usage.price_for(row['name'], prices)
+            row['price_input'] = price.input_per_million if price else None
+            row['price_output'] = price.output_per_million if price else None
+        for row in report['combinations']:
+            row['url'] = filtered(task__exact=row['task'], model__exact=row['model'])
+        for row in report['users']:
+            row['url'] = filtered(user__id__exact=row['user_id']) if row['user_id'] else filtered(user__isnull=True)
+        for obj in cl.result_list:
+            obj._admin_prices = prices
+        presets = []
+        for value, label in [('7', '7 jours'), ('30', '30 jours'), ('90', '90 jours'), ('all', 'Tout l’historique')]:
+            params = request.GET.copy()
+            for key in list(params):
+                if key.startswith('day__') or key in ('periode', 'p', 'all'):
+                    params.pop(key, None)
+            params['periode'] = value
+            presets.append((label, '?' + params.urlencode()))
+        today = timezone.localdate()
+        period = request.GET.get('periode', '30')
+        days = int(period) if period in ('7', '30', '90') else 30
+        dated = any(key.startswith('day__') for key in request.GET)
+        first = report['first'] if dated or period == 'all' else today - datetime.timedelta(days=days - 1)
+        context.update(usage=report, usage_presets=presets,
+            usage_settings=reverse('admin:summarizer_sitesettings_changelist'),
+            usage_export=reverse('admin:summarizer_aiusage_export') + filtered(),
+            usage_prices=reverse('admin:summarizer_aiprice_changelist'),
+            usage_date_from=request.GET.get('day__gte') or (first or today).isoformat(),
+            usage_date_to=request.GET.get('day__lte') or ((report['last'] if dated else today) or today).isoformat(),
+            usage_hidden=[(k, v) for k, values in request.GET.lists() for v in values
+                          if not k.startswith('day__') and k not in ('p', 'all', 'periode')])
+        return response
