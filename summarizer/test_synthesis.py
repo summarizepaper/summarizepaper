@@ -294,3 +294,40 @@ class PaperReadingTests(TestCase):
                 'The results were published in a paper titled “Discs”. The results presented in Figure 2 hold.</p>')
         out = without_invented_references(html, ['Gavin A. L. Coleman', 'Thomas J. Haworth'], '', 'accepted for publication in MNRAS')
         self.assertEqual(BeautifulSoup(out, 'html.parser').get_text(), BeautifulSoup(html, 'html.parser').get_text())
+
+
+class SummarySourceRefreshTests(TestCase):
+    def test_rerun_replaces_old_source_before_the_summary_reads_it(self):
+        from .consumers import HeadlessSummary
+        paper = ArxivPaper.objects.create(arxiv_id='doi_10.1038--s41550-026-03004-3',
+            title='Two debris discs', abstract='Only the abstract.',
+            license='https://creativecommons.org/licenses/by/4.0/')
+        consumer = HeadlessSummary(paper.arxiv_id, 'fr')
+        consumer.send_source = mock.AsyncMock()
+        consumer.send_message_now = mock.AsyncMock()
+
+        class StopBeforePaidCall(Exception):
+            pass
+
+        for previous, fresh, origin, scope in [
+            ('abstract', 'FULL METHODS AND RESULTS ' * 200, 'pdf', 'full_text'),
+            ('pdf', 'Only the abstract.', 'abstract', 'abstract_unavailable'),
+        ]:
+            with self.subTest(previous=previous, origin=origin):
+                PaperText.objects.update_or_create(arxiv_id=paper.arxiv_id,
+                    defaults={'source': previous, 'text': 'OLD SOURCE'})
+                async def inspect_source(*args):
+                    # The real detailed_summary reloads context from this database row.
+                    from asgiref.sync import sync_to_async
+                    stored = await sync_to_async(PaperText.objects.get)(arxiv_id=paper.arxiv_id)
+                    self.assertEqual(stored.source, origin)
+                    self.assertIn(fresh.strip(), stored.text)
+                    self.assertNotIn('OLD SOURCE', stored.text)
+                    raise StopBeforePaidCall
+                with mock.patch('summarizer.utils.read_paper', mock.AsyncMock(return_value=(fresh, origin))), \
+                     mock.patch('summarizer.utils.summarize_book', side_effect=inspect_source), \
+                     self.assertRaises(StopBeforePaidCall):
+                    async_to_sync(consumer.computesummary)(paper.arxiv_id, 'fr',
+                        [paper.license, paper.title, paper.abstract, []], {}, 'HEADER', True)
+                consumer.send_source.assert_awaited_with(scope)
+                self.assertEqual(synthesis.license_scope(paper), scope)

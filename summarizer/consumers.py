@@ -366,9 +366,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 
                 message["progress"] = 20
                 if language == 'fr':
-                    message["loading_message"] = "Lecture du fichier pdf..."
+                    message["loading_message"] = ("Texte intégral récupéré." if text_source != 'abstract' else
+                                                  "Texte intégral indisponible : utilisation de l’abstract.")
                 else:
-                    message["loading_message"] = "Reading the pdf file..."
+                    message["loading_message"] = ("Full text retrieved." if text_source != 'abstract' else
+                                                  "Full text unavailable: using the abstract.")
                 #time.sleep(10.)
 
                 c=asyncio.create_task(self.send_message_now(message))
@@ -391,25 +393,19 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                                    ('abstract_unavailable' if public else 'abstract_license'))
             message["progress"] = 30
             if language == 'fr':
-                message["loading_message"] = "Indexation de l'article..."
+                message["loading_message"] = "Préparation du texte à analyser..."
             else:
-                message["loading_message"] = "Indexing the paper..."
+                message["loading_message"] = "Preparing the text for analysis..."
             #await self.send_message_now(message)
 
             c=asyncio.create_task(self.send_message_now(message))
             await c
 
 
-            #print('dattaaaaaaaaaaaa',data)
-            if not await sync_to_async(utils.has_paper_text)(arxiv_id):
-                if public==1:
-                    book_text2=data+'    '+full_text
-                else:
-                    book_text2=data+'    '+book_text
-
-                c = asyncio.create_task(utils.createindex(arxiv_id, book_text2, settings.OPENAI_KEY, source=text_source))
-                created=await c
-                #print('crea',created)
+            # A rerun must replace the previous source before detailed_summary
+            # and insight read PaperText; an old abstract must not mask a fresh PDF.
+            await utils.createindex(arxiv_id, data + '    ' + book_text,
+                                    settings.OPENAI_KEY, source=text_source)
 
             #input('stop here')
 
