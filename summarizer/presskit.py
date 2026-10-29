@@ -542,14 +542,15 @@ def citation(paper):
 def press_figures(value, figures, paper):
     """The figures the model chose, with the image of the paper, its caption and the credit its license asks."""
     by_label = {normalized(f['label']): f for f in figures}  # 'Figure 2:' as arXiv tags it is 'figure 2'
-    code, _version = sources.license_code(paper.license)
     chosen = []
     for item in value if isinstance(value, list) else []:
         figure = by_label.get(normalized(str((item or {}).get('label') or ''))) if isinstance(item, dict) else None
         if figure is None or figure['label'].rstrip(':.| ') in [c['label'] for c in chosen]:
             continue
-        credit = ', '.join(part for part in [byline(paper), figure['label'].rstrip(':.| '), sources.label(paper.arxiv_id),
-                                              sources.license_label(paper.license or '')] if part)
+        license_url = figure.get('license_url') or paper.license
+        code, _version = sources.license_code(license_url)
+        credit = ', '.join(part for part in [byline(paper), figure['label'].rstrip(':.| '), sources.label(figure.get('source_paper_id') or paper.arxiv_id),
+                                              sources.license_label(license_url or '')] if part)
         label = figure['label'].rstrip(':.| ')
         chosen.append({'label': label, 'image': figure['images'][0], 'caption': figure['caption'][:1500],
                        'source_url': figure['source_url'], 'why': clean(item.get('why'), 400), 'credit': credit,

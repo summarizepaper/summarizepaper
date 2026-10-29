@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var imageHosts = ['arxiv.org', 'www.arxiv.org', 'pmc.ncbi.nlm.nih.gov', 'cdn.ncbi.nlm.nih.gov'];
+  var imageHosts = ['arxiv.org', 'www.arxiv.org', 'pmc.ncbi.nlm.nih.gov', 'cdn.ncbi.nlm.nih.gov', 'media.springernature.com'];
   function imageURL(value) {
     try { var u = new URL(value); return u.protocol === 'https:' && imageHosts.includes(u.hostname) &&
       !u.username && !u.password && (!u.port || u.port === '443'); } catch (_) { return false; }

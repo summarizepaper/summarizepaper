@@ -195,3 +195,16 @@ test('figure zoom closes with Escape, native cancel or the backdrop, preserving 
   h.dialog.fire('click', {target: {}, clientX: 0, clientY: 0}); assert.equal(h.dialog.open, true);
   h.dialog.fire('click', {target: h.dialog, clientX: 0, clientY: 50}); assert.equal(h.dialog.open, false);
 });
+
+test('publisher figures from Springer Nature can be displayed and enlarged', async () => {
+  const h = harness();
+  const image = 'https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fpaper/MediaObjects/figure.png';
+  h.open();
+  const data = ready();
+  data.figures = [{label: 'Fig. 1', caption: 'Publisher caption.', images: [image], source_url: 'https://www.nature.com/articles/paper#Fig1'}];
+  h.requests[0].reply(data); await settle();
+  const card = h['.chat-figures-grid'].children[0];
+  assert.equal(card.children[0].children[0].src, image);
+  card.children[0].fire('click');
+  assert.equal(h['.chat-figure-enlarged'].children.filter(e => e.tagName === 'img')[0].src, image);
+});

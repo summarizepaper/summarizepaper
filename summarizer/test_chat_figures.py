@@ -164,3 +164,72 @@ class ChatFiguresTests(TestCase):
         data = figures.extract(html, 'https://arxiv.org/html/paper', 'arxiv')
         self.assertEqual(data[0]['images'], ['https://arxiv.org/html/paper/plot.png'])
         self.assertIn(r'flux\({}_{\text{dust}}\)', data[0]['caption'])
+
+    DOI = '10.1038/s41550-026-03004-3'
+    URL = 'https://www.nature.com/articles/s41550-026-03004-3'
+    IMAGE = '//media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs41550-026-03004-3/MediaObjects/plot.png'
+
+    def nature_paper(self, mapping=None):
+        self.paper.arxiv_id = 'doi_10.1038--s41550-026-03004-3'
+        self.paper.save()
+        if mapping:
+            ExternalPaper.objects.create(key=self.paper.arxiv_id, source='openalex', metadata=json.dumps(mapping))
+        return self.paper
+
+    def nature_html(self, extra=''):
+        return '<figure><figcaption><b id="Fig1">Fig. 1: Spectrum.</b></figcaption><img src="%s"><div class="c-article-section__figure-description"><p>Full caption with flux and uncertainty. %s</p></div></figure>' % (self.IMAGE, extra)
+
+    def test_nature_keeps_full_caption_anchor_image_and_source_license(self):
+        self.nature_paper()
+        self.assertEqual(figures.html_source(self.paper), (self.URL, 'nature'))
+        with mock.patch.object(figures, 'fetch_html', return_value=self.nature_html()):
+            data = figures.paper_gallery(self.paper)
+        self.assertEqual(data['status'], 'ready')
+        f = data['figures'][0]
+        self.assertEqual(f['source_url'], self.URL + '#Fig1')
+        self.assertIn('Full caption with flux', f['caption'])
+        self.assertEqual(f['images'], ['https:' + self.IMAGE])
+        self.assertEqual(f['license_url'], self.paper.license)
+
+    def test_wrong_article_images_and_third_party_credits_are_not_reused(self):
+        self.assertEqual(figures.extract(self.nature_html().replace('03004-3', '99999-1'), self.URL, 'nature'), [])
+        self.assertEqual(figures.extract(self.nature_html('Reproduced with permission from another publisher.'), self.URL, 'nature'), [])
+
+    def test_nature_cookie_redirects_are_bounded_and_cannot_leave_trusted_hosts(self):
+        redirect = self.response(status=303)
+        redirect.headers = {'Location': 'https://idp.nature.com/authorize?response_type=cookie'}
+        back = self.response(status=302)
+        back.headers = {'Location': self.URL}
+        final = self.response(html=self.nature_html())
+        session = mock.Mock()
+        session.get.side_effect = [redirect, back, final]
+        with mock.patch.object(figures.requests, 'Session', return_value=session):
+            self.assertIn(b'Full caption', figures.fetch_html(self.URL, 'nature'))
+        self.assertEqual(session.get.call_count, 3)
+        session.close.assert_called_once()
+        redirect.headers = {'Location': 'http://169.254.169.254/private'}
+        session.reset_mock(); session.get.side_effect = [redirect]
+        with mock.patch.object(figures.requests, 'Session', return_value=session):
+            self.assertEqual(figures.fetch_html(self.URL, 'nature'), b'')
+        self.assertEqual(session.get.call_count, 1)
+
+    def test_arxiv_fallback_checks_its_own_license_and_keeps_its_credit(self):
+        self.nature_paper({'arxiv_id': '2401.04088v2'})
+        preprint = ArxivPaper.objects.create(arxiv_id='2401.04088v2', license='https://creativecommons.org/licenses/by-sa/4.0/')
+        with mock.patch.object(figures, 'fetch_html', side_effect=[b'', HTML.encode()]):
+            data = figures.paper_gallery(self.paper)
+        self.assertEqual(data['status'], 'ready')
+        f = data['figures'][0]
+        self.assertEqual(f['source_paper_id'], preprint.arxiv_id)
+        self.assertEqual(f['license_url'], preprint.license)
+        from . import presskit
+        chosen = presskit.press_figures([{'label': f['label'], 'why': 'A spectrum.'}], data['figures'], self.paper)[0]
+        self.assertIn('arXiv: 2401.04088v2', chosen['credit'])
+        self.assertIn('CC BY-SA 4.0', chosen['credit'])
+
+    def test_restricted_or_invalid_arxiv_mapping_is_not_fetched(self):
+        self.nature_paper({'text': [['arxiv', '2401.04088v2']]})
+        ArxivPaper.objects.create(arxiv_id='2401.04088v2', license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
+        with mock.patch.object(figures, 'fetch_html', return_value=b'') as fetch:
+            self.assertEqual(figures.paper_gallery(self.paper)['status'], 'empty')
+        self.assertEqual(fetch.call_count, 1)
