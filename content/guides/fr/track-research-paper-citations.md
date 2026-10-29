@@ -4,7 +4,7 @@ description: 'Configurez vos alertes de citations, vérifiez les passages citant
   gardez les lectures utiles : un parcours illustré, du suivi à la collection.'
 date: 2026-10-27
 draft: false
-updated: 2026-10-28
+updated: 2026-10-29
 ---
 
 Votre article est cité : **quel résultat a été repris, et dans quel but ?** Les alertes de citations permettent de passer du compteur au passage qui explique l’usage de votre travail. Avec Premium, vous pouvez suivre vos propres publications, une référence de votre domaine ou les articles d’une équipe.
@@ -48,7 +48,7 @@ Les sources sont vérifiées une fois par jour : un email immédiat signifie une
 
 Dans **Voir les alertes de citation passées**, ouvrez une entrée datée, puis **Extraits des citations**. L’historique conserve les alertes envoyées, y compris les références qui dépassent la limite de l’email ; il reste accessible après l’arrêt du suivi d’un article.
 
-L’alerte du **28 octobre 2026** contient *Thermochemical constraints on a primordial-origin of gas-rich debris disks*, de **Mitani et al.**, déposé sur arXiv le **24 août 2026**. Ce décalage montre pourquoi la date d’une alerte ne doit pas être confondue avec la date de parution : une source peut indexer une citation plus tard.
+L’alerte archivée du **28 octobre 2026** signale une citation dans *Thermochemical constraints on a primordial-origin of gas-rich debris disks*, de **Mitani et al.**, dont le [premier dépôt sur arXiv date du **24 août 2026**](https://arxiv.org/abs/2608.22781). Le **28 octobre est la date d’envoi de l’alerte**, pas celle du dépôt ni celle d’une publication en revue. Une « nouvelle citation » désigne ici une citation repérée depuis le relevé précédent ; l’envoi dépend ensuite du rythme choisi dans les réglages. Ces deux dates ne suffisent donc pas à mesurer le délai de détection. Dans cet exemple, la citation provient d’ADS, mais l’archive ne donne pas sa date d’indexation : on ne peut pas attribuer cet écart à une indexation tardive.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/citations/history-fr.jpg"><img src="/static/summarizer/img/guides/citations/history-fr.jpg" alt="L’alerte archivée du 28 octobre contient Mitani et al. (2026) et le passage original sur le carbone produit par photodissociation du CO." width="1280" height="720" loading="lazy" /></a>

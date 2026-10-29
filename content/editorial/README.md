@@ -140,3 +140,7 @@ Collections privées créées depuis les lettres : 298 FR, 299 EN, six articles 
 La semaine précédente devient éligible le mardi à 06:00 UTC (Paris 07:00 en hiver, 08:00 en été), après l’annonce habituelle arXiv du lundi soir américain. Le traitement horaire et le backfill utilisent le même seuil UTC ; les dates sans heure conservent une lecture par jour calendaire. Le nettoyage des listes d’articles suit également ce seuil. La fenêtre du 19–25 octobre est donc éligible dès le 27 à 06:00 UTC, au lieu du 31 octobre. Les tests couvrent la minute précédant le seuil, le seuil, un décalage horaire et le passage d’année.
 
 Guide FR/EN et explication de l’outil actualisés : les annonces de modération retardées ne sont pas garanties au premier calcul. Les captures du 12–18 octobre restent un exemple d’archive explicite, avec liens vers la bonne semaine, plutôt qu’une illustration prétendument courante.
+
+### Dates de l’exemple d’alerte de citation — 29 octobre 2026
+
+Contrôle en lecture seule de l’archive : envoi le 28 octobre 2026 à 00:01:35 UTC, citation de 2608.22781 vers 1703.10693, identifiant ADS 2026arXiv260822781M, date source limitée au mois 2026-08. Le dépôt initial du 24 août 2026 est confirmé par l’historique arXiv. La date d’indexation ADS et celle de première détection ne sont pas conservées dans cette archive ; l’écart ne prouve donc pas une indexation tardive. Guides FR/EN corrigés pour distinguer dépôt, détection et envoi selon le rythme choisi. Aucun changement du fonctionnement des alertes.
