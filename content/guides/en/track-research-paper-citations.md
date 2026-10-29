@@ -44,9 +44,9 @@ The sources are checked once a day. An immediate alert means notification after 
 <figcaption>Set the email schedule and the separate option for immediate alerts about clear challenges. Sent alerts are accessible below.</figcaption>
 </figure>
 
-Use **View past citation alerts** to open a dated entry and its **Citation excerpts**. The archive retains sent alerts, including references beyond the email limit, even after you stop following a paper. A “new citation” means a citation detected since the previous check; delivery then follows the schedule selected in the settings. The alert date alone does not tell you when the citing paper was first submitted or published.
+Use **View past citation alerts** to open an entry and its **Citation excerpts**. The archive retains sent alerts, including references beyond the email limit, even after you stop following a paper.
 
-For example, the archived alert dated **28 October 2026** points to **Mitani et al.**, *Thermochemical constraints on a primordial-origin of gas-rich debris disks*, whose [first arXiv submission was on **24 August 2026**](https://arxiv.org/abs/2608.22781). **28 October is the alert delivery date**, not the submission date or a journal publication date. These two dates do not establish the detection delay. The citation in this example comes from ADS, but the archive does not record when ADS indexed it, so late indexing cannot be established as the cause of the gap. Its citation recalls neutral carbon as a product of CO photodissociation in a secondary-origin model. The live citation page labels this passage **mentions it**: the label describes the use of this particular reference, rather than the overall scientific position of the citing paper.
+For example, the alert shows that **Mitani et al.** cite the followed paper in [*Thermochemical constraints on a primordial-origin of gas-rich debris disks*](https://arxiv.org/abs/2608.22781). Open the excerpt to see how the authors use the reference, then open the citing paper to read further. Its citation recalls neutral carbon as a product of CO photodissociation in a secondary-origin model. The live citation page labels this passage **mentions it**: the label describes the use of this particular reference, rather than the overall scientific position of the citing paper.
 
 ## 3. Read the coverage behind the headline count
 

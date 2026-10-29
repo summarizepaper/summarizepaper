@@ -48,11 +48,11 @@ Les sources sont vérifiées une fois par jour : un email immédiat signifie une
 
 Dans **Voir les alertes de citation passées**, ouvrez une entrée datée, puis **Extraits des citations**. L’historique conserve les alertes envoyées, y compris les références qui dépassent la limite de l’email ; il reste accessible après l’arrêt du suivi d’un article.
 
-L’alerte archivée du **28 octobre 2026** signale une citation dans *Thermochemical constraints on a primordial-origin of gas-rich debris disks*, de **Mitani et al.**, dont le [premier dépôt sur arXiv date du **24 août 2026**](https://arxiv.org/abs/2608.22781). Le **28 octobre est la date d’envoi de l’alerte**, pas celle du dépôt ni celle d’une publication en revue. Une « nouvelle citation » désigne ici une citation repérée depuis le relevé précédent ; l’envoi dépend ensuite du rythme choisi dans les réglages. Ces deux dates ne suffisent donc pas à mesurer le délai de détection. Dans cet exemple, la citation provient d’ADS, mais l’archive ne donne pas sa date d’indexation : on ne peut pas attribuer cet écart à une indexation tardive.
+L’alerte signale que **Mitani et al.** citent l’article suivi dans [*Thermochemical constraints on a primordial-origin of gas-rich debris disks*](https://arxiv.org/abs/2608.22781). Ouvrez l’extrait pour voir comment les auteurs utilisent cette référence, puis accédez au papier citant pour approfondir la lecture.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/citations/history-fr.jpg"><img src="/static/summarizer/img/guides/citations/history-fr.jpg" alt="L’alerte archivée du 28 octobre contient Mitani et al. (2026) et le passage original sur le carbone produit par photodissociation du CO." width="1280" height="720" loading="lazy" /></a>
-<figcaption>L’alerte archivée du 28 octobre contient Mitani et al. (2026) et le passage original sur le carbone produit par photodissociation du CO.</figcaption>
+<a href="/static/summarizer/img/guides/citations/history-fr.jpg"><img src="/static/summarizer/img/guides/citations/history-fr.jpg" alt="L’alerte présente le papier de Mitani et al. et le passage original sur le carbone produit par photodissociation du CO." width="1280" height="720" loading="lazy" /></a>
+<figcaption>L’alerte présente le papier de Mitani et al. et le passage original sur le carbone produit par photodissociation du CO.</figcaption>
 </figure>
 
 Ici, l’étiquette **le mentionne** est accompagnée d’une explication : le papier rappelle que le carbone atomique neutre provient de la photodissociation du CO dans le scénario secondaire. Le passage anglais reste visible pour vérifier ce rapprochement. Le sujet général de l’article peut discuter une autre origine du gaz ; l’étiquette porte sur le passage qui cite cette référence précise.
