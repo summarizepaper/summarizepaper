@@ -150,6 +150,7 @@
         if (json.status !== 'ok') return;
         var field = document.getElementById('kit-share-url');
         field.value = json.url || '';
+        shareBox.querySelector('[data-kit-share-timing]').textContent = json.timing || '';
         shareBox.hidden = !json.url;
         if (action === 'update') shareBox.querySelector('[data-kit-share-outdated]').hidden = true;
         if (json.url) field.select();

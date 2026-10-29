@@ -206,7 +206,10 @@ class PressKitRoleTests(ToolsTestCase):
 
     def test_share_link_is_each_readers_own_frozen_copy(self):
         self.generate()
-        url = self.paid.post(self.base + 'share/', {'action': 'share'}).json()['url']
+        shared = self.paid.post(self.base + 'share/', {'action': 'share'}).json()
+        self.assertIn('Time remaining:', shared['timing'])
+        self.assertContains(self.paid.get(self.base), 'Activated or renewed on')
+        url = shared['url']
         self.assertIn('/en/press-kit/shared/', url)
         path = url.split('testserver')[1]
         page = Client().get(path)

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load i18n static_version %}
+{% load i18n static_version share_timing %}
 {% get_current_language as LANGUAGE_CODE %}
 
 
@@ -130,7 +130,6 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   data-delete-url="{% url 'chat_delete' 'ROOM' %}" data-rename-url="{% url 'chat_rename' 'ROOM' %}"
   data-delete-confirm="{% trans 'Delete this conversation? Its questions and answers, and its shared link if any, will be gone.' %}"
   data-rename-prompt="{% trans 'Name of this conversation (empty: its first question)' %}"
-  data-share-until="{% trans 'This link works until {date}.' %}"
   data-more="{% trans 'Show the abstract' %}" data-less="{% trans 'Hide the abstract' %}"
   data-move-up="{% trans 'Move up' %}" data-drag="{% trans 'Drag to reorder' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
   data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
@@ -311,7 +310,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
     </div>
     <div class="share-box" id="share-box"{% if not share %} hidden{% endif %}>
       <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %}
-        <span id="share-expires">{% if share.expires %}{% blocktrans with date=share.expires|date:"DATE_FORMAT" %}This link works until {{ date }}.{% endblocktrans %}{% endif %}</span></p>
+        <span id="share-expires" role="status">{% if share %}{% share_timing share.expires %}{% endif %}</span></p>
       <div class="share-row">
         <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}" value="{% if share %}{{ request.scheme }}://{{ request.get_host }}{% url 'chat_shared' share.token %}{% endif %}">
         <button type="button" id="share-copy">{% trans 'Copy' %}</button>

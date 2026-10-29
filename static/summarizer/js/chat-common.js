@@ -132,10 +132,7 @@
         url.value = data.url;
         stop.dataset.token = data.url.split('/shared/')[1].replace(/\/$/, '');
         var until = box.querySelector('#share-expires');
-        if (until && data.expires) {
-          until.textContent = labels.shareUntil.replace('{date}', new Date(data.expires + 'T00:00:00Z')
-            .toLocaleDateString(document.documentElement.lang || undefined, {year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'}));
-        }
+        if (until) until.textContent = data.timing || '';
         box.hidden = false;
         url.select();
       }).catch(function () {alert(labels.shareFailed);}).then(function () {button.disabled = false;});

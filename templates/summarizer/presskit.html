@@ -89,8 +89,10 @@
       {% if kit.schema_version != 3 or row.status == 'failed' %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Update this kit: roles, earlier papers, figures' %}</button>
       {% elif can_read_full_text %}<button class="btn btn-ghost" type="button" id="kit-go" data-again="1">{% trans 'Read the full text again' %}</button>{% endif %}
     </div>
+    {% if share_timing and not share_url %}<p class="muted" role="status">{{ share_timing }}</p>{% endif %}
     <div class="kit-share-box" data-kit-share-box{% if not share_url %} hidden{% endif %}>
       <label for="kit-share-url">{% trans 'Anyone with this link can read the kit, without an account, for 90 days: your press office, your co-authors.' %}</label>
+      <p class="muted" data-kit-share-timing role="status" style="flex-basis:100%">{{ share_timing }}</p>
       <input id="kit-share-url" type="text" readonly value="{{ share_url }}">
       <button type="button" class="btn btn-sm" data-copy-field="kit-share-url">{% trans 'Copy' %}</button>
       <button type="button" class="btn btn-sm btn-ghost" data-kit-unshare>{% trans 'Stop sharing' %}</button>

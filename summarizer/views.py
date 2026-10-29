@@ -1283,6 +1283,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'reading_langs':reading.OUTPUT_LANGUAGES,
                 'reading_left':reading.quota_left(request),
                 'quota_left':chat_page.quota_left(request),
+                'paper_share':chat_page.current_share(request, arxiv_id),
                 'citation_meta':citation_meta(paper),
                 'insight':paper_insight,
                 'topic':keywords[0] if keywords else '',

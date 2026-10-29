@@ -17425,3 +17425,34 @@ msgstr "En poste dans ce pays : %(country)s."
 
 msgid "No researcher found working in this country."
 msgstr "Aucun chercheur trouvé en poste dans ce pays."
+
+
+msgid "No scheduled expiration."
+msgstr "Aucune expiration programmée."
+
+msgid "Activated or renewed on %(activated)s. Expires on %(expires)s."
+msgstr "Activé ou renouvelé le %(activated)s. Expire le %(expires)s."
+
+msgid "Expired link."
+msgstr "Lien expiré."
+
+msgid "Less than a minute"
+msgstr "Moins d’une minute"
+
+msgid "Time remaining: %(remaining)s."
+msgstr "Temps restant : %(remaining)s."
+
+msgid "%(n)s day"
+msgid_plural "%(n)s days"
+msgstr[0] "%(n)s jour"
+msgstr[1] "%(n)s jours"
+
+msgid "%(n)s hour"
+msgid_plural "%(n)s hours"
+msgstr[0] "%(n)s heure"
+msgstr[1] "%(n)s heures"
+
+msgid "%(n)s minute"
+msgid_plural "%(n)s minutes"
+msgstr[0] "%(n)s minute"
+msgstr[1] "%(n)s minutes"

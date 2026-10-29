@@ -5,8 +5,8 @@ import datetime
 import secrets
 
 from django.http import Http404
-from django.utils import timezone
-from django.utils.translation import get_language
+from django.utils import formats, timezone
+from django.utils.translation import get_language, gettext as _, ngettext
 
 from .models import Generated
 
@@ -40,3 +40,38 @@ def shared_row(kind, token):
     if row is None or (row.share_expires and row.share_expires < timezone.now()):
         raise Http404
     return row
+
+
+def timing(expires, days=SHARE_DAYS, now=None):
+    """Last activation/renewal and remaining validity, including existing links.
+
+    All expiring links are set to now + their fixed lifetime when shared or
+    renewed. Subtracting that lifetime recovers that event, not initial creation.
+    """
+    if expires is None:
+        return _('No scheduled expiration.')
+    now = now or timezone.now()
+    def date(value):
+        local = timezone.localtime(value)
+        return '%s (%s)' % (formats.date_format(local, 'DATETIME_FORMAT'), local.tzname())
+    activated = expires - datetime.timedelta(days=days)
+    dates = _('Activated or renewed on %(activated)s. Expires on %(expires)s.') % {
+        'activated': date(activated), 'expires': date(expires)}
+    seconds = (expires - now).total_seconds()
+    if seconds <= 0:
+        return dates + ' ' + _('Expired link.')
+    minutes = int(seconds // 60)
+    if minutes < 1:
+        remaining = _('Less than a minute')
+    else:
+        d, rest = divmod(minutes, 1440)
+        h, m = divmod(rest, 60)
+        parts = []
+        if d:
+            parts.append(ngettext('%(n)s day', '%(n)s days', d) % {'n': d})
+        if h:
+            parts.append(ngettext('%(n)s hour', '%(n)s hours', h) % {'n': h})
+        if not d and m:
+            parts.append(ngettext('%(n)s minute', '%(n)s minutes', m) % {'n': m})
+        remaining = ', '.join(parts)
+    return dates + ' ' + _('Time remaining: %(remaining)s.') % {'remaining': remaining}

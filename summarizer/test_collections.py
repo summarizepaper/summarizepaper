@@ -401,6 +401,7 @@ class ShareAndWatchTests(CollectionsTestCase):
         self.assertEqual(copy.papers.get(arxiv_id='2101.00001v1').note, '')
         Collection.objects.filter(pk=collection.pk).update(share_expires=timezone.now() - datetime.timedelta(days=1))
         self.assertEqual(Client().get(url).status_code, 404)
+        self.assertContains(client.get('/en/collections/%d/' % collection.pk), 'Expired link.')
         client.post('/en/collections/%d/' % collection.pk, {'action': 'unshare'})
         self.assertEqual(Client().get(url).status_code, 404)
         self.assertEqual(Client().get('/en/collections/shared/x/').status_code, 404)

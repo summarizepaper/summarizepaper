@@ -23,7 +23,7 @@ from django.views.decorators.http import require_POST
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, assistant, citations, exports, sources
+from . import access, assistant, citations, exports, result_share, sources
 from .models import AIassistant, ArxivPaper, ChatConversation, ChatShare
 
 logger = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ def page(request):
         'table_columns': [str(label) for _, label in TABLE_COLUMNS],
         'table_allowed': access.has_tool(request.user, 'collections'),  # Premium, like the collections' tables
         'quota_left': quota_left(request),
-        'share': owned(ChatShare.objects.filter(room=room, active=True), request).first() if room else None,
+        'share': current_share(request, room),
     })
 
 
@@ -271,7 +271,7 @@ def share(request):
     link.expires = link.upto + datetime.timedelta(days=SHARE_DAYS)
     link.save()
     return JsonResponse({'url': request.build_absolute_uri('/%s/chat/shared/%s/' % (get_language(), link.token)),
-                         'expires': link.expires.date().isoformat()})
+                         'expires': link.expires.date().isoformat(), 'timing': result_share.timing(link.expires)})
 
 
 @require_POST
@@ -337,3 +337,8 @@ def rename_conversation(request, room):
                                         user=request.user if request.user.is_authenticated else None,
                                         ip_address=None if request.user.is_authenticated else access.hash_ip(access.client_ip(request)))
     return JsonResponse({'status': 'done', 'title': title})
+
+
+def current_share(request, room):
+    """The owner's last active link, including an expired one they can renew."""
+    return owned(ChatShare.objects.filter(room=room, active=True), request).first() if room else None

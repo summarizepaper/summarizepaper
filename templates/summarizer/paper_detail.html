@@ -1,4 +1,4 @@
-{% load i18n index dash_slash seo %}
+{% load i18n index dash_slash seo share_timing %}
 {% get_current_language as LANGUAGE_CODE %}
 <div id="paper-detail" data-paper="{{ arxiv_id }}" data-lang="{{ language }}" data-public="{{ public|yesno:'1,0' }}"
  data-user="{% if request.user.is_authenticated %}{{ request.user }} -{% else %}{% trans 'You -' %}{% endif %}"
@@ -6,7 +6,6 @@
  data-sources-url="{% url 'chat_sources' %}" data-quota-url="{% url 'chat_quota' %}"
  data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
  data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
- data-share-until="{% trans 'This link works until {date}.' %}"
  data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}" data-ask-again="{% trans 'Ask again' %}"
  data-sources="{% trans 'Sources' %}" data-stopped="{% trans 'Stopped.' %}"
  data-export-general="{% trans 'general knowledge' %}" data-export-not-found="{% trans 'passage not found: check' %}"
@@ -184,12 +183,12 @@
         <span class="spacer"></span>
         <button type="button" id="share-conversation"{% if not chathistory %} disabled{% endif %}><i class="fas fa-share-alt"></i> {% trans 'Share' %}</button>
       </div>
-      <div class="share-box" id="share-box" hidden>
-        <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %} <span id="share-expires"></span></p>
+      <div class="share-box" id="share-box"{% if not paper_share %} hidden{% endif %}>
+        <p>{% trans 'Anyone with this link can read this conversation as it is now, without knowing who asked. Your next questions stay private until you share again.' %} <span id="share-expires" role="status">{% if paper_share %}{% share_timing paper_share.expires %}{% endif %}</span></p>
         <div class="share-row">
-          <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}">
+          <input type="text" id="share-url" readonly aria-label="{% trans 'Link of the shared conversation' %}" value="{% if paper_share %}{{ request.scheme }}://{{ request.get_host }}{% url 'chat_shared' paper_share.token %}{% endif %}">
           <button type="button" id="share-copy">{% trans 'Copy' %}</button>
-          <button type="button" id="share-stop">{% trans 'Stop sharing' %}</button>
+          <button type="button" id="share-stop" data-token="{{ paper_share.token|default:'' }}">{% trans 'Stop sharing' %}</button>
         </div>
       </div>
       <form class="chatbot-form">

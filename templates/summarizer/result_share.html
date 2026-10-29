@@ -1,9 +1,10 @@
-{% load i18n %}
+{% load i18n share_timing %}
 {# The owner's read-only link to a finished result. Expects row, share_url and what (what the link shows). #}
 <section class="card section-card result-share" aria-labelledby="share-title">
   <h2 id="share-title">{% trans 'Share a read-only link' %}</h2>
+  {% if row.share_token %}<p class="muted" role="status">{% share_timing row.share_expires %}</p>{% endif %}
   {% if share_url %}
-    <p>{{ what }} {% blocktrans with d=row.share_expires|date:"j F Y" %}It works until {{ d }}.{% endblocktrans %}</p>
+    <p>{{ what }}</p>
     <div class="tool-row link-row">
       <input type="text" readonly value="{{ share_url }}" id="share-url" aria-label="{% trans 'Shared link' %}">
       <button type="button" class="btn btn-sm" data-copy="share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>

@@ -741,10 +741,10 @@ def leads(request):
         item.collectable = any(p.get('site_key') for p in item.snapshot['readings'])
     conference_talks(request.user, saved, lang)
     message = request.session.pop('student_message', None)
-    share = StudentLeadsShare.objects.filter(user=request.user, expires__gt=timezone.now()).first()
+    share = StudentLeadsShare.objects.filter(user=request.user).first()
     return render(request, 'summarizer/student_leads.html', {
         'old': sum((item.snapshot.get('version') or 0) < RESULT_VERSION for item in every),
-        'share': share, 'share_url': request.build_absolute_uri(reverse('student_leads_shared', kwargs={'token': share.token})) if share else '',
+        'share': share, 'share_url': request.build_absolute_uri(reverse('student_leads_shared', kwargs={'token': share.token})) if share and share.expires > timezone.now() else '',
         'shortlist': saved, 'paid': paid, 'total': every.count(), 'pipeline': [(k, label, counts[k]) for k, label in statuses],
         'status_filter': selected_status, 'due_filter': request.GET.get('due') == '1', 'status_choices': statuses,
         'saved_pk': request.session.pop('student_saved_id', None), 'message': LEAD_MESSAGES.get(message),

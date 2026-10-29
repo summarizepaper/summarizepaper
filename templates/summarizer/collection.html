@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n share_timing %}
 {% load static_version %}
 {% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
@@ -359,6 +359,7 @@
 
     {% if owner %}
     <h3>{% trans 'Share a read-only link' %}</h3>
+    {% if collection.share_token %}<p class="muted" role="status">{% share_timing collection.share_expires %}</p>{% endif %}
     {% if share_url %}
       <p>{% blocktrans with d=collection.share_expires|date:"j F Y" %}Anyone with this link sees the papers, the comparison table and the open questions, never who made the collection, and can copy the papers into a collection of theirs. It works until {{ d }}.{% endblocktrans %}{% if collection.share_notes %} {% trans 'Your notes are shown.' %}{% endif %}</p>
       <div class="tool-row link-row">

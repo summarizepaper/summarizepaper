@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n static_version %}
+{% load i18n static_version share_timing %}
 {% block title %}{% trans 'My leads' %}{% endblock %}
 {% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
@@ -44,8 +44,8 @@
   {% if total %}<section id="share" class="card section-card" style="scroll-margin-top:90px"><h2>{% trans 'Show my leads to a supervisor' %}</h2>
     <p>{% trans 'A read-only link to your leads and where each application stands, for a supervisor or a programme coordinator. Never your drafts, never your name; your notes only if you choose.' %}</p>
     {% if share %}
-      <p>{% blocktrans with d=share.expires|date:"j F Y" %}The link works until {{ d }}.{% endblocktrans %} {% if share.notes %}{% trans 'It shows your notes.' %}{% else %}{% trans 'It does not show your notes.' %}{% endif %}</p>
-      <div class="tool-row link-row"><input type="text" readonly value="{{ share_url }}" id="leads-share-url" aria-label="{% trans 'Shared link' %}"> <button type="button" class="btn btn-sm" data-copy="leads-share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button></div>
+      <p role="status">{% share_timing share.expires %} {% if share.notes %}{% trans 'It shows your notes.' %}{% else %}{% trans 'It does not show your notes.' %}{% endif %}</p>
+      {% if share_url %}<div class="tool-row link-row"><input type="text" readonly value="{{ share_url }}" id="leads-share-url" aria-label="{% trans 'Shared link' %}"> <button type="button" class="btn btn-sm" data-copy="leads-share-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button></div>{% endif %}
     {% endif %}
     <form method="post" action="{% url 'student_leads_share' %}" class="item-actions">{% csrf_token %}
       <label><input type="checkbox" name="notes" value="1"{% if share.notes %} checked{% endif %}> {% trans 'Include my private notes' %}</label>

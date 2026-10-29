@@ -365,6 +365,10 @@ class PageTests(ToolsTestCase):
         self.assertContains(page, '<meta property="og:description" content="The clouds are x thick.">')
         paper = Client().get('/en/paper/2101.00001v1/')
         self.assertContains(paper, 'id="share-conversation"')
+        self.assertContains(paper, 'Time remaining:')
+        self.assertContains(paper, url)
+        stranger = self.client_for(self.user('share-stranger'))
+        self.assertNotContains(stranger.get('/en/paper/2101.00001v1/'), url)
         self.assertContains(paper, '<textarea maxlength="6000"')
         self.assertContains(paper, 'id="stop-btn"')
 
@@ -432,6 +436,9 @@ class PageTests(ToolsTestCase):
         data = Client().post('/en/chat/share/', {'room': room}).json()
         link = ChatShare.objects.get()
         self.assertEqual(data['expires'], link.expires.date().isoformat())
+        self.assertIn('Activated or renewed on', data['timing'])
+        self.assertIn('Time remaining:', data['timing'])
+        self.assertContains(Client().get('/en/chat/?c=' + room), 'Time remaining:')
         self.assertEqual((link.expires - link.upto).days, chat_page.SHARE_DAYS)
         path = data['url'].split('testserver', 1)[1]
         self.assertEqual(Client().get(path).status_code, 200)

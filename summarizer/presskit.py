@@ -902,7 +902,9 @@ def share_context(request, row):
     """The reader's share link of this kit, and whether the kit changed since they shared it."""
     shared = share_row(row.key, request.user, row.lang) if row is not None else None
     url = result_share.shared_url(request, shared, 'press-kit') if shared else ''
-    return {'share_url': url, 'share_outdated': bool(url and shared.data().get('kit_updated') != row.updated.isoformat())}
+    return {'share_url': url,
+            'share_timing': result_share.timing(shared.share_expires) if shared and shared.share_token else '',
+            'share_outdated': bool(url and shared.data().get('kit_updated') != row.updated.isoformat())}
 
 
 def presskit_shared(request, token):
@@ -1015,7 +1017,8 @@ def presskit_share(request, arxiv_id):
         row.content = json.dumps(dict(kit.data(), kit_updated=kit.updated.isoformat()))
         row.save(update_fields=['content', 'updated'])
     result_share.act(row, 'unshare' if action == 'unshare' else 'share')
-    return JsonResponse({'status': 'ok', 'url': result_share.shared_url(request, row, 'press-kit')})
+    return JsonResponse({'status': 'ok', 'url': result_share.shared_url(request, row, 'press-kit'),
+                         'timing': result_share.timing(row.share_expires) if row.share_token else ''})
 
 
 EXPERTS_KIND = 'presskit_experts'
