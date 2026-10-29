@@ -11,7 +11,7 @@
     <div class="tool-output" id="reading-output"></div>
   </div>
 
-  <div class="tool-row">
+  <div class="tool-row" id="paper-collections" style="scroll-margin-top:90px">
     <span class="tool-label">{% trans 'Save to a collection' %}</span>
     {% if request.user.is_authenticated %}
       <select id="collection-pick" aria-label="{% trans 'Collection' %}">
@@ -45,7 +45,7 @@
     <span class="tool-status" id="zotero-status"></span>
   </div>
 
-  <div class="tool-row">
+  <div class="tool-row" id="paper-citations" style="scroll-margin-top:90px">
     <span class="tool-label">{% trans 'Citation alerts' %}</span>
     <button type="button" class="btn btn-sm btn-ghost" id="follow-go" data-following="{{ following|yesno:'1,0' }}">{% if following %}{% trans 'Stop following its citations' %}{% else %}{% trans 'Tell me who cites it' %}{% endif %}</button>
     <span class="tool-status" id="follow-status"></span>

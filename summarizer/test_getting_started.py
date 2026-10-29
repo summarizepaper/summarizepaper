@@ -90,6 +90,39 @@ class GettingStartedTests(TestCase):
             chat = self.client.get('/en/chat/', {'ids': paper.arxiv_id, 'tour': '1', 'tour_domain': slug})
             self.assertContains(chat, '/en/getting-started/?domain=%s#question' % slug)
 
+    def test_next_tools_keep_example_and_open_existing_forms_without_subscribing(self):
+        for slug, example in getting_started.EXAMPLES.items():
+            paper, _ = ArxivPaper.objects.get_or_create(arxiv_id=example['id'], defaults={'title':'Example ' + slug, 'license':self.paper.license})
+            PaperText.objects.get_or_create(arxiv_id=paper.arxiv_id, defaults={'source':'html','text':'Full text'})
+            for lang in ('fr','en'):
+                SummaryPaper.objects.get_or_create(paper=paper,lang=lang,defaults={'summary':'Ready summary'})
+                response = self.client.get('/%s/getting-started/' % lang, {'domain':slug})
+                soup = BeautifulSoup(response.content, 'html.parser')
+                links = soup.select('[data-guided-next-tools] a')
+                self.assertEqual([a['href'] for a in links], [
+                    '/%s/paper/%s/#paper-collections' % (lang,paper.arxiv_id),
+                    '/%s/paper/%s/#paper-citations' % (lang,paper.arxiv_id),
+                    '/%s/press-kit/%s/' % (lang,paper.arxiv_id), '/%s/tools/' % lang])
+                self.assertIsNone(soup.select_one('[data-guided-next-tools]').get('hidden'))
+        from .models import FollowedPaper, Collection
+        self.assertEqual(FollowedPaper.objects.count(),0)
+        self.assertEqual(Collection.objects.count(),0)
+
+    def test_chat_next_tools_only_follow_an_answer_about_the_guided_example(self):
+        from .models import AIassistant
+        user = User.objects.create_user('guided-reader')
+        self.client.force_login(user)
+        params = {'tour':'1','ids':self.paper.arxiv_id, 'c':'guided_room_test_1'}
+        response = self.client.get('/en/chat/',params)
+        soup = BeautifulSoup(response.content,'html.parser')
+        self.assertTrue(soup.select_one('[data-guided-next-tools]').has_attr('hidden'))
+        AIassistant.objects.create(user=user,arxiv_id=params['c'],papers=self.paper.arxiv_id,query='Question',response='Answer')
+        response = self.client.get('/en/chat/',params)
+        self.assertTrue(response.context['next_tools_ready'])
+        params['ids'] = '2501.00001v1'
+        self.assertFalse(self.client.get('/en/chat/',params).context['next_tools_ready'])
+        self.assertNotContains(self.client.get('/en/chat/'),'data-guided-next-tools')
+
     def test_unknown_domain_falls_back_without_selecting_arbitrary_papers(self):
         response = self.client.get('/en/getting-started/', {'domain': '//evil.test/paper'})
         self.assertEqual(response.context['paper'].pk, self.paper.pk)

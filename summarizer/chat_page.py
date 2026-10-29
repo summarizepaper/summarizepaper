@@ -102,9 +102,15 @@ def page(request):
         papers = last.split(',') if last else []
     asked = [i.strip().replace('/', '--') for i in request.GET.get('ids', '').split(',') if i.strip()]
     asked = [i for i in asked if ID_RE.match(i)][:assistant.MAX_PAPERS]
+    guided = request.GET.get('tour') == '1'
+    guided_domain = getting_started.domain(request.GET.get('tour_domain', ''))
+    next_paper = ArxivPaper.objects.filter(arxiv_id=getting_started.EXAMPLES[guided_domain]['id']).first() if guided else None
+    next_ready = bool(next_paper and next_paper.arxiv_id in (asked or papers) and any(
+        row.kind == 'answer' and row.response and next_paper.arxiv_id in (row.papers or '').split(',') for row in history))
     return render(request, 'summarizer/chat.html', {
-        'guided': request.GET.get('tour') == '1',
-        'guided_domain': getting_started.domain(request.GET.get('tour_domain', '')),
+        'next_tools_paper': next_paper, 'next_tools_ready': next_ready, 'next_tools_hidden': not next_ready,
+        'guided': guided,
+        'guided_domain': guided_domain,
         'room': room, 'chathistory': history, 'preset': preset_papers(list(dict.fromkeys(asked or papers))),
         'conversations': recent_conversations(request, room), 'max_nb_paper': assistant.MAX_PAPERS,
         'table_columns': [str(label) for _, label in TABLE_COLUMNS],

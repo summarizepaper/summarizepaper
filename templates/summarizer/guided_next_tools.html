@@ -1,0 +1,21 @@
+{% if next_tools_paper %}
+<section class="guided-next-tools" data-guided-next-tools data-paper="{{ next_tools_paper.arxiv_id }}" data-answered="{% if next_tools_ready %}1{% else %}0{% endif %}"{% if next_tools_hidden %} hidden{% endif %} aria-labelledby="guided-next-title">
+  <h2 id="guided-next-title">{% if LANGUAGE_CODE == 'fr' %}Que voulez-vous faire ensuite ?{% else %}What would you like to do next?{% endif %}</h2>
+  <p class="guided-next-paper">{% if LANGUAGE_CODE == 'fr' %}Pour l’article d’exemple :{% else %}For the example paper:{% endif %} <strong>{{ next_tools_paper.title }}</strong></p>
+  <div class="guided-next-grid">
+    <article><span class="guided-next-plan">{% if LANGUAGE_CODE == 'fr' %}Compte gratuit{% else %}Free account{% endif %}</span><h3>{% if LANGUAGE_CODE == 'fr' %}Le garder dans une collection{% else %}Keep it in a collection{% endif %}</h3>
+      <p>{% if LANGUAGE_CODE == 'fr' %}Regroupez cet article avec vos autres lectures pour le retrouver plus facilement.{% else %}Keep this paper with your other reading so you can find it again easily.{% endif %}</p>
+      <a href="{% url 'arxividpage' next_tools_paper.arxiv_id %}#paper-collections" data-funnel="getting_started_next_collection">{% if LANGUAGE_CODE == 'fr' %}Choisir une collection{% else %}Choose a collection{% endif %} →</a>
+    </article>
+    <article><span class="guided-next-plan">Premium</span><h3>{% if LANGUAGE_CODE == 'fr' %}Suivre ses citations{% else %}Follow its citations{% endif %}</h3>
+      <p>{% if LANGUAGE_CODE == 'fr' %}Retrouvez l’action qui permet d’être averti quand de nouveaux articles le citent.{% else %}Find the option to be notified when new papers cite this one.{% endif %}</p>
+      <a href="{% url 'arxividpage' next_tools_paper.arxiv_id %}#paper-citations" data-funnel="getting_started_next_citations">{% if LANGUAGE_CODE == 'fr' %}Configurer une alerte{% else %}Set up an alert{% endif %} →</a>
+    </article>
+    <article><span class="guided-next-plan">Premium+</span><h3>{% if LANGUAGE_CODE == 'fr' %}Communiquer sur cet article{% else %}Communicate about this paper{% endif %}</h3>
+      <p>{% if LANGUAGE_CODE == 'fr' %}Découvrez le kit de presse : présentation des résultats, questions aux auteurs et points de vigilance.{% else %}Explore the press kit: a presentation of the findings, questions for authors and points to watch.{% endif %}</p>
+      <a href="{% url 'presskit' next_tools_paper.arxiv_id %}" data-funnel="getting_started_next_presskit">{% if LANGUAGE_CODE == 'fr' %}Découvrir le kit de presse{% else %}Explore the press kit{% endif %} →</a>
+    </article>
+  </div>
+  <a class="guided-next-all" href="{% url 'tools' %}" data-funnel="getting_started_next_all">{% if LANGUAGE_CODE == 'fr' %}Explorer tous les outils{% else %}Explore all tools{% endif %} →</a>
+</section>
+{% endif %}

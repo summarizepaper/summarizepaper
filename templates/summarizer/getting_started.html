@@ -2,6 +2,7 @@
 {% block title %}{% if LANGUAGE_CODE == 'fr' %}Vos premiers pas avec SummarizePaper{% else %}Get started with SummarizePaper{% endif %}{% endblock %}
 {% block extra_head_tags %}
 <link rel="stylesheet" href="{% static_v 'summarizer/css/getting-started.css' %}">
+<link rel="stylesheet" href="{% static_v 'summarizer/css/guided-next-tools.css' %}">
 {% include 'summarizer/mathjax.html' %}{% include 'summarizer/chat_rendering.html' %}
 <script defer src="{% static_v 'summarizer/js/getting-started.js' %}"></script>
 {% endblock %}
@@ -70,6 +71,7 @@
       <p class="muted">{% if LANGUAGE_CODE == 'fr' %}L’ouverture n’envoie aucune question. Les limites quotidiennes habituelles s’appliquent quand vous utilisez l’assistant.{% else %}Opening the chat does not send a question. Your usual daily limits apply when you use the assistant.{% endif %}</p>
     </form>
     <a class="getting-started-help" href="/{{ LANGUAGE_CODE }}/guides/how-to-chat-with-research-papers/">{% if LANGUAGE_CODE == 'fr' %}Comment vérifier les réponses et leurs sources ?{% else %}How do I check answers and their sources?{% endif %}</a>
+    {% include 'summarizer/guided_next_tools.html' with next_tools_paper=paper %}
   </section>
   {% else %}
   <section class="getting-started-panel"><h2>{% if LANGUAGE_CODE == 'fr' %}L’exemple est momentanément indisponible{% else %}The example is temporarily unavailable{% endif %}</h2><p>{% if LANGUAGE_CODE == 'fr' %}Vous pouvez commencer avec un article de votre choix ou découvrir les outils dans nos guides illustrés.{% else %}You can start with your own paper or explore our illustrated guides.{% endif %}</p><a class="btn" href="{% url 'summarize' %}">{% if LANGUAGE_CODE == 'fr' %}Choisir un article{% else %}Choose a paper{% endif %}</a> <a href="{% url 'guides' %}">{% if LANGUAGE_CODE == 'fr' %}Voir les guides{% else %}Browse the guides{% endif %}</a></section>

@@ -14,6 +14,13 @@
     var domain = ['astronomy', 'biology', 'computing'].includes(T.guidedDomain) ? T.guidedDomain : 'astronomy';
     try {if (window.umami) Promise.resolve(window.umami.track(name, {domain:domain})).catch(function () {});} catch (_) {}
   }
+  var guidedNextTools = root.querySelector('[data-guided-next-tools]');
+  var lastQuestionIds = [];
+  function updateGuidedNextTools(answered) {
+    if (!guidedNextTools) return;
+    if (answered) guidedNextTools.dataset.answered = '1';
+    guidedNextTools.hidden = guidedNextTools.dataset.answered !== '1' || !readyIds().includes(guidedNextTools.dataset.paper);
+  }
   var MAX = Number(T.max) || 10;
   var WS = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
   var $ = function (selector) {return root.querySelector(selector);};
@@ -392,6 +399,7 @@
       link.href = T.exportUrl.replace('FMT', link.dataset.export) + '?ids=' + encodeURIComponent(ids);
     });
     markResults();
+    updateGuidedNextTools(false);
     updateUrl();
     composer();
     clearTimeout(sourcesTimer);
@@ -500,6 +508,7 @@
     loading.style.display = 'none';
     if (response) {
       guidedTrack('getting_started_answer_view');
+      updateGuidedNextTools(guidedNextTools && lastQuestionIds.includes(guidedNextTools.dataset.paper));
       actions(response, lastQuestion);
       tools.linkTags(response, tagLinks());
       refreshQuota();
@@ -525,6 +534,7 @@
     if (!question || busy || sendButton.disabled) return;
     guidedTrack('getting_started_question_sent');
     lastQuestion = question;
+    lastQuestionIds = ids.slice();
     asked(question, ids);
     input.value = '';
     grow();
@@ -594,7 +604,8 @@
     if (socket) {var old = socket; socket = null; old.close();}
     room = newRoom();
     busy = false; queue = []; currentResponse = null; pendingFigures = null; checking = {}; currentTable = null;
-    lastPapers = null;
+    lastPapers = null; lastQuestionIds = [];
+    if (guidedNextTools) {guidedNextTools.dataset.answered = '0'; guidedNextTools.hidden = true;}
     shareBox.hidden = true;
     messages.replaceChildren();
     finish(null);
@@ -620,6 +631,7 @@
     if (busy || tableToggle.disabled) return;
     builder.hidden = true;
     lastQuestion = '';
+    lastQuestionIds = ids.slice();
     asked(T.tableTitle + ': ' + columns.join(' · '), ids);
     var element = node('div', 'chatbot-response chat-table-block');
     messages.appendChild(element);

@@ -7,6 +7,7 @@
 {% block title %} {% trans 'Chat with Arxiv Papers - Ask Any Questions You Like!' %} {% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Welcome to Chat with Arxiv Papers, where you can engage in interactive conversations with one or several academic papers from the Arxiv preprint repository. Our innovative platform allows you to pose any questions you may have about the research, methodology, or findings presented in the papers, and receive immediate responses from our intelligent chatbot powered by state-of-the-art language models. Whether you are a student, researcher, or simply curious about the latest developments in your field of interest, Chat with Arxiv Papers offers a unique opportunity to explore cutting-edge research in a conversational and engaging way. Try it now and discover a new world of knowledge at your fingertips!' %}" />
+  {% if guided %}<link rel="stylesheet" href="{% static_v 'summarizer/css/guided-next-tools.css' %}">{% endif %}
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/chat/" />
 
   {% include 'summarizer/mathjax.html' %}
@@ -330,6 +331,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
     </div>
   </div>
 </div>
+{% if guided %}{% include 'summarizer/guided_next_tools.html' %}{% endif %}
 <a id="chatbot-toggle" href="#">{% trans 'AI assistant instructions?' %}</a>
 <div class="chatbot-instructions" style="display: none;">
   <ol>
