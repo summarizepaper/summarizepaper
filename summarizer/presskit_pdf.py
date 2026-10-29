@@ -40,7 +40,7 @@ def outline(paper, row, publication=None, role=None, editorial=None, experts=Non
               'excerpt': _('Source read: partial text. The analysis does not cover the entire paper.'),
               'unknown': _('Legacy kit: the exact source scope was not recorded. Enrich the kit to record it.')}
     add('warn', scopes.get(scope, scopes['unknown']))
-    add('meta', _('Peer-review status is not independently confirmed. A journal reference alone does not establish it.'))
+    add('meta', publication_status.peer_review_text(publication))
     add('meta', source.get('journal_ref'))
     add('meta', 'DOI: ' + source['doi'] if source.get('doi') else '')
     add('note', _('AI-assisted brief. Verify facts, interpretation and quotations against the original paper before publication.'))
@@ -135,7 +135,7 @@ def outline(paper, row, publication=None, role=None, editorial=None, experts=Non
         for reference in publication.get('sources', []):
             add('meta', reference['name'] + ': ' + reference['detail'])
             add('link', reference['url'], reference['url'])
-        add('note', _('A publication record does not independently establish peer review. No publication found does not mean the manuscript is unpublished; private submission and review decisions may be inaccessible.'))
+        add('note', publication_status.peer_review_text(publication))
     if editorial:
         add('h', _('From the weekly letter'))
         add('h3', editorial['heading'])

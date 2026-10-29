@@ -13,7 +13,7 @@ from django.utils.translation import gettext as _
 from pylatexenc.latex2text import LatexNodes2Text
 
 from . import digest, generated, sources
-from .models import Generated
+from .models import Generated, PaperText
 
 KIND = 'presskit_status'
 TTL = datetime.timedelta(days=1)
@@ -28,7 +28,43 @@ def normalized(value):
 
 def latest(paper_id, kit=None):
     row = Generated.objects.filter(kind=KIND, key=paper_id, lang='en').first()
-    return (row.data() if row and row.content else None) or (kit or {}).get('publication_status')
+    report = (row.data() if row and row.content else None) or (kit or {}).get('publication_status')
+    return with_peer_review(paper_id, report)
+
+
+# Verified policy, limited to article types explicitly covered by this journal.
+# Editorials, News & Views and a journal name declared on arXiv are insufficient.
+NATURE_ASTRONOMY_POLICY = 'https://www.nature.com/natastron/editorial-policies/peer-review'
+
+
+def with_peer_review(paper_id, report):
+    if not report or report.get('status') != 'published':
+        return report
+    doi = sources.clean_doi(report.get('doi', ''))
+    if normalized(report.get('journal')) != 'nature astronomy' or not re.fullmatch(r'10\.1038/s41550-\d{3,4}-\d{4,6}-[a-z0-9]+', doi):
+        return report
+    row = PaperText.objects.filter(arxiv_id=paper_id, source='pdf').first()
+    if row is None:
+        return report
+    # Match the publisher's masthead, not a type word in our metadata or prose.
+    text = row.text
+    marker = re.search(r'(?im)^\s*nature astronomy\s*\n+\s*(Article|Analysis|Review|Perspective|Matters Arising)\s*\n+\s*https://doi\.org/([^\s]+)', text[:3000])
+    if not marker or sources.clean_doi(marker.group(2)) != doi:
+        return report
+    report = dict(report, peer_review='journal_policy', article_type=marker.group(1),
+                  peer_review_policy=NATURE_ASTRONOMY_POLICY)
+    report['sources'] = list(report.get('sources') or [])
+    if not any(source.get('kind') == 'peer_review_policy' for source in report['sources']):
+        report['sources'].append({'name': 'Nature Astronomy · peer-review policy',
+            'url': NATURE_ASTRONOMY_POLICY, 'kind': 'peer_review_policy',
+            'detail': peer_review_text(report)})
+    return report
+
+
+def peer_review_text(report):
+    if (report or {}).get('peer_review') == 'journal_policy':
+        return _("Peer-reviewed article, according to the journal's policy for this article type.")
+    return _('Peer-review status could not be determined from the available information.')
 
 
 def stale(report, age=TTL):
@@ -155,7 +191,7 @@ def apply_work(report, work):
 def for_generation(paper):
     report = latest(paper.arxiv_id)
     if stale(report):
-        report = lookup(paper)
+        report = with_peer_review(paper.arxiv_id, lookup(paper))
         Generated.objects.update_or_create(kind=KIND, key=paper.arxiv_id, lang='en',
             defaults={'status': 'done', 'content': json.dumps(report)})
     return report
@@ -193,4 +229,5 @@ def display_context(report):
         checked = datetime.datetime.fromisoformat(report['checked_at'])
     except (TypeError, KeyError, ValueError):
         checked = None
-    return {'publication': report, 'publication_label': description(report), 'publication_checked_at': checked}
+    return {'publication': report, 'publication_label': description(report), 'publication_checked_at': checked,
+            'publication_peer_review': peer_review_text(report)}

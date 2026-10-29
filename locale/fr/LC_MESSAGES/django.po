@@ -17456,3 +17456,13 @@ msgid "%(n)s minute"
 msgid_plural "%(n)s minutes"
 msgstr[0] "%(n)s minute"
 msgstr[1] "%(n)s minutes"
+
+
+msgid "Peer-reviewed article, according to the journal's policy for this article type."
+msgstr "Article évalué par les pairs, conformément à la politique de la revue pour ce type d’article."
+
+msgid "Peer-review status could not be determined from the available information."
+msgstr "Le statut de l’évaluation par les pairs n’a pas pu être déterminé à partir des informations disponibles."
+
+msgid "Journal peer-review policy"
+msgstr "Politique d’évaluation par les pairs de la revue"

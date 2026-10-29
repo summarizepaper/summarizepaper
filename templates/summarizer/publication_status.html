@@ -6,7 +6,7 @@
 <p class="muted">{% trans 'Checked at' %} {{ publication_checked_at|date:"j F Y H:i T" }}{% if publication.checked_sources %} · {% trans 'Sources queried' %}: {{ publication.checked_sources|join:', ' }}{% endif %}</p>
 {% if publication.unavailable %}<p class="error">{% trans 'Some sources were unavailable' %}: {{ publication.unavailable|join:', ' }}. {% trans 'The verification may be incomplete.' %}</p>{% endif %}
 {% if publication.sources %}<ul>{% for source in publication.sources %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.name }}</a> — {{ source.detail }}</li>{% endfor %}</ul>{% endif %}
-<p class="muted">{% trans 'A publication record does not independently establish peer review. No publication found does not mean the manuscript is unpublished; private submission and review decisions may be inaccessible.' %}</p>
+<p class="muted">{{ publication_peer_review }}{% if publication.peer_review_policy %} <a href="{{ publication.peer_review_policy }}" target="_blank" rel="noopener noreferrer">{% trans 'Journal peer-review policy' %}</a>{% endif %}</p>
 {% else %}
 <p class="muted">{% trans 'We will check the latest arXiv record and Crossref publication metadata. This does not regenerate the kit.' %}</p>
 {% endif %}

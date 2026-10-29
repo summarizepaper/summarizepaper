@@ -165,3 +165,52 @@ class PublicationKitTests(ToolsTestCase):
         self.assertEqual(client.post(self.base+'publication/start/').status_code,403)
         with mock.patch.object(status,'lookup',return_value=report()):
             self.assertEqual(client.post(self.base+'publication/start/',HTTP_X_CSRFTOKEN=client.cookies['csrftoken'].value).status_code,200)
+
+
+class JournalPeerReviewTests(ToolsTestCase):
+    DOI = '10.1038/s41550-026-03004-3'
+    KEY = 'doi_10.1038--s41550-026-03004-3'
+
+    def setUp(self):
+        from .models import PaperText
+        super().setUp()
+        self.paper_obj = self.paper(arxiv_id=self.KEY)
+        self.text = PaperText.objects.create(arxiv_id=self.KEY, source='pdf',
+            text='Title: Some metadata\n    nature astronomy\n\nArticle\n\nhttps://doi.org/' + self.DOI + '\n\nResearch content.')
+        self.report = report(journal='Nature Astronomy', doi=self.DOI)
+
+    def test_publisher_type_and_policy_establish_peer_review(self):
+        result = status.with_peer_review(self.KEY, self.report)
+        self.assertEqual(result['peer_review'], 'journal_policy')
+        self.assertEqual(result['article_type'], 'Article')
+        self.assertEqual(result['peer_review_policy'], status.NATURE_ASTRONOMY_POLICY)
+        self.assertEqual(self.report['peer_review'], 'not_independently_verified')
+        self.assertEqual(len(status.with_peer_review(self.KEY, result)['sources']), 2)
+        with translation.override('fr'):
+            self.assertIn('Article évalué par les pairs', status.peer_review_text(result))
+
+    def test_journal_name_alone_editorial_or_another_doi_do_not_suffice(self):
+        for text, origin in [('nature astronomy\nNews & Views\nhttps://doi.org/' + self.DOI, 'pdf'),
+                             ('nature astronomy\nArticle\nhttps://doi.org/10.1038/s41550-026-99999-1', 'pdf'),
+                             ('Abstract mentioning Nature Astronomy and Article', 'pdf'),
+                             (self.text.text, 'abstract')]:
+            with self.subTest(text=text, origin=origin):
+                self.text.text, self.text.source = text, origin
+                self.text.save()
+                self.assertEqual(status.with_peer_review(self.KEY, self.report)['peer_review'], 'not_independently_verified')
+        self.assertEqual(status.with_peer_review(self.KEY, dict(self.report, status='preprint'))['peer_review'], 'not_independently_verified')
+
+    def test_cached_reports_and_page_exports_use_the_policy(self):
+        from django.template.loader import render_to_string
+        from . import presskit_pdf
+        Generated.objects.create(kind=status.KIND, key=self.KEY, lang='en', status='done', content=json.dumps(self.report))
+        enriched = status.latest(self.KEY)
+        context = status.display_context(enriched)
+        page = render_to_string('summarizer/publication_status.html', context)
+        self.assertIn('Peer-reviewed article', page)
+        self.assertNotIn('does not independently establish', page)
+        row = Generated.objects.create(kind='presskit', key=self.KEY, lang='en', status='done', content=json.dumps({'headline': 'Test'}))
+        exported = '\n'.join(line[1] for line in presskit_pdf.outline(self.paper_obj, row, publication=enriched))
+        self.assertIn('Peer-reviewed article', exported)
+        self.assertNotIn('not independently confirmed', exported)
+        self.assertEqual(status.for_generation(self.paper_obj)['peer_review'], 'journal_policy')

@@ -121,7 +121,9 @@ Use the publication_check metadata to establish what has already been checked, w
 Do not ask a generic question about editorial/publication status if a publication has been found.
 Instead ask about remaining uncertainty: the version to cite, subsequent corrections, data, or changes between versions.
 For a declaration on arXiv, say it is author-declared, not independently confirmed. Missing records do not prove non-publication.
-A journal reference alone does not establish peer review. Missing disclosure is unknown, not proof of no conflict.
+A journal reference alone does not establish peer review. When publication_check.peer_review is journal_policy,
+peer review is established from the publisher PDF's article type and the journal's linked policy: state this explicitly,
+and do not repeat that peer review is unverified. Missing disclosure is unknown, not proof of no conflict.
 Explain absolute effects, sample sizes, uncertainty, comparison groups and causal limits when the source supports them.
 Distinguish measured results, simulations, associations and speculation. Never turn association into causation.
 For abstract-only or partial sources, explicitly limit the analysis to those sources. Do not claim to have read more.

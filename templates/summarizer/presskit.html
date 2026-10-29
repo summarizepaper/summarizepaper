@@ -306,7 +306,7 @@
       <h2>{% trans 'Source and verification status' %}</h2>
       <p><a href="{{ kit.source.url }}" rel="noopener noreferrer" target="_blank">{{ kit.source.paper_id }}</a>{% if kit.source.published %} · {{ kit.source.published }}{% endif %}</p>
       <p>{% if kit.source.scope == 'abstract' %}{% trans 'Source read: abstract only.' %}{% elif kit.source.scope == 'excerpt' %}{% trans 'Source read: partial text. The analysis does not cover the entire paper.' %}{% else %}{% trans 'Source read: available full text.' %}{% endif %}</p>
-      <p class="muted">{% if kit.source.journal_ref %}{{ kit.source.journal_ref }} · {% endif %}{% trans 'Peer-review status is not independently confirmed. A journal reference alone does not establish it.' %}</p>
+      <p class="muted">{% if kit.source.journal_ref %}{{ kit.source.journal_ref }} · {% endif %}{{ publication_peer_review }}</p>
     </section>
     {% endif %}
     </div>
