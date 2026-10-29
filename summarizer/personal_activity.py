@@ -23,10 +23,17 @@ def record_visit(user, arxiv_id):
         PaperVisit.objects.update_or_create(user=user, paper=paper, defaults={'visited': timezone.now()})
 
 
+def search_path(text):
+    try:
+        return urlsplit(text).path if '://' in text else text
+    except ValueError:
+        return text  # malformed pasted URLs remain ordinary search text
+
+
 def paper_matches(query):
     """Local search only: pasted identifiers never trigger a remote lookup."""
     text = unquote(query).strip()
-    path = urlsplit(text).path if '://' in text else text
+    path = search_path(text)
     paper_key = re.search(r'/paper/([^/?#]+)', path)
     if paper_key:
         text = paper_key.group(1)
@@ -35,7 +42,7 @@ def paper_matches(query):
     doi = sources.clean_doi(text)
     if doi and not doi.startswith('10.48550/arxiv.'):
         return ArxivPaper.objects.filter(Q(arxiv_id__iexact=sources.doi_key(doi)) | Q(link_doi__icontains=doi))
-    arxiv_text = urlsplit(text).path if '://' in text else text
+    arxiv_text = search_path(text)
     arxiv = re.search(r'(?:^|arxiv:|/abs/|/pdf/|arxiv\.)(\d{4}\.\d{4,5}(?:v\d+)?|[a-z-]+(?:/|--)\d{7}(?:v\d+)?)(?:\.pdf)?/?$', arxiv_text, re.I)
     if arxiv:
         identifier = re.sub(r'v\d+$', '', arxiv.group(1), flags=re.I).replace('/', '--')

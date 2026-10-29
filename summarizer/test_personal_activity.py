@@ -148,3 +148,9 @@ class ActivityTests(ToolsTestCase):
         self.assertContains(response, 'Aujourd’hui')
         response = self.client.get('/fr/history/', {'q': '<script>alert(1)</script>'})
         self.assertNotContains(response, '<script>alert(1)</script>')
+
+    def test_malformed_pasted_link_is_a_normal_empty_search(self):
+        for tab in ('readings', 'conversations'):
+            response = self.client.get('/en/history/', {'tab': tab, 'q': 'https://[arxiv.org'})
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'No matching activity')
