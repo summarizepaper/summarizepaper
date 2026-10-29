@@ -18,20 +18,17 @@ function harness(hash = '', domain = 'biology') {
   const headings = names.map(() => new Element());
   const next = [new Element({next: 'figures'}), new Element({next: 'question'})];
   const nav = new Element(), suggestions = new Element(), gallery = new Element();
-  const evidence = new Element(), verify = new Element(), status = new Element(), summary = new Element();
+  const evidence = new Element();
   const input = new Element(); input.value = 'Original draft';
   const choices = [new Element({question: 'Draft about Figure 2'})];
-  status.hidden = true;
   const root = {dataset: {domain}, querySelector(selector) {
     if (selector.startsWith('#step-')) return headings[names.indexOf(selector.split(' ')[0].slice(6))];
     return {'.getting-started-steps':nav, '.getting-started-suggestions':suggestions,
-      '.chat-figures':gallery, '#walkthrough-evidence':evidence, '[data-verify]':verify,
-      '.getting-started-exercise-status':status, 'textarea':input}[selector];
+      '.chat-figures':gallery, 'textarea':input}[selector];
   }, querySelectorAll(selector) {
     return {'[data-panel]':panels, '[data-step]':buttons, '[data-next]':next,
-      '.getting-started-suggestions [data-question]':choices}[selector];
+      '.getting-started-suggestions [data-question]':choices, '.getting-started-evidence':[evidence]}[selector];
   }};
-  evidence.querySelector = () => summary;
   const events = {}, tracks = [];
   const location = {get hash() {return hash;}, set hash(value) {hash = value.startsWith('#') ? value : '#' + value;}};
   const window = {addEventListener: (name, fn) => events[name] = fn,
@@ -39,7 +36,7 @@ function harness(hash = '', domain = 'biology') {
   vm.runInNewContext(fs.readFileSync('static/summarizer/js/getting-started.js', 'utf8'), {
     document: {querySelector: () => root}, location, window, Promise,
   });
-  return {panels, buttons, headings, next, nav, gallery, evidence, verify, status, summary, input, choices, tracks,
+  return {panels, buttons, headings, next, nav, gallery, evidence, input, choices, tracks,
     change() {events.hashchange();}};
 }
 
@@ -68,17 +65,15 @@ test('a return link opens and scrolls to the right step; unknown hashes fall bac
   assert.equal(invalid.panels[0].hidden, false);
 });
 
-test('source exercise opens the quotation and tracks an actual opening once without sending the draft', () => {
+test('source disclosures stay in place and track one actual opening without sending the draft', () => {
   const h = harness();
-  assert.equal(h.status.hidden, true);
-  h.verify.fire('click');
-  assert.equal(h.evidence.open, true);
-  assert.equal(h.evidence.scrolled.block, 'center');
-  h.evidence.fire('toggle'); h.evidence.fire('toggle');
-  assert.equal(h.status.hidden, false);
+  h.evidence.open = false; h.evidence.fire('toggle');
+  assert.equal(h.tracks.filter(t => t.name === 'getting_started_source_open').length, 0);
+  h.evidence.open = true; h.evidence.fire('toggle'); h.evidence.fire('toggle');
   const opened = h.tracks.filter(t => t.name === 'getting_started_source_open');
   assert.equal(opened.length, 1);
   assert.deepEqual(opened[0].data, {step:'summary', domain:'biology'});
+  assert.equal(h.evidence.scrolled, undefined);
   assert.equal(h.input.value, 'Original draft');
   assert.doesNotMatch(JSON.stringify(h.tracks), /Original draft|Draft about/);
 });

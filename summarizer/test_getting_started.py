@@ -82,7 +82,9 @@ class GettingStartedTests(TestCase):
             self.text.save()
             response = self.client.get('/en/getting-started/')
             self.assertContains(response, 'id="walkthrough-evidence"')
-            self.assertContains(response, 'Show its source')
+            self.assertContains(response, 'Read the original passage')
+            self.assertContains(response, 'Our AI has summarized the full text')
+            self.assertNotContains(response, 'data-verify')
             self.assertContains(response, quote)
             self.assertNotIn('exercise', data['findings'][0])
             data['abstract_only'] = True

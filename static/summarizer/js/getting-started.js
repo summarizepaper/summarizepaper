@@ -36,22 +36,15 @@
   root.querySelectorAll('.getting-started-suggestions [data-question]').forEach(function (button) {
     button.addEventListener('click', function () {var input = root.querySelector('textarea'); input.value = button.dataset.question; input.focus();});
   });
-  var evidence = root.querySelector('#walkthrough-evidence');
-  var verify = root.querySelector('[data-verify]');
-  if (evidence && verify) {
-    var seen = false;
-    verify.hidden = false;
-    verify.addEventListener('click', function () {
-      evidence.open = true;
-      evidence.querySelector('summary').focus({preventScroll:true});
-      evidence.scrollIntoView({block:'center', behavior:'auto'});
-    });
+  var sourceOpened = false;
+  root.querySelectorAll('.getting-started-evidence').forEach(function (evidence) {
     evidence.addEventListener('toggle', function () {
-      if (!evidence.open) return;
-      root.querySelector('.getting-started-exercise-status').hidden = false;
-      if (!seen) {seen = true; track('getting_started_source_open', 'summary');}
+      if (evidence.open && !sourceOpened) {
+        sourceOpened = true;
+        track('getting_started_source_open', 'summary');
+      }
     });
-  }
+  });
   window.addEventListener('hashchange', function () {show(location.hash.slice(1), true);});
   // A return from the chat or a shared step link should also open at the actual step.
   show(location.hash.slice(1), steps.includes(location.hash.slice(1)));
