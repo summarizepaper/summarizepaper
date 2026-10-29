@@ -1,0 +1,17 @@
+{% load i18n %}
+{% if reading_formats %}
+<section class="getting-started-reading" aria-labelledby="discovery-read-further" data-reading-widget>
+  <h3 id="discovery-read-further">{% if LANGUAGE_CODE == 'fr' %}Aller plus loin{% else %}Read further{% endif %}</h3>
+  <p>{% if LANGUAGE_CODE == 'fr' %}Un même papier, plusieurs façons de le lire. Essayez les résumés, les points clés et le blog générés par notre IA, puis comparez-les à l’abstract des auteurs.{% else %}One paper, several ways to read it. Explore our AI-generated summaries, key points and blog, then compare them with the authors’ abstract.{% endif %}</p>
+  <div class="getting-started-reading-tabs" role="tablist" aria-label="{% if LANGUAGE_CODE == 'fr' %}Formats de lecture{% else %}Reading formats{% endif %}" hidden>
+  {% for format in reading_formats %}<button type="button" role="tab" id="reading-tab-{{ format.key }}" aria-controls="reading-panel-{{ format.key }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" tabindex="{% if forloop.first %}0{% else %}-1{% endif %}" data-reading="{{ format.key }}">{{ format.label }}</button>{% endfor %}
+  </div>
+  {% for format in reading_formats %}
+  <section class="getting-started-reading-panel" id="reading-panel-{{ format.key }}" role="tabpanel" aria-labelledby="reading-tab-{{ format.key }}" tabindex="0" data-reading-panel="{{ format.key }}">
+    <h4>{{ format.label }}</h4><p class="getting-started-reading-description">{{ format.description }}</p>
+    <div class="getting-started-reading-content">{{ format.html|safe }}</div>
+  </section>
+  {% endfor %}
+  <a class="getting-started-help" href="{% url 'arxividpage' paper.arxiv_id %}#results" data-funnel="getting_started_read_further_open">{% if LANGUAGE_CODE == 'fr' %}Ouvrir la fiche complète de l’article{% else %}Open the full paper page{% endif %} →</a>
+</section>
+{% endif %}

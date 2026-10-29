@@ -27,18 +27,24 @@
   </nav>
   <section class="getting-started-panel" id="step-summary" data-panel="summary" aria-labelledby="summary-heading">
     <p class="getting-started-kicker">01 / {% if LANGUAGE_CODE == 'fr' %}Comprendre{% else %}Understand{% endif %}</p>
-    <h2 id="summary-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Les résultats à retenir{% else %}The findings to take away{% endif %}</h2>
+    <h2 id="summary-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Comprendre la fiche d’un article{% else %}Understand a paper page{% endif %}</h2>
 
-    <p class="getting-started-intro">{% if LANGUAGE_CODE == 'fr' %}Notre IA a résumé le texte intégral de cet article. Voici les principaux résultats qu’elle en a extraits.{% else %}Our AI has summarized the full text of this paper. Here are the main findings it extracted.{% endif %}</p>
+    <p class="getting-started-intro">{% if LANGUAGE_CODE == 'fr' %}Notre IA a résumé le texte intégral de cet article. La fiche présente d’abord l’essentiel : la question, la méthode, les résultats et les limites. Vous pouvez ensuite approfondir avec plusieurs formats de lecture.{% else %}Our AI has summarized the full text of this paper. The page starts with the essentials: the question, method, findings and limitations. You can then explore several reading formats.{% endif %}</p>
     <div class="getting-started-summary">
-    {% if insight %}<p><strong>{{ insight.tldr }}</strong></p>
+    {% if insight %}<h3>{% if LANGUAGE_CODE == 'fr' %}L’essentiel{% else %}The essentials{% endif %}</h3><p><strong>{{ insight.tldr }}</strong></p>
+    <div class="getting-started-essentials-grid">
+      {% if insight.question %}<section aria-labelledby="discovery-research-question"><h4 id="discovery-research-question">{% if LANGUAGE_CODE == 'fr' %}Question{% else %}Question{% endif %}</h4><p>{{ insight.question }}</p></section>{% endif %}
+      {% if insight.method %}<section aria-labelledby="discovery-method"><h4 id="discovery-method">{% if LANGUAGE_CODE == 'fr' %}Méthode{% else %}Method{% endif %}</h4><p>{{ insight.method }}</p></section>{% endif %}
+    </div>
+    <h4>{% if LANGUAGE_CODE == 'fr' %}Résultats{% else %}Findings{% endif %}</h4>
     {% if evidence_exercise %}<p class="getting-started-source-help">{% if LANGUAGE_CODE == 'fr' %}Pour vérifier un résultat, cliquez sur <strong>« Lire le passage original »</strong> juste en dessous. L’extrait s’ouvre sur cette page, dans la langue de l’article : comparez-le au résultat résumé par l’IA.{% else %}To check a finding, click <strong>“Read the original passage”</strong> directly underneath it. The excerpt opens on this page, in the paper’s original language: compare it with the AI summary.{% endif %}</p>{% endif %}
-    <ul>{% for item in insight.findings|slice:':3' %}<li{% if item.exercise %} class="getting-started-exercise-finding"{% endif %}><span class="getting-started-claim">{% if item.kind == 'result' %}{% if LANGUAGE_CODE == 'fr' %}Résultat{% else %}Finding{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Interprétation des auteurs{% else %}Authors’ interpretation{% endif %}{% endif %}</span> {{ item.text }}
+    <ul>{% for item in insight.findings %}<li{% if item.exercise %} class="getting-started-exercise-finding"{% endif %}><span class="getting-started-claim">{% if item.kind == 'result' %}{% if LANGUAGE_CODE == 'fr' %}Résultat{% else %}Finding{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Interprétation des auteurs{% else %}Authors’ interpretation{% endif %}{% endif %}</span> {{ item.text }}
     {% if item.quote %}<details class="getting-started-evidence"{% if item.exercise %} id="walkthrough-evidence"{% endif %}><summary>{% if LANGUAGE_CODE == 'fr' %}Lire le passage original{% else %}Read the original passage{% endif %}</summary><p class="getting-started-quote-label">{% if LANGUAGE_CODE == 'fr' %}Extrait de l’article original :{% else %}Excerpt from the original paper:{% endif %}</p><blockquote>{{ item.quote }}</blockquote></details>{% endif %}</li>{% endfor %}</ul>
-    {% if insight.limitations %}<p><strong>{% if LANGUAGE_CODE == 'fr' %}Une limite à garder en tête :{% else %}A limitation to keep in mind:{% endif %}</strong> {{ insight.limitations.0.text }}</p>{% endif %}
+    {% if insight.limitations %}<h4>{% if LANGUAGE_CODE == 'fr' %}Limites{% else %}Limitations{% endif %}</h4><ul>{% for item in insight.limitations %}<li>{{ item.text }}{% if item.quote %}<details class="getting-started-evidence"><summary>{% if LANGUAGE_CODE == 'fr' %}Lire le passage original{% else %}Read the original passage{% endif %}</summary><blockquote>{{ item.quote }}</blockquote></details>{% endif %}</li>{% endfor %}</ul>{% endif %}
+    {% if insight.significance %}<h4>{% if LANGUAGE_CODE == 'fr' %}Portée{% else %}Why it matters{% endif %}</h4><p>{{ insight.significance }}</p>{% endif %}
     {% else %}<p class="muted">{% if LANGUAGE_CODE == 'fr' %}Extrait du résumé{% else %}Summary excerpt{% endif %}</p>{{ summary_html|safe }}{% endif %}
     </div>
-    {% if simple_html %}<details class="getting-started-simple"><summary>{% if LANGUAGE_CODE == 'fr' %}Voir aussi la version très simplifiée{% else %}Also see the simplified version{% endif %}</summary>{{ simple_html|safe }}</details>{% endif %}
+    {% include 'summarizer/getting_started_reading.html' %}
     <p class="getting-started-tip">{% if LANGUAGE_CODE == 'fr' %}À vérifier pendant la lecture : qu’est-ce qui a été observé, et qu’est-ce qui reste une interprétation ? Un résumé généré par IA se vérifie dans l’article original.{% else %}As you read, check what was observed and what remains an interpretation. Verify an AI-generated summary against the original paper.{% endif %}</p>
     <button class="btn" type="button" data-next="figures" hidden>{% if LANGUAGE_CODE == 'fr' %}Voir les figures{% else %}Explore the figures{% endif %} →</button>
     <a class="getting-started-help" href="/{{ LANGUAGE_CODE }}/guides/how-to-summarize-a-research-paper/">{% if LANGUAGE_CODE == 'fr' %}Le guide illustré des résumés{% else %}Illustrated guide to summaries{% endif %}</a>

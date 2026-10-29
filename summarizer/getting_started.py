@@ -5,7 +5,7 @@ from django.utils.translation import get_language
 from django.utils.text import Truncator
 from django.views.decorators.http import require_GET
 
-from . import insight, sources, summary_text
+from . import insight, keypoints, sources, summary_text
 from .models import ArxivPaper, PaperText, SummaryPaper
 
 EXAMPLES = {
@@ -38,6 +38,39 @@ def domain(value):
     return value if value in EXAMPLES else 'astronomy'
 
 
+def reading_formats(paper, summary, lang):
+    """The same stored texts and safe presentation helpers as the paper page."""
+    from .utils import clean_blog_html
+    labels = {
+        'fr': {
+            'summary': ('Résumé complet', 'La synthèse détaillée : contexte, démarche, résultats et limites.'),
+            'plain': ('Résumé vulgarisé', 'Les idées du papier expliquées dans un langage plus accessible.'),
+            'points': ('Points clés', 'Les points clés générés par l’IA pour une lecture rapide.'),
+            'blog': ('Article de blog', 'Une présentation narrative générée par l’IA à partir du papier.'),
+            'abstract': ('Abstract original', 'Le résumé rédigé par les auteurs, dans la langue de publication.'),
+        },
+        'en': {
+            'summary': ('Full summary', 'The detailed synthesis: context, approach, findings and limitations.'),
+            'plain': ('Plain-language summary', 'The paper’s ideas explained in more accessible language.'),
+            'points': ('Key points', 'AI-generated key points for a quick read.'),
+            'blog': ('Blog article', 'An AI-generated narrative introduction to the paper.'),
+            'abstract': ('Original abstract', 'The authors’ own abstract, in the publication’s original language.'),
+        },
+    }[lang]
+    blog = summary_text.without_invented_references(clean_blog_html(summary.blog),
+        [a.name for a in paper.authors.all()], paper.journal_ref, paper.comments) if summary.blog else ''
+    points = keypoints.stored_points(summary.notes)
+    bodies = [
+        ('summary', summary_text.lay_html(summary.summary)),
+        ('plain', summary_text.lay_html(summary.lay_summary)),
+        ('points', '<ul>' + ''.join('<li>%s</li>' % keypoints.point_html(p) for p in points) + '</ul>' if points else ''),
+        ('blog', blog),
+        ('abstract', summary_text.lay_html(paper.abstract)),
+    ]
+    return [{'key': key, 'label': labels[key][0], 'description': labels[key][1], 'html': body}
+            for key, body in bodies if body.strip()]
+
+
 @require_GET
 def page(request):
     lang = 'fr' if get_language() == 'fr' else 'en'
@@ -53,8 +86,11 @@ def page(request):
     exercise = None
     if reading and not reading.get('abstract_only'):
         # Check against the current full text as well: cached findings can predate a source refresh.
-        reading = dict(reading, findings=[dict(item) for item in reading['findings']])
+        reading = dict(reading, findings=[dict(item) for item in reading['findings']],
+                       limitations=[dict(item) for item in reading.get('limitations', [])])
         for item in reading['findings']:
+            item['quote'] = insight.evidence(item.get('quote'), text.text)
+        for item in reading['limitations']:
             item['quote'] = insight.evidence(item.get('quote'), text.text)
         exercise = next((item for item in reading['findings'][:3] if item.get('quote')), None)
         if exercise:
@@ -77,6 +113,6 @@ def page(request):
         'domains': [{'slug': slug, 'label': row[lang]} for slug, row in EXAMPLES.items()],
         'figure_number': example['figure'], 'figure_task': example['task_' + lang],
         'summary_html': summary_text.lay_html(Truncator(summary.summary or summary.lay_summary).words(180)) if ready else '',
-        'simple_html': summary_text.lay_html(summary.lay_summary) if ready and summary.summary and summary.lay_summary else '',
+        'reading_formats': reading_formats(paper, summary, lang) if ready else [],
         'figure_paper': key, 'figure_chat_url': reverse('chat') + '?ids=' + key + '&tour=1&tour_domain=' + selected,
     })

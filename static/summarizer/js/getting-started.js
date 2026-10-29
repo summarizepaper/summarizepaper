@@ -8,8 +8,10 @@
   var steps = ['summary', 'figures', 'question'];
   var domain = ['astronomy', 'biology', 'computing'].includes(root.dataset.domain) ? root.dataset.domain : 'astronomy';
   var navigation = root.querySelector('.getting-started-steps');
-  function track(name, step) {
-    try { if (window.umami) Promise.resolve(window.umami.track(name, {step:step, domain:domain})).catch(function () {}); } catch (_) {}
+  function track(name, step, format) {
+    var data = {step:step, domain:domain};
+    if (['summary', 'plain', 'points', 'blog', 'abstract'].includes(format)) data.format = format;
+    try { if (window.umami) Promise.resolve(window.umami.track(name, data)).catch(function () {}); } catch (_) {}
   }
   function show(step, focus) {
     if (!steps.includes(step)) step = 'summary';
@@ -44,6 +46,37 @@
         track('getting_started_source_open', 'summary');
       }
     });
+  });
+  root.querySelectorAll('[data-reading-widget]').forEach(function (widget) {
+    var tabs = Array.from(widget.querySelectorAll('[data-reading]'));
+    var contents = Array.from(widget.querySelectorAll('[data-reading-panel]'));
+    if (!tabs.length) return;
+    widget.querySelector('.getting-started-reading-tabs').hidden = false;
+    function select(tab, focus, measured) {
+      tabs.forEach(function (button) {
+        var active = button === tab;
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+        button.setAttribute('tabindex', active ? '0' : '-1');
+      });
+      contents.forEach(function (panel) {
+        panel.hidden = panel.dataset.readingPanel !== tab.dataset.reading;
+        if (!panel.hidden && window.SPChat) window.SPChat.typeset(panel);
+      });
+      if (focus) tab.focus();
+      if (measured) track('getting_started_reading_format', 'summary', tab.dataset.reading);
+    }
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener('click', function () {select(tab, false, true);});
+      tab.addEventListener('keydown', function (event) {
+        var target;
+        if (event.key === 'ArrowRight') target = tabs[(index + 1) % tabs.length];
+        else if (event.key === 'ArrowLeft') target = tabs[(index + tabs.length - 1) % tabs.length];
+        else if (event.key === 'Home') target = tabs[0];
+        else if (event.key === 'End') target = tabs[tabs.length - 1];
+        if (target) {event.preventDefault(); select(target, true, true);}
+      });
+    });
+    select(tabs[0], false, false);
   });
   window.addEventListener('hashchange', function () {show(location.hash.slice(1), true);});
   // A return from the chat or a shared step link should also open at the actual step.

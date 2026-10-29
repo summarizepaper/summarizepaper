@@ -5,7 +5,7 @@ const vm = require('node:vm');
 class Element {
   constructor(dataset = {}) {this.dataset = dataset; this.hidden = false; this.events = {}; this.attrs = {};}
   addEventListener(name, fn) {this.events[name] = fn;}
-  fire(name) {this.events[name]?.();}
+  fire(name, event = {}) {this.events[name]?.(event);}
   setAttribute(name, value) {this.attrs[name] = value;}
   removeAttribute(name) {delete this.attrs[name];}
   focus(options) {this.focused = options || true;}
@@ -21,13 +21,18 @@ function harness(hash = '', domain = 'biology') {
   const evidence = new Element();
   const input = new Element(); input.value = 'Original draft';
   const choices = [new Element({question: 'Draft about Figure 2'})];
+  const formats = ['summary', 'plain', 'points', 'blog', 'abstract'];
+  const readingTabs = formats.map(reading => new Element({reading}));
+  const readingPanels = formats.map(readingPanel => new Element({readingPanel}));
+  const readingNav = new Element();
+  const widget = {querySelector: () => readingNav, querySelectorAll: selector => selector === '[data-reading]' ? readingTabs : readingPanels};
   const root = {dataset: {domain}, querySelector(selector) {
     if (selector.startsWith('#step-')) return headings[names.indexOf(selector.split(' ')[0].slice(6))];
     return {'.getting-started-steps':nav, '.getting-started-suggestions':suggestions,
       '.chat-figures':gallery, 'textarea':input}[selector];
   }, querySelectorAll(selector) {
     return {'[data-panel]':panels, '[data-step]':buttons, '[data-next]':next,
-      '.getting-started-suggestions [data-question]':choices, '.getting-started-evidence':[evidence]}[selector];
+      '.getting-started-suggestions [data-question]':choices, '.getting-started-evidence':[evidence], '[data-reading-widget]':[widget]}[selector];
   }};
   const events = {}, tracks = [];
   const location = {get hash() {return hash;}, set hash(value) {hash = value.startsWith('#') ? value : '#' + value;}};
@@ -36,7 +41,7 @@ function harness(hash = '', domain = 'biology') {
   vm.runInNewContext(fs.readFileSync('static/summarizer/js/getting-started.js', 'utf8'), {
     document: {querySelector: () => root}, location, window, Promise,
   });
-  return {panels, buttons, headings, next, nav, gallery, evidence, input, choices, tracks,
+  return {panels, buttons, headings, next, nav, gallery, evidence, input, choices, tracks, readingTabs, readingPanels, readingNav,
     change() {events.hashchange();}};
 }
 
@@ -76,4 +81,22 @@ test('source disclosures stay in place and track one actual opening without send
   assert.equal(h.evidence.scrolled, undefined);
   assert.equal(h.input.value, 'Original draft');
   assert.doesNotMatch(JSON.stringify(h.tracks), /Original draft|Draft about/);
+});
+
+test('reading formats switch real panels, keep a single active tab and support keyboard navigation', () => {
+  const h = harness();
+  assert.deepEqual(h.readingPanels.map(p => p.hidden), [false, true, true, true, true]);
+  h.readingTabs[3].fire('click');
+  assert.deepEqual(h.readingPanels.map(p => p.hidden), [true, true, true, false, true]);
+  assert.equal(h.readingTabs[3].attrs['aria-selected'], 'true');
+  assert.equal(h.readingTabs[0].attrs.tabindex, '-1');
+  let prevented = false;
+  h.readingTabs[3].fire('keydown', {key:'ArrowRight', preventDefault() {prevented = true;}});
+  assert.equal(prevented, true);
+  assert.equal(h.readingPanels[4].hidden, false);
+  assert.equal(h.readingTabs[4].focused, true);
+  h.readingTabs[4].fire('keydown', {key:'Home', preventDefault() {}});
+  assert.equal(h.readingPanels[0].hidden, false);
+  assert.equal(h.input.value, 'Original draft');
+  assert.deepEqual(h.tracks.filter(t => t.name === 'getting_started_reading_format').map(t => t.data.format), ['blog', 'abstract', 'summary']);
 });

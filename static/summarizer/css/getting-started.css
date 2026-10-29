@@ -56,3 +56,25 @@
 .getting-started-panel .getting-started-intro { margin: 0 0 14px; font-size: 15px; color: var(--text-muted); }
 .getting-started-summary .getting-started-source-help { padding: 10px 14px; background: var(--bg-soft); border-radius: 8px; font-size: 14px; line-height: 1.6; }
 .getting-started-evidence .getting-started-quote-label { margin: 10px 0 0; color: var(--text-muted); font-size: 12px; }
+
+.getting-started-summary h3 { font-size: 20px; margin: 18px 0 10px; }
+.getting-started-summary h4 { font-size: 15px; margin: 18px 0 8px; }
+.getting-started-essentials-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.getting-started-essentials-grid section { min-width: 0; }
+.getting-started-essentials-grid h4 { color: var(--accent); }
+.getting-started-essentials-grid p { font-size: 14px; margin: 0; }
+.getting-started-reading { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 24px; }
+.getting-started-reading h3 { font-size: 22px; margin: 0 0 10px; }
+.getting-started-reading > p { font-size: 14px; }
+.getting-started-reading-tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 12px; }
+.getting-started-reading-tabs button { font: inherit; font-size: 13px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer; }
+.getting-started-reading-tabs button[aria-selected=true] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.getting-started-reading-panel { border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin: 10px 0; }
+.getting-started-reading-panel > h4 { font-size: 16px; margin: 0 0 8px; }
+.getting-started-reading-panel .getting-started-reading-description { font-size: 13px; color: var(--text-muted); margin: 0 0 14px; }
+.getting-started-reading-content { max-height: 380px; overflow-y: auto; overflow-wrap: anywhere; font-size: 14px; line-height: 1.75; }
+.getting-started-reading-content h2, .getting-started-reading-content h3 { font-size: 18px; margin: 18px 0 8px; }
+.getting-started-reading-content p:first-child { margin-top: 0; }
+.getting-started-reading-content li { margin-bottom: 10px; }
+.getting-started-reading-panel:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 600px) { .getting-started-essentials-grid { grid-template-columns: 1fr; gap: 0; } .getting-started-reading-panel { padding: 14px; } }

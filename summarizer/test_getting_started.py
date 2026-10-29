@@ -46,6 +46,32 @@ class GettingStartedTests(TestCase):
         self.assertContains(response, '&lt;script&gt;untrusted source quotation with enough characters&lt;/script&gt;')
         self.assertNotContains(response, '<script>untrusted source quotation with enough characters</script>')
 
+    def test_full_paper_sections_and_reading_formats_use_stored_content_safely(self):
+        self.paper.abstract = 'The original abstract written by the authors.'
+        self.paper.save()
+        stored_blog = '<h2>A research story</h2><p>A narrative about the findings.</p><script>alert("blog")</script><img src="https://evil.test/pixel" onerror="alert(1)">'
+        SummaryPaper.objects.filter(lang='en').update(
+            summary='The full scientific summary, not a shortened preview.',
+            lay_summary='An accessible explanation.', notes="['First key point', 'Second key point']", blog=stored_blog)
+        data = {'tldr':'The essentials in one sentence', 'question':'The research question',
+                'method':'The actual experimental method', 'significance':'Why this research matters',
+                'findings':[{'text':'Finding %d' % i, 'kind':'result', 'quote':''} for i in range(5)],
+                'limitations':[{'text':'A real study limitation', 'quote':''}]}
+        with mock.patch('summarizer.getting_started.insight.for_page', return_value=data):
+            response = self.client.get('/en/getting-started/')
+        for content in ('The research question', 'The actual experimental method', 'Why this research matters',
+                        'Finding 4', 'A real study limitation', 'The full scientific summary, not a shortened preview.',
+                        'An accessible explanation.', 'First key point', 'Second key point', 'A research story',
+                        'The original abstract written by the authors.'):
+            self.assertContains(response, content)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        self.assertEqual([b['data-reading'] for b in soup.select('[data-reading]')], ['summary','plain','points','blog','abstract'])
+        self.assertEqual(len(soup.select('[data-reading-panel]')), 5)
+        self.assertNotContains(response, '<script>alert("blog")</script>')
+        self.assertNotContains(response, 'https://evil.test/pixel')
+        self.assertEqual(SummaryPaper.objects.get(lang='en').blog, stored_blog)
+        self.assertContains(response, '/en/paper/%s/#results' % self.paper.arxiv_id)
+
     def test_all_domains_use_their_own_bilingual_paper_questions_and_chat_return(self):
         for slug, example in getting_started.EXAMPLES.items():
             paper, _ = ArxivPaper.objects.get_or_create(arxiv_id=example['id'], defaults={
