@@ -97,7 +97,7 @@
         <li><a href="/{{LANGUAGE_CODE}}/faq">{% trans 'FAQ' %}</a></li>
         <li><a href="/{{LANGUAGE_CODE}}/premium/" class="nav-premium" data-funnel="premium_click"><i class="fas fa-star" style="font-size:12px"></i> {% trans 'Premium' %}</a></li>
         {% if request.user.is_authenticated %}
-        <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My history' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'My activity' %}</a></li>
         {% endif %}
         {% if request.user.is_staff %}
         <li><a href="/admin/" class="nav-admin" title="Admin"><i class="fas fa-user-shield"></i> Admin</a></li>

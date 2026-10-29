@@ -17491,3 +17491,75 @@ msgstr "Vous cherchez un regard extérieur dans un pays précis ? Avec Premium+,
 
 msgid "Explore Premium+"
 msgstr "Voir les possibilités de Premium+"
+
+msgid "My activity"
+msgstr "Mon activité"
+
+msgid "Find your recent reading and pick up your conversations."
+msgstr "Retrouvez vos lectures récentes et reprenez vos conversations."
+
+msgid "Activity type"
+msgstr "Type d’activité"
+
+msgid "Readings"
+msgstr "Lectures"
+
+msgid "Conversations"
+msgstr "Conversations"
+
+msgid "Search by title or paper identifier"
+msgstr "Rechercher par titre ou identifiant d’article"
+
+msgid "Search your questions or conversation names"
+msgstr "Rechercher dans vos questions ou les noms de conversations"
+
+msgid "Articles opened while signed in appear here automatically. Earlier summary requests are also kept, once per paper."
+msgstr "Les articles ouverts lorsque vous êtes connecté apparaissent ici automatiquement. Les anciennes demandes de résumé sont également conservées, une seule fois par article."
+
+msgid "results"
+msgstr "résultats"
+
+msgid "Last opened"
+msgstr "Dernière consultation"
+
+msgid "Summary requested"
+msgstr "Résumé demandé"
+
+msgid "Last exchange"
+msgstr "Dernier échange"
+
+msgid "Read the paper"
+msgstr "Lire l’article"
+
+msgid "Chat about this paper"
+msgstr "Discuter de cet article"
+
+msgid "Resume conversation"
+msgstr "Reprendre la conversation"
+
+msgid "Pagination"
+msgstr "Pagination"
+
+msgid "No matching activity"
+msgstr "Aucune activité correspondante"
+
+msgid "Try a shorter search or another keyword."
+msgstr "Essayez une recherche plus courte ou un autre mot-clé."
+
+msgid "No conversations yet"
+msgstr "Aucune conversation pour le moment"
+
+msgid "Ask a question about a paper. You can return to the exchange here."
+msgstr "Posez une question sur un article. Vous pourrez retrouver l’échange ici."
+
+msgid "Start a conversation"
+msgstr "Commencer une conversation"
+
+msgid "No readings yet"
+msgstr "Aucune lecture pour le moment"
+
+msgid "Open a paper while signed in to find it here later."
+msgstr "Ouvrez un article en étant connecté pour le retrouver ici plus tard."
+
+msgid "Explore an example"
+msgstr "Découvrir un exemple"

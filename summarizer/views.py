@@ -1337,6 +1337,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
             'alpaper':alpaper,
         })
 
+        if request.method == 'GET' and request.user.is_authenticated:
+            from .personal_activity import record_visit
+            record_visit(request.user, arxiv_id)
         return render(request, "summarizer/paper_detail.html" if _fragment else "summarizer/arxividpage.html", stuff_for_frontend)
 
 
@@ -1371,31 +1374,8 @@ def vote(request, paper_id):
     return redirect('arxividpage', arxiv_id=paper_id)
 
 def history(request):
-    stuff_for_frontend={}
-
-    paper_history=[]
-    if request.user.is_authenticated:
-        #access user table
-        auth=True
-        history=PaperHistory.objects.filter(user=request.user).order_by('-created')
-        print('history',history)
-        for h in history:
-            arxiv_paper = ArxivPaper.objects.filter(arxiv_id=h.arxiv_id).first()
-            paperdate = h.created#.strftime('%d/%m/%Y')
-
-            if arxiv_paper:
-                paper_history.append({'arxiv_id': h.arxiv_id, 'title': arxiv_paper.title, 'date': paperdate})
-            else:
-                paper_history.append({'arxiv_id': h.arxiv_id, 'date': paperdate})
-    else:
-        auth=False
-
-    stuff_for_frontend.update({
-        'auth':auth,
-        'paper_history':paper_history
-    })
-
-    return render(request, "summarizer/history.html", stuff_for_frontend)
+    from . import personal_activity
+    return personal_activity.page(request)
 
 
 def update_cache(request):

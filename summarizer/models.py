@@ -1,3 +1,4 @@
+from django.utils import timezone
 import json
 
 from django.db import models
@@ -105,6 +106,17 @@ class PaperHistory(models.Model):
 
     def __str__(self):
         return self.arxiv_id#+' '+self.user.username
+
+class PaperVisit(models.Model):
+    """Last authenticated reading, independent of summary generation quotas."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    paper = models.ForeignKey('ArxivPaper', on_delete=models.CASCADE)
+    visited = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'paper'], name='unique_user_paper_visit')]
+        indexes = [models.Index(fields=['user', '-visited'], name='visit_user_recent')]
+
 
 class PDFHistory(models.Model):
     id = models.AutoField(primary_key=True)

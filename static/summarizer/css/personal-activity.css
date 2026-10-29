@@ -1,0 +1,19 @@
+.activity { max-width: 960px; }
+.activity-tabs,.activity-actions,.activity-pagination { display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+.activity-tabs { border-bottom:1px solid var(--border,#ddd); margin-bottom:24px; padding-bottom:12px; }
+.activity-tabs a { padding:8px 4px; }
+.activity-tabs [aria-current] { font-weight:700; border-bottom:3px solid var(--primary,#5753d7); }
+.activity-search label { display:block; font-weight:600; margin-bottom:8px; }
+.activity-search > div { display:flex; gap:10px; }
+.activity-search input { flex:1; min-width:0; padding:12px; border:1px solid var(--border,#ccc); border-radius:8px; font:inherit; }
+.activity-search button { padding:10px 16px; cursor:pointer; }
+.activity-help,.activity-meta { color:var(--text-muted,#666); font-size:14px; }
+.activity-list { list-style:none; padding:0; display:grid; gap:14px; }
+.activity-item { padding:22px; overflow-wrap:anywhere; }
+.activity-item h2 { font-size:18px; line-height:1.45; margin:0 0 8px; }
+.activity-item h2 a { color:var(--text); text-decoration:none; }
+.activity-actions { margin-top:16px; font-size:14px; }
+.activity-pagination { justify-content:center; margin:28px 0; }
+.activity-empty { padding:28px; margin-top:24px; }
+.activity a:focus-visible { outline:3px solid #7773dd; outline-offset:4px; }
+@media(max-width:520px) { .activity-item { padding:16px; } .activity-actions { align-items:flex-start; flex-direction:column; gap:12px; } }

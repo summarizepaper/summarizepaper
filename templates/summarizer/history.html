@@ -1,57 +1,55 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load i18n %}
-{% get_current_language as LANGUAGE_CODE %}
-
-{% block title %} {% trans 'History of Summarized arXiv papers - Get Accurate and Fast Paper Summaries' %} {% endblock %}
+{% load static i18n %}
+{% block title %}{% trans 'My activity' %} — SummarizePaper{% endblock %}
 {% block extra_head_tags %}
-  {% include 'summarizer/mathjax.html' %}
-  <meta name="description" content="{% trans 'Our AI-powered paper summarization service provides fast, accurate, and easy-to-read summaries of research articles. Save time and stay up-to-date with the latest research with our cutting-edge technology.' %}" />
-  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/history/" />
-  <style>
-    .history-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-    .history-item a {
-      display: block;
-      padding: 18px 20px;
-      color: var(--text);
-      text-decoration: none;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    .history-item a:hover { border-color: #c7cbff; box-shadow: var(--shadow); }
-    .history-item .t { display: block; font-weight: 600; line-height: 1.4; }
-    .history-item .meta { display: block; margin-top: 6px; color: var(--text-muted); font-size: 14px; }
-    .history-item .meta code { font-family: ui-monospace, Menlo, monospace; }
-    .history-message { margin: 48px 0; color: var(--text-muted); text-align: center; font-size: 18px; }
-  </style>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="{% static 'summarizer/css/personal-activity.css' %}">
 {% endblock %}
-
-{% block header_class %}{% endblock %}
-
 {% block content %}
-
-<div class="page">
-{% if auth %}
-  <header class="page-header"><h1>{% trans 'Your History' %}</h1><p class="lead">{{ user.username }}</p></header>
-{% if paper_history %}
-<ul class="history-list">
-{% for h in paper_history %}
-  <li class="history-item"><a href="/{{LANGUAGE_CODE}}/paper/{{ h.arxiv_id }}/" class="card">
-    <span class="t">{% if h.title %}{{ h.title }}{% else %}{{ h.arxiv_id }}{% endif %}</span>
-    <span class="meta"><code>{{ h.arxiv_id }}</code> · {{ h.date|date:"j F Y" }}</span>
-  </a></li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="history-message">{% trans 'No history yet' %}</p>
-{% endif %}
-{% else %}
-<p class="history-message">{% trans 'You cannot access this page.' %}</p>
-{% endif %}
+<div class="page activity">
+  <header class="page-header"><h1>{% trans 'My activity' %}</h1><p class="lead">{% trans 'Find your recent reading and pick up your conversations.' %}</p></header>
+  <nav class="activity-tabs" aria-label="{% trans 'Activity type' %}">
+    <a href="{{ readings_url }}" {% if tab == 'readings' %}aria-current="page"{% endif %}>{% trans 'Readings' %}</a>
+    <a href="{{ conversations_url }}" {% if tab == 'conversations' %}aria-current="page"{% endif %}>{% trans 'Conversations' %}</a>
+    <a href="{% url 'collections' %}">{% trans 'My collections' %} →</a>
+  </nav>
+  <form method="get" class="activity-search" role="search">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <label for="activity-query">{% if tab == 'readings' %}{% trans 'Search by title or paper identifier' %}{% else %}{% trans 'Search your questions or conversation names' %}{% endif %}</label>
+    <div><input id="activity-query" type="search" name="q" value="{{ query }}" maxlength="200"><button type="submit">{% trans 'Search' %}</button></div>
+  </form>
+  {% if tab == 'readings' %}<p class="activity-help">{% trans 'Articles opened while signed in appear here automatically. Earlier summary requests are also kept, once per paper.' %}</p>{% endif %}
+  {% if items %}
+  <p class="activity-help">{{ pagination.paginator.count }} {% trans 'results' %}</p>
+  <ul class="activity-list">
+    {% for item in items %}
+    <li class="card activity-item">
+      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      <p class="activity-meta">{% if tab == 'readings' %}{% if item.visited %}{% trans 'Last opened' %}{% else %}{% trans 'Summary requested' %}{% endif %}{% else %}{% trans 'Last exchange' %}{% endif %} · {{ item.date|date:"j F Y, H:i" }}{% if item.id %}<br><span>{{ item.id }}</span>{% endif %}</p>
+      {% if item.paper_title %}<p>{{ item.paper_title }}</p>{% endif %}
+      <div class="activity-actions">
+        {% if tab == 'readings' %}
+        <a href="{{ item.url }}">{% trans 'Read the paper' %}</a>
+        <a href="{{ item.chat }}">{% trans 'Chat about this paper' %}</a>
+        <a href="{{ item.collection }}">{% trans 'Add to a collection' %}</a>
+        {% else %}<a href="{{ item.url }}">{% trans 'Resume conversation' %} →</a>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% if pagination.has_other_pages %}
+  <nav class="activity-pagination" aria-label="{% trans 'Pagination' %}">
+    {% if previous_url %}<a href="{{ previous_url }}">← {% trans 'Previous' %}</a>{% endif %}
+    <span>{{ pagination.number }} / {{ pagination.paginator.num_pages }}</span>
+    {% if next_url %}<a href="{{ next_url }}">{% trans 'Next' %} →</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% else %}
+  <div class="card activity-empty">
+    {% if query %}<h2>{% trans 'No matching activity' %}</h2><p>{% trans 'Try a shorter search or another keyword.' %}</p>
+    {% elif tab == 'conversations' %}<h2>{% trans 'No conversations yet' %}</h2><p>{% trans 'Ask a question about a paper. You can return to the exchange here.' %}</p><a href="{% url 'chat' %}">{% trans 'Start a conversation' %} →</a>
+    {% else %}<h2>{% trans 'No readings yet' %}</h2><p>{% trans 'Open a paper while signed in to find it here later.' %}</p><a href="/{{ LANGUAGE_CODE }}/getting-started/">{% trans 'Explore an example' %} →</a>{% endif %}
+  </div>
+  {% endif %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-
-
-
 {% endblock %}
