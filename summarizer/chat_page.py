@@ -23,7 +23,7 @@ from django.views.decorators.http import require_POST
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, assistant, citations, exports, result_share, sources
+from . import getting_started, access, assistant, citations, exports, result_share, sources
 from .models import AIassistant, ArxivPaper, ChatConversation, ChatShare
 
 logger = logging.getLogger(__name__)
@@ -104,6 +104,7 @@ def page(request):
     asked = [i for i in asked if ID_RE.match(i)][:assistant.MAX_PAPERS]
     return render(request, 'summarizer/chat.html', {
         'guided': request.GET.get('tour') == '1',
+        'guided_domain': getting_started.domain(request.GET.get('tour_domain', '')),
         'room': room, 'chathistory': history, 'preset': preset_papers(list(dict.fromkeys(asked or papers))),
         'conversations': recent_conversations(request, room), 'max_nb_paper': assistant.MAX_PAPERS,
         'table_columns': [str(label) for _, label in TABLE_COLUMNS],

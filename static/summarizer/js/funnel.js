@@ -9,6 +9,7 @@
     var data = {};
     if (['hero', 'needs', 'examples', 'offer', 'recent'].includes(element.dataset.placement)) data.placement = element.dataset.placement;
     if (['paper', 'digest', 'refcheck', 'missed', 'scoops'].includes(element.dataset.tool)) data.tool = element.dataset.tool;
+    if (['astronomy', 'biology', 'computing'].includes(element.dataset.domain)) data.domain = element.dataset.domain;
     return data;
   }
   document.addEventListener('click', function (event) {

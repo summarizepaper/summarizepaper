@@ -6,17 +6,19 @@
 <script defer src="{% static_v 'summarizer/js/getting-started.js' %}"></script>
 {% endblock %}
 {% block content %}
-<main class="getting-started container" data-funnel-view="getting_started_view">
+<main class="getting-started container" data-funnel-view="getting_started_view" data-domain="{{ domain }}">
   <header class="getting-started-header">
-    <p class="getting-started-kicker">{% if LANGUAGE_CODE == 'fr' %}Un article · Trois étapes{% else %}One paper · Three steps{% endif %}</p>
     <h1>{% if LANGUAGE_CODE == 'fr' %}Un article, du résumé à la discussion{% else %}From paper summary to your first question{% endif %}</h1>
-    <p class="lead">{% if LANGUAGE_CODE == 'fr' %}Comprenez un vrai article, explorez ses figures et posez votre première question. L’exemple est prêt : vous n’avez aucun document à chercher.{% else %}Understand a real paper, explore its figures and ask your first question. The example is ready: you don’t need to find a document.{% endif %}</p>
+    <p class="lead">{% if LANGUAGE_CODE == 'fr' %}Choisissez un domaine, vérifiez un résultat, explorez les figures et préparez votre première question.{% else %}Choose a field, check a finding, explore the figures and prepare your first question.{% endif %}</p>
     <a class="getting-started-skip" href="{% url 'summarize' %}" data-funnel="getting_started_skip">{% if LANGUAGE_CODE == 'fr' %}Je préfère utiliser mon propre article{% else %}I’d rather use my own paper{% endif %} →</a>
   </header>
+  <nav class="getting-started-domains" aria-label="{% if LANGUAGE_CODE == 'fr' %}Choisir un domaine{% else %}Choose a field{% endif %}">
+    {% for choice in domains %}<a href="?domain={{ choice.slug }}" {% if choice.slug == domain %}aria-current="true"{% endif %} data-funnel="getting_started_domain" data-domain="{{ choice.slug }}">{{ choice.label }}</a>{% endfor %}
+  </nav>
   {% if example_ready %}
-  <div class="getting-started-paper"><span class="getting-started-badge">CC-BY · {% if LANGUAGE_CODE == 'fr' %}Texte intégral disponible{% else %}Full text available{% endif %}</span>
-    <h2>{{ paper.title }}</h2><p>{% for author in paper.authors.all %}{% if forloop.counter <= 3 %}{{ author.name }}{% if not forloop.last and forloop.counter < 3 %}, {% endif %}{% elif forloop.counter == 4 %} et al.{% endif %}{% endfor %}</p>
-    <p class="muted">{{ paper.journal_ref|default:'Nature Astronomy' }} · <a href="{% url 'arxividpage' paper.arxiv_id %}" data-funnel="getting_started_paper_open">{% if LANGUAGE_CODE == 'fr' %}Ouvrir la fiche de l’article{% else %}Open the paper page{% endif %} ↗</a> · <a href="{{ paper.license }}" target="_blank" rel="noopener noreferrer">{% if LANGUAGE_CODE == 'fr' %}Licence et attribution{% else %}License and attribution{% endif %} ↗</a></p>
+  <div class="getting-started-paper"><span class="getting-started-badge">CC-BY · {% if LANGUAGE_CODE == 'fr' %}Texte intégral disponible{% else %}Full text available{% endif %}{% if is_preprint %} · {% if LANGUAGE_CODE == 'fr' %}Prépublication{% else %}Preprint{% endif %}{% endif %}</span>
+    <h2>{{ paper.title }}</h2><details class="getting-started-attribution"><summary>{% if LANGUAGE_CODE == 'fr' %}Sources, auteurs et licence{% else %}Sources, authors and license{% endif %}</summary><p>{% for author in paper.authors.all %}{% if forloop.counter <= 3 %}{{ author.name }}{% if not forloop.last and forloop.counter < 3 %}, {% endif %}{% elif forloop.counter == 4 %} et al.{% endif %}{% endfor %}</p>
+    <p class="muted">{{ paper.journal_ref|default:source_label }} · <a href="{% url 'arxividpage' paper.arxiv_id %}" data-funnel="getting_started_paper_open">{% if LANGUAGE_CODE == 'fr' %}Ouvrir la fiche de l’article{% else %}Open the paper page{% endif %} ↗</a> · <a href="{{ paper.license }}" target="_blank" rel="noopener noreferrer">{% if LANGUAGE_CODE == 'fr' %}Licence et attribution{% else %}License and attribution{% endif %} ↗</a></p></details>
   </div>
   <nav class="getting-started-steps" aria-label="{% if LANGUAGE_CODE == 'fr' %}Étapes de la découverte{% else %}Discovery steps{% endif %}" hidden>
     <button type="button" data-step="summary" aria-controls="step-summary">1. {% if LANGUAGE_CODE == 'fr' %}Comprendre{% else %}Understand{% endif %}</button>
@@ -26,11 +28,17 @@
   <section class="getting-started-panel" id="step-summary" data-panel="summary" aria-labelledby="summary-heading">
     <p class="getting-started-kicker">01 / {% if LANGUAGE_CODE == 'fr' %}Comprendre{% else %}Understand{% endif %}</p>
     <h2 id="summary-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Les résultats à retenir{% else %}The findings to take away{% endif %}</h2>
-    <p>{% if LANGUAGE_CODE == 'fr' %}Commencez par l’essentiel ci-dessous. Sur la fiche complète, retrouvez la synthèse détaillée, les points clés et une version simplifiée.{% else %}Start with the essentials below. The full paper page offers a detailed synthesis, key points and a simplified version.{% endif %}</p>
+
     <div class="getting-started-summary">
     {% if insight %}<p><strong>{{ insight.tldr }}</strong></p>
-    <ul>{% for item in insight.findings|slice:':3' %}<li><span class="getting-started-claim">{% if item.kind == 'result' %}{% if LANGUAGE_CODE == 'fr' %}Résultat{% else %}Finding{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Interprétation des auteurs{% else %}Authors’ interpretation{% endif %}{% endif %}</span> {{ item.text }}
-    {% if item.quote %}<details class="getting-started-evidence"><summary>{% if LANGUAGE_CODE == 'fr' %}Vérifier le passage dans l’article{% else %}Check the passage in the paper{% endif %}</summary><blockquote>{{ item.quote }}</blockquote></details>{% endif %}</li>{% endfor %}</ul>
+    {% if evidence_exercise %}<div class="getting-started-exercise">
+      <strong>{% if LANGUAGE_CODE == 'fr' %}À vous de vérifier une affirmation{% else %}Your turn: check a claim{% endif %}</strong>
+      <p>{% if LANGUAGE_CODE == 'fr' %}Ouvrez le passage source du résultat signalé ci-dessous, puis comparez les deux formulations.{% else %}Open the source passage for the finding marked below, then compare the two statements.{% endif %}</p>
+      <button type="button" class="btn btn-sm" data-verify hidden>{% if LANGUAGE_CODE == 'fr' %}Afficher sa source{% else %}Show its source{% endif %}</button>
+      <p class="getting-started-exercise-status" role="status" hidden>{% if LANGUAGE_CODE == 'fr' %}Comparez l’affirmation et l’extrait original : disent-ils la même chose ? La citation reste dans la langue de l’article.{% else %}Compare the claim with the original passage: do they say the same thing? The quotation stays in the paper’s original language.{% endif %}</p>
+    </div>{% endif %}
+    <ul>{% for item in insight.findings|slice:':3' %}<li{% if item.exercise %} class="getting-started-exercise-finding"{% endif %}><span class="getting-started-claim">{% if item.kind == 'result' %}{% if LANGUAGE_CODE == 'fr' %}Résultat{% else %}Finding{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Interprétation des auteurs{% else %}Authors’ interpretation{% endif %}{% endif %}</span> {{ item.text }}
+    {% if item.quote %}<details class="getting-started-evidence"{% if item.exercise %} id="walkthrough-evidence"{% endif %}><summary>{% if LANGUAGE_CODE == 'fr' %}Vérifier le passage dans l’article{% else %}Check the passage in the paper{% endif %}</summary><blockquote>{{ item.quote }}</blockquote></details>{% endif %}</li>{% endfor %}</ul>
     {% if insight.limitations %}<p><strong>{% if LANGUAGE_CODE == 'fr' %}Une limite à garder en tête :{% else %}A limitation to keep in mind:{% endif %}</strong> {{ insight.limitations.0.text }}</p>{% endif %}
     {% else %}<p class="muted">{% if LANGUAGE_CODE == 'fr' %}Extrait du résumé{% else %}Summary excerpt{% endif %}</p>{{ summary_html|safe }}{% endif %}
     </div>
@@ -44,16 +52,16 @@
     <h2 id="figures-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Passez du résumé aux données{% else %}Go from the summary to the data{% endif %}</h2>
     <p>{% if LANGUAGE_CODE == 'fr' %}Dans « Figures et graphiques », cliquez sur une image pour l’agrandir. Échap ou un clic en dehors de l’image ferme l’agrandissement. Les légendes sont celles de la publication originale.{% else %}In “Figures and plots”, click an image to enlarge it. Press Escape or click outside to close it. Captions come from the original publication.{% endif %}</p>
     {% include 'summarizer/chat_figures.html' %}
-    <p class="getting-started-tip">{% if LANGUAGE_CODE == 'fr' %}Essayez de repérer ce que représente chaque axe de la figure 1. Vous pourrez demander une explication à l’assistant à l’étape suivante.{% else %}Try identifying what each axis in Figure 1 represents. You can ask the assistant to explain it in the next step.{% endif %}</p>
+    <p class="getting-started-tip">{{ figure_task }}</p>
     <button class="btn" type="button" data-next="question" hidden>{% if LANGUAGE_CODE == 'fr' %}Préparer ma question{% else %}Prepare my question{% endif %} →</button>
   </section>
   <section class="getting-started-panel" id="step-question" data-panel="question" aria-labelledby="question-heading">
     <p class="getting-started-kicker">03 / {% if LANGUAGE_CODE == 'fr' %}Discuter{% else %}Discuss{% endif %}</p>
     <h2 id="question-heading" tabindex="-1">{% if LANGUAGE_CODE == 'fr' %}Posez la question qui vous intéresse{% else %}Ask what you want to understand{% endif %}</h2>
     <p>{% if LANGUAGE_CODE == 'fr' %}Choisissez une suggestion ou écrivez votre question. Nous ouvrirons la discussion avec cet article déjà sélectionné ; vous pourrez relire votre question avant de l’envoyer.{% else %}Choose a suggestion or write your question. We’ll open the chat with this paper selected; you can review your question before sending it.{% endif %}</p>
-    <div class="getting-started-suggestions" hidden>{% for question in questions %}<button type="button" data-question="{{ question }}">{% if forloop.first %}{% if LANGUAGE_CODE == 'fr' %}Le résultat principal{% else %}The main result{% endif %}{% elif forloop.counter == 2 %}{% if LANGUAGE_CODE == 'fr' %}Comprendre la figure 1{% else %}Understand Figure 1{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Les limites de l’étude{% else %}Study limitations{% endif %}{% endif %}</button>{% endfor %}</div>
+    <div class="getting-started-suggestions" hidden>{% for question in questions %}<button type="button" data-question="{{ question }}">{% if forloop.first %}{% if LANGUAGE_CODE == 'fr' %}Le résultat principal{% else %}The main result{% endif %}{% elif forloop.counter == 2 %}{% if LANGUAGE_CODE == 'fr' %}Comprendre la figure {{ figure_number }}{% else %}Understand Figure {{ figure_number }}{% endif %}{% else %}{% if LANGUAGE_CODE == 'fr' %}Les limites de l’étude{% else %}Study limitations{% endif %}{% endif %}</button>{% endfor %}</div>
     <form action="{% url 'chat' %}" method="get" data-funnel="getting_started_chat_open">
-      <input type="hidden" name="ids" value="{{ paper.arxiv_id }}"><input type="hidden" name="tour" value="1">
+      <input type="hidden" name="ids" value="{{ paper.arxiv_id }}"><input type="hidden" name="tour" value="1"><input type="hidden" name="tour_domain" value="{{ domain }}">
       <label for="first-question">{% if LANGUAGE_CODE == 'fr' %}Votre question{% else %}Your question{% endif %}</label>
       <textarea id="first-question" name="ask" rows="4" maxlength="600" required>{{ questions.0 }}</textarea>
       <button class="btn" type="submit">{% if LANGUAGE_CODE == 'fr' %}Ouvrir la discussion{% else %}Open the chat{% endif %} →</button>

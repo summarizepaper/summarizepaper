@@ -33,16 +33,60 @@ class GettingStartedTests(TestCase):
 
     def test_scientific_findings_keep_verified_quotes_and_label_interpretations(self):
         data = {'tldr': 'Scientific overview', 'findings': [
-            {'text': 'An observed result', 'kind': 'result', 'quote': '<script>untrusted</script>'},
+            {'text': 'An observed result', 'kind': 'result', 'quote': '<script>untrusted source quotation with enough characters</script>'},
             {'text': 'A proposed explanation', 'kind': 'interpretation', 'quote': ''}],
             'limitations': [{'text': 'The objects were not directly detected'}]}
+        self.text.text = data['findings'][0]['quote']
+        self.text.save()
         with mock.patch('summarizer.getting_started.insight.for_page', return_value=data):
             response = self.client.get('/fr/getting-started/')
         self.assertContains(response, 'Scientific overview')
         self.assertContains(response, 'Interprétation des auteurs')
         self.assertContains(response, 'The objects were not directly detected')
-        self.assertContains(response, '&lt;script&gt;untrusted&lt;/script&gt;')
-        self.assertNotContains(response, '<script>untrusted</script>')
+        self.assertContains(response, '&lt;script&gt;untrusted source quotation with enough characters&lt;/script&gt;')
+        self.assertNotContains(response, '<script>untrusted source quotation with enough characters</script>')
+
+    def test_all_domains_use_their_own_bilingual_paper_questions_and_chat_return(self):
+        for slug, example in getting_started.EXAMPLES.items():
+            paper, _ = ArxivPaper.objects.get_or_create(arxiv_id=example['id'], defaults={
+                'title': 'Example ' + slug, 'license': self.paper.license})
+            PaperText.objects.get_or_create(arxiv_id=paper.arxiv_id, defaults={'source': 'html', 'text': 'Full paper'})
+            for lang in ('fr', 'en'):
+                SummaryPaper.objects.get_or_create(paper=paper, lang=lang, defaults={'summary': slug + ' ' + lang})
+                response = self.client.get('/%s/getting-started/' % lang, {'domain': slug})
+                soup = BeautifulSoup(response.content, 'html.parser')
+                self.assertEqual(response.context['paper'].pk, paper.pk)
+                self.assertEqual(soup.select_one('[name=ids]')['value'], paper.arxiv_id)
+                self.assertEqual(soup.select_one('[name=tour_domain]')['value'], slug)
+                self.assertContains(response, example['question_' + lang])
+                self.assertContains(response, 'data-domain="%s"' % slug)
+                self.assertContains(response, 'data-paper="%s"' % paper.arxiv_id)
+            chat = self.client.get('/en/chat/', {'ids': paper.arxiv_id, 'tour': '1', 'tour_domain': slug})
+            self.assertContains(chat, '/en/getting-started/?domain=%s#question' % slug)
+
+    def test_unknown_domain_falls_back_without_selecting_arbitrary_papers(self):
+        response = self.client.get('/en/getting-started/', {'domain': '//evil.test/paper'})
+        self.assertEqual(response.context['paper'].pk, self.paper.pk)
+        self.assertEqual(response.context['domain'], 'astronomy')
+        chat = self.client.get('/en/chat/', {'tour': '1', 'tour_domain': 'evil'})
+        self.assertContains(chat, '/en/getting-started/?domain=astronomy#question')
+
+    def test_exercise_only_uses_a_quote_in_the_current_source(self):
+        quote = 'An original sentence supported by the full article text.'
+        data = {'tldr': 'Overview', 'abstract_only': False, 'findings': [
+            {'text': 'A supported finding', 'kind': 'result', 'quote': quote}]}
+        with mock.patch('summarizer.getting_started.insight.for_page', return_value=data):
+            response = self.client.get('/en/getting-started/')
+            self.assertNotContains(response, 'id="walkthrough-evidence"')
+            self.text.text = 'Before. ' + quote + ' After.'
+            self.text.save()
+            response = self.client.get('/en/getting-started/')
+            self.assertContains(response, 'id="walkthrough-evidence"')
+            self.assertContains(response, 'Show its source')
+            self.assertContains(response, quote)
+            self.assertNotIn('exercise', data['findings'][0])
+            data['abstract_only'] = True
+            self.assertNotContains(self.client.get('/en/getting-started/'), 'id="walkthrough-evidence"')
 
     def test_untrusted_summary_is_escaped(self):
         SummaryPaper.objects.filter(lang='fr').update(lay_summary='<script>alert(1)</script>')

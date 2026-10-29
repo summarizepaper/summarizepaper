@@ -11,7 +11,8 @@
   function guidedTrack(name) {
     if (T.guided !== '1' || guidedEvents[name]) return;
     guidedEvents[name] = true;
-    try {if (window.umami) Promise.resolve(window.umami.track(name)).catch(function () {});} catch (_) {}
+    var domain = ['astronomy', 'biology', 'computing'].includes(T.guidedDomain) ? T.guidedDomain : 'astronomy';
+    try {if (window.umami) Promise.resolve(window.umami.track(name, {domain:domain})).catch(function () {});} catch (_) {}
   }
   var MAX = Number(T.max) || 10;
   var WS = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
