@@ -55,7 +55,7 @@ Enter **JWST** and **ALMA** in the additional fields and select **Show the histo
 `millimeter`, `JWST` and `ALMA` are related, but they name different things: a wavelength range and two facilities. The comparison helps distinguish their trajectories; it does not measure their relative scientific performance.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/rising/compare-form-en.jpg"><img src="/static/summarizer/img/guides/rising/compare-form-en.jpg" alt="English comparison form containing millimeter, JWST and ALMA in Astrophysics" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/rising/compare-form-terms-en.jpg"><img src="/static/summarizer/img/guides/rising/compare-form-terms-en.jpg" alt="English comparison form containing millimeter, JWST and ALMA in Astrophysics" width="1280" height="720" loading="lazy" /></a>
 <figcaption>The fields make the comparison explicit while preserving the same literature scope.</figcaption>
 </figure>
 This consultation gives the following results:

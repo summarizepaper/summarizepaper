@@ -55,7 +55,7 @@ Dans les deux champs supplémentaires, saisissez **JWST** et **ALMA**, puis cliq
 `millimeter`, `JWST` et `ALMA` sont liés, mais ne désignent pas la même chose : une gamme de longueurs d’onde et deux installations. Cette comparaison aide à distinguer leurs évolutions ; elle ne mesure pas leur performance scientifique respective.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/rising/compare-form-fr.jpg"><img src="/static/summarizer/img/guides/rising/compare-form-fr.jpg" alt="Formulaire français comparant millimeter, JWST et ALMA dans le domaine Astrophysique" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/rising/compare-form-terms-fr.jpg"><img src="/static/summarizer/img/guides/rising/compare-form-terms-fr.jpg" alt="Formulaire français comparant millimeter, JWST et ALMA dans le domaine Astrophysique" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Les trois champs permettent de formuler une comparaison explicite plutôt que de juxtaposer des captures de domaines différents.</figcaption>
 </figure>
 Voici les résultats de cette consultation :
