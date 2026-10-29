@@ -153,3 +153,33 @@ class PressKitQualityTests(ToolsTestCase):
             self.assertIn(value, text)
         with translation.override('fr'):
             self.assertContains(self.paid.get('/fr/press-kit/2101.00001v1/'), 'Télécharger en PDF')
+
+
+class PressKitSourceTests(ToolsTestCase):
+    def test_a_header_wrapped_abstract_is_not_labelled_full_text(self):
+        paper = self.paper()
+        PaperText.objects.create(arxiv_id=paper.arxiv_id, source='abstract',
+                                 text='Title: Example. Abstract: ' + paper.abstract)
+        with mock.patch('summarizer.paper_source.read_again', return_value=('', '')):
+            text, origin, abstract_only = presskit.read(paper)
+        self.assertEqual((text, origin, abstract_only), (paper.abstract, 'abstract', True))
+
+    def test_external_paper_can_upgrade_an_old_abstract_to_its_pdf(self):
+        paper = self.paper(arxiv_id='doi_10.1038--s41550-026-03004-3')
+        PaperText.objects.create(arxiv_id=paper.arxiv_id, source='abstract',
+                                 text='Title: Example. Abstract: ' + paper.abstract)
+        with mock.patch('summarizer.sources.full_text', return_value=('Full methods and results', 'pdf')) as fetch:
+            self.assertEqual(presskit.read(paper), ('Full methods and results', 'pdf', False))
+        fetch.assert_called_once_with(paper.arxiv_id)
+        self.assertEqual(PaperText.objects.get(arxiv_id=paper.arxiv_id).source, 'pdf')
+
+    def test_external_fallback_stays_abstract_and_saved_pdf_needs_no_download(self):
+        paper = self.paper(arxiv_id='doi_10.1038--s41550-026-03004-3')
+        row = PaperText.objects.create(arxiv_id=paper.arxiv_id, source='abstract', text='Header ' + paper.abstract)
+        with mock.patch('summarizer.sources.full_text', return_value=('Header ' + paper.abstract, 'abstract')):
+            self.assertEqual(presskit.read(paper), (paper.abstract, 'abstract', True))
+        row.source, row.text = 'pdf', 'Full methods and results'
+        row.save()
+        with mock.patch('summarizer.sources.full_text') as fetch:
+            self.assertEqual(presskit.read(paper), (row.text, 'pdf', False))
+        fetch.assert_not_called()

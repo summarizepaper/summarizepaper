@@ -664,15 +664,20 @@ def read(paper):
     from .models import PaperText
     if sources.is_open_license(paper.license):
         available = paper_source.paper_text(paper.arxiv_id)
-        if not available or normalized(available) == normalized(paper.abstract or ''):
-            full_text, origin = paper_source.read_again(paper.arxiv_id)
-            if full_text:
+        origin = PaperText.objects.filter(arxiv_id=paper.arxiv_id).values_list('source', flat=True).first() or 'text'
+        # Stored abstracts include the title/authors header, so comparing their
+        # text with the bare abstract cannot establish full-text availability.
+        if not available or origin == 'abstract' or normalized(available) == normalized(paper.abstract or ''):
+            if sources.is_external(paper.arxiv_id):
+                full_text, origin = sources.full_text(paper.arxiv_id)
+            else:
+                full_text, origin = paper_source.read_again(paper.arxiv_id)
+            if full_text and origin != 'abstract':
                 paper_source.store_text(paper.arxiv_id, full_text, origin)
                 available = full_text
             else:
                 available = ''
         if available:
-            origin = PaperText.objects.filter(arxiv_id=paper.arxiv_id).values_list('source', flat=True).first() or 'text'
             return available, origin, False
     return paper.abstract or '', 'abstract', True
 
