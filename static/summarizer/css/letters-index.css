@@ -1,0 +1,9 @@
+.letters-schedule { margin-bottom:24px; line-height:1.65; }
+.page .letters-archives h2 { font-size:20px; margin:24px 0 12px; }
+.letters-edition-form label { display:block; margin-bottom:8px; font-weight:600; }
+.letters-edition-form > div { display:flex; flex-wrap:wrap; gap:10px; }
+.letters-edition-form select { flex:1; min-width:0; max-width:460px; padding:10px 12px; font:inherit; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:8px; }
+.letters-edition-form button { cursor:pointer; }
+.letters-edition-nav { display:flex; flex-wrap:wrap; gap:12px 24px; margin:16px 0; font-size:14px; }
+.letters-edition-form :focus-visible,.letters-edition-nav a:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+@media(max-width:520px) { .letters-edition-form > div { flex-direction:column; } .letters-edition-form select { width:100%; } .letters-edition-form button { align-self:flex-start; } }

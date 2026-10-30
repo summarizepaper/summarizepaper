@@ -17659,3 +17659,57 @@ msgid ""
 msgstr ""
 "Calcul à partir du %(date)s à %(time)s, heure de Paris (%(utc)s UTC). Les "
 "résultats sont publiés une fois le traitement terminé."
+
+msgid "Publication schedule"
+msgstr "Calendrier de publication"
+
+msgid "Latest edition"
+msgstr "Dernière édition"
+
+msgid "Next edition expected from %(next_date)s."
+msgstr "Prochaine édition attendue à partir du %(next_date)s."
+
+msgid "Publication is pending."
+msgstr "La publication est en attente."
+
+msgid ""
+"Letters appear progressively by field, once the announcements are available "
+"and the texts have been checked."
+msgstr ""
+"Les lettres paraissent progressivement par domaine, une fois les annonces "
+"disponibles et les textes vérifiés."
+
+msgid "Browse editions"
+msgstr "Consulter les éditions"
+
+msgid "Edition date"
+msgstr "Date de l’édition"
+
+msgid "Show edition"
+msgstr "Afficher l’édition"
+
+msgid "Edition navigation"
+msgstr "Navigation entre les éditions"
+
+msgid "Previous edition"
+msgstr "Édition précédente"
+
+msgid "Back to the latest letters"
+msgstr "Revenir aux dernières lettres"
+
+msgid "Edition of %(date)s"
+msgstr "Édition du %(date)s"
+
+msgid "Previous editions in this field"
+msgstr "Éditions précédentes de ce domaine"
+
+msgid "No letter was published in this field for this edition."
+msgstr "Aucune lettre n’a été publiée dans ce domaine pour cette édition."
+
+msgid "Browse this field’s editions"
+msgstr "Consulter les éditions de ce domaine"
+
+msgid "%(count)s letter available"
+msgid_plural "%(count)s letters available"
+msgstr[0] "%(count)s lettre disponible"
+msgstr[1] "%(count)s lettres disponibles"

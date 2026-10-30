@@ -31,7 +31,7 @@ from django.db import connection
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.utils import timezone, translation
+from django.utils import timezone, translation, formats
 from django.utils.translation import get_language, gettext
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
@@ -936,11 +936,38 @@ def letters_page(request):
             return redirect('/%s/letters/?saved=1' % lang)
         subscribed = {s.topic for s in (LetterSubscription.objects.filter(user=request.user, active=True) if paid
                                         else allowed_subscriptions(request.user))}
-    latest = latest_letters(lang)
+    editions = list(Letter.objects.filter(lang=lang, topic__in=TOPICS).order_by('-day')
+                    .values_list('day', flat=True).distinct())
+    latest_day = editions[0] if editions else None
+    selected = request.GET.get('edition', '')
+    selected_day = latest_day
+    if selected:
+        try:
+            selected_day = datetime.date.fromisoformat(selected)
+        except ValueError:
+            raise Http404
+        if selected_day not in editions:
+            raise Http404
+        latest = {letter.topic: letter for letter in Letter.objects.filter(lang=lang, day=selected_day,
+                    topic__in=TOPICS).defer('content', 'vectors')}
+    else:
+        latest = latest_letters(lang)
+    index = editions.index(selected_day) if selected_day in editions else 0
+    next_day = latest_day + WEEK if latest_day else None
+    next_date = formats.date_format(next_day, 'l j F Y') if next_day else ''
+    if lang.startswith('fr'):
+        next_date = next_date[:1].lower() + next_date[1:]
     topics = [{'slug': slug, 'name': spec['name'], 'letter': latest.get(slug), 'subscribed': slug in subscribed}
               for slug, spec in TOPICS.items()]
-    return render(request, 'summarizer/letters.html', {'topics': topics, 'paid': paid, 'free_count': FREE_SUBSCRIPTIONS,
-                                                       'saved': request.GET.get('saved') == '1'})
+    return render(request, 'summarizer/letters.html', {
+        'topics': topics, 'paid': paid, 'free_count': FREE_SUBSCRIPTIONS,
+        'saved': request.GET.get('saved') == '1', 'editions': editions, 'selected_day': selected_day,
+        'archive_selected': bool(selected), 'latest_day': latest_day, 'next_date': next_date,
+        'edition_pending': bool(next_day and timezone.localdate() >= next_day),
+        'edition_count': len(latest),
+        'older_edition': editions[index + 1] if index + 1 < len(editions) else None,
+        'newer_edition': editions[index - 1] if index > 0 else None,
+    })
 
 
 def topic_page(request, topic):

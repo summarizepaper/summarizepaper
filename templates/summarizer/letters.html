@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Weekly science letters from arXiv' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/letters-index.css' %}">
   <meta name="description" content="{% trans 'Every week, the new research of eleven fields, from AI and space to the brain, mathematics and economics, told like a magazine article from the papers of arXiv, bioRxiv and medRxiv, each number checked against the abstracts.' %}" />
-  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/letters/{% if archive_selected %}?edition={{ selected_day|date:'Y-m-d' }}{% endif %}" />
   <link rel="alternate" type="application/rss+xml" title="{% trans 'Weekly letters' %}" href="/{{ LANGUAGE_CODE }}/letters/feed/" />
 {% endblock %}
 
@@ -20,6 +21,30 @@
   </header>
   {% if saved %}<p class="notice">{% trans 'Your choices are saved.' %}</p>{% endif %}
 
+  {% if latest_day %}
+  <aside class="notice letters-schedule" aria-label="{% trans 'Publication schedule' %}">
+    <strong>{% trans 'Latest edition' %} : {{ latest_day|date:"j F Y" }}</strong><br>
+    {% blocktrans %}Next edition expected from {{ next_date }}.{% endblocktrans %}
+    {% if edition_pending %}{% trans 'Publication is pending.' %}{% endif %}
+    {% trans 'Letters appear progressively by field, once the announcements are available and the texts have been checked.' %}
+  </aside>
+  <section class="letters-archives" aria-labelledby="letters-editions-title">
+    <h2 id="letters-editions-title">{% trans 'Browse editions' %}</h2>
+    <form method="get" class="letters-edition-form">
+      <label for="letter-edition">{% trans 'Edition date' %}</label>
+      <div><select id="letter-edition" name="edition">
+        {% for day in editions %}<option value="{{ day|date:'Y-m-d' }}"{% if day == selected_day %} selected{% endif %}>{{ day|date:"j F Y" }}{% if day == latest_day %} — {% trans 'Latest edition' %}{% endif %}</option>{% endfor %}
+      </select><button class="btn" type="submit">{% trans 'Show edition' %}</button></div>
+    </form>
+    <nav class="letters-edition-nav" aria-label="{% trans 'Edition navigation' %}">
+      {% if older_edition %}<a href="?edition={{ older_edition|date:'Y-m-d' }}">← {% trans 'Previous edition' %} · {{ older_edition|date:"j F Y" }}</a>{% endif %}
+      {% if newer_edition %}<a href="?edition={{ newer_edition|date:'Y-m-d' }}">{% trans 'Next edition' %} · {{ newer_edition|date:"j F Y" }} →</a>{% endif %}
+      {% if archive_selected %}<a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Back to the latest letters' %}</a>{% endif %}
+    </nav>
+    {% if archive_selected %}<p class="muted">{% blocktrans with date=selected_day|date:"j F Y" %}Edition of {{ date }}{% endblocktrans %} · {% blocktrans count count=edition_count %}{{ count }} letter available{% plural %}{{ count }} letters available{% endblocktrans %}</p>{% endif %}
+  </section>
+  {% endif %}
+
   <div class="item-list">
     {% for t in topics %}
     <article class="card topic-card">
@@ -28,9 +53,9 @@
       <p class="muted"><small>{{ t.letter.day|date:"j F Y" }}</small></p>
       <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/{{ t.letter.day|date:'Y-m-d' }}/"><strong>{{ t.letter.title }}</strong></a></p>
       <p class="muted">{{ t.letter.dek }}</p>
-      <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/">{% trans 'All the letters' %}</a> · <a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/feed/">RSS</a></p>
+      <p><a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/">{% trans 'Previous editions in this field' %}</a> · <a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/feed/">RSS</a></p>
       {% else %}
-      <p class="muted">{% trans 'The first letter comes out next week.' %}</p>
+      <p class="muted">{% if archive_selected %}{% trans 'No letter was published in this field for this edition.' %} <a href="/{{ LANGUAGE_CODE }}/letters/{{ t.slug }}/">{% trans 'Browse this field’s editions' %}</a>{% else %}{% trans 'The first letter comes out next week.' %}{% endif %}</p>
       {% endif %}
     </article>
     {% endfor %}
