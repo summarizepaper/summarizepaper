@@ -27,7 +27,7 @@ from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, 
                      DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
-                     SuppressedEmail, OutreachContact, UserPlan, PremiumGrant, Vote)
+                     SuppressedEmail, EmailEvent, OutreachContact, UserPlan, PremiumGrant, Vote)
 
 admin.site.index_title = 'Tableau de bord'
 
@@ -488,6 +488,16 @@ class CategorySynthesisAdmin(ModelAdmin):
     search_fields = ('category',)
 
 
+@admin.register(EmailEvent)
+class EmailEventAdmin(ModelAdmin):
+    list_display = ('recipient', 'kind', 'created', 'message_id')
+    list_filter = ('kind',)
+    search_fields = ('recipient', 'message_id')
+    readonly_fields = ('recipient', 'kind', 'message_id', 'details', 'created')
+
+    def has_add_permission(self, request): return False
+
+
 @admin.register(SuppressedEmail)
 class SuppressedEmailAdmin(ModelAdmin):
     list_display = ('email', 'reason', 'created')
@@ -663,7 +673,7 @@ class OutreachContactAdmin(ModelAdmin):
 
     @admin.action(description='Marquer une réponse reçue', permissions=['change'])
     def mark_replied(self, request, queryset):
-        count = queryset.filter(status='sent').update(status='replied')
+        count = queryset.filter(status__in=('sent', 'dispatched', 'delivered')).update(status='replied')
         self.message_user(request, '%d réponse(s) enregistrée(s).' % count)
 
     @admin.action(description='Bloquer une adresse après rejet définitif confirmé', permissions=['change'])

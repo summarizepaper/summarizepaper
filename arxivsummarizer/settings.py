@@ -49,6 +49,7 @@ THROTTLE = sys.argv[1:2] != ['test']
 #Premium subscriptions, see summarizer/billing.py
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+CLOUDMAILIN_EVENTS_SECRET = os.getenv('CLOUDMAILIN_EVENTS_SECRET', '')  # last part of the delivery events webhook URL
 STRIPE_PRICE_MONTHLY = os.getenv('STRIPE_PRICE_MONTHLY', '')
 STRIPE_PRICE_YEARLY = os.getenv('STRIPE_PRICE_YEARLY', '')
 STRIPE_PRICE_MONTHLY_USD = os.getenv('STRIPE_PRICE_MONTHLY_USD', '')
@@ -148,6 +149,7 @@ UNFOLD = {
                 {"title": "Tableau de bord", "icon": "dashboard", "link": reverse_lazy("admin:index")},
                 {"title": "Activité du jour", "icon": "timeline", "link": reverse_lazy("admin_activity")},
                 {"title": "Relances et retours", "icon": "outgoing_mail", "link": reverse_lazy("admin:summarizer_outreachcontact_changelist")},
+                {"title": "Événements d'envoi", "icon": "mark_email_read", "link": reverse_lazy("admin:summarizer_emailevent_changelist")},
                 {"title": "Coûts API", "icon": "payments", "link": reverse_lazy("admin:summarizer_aiusage_changelist")},
                 {"title": "Quotas et modèles IA", "icon": "tune",
                  "link": reverse_lazy("admin:summarizer_sitesettings_changelist")},

@@ -561,6 +561,23 @@ class SuppressedEmail(models.Model):
         return '%s (%s)' % (self.email, self.reason)
 
 
+class EmailEvent(models.Model):
+    """A delivery event CloudMailin posts after accepting an email: dispatch, delivery, bounce... (mail_events.py)."""
+    recipient = models.CharField(max_length=254, db_index=True)
+    kind = models.CharField(max_length=40)
+    message_id = models.CharField(max_length=200, blank=True)
+    details = models.JSONField(default=dict, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = "événement d'envoi"
+        verbose_name_plural = "événements d'envoi"
+
+    def __str__(self):
+        return '%s %s' % (self.recipient, self.kind)
+
+
 class SiteSettings(models.Model):
     """Quotas and AI models, edited in the admin. A single row; read it with SiteSettings.current()."""
     free_runs_per_day = models.PositiveIntegerField('résumés par jour (gratuit)', default=10,
@@ -1281,6 +1298,8 @@ class OutreachContact(models.Model):
     lang = models.CharField(max_length=10, default='en')
     status = models.CharField(max_length=20, default='sending', choices=[
         ('sending', 'Envoi en cours / à vérifier'), ('sent', 'Accepté par le serveur SMTP'),
+        ('dispatched', 'Transmis au serveur du destinataire'), ('delivered', 'Livré'),
+        ('suppressed', 'Bloqué par CloudMailin, non envoyé'),
         ('replied', 'Réponse reçue'), ('bounced', 'Adresse rejetée définitivement'),
         ('unsubscribed', 'Désinscrit'), ('failed', 'Erreur / livraison à vérifier')])
     subject = models.CharField(max_length=200)

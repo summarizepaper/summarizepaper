@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemap_views
 from summarizer.sitemaps import GuideSitemap, LetterSitemap, StaticViewSitemap, SummarizedPaperSitemap
-from summarizer import accounts, billing
+from summarizer import accounts, billing, mail_events
 from summarizer.views import llms_txt, robots_txt
 
 app_name = 'summarizer'
@@ -38,6 +38,7 @@ urlpatterns = [
     path('robots.txt', robots_txt),
     path('llms.txt', llms_txt),
     path('stripe/webhook/', billing.webhook, name='stripe_webhook'),
+    path('cloudmailin/events/<str:secret>/', mail_events.webhook, name='cloudmailin_events'),
     path('google/callback/', accounts.google_callback, name='google_callback'),
     path('sitemap.xml', sitemap_views.index, {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap-section'}),
     path('sitemap-<section>.xml', sitemap_views.sitemap, {'sitemaps': sitemaps}, name='sitemap-section'),
