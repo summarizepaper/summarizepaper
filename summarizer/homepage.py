@@ -3,10 +3,27 @@ import re
 from decimal import Decimal
 
 from django.db.models import Q
-from django.utils.translation import get_language
+from django.urls import reverse
+from django.utils.translation import get_language, gettext_lazy as _
 
 from . import billing
 from .models import SummaryPaper
+
+
+# Free tools shown first on the homepage: (url name or anchor, icon, name, pitch, needs an account, call to action).
+FREE_TOOLS = [
+    ('#arxiv-id', 'file-alt', _('Summaries'), _('Key ideas, results and limits of any paper, in 16 languages.'), False, _('Summarize a paper')),
+    ('chat', 'comments', _('Chat with papers'), _('Ask a question to one paper or several, answered from the text.'), False, _('Ask a question')),
+    ('digest', 'envelope', _('Daily digest'), _('New papers in your fields every morning, with short summaries.'), True, _('Set up my free digest')),
+    ('letters', 'feather-alt', _('Weekly letters'), _('Each week, the papers that matter in your field, put into perspective.'), False, _('Read this week’s letters')),
+    ('trends', 'chart-line', _('Rising topics'), _('The topics rising on arXiv, bioRxiv and medRxiv, field by field.'), False, _('See rising topics')),
+    ('saved_searches', 'bookmark', _('Saved searches'), _('Save a search and get its new papers by email or RSS.'), True, _('Save a search')),
+]
+
+
+def free_tools():
+    return [{'url': url if url.startswith('#') else reverse(url), 'slug': url.lstrip('#'), 'icon': icon, 'name': name,
+             'pitch': pitch, 'account': account, 'cta': cta} for url, icon, name, pitch, account, cta in FREE_TOOLS]
 
 
 def monthly_price(currency='eur'):
@@ -28,11 +45,12 @@ def monthly_price(currency='eur'):
 
 
 def context(request=None):
+    from .email_updates import form_context
     currency = billing.selected_currency(request) if request is not None else 'eur'
     ready = ((Q(summary__isnull=False) & ~Q(summary='')) |
              (Q(lay_summary__isnull=False) & ~Q(lay_summary='')))
     papers = list(SummaryPaper.objects.filter(ready, lang=get_language())
                   .select_related('paper').order_by('-updated')[:7])
     papers = [p for p in papers if (p.summary or '').strip() or (p.lay_summary or '').strip()]
-    return {'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
+    return {**form_context(), 'free_tools': free_tools(), 'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
             'home_price': monthly_price(currency), 'billing_currency': currency, 'billing_currencies': billing.currencies()}

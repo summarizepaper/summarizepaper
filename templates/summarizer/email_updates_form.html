@@ -1,0 +1,17 @@
+{% load i18n %}
+<form method="post" action="{% url 'email_updates' %}" class="home-email-form" data-funnel="home_email_signup">
+  {% csrf_token %}
+  {% if update_error %}<p class="error" role="alert">{{ update_error }}</p>{% endif %}
+  <label class="home-email-label" for="updates-topic">{% trans '1. Choose your field' %}</label>
+  <select name="topic" id="updates-topic" required>
+    <option value="">{% trans 'Your research field…' %}</option>
+    {% for slug, name in update_topics %}<option value="{{ slug }}"{% if slug == update_topic %} selected{% endif %}>{{ name }}</option>{% endfor %}
+  </select>
+  <fieldset>
+    <legend>{% trans '2. Choose what lands in your inbox' %}</legend>
+    <label class="home-email-choice"><input type="checkbox" name="products" value="digest"{% if 'digest' in update_products %} checked{% endif %}><span><strong>{% trans 'Daily digest' %}</strong><small>{% trans 'New papers with short summaries, every weekday.' %}</small></span></label>
+    <label class="home-email-choice"><input type="checkbox" name="products" value="letters"{% if 'letters' in update_products %} checked{% endif %}><span><strong>{% trans 'Weekly letter' %}</strong><small>{% trans 'Six papers put into perspective, once a week.' %}</small></span></label>
+  </fieldset>
+  <button type="submit" class="btn btn-lg">{% if request.user.is_authenticated %}{% trans 'Receive my research updates' %}{% else %}{% trans 'Continue with a free account' %}{% endif %} <span aria-hidden="true">→</span></button>
+  <p class="home-fine">{% if request.user.is_authenticated %}{% trans 'Sent to' %} {{ request.user.email }}. {% else %}{% trans 'Your choices are kept while you create an account or sign in.' %} {% endif %}{% trans 'Unsubscribe at any time.' %}</p>
+</form>

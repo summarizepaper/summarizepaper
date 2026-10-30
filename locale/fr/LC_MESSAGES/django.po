@@ -17722,3 +17722,132 @@ msgstr "Saisissez un nom valide."
 
 msgid "Too many messages. Please try again in one hour."
 msgstr "Trop de messages ont été envoyés. Veuillez réessayer dans une heure."
+
+msgid "1. Choose your field"
+msgstr "1. Choisissez votre domaine"
+
+msgid "Your research field…"
+msgstr "Votre domaine de recherche…"
+
+msgid "2. Choose what lands in your inbox"
+msgstr "2. Choisissez vos lectures par email"
+
+msgid "New papers with short summaries, every weekday."
+msgstr "Les nouveaux articles et leurs résumés courts, du lundi au vendredi."
+
+msgid "Six papers put into perspective, once a week."
+msgstr "Six articles mis en perspective, une fois par semaine."
+
+msgid "Receive my research updates"
+msgstr "Recevoir mes lectures"
+
+msgid "Continue with a free account"
+msgstr "Continuer avec un compte gratuit"
+
+msgid "Sent to"
+msgstr "Envoi à"
+
+msgid "Your choices are kept while you create an account or sign in."
+msgstr "Vos choix sont conservés pendant votre inscription ou votre connexion."
+
+msgid "Unsubscribe at any time."
+msgstr "Désinscription à tout moment."
+
+msgid "Your research updates by email"
+msgstr "Votre veille scientifique par email"
+
+msgid "A daily reading list and a weekly perspective on your field."
+msgstr "Une sélection quotidienne et un regard hebdomadaire sur votre domaine."
+
+msgid "Your subscriptions are active"
+msgstr "Vos abonnements sont actifs"
+
+msgid "Your digest is ready. Check its categories and delivery schedule in your settings."
+msgstr "Votre digest est prêt. Retrouvez ses catégories et son horaire d’envoi dans les réglages."
+
+msgid "Your weekly letter is selected. You can already read the available editions online."
+msgstr "Votre lettre hebdomadaire est sélectionnée. Vous pouvez déjà lire les éditions disponibles en ligne."
+
+msgid "No duplicate subscription was created and your existing preferences were preserved."
+msgstr "Aucun abonnement en double n’a été créé et vos préférences existantes ont été conservées."
+
+msgid "Free with an account. Choose a field, then confirm your subscriptions."
+msgstr "Gratuit avec un compte. Choisissez un domaine, puis confirmez vos abonnements."
+
+msgid "Personalize my digest"
+msgstr "Personnaliser mon digest"
+
+msgid "Choose my weekly letters"
+msgstr "Choisir mes lettres hebdomadaires"
+
+msgid "Read this week’s letter"
+msgstr "Lire la lettre de la semaine"
+
+msgid "Get the digest and weekly letters"
+msgstr "Recevoir le digest et les lettres"
+
+msgid "Your next reading habit"
+msgstr "Votre prochain rendez-vous avec la science"
+
+msgid "Science worth reading, directly in your inbox"
+msgstr "La recherche à suivre, directement dans votre boîte mail"
+
+msgid "Get new papers with the digest, and take a step back with the weekly letters. One field, two complementary formats."
+msgstr "Découvrez les nouveaux articles avec le digest, puis prenez du recul avec les lettres hebdomadaires. Un domaine, deux formats complémentaires."
+
+msgid "Start with a selection of categories in your field, then refine your digest whenever you want."
+msgstr "Commencez avec une sélection de catégories de votre domaine, puis affinez votre digest quand vous le souhaitez."
+
+msgid "Browse this week’s letters"
+msgstr "Voir les lettres de la semaine"
+
+msgid "Choose a field and at least one email format."
+msgstr "Choisissez un domaine et au moins un format d’email."
+
+msgid "You already have a digest. Personalize it below to keep your existing preferences."
+msgstr "Vous avez déjà un digest. Personnalisez-le ci-dessous pour conserver vos préférences actuelles."
+
+msgid "You already receive a weekly letter. Change your choice below, or keep your current subscription."
+msgstr "Vous recevez déjà une lettre hebdomadaire. Modifiez votre choix ci-dessous ou conservez votre abonnement actuel."
+
+msgid "Research tools ready to use"
+msgstr "Des outils de recherche prêts à l’emploi"
+
+msgid "No account needed"
+msgstr "Sans compte"
+
+msgid "Create your free account in 30 seconds"
+msgstr "Créez votre compte gratuit en 30 secondes"
+
+msgid "Unlock the daily digest, a weekly letter, collections and a saved search. No credit card required."
+msgstr "Débloquez le digest quotidien, une lettre hebdomadaire, les collections et une recherche sauvegardée. Sans carte bancaire."
+
+msgid "Key ideas, results and limits of any paper, in 16 languages."
+msgstr "Les idées clés, les résultats et les limites de n’importe quel article, en 16 langues."
+
+msgid "Summarize a paper"
+msgstr "Résumer un article"
+
+msgid "Ask a question to one paper or several, answered from the text."
+msgstr "Posez une question à un ou plusieurs articles, avec des réponses tirées du texte."
+
+msgid "New papers in your fields every morning, with short summaries."
+msgstr "Les nouveaux articles de vos domaines chaque matin, avec des résumés courts."
+
+msgid "Each week, the papers that matter in your field, put into perspective."
+msgstr "Chaque semaine, les articles qui comptent dans votre domaine, mis en perspective."
+
+msgid "Read this week’s letters"
+msgstr "Lire les lettres de la semaine"
+
+msgid "The topics rising on arXiv, bioRxiv and medRxiv, field by field."
+msgstr "Les sujets en hausse sur arXiv, bioRxiv et medRxiv, domaine par domaine."
+
+msgid "See rising topics"
+msgstr "Voir les sujets en hausse"
+
+msgid "Save a search and get its new papers by email or RSS."
+msgstr "Sauvegardez une recherche et recevez ses nouveaux articles par email ou RSS."
+
+msgid "Save a search"
+msgstr "Sauvegarder une recherche"

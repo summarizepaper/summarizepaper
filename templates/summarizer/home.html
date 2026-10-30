@@ -48,6 +48,7 @@
       {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
     </form>
     <div class="home-actions">
+      <a class="home-email-shortcut" href="#email-updates" data-funnel="email_updates_entry" data-placement="hero">{% trans 'Get the digest and weekly letters' %} <span aria-hidden="true">↓</span></a>
       <a href="{% url 'getting_started' %}" data-funnel="getting_started_entry" data-placement="hero">{% trans 'Try an example' %} <span aria-hidden="true">↗</span></a>
       <a href="{% url 'premium' %}" data-funnel="premium_click" data-placement="hero">Premium{% if home_price %} · {{ home_price }}{% endif %}</a>
     </div>
@@ -55,22 +56,40 @@
   <aside class="home-preview" aria-label="{% trans 'Research workflow preview' %}">
     <div class="home-preview-header"><span class="home-dot" aria-hidden="true"></span> {% trans 'A companion for the work between papers' %}</div>
     <ol class="home-workflow">
-      <li><span class="home-step">01</span><div><strong>{% trans 'Read with a question in mind' %}</strong><p>{% trans 'Get the key ideas, then ask about the method or limitations.' %}</p><span class="home-tag">{% trans 'Free to start' %}</span></div></li>
-      <li><span class="home-step">02</span><div><strong>{% trans 'Build a reading habit' %}</strong><p>{% trans 'Bring new papers from your fields into your inbox.' %}</p><span class="home-tag">{% trans 'Free digest' %}</span></div></li>
-      <li><span class="home-step">03</span><div><strong>{% trans 'Prepare your next submission' %}</strong><p>{% trans 'Check references and find related work your draft may have missed.' %}</p><span class="home-tag home-tag-paid">Premium</span></div></li>
+      <li><span class="home-step">01</span><div><a href="#arxiv-id" data-funnel="home_tool_click" data-tool="paper" data-placement="hero"><strong>{% trans 'Read with a question in mind' %}</strong></a><p>{% trans 'Get the key ideas, then ask about the method or limitations.' %}</p><span class="home-tag">{% trans 'Free to start' %}</span></div></li>
+      <li><span class="home-step">02</span><div><a href="#email-updates" data-funnel="email_updates_entry" data-placement="hero"><strong>{% trans 'Build a reading habit' %}</strong></a><p>{% trans 'Bring new papers from your fields into your inbox.' %}</p><span class="home-tag">{% trans 'Free digest' %}</span></div></li>
+      <li><span class="home-step">03</span><div><a href="{% url 'refcheck' %}" data-funnel="home_tool_click" data-tool="refcheck" data-placement="hero"><strong>{% trans 'Prepare your next submission' %}</strong></a><p>{% trans 'Check references and find related work your draft may have missed.' %}</p><span class="home-tag home-tag-paid">Premium</span></div></li>
     </ol>
-    <a href="#research-tools" class="home-preview-link">{% trans 'Find the tool for your next step' %} <span aria-hidden="true">↓</span></a>
+    <a href="#free-tools" class="home-preview-link">{% trans 'Find the tool for your next step' %} <span aria-hidden="true">↓</span></a>
   </aside>
 </section>
 
+<section class="home-section container home-free" id="free-tools" aria-labelledby="free-tools-title">
+  <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Free to start' %}</p><h2 id="free-tools-title">{% trans 'Research tools ready to use' %}</h2></div><a href="{% url 'tools' %}">{% trans 'All research tools' %} <span aria-hidden="true">↗</span></a></div>
+  <ul class="home-tools">
+    {% for tool in free_tools %}<li class="home-tool"><span class="home-tool-icon" aria-hidden="true"><i class="fas fa-{{ tool.icon }}"></i></span><h3><a href="{{ tool.url }}" data-funnel="home_tool_click" data-tool="{{ tool.slug }}" data-placement="free">{{ tool.name }}</a></h3><p>{{ tool.pitch }}</p><span class="home-tag">{% if tool.account %}{% trans 'Free with an account' %}{% else %}{% trans 'No account needed' %}{% endif %}</span><span class="home-tool-cta" aria-hidden="true">{{ tool.cta }} →</span></li>{% endfor %}
+  </ul>
+  {% if not request.user.is_authenticated %}
+  <div class="home-signup">
+    <div><h3>{% trans 'Create your free account in 30 seconds' %}</h3><p>{% trans 'Unlock the daily digest, a weekly letter, collections and a saved search. No credit card required.' %}</p></div>
+    <div class="home-signup-actions"><a class="btn btn-lg" href="{% url 'register' %}" data-funnel="signup_click" data-placement="free">{% trans 'Create a free account' %}</a><a href="{% url 'login' %}">{% trans 'Log in' %}</a></div>
+  </div>
+  {% endif %}
+</section>
+
+<section class="container home-email-wrap" id="email-updates" aria-labelledby="email-updates-title">
+  <div class="home-email-panel">
+    <div><p class="home-kicker">{% trans 'Your next reading habit' %}</p><h2 id="email-updates-title">{% trans 'Science worth reading, directly in your inbox' %}</h2><p>{% trans 'Get new papers with the digest, and take a step back with the weekly letters. One field, two complementary formats.' %}</p><span class="home-tag">{% trans 'Free with an account' %}</span><p class="home-fine">{% trans 'Start with a selection of categories in your field, then refine your digest whenever you want.' %}</p><div class="home-email-links"><a href="{% url 'digest' %}">{% trans 'Personalize my digest' %} →</a><a href="{% url 'letters' %}">{% trans 'Browse this week’s letters' %} →</a></div></div>
+    {% include 'summarizer/email_updates_form.html' %}
+  </div>
+</section>
+
 <section class="home-section container" id="research-tools" aria-labelledby="tools-title">
-  <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Built around your research' %}</p><h2 id="tools-title">{% trans 'What are you working on today?' %}</h2></div><a href="{% url 'tools' %}">{% trans 'All research tools' %} <span aria-hidden="true">↗</span></a></div>
+  <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Go further with Premium' %}</p><h2 id="tools-title">{% trans 'What are you working on today?' %}</h2></div><a href="{% url 'tools' %}">{% trans 'All research tools' %} <span aria-hidden="true">↗</span></a></div>
   <div class="home-needs">
-    <article class="home-need"><span class="home-tag">{% trans 'Free to start' %}</span><h3>{% trans 'Understand a paper' %}</h3><p>{% trans 'Find the question, the main results and the limits. Ask follow-up questions about one paper or several.' %}</p><p class="home-tool-names">{% trans 'AI summaries · Paper assistant' %}</p><a href="#arxiv-id" data-funnel="home_tool_click" data-tool="paper" data-placement="needs">{% trans 'Explore a paper' %} <span aria-hidden="true">→</span></a></article>
-    <article class="home-need"><span class="home-tag">{% trans 'Free with an account' %}</span><h3>{% trans 'Keep up with your field' %}</h3><p>{% trans 'Receive new papers from the categories you follow, with short summaries. Choose a daily or weekly rhythm.' %}</p><p class="home-tool-names">Daily Digest</p><a href="{% url 'digest' %}" data-funnel="home_tool_click" data-tool="digest" data-placement="needs">{% trans 'Set up my free digest' %} <span aria-hidden="true">→</span></a></article>
-    <article class="home-need"><span class="home-tag home-tag-paid">Premium+</span><h3>{% trans 'Explore a research question' %}</h3><p>{% trans 'Ask a question. Get 15 to 30 founding and recent papers, grouped by approach, with a synthesis that cites them.' %}</p><p class="home-tool-names">{% trans 'Literature review' %}</p><a href="{% url 'literature' %}" data-funnel="home_tool_click" data-tool="literature" data-placement="needs">{% trans 'Start from a question' %} <span aria-hidden="true">→</span></a></article>
-    <article class="home-need"><span class="home-tag home-tag-paid">Premium</span><h3>{% trans 'Check before submitting' %}</h3><p>{% trans 'Spot references to review and find related research your draft does not cite.' %}</p><p class="home-tool-names">Bibliography Check · What Did I Miss?</p><a href="#reference-example" data-funnel="home_example_click" data-placement="needs">{% trans 'See a reference-check example' %} <span aria-hidden="true">→</span></a><div class="home-tool-links"><a href="{% url 'refcheck' %}" data-funnel="home_tool_click" data-tool="refcheck">Bibliography Check</a><a href="{% url 'missed' %}" data-funnel="home_tool_click" data-tool="missed">What Did I Miss?</a></div></article>
-    <article class="home-need"><span class="home-tag home-tag-paid">Premium</span><h3>{% trans 'Watch research close to yours' %}</h3><p>{% trans 'Describe your project. Get an email when new arXiv, bioRxiv or medRxiv papers overlap with it.' %}</p><p class="home-tool-names">Scoop Watch</p><a href="{% url 'scoops' %}" data-funnel="home_tool_click" data-tool="scoops" data-placement="needs">{% trans 'Discover Scoop Watch' %} <span aria-hidden="true">→</span></a></article>
+    <article class="home-need"><span class="home-tag home-tag-paid">Premium+</span><h3><i class="fas fa-book-open" aria-hidden="true"></i> {% trans 'Explore a research question' %}</h3><p>{% trans 'Ask a question. Get 15 to 30 founding and recent papers, grouped by approach, with a synthesis that cites them.' %}</p><p class="home-tool-names">{% trans 'Literature review' %}</p><a href="{% url 'literature' %}" data-funnel="home_tool_click" data-tool="literature" data-placement="needs">{% trans 'Start from a question' %} <span aria-hidden="true">→</span></a></article>
+    <article class="home-need"><span class="home-tag home-tag-paid">Premium</span><h3><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check before submitting' %}</h3><p>{% trans 'Spot references to review and find related research your draft does not cite.' %}</p><p class="home-tool-names">Bibliography Check · What Did I Miss?</p><a href="#reference-example" data-funnel="home_example_click" data-placement="needs">{% trans 'See a reference-check example' %} <span aria-hidden="true">→</span></a><div class="home-tool-links"><a href="{% url 'refcheck' %}" data-funnel="home_tool_click" data-tool="refcheck">Bibliography Check</a><a href="{% url 'missed' %}" data-funnel="home_tool_click" data-tool="missed">What Did I Miss?</a></div></article>
+    <article class="home-need"><span class="home-tag home-tag-paid">Premium</span><h3><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'Watch research close to yours' %}</h3><p>{% trans 'Describe your project. Get an email when new arXiv, bioRxiv or medRxiv papers overlap with it.' %}</p><p class="home-tool-names">Scoop Watch</p><a href="{% url 'scoops' %}" data-funnel="home_tool_click" data-tool="scoops" data-placement="needs">{% trans 'Discover Scoop Watch' %} <span aria-hidden="true">→</span></a></article>
   </div>
 </section>
 

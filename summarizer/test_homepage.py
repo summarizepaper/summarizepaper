@@ -29,6 +29,15 @@ class HomepageTests(TestCase):
             self.assertContains(response, 'application/ld+json')
             self.assertNotContains(response, '€7')  # No invented price when Stripe is unconfigured.
 
+    def test_free_tools_lead_to_their_pages_and_signup_is_only_for_visitors(self):
+        for lang in ('en', 'fr'):
+            soup = BeautifulSoup(self.client.get('/%s/' % lang).content, 'html.parser')
+            links = [a['href'] for a in soup.select('#free-tools .home-tool h3 a')]
+            self.assertEqual(links, ['#arxiv-id'] + ['/%s/%s/' % (lang, p) for p in ('chat', 'digest', 'letters', 'trends', 'saved-searches')])
+            self.assertEqual(soup.select_one('.home-signup a.btn')['href'], '/%s/register/' % lang)
+        self.client.force_login(User.objects.create_user('member', 'member@example.com', 'pass'))
+        self.assertNotContains(self.client.get('/en/'), 'home-signup')
+
     def test_example_is_a_ready_summary_in_the_current_language(self):
         paper = ArxivPaper.objects.create(arxiv_id='1706.03762v1', title='Attention Is All You Need')
         SummaryPaper.objects.create(paper=paper, lang='en', summary='A ready summary.')
