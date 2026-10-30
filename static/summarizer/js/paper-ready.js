@@ -11,6 +11,14 @@
     var root = document.getElementById('paper-detail');
     if (!root || root.dataset.mounted) return;
     root.dataset.mounted = '1';
+    root.querySelectorAll('details.more-authors').forEach(function (details) {
+      details.addEventListener('toggle', function () {
+        if (!details.open) return;
+        // Once revealed, make the names ordinary text, including for screen readers.
+        details.querySelector('summary').remove();
+        details.replaceWith.apply(details, Array.from(details.childNodes));
+      });
+    });
     if (window.SPPaperTools) SPPaperTools.init();
     if (window.SPChatFigures && SPChatFigures.init) SPChatFigures.init(root);
     if (window.SPChat && SPChat.init) SPChat.init(root);
