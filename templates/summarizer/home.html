@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static static_version i18n dash_slash %}
+{% load static static_version i18n dash_slash seo %}
 {% get_current_language as LANGUAGE_CODE %}
 {% block title %}{% trans 'AI Research Companion & Paper Summaries | SummarizePaper' %}{% endblock %}
 {% block extra_head_tags %}
@@ -118,7 +118,7 @@
 {% if latestpapers %}
 <section class="home-section container" aria-labelledby="latest-title">
   <h2 id="latest-title">{% trans 'Recently summarized research papers' %}</h2>
-  <div class="home-recent">{% for paper in latestpapers|slice:':3' %}<a href="{% url 'arxividpage' paper.paper.arxiv_id %}" class="home-recent-paper" data-funnel="home_example_click" data-placement="recent"><span>{{ paper.paper.category|category_label }}</span><h3>{{ paper.paper.title|truncatechars:110 }}</h3><p>{{ paper.lay_summary|default:paper.summary|striptags|truncatewords:28 }}</p><strong>{% trans 'Read the summary' %} →</strong></a>{% endfor %}</div>
+  <div class="home-recent">{% for paper in latestpapers|slice:':3' %}<a href="{% url 'arxividpage' paper.paper.arxiv_id %}" class="home-recent-paper" data-funnel="home_example_click" data-placement="recent"><span>{{ paper.paper.category|category_label }}</span><h3>{{ paper.paper.title|truncatechars:110 }}</h3><p>{% trans 'Summary' %}{% if LANGUAGE_CODE == 'fr' %} :{% else %}:{% endif %} {{ paper.lay_summary|default:paper.summary|plaintext|truncatewords:28 }}</p><strong>{% trans 'Read the summary' %} →</strong></a>{% endfor %}</div>
 </section>
 {% endif %}
 </main>

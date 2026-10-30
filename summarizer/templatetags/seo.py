@@ -20,6 +20,7 @@ def plaintext(value):
     """Readable text from stored summary HTML: tags become spaces, entities are decoded."""
     text = re.sub(r'<[^>]+>', ' ', str(value or ''))
     text = re.sub(r'\s+', ' ', html.unescape(text)).strip()
+    text = summary_text.PREFIX.sub('', text, count=1).strip()
     #some generated summaries start with a bare "Summary"/"Résumé" label glued to the text
     return re.sub(r'^(Summary|Résumé)\s*:?\s*(?=[A-ZÀ-Ý])', '', text)
 
