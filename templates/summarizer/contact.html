@@ -32,16 +32,18 @@
 
   <form action="" method="post" class="card contact-form">
     {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div hidden aria-hidden="true"><label for="website">Website</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
     <label for="name">{% trans 'Name:' %}</label>
-    <input type="text" id="name" name="name" required>
+    {{ form.name.errors }}<input type="text" id="name" name="name" maxlength="120" value="{{ form.name.value|default_if_none:'' }}" required>
 
     <label for="email">{% trans 'Email:' %}</label>
-    <input type="email" id="email" name="email" required>
+    {{ form.email.errors }}<input type="email" id="email" name="email" maxlength="254" value="{{ form.email.value|default_if_none:'' }}" required>
 
     <label for="message">{% trans 'Message:' %}</label>
-    <textarea id="message" name="message" rows="5" required></textarea>
+    {{ form.message.errors }}<textarea id="message" name="message" rows="5" maxlength="10000" required>{{ form.message.value|default_if_none:'' }}</textarea>
 
-    <input type="submit" value="Submit" class="btn btn-lg">
+    <input type="submit" value="{% trans 'Send' %}" class="btn btn-lg">
   </form>
   {% if sent == 1 %}
   <div class="notice" style="margin-top:20px">{% trans "The email was successfully sent. You'll hear back from us shortly." %}</div>

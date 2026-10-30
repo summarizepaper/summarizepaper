@@ -17716,3 +17716,9 @@ msgstr[1] "%(count)s lettres disponibles"
 
 msgid "The structured reading is unavailable: no abstract or permitted full text was obtained. Previously generated content cannot be checked against the paper text. Please consult the original article."
 msgstr "L’éclairage est indisponible : aucun abstract ni texte intégral autorisé n’a pu être récupéré. Les contenus déjà générés ne peuvent pas être vérifiés à partir du texte de l’article. Consultez l’article original."
+
+msgid "Enter a valid name."
+msgstr "Saisissez un nom valide."
+
+msgid "Too many messages. Please try again in one hour."
+msgstr "Trop de messages ont été envoyés. Veuillez réessayer dans une heure."

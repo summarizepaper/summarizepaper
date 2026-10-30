@@ -490,41 +490,9 @@ def faq(request):
 
 
 def contact(request):
-    stuff_for_frontend = {}
+    from .contact_form import page
+    return page(request)
 
-    if request.method == 'POST':
-        name = request.POST['name']
-        email = request.POST['email']
-        message = request.POST['message']
-
-        # Send an email to the specified email address
-        subject = 'Paper Summarization Contact Form: ' + name
-        emailto = ['contact@summarizepaper.com']
-        #emailto.append(email)
-        emailsend = EmailMessage(
-            subject,
-            message+'\n\n\nFrom: '+name+' ('+email+')',
-            'SummarizePaper <communication@summarizepaper.com>',  # from
-            emailto,  # to
-            # getemails,  # bcc
-            # reply_to=replylist,
-            headers={'Message-From': 'www.summarizepaper.com'},
-        )
-        #emailsend.content_subtype = "html"
-
-        sent=emailsend.send(fail_silently=False)
-
-        if sent == 1:
-            stuff_for_frontend.update({'sent':1})
-        else:
-            stuff_for_frontend.update({'sent':0})
-
-            print('Failed to send the email.')
-
-        return render(request, 'summarizer/contact.html',stuff_for_frontend)
-
-
-    return render(request, "summarizer/contact.html", stuff_for_frontend)
 
 def privacy(request):
     stuff_for_frontend = {}
