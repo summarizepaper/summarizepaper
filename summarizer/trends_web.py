@@ -3,6 +3,7 @@ import csv
 import datetime
 import json
 from urllib.parse import urlencode
+from zoneinfo import ZoneInfo
 
 import numpy as np
 from django.http import Http404, HttpResponse
@@ -119,6 +120,20 @@ def for_you(user, lang):
     return ranked[:12], bool(categories), profile is not None
 
 
+
+def next_edition(day, now=None):
+    """The next submission week, using the same UTC cutoff as the scheduler."""
+    week = day + trends.WEEK
+    opens = datetime.datetime.combine(week + trends.WEEK + trends.CLOSE,
+        datetime.time.min, tzinfo=datetime.timezone.utc) + trends.CLOSE_TIME
+    paris = opens.astimezone(ZoneInfo('Europe/Paris'))
+    date = formats.date_format(paris, 'l j F Y')
+    if (get_language() or '').startswith('fr'):
+        date = date[:1].lower() + date[1:]
+    return {'start': week, 'end': week + datetime.timedelta(days=6),
+            'date': date, 'time': paris.strftime('%H:%M'),
+            'utc_time': opens.strftime('%H:%M'), 'pending': (now or timezone.now()) >= opens}
+
 def trends_page(request):
     paid = access.has_tool(request.user, 'trends')
     lang = get_language()
@@ -146,6 +161,7 @@ def trends_page(request):
     top, inner = scope_links(lang, day, scope) if day else ([], [])
     index = weeks.index(day) if day in weeks else 0
     context.update({
+        'next_edition': next_edition(day) if day and weeks and day == weeks[0] else None,
         'result_status': trends.result_state(scope, lang, day).get('status', 'pending') if day else 'pending',
         'day': day, 'day_end': day + datetime.timedelta(days=6) if day else None,
         'topics': [decorate(t) for t in shown], 'hidden': len(topics) - len(shown), 'top_scopes': top, 'inner_scopes': inner,

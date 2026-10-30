@@ -91,3 +91,25 @@ class TrendRetryTests(ToolsTestCase):
             with self.assertRaises(Exception):
                 trends.write('*', self.WEEK, rising=self.SIGNAL)
         self.assertEqual(self.state()['status'], 'failed')
+
+    def test_next_edition_matches_scheduler_and_paris_daylight_saving(self):
+        next_one = trends_web.next_edition(self.WEEK, datetime.datetime(2026, 10, 30, tzinfo=datetime.timezone.utc))
+        self.assertEqual(next_one['start'], datetime.date(2026, 10, 26))
+        self.assertEqual(next_one['end'], datetime.date(2026, 11, 1))
+        self.assertEqual((next_one['time'], next_one['utc_time'], next_one['pending']), ('07:00', '06:00', False))
+        summer = trends_web.next_edition(datetime.date(2026, 7, 6))
+        self.assertEqual(summer['time'], '08:00')
+        late = trends_web.next_edition(self.WEEK, datetime.datetime(2026, 11, 3, 6, tzinfo=datetime.timezone.utc))
+        self.assertTrue(late['pending'])
+
+    def test_schedule_is_shown_on_latest_edition_in_french(self):
+        RisingTopics.objects.create(scope='*', lang='fr', day=self.WEEK, content='{"topics": [], "status": "filtered"}')
+        page = Client().get('/fr/trends/')
+        self.assertContains(page, 'Prochaine édition')
+        self.assertContains(page, '26 octobre')
+        self.assertContains(page, '1 novembre 2026')
+        self.assertContains(page, 'mardi 3 novembre 2026 à 07:00')
+        older = self.WEEK - trends.WEEK
+        RisingTopics.objects.create(scope='*', lang='fr', day=older, content='{"topics": []}')
+        page = Client().get('/fr/trends/', {'week': older.isoformat()})
+        self.assertNotContains(page, 'aria-label="Prochaine édition"')

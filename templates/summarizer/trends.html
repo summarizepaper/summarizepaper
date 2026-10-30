@@ -60,6 +60,13 @@
       <span class="muted">{% blocktrans with start=day|date:"j F" end=day_end|date:"j F Y" %}Papers submitted from {{ start }} to {{ end }}{% endblocktrans %}</span>
       {% if newer %}<a href="?scope={{ scope|urlencode }}&week={{ newer|date:'Y-m-d' }}">{% trans 'Next week' %} &rarr;</a>{% endif %}
     </div>
+    {% if next_edition %}
+    <aside class="notice" aria-label="{% trans 'Next edition' %}">
+      <strong>{% trans 'Next edition' %}</strong> — {% blocktrans with start=next_edition.start|date:"j F" end=next_edition.end|date:"j F Y" %}papers submitted from {{ start }} to {{ end }}{% endblocktrans %}.<br>
+      {% if next_edition.pending %}{% trans 'This edition is awaiting publication.' %} {% endif %}
+      {% blocktrans with date=next_edition.date time=next_edition.time utc=next_edition.utc_time %}Calculation starts no earlier than {{ date }} at {{ time }} Paris time ({{ utc }} UTC). Results appear once processing is complete.{% endblocktrans %}
+    </aside>
+    {% endif %}
     {% if letter %}<p class="trend-badge">{% blocktrans with name=letter_name %}What these papers found, told for readers of other fields: the weekly letter "{{ name }}".{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/">{{ letter.title }}</a></p>
     {% elif scope == '*' %}<p class="muted">{% trans 'What the papers found, field by field:' %} <a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'the weekly letters' %}</a>.</p>{% endif %}
     {% if topics %}

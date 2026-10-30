@@ -17643,3 +17643,19 @@ msgid ""
 msgstr ""
 "Les sujets de cette semaine sont en attente de validation ou de génération. "
 "Le calcul sera relancé ; cela ne signifie pas qu’aucun sujet ne progresse."
+
+msgid "Next edition"
+msgstr "Prochaine édition"
+
+msgid "papers submitted from %(start)s to %(end)s"
+msgstr "articles soumis du %(start)s au %(end)s"
+
+msgid "This edition is awaiting publication."
+msgstr "Cette édition est en attente de publication."
+
+msgid ""
+"Calculation starts no earlier than %(date)s at %(time)s Paris time (%(utc)s "
+"UTC). Results appear once processing is complete."
+msgstr ""
+"Calcul à partir du %(date)s à %(time)s, heure de Paris (%(utc)s UTC). Les "
+"résultats sont publiés une fois le traitement terminé."
