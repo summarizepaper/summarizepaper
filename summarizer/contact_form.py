@@ -1,9 +1,10 @@
-"""Public contact form: validated input, shared rate limits and duplicate protection."""
+"""Public contact form: validated input, bot traps, shared rate limits and duplicate protection."""
 import hashlib
 import logging
 import time
 
 from django import forms
+from django.core import signing
 from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.shortcuts import redirect, render
@@ -14,11 +15,30 @@ from . import access
 logger = logging.getLogger(__name__)
 
 
+MIN_MESSAGE_LENGTH = 20
+# Humans take a few seconds to fill the form; scripts post at once or without loading it.
+MIN_FILL_SECONDS = 3
+MAX_FILL_SECONDS = 86400
+TOKEN_SALT = 'contact-form-started'
+
+
+def start_token():
+    return signing.dumps(time.time(), salt=TOKEN_SALT)
+
+
+def _fill_seconds(token):
+    try:
+        return time.time() - float(signing.loads(token, salt=TOKEN_SALT))
+    except (signing.BadSignature, TypeError, ValueError):
+        return None
+
+
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=120)
     email = forms.EmailField(max_length=254)
-    message = forms.CharField(max_length=10000, widget=forms.Textarea)
+    message = forms.CharField(min_length=MIN_MESSAGE_LENGTH, max_length=10000, widget=forms.Textarea)
     website = forms.CharField(required=False, widget=forms.HiddenInput)
+    started = forms.CharField(required=False, widget=forms.HiddenInput)
 
     def clean_name(self):
         name = self.cleaned_data['name']
@@ -35,15 +55,20 @@ def _over_limit(scope, identity, maximum):
 
 def page(request):
     form = ContactForm(request.POST if request.method == 'POST' else None)
-    context = {'form': form, 'sent': 1 if request.session.pop('contact_sent', False) else None}
+    context = {'form': form, 'started': start_token(),
+               'sent': 1 if request.session.pop('contact_sent', False) else None}
     if request.method != 'POST':
         return render(request, 'summarizer/contact.html', context)
     if not form.is_valid():
         return render(request, 'summarizer/contact.html', context, status=400)
-    if form.cleaned_data['website']:
-        # Pretend success for bots filling the hidden field, without sending mail.
+    elapsed = _fill_seconds(form.cleaned_data['started'])
+    if form.cleaned_data['website'] or elapsed is None or elapsed < MIN_FILL_SECONDS:
+        # Pretend success for bots (hidden field filled, form never loaded, instant post), without sending mail.
         request.session['contact_sent'] = True
         return redirect('contact')
+    if elapsed > MAX_FILL_SECONDS:
+        form.add_error(None, _('This page was open for too long. Please send your message again.'))
+        return render(request, 'summarizer/contact.html', context, status=400)
     data = form.cleaned_data
     email = data['email'].lower()
     digest = hashlib.sha256((email + '\n' + data['name'] + '\n' + data['message']).encode()).hexdigest()

@@ -9,6 +9,7 @@ from django.utils import translation
 
 from summarizer import accounts, digest
 from summarizer.models import DigestItem, DigestSubscription
+from summarizer.test_contact_form import started_ago
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -51,7 +52,9 @@ class EmailSenderTests(TestCase):
         self.assertIn('/en/reset/', mail.outbox[0].body)
 
     def test_contact_form_keeps_its_existing_branded_communication_address(self):
-        response = Client().post('/en/contact/', {'name': 'Reader', 'email': self.user.email, 'message': 'A question.'})
+        response = Client().post('/en/contact/', {'name': 'Reader', 'email': self.user.email,
+                                                  'message': 'A question about a paper.',
+                                                  'started': started_ago(60)})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(mail.outbox), 1)
         self.assert_sender(mail.outbox[0], 'communication@summarizepaper.com')

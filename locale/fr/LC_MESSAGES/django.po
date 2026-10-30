@@ -17857,3 +17857,9 @@ msgstr "Déjà lu par plus de %(count)s chercheurs."
 
 msgid "Get new papers like these every morning"
 msgstr "Recevoir des articles comme ceux-ci chaque matin"
+
+#: summarizer/contact_form.py
+msgid "This page was open for too long. Please send your message again."
+msgstr ""
+"Cette page est restée ouverte trop longtemps. Merci de renvoyer votre "
+"message."

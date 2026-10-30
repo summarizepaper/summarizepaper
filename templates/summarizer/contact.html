@@ -34,6 +34,7 @@
     {% csrf_token %}
     {{ form.non_field_errors }}
     <div hidden aria-hidden="true"><label for="website">Website</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
+    <input type="hidden" name="started" value="{{ started }}">
     <label for="name">{% trans 'Name:' %}</label>
     {{ form.name.errors }}<input type="text" id="name" name="name" maxlength="120" value="{{ form.name.value|default_if_none:'' }}" required>
 
@@ -41,7 +42,7 @@
     {{ form.email.errors }}<input type="email" id="email" name="email" maxlength="254" value="{{ form.email.value|default_if_none:'' }}" required>
 
     <label for="message">{% trans 'Message:' %}</label>
-    {{ form.message.errors }}<textarea id="message" name="message" rows="5" maxlength="10000" required>{{ form.message.value|default_if_none:'' }}</textarea>
+    {{ form.message.errors }}<textarea id="message" name="message" rows="5" minlength="20" maxlength="10000" required>{{ form.message.value|default_if_none:'' }}</textarea>
 
     <input type="submit" value="{% trans 'Send' %}" class="btn btn-lg">
   </form>
