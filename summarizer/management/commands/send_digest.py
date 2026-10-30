@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, digest, letters, publication_alerts, scoops, students, teams, trends, usage, saved_searches
+from summarizer import audio, changes, citations, digest, letters, publication_alerts, publication_status, scoops, students, teams, trends, usage, saved_searches
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,7 @@ class Command(BaseCommand):
                            ('letter emails', lambda: letters.send(now, budget)),
                            ('search watches', lambda: saved_searches.run(now, budget, base_url=options['base_url'])),
                            ('publication alerts', lambda: publication_alerts.run(now, budget)),
+                           ('publication details', lambda: publication_status.refresh_queued()),
                            ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url'])),
                            ('placement new papers', lambda: students.watch_new_papers(now, budget, base_url=options['base_url'])),
                            ('topic maps', lambda: teams.watch_maps(now, budget, base_url=options['base_url'])),

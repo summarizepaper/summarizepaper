@@ -87,6 +87,7 @@ def check(now, limit=MAX_CHECKED_PER_DAY):
             continue
         Generated.objects.update_or_create(kind=publication_status.KIND, key=paper.arxiv_id, lang='en',
                                            defaults={'status': 'done', 'content': json.dumps(report)})
+        publication_status.remember(paper, report)
         for kind, journal, doi in news(reports[base], report):
             for user_id in followers:
                 _alert, created = PublicationAlert.objects.get_or_create(

@@ -13,7 +13,7 @@ from .tool_list import TOOL_GROUPS
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, reading, similar, sources, exports, insight, summary_text
+from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, publication_status, reading, similar, sources, exports, insight, summary_text
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -1255,6 +1255,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'quota_left':chat_page.quota_left(request),
                 'paper_share':chat_page.current_share(request, arxiv_id),
                 'citation_meta':citation_meta(paper),
+                'publication_info':publication_status.for_page(paper),
                 'insight':paper_insight,
                 'insight_unavailable': insight.unavailable(arxiv_id, lang),
                 'topic':keywords[0] if keywords else '',

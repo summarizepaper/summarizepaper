@@ -2,18 +2,23 @@
 import datetime
 import html
 import json
+import logging
 import re
+import time
 import unicodedata
 import requests
 from urllib.parse import quote
 from xml.etree import ElementTree
 
+from django.core.cache import cache
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from pylatexenc.latex2text import LatexNodes2Text
 
 from . import digest, generated, sources
-from .models import Generated, PaperText
+from .models import ArxivPaper, FollowedPaper, Generated, PaperText
+
+logger = logging.getLogger(__name__)
 
 KIND = 'presskit_status'
 TTL = datetime.timedelta(days=1)
@@ -92,6 +97,20 @@ def publication_date(work):
     return ''
 
 
+def accepted_date(work):
+    """'2023-05-25' when Crossref has the acceptance date, from the field (A&A) or a publisher assertion (AAS, Springer)."""
+    parts = (work.get('accepted') or {}).get('date-parts') or []
+    values = ['-'.join(str(n) for n in parts[0])] if parts and parts[0] and len(parts[0]) == 3 else []
+    values += [str(a.get('value') or '') for a in work.get('assertion') or [] if a.get('name') in ('accepted', 'date_accepted')]
+    for value in values:
+        for form in ('%Y-%m-%d', '%d %B %Y'):
+            try:
+                return datetime.datetime.strptime(value.strip(), form).date().isoformat()
+            except ValueError:
+                continue
+    return ''
+
+
 def lookup(paper):
     report = {'checked_at': timezone.now().isoformat(), 'status': 'unknown', 'doi': '', 'journal': '',
               'date': '', 'sources': [], 'checked_sources': [], 'unavailable': [], 'peer_review': 'not_independently_verified'}
@@ -108,6 +127,7 @@ def lookup(paper):
             if record:
                 doi = sources.clean_doi(record.get('doi', '')) or doi
                 comment = record.get('comment', '')[:2000]
+                report['arxiv_doi'], report['journal_ref'] = doi or '', record.get('journal_ref', '')[:200]
                 report['sources'].append({'name': 'arXiv', 'url': 'https://arxiv.org/abs/' + base,
                     'detail': ' · '.join(filter(None, [record.get('journal_ref', '')[:600], comment])) or _('Preprint record found.'), 'kind': 'author_metadata'})
                 report['status'] = 'journal_reference' if record.get('journal_ref') else 'preprint'
@@ -177,12 +197,12 @@ def notices(work):
 
 def apply_work(report, work):
     doi = sources.clean_doi(work.get('DOI', ''))
-    journal = (work.get('container-title') or [''])[0]
+    journal = html.unescape((work.get('container-title') or [''])[0])
     date = publication_date(work)
     if not doi or not journal or work.get('type') not in ('journal-article', 'proceedings-article') or not date:
         return False
     report.update(status='forthcoming' if date > timezone.now().date().isoformat()[:len(date)] else 'published',
-                  doi=doi, journal=journal, date=date, updates=notices(work))
+                  doi=doi, journal=journal, date=date, accepted=accepted_date(work), updates=notices(work))
     report['sources'].append({'name': 'Crossref', 'url': 'https://doi.org/' + doi,
                              'detail': journal + ' · ' + date, 'kind': 'publisher_metadata'})
     return True
@@ -231,3 +251,92 @@ def display_context(report):
         checked = None
     return {'publication': report, 'publication_label': description(report), 'publication_checked_at': checked,
             'publication_peer_review': peer_review_text(report)}
+
+
+# The paper page shows the journal, DOI and dates found by lookup. Its views queue the papers whose check is
+# missing or old, and the hourly run checks a few of them at arXiv's pace (refresh_queued).
+QUEUE_KEY = 'publication-status-queue'
+MAX_QUEUED = 500
+MAX_REFRESHED_PER_RUN = 30
+ARXIV_SECONDS = 3
+SHOWN_EVERY = datetime.timedelta(days=30)
+PUBLISHED_SHOWN_EVERY = datetime.timedelta(days=180)
+
+
+def page_due(report):
+    if not report:
+        return True
+    return stale(report, PUBLISHED_SHOWN_EVERY if report.get('status') == 'published' else SHOWN_EVERY)
+
+
+def queue(arxiv_id):
+    ids = cache.get(QUEUE_KEY) or []
+    if arxiv_id not in ids and len(ids) < MAX_QUEUED:
+        cache.set(QUEUE_KEY, ids + [arxiv_id], 7 * 86400)
+
+
+def iso_date(value):
+    """('2013-06' ->) (datetime.date(2013, 6, 1), 'F Y'): the date and the format that shows only what is known."""
+    parts = [int(n) for n in re.findall(r'\d+', value or '')][:3]
+    try:
+        return datetime.date(*(parts + [1, 1])[:3]), {1: 'Y', 2: 'F Y'}.get(len(parts), 'd M. Y')
+    except (TypeError, ValueError):
+        return None, ''
+
+
+def for_page(paper):
+    """What the paper page shows of the paper's publication: {doi, journal, published, published_format, accepted,
+    forthcoming}. The journal comes from Crossref when it confirmed the publication, else the arXiv journal reference."""
+    row = Generated.objects.filter(kind=KIND, key=paper.arxiv_id, lang='en').first()
+    report = row.data() if row and row.content else None
+    if page_due(report) and not sources.is_external(paper.arxiv_id):
+        queue(paper.arxiv_id)
+    report = report or {}
+    confirmed = report.get('status') in ('published', 'forthcoming')
+    doi = (confirmed and report.get('doi')) or report.get('arxiv_doi') or sources.clean_doi(paper.link_doi or '') or ''
+    published, published_format = iso_date(report.get('date')) if confirmed else (None, '')
+    accepted = iso_date(report.get('accepted'))[0] if confirmed else None
+    return {'doi': '' if sources.ARXIV_DOI_RE.match(doi) else doi,
+            'journal': report.get('journal', '') if confirmed else (paper.journal_ref or ''),
+            'confirmed': confirmed, 'forthcoming': report.get('status') == 'forthcoming',
+            'published': published, 'published_format': published_format, 'accepted': accepted}
+
+
+def remember(paper, report):
+    """Keep on the paper the DOI and journal reference that arXiv now has: they are often added after publication."""
+    fields = {}
+    doi = report.get('arxiv_doi') or (report.get('status') in ('published', 'forthcoming') and report.get('doi'))
+    if doi and not sources.ARXIV_DOI_RE.match(doi) and sources.clean_doi(paper.link_doi or '') != doi:
+        fields['link_doi'] = 'https://doi.org/' + doi
+    if report.get('journal_ref') and report['journal_ref'] != (paper.journal_ref or ''):
+        fields['journal_ref'] = report['journal_ref']
+    if fields:  # update() leaves ArxivPaper.updated alone: it dates the summary
+        ArxivPaper.objects.filter(pk=paper.pk).update(**fields)
+
+
+def refresh_queued(limit=MAX_REFRESHED_PER_RUN):
+    """From the hourly run: check the queued papers. Followed papers are left to publication_alerts, whose
+    alerts come from comparing its own checks. Returns how many papers were checked."""
+    ids = cache.get(QUEUE_KEY) or []
+    cache.set(QUEUE_KEY, ids[limit:], 7 * 86400)
+    checked = 0
+    for arxiv_id in ids[:limit]:
+        paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+        base = re.sub(r'v\d+$', '', arxiv_id).replace('--', '/')
+        if paper is None or FollowedPaper.objects.filter(arxiv_id=base).exists():
+            continue
+        row = Generated.objects.filter(kind=KIND, key=arxiv_id, lang='en').first()
+        if not page_due(row.data() if row and row.content else None):
+            continue
+        if checked:
+            time.sleep(ARXIV_SECONDS)
+        try:
+            report = lookup(paper)
+        except Exception:
+            logger.warning('Publication check failed for %s', arxiv_id)
+            continue
+        checked += 1
+        Generated.objects.update_or_create(kind=KIND, key=arxiv_id, lang='en',
+                                           defaults={'status': 'done', 'content': json.dumps(report)})
+        remember(paper, report)
+    return checked

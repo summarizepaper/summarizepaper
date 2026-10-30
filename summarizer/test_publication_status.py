@@ -214,3 +214,62 @@ class JournalPeerReviewTests(ToolsTestCase):
         self.assertIn('Peer-reviewed article', exported)
         self.assertNotIn('not independently confirmed', exported)
         self.assertEqual(status.for_generation(self.paper_obj)['peer_review'], 'journal_policy')
+
+
+class PaperPagePublicationTests(SimpleTestCase):
+    def test_acceptance_date_from_the_field_or_a_publisher_assertion(self):
+        self.assertEqual(status.accepted_date({'accepted': {'date-parts': [[2023, 7, 4]]}}), '2023-07-04')
+        self.assertEqual(status.accepted_date({'assertion': [{'name': 'date_received', 'value': '2023-05-11'},
+                                                             {'name': 'date_accepted', 'value': '2023-05-25'}]}), '2023-05-25')
+        self.assertEqual(status.accepted_date({'assertion': [{'name': 'accepted', 'value': '11 March 2013'}]}), '2013-03-11')
+        self.assertEqual(status.accepted_date({'accepted': {'date-parts': [[2023, 7]]}}), '')
+
+    def test_journal_names_are_unescaped_and_keep_the_acceptance_date(self):
+        found = {'sources': []}
+        status.apply_work(found, article(**{'container-title': ['Astronomy &amp; Astrophysics'],
+                                            'accepted': {'date-parts': [[2024, 1, 5]]}}))
+        self.assertEqual((found['journal'], found['accepted']), ('Astronomy & Astrophysics', '2024-01-05'))
+
+    def test_dates_show_only_their_known_precision(self):
+        self.assertEqual(status.iso_date('2013-06'), (datetime.date(2013, 6, 1), 'F Y'))
+        self.assertEqual(status.iso_date('2014-01-06'), (datetime.date(2014, 1, 6), 'd M. Y'))
+        self.assertEqual(status.iso_date(''), (None, ''))
+
+
+class PaperPageRefreshTests(ToolsTestCase):
+    def setUp(self):
+        super().setUp()
+        from django.core.cache import cache
+        from .models import ArxivPaper
+        cache.delete(status.QUEUE_KEY)
+        # Saved by an old parser: the "DOI" was the arXiv page and arXiv had no journal reference yet
+        self.paper = ArxivPaper.objects.create(arxiv_id='1307.0983v2', title=TITLE,
+                                               link_doi='http://arxiv.org/abs/1307.0983v2', journal_ref='')
+
+    def test_page_shows_no_fake_doi_and_queues_the_check(self):
+        info = status.for_page(self.paper)
+        self.assertEqual((info['doi'], info['journal'], info['published']), ('', '', None))
+        self.assertEqual(status.cache.get(status.QUEUE_KEY), ['1307.0983v2'])
+
+    def test_hourly_check_fills_the_page_and_the_paper(self):
+        status.queue(self.paper.arxiv_id)
+        found = report(doi='10.1017/s1743921313008880', journal='Proceedings of the International Astronomical Union',
+                       date='2014-01-06', accepted='2013-09-02', arxiv_doi='10.1017/s1743921313008880', journal_ref='IAU 299')
+        with mock.patch.object(status, 'lookup', return_value=found):
+            self.assertEqual(status.refresh_queued(), 1)
+        self.paper.refresh_from_db()
+        self.assertEqual((self.paper.link_doi, self.paper.journal_ref), ('https://doi.org/10.1017/s1743921313008880', 'IAU 299'))
+        info = status.for_page(self.paper)
+        self.assertEqual((info['doi'], info['journal'], info['published'], info['accepted']),
+                         ('10.1017/s1743921313008880', 'Proceedings of the International Astronomical Union',
+                          datetime.date(2014, 1, 6), datetime.date(2013, 9, 2)))
+        self.assertEqual(status.cache.get(status.QUEUE_KEY), [])
+
+    def test_followed_papers_are_left_to_the_publication_alerts(self):
+        from django.contrib.auth.models import User
+        from .models import FollowedPaper
+        FollowedPaper.objects.create(user=User.objects.create(username='reader'), arxiv_id='1307.0983')
+        status.queue(self.paper.arxiv_id)
+        with mock.patch.object(status, 'lookup') as lookup:
+            self.assertEqual(status.refresh_queued(), 0)
+        lookup.assert_not_called()

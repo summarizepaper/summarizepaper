@@ -25,9 +25,10 @@
     {% endif %}
     {% endwith %}
     <div class="paper-meta">
-      <span class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank" rel="noopener">{% endif %}{% trans 'Original paper' %}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi and not arxiv_id|is_external %} · <a href="{{ paper.link_doi }}" target="_blank" rel="noopener">DOI</a>{% endif %}</span>
+      <span class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank" rel="noopener">{% endif %}{% trans 'Original paper' %}{% if paper.link_homepage %}</a>{% endif %}{% if publication_info.doi and not arxiv_id|is_external %} · DOI <a href="https://doi.org/{{ publication_info.doi }}" target="_blank" rel="noopener">{{ publication_info.doi }}</a>{% endif %}</span>
       {% if paper.published_arxiv %}<span class="info-text"><i class="fas fa-clock"></i> {% if arxiv_id|is_external %}{% trans 'Published on' %}{% else %}{% trans 'Submitted to arXiv on' %}{% endif %} {{ paper.published_arxiv|date:"d M. Y" }}</span>{% endif %}
-      {% if paper.journal_ref %}<span class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</span>{% endif %}
+      {% with p=publication_info %}{% if p.journal %}<span class="info-text"><i class="fas fa-book"></i> {% if p.confirmed %}{% if p.forthcoming %}{% trans 'To be published in' %}{% else %}{% trans 'Published in' %}{% endif %} <em>{{ p.journal }}</em>{% if p.published %} ({{ p.published|date:p.published_format }}){% endif %}{% else %}{{ p.journal }}{% endif %}</span>{% endif %}
+      {% if p.accepted %}<span class="info-text"><i class="fas fa-check"></i> {% trans 'Accepted on' %} {{ p.accepted|date:"d M. Y" }}</span>{% endif %}{% endwith %}
       {% if paper.comments %}<span class="info-text"><i class="fas fa-comment"></i> {{ paper.comments }}</span>{% endif %}
       <span class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% if paper.license %}<a href="{{ paper.license }}" target="_blank" rel="noopener">{{ cc_format }}</a>{% else %}{% trans 'not stated (all rights reserved)' %}{% endif %}</span>
       {% if sumlang %}<span class="info-text"><i class="fas fa-language"></i> {% trans 'Also in:' %} {% for l in sumlang %}<a href="/{{ l }}/paper/{{ arxiv_id }}/">{{ l }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}

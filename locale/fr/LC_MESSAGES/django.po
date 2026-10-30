@@ -17863,3 +17863,12 @@ msgid "This page was open for too long. Please send your message again."
 msgstr ""
 "Cette page est restée ouverte trop longtemps. Merci de renvoyer votre "
 "message."
+
+msgid "Published in"
+msgstr "Publié dans"
+
+msgid "To be published in"
+msgstr "À paraître dans"
+
+msgid "Accepted on"
+msgstr "Accepté le"
