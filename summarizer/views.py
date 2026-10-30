@@ -1288,6 +1288,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'paper_share':chat_page.current_share(request, arxiv_id),
                 'citation_meta':citation_meta(paper),
                 'insight':paper_insight,
+                'insight_unavailable': insight.unavailable(arxiv_id, lang),
                 'topic':keywords[0] if keywords else '',
                 'saved_matches':saved_searches.matching(request.user, arxiv_id),
             })

@@ -38,6 +38,11 @@ class GenerationError(Exception):
     pass
 
 
+class SourceUnavailable(Exception):
+    """No usable source exists; an expected limitation rather than an AI failure."""
+    pass
+
+
 def language_name(lang):
     from django.utils.translation import get_language_info
     try:
@@ -114,6 +119,10 @@ def _run(pk, work):
     try:
         with usage.task(kind, user_id):
             content = work(pk)
+    except SourceUnavailable as e:
+        logger.info('Generation %s unavailable: %s', pk, e)
+        Generated.objects.filter(pk=pk).update(status='no_source', error=str(e)[:2000], content='', updated=timezone.now())
+        return
     except Exception as e:
         logger.exception('Generation %s failed', pk)
         Generated.objects.filter(pk=pk).update(status='failed', error=repr(e)[:2000], updated=timezone.now())

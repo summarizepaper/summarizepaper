@@ -537,6 +537,18 @@ def localized_name(topic, lang):
         return str(TOPICS[topic]['name']), gettext('%(name)s this week') % {'name': str(TOPICS[topic]['name'])}
 
 
+
+def normalized_title(topic, lang, title):
+    """Repair only the letter heading, preserving the editorial title that follows."""
+    title = str(title).strip()[:300]
+    if lang == 'fr':
+        name, heading = localized_name(topic, lang)
+        english, _heading = localized_name(topic, 'en')
+        title = re.sub(r'^(?:%s|%s)\s+this\s+week\b' % (re.escape(name), re.escape(english)),
+                       lambda match: heading, title, count=1, flags=re.I)
+        title = re.sub(r'\s*:\s*', '\u00a0: ', title, count=1)
+    return title
+
 def write(topic, day, lang, save=True, reuse=True):
     """The letter of a theme, week and language, stored unless save=False; reuse=False chooses the papers again
     even when another language already has them."""
@@ -587,11 +599,7 @@ def write(topic, day, lang, save=True, reuse=True):
                 'study': written.get('study') if written.get('study') in STUDY_TYPES else 'other',
                 'evidence': '' if unsupported(evidence, known) else evidence,
                 'limit': plain_math(str(written.get('limit') or '').strip())[:400]})
-    title = str(answer['title']).strip()[:300]
-    if lang != 'en':  # the model sometimes keeps the English 'this week' of the prompt's examples
-        title = title.replace('%s this week' % name, heading)
-    if lang == 'fr':
-        title = re.sub(r'\s*:\s*', '\u00a0: ', title, count=1)
+    title = normalized_title(topic, lang, answer['title'])
     selection = dict(selection, sources=sorted({facts[p['arxiv_id']]['source'] for p in chosen}), **check)
     order = [p['arxiv_id'] for p in chosen]
     queries = {}

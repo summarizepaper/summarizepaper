@@ -6,7 +6,7 @@ import asyncio
 import re
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, chat_table, insight, keypoints, similar, sources, summary_text
+from summarizer import access, assistant, chat_table, generated, insight, keypoints, similar, sources, summary_text
 import logging
 
 logger = logging.getLogger(__name__)
@@ -389,6 +389,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 book_text='Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.'
                 text_source='abstract'
 
+            if text_source == 'abstract' and not (abstract or '').strip():
+                raise generated.SourceUnavailable('No abstract or permitted full text is available.')
+
             await self.send_source('full_text' if text_source != 'abstract' else
                                    ('abstract_unavailable' if public else 'abstract_license'))
             message["progress"] = 30
@@ -661,6 +664,11 @@ class LoadingConsumer(AsyncWebsocketConsumer):
     async def sendmessages(self,v,l,message,p):
         try:
             await self._sendmessages(v,l,message,p)
+        except generated.SourceUnavailable:
+            cache.set(self.arxiv_group_name, False)
+            text = ('Résumé indisponible : aucun abstract ni texte intégral autorisé n’a pu être récupéré. Consultez l’article original.'
+                    if l == 'fr' else 'Summary unavailable: no abstract or permitted full text could be obtained. Please consult the original article.')
+            await self.send_message_now({'loading_message': text, 'progress': 0})
         except Exception:
             logger.exception('Summary failed for %s', v)
             #release the "running" lock so the paper can be run again

@@ -13,7 +13,7 @@ import logging
 
 from . import generated, paper_source, sources
 from .assistant import SOURCE_POLICY
-from .models import ArxivPaper, Generated
+from .models import ArxivPaper, Generated, PaperText
 from .presskit import normalized, quote_match
 
 logger = logging.getLogger(__name__)
@@ -65,11 +65,12 @@ def structured(answer, source, abstract_only):
 
 def source_text(paper):
     """(text given to the model, abstract_only)."""
-    if sources.is_open_license(paper.license):
+    stored = PaperText.objects.filter(arxiv_id=paper.arxiv_id).only('source').first()
+    if sources.is_open_license(paper.license) and not (stored and stored.source == 'abstract'):
         text = paper_source.paper_text(paper.arxiv_id)
         if text and normalized(text) != normalized(paper.abstract or ''):
             return text[:MAX_CHARS], False
-    return paper.abstract or '', True
+    return (paper.abstract or '').strip(), True
 
 
 def write(arxiv_id, lang, paid):
@@ -77,7 +78,7 @@ def write(arxiv_id, lang, paid):
         paper = ArxivPaper.objects.get(arxiv_id=arxiv_id)
         text, abstract_only = source_text(paper)
         if not text:
-            raise ValueError('no text for %s' % arxiv_id)
+            raise generated.SourceUnavailable('No abstract or permitted full text is available.')
         authors = [a.name for a in paper.authors.all()[:20]]
         generated.release_connection()
         context = json.dumps({'source_documents': {
@@ -104,3 +105,7 @@ def for_page(arxiv_id, lang):
     row = Generated.objects.filter(kind=KIND, key=arxiv_id, lang=lang, status='done').first()
     data = row.data() if row else None
     return data if isinstance(data, dict) and data.get('tldr') and data.get('findings') else None
+
+
+def unavailable(arxiv_id, lang):
+    return Generated.objects.filter(kind=KIND, key=arxiv_id, lang=lang, status='no_source').exists()

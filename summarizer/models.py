@@ -655,7 +655,7 @@ class Generated(models.Model):
 
     One row per kind, key and language, shared by every reader unless `user` is set (private results).
     """
-    STATUSES = [('pending', 'En cours'), ('done', 'Prêt'), ('failed', 'Échec')]
+    STATUSES = [('pending', 'En cours'), ('done', 'Prêt'), ('failed', 'Échec'), ('no_source', 'Source indisponible')]
     kind = models.CharField(max_length=20)
     key = models.CharField(max_length=200)
     lang = models.CharField(max_length=10, default='en')

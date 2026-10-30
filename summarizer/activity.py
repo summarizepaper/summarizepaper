@@ -160,7 +160,7 @@ def feed(day, kind=None, members_only=False):
             add('search', s.created, s.query or '', '/%s/search-results/' % s.lang, s.user)
     if wanted('tool'):
         for g in rows(Generated).select_related('user').defer('content'):
-            state = {'failed': 'échec : %s' % g.error[:120], 'pending': 'en cours %s' % g.step}.get(g.status, '')
+            state = {'failed': 'échec : %s' % g.error[:120], 'pending': 'en cours %s' % g.step, 'no_source': 'source indisponible'}.get(g.status, '')
             add('tool', g.created, '%s · %s' % (TOOL_NAMES.get(g.kind, g.kind), g.key[:60]), _tool_url(g), g.user,
                 state, g.status == 'failed')
     if wanted('vote'):
@@ -197,7 +197,12 @@ def watch():
     as_rows = lambda query: [{'time': g.updated.astimezone(PARIS), 'tool': TOOL_NAMES.get(g.kind, g.kind), 'key': g.key[:60],
                               'href': _tool_url(g), 'who': _who(g.user), 'who_url': _user_url(g.user),
                               'detail': g.error[:200] or g.step} for g in query]
-    return {'failed': as_rows(failed), 'stuck': as_rows(stuck)}
+    unavailable = Generated.objects.filter(status='no_source', updated__gte=now - datetime.timedelta(days=1)) \
+        .select_related('user').defer('content').order_by('-updated')[:30]
+    no_source = as_rows(unavailable)
+    for row in no_source:
+        row['detail'] = 'Aucun abstract ni texte intégral autorisé disponible ; aucune génération effectuée.'
+    return {'failed': as_rows(failed), 'stuck': as_rows(stuck), 'unavailable': no_source}
 
 
 # an answer about several papers names each by its tag, such as [Smith et al. 2021] (assistant.MULTI_INSTRUCTIONS)
