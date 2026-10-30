@@ -19,9 +19,9 @@
     {% if paper.title %}<h1 class="paper-title">{{ paper.title }}</h1>{% endif %}
     {% with authors=paper.authors.all %}
     {% if authors %}
-    <p class="paper-authors">
+    <div class="paper-authors">
       {% for author in authors %}{% if forloop.counter == 9 %}<details class="more-authors"><summary>{% blocktrans count n=authors|length|add:"-8" %}and {{ n }} more author{% plural %}and {{ n }} more authors{% endblocktrans %}</summary>{% endif %}{{ author.name }}{% if author.affiliation %} <span class="affiliation">({{ author.affiliation }})</span>{% endif %}{% if not forloop.last %}, {% endif %}{% if forloop.last and forloop.counter > 8 %}</details>{% endif %}{% endfor %}
-    </p>
+    </div>
     {% endif %}
     {% endwith %}
     <div class="paper-meta">
