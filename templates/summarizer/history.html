@@ -55,5 +55,6 @@
     {% else %}<h2>{% trans 'No readings yet' %}</h2><p>{% trans 'Open a paper while signed in to find it here later.' %}</p><a href="/{{ LANGUAGE_CODE }}/getting-started/">{% trans 'Explore an example' %} →</a>{% endif %}
   </div>
   {% endif %}
+  <p class="activity-account muted" style="margin-top:40px;font-size:14px"><a href="{% url 'account_delete' %}">{% trans 'Delete my account' %}</a></p>
 </div>
 {% endblock %}

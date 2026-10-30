@@ -26,6 +26,13 @@ class ContactProtectionTests(TestCase):
             self.assertEqual(self.client.post('/en/contact/', fields).status_code, 400)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_signed_in_reader_finds_name_and_email_filled(self):
+        from django.contrib.auth.models import User
+        self.client.force_login(User.objects.create_user('ada', 'ada@example.com', 'pw', first_name='Ada'))
+        html = self.client.get('/en/contact/').content.decode()
+        self.assertIn('value="Ada"', html)
+        self.assertIn('value="ada@example.com"', html)
+
     def test_honeypot_does_not_send(self):
         self.assertEqual(self.client.post('/en/contact/', {**self.fields, 'website': 'spam'}).status_code, 302)
         self.assertEqual(len(mail.outbox), 0)

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Delete my account' %}{% endblock %}
+{% block extra_head_tags %}
+  <meta name="robots" content="noindex">
+  <style>
+    .delete-card { padding: 24px 28px; }
+    .delete-card ul { margin: 0 0 18px; padding-left: 22px; }
+    .delete-card li { margin: 4px 0; }
+    .delete-card label { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 18px; font-weight: 600; }
+    .delete-card label input { width: auto; margin-top: 4px; }
+    .btn-danger { background: #b91c1c; border-color: #b91c1c; }
+    .btn-danger:hover { background: #991b1b; border-color: #991b1b; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="page" style="max-width:640px">
+  {% if deleted %}
+  <header class="page-header"><h1>{% trans 'Your account has been deleted' %}</h1></header>
+  <div class="notice" role="status">{% trans 'Your account and the data attached to it have been deleted. Thank you for having used SummarizePaper.' %}</div>
+  <p style="margin-top:20px"><a href="/{{ LANGUAGE_CODE }}/">{% trans 'Back to the home page' %}</a></p>
+  {% else %}
+  <header class="page-header">
+    <h1>{% trans 'Delete my account' %}</h1>
+    <p class="lead">{% trans 'This deletes your account for good. It cannot be undone.' %}</p>
+  </header>
+
+  {% if staff %}
+  <div class="error">{% trans 'Staff accounts cannot be deleted from this page; use the admin.' %}</div>
+  {% else %}
+  <form method="post" class="card delete-card">
+    {% csrf_token %}
+    <p>{% trans 'Will be deleted at once:' %}</p>
+    <ul>
+      <li>{% trans 'your account, your sign-in and your email address;' %}</li>
+      <li>{% trans 'your reading activity and your conversations;' %}</li>
+      <li>{% trans 'your collections, including those you shared with others;' %}</li>
+      <li>{% trans 'your digests, saved searches, alerts, letters and followed papers, so you will receive no more emails;' %}</li>
+      <li>{% trans 'your results (press kits, literature reviews, slides...), their share links and your Zotero connection.' %}</li>
+    </ul>
+    {% if subscribed %}
+    <p class="notice" style="background:#fffbeb;border-color:#fde68a;color:#92400e">{% trans 'Your Premium subscription will be cancelled immediately, without refund of the current period. Stripe keeps your invoices, as the law requires.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'manage your subscription' %}</a></p>
+    {% endif %}
+    {% if error == 'confirm' %}<p class="error">{% trans 'Tick the box to confirm.' %}</p>{% endif %}
+    {% if error == 'billing' %}<p class="error">{% trans 'Your subscription could not be cancelled, so the account was kept. Please try again in a moment or contact us.' %}</p>{% endif %}
+    <label><input type="checkbox" name="confirm" value="yes" required> {% trans 'I understand that my account and its data will be deleted for good.' %}</label>
+    <button type="submit" class="btn btn-danger">{% trans 'Delete my account' %}</button>
+    <a href="/{{ LANGUAGE_CODE }}/history/" style="margin-left:14px">{% trans 'Cancel' %}</a>
+  </form>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

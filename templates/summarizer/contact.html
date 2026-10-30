@@ -1,18 +1,22 @@
 {% extends 'base.html' %}
-{% load static %}
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
 
-{% block title %} {% trans 'Contact Us - Get in Touch with our arXiv Summarization Service' %} {% endblock %}
+{% block title %}{% trans 'Contact SummarizePaper' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Have questions or feedback about our AI-powered arXiv paper summarization service? Contact us today to get in touch with our team and learn more.' %}" />
+  <meta name="description" content="{% trans 'A question, a bug, an idea or a privacy request about SummarizePaper? Write to us: a real person reads every message and answers.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/contact/" />
   <style>
     .contact-form { padding: 28px; }
     .contact-form label { display: block; margin: 0 0 6px; font-size: 14px; font-weight: 600; }
     .contact-form input, .contact-form textarea { margin-bottom: 18px; }
     .contact-form input[type=submit] { width: auto; margin: 0; }
+    .contact-form .form-note { margin: 14px 0 0; font-size: 13px; color: var(--text-muted); }
+    .contact-help { margin: 0 0 28px; padding: 18px 22px; font-size: 15px; }
+    .contact-help h2 { margin: 0 0 8px; font-size: 16px; }
+    .contact-help ul { margin: 0; padding-left: 20px; }
+    .contact-help li { margin: 4px 0; }
   </style>
 {% endblock %}
 
@@ -23,12 +27,22 @@
 <div class="page" style="max-width:640px">
   <header class="page-header">
   <h1>{% trans 'Contact Us' %}</h1>
-  <p class="lead">
-    {% blocktrans %} Have questions or concerns about our AI-powered paper summarization
-    service? We're here to help! Fill out the form below and we'll get back
-    to you as soon as possible. {% endblocktrans %}
-  </p>
+  <p class="lead">{% trans 'A question, a bug, an idea of a tool or a privacy request? Quentin, who develops the site, reads every message and answers by email.' %}</p>
   </header>
+
+  {% if sent == 1 %}
+  <div class="notice" role="status">{% trans "The email was successfully sent. You'll hear back from us shortly." %}</div>
+  {% else %}
+
+  <div class="card contact-help">
+    <h2>{% trans 'Maybe answered already' %}</h2>
+    <ul>
+      <li><a href="/{{ LANGUAGE_CODE }}/faq/">{% trans 'Frequently asked questions' %}</a> {% trans '(limits, languages, sources, Premium)' %}</li>
+      <li><a href="/{{ LANGUAGE_CODE }}/guides/">{% trans 'Guides with real examples for each tool' %}</a></li>
+      <li>{% trans 'Invoices, payment card or cancellation:' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'manage your subscription' %}</a></li>
+      <li>{% trans 'Too many emails: every digest, alert and letter ends with a link to stop it or change its settings.' %}</li>
+    </ul>
+  </div>
 
   <form action="" method="post" class="card contact-form">
     {% csrf_token %}
@@ -36,18 +50,17 @@
     <div hidden aria-hidden="true"><label for="website">Website</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
     <input type="hidden" name="started" value="{{ started }}">
     <label for="name">{% trans 'Name:' %}</label>
-    {{ form.name.errors }}<input type="text" id="name" name="name" maxlength="120" value="{{ form.name.value|default_if_none:'' }}" required>
+    {{ form.name.errors }}<input type="text" id="name" name="name" maxlength="120" autocomplete="name" value="{{ form.name.value|default_if_none:'' }}" required>
 
     <label for="email">{% trans 'Email:' %}</label>
-    {{ form.email.errors }}<input type="email" id="email" name="email" maxlength="254" value="{{ form.email.value|default_if_none:'' }}" required>
+    {{ form.email.errors }}<input type="email" id="email" name="email" maxlength="254" autocomplete="email" value="{{ form.email.value|default_if_none:'' }}" required>
 
     <label for="message">{% trans 'Message:' %}</label>
-    {{ form.message.errors }}<textarea id="message" name="message" rows="5" minlength="20" maxlength="10000" required>{{ form.message.value|default_if_none:'' }}</textarea>
+    {{ form.message.errors }}<textarea id="message" name="message" rows="6" minlength="20" maxlength="10000" placeholder="{% trans 'For a bug, the link of the page and what you expected help us a lot.' %}" required>{{ form.message.value|default_if_none:'' }}</textarea>
 
     <input type="submit" value="{% trans 'Send' %}" class="btn btn-lg">
+    <p class="form-note">{% trans 'Your name, email and message are sent to us by email to answer you; they are not kept on the site.' %} <a href="/{{ LANGUAGE_CODE }}/privacy/">{% trans 'Privacy Policy' %}</a></p>
   </form>
-  {% if sent == 1 %}
-  <div class="notice" style="margin-top:20px">{% trans "The email was successfully sent. You'll hear back from us shortly." %}</div>
   {% endif %}
 
   {% if sent == 0 %}
@@ -55,9 +68,4 @@
   {% endif %}
 
 </div>
-{% endblock %}
-
-{% block scripts %}
-
-
 {% endblock %}

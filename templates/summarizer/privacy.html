@@ -1,12 +1,18 @@
 {% extends 'base.html' %}
-{% load static %}
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %} {% trans 'Our Privacy Policy - AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
+{% block title %}{% trans 'Privacy Policy - SummarizePaper' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'We take your privacy seriously. Learn more about our privacy policy for our AI-powered arXiv paper summarization service. Discover how we protect your data, what information we collect, and how we use it to improve our service.' %}" />
+  <meta name="description" content="{% trans 'What SummarizePaper collects, why, with which providers and for how long: accounts, chat questions, alerts, payments, emails, cookies and AI processing. No advertising and no tracking cookies.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/privacy/" />
+  <style>
+    .privacy-summary { margin: 0 0 8px; padding: 18px 22px; font-size: 16px; }
+    .privacy-summary ul { margin: 0; padding-left: 20px; }
+    .privacy-summary li { margin: 4px 0; }
+    .prose ul { padding-left: 22px; }
+    .prose li { margin: 6px 0; }
+  </style>
 {% endblock %}
 
 {% block header_class %}{% endblock %}
@@ -14,53 +20,88 @@
 {% block content %}
 
 <div class="page prose">
-      <header class="page-header">
-      <h1>{% trans "Privacy Policy" %}</h1>
-      <p class="lead"><small>{% trans 'Last update:' %} 23/02/23</small></p>
-      </header>
-      <p>
-        {% trans "Our website is committed to protecting the privacy of its users. This Privacy Policy outlines the types of information we collect, how we use it, and how we protect it. We are dedicated to following industry best practices and respecting the General Data Protection Regulation (GDPR) and other relevant privacy laws." %}
-      </p>
-      <h2>{% trans "Information Collection and Use" %}</h2>
-      <p>
-        {% trans "We do not collect information from our users when they use our website unless they create an account. The only time we do keep personal information is when users contact us via our contact form so that we can then reply to them. In this case, we keep the name, email address and message." %}
-      </p>
-      <p>
-        {% trans "We do not sell or share any personal information with third-party companies. All user data is kept confidential and is only used in accordance with this Privacy Policy." %}
-      </p>
-      <h2>{% trans "Cookies" %}</h2>
-      <p>
-        {% trans "Our website only uses necessary cookies (e.g. to help protect the website against Cross-Site Request Forgery attacks)." %}
-      </p>
-      <p>
-        {% trans "We measure our audience with Umami, which sets no cookies and does not store IP addresses or any personal information. We only see aggregate figures such as page views, referring sites and countries." %}
-      </p>
-      <p>
-        {% trans "Users have the option to disable cookies in their web browser, but this may affect the functionality of our website." %}
-      </p>
-      <h2>{% trans "Data Security" %}</h2>
-      <p>
-        {% trans "We take appropriate measures to protect the security of our users' personal information. However, no data transmission over the internet can be guaranteed to be 100% secure. As a result, we cannot guarantee the security of any information transmitted to our website." %}
-      </p>
-      <p>
-        {% trans "In the unlikely event of a data breach, we will promptly notify affected users and take appropriate measures to secure their information." %}
-      </p>
-      <h2>{% trans "Open Source" %}</h2>
-      <p>
-        {% blocktrans %} Our website is built as an <a href="https://github.com/summarizepaper/summarizepaper" target="_blank">open source software</a>, which allows for greater transparency and security. The codebase is available for public inspection and contributions are welcomed from the open source community. {% endblocktrans %}
-      </p>
-      <h2>{% trans "Changes to this Privacy Policy" %}</h2>
-      <p>
-        {% trans 'We reserve the right to make changes to this Privacy Policy at any time. If changes are made, we will notify users by updating the "Effective Date" at the top of this page. We encourage users to periodically review this Privacy Policy to stay informed about how we are protecting their information.' %}
-</p>
-<h2>{% trans "Contact Us" %}</h2>
-<p>
-{% trans "If you have any questions or concerns about this Privacy Policy, please contact us using the" %} <a href="/{{LANGUAGE_CODE}}/contact">{% trans "dedicated page" %}</a>. {% trans "We are always happy to hear from our users and will make every effort to address any issues." %}
-</p>
+  <header class="page-header">
+    <h1>{% trans "Privacy Policy" %}</h1>
+    <p class="lead"><small>{% trans 'Last update:' %} {% if LANGUAGE_CODE == 'fr' %}30/10/2026{% else %}2026-10-30{% endif %}</small></p>
+  </header>
+
+  <div class="card privacy-summary">
+    <ul>
+      <li>{% trans 'We collect only what the service needs to work, and we never sell or rent your data.' %}</li>
+      <li>{% trans 'No advertising, no tracking cookies: our audience measurement sets no cookie.' %}</li>
+      <li>{% trans 'Your questions and the texts you submit are sent to OpenAI to be answered; do not paste confidential information.' %}</li>
+      <li>{% trans 'You can delete your account yourself at any time, and ask us to see or correct your data.' %}</li>
+    </ul>
+  </div>
+
+  <h2>{% trans "Who is responsible" %}</h2>
+  <p>{% trans 'SummarizePaper is published by CarbonFreeConf, SASU, 3 bis rue de la Garenne, 17170 Courçon, France, which decides how your data is used (data controller). For any question about your data, use the' %} <a href="/{{ LANGUAGE_CODE }}/contact/">{% trans 'contact form' %}</a>.</p>
+
+  <h2>{% trans "What we collect and why" %}</h2>
+
+  <h3>{% trans 'Your account' %}</h3>
+  <p>{% trans 'Your username, email address and password (stored only as a hash), or, if you sign in with Google, your name and email address as Google gives them. We use them to sign you in and to send you the emails you asked for. Legal basis: providing the service you signed up for.' %}</p>
+
+  <h3>{% trans 'What you do with your account' %}</h3>
+  <p>{% trans 'The papers you read, your chat questions and their answers, your collections, saved searches, digests and alerts and their settings, the papers and authors you follow, the projects you describe for the scoop watch, your placement shortlists and the results you generate (press kits, literature reviews, slides...). They are kept so that you find them again in your activity and receive your alerts. If you connect Zotero, we keep your library ID and the API key you give us, only to send papers to your library.' %}</p>
+
+  <h3>{% trans 'Without an account' %}</h3>
+  <p>{% trans 'When you request a summary, ask a question or vote without an account, we keep the request with a hashed form of your IP address (never the address itself), to apply the daily limits and let you continue your conversation. Legal basis: our legitimate interest in keeping the free service available to everyone.' %}</p>
+
+  <h3>{% trans 'Files and texts you submit' %}</h3>
+  <p>{% trans 'The drafts, bibliographies and conference programs you upload or paste are read to produce the result you asked for and are not kept on the site; only that result is saved in your account.' %}</p>
+
+  <h3>{% trans 'Emails' %}</h3>
+  <p>{% trans 'For the emails we send, our email provider tells us whether they were delivered or rejected, and we stop writing to addresses that bounce or unsubscribe. In the daily digest, we record which papers you open, with their rank in the email, to improve the ranking; these statistics are deleted after 90 days. We may occasionally write to account holders to ask for their feedback; each of these emails has a link to stop them.' %}</p>
+
+  <h3>{% trans 'Payments' %}</h3>
+  <p>{% trans 'Premium payments are handled by Stripe: we never see or store your card number. We keep your plan, its dates and your Stripe customer reference, and the invoices are kept as long as the law requires.' %}</p>
+
+  <h3>{% trans 'Contact form' %}</h3>
+  <p>{% trans 'Your name, email address and message are sent to us by email so that we can answer you; they are not stored on the site. A fingerprint of the message is kept for 24 hours to avoid duplicates.' %}</p>
+
+  <h3>{% trans 'Shared links' %}</h3>
+  <p>{% trans 'When you share a conversation, a result or a collection, anyone with the link can read it until the link expires or you stop sharing; members of a shared collection see its papers and notes.' %}</p>
+
+  <h2>{% trans "Artificial intelligence" %}</h2>
+  <p>{% trans 'Summaries, answers and other results are written with the OpenAI API. To produce them, we send OpenAI the text of the papers, your questions and the texts you submit, never your email address. According to its terms for API customers, OpenAI does not use this data to train its models and may keep it up to 30 days to detect abuse.' %}</p>
+
+  <h2>{% trans "Cookies and storage in your browser" %}</h2>
+  <p>{% trans 'We only use cookies needed for the site to work: one to keep you signed in, and one to protect forms against Cross-Site Request Forgery attacks. Your browser also remembers a few display choices (such as the PDF panel or your role in the press kit) in its local storage; they never leave your device. As these are strictly necessary, no consent banner is needed.' %}</p>
+  <p>{% trans 'We measure our audience with Umami, which sets no cookies and does not store IP addresses. Sign-in links and tokens are removed from the addresses it receives, and we only see aggregate figures such as page views, referring sites, countries and the steps of sign-up and subscription.' %}</p>
+
+  <h2>{% trans "Our providers" %}</h2>
+  <p>{% trans 'They process data only on our behalf and for the purpose given:' %}</p>
+  <ul>
+    <li><strong>Heroku (Salesforce)</strong> — {% trans 'hosting, database and logs (United States)' %}</li>
+    <li><strong>Redis Cloud</strong> — {% trans 'temporary cache' %}</li>
+    <li><strong>CloudMailin</strong> — {% trans 'sending emails and reporting their delivery' %}</li>
+    <li><strong>OpenAI</strong> — {% trans 'AI processing (United States)' %}</li>
+    <li><strong>Stripe</strong> — {% trans 'payments' %}</li>
+    <li><strong>Google</strong> — {% trans 'sign-in with Google, if you choose it' %}</li>
+    <li><strong>Cloudflare</strong> — {% trans 'Turnstile check against bots on sign-up and sign-in, and the icons of the site' %}</li>
+    <li><strong>jsDelivr</strong> — {% trans 'display of mathematical formulas (MathJax)' %}</li>
+    <li><strong>Umami</strong> — {% trans 'cookieless audience measurement' %}</li>
+    <li><strong>Sentry</strong> — {% trans 'error reports, without personal data' %}</li>
+  </ul>
+  <p>{% trans 'The fonts of the site are served from our own domain. Loading icons and formulas from Cloudflare and jsDelivr tells them your IP address, as for any web page. Some providers are in the United States; these transfers rely on the EU-US Data Privacy Framework or on the standard contractual clauses of the European Commission.' %}</p>
+
+  <h2>{% trans "How long we keep it" %}</h2>
+  <p>{% trans 'Account data and what you created with it are kept as long as your account exists, and deleted at once when you delete the account. Accounts that were never activated may be deleted. Billing records are kept by Stripe for the period required by French law (10 years), and addresses that bounced or asked us to stop writing stay on a list so that we never write to them again.' %}</p>
+
+  <h2>{% trans "Your rights" %}</h2>
+  <p>{% trans 'Under the GDPR, you can access your data, correct it, have it deleted, receive it in a portable format, object to its use or restrict it. You can delete your account and its data yourself from the bottom of the My activity page; for the other requests, write to us through the contact form from the email address of your account; we answer within one month. If you think your rights are not respected, you can complain to the CNIL (cnil.fr).' %}</p>
+
+  {% if request.user.is_authenticated %}<p><a href="{% url 'account_delete' %}">{% trans 'Delete my account' %}</a></p>{% endif %}
+
+  <h2>{% trans "Data Security" %}</h2>
+  <p>{% trans 'The site is served only over HTTPS, passwords are hashed, and the database is reached through encrypted connections. No system is perfectly secure; in the unlikely event of a data breach, we will notify affected users and the authorities as the law requires.' %}</p>
+  <p>{% trans 'The code of the site is' %} <a href="https://github.com/summarizepaper/summarizepaper">{% trans 'open source' %}</a>{% trans ', so anyone can check how it handles data.' %}</p>
+
+  <h2>{% trans "Changes to this Privacy Policy" %}</h2>
+  <p>{% trans 'We update this page when the service changes, and change its date at the top. For important changes, we will tell account holders by email.' %}</p>
+
+  <h2>{% trans "Contact Us" %}</h2>
+  <p>{% trans "If you have any questions or concerns about this Privacy Policy, please contact us using the" %} <a href="/{{LANGUAGE_CODE}}/contact/">{% trans "dedicated page" %}</a>. {% trans "We are always happy to hear from our users and will make every effort to address any issues." %}</p>
 </div>
-{% endblock %}
-
-{% block scripts %}
-
-
 {% endblock %}

@@ -1,14 +1,18 @@
 {% extends 'base.html' %}
-{% load static %}
 {% load i18n %}
-
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'About Our AI-Powered arXiv Paper Summarization Service' %} {% endblock %}
+{% block title %}{% trans 'About SummarizePaper: AI tools to read and follow research papers' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Learn more about our innovative AI-powered arXiv paper summarization service. Find out how our team of experts leverages cutting-edge technologies to deliver fast, accurate, and easy-to-read paper summaries.' %}" />
+  <meta name="description" content="{% trans 'SummarizePaper reads scientific papers from arXiv, preprint servers and open-access journals for you: summaries in 16 languages, chat with sources, digests, alerts and tools to write and present. Created by astronomer Quentin Kral.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/about/" />
 <style>
+  .about-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 8px 0 12px; }
+  .about-groups .card { padding: 18px 20px; font-size: 15px; }
+  .about-groups h3 { margin: 0 0 10px; font-size: 17px; }
+  .about-groups ul { margin: 0; padding: 0; list-style: none; }
+  .about-groups li { padding: 4px 0; }
+  .about-groups li i { width: 18px; color: var(--accent); }
   .disclaimer { display: flex; gap: 14px; margin-top: 40px; padding: 20px 24px; border-radius: var(--radius); background: #fffbeb; border: 1px solid #fde68a; color: #78350f; font-size: 15px; }
   .disclaimer p { margin: 0; }
   .disclaimer i { margin-top: 4px; color: #d97706; }
@@ -20,24 +24,53 @@
 {% block content %}
 
 <div class="page prose">
-<header class="page-header"><h1>{% trans 'About Us' %}</h1></header>
-<p>{% trans 'Welcome to our website, where we use cutting-edge AI technology to summarize the latest research papers from arXiv. Our goal is to make it easy for you to stay up-to-date on the latest developments in your field of interest, without having to spend hours reading through lengthy research papers. It can also be useful if you are not a researcher but want to understand the content of published articles in a certain field. Everyone has the ability to verify information, thereby reducing the spread of misinformation. We wish to thank arXiv for use of its open access interoperability.' %}</p>
+<header class="page-header">
+  <h1>{% trans 'About SummarizePaper' %}</h1>
+  <p class="lead">{% trans 'SummarizePaper reads scientific papers for you, so that researchers, students, journalists and curious readers can understand them, follow their field and check information at its source.' %}</p>
+</header>
 
-<h2>{% trans 'How We Do It' %}</h2>
-<p>{% trans 'Our AI algorithms analyze each paper and extract the key findings and conclusions, presenting them to you in a concise and easily digestible format. By automating this process, we are able to provide you with an AI assistant to answer your questions about the content of articles in a fraction of the time it would take you to read them all in their entirety. ' %}</p>
+<h2>{% trans 'What you can do here' %}</h2>
+<p>{% trans 'It started in 2023 as an arXiv summarizer. It now covers every step of research, from reading a paper to presenting it:' %}</p>
+<div class="about-groups">
+  {% for group in TOOL_GROUPS %}
+  <div class="card">
+    <h3>{{ group.title }}</h3>
+    <ul>
+      {% for tool in group.tools %}
+      <li><i class="fas fa-{{ tool.icon }}" aria-hidden="true"></i> <a href="/{{ LANGUAGE_CODE }}/{{ tool.path }}">{{ tool.name }}</a>{% if tool.premium %} <span class="badge-premium">{% if tool.premium == 'plus' %}Premium+{% else %}Premium{% endif %}</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+<p><a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'All the tools, described' %}</a> · <a href="/{{ LANGUAGE_CODE }}/guides/">{% trans 'Illustrated guides with real examples' %}</a> · <a href="/{{ LANGUAGE_CODE }}/getting-started/">{% trans 'Your first paper, step by step' %}</a></p>
 
-<h2>{% trans 'Our Team' %}</h2>
-<p>{% trans 'The team is currently made up of one researcher in astrophysics (Quentin Kral) with a passion to make complex information more accessible. Our goal is to allow everyone to benefit from all research findings and thereby avoid fake news.' %} <a href="/{{ LANGUAGE_CODE }}/author/quentin-kral/">{% trans 'More about the author' %}</a></p>
+<h2>{% trans 'Where the papers come from' %}</h2>
+<p>{% trans 'Papers come from arXiv, bioRxiv, medRxiv, HAL and Europe PMC, and from journals through their DOI, with metadata from OpenAlex, Crossref and Semantic Scholar. We read the full text only when the license of the paper allows it, and the abstract otherwise; each page says which one was used. Summaries can be read in 16 languages.' %}</p>
+<p>{% trans 'We thank arXiv for use of its open access interoperability, and OpenAlex, Crossref, Semantic Scholar and the preprint servers for their open data.' %}</p>
+
+<h2>{% trans 'How we keep the AI honest' %}</h2>
+<p>{% trans 'Summaries, answers and letters are written by language models (OpenAI). They can be wrong, so we make them easy to check:' %}</p>
+<ul>
+  <li>{% trans 'chat answers and key findings show the passages of the paper they rely on, which open in place;' %}</li>
+  <li>{% trans 'the numbers of the weekly letters and the quotes of the press kits are checked against the papers before publication;' %}</li>
+  <li>{% trans 'when only the abstract could be read, the page says so instead of guessing the rest.' %}</li>
+</ul>
+
+<h2>{% trans 'Free and Premium' %}</h2>
+<p>{% trans 'Summaries, chat, collections, the daily digest, rising topics, the weekly letters and one saved search are free, within daily limits. Premium and Premium+ open the tools that read the most for you and fund the service; they can be cancelled in one click.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See the offers' %}</a></p>
+
+<h2>{% trans 'Who is behind it' %}</h2>
+<p>{% trans 'SummarizePaper is created and developed by Quentin Kral, astronomer at the Paris Observatory, who wants everyone, researchers or not, to benefit from research findings and be able to check information at its source. It is published by CarbonFreeConf, a French company, and its code is open source (MIT license).' %}</p>
+<p><a href="/{{ LANGUAGE_CODE }}/author/quentin-kral/">{% trans 'More about the author' %}</a> · <a href="https://github.com/summarizepaper/summarizepaper">{% trans 'Source code' %}</a> · <a href="/{{ LANGUAGE_CODE }}/legal-notice/">{% trans 'Legal Notice' %}</a></p>
+
+<h2>{% trans 'Get in touch' %}</h2>
+<p>{% trans 'A question, a bug, an idea of a tool, or a partnership? We read every message.' %} <a href="/{{ LANGUAGE_CODE }}/contact/">{% trans 'Contact us' %}</a></p>
 
 <div class="disclaimer">
-  <i class="fas fa-exclamation-triangle"></i>
+  <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
   <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
 </div>
 
 </div>
-{% endblock %}
-
-{% block scripts %}
-
-
 {% endblock %}

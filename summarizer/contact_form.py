@@ -54,7 +54,10 @@ def _over_limit(scope, identity, maximum):
 
 
 def page(request):
-    form = ContactForm(request.POST if request.method == 'POST' else None)
+    user = request.user
+    initial = ({'name': user.get_full_name() or user.username, 'email': user.email}
+               if user.is_authenticated else None)
+    form = ContactForm(request.POST if request.method == 'POST' else None, initial=initial)
     context = {'form': form, 'started': start_token(),
                'sent': 1 if request.session.pop('contact_sent', False) else None}
     if request.method != 'POST':

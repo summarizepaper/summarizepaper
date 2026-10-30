@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
-from . import (views, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+from . import (views, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -163,6 +163,7 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('login/email/', accounts.email_login, name='email_login'),
     path('login/google/', accounts.google_start, name='google_login'),
+    path('account/delete/', account_deletion.page, name='account_delete'),
     path('account/delete/<str:token>/', reactivation.delete_account, name='reactivation_delete'),
     path('login/link/<str:token>/', accounts.login_link, name='login_link'),
     path('logout/', logout_view, name='logout'),
