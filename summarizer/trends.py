@@ -13,6 +13,7 @@ it never decides what rises: the counts do.
 """
 import base64
 import datetime
+import hashlib
 import json
 import logging
 import math
@@ -494,12 +495,62 @@ def vector_of(topic):
     return np.frombuffer(base64.b64decode(topic['vector']), dtype=np.float16).astype(np.float32) if topic.get('vector') else None
 
 
-def write(scope, week, rising=None):
-    """Name the rising topics of a scope in every language at once, and store them; the English content."""
+def result_state(scope, lang, week):
     from .models import RisingTopics
+    content = RisingTopics.objects.filter(scope=scope, lang=lang, day=week).values_list('content', flat=True).first()
+    return json.loads(content) if content else {}
+
+
+def _save_results(scope, week, content_by_language, metadata):
+    from .models import RisingTopics
+    with transaction.atomic():
+        for lang in LANGS:
+            content = dict(content_by_language.get(lang, {'topics': []}), **metadata)
+            RisingTopics.objects.update_or_create(scope=scope, lang=lang, day=week,
+                                                 defaults={'content': json.dumps(content)})
+    _RECENT.clear()
+
+
+def write(scope, week, rising=None):
+    """Publish a validated result, recording why empty results need another check.
+
+    Empty statistical results are checked daily without an AI call. A model that
+    rejects every candidate gets at most three attempts for the same signals.
+    """
+    now = timezone.now()
+    previous = result_state(scope, LANGS[0], week)
     rising = rising if rising is not None else rising_terms(scope, week)
+    signature = hashlib.sha256(json.dumps(rising, sort_keys=True).encode()).hexdigest()
+    attempts = previous.get('attempts', 0) if previous.get('signature') == signature else 0
+    metadata = {'checked_at': now.isoformat(), 'candidate_count': len(rising or []),
+                'signature': signature, 'attempts': attempts,
+                'next_retry_at': (now + datetime.timedelta(days=1)).isoformat()}
     if not rising:
+        metadata['status'] = 'insufficient_data' if rising is None else 'no_signal'
+        _save_results(scope, week, {}, metadata)
         return None
+    if attempts >= 3 and previous.get('status') == 'filtered':
+        _save_results(scope, week, {}, dict(metadata, status='filtered'))
+        return None
+    metadata['attempts'] = attempts + 1
+    try:
+        content = _write_topics(scope, week, rising)
+    except Exception as exc:
+        # A failed refresh must not erase an already published result.
+        if not previous.get('topics'):
+            _save_results(scope, week, {}, dict(metadata, status='failed', error_type=type(exc).__name__,
+                next_retry_at=(now + datetime.timedelta(hours=min(24, 2 ** min(attempts, 5)))).isoformat()))
+        raise
+    if not content:
+        _save_results(scope, week, {}, dict(metadata, status='filtered',
+            next_retry_at=(now + datetime.timedelta(hours=6 if attempts < 2 else 24)).isoformat()))
+        return None
+    _save_results(scope, week, content, dict(metadata, status='ready', next_retry_at=None))
+    return content[LANGS[0]]
+
+
+def _write_topics(scope, week, rising):
+    """Name only statistically selected signals; an empty model answer is not a no-signal result."""
     papers = stored_papers(week, scope)
     texts = {p['key']: terms('%s. %s' % (p['title'], p['abstract'])) for p in papers}
     by_key = {p['key']: p for p in papers}
@@ -513,7 +564,7 @@ def write(scope, week, rising=None):
                                         else 'arXiv' + ('' if scope == '*' else ' (%s)' % scope))
     answer = generated.chat_json(
         'These terms are used in many more %s papers this week than usual. Group the ones that belong to the same '
-        'research topic into 3 to 7 topics; never put unrelated terms together, and leave out terms that are only noise '
+        'research topic into 1 to 7 topics (fewer when there are few candidates); never put unrelated terms together, and leave out terms that are only noise '
         '(formatting, generic words, a conference or a template). For each topic write, in English and in French, a title '
         'a curious non-specialist understands and 2 or 3 sentences saying what it is about and why researchers may be '
         'publishing more on it now, without inventing events. Also give "query": the topic as a researcher would type it '
@@ -521,8 +572,10 @@ def write(scope, week, rising=None):
         'example IDs. Never write IDs in the texts. Answer with a JSON object {"topics": [{"title": {"en": "...", '
         '"fr": "..."}, "text": {"en": "...", "fr": "..."}, "query": "...", "terms": ["..."], "papers": ["ID"]}]}.\n\n%s'
         % (where, listing), paid=True, max_tokens=5000)
+    if not isinstance(answer.get('topics'), list):
+        raise generated.GenerationError('Rising topics response has no topics list')
     topics = []
-    for topic in answer.get('topics', []):
+    for topic in answer['topics']:
         if not isinstance(topic, dict) or not isinstance(topic.get('title'), dict):
             continue
         grouped = sorted({t for t in topic.get('terms', []) if t in stats}, key=lambda t: -stats[t]['llr'])
@@ -544,6 +597,8 @@ def write(scope, week, rising=None):
             'stats': [stats[t] for t in grouped], 'keys': keys, 'chosen': [k for k in topic.get('papers', []) if k in by_key],
         })
     if not topics:
+        if answer['topics']:
+            raise generated.GenerationError('No valid bilingual topic matched the selected signals')
         return None
     main_history = history(scope, [t['main'] for t in topics], weeks=[week - WEEK * i for i in range(60)][::-1])
     for topic in topics:
@@ -574,19 +629,24 @@ def write(scope, week, rising=None):
     except Exception:
         logger.exception('Rising topics of %s not embedded', scope)
     topics.sort(key=lambda t: -t['stats'][0]['llr'])
-    written = None
-    for lang in LANGS:
-        content = {'topics': [dict({k: v for k, v in t.items() if k not in ('titles', 'texts')},
-                                   title=t['titles'][lang], text=t['texts'][lang]) for t in topics]}
-        RisingTopics.objects.update_or_create(scope=scope, lang=lang, day=week, defaults={'content': json.dumps(content)})
-        written = written or content
-    return written
+    return {lang: {'topics': [dict({k: v for k, v in t.items() if k not in ('titles', 'texts')},
+                                    title=t['titles'][lang], text=t['texts'][lang]) for t in topics]}
+            for lang in LANGS}
 
 
-def due_scopes(week):
-    """Scopes whose topics of a week are not written yet: all of arXiv, then by size."""
+def due_scopes(week, now=None):
+    """Unwritten or due empty results, including old empty rows without a status."""
     from .models import RisingTopics, TermWeek
-    done = set(RisingTopics.objects.filter(day=week, lang=LANGS[0]).values_list('scope', flat=True))
+    now = now or timezone.now()
+    done = set()
+    languages = {}
+    for scope, lang, content in RisingTopics.objects.filter(day=week).values_list('scope', 'lang', 'content'):
+        result = json.loads(content)
+        retry_at = result.get('next_retry_at')
+        waiting = bool(retry_at and datetime.datetime.fromisoformat(retry_at) > now)
+        if result.get('topics') or waiting:
+            languages.setdefault(scope, set()).add(lang)
+    done = {scope for scope, langs in languages.items() if set(LANGS) <= langs}
     sizes = dict(TermWeek.objects.filter(week=week, part=0).values_list('scope', 'papers'))
     scopes = sorted((s for s, n in sizes.items() if n >= MIN_WEEK_PAPERS and s != '*'), key=lambda s: -sizes[s])
     return [s for s in (['*'] if '*' in sizes else []) + scopes if s not in done]
@@ -608,17 +668,13 @@ def update(now=None):
         TrendPaper.objects.filter(week__lt=target - WEEK * (KEEP_PAPERS - 1)).delete()
         TermWeek.objects.filter(week__lt=target - WEEK * HISTORY_WEEKS).delete()
         written, tried = 0, 0
-        for scope in due_scopes(target):
+        for scope in due_scopes(target, now):
             if tried >= SCOPES_PER_RUN:
                 break
             tried += 1
             try:
                 if write(scope, target):
                     written += 1
-                else:
-                    # nothing rose: an empty week, so the scope is not tried again every hour
-                    for lang in LANGS:
-                        RisingTopics.objects.get_or_create(scope=scope, lang=lang, day=target, defaults={'content': '{"topics": []}'})
             except Exception:
                 logger.exception('Rising topics of %s failed', scope)
         return written

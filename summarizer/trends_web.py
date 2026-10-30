@@ -79,7 +79,7 @@ def decorate(topic):
 
 def scope_links(lang, day, scope):
     """The scopes with topics this week: all of arXiv, the archives and servers, then the categories of the open one."""
-    written = set(RisingTopics.objects.filter(lang=lang, day=day).exclude(content='{"topics": []}').values_list('scope', flat=True))
+    written = set(RisingTopics.objects.filter(lang=lang, day=day).exclude(content__regex=r'"topics"\s*:\s*\[\s*\]').values_list('scope', flat=True))
     top = sorted((s for s in written if s != '*' and '.' not in s and s in trends_scopes_top()), key=trends.scope_name)
     archive = archive_of(scope) if scope != '*' else None
     inner = sorted((s for s in written if '.' in s and archive_of(s) == archive), key=trends.scope_name)
@@ -146,6 +146,7 @@ def trends_page(request):
     top, inner = scope_links(lang, day, scope) if day else ([], [])
     index = weeks.index(day) if day in weeks else 0
     context.update({
+        'result_status': trends.result_state(scope, lang, day).get('status', 'pending') if day else 'pending',
         'day': day, 'day_end': day + datetime.timedelta(days=6) if day else None,
         'topics': [decorate(t) for t in shown], 'hidden': len(topics) - len(shown), 'top_scopes': top, 'inner_scopes': inner,
         'archive': archive_of(scope) if scope != '*' else '', 'archive_name': trends.scope_name(archive_of(scope)) if scope != '*' else '',

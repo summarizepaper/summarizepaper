@@ -65,7 +65,17 @@
     {% if topics %}
     <div class="item-list">{% for topic in topics %}{% include 'summarizer/trend_card.html' %}{% endfor %}</div>
     {% else %}
-    <p class="notice">{% trans 'Nothing rose clearly this week: no term was used by twice as many papers as usual, from several teams, often enough to rule out chance.' %}</p>
+    <p class="notice">
+      {% if result_status == 'no_signal' %}
+        {% trans 'No term passed the statistical and independent-team thresholds this week. Counts will be checked again.' %}
+      {% elif result_status == 'filtered' %}
+        {% trans 'Some terms passed the statistical thresholds, but no research topic was retained after filtering. This does not mean that no term is rising.' %}
+      {% elif result_status == 'insufficient_data' %}
+        {% trans 'There are not yet enough papers or weeks of comparison to assess this week. The calculation will be retried.' %}
+      {% else %}
+        {% trans 'The topics for this week are awaiting validation or generation. The calculation will be retried; this is not a conclusion that nothing is rising.' %}
+      {% endif %}
+    </p>
     {% endif %}
     {% if hidden %}
     <div class="upsell" style="margin-top:20px"><p>{% blocktrans count n=hidden %}{{ n }} more rising topic this week.{% plural %}{{ n }} more rising topics this week.{% endblocktrans %} {% trans 'Premium shows them all, the rising topics of each field and category (cs.LG, astro-ph.EP, bioRxiv neuroscience...), those closest to your research, the history of any term compared with others, and puts those of your fields in your Monday digest.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
