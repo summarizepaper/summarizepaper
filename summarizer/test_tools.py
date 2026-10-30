@@ -2147,6 +2147,15 @@ class UsageTests(ToolsTestCase):
             self.assertEqual(usage.record({'model': 'm', 'usage': {'prompt_tokens': 1}}), {'model': 'm', 'usage': {'prompt_tokens': 1}})
         self.assertEqual(usage.record(None), None)
 
+    def test_a_malformed_json_answer_is_asked_once_more(self):
+        import json
+        with mock.patch('summarizer.generated.requests.post', side_effect=[self.openai('{"tldr" "cut'), self.openai()]) as post:
+            self.assertEqual(generated.chat_json('x'), {'ok': 1})
+        self.assertEqual(post.call_count, 2)
+        with mock.patch('summarizer.generated.requests.post', return_value=self.openai('{"tldr" "cut')) as post:
+            self.assertRaises(json.JSONDecodeError, generated.chat_json, 'x')
+        self.assertEqual(post.call_count, 2)
+
     def test_admin_shows_the_costs(self):
         from summarizer.models import AIUsage
         AIUsage.objects.create(day=timezone.now().date(), task='summary', model='gpt-unpriced', calls=3, prompt_tokens=10)

@@ -52,19 +52,29 @@ def language_name(lang):
 
 
 def chat_json(prompt, paid=True, max_tokens=3000, system=None, timeout=300):
-    """One chat completion that answers with a JSON object, returned as a dict."""
+    """One chat completion that answers with a JSON object, returned as a dict.
+
+    JSON mode still lets a rare answer come back malformed: the same call is made once more.
+    """
     model_free, model_paid = ai_models()
     messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': prompt}]
-    response = requests.post(
-        'https://api.openai.com/v1/chat/completions',
-        headers={'Authorization': 'Bearer %s' % settings.OPENAI_KEY},
-        json={'model': model_paid if paid else model_free, 'messages': messages,
-              'response_format': {'type': 'json_object'}, **chat_params(paid, max_tokens)},
-        timeout=timeout,
-    )
-    response.raise_for_status()
-    content = usage.record(response.json())['choices'][0]['message']['content']
-    answer = json.loads(content)
+    for attempt in range(2):
+        response = requests.post(
+            'https://api.openai.com/v1/chat/completions',
+            headers={'Authorization': 'Bearer %s' % settings.OPENAI_KEY},
+            json={'model': model_paid if paid else model_free, 'messages': messages,
+                  'response_format': {'type': 'json_object'}, **chat_params(paid, max_tokens)},
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        content = usage.record(response.json())['choices'][0]['message']['content']
+        try:
+            answer = json.loads(content)
+            break
+        except json.JSONDecodeError:
+            if attempt:
+                raise
+            logger.warning('Malformed JSON answer (%s characters), asking again', len(content or ''))
     if not isinstance(answer, dict):
         raise GenerationError('the model did not answer with a JSON object')
     return answer
