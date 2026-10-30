@@ -856,6 +856,30 @@ class AccountTests(TestCase):
         self.assertFalse(User.objects.exists())
         self.assertEqual(len(mail.outbox), 0)
 
+    @override_settings(TURNSTILE_SITE_KEY='site', TURNSTILE_SECRET_KEY='secret')
+    def test_turnstile_is_checked_when_configured(self):
+        from django.core import mail
+        from summarizer import accounts
+        self.assertContains(Client().get('/en/register/'), 'data-sitekey="site"')
+        answer = mock.Mock(**{'json.return_value': {'success': False}})
+        with mock.patch('summarizer.accounts.requests.post', return_value=answer) as verify:
+            self.register(**{'cf-turnstile-response': 'bad'})
+            self.register()  # no token: Cloudflare is not even asked
+        self.assertEqual(verify.call_count, 1)
+        self.assertEqual(verify.call_args.kwargs['data']['response'], 'bad')
+        self.assertFalse(User.objects.exists())
+        answer.json.return_value = {'success': True}
+        with mock.patch('summarizer.accounts.requests.post', return_value=answer):
+            self.register(**{'cf-turnstile-response': 'good'})
+        self.assertTrue(User.objects.filter(username='newbie').exists())
+        self.assertEqual(len(mail.outbox), 1)
+        # Cloudflare down: a person is not locked out
+        with mock.patch('summarizer.accounts.requests.post', side_effect=accounts.requests.Timeout()):
+            self.assertFalse(accounts.looks_like_bot({'form_stamp': self.stamp(), 'cf-turnstile-response': 't'}))
+
+    def test_no_turnstile_without_keys(self):
+        self.assertNotContains(Client().get('/en/register/'), 'cf-turnstile')
+
     def test_email_already_used(self):
         User.objects.create_user('first', 'new@example.org', 'pw', is_active=False)
         r = self.register(email='NEW@example.org')

@@ -67,6 +67,10 @@ LOGIN_URL = '/login/'
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 
+#Cloudflare Turnstile on the forms that send emails, see summarizer/accounts.py (no check while unset)
+TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '')
+TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
+
 SITE_URL = os.getenv('SITE_URL', 'https://www.summarizepaper.com' if 'ON_HEROKU' in os.environ else '')
 
 #Cookieless audience measurement on cloud.umami.is, production only so local visits are not counted

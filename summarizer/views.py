@@ -180,7 +180,7 @@ class RegisterView(View):
                    'next': accounts._safe_next(request, request.POST.get('next') or request.GET.get('next')),
                    **accounts.auth_context()}
         ip = access.hash_ip(access.client_ip(request))
-        if accounts.looks_like_bot(request.POST) or accounts.signups_exhausted(ip):
+        if accounts.looks_like_bot(request.POST, access.client_ip(request)) or accounts.signups_exhausted(ip):
             # no account and no email, but the same page a person would see
             return redirect('account_activation_sent')
         if form.is_valid():

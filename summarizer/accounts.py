@@ -42,6 +42,8 @@ MIN_FORM_SECONDS = 3
 LINKS_PER_EMAIL_PER_HOUR = 3
 LINKS_PER_IP_PER_HOUR = 10
 SIGNUPS_PER_IP_PER_DAY = 10
+TURNSTILE_FIELD = 'cf-turnstile-response'
+TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
 
 # --- bot checks -------------------------------------------------------------
@@ -53,18 +55,39 @@ def form_stamp():
 def auth_context():
     """Context of the login and signup pages: bot check fields and the Google button."""
     return {'antibot_stamp': form_stamp(), 'antibot_field': HONEYPOT_FIELD,
-            'google_login': bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)}
+            'google_login': bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET),
+            'turnstile_site_key': settings.TURNSTILE_SITE_KEY if settings.TURNSTILE_SECRET_KEY else ''}
 
 
-def looks_like_bot(data):
-    """A filled honeypot, or a form sent back faster than a person can type, or without our stamp."""
+def turnstile_passed(token, ip=''):
+    """Cloudflare's answer on the widget token; when Cloudflare cannot be reached, people are let through."""
+    if not token:
+        return False
+    try:
+        r = requests.post(TURNSTILE_VERIFY, timeout=10, data={
+            'secret': settings.TURNSTILE_SECRET_KEY, 'response': token, 'remoteip': ip})
+        r.raise_for_status()
+        return bool(r.json().get('success'))
+    except (requests.RequestException, ValueError):
+        logger.warning('Turnstile siteverify unreachable, form let through', exc_info=True)
+        return True
+
+
+def looks_like_bot(data, ip=''):
+    """A filled honeypot, a form sent back faster than a person can type or without our stamp, or a failed Turnstile.
+
+    Bots driving a real browser got past the first checks (random usernames with
+    strangers' yahoo/aol/hotmail addresses, 2026-10-30), hence Turnstile.
+    """
     if data.get(HONEYPOT_FIELD):
         return True
     try:
         started = signing.loads(data.get(STAMP_FIELD, ''), salt=STAMP_SALT, max_age=24 * 3600)
     except signing.BadSignature:
         return True
-    return time.time() - float(started) < MIN_FORM_SECONDS
+    if time.time() - float(started) < MIN_FORM_SECONDS:
+        return True
+    return bool(settings.TURNSTILE_SECRET_KEY) and not turnstile_passed(data.get(TURNSTILE_FIELD, ''), ip)
 
 
 def over_limit(key, limit, seconds):
@@ -164,7 +187,7 @@ def email_login(request):
         if form.is_valid():
             email = form.cleaned_data['email'].lower()
             ip = access.hash_ip(access.client_ip(request))
-            blocked = (looks_like_bot(request.POST)
+            blocked = (looks_like_bot(request.POST, access.client_ip(request))
                        or over_limit('loginlink:ip:' + ip, LINKS_PER_IP_PER_HOUR, 3600)
                        or over_limit('loginlink:email:' + access.hash_ip(email), LINKS_PER_EMAIL_PER_HOUR, 3600))
             user = None if blocked else account_for_email(email)
