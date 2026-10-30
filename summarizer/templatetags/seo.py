@@ -26,6 +26,14 @@ def plaintext(value):
 
 
 @register.filter
+def first_point(value):
+    """The first point of a numbered summary, without its number; other summaries unchanged."""
+    text = plaintext(value)
+    match = re.match(r'1[.)]\s+(.+?)(?:\s+2[.)]\s|$)', text)
+    return match.group(1) if match else text
+
+
+@register.filter
 def keypoint(value):
     """A key point as safe HTML: no markdown, short leading label in bold."""
     return mark_safe(keypoints.point_html(str(value or '')))

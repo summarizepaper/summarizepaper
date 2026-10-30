@@ -17854,3 +17854,6 @@ msgstr "Sauvegarder une recherche"
 
 msgid "Already read by more than %(count)s researchers."
 msgstr "Déjà lu par plus de %(count)s chercheurs."
+
+msgid "Get new papers like these every morning"
+msgstr "Recevoir des articles comme ceux-ci chaque matin"

@@ -33,7 +33,8 @@ class HomepageTests(TestCase):
         for lang in ('en', 'fr'):
             soup = BeautifulSoup(self.client.get('/%s/' % lang).content, 'html.parser')
             links = [a['href'] for a in soup.select('#free-tools .home-tool h3 a')]
-            self.assertEqual(links, ['#arxiv-id'] + ['/%s/%s/' % (lang, p) for p in ('chat', 'digest', 'letters', 'trends', 'saved-searches')])
+            self.assertEqual(links, ['#arxiv-id', '/%s/chat/' % lang, '#email-updates'] +
+                             ['/%s/%s/' % (lang, p) for p in ('letters', 'trends', 'saved-searches')])
             self.assertEqual(soup.select_one('.home-signup a.btn')['href'], '/%s/register/' % lang)
         self.client.force_login(User.objects.create_user('member', 'member@example.com', 'pass'))
         self.assertNotContains(self.client.get('/en/'), 'home-signup')
@@ -61,6 +62,16 @@ class HomepageTests(TestCase):
         response = self.client.get('/fr/')
         self.assertIsNone(response.context['example_paper'])
         self.assertContains(response, 'href="/fr/getting-started/"')
+
+    def test_hero_previews_real_summaries_by_their_first_point(self):
+        paper = ArxivPaper.objects.create(arxiv_id='2610.00001v1', title='Quantum   magnets', category='quant-ph')
+        SummaryPaper.objects.create(paper=paper, lang='fr', lay_summary='<ol><li>1. Des aimants minuscules.</li><li>2. Un second point.</li></ol>')
+        soup = BeautifulSoup(self.client.get('/fr/').content, 'html.parser')
+        item = soup.select_one('.home-latest li')
+        self.assertEqual(item.select_one('a')['href'], '/fr/paper/2610.00001v1/')
+        self.assertEqual(item.select_one('a').get_text(), 'Quantum magnets')
+        self.assertEqual(item.select_one('p').get_text(), 'Des aimants minuscules.')
+        self.assertEqual(len(soup.select('#premium-title')), 1)
 
     def test_blank_search_never_calls_external_sources(self):
         with mock.patch('summarizer.views.sources.resolve') as resolve:

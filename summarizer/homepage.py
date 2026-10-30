@@ -12,20 +12,21 @@ from . import billing
 from .models import SummaryPaper
 
 
-# Free tools shown first on the homepage: (url name or anchor, icon, name, pitch, needs an account, call to action).
+# Free tools shown first on the homepage: (funnel slug, url name or anchor, icon, name, pitch, needs an account, call to action).
+# The digest card opens the two-click signup on the page rather than the full settings.
 FREE_TOOLS = [
-    ('#arxiv-id', 'file-alt', _('Summaries'), _('Key ideas, results and limits of any paper, in 16 languages.'), False, _('Summarize a paper')),
-    ('chat', 'comments', _('Chat with papers'), _('Ask a question to one paper or several, answered from the text.'), False, _('Ask a question')),
-    ('digest', 'envelope', _('Daily digest'), _('New papers in your fields every morning, with short summaries.'), True, _('Set up my free digest')),
-    ('letters', 'feather-alt', _('Weekly letters'), _('Each week, the papers that matter in your field, put into perspective.'), False, _('Read this week’s letters')),
-    ('trends', 'chart-line', _('Rising topics'), _('The topics rising on arXiv, bioRxiv and medRxiv, field by field.'), False, _('See rising topics')),
-    ('saved_searches', 'bookmark', _('Saved searches'), _('Save a search and get its new papers by email or RSS.'), True, _('Save a search')),
+    ('paper', '#arxiv-id', 'file-alt', _('Summaries'), _('Key ideas, results and limits of any paper, in 16 languages.'), False, _('Summarize a paper')),
+    ('chat', 'chat', 'comments', _('Chat with papers'), _('Ask a question to one paper or several, answered from the text.'), False, _('Ask a question')),
+    ('digest', '#email-updates', 'envelope', _('Daily digest'), _('New papers in your fields every morning, with short summaries.'), True, _('Set up my free digest')),
+    ('letters', 'letters', 'feather-alt', _('Weekly letters'), _('Each week, the papers that matter in your field, put into perspective.'), False, _('Read this week’s letters')),
+    ('trends', 'trends', 'chart-line', _('Rising topics'), _('The topics rising on arXiv, bioRxiv and medRxiv, field by field.'), False, _('See rising topics')),
+    ('saved_searches', 'saved_searches', 'bookmark', _('Saved searches'), _('Save a search and get its new papers by email or RSS.'), True, _('Save a search')),
 ]
 
 
 def free_tools():
-    return [{'url': url if url.startswith('#') else reverse(url), 'slug': url.lstrip('#'), 'icon': icon, 'name': name,
-             'pitch': pitch, 'account': account, 'cta': cta} for url, icon, name, pitch, account, cta in FREE_TOOLS]
+    return [{'url': url if url.startswith('#') else reverse(url), 'slug': slug, 'icon': icon, 'name': name,
+             'pitch': pitch, 'account': account, 'cta': cta} for slug, url, icon, name, pitch, account, cta in FREE_TOOLS]
 
 
 READERS_SHOWN_FROM = 100  # a smaller count would not reassure anyone
