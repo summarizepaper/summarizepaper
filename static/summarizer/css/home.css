@@ -110,6 +110,7 @@
 .home-workflow a { color: inherit; text-decoration: none; }
 .home-workflow a:hover strong { color: var(--accent); text-decoration: underline; }
 .home-free { padding-top: 24px; }
+.home-readers { font-weight: 700; color: #205f4e; margin: 14px 0 0; }
 .home-tools { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .home-tool { position: relative; display: flex; flex-direction: column; align-items: start; padding: 22px; border: 1px solid var(--home-line); border-radius: 12px; background: white; transition: border-color .15s, box-shadow .15s, transform .15s; }
 .home-tool:hover { border-color: var(--accent); box-shadow: 0 10px 26px #192b3b14; transform: translateY(-2px); }
@@ -123,11 +124,12 @@
 .home-tool-cta { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--home-line); width: 100%; font-size: 15px; font-weight: 700; color: var(--accent); }
 .home-tool .home-tag { margin-bottom: 16px; }
 .home-signup { display: flex; align-items: center; justify-content: space-between; gap: 24px 40px; margin-top: 20px; padding: 26px 30px; border-radius: 14px; background: #192b3b; color: white; }
-.home-signup h3 { font-size: 22px; margin: 0 0 6px; color: white; }
+.home-signup-wrap { padding-top: 48px; }
+.home-signup h2 { font-size: 22px; margin: 0 0 6px; color: white; }
 .home-signup p { margin: 0; color: #d3dce4; font-size: 15px; }
 .home-signup-actions { display: flex; align-items: center; gap: 20px; flex: 0 0 auto; }
 .home-signup-actions .btn { white-space: nowrap; }
 .home-signup-actions > a:last-child { color: white; font-weight: 600; }
 @media (max-width: 1000px) { .home-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 760px) { .home-needs { grid-template-columns: 1fr; } .home-signup { flex-direction: column; align-items: stretch; padding: 22px; } .home-signup-actions { flex-direction: column; align-items: stretch; text-align: center; gap: 12px; } }
+@media (max-width: 760px) { .home-search .search-examples, .home-search .home-fine + .home-fine { display: none; } .home-needs { grid-template-columns: 1fr; } .home-signup { flex-direction: column; align-items: stretch; padding: 22px; } .home-signup-actions { flex-direction: column; align-items: stretch; text-align: center; gap: 12px; } }
 @media (max-width: 460px) { .home-tools { grid-template-columns: 1fr; } }

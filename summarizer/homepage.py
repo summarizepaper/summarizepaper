@@ -2,6 +2,8 @@
 import re
 from decimal import Decimal
 
+from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.translation import get_language, gettext_lazy as _
@@ -24,6 +26,23 @@ FREE_TOOLS = [
 def free_tools():
     return [{'url': url if url.startswith('#') else reverse(url), 'slug': url.lstrip('#'), 'icon': icon, 'name': name,
              'pitch': pitch, 'account': account, 'cta': cta} for url, icon, name, pitch, account, cta in FREE_TOOLS]
+
+
+READERS_SHOWN_FROM = 100  # a smaller count would not reassure anyone
+
+
+def readers():
+    """Researchers receiving a digest or a weekly letter, rounded down for display; None while too few."""
+    count = cache.get('home-readers')
+    if count is None:
+        count = (User.objects.filter(Q(digests__active=True) | Q(letter_subscriptions__active=True), is_active=True)
+                 .distinct().count())
+        cache.set('home-readers', count, 6 * 3600)
+    if count < READERS_SHOWN_FROM:
+        return None
+    step = 100 if count >= 1000 else 10 if count >= 100 else 1
+    shown = '{:,}'.format(count // step * step)
+    return shown.replace(',', '\u202f') if get_language() == 'fr' else shown
 
 
 def monthly_price(currency='eur'):
@@ -52,5 +71,5 @@ def context(request=None):
     papers = list(SummaryPaper.objects.filter(ready, lang=get_language())
                   .select_related('paper').order_by('-updated')[:7])
     papers = [p for p in papers if (p.summary or '').strip() or (p.lay_summary or '').strip()]
-    return {**form_context(), 'free_tools': free_tools(), 'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
+    return {**form_context(), 'free_tools': free_tools(), 'home_readers': readers(), 'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
             'home_price': monthly_price(currency), 'billing_currency': currency, 'billing_currencies': billing.currencies()}

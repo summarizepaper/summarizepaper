@@ -6,7 +6,7 @@
 <main class="page home" style="max-width:850px">
   <header class="page-header"><h1>{% trans 'Your research updates by email' %}</h1><p class="lead">{% trans 'A daily reading list and a weekly perspective on your field.' %}</p></header>
   {% if updates_done %}
-  <section class="notice" role="status">
+  <section class="notice" role="status" data-funnel-view="email_updates_done">
     <h2>{% trans 'Your subscriptions are active' %}</h2>
     {% if 'digest' in updates_done.products %}<p>{% trans 'Your digest is ready. Check its categories and delivery schedule in your settings.' %}</p>{% endif %}
     {% if 'letters' in updates_done.products %}<p>{% trans 'Your weekly letter is selected. You can already read the available editions online.' %}</p><p><a href="{% url 'letter_topic' updates_done.topic %}">{% trans 'Read this week’s letter' %} →</a></p>{% endif %}

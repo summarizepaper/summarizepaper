@@ -1085,8 +1085,10 @@ class SimilarPapersTests(TestCase):
 
 class ReactivationTests(TestCase):
     def inactive(self, username, email, days_ago=100):
+        from summarizer.reactivation import CUTOFF
         user = User.objects.create_user(username, email, 'pw', is_active=False)
-        user.date_joined = timezone.now() - timezone.timedelta(days=days_ago)
+        # Relative to the fixed cutoff, not today, so the test does not expire as days pass.
+        user.date_joined = CUTOFF - timezone.timedelta(days=days_ago)
         user.save()
         return user
 

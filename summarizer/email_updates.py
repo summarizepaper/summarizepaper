@@ -1,4 +1,5 @@
 """A short, explicit opt-in to the existing digest and weekly letter subscriptions."""
+import time
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
@@ -25,6 +26,8 @@ STARTERS = {
     'computing': 'cs.DS,cs.SE,cs.CR,cs.DC,eess.SP',
     'economy': 'econ.EM,econ.GN,q-fin.EC,q-fin.ST,q-fin.PM',
 }
+PENDING = 'email_updates_pending'
+PENDING_MAX_AGE = 24 * 3600
 
 
 def form_context(topic='', products=None):
@@ -39,6 +42,12 @@ def signup(request):
     products = [p for p in ('digest', 'letters') if p in data.getlist('products')]
     context = form_context(topic, products if request.method == 'POST' or 'products' in data else None)
     if request.method == 'GET':
+        pending = request.session.pop(PENDING, None) if request.user.is_authenticated else None
+        if (pending and time.time() - pending['at'] < PENDING_MAX_AGE
+                and pending['topic'] in STARTERS):
+            error = subscribe(request, pending['topic'], [p for p in ('digest', 'letters') if p in pending['products']])
+            if error:
+                context['update_error'] = error
         if request.user.is_authenticated:
             context['updates_done'] = request.session.pop('email_updates_done', None)
         return render(request, 'summarizer/email_updates.html', context)
@@ -46,9 +55,20 @@ def signup(request):
         context['update_error'] = _('Choose a field and at least one email format.')
         return render(request, 'summarizer/email_updates.html', context, status=400)
     if not request.user.is_authenticated:
-        # A GET after account creation only displays confirmation; it never opts someone in.
+        # Only this browser's session, filled by a CSRF-checked POST, applies choices after sign-in:
+        # a link alone never subscribes anyone.
+        request.session[PENDING] = {'topic': topic, 'products': products, 'at': time.time()}
         next_url = reverse('email_updates') + '?' + urlencode({'topic': topic, 'products': products}, doseq=True)
         return redirect(reverse('register') + '?' + urlencode({'next': next_url}))
+    error = subscribe(request, topic, products)
+    if error:
+        context['update_error'] = error
+        return render(request, 'summarizer/email_updates.html', context, status=409)
+    return redirect(reverse('email_updates'))
+
+
+def subscribe(request, topic, products):
+    """Opt the signed-in user in to the chosen formats; an error message, or None once done."""
     lang = get_language()
     with transaction.atomic():
         # Serialize duplicate clicks, including across web workers.
@@ -68,8 +88,7 @@ def signup(request):
                 LetterSubscription.objects.filter(user=request.user, active=True).count() >= letters.FREE_SUBSCRIPTIONS):
             error = _('You already receive a weekly letter. Change your choice below, or keep your current subscription.')
         if error:
-            context['update_error'] = error
-            return render(request, 'summarizer/email_updates.html', context, status=409)
+            return error
         if 'digest' in products:
             if existing_digest is None:
                 existing_digest = DigestSubscription.objects.create(user=request.user, categories=STARTERS[topic],
@@ -83,4 +102,5 @@ def signup(request):
                 defaults={'active': True, 'lang': lang})
         request.session['email_updates_done'] = {'topic': topic, 'products': products,
                                                 'digest_id': existing_digest.pk if 'digest' in products else None}
-    return redirect(reverse('email_updates'))
+
+

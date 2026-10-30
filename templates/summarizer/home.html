@@ -69,17 +69,11 @@
   <ul class="home-tools">
     {% for tool in free_tools %}<li class="home-tool"><span class="home-tool-icon" aria-hidden="true"><i class="fas fa-{{ tool.icon }}"></i></span><h3><a href="{{ tool.url }}" data-funnel="home_tool_click" data-tool="{{ tool.slug }}" data-placement="free">{{ tool.name }}</a></h3><p>{{ tool.pitch }}</p><span class="home-tag">{% if tool.account %}{% trans 'Free with an account' %}{% else %}{% trans 'No account needed' %}{% endif %}</span><span class="home-tool-cta" aria-hidden="true">{{ tool.cta }} →</span></li>{% endfor %}
   </ul>
-  {% if not request.user.is_authenticated %}
-  <div class="home-signup">
-    <div><h3>{% trans 'Create your free account in 30 seconds' %}</h3><p>{% trans 'Unlock the daily digest, a weekly letter, collections and a saved search. No credit card required.' %}</p></div>
-    <div class="home-signup-actions"><a class="btn btn-lg" href="{% url 'register' %}" data-funnel="signup_click" data-placement="free">{% trans 'Create a free account' %}</a><a href="{% url 'login' %}">{% trans 'Log in' %}</a></div>
-  </div>
-  {% endif %}
 </section>
 
 <section class="container home-email-wrap" id="email-updates" aria-labelledby="email-updates-title">
   <div class="home-email-panel">
-    <div><p class="home-kicker">{% trans 'Your next reading habit' %}</p><h2 id="email-updates-title">{% trans 'Science worth reading, directly in your inbox' %}</h2><p>{% trans 'Get new papers with the digest, and take a step back with the weekly letters. One field, two complementary formats.' %}</p><span class="home-tag">{% trans 'Free with an account' %}</span><p class="home-fine">{% trans 'Start with a selection of categories in your field, then refine your digest whenever you want.' %}</p><div class="home-email-links"><a href="{% url 'digest' %}">{% trans 'Personalize my digest' %} →</a><a href="{% url 'letters' %}">{% trans 'Browse this week’s letters' %} →</a></div></div>
+    <div><p class="home-kicker">{% trans 'Your next reading habit' %}</p><h2 id="email-updates-title">{% trans 'Science worth reading, directly in your inbox' %}</h2><p>{% trans 'Get new papers with the digest, and take a step back with the weekly letters. One field, two complementary formats.' %}</p><span class="home-tag">{% trans 'Free with an account' %}</span>{% if home_readers %}<p class="home-readers">{% blocktrans with count=home_readers %}Already read by more than {{ count }} researchers.{% endblocktrans %}</p>{% endif %}<p class="home-fine">{% trans 'Start with a selection of categories in your field, then refine your digest whenever you want.' %}</p><div class="home-email-links"><a href="{% url 'digest' %}">{% trans 'Personalize my digest' %} →</a><a href="{% url 'letters' %}">{% trans 'Browse this week’s letters' %} →</a></div></div>
     {% include 'summarizer/email_updates_form.html' %}
   </div>
 </section>
@@ -121,6 +115,15 @@
     </div>
   </div>
 </section>
+
+{% if not request.user.is_authenticated %}
+<section class="container home-signup-wrap" aria-labelledby="signup-title">
+  <div class="home-signup">
+    <div><h2 id="signup-title">{% trans 'Create your free account in 30 seconds' %}</h2><p>{% trans 'Unlock the daily digest, a weekly letter, collections and a saved search. No credit card required.' %}</p></div>
+    <div class="home-signup-actions"><a class="btn btn-lg" href="{% url 'register' %}" data-funnel="signup_click" data-placement="free">{% trans 'Create a free account' %}</a><a href="{% url 'login' %}">{% trans 'Log in' %}</a></div>
+  </div>
+</section>
+{% endif %}
 
 <section class="home-section container" aria-labelledby="premium-title">
   <div class="home-premium">

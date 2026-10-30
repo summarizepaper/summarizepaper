@@ -27,15 +27,35 @@ class QuickEmailSignupTests(TestCase):
             self.assertContains(response, 'name="products" value="digest" checked')
             self.assertContains(response, 'name="products" value="letters" checked')
 
-    def test_anonymous_choices_survive_signup_without_activating_by_get(self):
+    def anonymous_choice(self):
         response = self.client.post('/fr/email-updates/', self.data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(urlparse(response.url).path, '/fr/register/')
         next_url = parse_qs(urlparse(response.url).query)['next'][0]
         self.assertEqual(parse_qs(urlparse(next_url).query)['products'], ['digest', 'letters'])
+        return next_url
+
+    def test_choices_apply_after_signing_in_from_the_same_browser(self):
+        next_url = self.anonymous_choice()
         self.login()
         response = self.client.get(next_url)
-        self.assertContains(response, '<option value="ai" selected>')
+        self.assertContains(response, 'Vos abonnements sont actifs')
+        self.assertContains(response, 'data-funnel-view="email_updates_done"')
+        self.assertEqual(DigestSubscription.objects.get().user, self.user)
+        self.assertEqual(LetterSubscription.objects.get().topic, 'ai')
+        self.client.get(next_url)  # the pending choice is used once
+        self.assertEqual(DigestSubscription.objects.count(), 1)
+
+    def test_a_link_alone_or_an_old_choice_never_subscribes(self):
+        next_url = self.anonymous_choice()
+        from django.test import Client
+        other = Client(); other.force_login(self.user)
+        self.assertContains(other.get(next_url), '<option value="ai" selected>')
+        session = self.client.session
+        session[email_updates.PENDING]['at'] -= email_updates.PENDING_MAX_AGE + 1
+        session.save()
+        self.login()
+        self.client.get(next_url)
         self.assertFalse(DigestSubscription.objects.exists())
         self.assertFalse(LetterSubscription.objects.exists())
 

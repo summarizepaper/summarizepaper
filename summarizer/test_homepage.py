@@ -38,6 +38,17 @@ class HomepageTests(TestCase):
         self.client.force_login(User.objects.create_user('member', 'member@example.com', 'pass'))
         self.assertNotContains(self.client.get('/en/'), 'home-signup')
 
+    def test_reader_count_is_shown_only_once_meaningful(self):
+        from . import homepage
+        with mock.patch.object(homepage, 'READERS_SHOWN_FROM', 2):
+            for i in range(3):
+                user = User.objects.create_user('reader%d' % i, 'r%d@example.com' % i, 'pass')
+                DigestSubscription.objects.create(user=user, categories='cs.AI', active=i < 1)
+            self.assertNotContains(self.client.get('/en/'), 'home-readers')
+            cache.clear()
+            DigestSubscription.objects.update(active=True)
+            self.assertContains(self.client.get('/en/'), 'Already read by more than 3 researchers.')
+
     def test_example_is_a_ready_summary_in_the_current_language(self):
         paper = ArxivPaper.objects.create(arxiv_id='1706.03762v1', title='Attention Is All You Need')
         SummaryPaper.objects.create(paper=paper, lang='en', summary='A ready summary.')

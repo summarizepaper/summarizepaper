@@ -2,6 +2,7 @@
 {% load static_version i18n %}
 {% block title %}{% trans 'My activity' %} — SummarizePaper{% endblock %}
 {% block extra_head_tags %}
+{% include 'summarizer/mathjax.html' %}
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="{% static_v 'summarizer/css/personal-activity.css' %}">
 {% endblock %}

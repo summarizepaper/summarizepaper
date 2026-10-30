@@ -503,7 +503,7 @@ def escape_latex(abstract):
     while "$" in abstract:
         start = abstract.index("$")
         end = abstract.index("$", start + 1)
-        abstract = abstract[:start] + "\[" + abstract[start + 1:end] + "\]" + abstract[end + 1:]
+        abstract = abstract[:start] + r"\[" + abstract[start + 1:end] + r"\]" + abstract[end + 1:]
     return abstract
 
 def arxiv_metadata_or_none(arxiv_id):

@@ -17851,3 +17851,6 @@ msgstr "Sauvegardez une recherche et recevez ses nouveaux articles par email ou 
 
 msgid "Save a search"
 msgstr "Sauvegarder une recherche"
+
+msgid "Already read by more than %(count)s researchers."
+msgstr "Déjà lu par plus de %(count)s chercheurs."
