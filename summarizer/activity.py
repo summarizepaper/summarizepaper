@@ -20,7 +20,7 @@ STUCK = datetime.timedelta(minutes=15)
 ARXIV_ID = re.compile(r'^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?(/|--)\d{7})(v\d+)?$')  # old ids are stored with '--'
 
 # Generated kinds whose result has its own page; the others are shown on the paper page
-RESULT_URLS = {'literature': 'literature_result', 'missed': 'missed_result', 'students': 'student_result',
+RESULT_URLS = {'insight': 'arxividpage', 'literature': 'literature_result', 'missed': 'missed_result', 'students': 'student_result',
                'conference': 'conference_result', 'teams': 'teams_result', 'refcheck': 'refcheck_result'}
 TOOL_NAMES = {
     'presskit': 'Kit presse', 'presskit_status': 'Kit presse (statut)', 'presskit_share': 'Kit presse (partage)', 'presskit_experts': 'Kit presse (contacts par pays)', 'slides': 'Journal club',

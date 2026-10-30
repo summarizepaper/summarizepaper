@@ -22,6 +22,7 @@ class MissingSourceTests(ToolsTestCase):
         self.assertIsNone(insight.for_page(paper.arxiv_id, 'en'))
         self.assertNotIn(row.key, [r['key'] for r in activity.watch()['failed']])
         self.assertIn(row.key, [r['key'] for r in activity.watch()['unavailable']])
+        self.assertEqual(activity.watch()['unavailable'][0]['href'], '/en/paper/' + paper.arxiv_id + '/')
         response = Client().get('/en/paper/' + paper.arxiv_id + '/')
         self.assertContains(response, 'The structured reading is unavailable')
         self.assertContains(response, 'Previously generated content cannot be checked')
