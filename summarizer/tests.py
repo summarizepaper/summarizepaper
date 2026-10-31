@@ -1637,6 +1637,20 @@ class ArxivFetchTests(NoBioServers, TestCase):
             self.assertEqual(digest.ensure_batch(MONDAY), [])
         self.assertFalse(ArxivBatch.objects.exists())
 
+    def test_empty_feeds_are_not_an_announcement_without_papers(self):
+        empty = lambda name: (None, [], 0)
+        with mock.patch('summarizer.digest.read_feed', side_effect=empty):
+            self.assertEqual(digest.ensure_batch(MONDAY), [])
+        self.assertFalse(ArxivBatch.objects.exists())
+        with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds()):
+            digest.ensure_batch(MONDAY + datetime.timedelta(hours=1))
+        self.assertEqual(ArxivBatch.objects.get().papers, len(digest.ARCHIVES))
+
+    def test_a_feed_of_replacements_only_is_on_time(self):
+        feed = RSS_FEED.replace('<arxiv:announce_type>new<', '<arxiv:announce_type>replace<').replace(
+            '<arxiv:announce_type>cross<', '<arxiv:announce_type>replace<')
+        self.assertEqual(digest.parse_rss(feed), (datetime.date(2026, 10, 19), []))
+
     def test_a_cut_feed_is_completed_by_its_followed_categories(self):
         with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(entries=2000)) as read:
             digest.ensure_batch(MONDAY, categories={'cs.LG', 'astro-ph.EP'})

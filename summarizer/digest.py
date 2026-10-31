@@ -307,12 +307,12 @@ def parse_rss(xml_text):
     root = ElementTree.fromstring(xml_text)
     day, papers = None, []
     for entry in root.findall(ATOM + 'entry'):
-        if entry.findtext(ARXIV_NS + 'announce_type', '') not in ('new', 'cross'):
-            continue  # replacements are new versions of papers already announced
         published = parse_datetime(entry.findtext(ATOM + 'published', ''))
         if published is None:
             continue
-        day = published.date()
+        day = published.date()  # replacements date the feed too: an archive may have nothing new that day
+        if entry.findtext(ARXIV_NS + 'announce_type', '') not in ('new', 'cross'):
+            continue  # replacements are new versions of papers already announced
         summary = entry.findtext(ATOM + 'summary', '')
         papers.append({
             'arxiv_id': site_id(entry.findtext(ATOM + 'id', '').split(':')[-1]),
@@ -384,12 +384,14 @@ def fetch_batch(expected, now, categories=(), batch=None):
             logger.exception('arXiv RSS %s could not be read', archive)
             missing.append(archive)
             continue
-        if day is not None and day != expected:
-            logger.info('arXiv RSS %s is still on %s, waiting for %s', archive, day, expected)
+        if day != expected:
+            # an empty feed is not out yet (or arXiv failed to fill it): taking it as a day without papers
+            # stored the batches of 29 and 30 October 2026 without any arXiv paper
+            logger.info('arXiv RSS %s is still on %s, waiting for %s', archive, day or 'an empty feed', expected)
             missing.append(archive)
             stale += 1
             continue
-        on_time += day is not None
+        on_time += 1
         for paper in papers:
             if paper['announced'] == expected:
                 found.setdefault(paper['arxiv_id'], paper)
