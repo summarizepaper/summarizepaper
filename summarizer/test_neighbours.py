@@ -121,6 +121,9 @@ class PageTests(NeighbourhoodTestCase):
         self.assertContains(page, 'Papers around this one')
         self.assertContains(page, 'Closest papers')
         self.assertContains(page, 'Galaxy disk galaxy')
+        # not summarized: its page would read arXiv for every crawler that follows the link
+        self.assertContains(page, 'href="/en/paper/2201.00009v1/" rel="nofollow"')
+        self.assertContains(page, 'href="/en/paper/2101.00002v2/">')
         self.assertContains(page, 'Cited by this paper')
         self.assertContains(page, 'href="/en/literature-review/?question=')
         self.assertContains(page, 'href="/en/scoops/?title=Galaxy%20galaxy%20disk')

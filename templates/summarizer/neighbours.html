@@ -26,7 +26,7 @@
           {% if item.cited and group.key != 'prior' %}<span class="nb-link">{% trans 'Cited by this paper' %}</span>{% endif %}
           {% if item.cites and group.key != 'followup' %}<span class="nb-link">{% trans 'Cites this paper' %}</span>{% endif %}
         </div>
-        <a class="nb-title" href="/{{ LANGUAGE_CODE }}/paper/{{ item.ref }}/">{{ item.title }}</a>
+        <a class="nb-title" href="/{{ LANGUAGE_CODE }}/paper/{{ item.ref }}/"{% if not item.summarized %} rel="nofollow"{% endif %}>{{ item.title }}</a>
         <div class="nb-sub">{% if item.authors %}{{ item.authors }}{% endif %}{% if item.year %} · {{ item.year }}{% endif %}{% if item.venue %} · <span class="nb-venue">{{ item.venue }}</span>{% endif %}
           · {% if item.summarized %}<span class="nb-summarized"><i class="fas fa-check" aria-hidden="true"></i> {% trans 'AI summary available' %}</span>{% else %}<span class="nb-unsummarized">{% trans 'Not summarized yet' %}</span>{% endif %}</div>
         <p class="nb-why"{% if not item.why %} hidden{% endif %}>{{ item.why }}</p>

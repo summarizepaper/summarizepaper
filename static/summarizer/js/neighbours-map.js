@@ -49,6 +49,7 @@
     var title = el('h3');
     var link = el('a', n.title);
     link.href = base + '/paper/' + n.ref + '/';
+    if (!n.summarized) link.rel = 'nofollow';  // its page reads arXiv or the DOI's source: not for crawlers
     title.appendChild(link);
     panel.appendChild(title);
     panel.appendChild(el('div', [n.authors, (n.date || '').slice(0, 4), n.venue].filter(Boolean).join(' · '), 'nb-sub'));
