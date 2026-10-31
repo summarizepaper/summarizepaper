@@ -13,9 +13,6 @@
   .about-groups ul { margin: 0; padding: 0; list-style: none; }
   .about-groups li { padding: 4px 0; }
   .about-groups li i { width: 18px; color: var(--accent); }
-  .disclaimer { display: flex; gap: 14px; margin-top: 40px; padding: 20px 24px; border-radius: var(--radius); background: #fffbeb; border: 1px solid #fde68a; color: #78350f; font-size: 15px; }
-  .disclaimer p { margin: 0; }
-  .disclaimer i { margin-top: 4px; color: #d97706; }
 </style>
 {% endblock %}
 
@@ -66,11 +63,6 @@
 
 <h2>{% trans 'Get in touch' %}</h2>
 <p>{% trans 'A question, a bug, an idea of a tool, or a partnership? We read every message.' %} <a href="/{{ LANGUAGE_CODE }}/contact/">{% trans 'Contact us' %}</a></p>
-
-<div class="disclaimer">
-  <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-  <p><strong>{% trans 'Disclaimer:' %}</strong> {% trans 'The AI-based summarization tool and virtual assistant provided on this website may not always provide accurate and complete summaries or responses. We encourage you to carefully review and evaluate the generated content to ensure its quality and relevance to your needs.' %}</p>
-</div>
 
 </div>
 {% endblock %}
