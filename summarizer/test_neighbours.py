@@ -168,6 +168,8 @@ class PageTests(NeighbourhoodTestCase):
         with mock.patch('summarizer.generated.chat_json', side_effect=self.why_answer) as chat:
             bot = Client(HTTP_USER_AGENT='Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
             self.assertEqual(bot.post(url).json()['status'], 'busy')
+            scraper = Client(REMOTE_ADDR='43.173.182.153')  # a browser user agent from a cloud that crawls the site
+            self.assertEqual(scraper.post(url).json()['status'], 'busy')
             with mock.patch('summarizer.neighbours.WHY_PER_VISITOR', 0):
                 self.assertEqual(Client().post(url).json()['status'], 'busy')
                 self.assertEqual(chat.call_count, 0)

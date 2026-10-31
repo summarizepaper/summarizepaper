@@ -638,6 +638,7 @@ def why_view(request, arxiv_id):
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
     if paper is None:
         raise Http404
+    from . import access
     from .digest_web import BOT_RE
     lang = get_language()
     row = why_row(arxiv_id, lang)
@@ -648,7 +649,8 @@ def why_view(request, arxiv_id):
         return JsonResponse({'status': 'pending', 'id': row.pk})
     if row is not None and row.status == 'failed' and row.updated > timezone.now() - datetime.timedelta(hours=1):
         return JsonResponse({'status': 'busy'})
-    if BOT_RE.search(request.META.get('HTTP_USER_AGENT', '')):
+    from .context_processors import untracked
+    if BOT_RE.search(request.META.get('HTTP_USER_AGENT', '')) or untracked(access.client_ip(request)):
         return JsonResponse({'status': 'busy'})
     row = start_why(arxiv_id, lang, request)
     if row is None:
