@@ -50,12 +50,9 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
             logger.exception('Could not read %s for the chat page', paper_id)
             await self.send(text_data=json.dumps({'message': 'failed', 'paper_id': paper_id}))
             return
-        url = licenseurl
-        if url:
-            cc_format = sources.license_label(url)
-            public = sources.is_open_license(url)
+        if licenseurl:
+            cc_format = sources.license_label(licenseurl)
         else:
-            public=False
             licenseurl="http://arxiv.org/licenses/assumed-1991-2003/"
             cc_format="ASSUMED 1991-2003"
 
@@ -64,7 +61,6 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
             'paper_id': paper_id,
             'licenseurl':licenseurl,
             'licensecc':cc_format,
-            'publiclicense':public
         }))
 
     async def create_embeddings(self, paper_id):
@@ -122,7 +118,7 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
 
             print('lic',license)
             # the rights to read the full text, apart from the license's (see tdm.py)
-            public = 1 if await asyncio.to_thread(tdm.may_read, license, paper_id) else 0
+            public = 1 if await sync_to_async(tdm.may_read)(license, paper_id) else 0
 
 
             print('pubbbllllliiiiiiccccc',public)
@@ -269,7 +265,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         print('lic',license)
         # the rights to read the full text, apart from the license's (see tdm.py)
-        public = 1 if await asyncio.to_thread(tdm.may_read, license, arxiv_id) else 0
+        public = 1 if await sync_to_async(tdm.may_read)(license, arxiv_id) else 0
 
 
         print('pubbbllllliiiiiiccccc',public)
@@ -357,7 +353,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         print('lic',license)
         # the rights to read the full text, apart from the license's (see tdm.py)
-        public = 1 if await asyncio.to_thread(tdm.may_read, license, arxiv_id) else 0
+        answer = await sync_to_async(tdm.paper_status)(license, arxiv_id)
+        public = 1 if answer in tdm.READABLE else 0
 
 
         print('pubbbllllliiiiiiccccc',public)
@@ -401,6 +398,10 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             if text_source == 'abstract' and not (abstract or '').strip():
                 raise generated.SourceUnavailable('No abstract or permitted full text is available.')
 
+            if public and text_source == 'abstract' and sources.is_external(arxiv_id) and \
+                    await sync_to_async(sources.rights_kept_out)(arxiv_id):
+                public, answer = 0, tdm.REVIEW
+            await sync_to_async(tdm.record)(answer if text_source != 'abstract' or not public else 'unavailable')
             await self.send_source('full_text' if text_source != 'abstract' else
                                    ('abstract_unavailable' if public else 'abstract_license'))
             message["progress"] = 30
@@ -768,7 +769,6 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             # shown by the page as they are: the page script does not know the other sources
             arxiv_dict2['ref_label'] = sources.label(v)
             arxiv_dict2['license_label'] = sources.license_label(arxiv_dict['license'])
-            arxiv_dict2['license_public'] = sources.is_open_license(arxiv_dict['license'])
             arxiv_dict2['published_label'] = published_label(v, l)
             c = asyncio.create_task(self.send_message_arxiv(arxiv_dict2))
             await c

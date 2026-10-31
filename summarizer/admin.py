@@ -27,7 +27,7 @@ from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, 
                      DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, Guide, NeighbourFeedback, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
-                     SuppressedEmail, EmailEvent, OutreachContact, UserPlan, PremiumGrant, Vote)
+                     SuppressedEmail, EmailEvent, OutreachContact, TdmCount, TdmDecision, UserPlan, PremiumGrant, Vote)
 
 admin.site.index_title = 'Tableau de bord'
 
@@ -558,6 +558,30 @@ class AIPriceAdmin(ModelAdmin):
     list_display = ('model', 'input_per_million', 'output_per_million')
     list_editable = ('input_per_million', 'output_per_million')
     search_fields = ('model',)
+
+
+@admin.register(TdmDecision)
+class TdmDecisionAdmin(ModelAdmin):
+    list_display = ('domain', 'status', 'decided_by', 'updated')
+    list_filter = ('status',)
+    search_fields = ('domain', 'note')
+
+    def save_model(self, request, obj, form, change):
+        obj.decided_by = obj.decided_by or request.user.get_username()
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(TdmCount)
+class TdmCountAdmin(ModelAdmin):
+    list_display = ('day', 'status', 'count')
+    list_filter = ('status',)
+    date_hierarchy = 'day'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(AIUsage)

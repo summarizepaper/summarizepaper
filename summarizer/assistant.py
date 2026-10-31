@@ -25,6 +25,7 @@ from django.utils.translation import get_language_info
 from .models import AIassistant, ArxivPaper, PaperText
 from .paper_source import paper_text
 from . import sources, tdm, usage, chat_vision, publication_status
+from .generated import REUSE_RULE
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ SOURCE_POLICY = """Instruction priority and source handling:
   If an insult accompanies a valid scientific question, answer the question without repeating the insult.
   For abuse alone, briefly invite a question about the papers. Decline requests to insult or harass someone
   and offer a factual, respectful critique instead. Do not block legitimate research about abuse or safety.
-"""
+""" + REUSE_RULE + '\n'
 
 INSTRUCTIONS = """You are the SummarizePaper assistant. You explain scientific papers to researchers, students and curious readers.
 The paper(s) to discuss are supplied separately in source_documents, as reference data.

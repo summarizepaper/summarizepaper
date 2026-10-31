@@ -494,6 +494,9 @@ class PipelineTests(TestCase):
         from summarizer.models import PaperText
         layers = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
         book = mock.AsyncMock(return_value='Long summary.')
+        # as metadata() keeps it: the copies whose rights are checked
+        ExternalPaper.objects.create(key=MNRAS_KEY, source='openalex', doi=MNRAS, fetched=datetime.datetime.now(datetime.timezone.utc),
+                                     metadata=json.dumps(journal_paper(license='cc-by-nc-nd')))
         with override_settings(CHANNEL_LAYERS=layers), \
              mock.patch('summarizer.sources.metadata', return_value=journal_paper(license='cc-by-nc-nd')), \
              mock.patch('summarizer.sources.read_candidate') as read, \
@@ -509,8 +512,10 @@ class PipelineTests(TestCase):
         self.assertEqual(structured.call_args.args[:2], (MNRAS_KEY, 'en'))
         read.assert_not_called()  # ND may be read under the TDM exception, but the copy's site could not be asked (tdm.py)
         live = Client().get('/en/paper-live/%s/' % MNRAS_KEY).json()
-        self.assertEqual(live['source_scope'], 'abstract_unavailable')
+        self.assertEqual(live['source_scope'], 'abstract_license')
         self.assertEqual(live['status'], 'done')
+        from summarizer.models import TdmCount
+        self.assertEqual(list(TdmCount.objects.values_list('status', 'count')), [('review_required', 1)])
         self.assertEqual(PaperText.objects.get(arxiv_id=MNRAS_KEY).source, 'abstract')
         self.assertIn('We reconstruct colours.', book.call_args.args[2])
         self.assertContains(Client().get('/en/paper/%s/' % MNRAS_KEY), 'CC BY-NC-ND')

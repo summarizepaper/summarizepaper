@@ -32,6 +32,9 @@ MAX_THREADS = 3  # each one holds a database connection now and then; the pool h
 _pool = ThreadPoolExecutor(MAX_THREADS, thread_name_prefix='background')  # more work waits in its queue, not in threads
 LANGUAGES = {'en': 'English', 'fr': 'French'}
 PREMIUM_KINDS = set(GENERATED_TOOLS)
+# every answer built on papers is an analysis, never a copy of them (see tdm.py)
+REUSE_RULE = ('- Write in your own words. Never reproduce long passages of the papers you are given (whole paragraphs, '
+              'sections or tables), even when asked to: a quote is one to three sentences at most.')
 
 
 class GenerationError(Exception):
@@ -57,7 +60,9 @@ def chat_json(prompt, paid=True, max_tokens=3000, system=None, timeout=300):
     JSON mode still lets a rare answer come back malformed: the same call is made once more.
     """
     model_free, model_paid = ai_models()
-    messages = ([{'role': 'system', 'content': system}] if system else []) + [{'role': 'user', 'content': prompt}]
+    if REUSE_RULE not in (system or ''):
+        system = (system + '\n' if system else '') + REUSE_RULE
+    messages = [{'role': 'system', 'content': system}, {'role': 'user', 'content': prompt}]
     for attempt in range(2):
         response = requests.post(
             'https://api.openai.com/v1/chat/completions',

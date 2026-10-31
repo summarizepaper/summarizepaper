@@ -20,6 +20,10 @@ Four answers:
                                than the site whose terms we read, or the site could not be asked. Not reading until
                                someone decides: finding no reservation is not a permission.
 
+Someone decides in the admin, site by site, after reading its terms (TdmDecision): its copies without
+an established license are then read under the exception (reservations still checked), or never read.
+Each summary counts the answer it got (TdmCount), shown in the admin next to what the AI costs.
+
 Only the first two are read. A text read under the exception is never shown
 back beyond short quotes (assistant.QUOTE_NOTE), and is forgotten KEEP_DAYS
 after it was read (forget_texts): the paper is read again when it is asked
@@ -56,6 +60,8 @@ POLICY_SECONDS = 2 * 86400  # arXiv's is asked again every hour (run): page load
 MAX_ROBOTS = 100000  # characters kept of a robots.txt (the cache is small); the rules come first
 TIMEOUT = 10
 KEEP_DAYS = 30
+DECISIONS_KEY = 'tdm-decisions'
+DECISIONS_SECONDS = 600  # TdmDecision.save clears it; a bulk delete in the admin is seen within that time
 META_RE = re.compile(r'<meta\s[^>]*name=["\']tdm-reservation["\'][^>]*>', re.I)
 CONTENT_RE = re.compile(r'content=["\']\s*1\s*["\']', re.I)
 
@@ -136,14 +142,31 @@ def document_reserves(headers, html=''):
     return any(CONTENT_RE.search(tag) for tag in META_RE.findall((html or '')[:200000]))
 
 
+def decision(host):
+    """What was decided in the admin for a site (TdmDecision): eligible_under_exception, blocked or None."""
+    from .models import TdmDecision
+    decisions = cache.get(DECISIONS_KEY)
+    if decisions is None:
+        decisions = dict(TdmDecision.objects.values_list('domain', 'status'))
+        cache.set(DECISIONS_KEY, decisions, DECISIONS_SECONDS)
+    host = (host or '').lower().removeprefix('www.')
+    # the most specific domain first: a decision about a subdomain wins over its parent's
+    return next((decisions[d] for d in sorted(decisions, key=len, reverse=True) if _host_in(host, (d,))), None)
+
+
 def status(license_url, url, ask=True):
     """The answer for reading the copy at url of a paper under that license. Without ask, a site whose answer is not
     in the cache is not asked (page loads): review_required."""
     level = license_status(license_url)
+    host = (urllib.parse.urlsplit(url).hostname or '').lower()
+    decided = decision(host)
+    if decided == BLOCKED:
+        return BLOCKED
+    if level == REVIEW and decided == EXCEPTION:
+        level = EXCEPTION  # someone read the site's terms
     if level != EXCEPTION:
         return level
-    host = (urllib.parse.urlsplit(url).hostname or '').lower()
-    if 'arxiv.org/licenses/' in (license_url or '').lower() and not _host_in(host, TERMS_READ):
+    if 'arxiv.org/licenses/' in (license_url or '').lower() and not _host_in(host, TERMS_READ) and not decided:
         return REVIEW  # arXiv's license is about arXiv's copy
     reserved = site_reserves(url, ask)
     if reserved is None:
@@ -157,13 +180,36 @@ def arxiv_status(license_url, ask=True):
     return next((a for a in (BLOCKED, REVIEW, EXCEPTION) if a in answers), ALLOWED)
 
 
-def may_read(license_url, key, ask=True):
-    """Whether the model may read the full text of a paper (an arXiv id or a sources key) under that license.
-    A paper from another source is read from several places: each is checked where it is read (sources.full_text)."""
+def paper_status(license_url, key, ask=True):
+    """The answer for reading the full text of a paper (an arXiv id or a sources key) under that license. A paper from
+    another source has several copies, each checked where it is read (sources.full_text): without a license that
+    lets us read it, the best of its copies (its arXiv version, a site someone decided about)."""
     from . import sources
-    if sources.is_external(key):
-        return license_status(license_url) in READABLE
-    return arxiv_status(license_url, ask) in READABLE
+    if not sources.is_external(key):
+        return arxiv_status(license_url, ask)
+    level = license_status(license_url)
+    if level in READABLE:
+        return level
+    copies = sources.copy_statuses(key, ask)
+    return min(copies, key=RANK.get) if copies else level
+
+
+def may_read(license_url, key, ask=True):
+    """Whether the model may read the full text of a paper (see paper_status)."""
+    return paper_status(license_url, key, ask) in READABLE
+
+
+def record(answer, day=None):
+    """Count a summary under the answer it got (TdmCount). Never breaks the summary."""
+    from django.db.models import F
+    from .models import TdmCount
+    day = day or timezone.localdate()
+    try:
+        if not TdmCount.objects.filter(day=day, status=answer).update(count=F('count') + 1):
+            TdmCount.objects.get_or_create(day=day, status=answer)
+            TdmCount.objects.filter(day=day, status=answer).update(count=F('count') + 1)
+    except Exception:
+        logger.exception('TDM count of %s could not be saved', answer)
 
 
 def run(now):

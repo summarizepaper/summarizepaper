@@ -57,4 +57,6 @@ def license_scope(paper):
     if not tdm.may_read(paper.license, paper.arxiv_id, ask=False):  # a page load never waits for a site
         return 'abstract_license'
     source = PaperText.objects.filter(arxiv_id=paper.arxiv_id).values_list('source', flat=True).first()
+    if source == 'abstract' and sources.is_external(paper.arxiv_id) and sources.rights_kept_out(paper.arxiv_id, ask=False):
+        return 'abstract_license'
     return ('abstract_unavailable' if source == 'abstract' else 'full_text') if source else 'full_text_allowed'

@@ -1331,3 +1331,52 @@ class NeighbourFeedback(models.Model):
 
     def __str__(self):
         return '%s autour de %s' % (self.ref, self.arxiv_id)
+
+
+class TdmDecision(models.Model):
+    """What someone decided, after reading a site's terms, about papers whose rights tdm.py could not establish
+    (review_required): read them under the TDM exception, or never read them."""
+    STATUSES = [('eligible_under_exception', 'Lire sous l’exception TDM (après vérification des oppositions)'),
+                ('blocked', 'Ne jamais lire')]
+    domain = models.CharField('site', max_length=200, unique=True,
+                              help_text='Nom de domaine des copies concernées, sous-domaines compris (hal.science, europepmc.org…).')
+    status = models.CharField('décision', max_length=30, choices=STATUSES)
+    note = models.TextField('justification', help_text='Conditions lues, lien, date.')
+    decided_by = models.CharField('décidé par', max_length=100, blank=True)
+    updated = models.DateTimeField('mise à jour', auto_now=True)
+
+    class Meta:
+        verbose_name = 'décision TDM'
+        verbose_name_plural = 'décisions TDM'
+        ordering = ('domain',)
+
+    def __str__(self):
+        return '%s : %s' % (self.domain, self.get_status_display())
+
+    def save(self, *args, **kwargs):
+        self.domain = self.domain.strip().lower().removeprefix('www.')
+        super().save(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('tdm-decisions')
+
+    def delete(self, *args, **kwargs):
+        result = super().delete(*args, **kwargs)
+        from django.core.cache import cache
+        cache.delete('tdm-decisions')
+        return result
+
+
+class TdmCount(models.Model):
+    """How many summaries a day read the full text under each answer of tdm.py."""
+    day = models.DateField('jour')
+    status = models.CharField('statut', max_length=30)
+    count = models.PositiveIntegerField('résumés', default=0)
+
+    class Meta:
+        verbose_name = 'statut TDM des résumés'
+        verbose_name_plural = 'statuts TDM des résumés'
+        ordering = ('-day', 'status')
+        constraints = [models.UniqueConstraint(fields=['day', 'status'], name='tdm_count_day_status')]
+
+    def __str__(self):
+        return '%s %s : %d' % (self.day, self.status, self.count)

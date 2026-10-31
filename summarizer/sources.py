@@ -828,17 +828,38 @@ def later_places(key, paper):
     return places
 
 
-def may_read_copy(paper, kind, where):
-    """Whether the rights of one copy of a paper (one of paper['text']) let the model read it (see tdm.py)."""
+def copy_status(paper, kind, where, ask=True):
+    """The answer of tdm.py for one copy of a paper (one of paper['text'])."""
     if kind == 'arxiv':
-        return True  # arxiv_text checks the rights of the arXiv version
+        return tdm.EXCEPTION  # may be read: arxiv_text checks the rights of the arXiv version before reading it
     license_url = paper.get('licenses', {}).get(where, paper['license']) if kind == 'pdf' else paper['license']
     url = {'epmc': EPMC_XML % where, 'epmc_doi': EPMC_XML % where,
            'openalex_tei': OPENALEX_CONTENT % (where, 'grobid-xml'), 'openalex_pdf': OPENALEX_CONTENT % (where, 'pdf')}
-    status = tdm.status(license_url, url.get(kind, where))
+    return tdm.status(license_url, url.get(kind, where), ask)
+
+
+def may_read_copy(paper, kind, where):
+    """Whether the rights of one copy of a paper let the model read it (see tdm.py)."""
+    status = copy_status(paper, kind, where)
     if status not in tdm.READABLE:
         logger.info('Not reading %s %s of %s: %s', kind, where, paper['key'], status)
     return status in tdm.READABLE
+
+
+def copy_statuses(key, ask=True):
+    """The answers of tdm.py for the copies of a paper we know, from its stored metadata: no request but to the
+    sites themselves, and to none of them without ask. [] when the paper is unknown."""
+    from .models import ExternalPaper
+    stored = ExternalPaper.objects.filter(key=key).values_list('metadata', flat=True).first()
+    paper = json.loads(stored) if stored else None
+    return [copy_status(paper, kind, where, ask) for kind, where in paper['text']] if paper else []
+
+
+def rights_kept_out(key, ask=True):
+    """True when copies of the paper are known and the rights of none let the model read it (see tdm.py): its page
+    says so, rather than that no copy could be read."""
+    answers = copy_statuses(key, ask)
+    return bool(answers) and not any(answer in tdm.READABLE for answer in answers)
 
 
 def full_text(key):

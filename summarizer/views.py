@@ -539,7 +539,7 @@ def arxiv_version_redirect(arxiv_id):
         paper = sources.metadata(arxiv_id)
     except sources.SourceUnavailable:
         return None
-    if paper and paper['arxiv_id'] and not tdm.may_read(paper['license'], arxiv_id):
+    if paper and paper['arxiv_id'] and tdm.license_status(paper['license']) not in tdm.READABLE:
         return redirect(reverse('arxividpage', kwargs={'arxiv_id': digest.site_id(paper['arxiv_id'])}))
     return None
 

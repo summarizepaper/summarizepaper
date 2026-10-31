@@ -8,8 +8,8 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from summarizer import assistant, changes, paper_source, sources, synthesis, tdm
-from summarizer.models import ArxivPaper, ExternalPaper, PaperText
+from summarizer import assistant, changes, generated, paper_source, sources, synthesis, tdm
+from summarizer.models import ArxivPaper, ExternalPaper, PaperText, TdmCount, TdmDecision
 from summarizer.test_sources import JATS, MNRAS, MNRAS_KEY, journal_paper
 
 CC_BY = 'http://creativecommons.org/licenses/by/4.0/'
@@ -243,3 +243,81 @@ class RetentionTests(TestCase):
             cache.clear()
             tdm.forget_texts(timezone.now() + datetime.timedelta(days=tdm.KEEP_DAYS + 1))
             self.assertEqual(paper_source.paper_text('2101.00001v1'), 'Abstract 2101.00001v1.')
+
+
+def store(paper):
+    ExternalPaper.objects.create(key=MNRAS_KEY, source='openalex', doi=MNRAS, fetched=timezone.now(), metadata=json.dumps(paper))
+
+
+@override_settings(CACHES=LOCMEM, TDM_CHECK_NETWORK=True)
+class DecisionTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_a_site_someone_cleared_is_read_under_the_exception_after_the_check(self):
+        url = 'https://www.repo.example/x.pdf'
+        self.assertEqual(tdm.status('', url), tdm.REVIEW)
+        TdmDecision.objects.create(domain='WWW.Repo.example', status=tdm.EXCEPTION, note='CGU lues le 31/10/2026')
+        self.assertEqual(TdmDecision.objects.get().domain, 'repo.example')
+        with site():
+            self.assertEqual(tdm.status('', url), tdm.EXCEPTION)
+            self.assertEqual(tdm.status(ARXIV, url), tdm.EXCEPTION)  # its copy of an arXiv-licensed paper too
+        cache.delete(tdm.POLICY_KEY % 'https://www.repo.example')
+        with site(tdmrep=[{'location': '/*', 'tdm-reservation': 1}]):
+            self.assertEqual(tdm.status('', url), tdm.BLOCKED)  # a reservation still wins
+
+    def test_a_blocked_site_is_never_read_and_the_most_specific_decision_wins(self):
+        TdmDecision.objects.create(domain='publisher.example', status=tdm.BLOCKED, note='Interdit par les CGU')
+        TdmDecision.objects.create(domain='oa.publisher.example', status=tdm.EXCEPTION, note='Portail ouvert')
+        self.assertEqual(tdm.status(CC_BY, 'https://publisher.example/x.pdf'), tdm.BLOCKED)
+        with site():
+            self.assertEqual(tdm.status('', 'https://oa.publisher.example/x.pdf'), tdm.EXCEPTION)
+        TdmDecision.objects.get(domain='oa.publisher.example').delete()
+        self.assertEqual(tdm.status('', 'https://oa.publisher.example/x.pdf'), tdm.BLOCKED)
+
+
+@override_settings(CACHES=LOCMEM, TDM_CHECK_NETWORK=True)
+class ExternalPaperTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_a_doi_without_license_is_read_from_its_arxiv_version(self):
+        store(journal_paper(license='', text=[('pdf', 'https://publisher.example/x.pdf'), ('arxiv', '2301.03702')]))
+        self.assertEqual(tdm.paper_status('', MNRAS_KEY), tdm.EXCEPTION)
+        row = [1] + [''] * 11 + [ARXIV, '']
+        with site(), mock.patch('summarizer.utils.get_arxiv_metadata', mock.AsyncMock(return_value=row)), \
+             mock.patch('summarizer.sources._download') as download, \
+             mock.patch('summarizer.paper_source.fetch_arxiv_html', return_value='arXiv text ' * 500):
+            self.assertEqual(sources.full_text(MNRAS_KEY)[1], 'html')
+        download.assert_not_called()  # the publisher's copy has no established rights
+
+    def test_a_doi_without_any_readable_copy_says_so(self):
+        store(journal_paper(license='', text=[('pdf', 'https://publisher.example/x.pdf')]))
+        self.assertEqual(tdm.paper_status('', MNRAS_KEY), tdm.REVIEW)
+        self.assertTrue(sources.rights_kept_out(MNRAS_KEY))
+        paper = ArxivPaper.objects.create(arxiv_id=MNRAS_KEY, title='T', license=CC_BY)
+        PaperText.objects.create(arxiv_id=MNRAS_KEY, text='Abstract.', source='abstract')
+        self.assertEqual(synthesis.license_scope(paper), 'abstract_license')
+        ExternalPaper.objects.all().delete()  # copies unknown: nothing says the rights kept us out
+        self.assertFalse(sources.rights_kept_out(MNRAS_KEY))
+        self.assertEqual(synthesis.license_scope(paper), 'abstract_unavailable')
+
+
+class CountTests(TestCase):
+    def test_summaries_are_counted_by_answer(self):
+        day = datetime.date(2026, 10, 31)
+        for answer in (tdm.EXCEPTION, tdm.EXCEPTION, tdm.ALLOWED):
+            tdm.record(answer, day)
+        self.assertEqual(dict(TdmCount.objects.values_list('status', 'count')), {tdm.EXCEPTION: 2, tdm.ALLOWED: 1})
+
+
+class ReuseRuleTests(TestCase):
+    def test_every_generation_is_told_not_to_reproduce_the_papers(self):
+        self.assertIn(generated.REUSE_RULE, assistant.SOURCE_POLICY)
+        answer = mock.Mock(status_code=200)
+        answer.json.return_value = {'choices': [{'message': {'content': '{}'}}], 'usage': {}}
+        for system in (None, 'Task.', assistant.SOURCE_POLICY):
+            with mock.patch('summarizer.generated.requests.post', return_value=answer) as post:
+                generated.chat_json('prompt', system=system)
+            sent = post.call_args.kwargs['json']['messages'][0]['content']
+            self.assertEqual(sent.count(generated.REUSE_RULE), 1)
