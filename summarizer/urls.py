@@ -1,7 +1,7 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 from . import (views, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web)
+               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -21,6 +21,7 @@ urlpatterns = [
     re_path(r"^arxiv-id/(?P<cat>[^\d]+)/(?P<arxiv_id>[a-zA-Z0-9]+)/$", views.legacy_paper_url),
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.legacy_paper_url),
     path("tree/<str:arxiv_id>/", views.tree, name="tree"),
+    path("neighbours/<str:arxiv_id>/why/", neighbours.why_view, name="neighbours_why"),
     path("bibtex/<str:arxiv_id>/", views.bibtex, name="bibtex"),
     path('saved-searches/', saved_searches.manage, name='saved_searches'),
     path('saved-searches/save/', saved_searches.save, name='save_search'),

@@ -20,6 +20,7 @@
       });
     });
     if (window.SPPaperTools) SPPaperTools.init();
+    if (window.SPNeighbours) SPNeighbours.init();
     if (window.SPChatFigures && SPChatFigures.init) SPChatFigures.init(root);
     if (window.SPChat && SPChat.init) SPChat.init(root);
     var download = root.querySelector('#download-form');

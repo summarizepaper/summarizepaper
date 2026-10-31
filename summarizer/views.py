@@ -7,13 +7,13 @@ import time
 import re
 import hashlib
 from .models import (AnnouncedPaper, ArxivPaper, Vote, PaperHistory, PDFHistory, SummaryPaper, AIassistant, Search,
-                     PaperScore, SiteSettings, UserPlan)
+                     SiteSettings, UserPlan)
 from .forms import RegistrationForm
 from .tool_list import TOOL_GROUPS
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, publication_status, reading, similar, sources, exports, insight, summary_text
+from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, neighbours, publication_status, reading, sources, exports, insight, summary_text
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -562,105 +562,13 @@ def tree(request, arxiv_id):
         cc_format, _public = license_display(paper.license)
 
         alpaper=True
-        relpapers=''
-        scores=[]
-        max_score=0
-        if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-            relpapers = (PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')
-                         .select_related('to_paper').prefetch_related('to_paper__authors'))
-            relpapersData = []
-            import numpy as np
-            import random
-
-            MAX_AUTHORS = 5
-
-            first_author = paper.authors.first()
-            author_name = first_author.name if first_author else 'Unknown Author'
-
-            paper_authors = paper.authors.all()
-            author_names = ', '.join([author.name for author in paper_authors[:MAX_AUTHORS]])
-            if len(paper_authors) > MAX_AUTHORS:
-                author_names += '...'
-
-            relpapersData.append({
-                    'arxiv_id': paper.arxiv_id,
-                    'title': paper.title,
-                    'score': 0.2*10,
-                    'lang':lang,
-                    'distance':0,
-                    'x': 0,
-                    'y': 0,
-                    'first_author': author_name,
-                    'authors': author_names,
-                    'main':True
-                })
-
-            # spread the papers evenly around the main one: searching random free spots took seconds
-            start_angle = random.random() * 2 * np.pi
-            for k, relpaper in enumerate(relpapers):
-                paper_authors = list(relpaper.to_paper.authors.all())
-                first_author = min(paper_authors, key=lambda a: a.pk) if paper_authors else None
-                author_name = first_author.name if first_author else 'Unknown Author'
-                author_names = ', '.join([author.name for author in paper_authors[:MAX_AUTHORS]])
-                if len(paper_authors) > MAX_AUTHORS:
-                    author_names += ', ...'
-                #author_names = ', '.join([author.name for author in paper_authors])
-                #author_names = ', '.join([a.name for a in relpaper.to_paper.authors])
-                print('aut',author_names)
-                distance = 100 * (relpaper.score) + 50.
-                # add x and y positions based on distance
-                #x = distance * np.cos(random.random() * np.pi * 2)
-                #y = distance * np.sin(random.random() * np.pi * 2)
-                angle = start_angle + 2 * np.pi * k / len(relpapers)
-                x = distance * np.cos(angle)
-                y = distance * np.sin(angle)
-
-                relpapersData.append({
-                    'arxiv_id': relpaper.to_paper.arxiv_id,
-                    'title': relpaper.to_paper.title,
-                    'score': 100 * (1 - relpaper.score),
-                    'lang':lang,
-                    'distance':distance,
-                    'x': x,
-                    'y': y,
-                    'first_author': author_name,
-                    'authors': author_names,
-                    'main':False
-                })
-
-            # Get maximum x and y values
-            max_d = max(item['distance'] for item in relpapersData)
-            #min_d = min(item['distance'] for item in relpapersData)
-            min_d = min(filter(lambda item: item['distance'] != 0, relpapersData), key=lambda item: item['distance'])['distance']
-            print('max_d',max_d)
-            print('min_d',min_d)
-
-            for item in relpapersData:
-                print("item['distance']1",item['distance'])
-                if item['distance'] != 0:
-                    newdist = ((item['distance'] - min_d+5) / (max_d - min_d+5)) * 100
-                    item['x']=item['x']/item['distance']*newdist
-                    item['y']=item['y']/item['distance']*newdist
-                print("item['distance']2",item['distance'])
-            # Renormalize x and y values
-            #for item in relpapersData:
-            #   item['x'] = (item['x'] / max_x) * 100
-            #   item['y'] = (item['y'] / max_y) * 100
-
-            # Convert the list of dictionaries to a JSON string
-            relpapers_json = json.dumps(relpapersData)
-
-            max_score = min(rel.score for rel in relpapers)
-            #for rel in relpapers:
-            #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
-            for pap in relpapers:
-                scores.append(similar.percent(pap.score))
-            stuff_for_frontend.update({
-                'relpapers':relpapers,
-                'max_score':str(max_score*10),
-                'relpapers_json':relpapers_json,
-                'scores':scores,
-            })
+        neighbourhood = neighbours.for_page(paper, lang, with_map=True)
+        stuff_for_frontend.update({
+            'neighbourhood': neighbourhood,
+            'map_data': neighbourhood['map'] if neighbourhood else None,
+            'my_collections': library.paper_collections(request.user, arxiv_id),
+            'insight': insight.for_page(arxiv_id, lang),
+        })
 
     else:
         alpaper=False
@@ -1213,20 +1121,6 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 else:
                     keywords=''
 
-            #closest_papers=asyncio.run(utils.findclosestpapers(arxiv_id,lang,settings.OPENAI_KEY))
-            #print('closest_papers',closest_papers)
-            relpapers=''
-            scores=[]
-            max_score=0
-            MAX_REL_PAPERS=7
-            if PaperScore.objects.filter(from_paper=paper,active=True).exists():
-                relpapers = PaperScore.objects.filter(from_paper=paper,active=True).order_by('score')[:MAX_REL_PAPERS]
-                max_score = min(rel.score for rel in relpapers)
-                #for rel in relpapers:
-                #    rel.left_pos = 100 * (relpapers.index(rel) % 10) / 10
-                for pap in relpapers:
-                    scores.append(similar.percent(pap.score))
-
             if sumpaper and sumpaper.blog:
                 sumpaper.blog = summary_text.without_invented_references(
                     utils.clean_blog_html(sumpaper.blog), [a.name for a in paper.authors.all()], paper.journal_ref, paper.comments)
@@ -1234,9 +1128,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
             stuff_for_frontend.update({
                 'paper':paper,
                 'structured_data':paper_structured_data(paper, sumpaper, lang),
-                'relpapers':relpapers,
-                'max_score':max_score,
-                'scores':scores,
+                'neighbourhood':neighbours.for_page(paper, lang),
                 'keywords':keywords,
                 'sumpaper':sumpaper,
                 'sumlang':sumlang,

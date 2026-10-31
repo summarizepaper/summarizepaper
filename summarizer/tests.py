@@ -1076,7 +1076,7 @@ class SimilarPapersTests(TestCase):
         self.assertContains(page, near.title)
         self.assertContains(page, 'DOI: 10.64898/2026.03.25.714121')
         self.assertNotContains(page, 'arXiv: doi_')
-        self.assertEqual(len(_json.loads(page.context['relpapers_json'])), 3)
+        self.assertEqual(len(page.context['map_data']['nodes']), 2)
 
     def test_empty_category_and_doi_version_suffix_are_supported(self):
         from summarizer import similar
@@ -1104,7 +1104,8 @@ class SimilarPapersTests(TestCase):
         main = self.paper('doi_10.1234--galaxy', 'galaxy', 'Astronomy')
         response = Client().get('/fr/tree/%s/' % main.arxiv_id)
         self.assertContains(response, 'Aucun article proche')
-        self.assertContains(response, "JSON.parse('[]')")
+        self.assertIsNone(response.context['map_data'])
+        self.assertNotContains(response, 'neighbours-map.js')
 
 
 class ReactivationTests(TestCase):
@@ -1220,12 +1221,13 @@ class TreePageTests(TestCase):
                                            author_order=j)
             # close scores put every paper on the same ring: the old random placement struggled here
             PaperScore.objects.create(from_paper=main, to_paper=other, score=0.30 + i / 1000, active=True)
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             r = Client().get('/en/tree/2401.00001v1/')
         self.assertEqual(r.status_code, 200)
-        data = _json.loads(r.context['relpapers_json'])
-        self.assertEqual(len(data), 16)
-        self.assertEqual(data[1]['first_author'], 'A0-0')
+        data = r.context['map_data']
+        self.assertEqual(len(data['nodes']), 15)
+        self.assertEqual(data['nodes'][0]['authors'], 'A0-0, A0-1')
+        self.assertEqual(data['nodes'][0]['level'], 'close')  # similarity 0.70
 
 
 class ArxivTimeoutTests(TestCase):

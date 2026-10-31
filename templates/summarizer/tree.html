@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static static_version %}
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 {% load dash_slash %}
 
-{% block title %} {% trans 'SummarizePaper Tree - Discovering Connections between Research Papers using AI' %} {% endblock %}
+{% block title %}{% if paper.title %}{% blocktrans with title=paper.title %}Papers around “{{ title }}”{% endblocktrans %} | SummarizePaper{% else %}{% trans 'SummarizePaper Tree - Discovering Connections between Research Papers using AI' %}{% endif %}{% endblock %}
 {% block extra_head_tags %}
   <meta name="description" content="{% trans 'Our website, SummarizePaper, leverages the power of artificial intelligence to help you explore and navigate the vast landscape of research papers. With our interactive visual tool, you can easily discover connections between related papers, visualize how they are connected, and explore the relationships between topics. Whether you are a researcher, student, or simply curious about the latest advancements in a field, SummarizePaper can help you make sense of the complex web of information in the world of academia.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/tree/{{ arxiv_id }}/" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.3/d3.min.js"></script>
-
+  {% if map_data %}<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.3/d3.min.js"></script>{% endif %}
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/neighbours.css' %}">
   {% include 'summarizer/mathjax.html' %}
-  
+
     <style>
 .main-content2 { max-width: 1000px; margin: 0 auto; padding: 40px 20px 0; }
 .title h1 { margin: 0 0 16px; font-size: clamp(26px, 3.6vw, 38px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
@@ -21,27 +21,20 @@
 .info-text { font-size: 14px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
 .info-text i { width: 16px; margin-right: 4px; color: #9a9aab; text-align: center; }
 .info-text a { text-decoration: none; font-weight: 500; }
-.paper-details p { margin: 16px 0 12px; font-size: 16px; line-height: 1.7; color: #33333f; }
-.paper-details strong { display: block; margin-bottom: 6px; color: var(--text); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
-.tree-intro { margin-top: 40px; padding: 24px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; }
+.paper-details details { margin: 16px 0 12px; }
+.paper-details summary { cursor: pointer; color: var(--text); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.paper-details p { margin: 10px 0 0; font-size: 16px; line-height: 1.7; color: #33333f; }
+.tree-intro { margin-top: 32px; }
 .tree-intro h2 { margin: 0 0 6px; font-size: 22px; }
 .tree-intro p { margin: 0; color: var(--text-muted); }
-.paper-resources { margin-top: 12px; color: var(--text-muted); font-size: 14px; }
-.paper-resources a { font-weight: 600; text-decoration: none; }
-.paper-resources a:hover { text-decoration: underline; }
-#graph { border: 1px solid var(--border) !important; border-radius: 0 0 var(--radius) var(--radius) !important; background: var(--surface); overflow: hidden; }
+.tree-intro a { font-weight: 600; text-decoration: none; }
 .message { margin: 40px 0 0; padding: 24px; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--text-muted); text-align: center; }
 .link { font-weight: 600; text-decoration: none; }
 .link:hover { text-decoration: underline; }
 .center { display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 24px; }
-.center form { display: flex; align-items: center; gap: 10px; }
-.center form p { margin: 0; }
-.main-content2 input[type="submit"] { padding: 9px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 600 14px var(--font); cursor: pointer; }
+.main-content2 input[type="submit"] { padding: 9px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: 600 14px var(--font); cursor: pointer; max-width: 100%; white-space: normal; }
 .main-content2 input[type="submit"]:hover { background: var(--bg-soft); }
-.beta { padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 12px; font-weight: 600; }
-#popover2 { display: none; position: fixed; z-index: 60; max-width: 320px; padding: 14px 16px; border-radius: var(--radius-sm); background: #16161d; color: #e6e6ef; font-size: 14px; box-shadow: var(--shadow); }
-#popover2 p { margin: 0 0 6px; }
-#popover-link2 { color: #9a9aab; cursor: help; }
+.main-content2 .neighbours { margin-top: 40px; }
     </style>
 {% endblock %}
 
@@ -51,81 +44,65 @@
 <div class="main-content2">
 
 {% if exist != 0 %}
-{% if paper.title %}
-    <div class="title"><h1>{{ paper.title }}</h1></div>
-  {% endif %}
+  {% if paper.title %}<div class="title"><h1>{{ paper.title }}</h1></div>{% endif %}
   <div class="subtitle">
     {% if paper.authors.all %}
       <p><b>{% trans 'Authors:' %}</b>
-        {% for author in paper.authors.all %}
-          {{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% endif %}{% if not forloop.last %}, {% endif %}
-        {% endfor %}
+        {% for author in paper.authors.all %}{{ author.name }}{% if author.affiliation %} ({{ author.affiliation }}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}
       </p>
     {% endif %}
   </div>
   {% if paper.journal_ref %}
-  <div class="info-block">
-    <div class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</div>
-  </div>
+  <div class="info-block"><div class="info-text"><i class="fas fa-book"></i> {{ paper.journal_ref }}</div></div>
   {% endif %}
   <div class="info-block">
-    <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank">{% endif %}{{ arxiv_id|paper_ref }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category }}){% endif %}</div>
-  </div>
-  {% if paper.comments %}
-  <div class="info-block">
-    <div class="info-text"><i class="fas fa-comment"></i> {{ paper.comments }}</div>
-  </div>
-  {% endif %}
-  {% if paper.license %}
-  <div class="info-block">
-    <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ paper.license }}" target="_blank">{{ cc_format }}</a></div>
-  </div>
-  {% elif not arxiv_id|is_external %}
-  <div class="info-block">
-    <div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% trans 'not stated (all rights reserved)' %}</div>
-  </div>
-  {% endif %}
-  <div class="paper-details">
-  {% if paper.abstract %}
-    <p><strong>{% trans 'Abstract:' %}</strong> <span class="math style="width: 1.796em; display: inline-block;">{{ paper.abstract }}</span></p>
-  {% endif %}
+    <div class="info-text"><i class="fas fa-link"></i> {% if paper.link_homepage %}<a href="{{ paper.link_homepage }}" target="_blank" rel="noopener">{% endif %}{{ arxiv_id|paper_ref }}{% if paper.link_homepage %}</a>{% endif %}{% if paper.link_doi %} - <a href="{{ paper.link_doi }}" target="_blank" rel="noopener">DOI</a>{% endif %}{% if paper.category %} ({{ paper.category|category_label }}){% endif %}</div>
   </div>
   {% if paper.published_arxiv %}
   <div class="info-block">
     <div class="info-text"><i class="fas fa-clock"></i> {% if arxiv_id|is_external %}{% trans 'Published on' %}{% else %}{% trans 'Submitted to arXiv on' %}{% endif %} {{ paper.published_arxiv|date:"d M. Y" }}</div>
   </div>
   {% endif %}
-
-  {% if  alpaper %}
-
-  <div class="tree-intro" id="closest">
-    <h2>{% trans 'Explore the paper tree' %}</h2>
-    <p>{% trans 'Click on the tree nodes to be redirected to a given paper and access their summaries and virtual assistant' %}</p>
-      <div class="paper-resources">
-        <div class="paper-resources-text">
-        <span>{% trans 'Also access our AI generated' %}
-        <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/#results">{% trans 'Summaries' %}</a>,
-        {% trans ' or ask questions about this paper to our' %} <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/#assistant">{% trans 'AI assistant' %}</a></span>.
-        </div>
-        </div>
+  {% if paper.license %}
+  <div class="info-block"><div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} <a href="{{ paper.license }}" target="_blank" rel="noopener">{{ cc_format }}</a></div></div>
+  {% elif not arxiv_id|is_external %}
+  <div class="info-block"><div class="info-text"><i class="fas fa-id-badge"></i> {% trans 'License:' %} {% trans 'not stated (all rights reserved)' %}</div></div>
+  {% endif %}
+  {% if paper.abstract %}
+  <div class="paper-details">
+    <details><summary>{% trans 'Abstract' %}</summary><p class="math">{{ paper.abstract }}</p></details>
   </div>
-  <div id="graph"></div>
-  {% if not relpapers %}<p class="message">{% trans "No related papers are available yet. Try the search below; results depend on the papers indexed in our database." %}</p>{% endif %}
+  {% endif %}
+
+  {% if alpaper %}
+  <div class="tree-intro">
+    <h2>{% trans 'The papers around it, by date and closeness' %}</h2>
+    <p>{% trans 'Higher is closer to this paper; left is older. Lines join papers close to each other: groups of lines are sub-topics. Select a point to see why it is there.' %}
+      <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Back to the summary of this paper' %}</a></p>
+  </div>
+  {% if map_data %}
+  <div class="nb-map" id="nb-map" data-this-paper="{% trans 'This paper' %}" data-closeness="{% trans 'Closeness' %}"
+   data-open="{% trans 'Open its AI summary' %}" data-summarize="{% trans 'Summarize it' %}" data-select="{% trans 'Select it' %}"
+   data-unselect="{% trans 'Unselect it' %}" data-cited="{% trans 'Cited by this paper' %}" data-cites="{% trans 'Cites this paper' %}"
+   data-undated="{% trans '{n} papers without a date are only in the list below.' %}">
+    <div class="nb-map-legend">
+      <span><i style="background:#4f46e5"></i>{% trans 'Closest papers' %}</span>
+      <span><i style="background:#d97706"></i>{% trans 'Prior work it builds on' %}</span>
+      <span><i style="background:#059669"></i>{% trans 'Papers that cite it' %}</span>
+    </div>
+  </div>
+  <div class="nb-panel" id="nb-panel" hidden aria-live="polite"></div>
+  {{ map_data|json_script:"nb-map-data" }}
+  {% include 'summarizer/neighbours.html' with on_map=True %}
+  {% else %}
+  <p class="message">{% trans "No related papers are available yet. Try the search below; results depend on the papers indexed in our database." %}</p>
+  {% endif %}
   <div class="center" style="margin-bottom:20px;">
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
       <input type="hidden" name="tree" value="0">
-      <input type="submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
-      <p>
-      <span class="beta">Beta</span>
-      <span id="popover-link2">
-        <i class="fas fa-question-circle"></i>
-      </span></p>
+      <input type="submit" value="{% if neighbourhood %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
     </form>
-    <div id="popover2">
-      <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
-      <p>{% trans 'We compare the title and abstract with papers indexed in our database. For arXiv papers, we search within the same category; for DOI and other sources, we search across sources and subjects. You can rerun the search as our database grows.' %}</p>
-    </div>
   </div>
   {% else %}
   <p class="message">{% trans 'The paper tree for this article is not created yet. To create it, you can run our tools' %} <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/" class="link">{% trans 'on this page' %}</a>.</p>
@@ -134,205 +111,12 @@
 <p>{% trans 'There is no existing article with the given arXiv ID:' %} {{ arxiv_id }}. {% blocktrans %} Try again your <a href="/{{LANGUAGE_CODE}}/">search</a> with a new arXiv ID.{% endblocktrans %}</p>
 {% endif %}
 
-
 </div>
 {% endblock %}
 
-
 {% block scripts %}
-{% if alpaper %}
-<script>
-  document.getElementById("popover-link2").addEventListener("mouseover", function(event) {
-    var popover2 = document.getElementById("popover2");
-    popover2.style.display = "block";
-    popover2.style.left = (event.clientX + 20) + "px";
-    popover2.style.top = (event.clientY - 200) + "px";
-  });
-  
-  document.getElementById("popover-link2").addEventListener("mouseout", function() {
-    var popover2 = document.getElementById("popover2");
-    popover2.style.display = "none";
-  });
-  </script>
-
-<script>
-var tooltip = d3.select("body")
-  .append("div")
-  .style("position", "absolute")
-  .style("z-index", "10")
-  .style("visibility", "hidden")
-
-  function showTooltip(event, d) {
-  // Get tooltip dimensions
-  const tooltipWidth = tooltip.node().offsetWidth;
-  const tooltipHeight = tooltip.node().offsetHeight;
-
-  // Get mouse position and adjust tooltip position based on screen bounds
-  let xPos = event.pageX + 10;
-  let yPos = event.pageY + 10;
-
-  // Check if tooltip goes off right side of screen
-  if (xPos + tooltipWidth > window.innerWidth) {
-    xPos = xPos;//window.innerWidth - tooltipWidth - 10;
-  }
-
-  // Check if tooltip goes off bottom side of screen
-  if (yPos + tooltipHeight > window.innerHeight) {
-    yPos = yPos;//window.innerHeight - tooltipHeight - 10;
-  }
-
-  // Show tooltip and position it correctly
-  tooltip.style('opacity', 1)
-    .style('left', xPos + 'px')
-    .style('top', yPos + 'px')
-    .style('background-color', 'white')
-    .style('border', '1px solid #e6e6ef')
-    .style('border-radius', '8px')
-    .style('box-shadow', '0 8px 24px rgba(16,16,29,.08)')
-    .style('max-width', '360px')
-    .style('font-size', '13px')
-    .html(`<div style="padding: 10px 12px; line-height: 1.5">
-          <strong>{% trans 'Title:' %} </strong>${d.title}<br>
-          <strong>{% trans 'Authors:' %} </strong>${d.authors}<br>
-          <strong>{% trans 'Arxiv ID:' %} </strong>${d.arxiv_id}<br>
-          ${d.main ? '' : `<strong>{% trans 'Score:' %} </strong>${d.score.toFixed(1)}%<br>`}
-        </div>`);
-}
-
-
-// Define the data for the graph
-var data = JSON.parse('{{ relpapers_json|default:'[]'|escapejs }}');
-//console.log(data)
-
-function drawGraph() {
-
-// Calculate maximum distance
-var maxDistance = 0;
-for (var i = 0; i < data.length; i++) {
-  var x = data[i].x;
-  var y = data[i].y;
-  var distance = Math.sqrt(x * x + y * y);
-  if (distance > maxDistance) {
-    maxDistance = distance;
-  }
-}
-
-// Define the dimensions and margins of the graph
-const margin = { top: 10, right: 10, bottom: 10, left: 10 };
-const width = window.innerWidth - margin.left - margin.right;
-const height = window.innerHeight - margin.top - margin.bottom;
-
-
-// Append the SVG object to the graph div
-d3.select('#graph svg').remove();
-var svg = d3.select('#graph')
-  .append('svg')
-  .attr('width', width + margin.left + margin.right)
-  .attr('height', height + margin.top + margin.bottom)
-  .append('g')
-  .attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-// Define the scales for the x and y axes
-let maxY = d3.max(data, d => d.y);
-let minY = d3.min(data, d => d.y);
-
-const xScale = d3.scaleLinear()
-.domain([-maxDistance-20, maxDistance+20])
-.range([0, width]);
-
-const yScale = d3.scaleLinear()
-  .domain([minY-40, maxY+40])
-  .range([0,height]);
-
-
-// Add the lines to connect the papers
-svg.selectAll('line')
-.data(data)
-.enter()
-.filter(d => !d.main)
-.append('line')
-.attr('x1', d => xScale(d.x))
-.attr('y1', d => yScale(d.y)-10)
-.attr('x2', d => xScale(data[0].x))
-.attr('y2', d => yScale(data[0].y)+10)
-.style('stroke', '#6366f1')
-.style('stroke-width', d => 2 )
-.style('opacity', d => 0.25 );
-
-// Add the circles for each paper
-const circles = svg.selectAll('g')
-.data(data)
-.enter()
-.append('g')
-.attr('transform', d => `translate(${xScale(d.x)},${yScale(d.y)})`);
-
-circles.append('text')
-  .text(d => {
-  const authors = d.authors.split(', ');
-  if (authors.length > 2) {
-    return `${authors[0]} et al.`;
-  }
-  if (authors.length == 2) {
-    return `${authors[0]} & ${authors[1]}`;
-  }
-  return `${authors[0]}`;
-  })
-  .attr('text-anchor', 'middle')
-  .attr('alignment-baseline', 'middle')
-  .style('fill', d => d.main ? '#4f46e5' : '#16161d')
-  .style('font-size', '13px')
-  .style('font-weight', d => d.main ? 700 : 600)
-  .style('font-family', "Inter, system-ui, sans-serif")
-  .each(function(d) {
-    // Get the bounding box of the text element
-    const bbox = this.getBBox();
-    // Add a rectangle behind the text to improve readability
-    d3.select(this.parentNode)
-      .insert('rect', ':first-child')
-      .attr('x', -bbox.width / 2 - 10)
-      .attr('y', -bbox.height / 2 - 6)
-      .attr('width', bbox.width + 20)
-      .attr('height', bbox.height + 12)
-      .attr('rx', 8)
-      .style('fill', d.main ? '#eef0ff' : '#fff')
-      .style('stroke', d.main ? '#4f46e5' : '#e6e6ef') // highlight the paper of this page
-      .style('stroke-width', d.main ? '2px' : '1px');
-      });
-
-// Add mouseover and mouseout events to the circles
-circles.on("mouseover", function(){d3.select(this).style("cursor", "pointer"); return tooltip.style("visibility", "visible");})
-       .on("mousemove", function(event, d){return showTooltip(event, d);})
-       .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
-
-circles.on('click', function(event,d) {
-  //console.log(d);
-  //alert('ok');
-  window.open(window.location.origin + '/' + `${d.lang}` + '/paper/' + encodeURIComponent(d.arxiv_id) + '/', '_blank');
-});
-
-// Add the text for each paper title
-svg.selectAll('text.title')
-  .data(data)
-  .enter()
-  .append('text')
-  .attr('class', 'title')
-  .attr('x', d => xScale(d.x))
-  .attr('y', d => yScale(d.y))
-  .style('display', 'none')
-  .text(d => d.title);
-}
-
-drawGraph();
-
-  function handleResize() {
-  // Redraw the graph with the new dimensions and scales
-  drawGraph();
-}
-
-
-// Attach the handleResize function to the resize event
-window.addEventListener('resize', handleResize);
-
-  </script>
-  {% endif %}
+{% if map_data %}
+<script src="{% static_v 'summarizer/js/neighbours.js' %}"></script>
+<script src="{% static_v 'summarizer/js/neighbours-map.js' %}"></script>
+{% endif %}
 {% endblock %}

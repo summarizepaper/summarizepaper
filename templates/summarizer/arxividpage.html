@@ -43,6 +43,7 @@
   {% include 'summarizer/mathjax.html' %}
   {% include 'summarizer/chat_rendering.html' %}
 
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/neighbours.css' %}">
   <style>
 /* Class names below are also used by the page scripts (tabs, live run, chat): keep them. */
 
@@ -309,42 +310,11 @@
 .rerun { margin: 32px 0 0; padding: 20px 24px; border: 1px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-muted); }
 .rerun p { margin: 0 0 14px; }
 
-/* ---------- Similar papers ---------- */
-.latest-papers { margin-top: 56px; }
-.latest-papers h2 { margin: 0 0 20px; font-size: 22px; font-weight: 700; }
-.paper-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-.paper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  transition: border-color .15s, box-shadow .15s, transform .15s;
-}
-.paper:hover { border-color: #c7cbff; box-shadow: var(--shadow); transform: translateY(-2px); }
-.paper a { color: var(--text); font-weight: 600; font-size: 15px; line-height: 1.4; text-decoration: none; }
-.paper a::after { content: ""; position: absolute; inset: 0; }
-.paper { position: relative; }
-.paper .category { margin-top: auto; color: var(--text-muted); font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.score {
-  align-self: flex-start;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #ecfdf5;
-  color: #047857;
-  font-size: 12px;
-  font-weight: 700;
-}
-.tree-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; color: var(--text-muted); }
-.tree-cta p { margin: 0; }
+/* ---------- Similar papers: summarizer/css/neighbours.css ---------- */
 .closest-search { margin-top: 24px; flex-direction: column; }
 .closest-search form { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; max-width: 100%; }
 .closest-search input[type="submit"] { max-width: 100%; white-space: normal; }
 .closest-search form p { margin: 0; }
-.beta { padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #b45309; font-size: 12px; font-weight: 600; }
 
 /* ---------- Disclaimer & premium ---------- */
 .disclaimer {
@@ -603,6 +573,7 @@
 {% include 'summarizer/citation_dialog.html' %}
 <script src="{% static_v 'summarizer/js/citation.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-tools.js' %}"></script>
+<script src="{% static_v 'summarizer/js/neighbours.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-ready.js' %}"></script>
 <script src="{% static_v 'summarizer/js/paper-live.js' %}"></script>
 <script src="{% static_v 'summarizer/js/pdf-panel.js' %}" data-title="{% trans 'Paper PDF' %}" data-new-tab="{% trans 'Open in a new tab' %}" data-close="{% trans 'Close the PDF' %}" data-resize="{% trans 'Resize the PDF' %}"></script>

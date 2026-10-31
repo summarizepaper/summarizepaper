@@ -5,6 +5,7 @@ the ones with the highest cosine similarity (within the same category for arXiv)
 works for every paper, whatever its license. PaperScore.score keeps a distance
 (lower is closer): 1 - cosine similarity.
 """
+import heapq
 import logging
 import re
 
@@ -23,6 +24,7 @@ DIMENSIONS = 512
 BATCH = 100
 MAX_INPUT_CHARS = 8000
 CLOSEST = 15
+SCAN_CHUNK = 5000
 
 
 def paper_input(paper):
@@ -99,6 +101,37 @@ def closest(paper, k=CLOSEST, candidates=None):
         if len(found) == k:
             break
     return found
+
+
+def scan(query, k, skip=None, categories=None):
+    """[(similarity, arxiv_id)] of the k indexed papers closest to a normalized vector, the closest first, read in
+    chunks of SCAN_CHUNK so that memory stays bounded whatever the number of indexed papers. skip(arxiv_id) leaves
+    a paper out; categories, when given, keeps only the papers of these categories."""
+    rows = PaperEmbedding.objects.filter(model=MODEL)
+    if categories:
+        rows = rows.filter(category__in=categories)
+    best, ids, chunk = [], [], []  # best: a heap of the highest (similarity, id)
+
+    def score():
+        found = np.frombuffer(b''.join(chunk), dtype=np.float32).reshape(len(chunk), -1) @ query
+        for aid, value in zip(ids, found):
+            item = (float(value), aid)
+            if len(best) < k:
+                heapq.heappush(best, item)
+            elif item > best[0]:
+                heapq.heapreplace(best, item)
+        ids.clear()
+        chunk.clear()
+    for aid, vec in rows.values_list('arxiv_id', 'vector').iterator(chunk_size=SCAN_CHUNK):
+        if skip and skip(aid):
+            continue
+        ids.append(aid)
+        chunk.append(bytes(vec))
+        if len(ids) >= SCAN_CHUNK:
+            score()
+    if ids:
+        score()
+    return sorted(best, reverse=True)
 
 
 def save_closest(paper, found):

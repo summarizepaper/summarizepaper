@@ -6,7 +6,7 @@ import asyncio
 import re
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, chat_table, generated, insight, keypoints, similar, sources, summary_text
+from summarizer import access, assistant, chat_table, generated, insight, keypoints, neighbours, sources, summary_text
 import logging
 
 logger = logging.getLogger(__name__)
@@ -646,7 +646,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         print('clossseeee')
         message["progress"] = 50
         await self.send_message_now(message)
-        await asyncio.to_thread(sources.in_thread, similar.find_and_store, v)
+        await asyncio.to_thread(sources.in_thread, neighbours.refresh, v, l)
 
         #await asyncio.sleep(10.)
         
@@ -920,7 +920,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         c=asyncio.create_task(self.send_message_now(message))
         await c
 
-        await asyncio.to_thread(sources.in_thread, similar.find_and_store, v)
+        await asyncio.to_thread(sources.in_thread, neighbours.after_synthesis, v, l)
 
         message["progress"] = 100
         if l == 'fr':

@@ -572,12 +572,14 @@ def collection_page(request, pk):
 
 @require_POST
 def add_to_collection(request):
-    """From a paper page: add the paper to a collection, or to a new one. JSON."""
+    """From a paper page: add the paper, or the papers selected around it (ids, which may not be in our tables
+    yet), to a collection, or to a new one. JSON."""
     if not request.user.is_authenticated:
         return JsonResponse({'status': 'login'}, status=403)
     paid = access.has_tool(request.user, 'collections')
     arxiv_id = request.POST.get('arxiv_id', '')
-    if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
+    ids = [i for i in (canonical_id(t) for t in request.POST.get('ids', '').split(',')[:SYNC_ADD] if t.strip()) if i]
+    if not ids and not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
         raise Http404
     wanted = request.POST.get('collection')
     if wanted == 'new':
@@ -587,9 +589,10 @@ def add_to_collection(request):
         collection = Collection.objects.create(user=request.user, name=name)
     else:
         collection = editable(request, wanted)
-    status = add_many(collection, [arxiv_id], access.has_tool(collection.user, 'collections'))
-    status = next(iter(k for k in status if k in ADD_RESULTS), 'unknown')
-    return JsonResponse({'status': 'added' if status == 'updated' else status, 'collection': collection.pk,
+    counts = add_many(collection, ids or [arxiv_id], access.has_tool(collection.user, 'collections'))
+    added = counts.get('added', 0) + counts.get('updated', 0)
+    status = 'added' if added else next(iter(k for k in counts if k in ADD_RESULTS), 'unknown')
+    return JsonResponse({'status': status, 'added': added, 'collection': collection.pk,
                          'name': collection.name, 'url': '/%s/collections/%s/' % (get_language(), collection.pk)})
 
 

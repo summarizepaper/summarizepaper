@@ -43,7 +43,7 @@
 
   <nav class="paper-actions" aria-label="{% trans 'Actions on this paper' %}">
     <a href="#assistant" class="action" data-funnel="paper_action_ask"><i class="fas fa-comments"></i> {% trans 'Ask a question' %}</a>
-    <a href="{% if relpapers %}#closest{% else %}#closest-search{% endif %}" class="action" data-funnel="paper_action_similar"><i class="fas fa-project-diagram"></i> {% trans 'Similar papers' %}</a>
+    <a href="{% if neighbourhood %}#closest{% else %}#closest-search{% endif %}" class="action" data-funnel="paper_action_similar"><i class="fas fa-project-diagram"></i> {% trans 'Similar papers' %}</a>
     {% if not arxiv_id|is_external %}<a href="https://arxiv.org/pdf/{{ arxiv_id|dash_slash }}" target="_blank" rel="noopener" class="action" data-pdf-panel data-funnel="paper_action_pdf"><i class="fas fa-file-pdf"></i> {% trans 'View the PDF' %}</a>{% endif %}
     <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog" class="action" data-funnel="paper_action_cite"><i class="fas fa-quote-right"></i> {% trans 'Cite' %}</a>
     <a href="#tools" class="action" data-funnel="paper_action_save"><i class="fas fa-bookmark"></i> {% trans 'Save' %}</a>
@@ -225,38 +225,14 @@
 
   {% include 'summarizer/paper_tools.html' %}
 
-  {% if relpapers %}
-  <section class="latest-papers" id="closest">
-    <h2>{% trans 'Similar papers summarized with our AI tools' %}</h2>
-    <div class="paper-list">
-      {% for paper in relpapers %}
-        <div class="paper">
-          <div class="score">{{ scores|index:forloop.counter0 }}%</div>
-          <a href="/{{ LANGUAGE_CODE }}/paper/{{ paper.to_paper.arxiv_id }}/" title="{{ paper.to_paper.title }}">{{ paper.to_paper.title|truncatechars:80 }}</a>
-          <div class="category">{{ paper.to_paper.category }}</div>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="tree-cta">
-      <p>{% trans 'Navigate through even more similar papers through a ' %}</p>
-      <a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}" class="btn btn-ghost"><i class="fas fa-project-diagram"></i> {% trans 'tree representation' %}</a>
-    </div>
-  </section>
-  {% endif %}
+  {% if neighbourhood %}{% include 'summarizer/neighbours.html' %}{% endif %}
 
   <div class="center closest-search" id="closest-search">
     <form action="{% url 'arxividpage' arxiv_id=arxiv_id %}" method="post">
       {% csrf_token %}
-      <input type="submit" class="ghost-submit" value="{% if relpapers %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
-      <p>
-      <span id="popover-link2">
-        <i class="fas fa-question-circle"></i>
-      </span></p>
+      <input type="submit" class="ghost-submit" value="{% if neighbourhood %}{% trans 'Search again for closest papers' %}{% else %}{% trans 'Search for closest papers' %}{% endif %}" name="close_button">
     </form>
-    <div id="popover2">
-      <p><strong>{% trans 'Look for similar papers (in beta version)' %}</strong></p>
-      <p>{% trans 'We compare the title and abstract with papers indexed in our database. For arXiv papers, we search within the same category; for DOI and other sources, we search across sources and subjects. You can rerun the search as our database grows.' %}</p>
-    </div>
+    {% if not neighbourhood %}<p class="closest-search-help">{% trans 'The closest papers among those summarized on this site and those Semantic Scholar knows, the prior work it builds on and the papers that cite it.' %}</p>{% endif %}
   </div>
 
   {% if not sumpaper.summary or not sumpaper.notes or not sumpaper.lay_summary or not sumpaper.blog or toolong or total_votes < -9 or user.is_staff %}

@@ -520,7 +520,7 @@ class CorrectionAndFindingTests(ComparisonTableTests):
 
 class BoundedSuggestionTests(SuggestionTests):
     def test_common_references_then_the_closest_papers(self):
-        with mock.patch('summarizer.collection_tools.EMBEDDING_CHUNK', 1):
+        with mock.patch('summarizer.similar.SCAN_CHUNK', 1):
             super().test_common_references_then_the_closest_papers()
 
 

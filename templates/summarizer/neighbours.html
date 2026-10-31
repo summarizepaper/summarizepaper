@@ -1,0 +1,76 @@
+{% load i18n %}
+{% with hood=neighbourhood %}
+<section class="neighbours" id="closest" data-paper="{{ arxiv_id }}" data-base="/{{ LANGUAGE_CODE }}"
+ data-why-url="{% url 'neighbours_why' arxiv_id %}" data-why-ready="{{ hood.why_ready|yesno:'1,0' }}" data-relations="{{ hood.relations_json }}"
+ data-selected-one="{% trans '1 paper selected' %}" data-selected-many="{% trans '{n} papers selected' %}"
+ data-added="{% trans 'Added to' %}" data-open="{% trans 'Open' %}" data-failed="{% trans 'Something went wrong. Please try again.' %}"
+ data-already="{% trans 'Already in this collection.' %}" data-full="{% trans 'This collection is full.' %}"
+ data-too-many="{% trans 'You have reached the number of collections of your plan.' %}" data-premium-link="{% trans 'Discover Premium' %}"
+ data-chat-max="{{ chat_max|default:9 }}" data-chat-too-many="{% trans 'The chat reads 10 papers at most: unselect a few.' %}">
+  <div class="nb-head">
+    <h2>{% trans 'Papers around this one' %}</h2>
+    {% if not on_map %}<a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}/" class="btn btn-sm btn-ghost" data-funnel="paper_neighbours_map"><i class="fas fa-project-diagram" aria-hidden="true"></i> {% trans 'See them on a map' %}</a>{% endif %}
+  </div>
+  <p class="nb-intro">{% trans 'Ranked by how close their title and abstract are to this paper’s. Select some to read them together.' %}</p>
+
+  {% for group in hood.groups %}
+  <h3 class="nb-group-title">{{ group.title }}</h3>
+  <ol class="nb-list">
+    {% for item in group.items %}
+    <li class="nb-item" data-ref="{{ item.ref }}">
+      <input type="checkbox" class="nb-check" value="{{ item.ref }}" aria-label="{% blocktrans with title=item.title %}Select “{{ title }}”{% endblocktrans %}">
+      <div class="nb-body">
+        <div class="nb-tags">
+          <span class="nb-level nb-level-{{ item.level }}" title="{% blocktrans with p=item.percent %}Similarity of the titles and abstracts: {{ p }}%{% endblocktrans %}">{{ item.level_label }}</span>
+          <span class="nb-relation"{% if not item.relation_label %} hidden{% endif %}>{{ item.relation_label }}</span>
+          {% if item.cited and group.key != 'prior' %}<span class="nb-link">{% trans 'Cited by this paper' %}</span>{% endif %}
+          {% if item.cites and group.key != 'followup' %}<span class="nb-link">{% trans 'Cites this paper' %}</span>{% endif %}
+        </div>
+        <a class="nb-title" href="/{{ LANGUAGE_CODE }}/paper/{{ item.ref }}/">{{ item.title }}</a>
+        <div class="nb-sub">{% if item.authors %}{{ item.authors }}{% endif %}{% if item.year %} · {{ item.year }}{% endif %}{% if item.venue %} · <span class="nb-venue">{{ item.venue }}</span>{% endif %}
+          · {% if item.summarized %}<span class="nb-summarized"><i class="fas fa-check" aria-hidden="true"></i> {% trans 'AI summary available' %}</span>{% else %}<span class="nb-unsummarized">{% trans 'Not summarized yet' %}</span>{% endif %}</div>
+        <p class="nb-why"{% if not item.why %} hidden{% endif %}>{{ item.why }}</p>
+        {% if item.tldr or item.abstract %}
+        <details class="nb-more"><summary>{% if item.tldr %}{% trans 'In short' %}{% else %}{% trans 'Abstract' %}{% endif %}</summary><p>{% if item.tldr %}{{ item.tldr }}{% else %}{{ item.abstract }}{% if item.abstract|length >= 700 %}…{% endif %}{% endif %}</p></details>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endfor %}
+
+  <div class="nb-actions" hidden>
+    <span class="nb-count" aria-live="polite"></span>
+    <a class="btn btn-sm nb-chat" href="/{{ LANGUAGE_CODE }}/chat/" data-funnel="paper_neighbours_chat"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Ask questions to them and this paper' %}</a>
+    {% if request.user.is_authenticated %}
+    <span class="nb-collection">
+      <select class="nb-collection-pick" aria-label="{% trans 'Collection' %}">
+        <option value="new">{% trans 'New collection…' %}</option>
+        {% for c in my_collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+      </select>
+      <button type="button" class="btn btn-sm btn-ghost nb-collection-go" data-name="{% blocktrans with title=paper.title|truncatechars:80 %}Around: {{ title }}{% endblocktrans %}">{% trans 'Add to the collection, with this paper' %}</button>
+    </span>
+    {% else %}
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="paper_signup_neighbours">{% trans 'Create a free account to keep them in a collection' %}</a>
+    {% endif %}
+    <span class="nb-status" aria-live="polite"></span>
+  </div>
+
+  <div class="nb-next">
+    <h3>{% trans 'Go further' %}</h3>
+    <ul>
+      <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={% if insight.question %}{{ insight.question|urlencode }}{% else %}{{ paper.title|urlencode }}{% endif %}" rel="nofollow"><i class="fas fa-book-open" aria-hidden="true"></i> {% trans 'A literature review from its research question' %}</a> <span class="badge-premium">Premium+</span></li>
+      <li><a href="/{{ LANGUAGE_CODE }}/scoops/?title={{ paper.title|truncatechars:280|urlencode }}&amp;description={{ paper.abstract|truncatechars:2000|urlencode }}" rel="nofollow"><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'An email the day a new paper comes this close' %}</a> <span class="badge-premium">Premium</span></li>
+      <li><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow"><i class="fas fa-users" aria-hidden="true"></i> {% trans 'The people and institutions who publish on its topic' %}</a> <span class="badge-premium">Premium</span></li>
+      {% if not on_map %}<li><a href="/{{ LANGUAGE_CODE }}/tree/{{ arxiv_id }}/"><i class="fas fa-project-diagram" aria-hidden="true"></i> {% trans 'A map of these papers by date and closeness' %}</a></li>{% endif %}
+    </ul>
+  </div>
+
+  <details class="nb-method">
+    <summary>{% trans 'How are these papers found?' %}</summary>
+    <p>{% trans 'We compare the title and abstract of this paper with those of every paper summarized on this site, and with the papers Semantic Scholar recommends, those it cites and those citing it (for a much-cited paper, its most recent citations). The levels (very close, close, related) come from the similarity of the texts, not from a judgment of quality. The sentence under a paper is written by an AI from the two abstracts: check it in the papers.' %}</p>
+    {% if hood.computed %}<p>{% blocktrans with day=hood.computed|date:"j F Y" %}Updated on {{ day }}.{% endblocktrans %}</p>
+    {% elif not hood.complete %}<p>{% trans 'For now only among the papers summarized on this site: search again to add the prior work, the follow-ups and Semantic Scholar’s recommendations.' %}</p>{% endif %}
+  </details>
+</section>
+{% endwith %}

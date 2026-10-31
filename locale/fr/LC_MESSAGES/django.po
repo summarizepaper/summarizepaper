@@ -18495,3 +18495,193 @@ msgstr ""
 msgid "I understand that my account and its data will be deleted for good."
 msgstr ""
 "Je comprends que mon compte et ses données seront supprimés définitivement."
+
+msgid "1 paper selected"
+msgstr "1 article sélectionné"
+
+msgid "{n} papers selected"
+msgstr "{n} articles sélectionnés"
+
+msgid "The chat reads 10 papers at most: unselect a few."
+msgstr "Le chat lit 10 articles au plus : désélectionnez-en quelques-uns."
+
+msgid "Papers around this one"
+msgstr "Les articles autour de celui-ci"
+
+msgid "See them on a map"
+msgstr "Les voir sur une carte"
+
+msgid ""
+"Ranked by how close their title and abstract are to this paper’s. Select "
+"some to read them together."
+msgstr ""
+"Classés selon la proximité de leur titre et de leur résumé avec ceux de cet "
+"article. Sélectionnez-en pour les lire ensemble."
+
+msgid "Select “%(title)s”"
+msgstr "Sélectionner « %(title)s »"
+
+msgid "Similarity of the titles and abstracts: %(p)s%%"
+msgstr "Similarité des titres et des résumés : %(p)s %%"
+
+msgid "Cited by this paper"
+msgstr "Cité par cet article"
+
+msgid "Cites this paper"
+msgstr "Cite cet article"
+
+msgid "AI summary available"
+msgstr "Résumé IA disponible"
+
+msgid "Not summarized yet"
+msgstr "Pas encore résumé"
+
+msgid "Ask questions to them and this paper"
+msgstr "Leur poser des questions, avec cet article"
+
+msgid "Around: %(title)s"
+msgstr "Autour de : %(title)s"
+
+msgid "Add to the collection, with this paper"
+msgstr "Ajouter à la collection, avec cet article"
+
+msgid "Create a free account to keep them in a collection"
+msgstr "Créez un compte gratuit pour les garder dans une collection"
+
+msgid "Go further"
+msgstr "Aller plus loin"
+
+msgid "A literature review from its research question"
+msgstr "Une revue de littérature à partir de sa question de recherche"
+
+msgid "An email the day a new paper comes this close"
+msgstr "Un email le jour où un nouvel article s’en approche autant"
+
+msgid "A map of these papers by date and closeness"
+msgstr "Une carte de ces articles par date et par proximité"
+
+msgid "How are these papers found?"
+msgstr "Comment ces articles sont-ils trouvés ?"
+
+msgid ""
+"We compare the title and abstract of this paper with those of every paper "
+"summarized on this site, and with the papers Semantic Scholar recommends, "
+"those it cites and those citing it (for a much-cited paper, its most recent "
+"citations). The levels (very close, close, related) come from the similarity"
+" of the texts, not from a judgment of quality. The sentence under a paper is"
+" written by an AI from the two abstracts: check it in the papers."
+msgstr ""
+"Nous comparons le titre et le résumé de cet article avec ceux de tous les "
+"articles résumés sur ce site, et avec les articles que Semantic Scholar "
+"recommande, ceux qu’il cite et ceux qui le citent (pour un article très "
+"cité, ses citations les plus récentes). Les niveaux (très proche, proche, "
+"apparenté) viennent de la similarité des textes, pas d’un jugement de "
+"qualité. La phrase sous un article est écrite par une IA à partir des deux "
+"résumés : vérifiez-la dans les articles."
+
+msgid "Updated on %(day)s."
+msgstr "Mis à jour le %(day)s."
+
+msgid ""
+"For now only among the papers summarized on this site: search again to add "
+"the prior work, the follow-ups and Semantic Scholar’s recommendations."
+msgstr ""
+"Pour l’instant seulement parmi les articles résumés sur ce site : relancez "
+"la recherche pour ajouter les travaux antérieurs, les suites et les "
+"recommandations de Semantic Scholar."
+
+msgid "Papers around “%(title)s”"
+msgstr "Les articles autour de « %(title)s »"
+
+msgid "The papers around it, by date and closeness"
+msgstr "Les articles autour de lui, par date et par proximité"
+
+msgid ""
+"Higher is closer to this paper; left is older. Lines join papers close to "
+"each other: groups of lines are sub-topics. Select a point to see why it is "
+"there."
+msgstr ""
+"Plus haut, c’est plus proche de cet article ; à gauche, c’est plus ancien. "
+"Les traits relient les articles proches entre eux : les groupes de traits "
+"sont des sous-thèmes. Sélectionnez un point pour voir pourquoi il est là."
+
+msgid "Back to the summary of this paper"
+msgstr "Retour au résumé de cet article"
+
+msgid "This paper"
+msgstr "Cet article"
+
+msgid "Closeness"
+msgstr "Proximité"
+
+msgid "Open its AI summary"
+msgstr "Ouvrir son résumé IA"
+
+msgid "Summarize it"
+msgstr "Le résumer"
+
+msgid "Select it"
+msgstr "Le sélectionner"
+
+msgid "Unselect it"
+msgstr "Le désélectionner"
+
+msgid "{n} papers without a date are only in the list below."
+msgstr "{n} articles sans date ne sont que dans la liste ci-dessous."
+
+msgid "Closest papers"
+msgstr "Les articles les plus proches"
+
+msgid "Prior work it builds on"
+msgstr "Les travaux antérieurs sur lesquels il s’appuie"
+
+msgid "Papers that cite it"
+msgstr "Les articles qui le citent"
+
+msgid ""
+"The closest papers among those summarized on this site and those Semantic "
+"Scholar knows, the prior work it builds on and the papers that cite it."
+msgstr ""
+"Les articles les plus proches parmi ceux résumés sur ce site et ceux que "
+"connaît Semantic Scholar, les travaux antérieurs sur lesquels il s’appuie et"
+" les articles qui le citent."
+
+msgid "Same question"
+msgstr "Même question"
+
+msgid "Another approach to the problem"
+msgstr "Autre approche du problème"
+
+msgid "Same method, another problem"
+msgstr "Même méthode, autre problème"
+
+msgid "Groundwork for this paper"
+msgstr "Base de cet article"
+
+msgid "Builds on this paper"
+msgstr "Prolonge cet article"
+
+msgid "Different results"
+msgstr "Résultats différents"
+
+msgid "Shared data, tool or method"
+msgstr "Données, outil ou méthode en commun"
+
+msgid "Broader context"
+msgstr "Contexte plus large"
+
+msgctxt "closeness of two papers"
+msgid "Very close"
+msgstr "Très proche"
+
+msgctxt "closeness of two papers"
+msgid "Close"
+msgstr "Proche"
+
+msgctxt "closeness of two papers"
+msgid "Related"
+msgstr "Apparenté"
+
+msgctxt "a kind of paper"
+msgid "Review"
+msgstr "Article de revue"

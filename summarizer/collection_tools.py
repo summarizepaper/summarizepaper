@@ -13,7 +13,6 @@
   sets them apart from the research a review is expected to know.
 - import_ids() and zotero_import(): adding many papers at once, a lookup per DOI, out of the request.
 """
-import heapq
 import json
 import logging
 import re
@@ -38,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 META_MAX = 30  # papers checked by one refresh (the oldest checks first: the next refresh goes on)
 ARXIV_SECONDS = 3  # arXiv asks for one query every three seconds
-EMBEDDING_CHUNK = 5000
 SUGGEST_MAX = 15
 CLASSIFY_MAX = 40  # shared references the model sorts into research and tools
 NOTICE_TITLE = re.compile(r'\s*(?:erratum|corrigendum|correction|retraction)\b', re.I)
@@ -277,33 +275,11 @@ def closest_to(papers, own):
         return []
     centre = np.mean(vectors, axis=0)
     centre = centre / (np.linalg.norm(centre) or 1)
-    candidates = PaperEmbedding.objects.filter(model=similar.MODEL)
     categories = {c for c in (similar.candidate_category(r) for r in rows) if c}
-    if categories:
-        candidates = candidates.filter(category__in=categories)
-    best, ids, chunk = [], [], []  # best: a heap of the highest (score, id), a few per suggestion for the versions
-
-    def score():
-        found = np.frombuffer(b''.join(chunk), dtype=np.float32).reshape(len(chunk), -1) @ centre
-        for aid, value in zip(ids, found):
-            item = (float(value), aid)
-            if len(best) < SUGGEST_MAX * 4:
-                heapq.heappush(best, item)
-            elif item > best[0]:
-                heapq.heapreplace(best, item)
-        ids.clear()
-        chunk.clear()
-    for aid, vec in candidates.values_list('arxiv_id', 'vector').iterator(chunk_size=EMBEDDING_CHUNK):
-        if same_ref(aid) in own:
-            continue
-        ids.append(aid)
-        chunk.append(bytes(vec))
-        if len(ids) >= EMBEDDING_CHUNK:
-            score()
-    if ids:
-        score()
+    # a few per suggestion: the versions of one paper count once
+    best = similar.scan(centre, SUGGEST_MAX * 4, skip=lambda aid: same_ref(aid) in own, categories=categories)
     chosen, seen = [], set()
-    for value, aid in sorted(best, reverse=True):
+    for value, aid in best:
         key = same_ref(aid)
         if key in seen:
             continue
