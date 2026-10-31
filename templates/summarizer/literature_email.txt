@@ -1,0 +1,11 @@
+{% load i18n %}{% blocktrans with name=user.first_name|default:user.username %}Hello {{ name }},{% endblocktrans %}
+
+{% blocktrans with question=result.question %}Your literature review is ready: "{{ question }}"{% endblocktrans %}
+{% if result.papers %}
+{% blocktrans count n=result.papers|length %}{{ n }} paper, grouped by approach, with the sentences that support each statement.{% plural %}{{ n }} papers, grouped by approach, with the sentences that support each statement.{% endblocktrans %}{% else %}
+{% trans 'No paper with an abstract was found for this question. Try wording it with the terms papers of the field use.' %}{% endif %}
+
+{{ link }}
+
+{% trans 'The SummarizePaper team' %}
+https://www.summarizepaper.com

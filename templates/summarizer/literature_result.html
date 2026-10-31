@@ -14,25 +14,71 @@
     {% else %}<p><a href="{% url 'literature' %}">← {% trans 'Literature review' %}</a></p>{% endif %}
     <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Your question' %}{% endif %}</h1>
     {% if result.question %}<p class="lead">{{ result.question }}</p>{% endif %}
+    {% if result %}<p class="meta">
+      {% if result.coverage.mode == 'collection' %}{% blocktrans with name=result.coverage.collection day=result.day|date:"j F Y" %}Written on {{ day }} from the papers of the collection “{{ name }}”{% endblocktrans %}{% else %}{% blocktrans with day=result.day|date:"j F Y" %}Searched on {{ day }}{% endblocktrans %}{% endif %}
+      {% if result.revision_of and not shared %} · <a href="/{{ LANGUAGE_CODE }}/literature-review/{{ result.revision_of.key }}/">{% trans 'revised from an earlier review' %}</a>{% endif %}
+      {% if result.previous and not shared %} · <a href="/{{ LANGUAGE_CODE }}/literature-review/{{ result.previous.key }}/">{% blocktrans with day=result.previous.day|date:"j F Y" %}searched again after the review of {{ day }}{% endblocktrans %}</a>{% endif %}
+    </p>{% endif %}
   </header>
+
+  {% if message == 'saved' and collection %}<p class="notice" role="status">{% trans 'The papers are in a new collection:' %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/">{{ collection.name }}</a> · <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/#table">{% trans 'compare them in a table' %}</a> · <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/#questions">{% trans 'find their open questions' %}</a></p>
+  {% elif message == 'too_many' %}<p class="error">{% trans 'You have reached your number of collections. Delete one to save these papers.' %}</p>
+  {% elif message == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} reviews a day. Come back tomorrow.{% endblocktrans %}</p>
+  {% elif message == 'length' %}<p class="error">{% blocktrans with low=20 high=max_chars %}Write your question in {{ low }} to {{ high }} characters.{% endblocktrans %}</p>
+  {% elif message == 'unchanged' %}<p class="error">{% trans 'Tick the papers to take out or to put in, then write the synthesis again.' %}</p>
+  {% elif message == 'too_few' %}<p class="error">{% trans 'A synthesis needs at least 2 papers.' %}</p>
+  {% elif message == 'revisions' %}<p class="error">{% trans 'You have revised enough reviews for today. Come back tomorrow.' %}</p>{% endif %}
 
   {% if result %}
     {% if not shared %}{% trans 'Anyone with this link reads the review as it is now, with its papers and its references, never who asked it.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+
+    {% if result.papers %}
+    <div class="item-actions lit-actions">
+      <strong>{% trans 'Export' %}</strong>
+      {% if shared %}
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_shared_export' token 'bib' %}">BibTeX</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_shared_export' token 'ris' %}">RIS</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_shared_export' token 'md' %}">Markdown</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_shared_export' token 'tex' %}">LaTeX</a>
+      {% else %}
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'bib' %}">BibTeX</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'ris' %}">RIS</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'md' %}" title="{% trans 'The synthesis and its numbered references' %}">Markdown</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'tex' %}" title="{% trans 'The synthesis with its citations and its bibliography, ready to compile' %}">LaTeX</a>
+      <button type="button" class="btn btn-sm btn-ghost" id="lit-zotero" data-key="{{ row.key }}" data-sending="{% trans 'Sending…' %}" data-premium="{% trans 'Sending to Zotero is a Premium feature.' %}" data-setup="{% trans 'Connect your Zotero library first:' %}" data-failed="{% trans 'Sending failed. Try again later.' %}" data-sent="{% trans 'Sent to your Zotero library.' %}">{% trans 'Send to Zotero' %}</button>
+      <span class="tool-status" id="lit-zotero-status" aria-live="polite"></span>
+      {% endif %}
+    </div>
+    {% if not shared %}<p class="muted"><small>{% trans 'BibTeX and RIS go to Zotero, Mendeley, EndNote or LaTeX; the LaTeX file holds the synthesis with its citations and its bibliography, to start a related-work section.' %}</small></p>{% endif %}
+    {% endif %}
+
     {% with c=result.coverage %}
     <section class="card section-card lit-coverage" aria-labelledby="coverage-title">
+      {% if c.mode == 'collection' %}
+      <h2 id="coverage-title">{% trans 'What this review reads' %}</h2>
+      <p>{% blocktrans count n=c.included %}{{ n }} paper of the collection, read from its abstract and, when its license allows it, from the conclusions of its full text.{% plural %}{{ n }} papers of the collection, read from their abstract and, when their license allows it, from the conclusions of their full text.{% endblocktrans %}
+        {% if c.years %}{% blocktrans with first=c.years.0 last=c.years.1 %}Published from {{ first }} to {{ last }}.{% endblocktrans %}{% endif %}</p>
+      {% if c.without_abstract %}<p class="notice" role="status">{% trans 'Left out, no abstract found:' %} {{ c.without_abstract|join:" · " }}</p>{% endif %}
+      {% if not shared and c.collection_pk %}<p><a href="/{{ LANGUAGE_CODE }}/collections/{{ c.collection_pk }}/">{% trans 'Open the collection' %}</a></p>{% endif %}
+      {% else %}
       <h2 id="coverage-title">{% trans 'How this review was searched' %}</h2>
       <p>{% blocktrans with candidates=c.candidates screened=c.screened relevant=c.relevant included=c.included %}{{ candidates }} papers found, the {{ screened }} closest to the question screened on their abstract, {{ relevant }} judged relevant, {{ included }} included.{% endblocktrans %}
         {% if c.years %}{% blocktrans with first=c.years.0 last=c.years.1 %}Published from {{ first }} to {{ last }}.{% endblocktrans %}{% endif %}
-        {% blocktrans with founding=c.labels.founding recent=c.labels.recent reviews=c.labels.review %}{{ founding }} founding papers, {{ recent }} from the last three years, {{ reviews }} reviews.{% endblocktrans %}
-        {% if c.findings %}{% blocktrans with quoted=c.quoted findings=c.findings %}{{ quoted }} of the {{ findings }} findings are backed by a sentence found word for word in an abstract.{% endblocktrans %}{% endif %}</p>
+        {% blocktrans with founding=c.labels.founding recent=c.labels.recent reviews=c.labels.review %}{{ founding }} founding papers, {{ recent }} from the last three years, {{ reviews }} reviews.{% endblocktrans %}</p>
+      {% endif %}
+      {% if c.statuses %}<p>{% blocktrans with published=c.statuses.published preprints=c.statuses.preprint deposits=c.statuses.deposit %}{{ published }} published in a journal or proceedings, {{ preprints }} preprints, {{ deposits }} deposits nobody reviewed.{% endblocktrans %}
+        {% if c.full_text is not None %}{% blocktrans with n=c.full_text %}The conclusions of {{ n }} open full texts were read too.{% endblocktrans %}{% endif %}</p>{% endif %}
+      {% if c.findings %}<p>{% blocktrans with quoted=c.quoted findings=c.findings %}{{ quoted }} of the {{ findings }} findings are backed by a sentence found word for word in a paper.{% endblocktrans %}
+        {% if c.statements %}{% blocktrans with quoted=c.statements_quoted total=c.statements %}So are {{ quoted }} of the {{ total }} points of agreement, disagreement and gaps.{% endblocktrans %}{% endif %}</p>{% endif %}
       {% if c.thin %}<p class="notice" role="status">{% blocktrans with n=c.relevant %}Only {{ n }} clearly relevant papers were found: the question may be very narrow, or worded differently in the literature. Papers marked "peripheral" were added to reach 15; read their part of the synthesis with care.{% endblocktrans %}</p>{% endif %}
-      {% if c.limited %}<p class="notice" role="status">{% if 'budget' in c.limited %}{% trans 'Our daily search budget ran out during this review: some searches were not run.' %}{% endif %} {% if 'openalex' in c.limited %}{% trans 'OpenAlex did not answer some searches.' %}{% endif %} {% if 'arxiv' in c.limited %}{% trans 'arXiv did not answer some searches.' %}{% endif %} {% trans 'The coverage is narrower than usual; you can run the review again later.' %}</p>{% endif %}
-      <p class="muted"><small>{% trans 'An exploratory synthesis, not a systematic review: the papers are read from their abstracts, and papers that OpenAlex and arXiv do not index, or that our searches word differently, can be missing.' %}</small></p>
+      {% if c.limited %}<p class="notice" role="status">{% if 'budget' in c.limited %}{% trans 'Our daily search budget ran out during this review: some searches were not run.' %}{% endif %} {% if 'openalex' in c.limited %}{% trans 'OpenAlex did not answer some searches.' %}{% endif %} {% if 'arxiv' in c.limited %}{% trans 'arXiv did not answer some searches.' %}{% endif %} {% if 's2' in c.limited %}{% trans 'Semantic Scholar did not answer: some often cited works stay unread.' %}{% endif %} {% trans 'The coverage is narrower than usual; you can run the review again later.' %}</p>{% endif %}
+      <p class="muted"><small>{% trans 'An exploratory synthesis, not a systematic review: the papers are read from their abstracts and the conclusions of their open full texts, and papers that OpenAlex and arXiv do not index, or that our searches word differently, can be missing.' %}</small></p>
+      {% if c.mode != 'collection' %}
       <details>
         <summary>{% trans 'Searches and sources' %}</summary>
         {% if c.include %}<p><strong>{% trans 'Inclusion:' %}</strong> {{ c.include }}</p>{% endif %}
         {% if c.concepts %}<p><strong>{% trans 'Key concepts:' %}</strong> {{ c.concepts|join:", " }}</p>{% endif %}
-        <p><strong>{% trans 'Queries:' %}</strong></p>
+        <p><strong>{% if c.edited %}{% trans 'Queries (yours):' %}{% else %}{% trans 'Queries:' %}{% endif %}</strong></p>
         <ul>{% for q in c.queries %}<li>{{ q }}</li>{% endfor %}</ul>
         <ul>
           <li>{% trans 'OpenAlex, by relevance:' %} {{ c.by_source.relevance|default:0 }}</li>
@@ -40,19 +86,25 @@
           <li>{% trans 'arXiv:' %} {{ c.by_source.arxiv|default:0 }}</li>
           <li>{% trans 'OpenAlex, reviews:' %} {{ c.by_source.reviews|default:0 }}</li>
           <li>{% trans 'OpenAlex, most cited:' %} {{ c.by_source.most_cited|default:0 }}</li>
-          <li>{% trans 'Cited by several of the closest papers:' %} {{ c.by_source.cited|default:0 }}</li>
+          <li>{% trans 'Cited by several of the closest papers:' %} {{ c.by_source.cited|default:0 }}{% if c.recovered %} {% blocktrans count n=c.recovered %}({{ n }} abstract found on Semantic Scholar or arXiv){% plural %}({{ n }} abstracts found on Semantic Scholar or arXiv){% endblocktrans %}{% endif %}</li>
+          {% if c.citing is not None %}<li>{% trans 'Recent papers citing the founding ones:' %} {{ c.by_source.citing|default:0 }}</li>{% endif %}
         </ul>
         <p class="muted"><small>{% trans 'A paper found by several searches is counted in each.' %}</small></p>
+        {% if c.retracted %}<p><strong>{% trans 'Left out, retracted:' %}</strong> {{ c.retracted|join:" · " }}</p>{% endif %}
       </details>
+      {% endif %}
     </section>
     {% endwith %}
+
+    {% if result.new %}<p class="notice" role="status">{% blocktrans count n=result.new %}{{ n }} paper was not in the previous review: it is marked New.{% plural %}{{ n }} papers were not in the previous review: they are marked New.{% endblocktrans %}</p>{% endif %}
 
     {% if not result.papers %}
       <p class="notice">{% trans 'No paper with an abstract was found for this question. Try wording it with the terms papers of the field use.' %}</p>
     {% else %}
       {% if result.overview %}
       <h2>{% trans 'In short' %}</h2>
-      <p>{% for s in result.overview %}{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %} {% endfor %}</p>
+      <p>{% for s in result.overview %}{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.refs %} {% endfor %}</p>
+      <p class="muted"><small>{% trans 'This summary rests on the findings below, each with the sentences that support it.' %}</small></p>
       {% endif %}
 
       {% if result.themes %}
@@ -63,7 +115,7 @@
           <tbody>
             {% for t in result.themes %}
             <tr><td><a href="#theme-{{ forloop.counter }}">{{ t.name }}</a></td>
-              <td>{% include 'summarizer/literature_cites.html' with cites=t.papers %}</td>
+              <td>{% include 'summarizer/literature_cites.html' with cites=t.refs %}</td>
               <td>{{ t.strengths }}</td><td>{{ t.limits }}</td></tr>
             {% endfor %}
           </tbody>
@@ -76,12 +128,7 @@
         {% if t.summary %}<p>{{ t.summary }}</p>{% endif %}
         {% if t.findings %}
         <ul class="lit-findings">
-          {% for f in t.findings %}
-          <li>{{ f.text }} {% include 'summarizer/literature_cites.html' with cites=f.papers %}
-            {% if f.quote %}<blockquote class="key-sentence">« {{ f.quote }} » <small class="muted">[{{ f.quoted }}]</small></blockquote>
-            {% else %}<div class="muted"><small>{% trans 'No sentence of the cited abstracts states it word for word: check it in the papers.' %}</small></div>{% endif %}
-          </li>
-          {% endfor %}
+          {% for f in t.findings %}<li>{% include 'summarizer/literature_statement.html' with s=f open=True %}</li>{% endfor %}
         </ul>
         {% endif %}
         {% if t.entries %}<p class="meta">{% for p in t.entries %}<a href="#ref-{{ p.n }}">[{{ p.n }}]</a> {{ p.title|truncatechars:80 }}{% if p.year %} ({{ p.year }}){% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
@@ -90,38 +137,94 @@
       {% endif %}
 
       {% if result.consensus %}<h2>{% trans 'Where the papers agree' %}</h2>
-      <ul>{% for s in result.consensus %}<li>{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %}</li>{% endfor %}</ul>{% endif %}
+      <ul class="lit-findings">{% for s in result.consensus %}<li>{% include 'summarizer/literature_statement.html' %}</li>{% endfor %}</ul>{% endif %}
       {% if result.disagreements %}<h2>{% trans 'Where they disagree' %}</h2>
-      <ul>{% for s in result.disagreements %}<li>{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %}</li>{% endfor %}</ul>{% endif %}
+      <ul class="lit-findings">{% for d in result.disagreements %}<li>{{ d.text }} {% include 'summarizer/literature_cites.html' with cites=d.refs %}
+        {% if d.sides %}<ul class="lit-sides">{% for s in d.sides %}<li>{% include 'summarizer/literature_statement.html' %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>{% endif %}
       {% if result.gaps %}<h2>{% trans 'What they leave open' %}</h2>
-      <ul>{% for s in result.gaps %}<li>{{ s.text }} {% include 'summarizer/literature_cites.html' with cites=s.papers %}</li>{% endfor %}</ul>{% endif %}
+      <ul class="lit-findings">{% for s in result.gaps %}<li>{% include 'summarizer/literature_statement.html' with gap=True %}</li>{% endfor %}</ul>{% endif %}
 
       {% if result.coverage.unread %}
       <h3>{% trans 'Often cited, not read' %}</h3>
-      <p class="muted">{% trans 'Several of the papers found cite these works, but OpenAlex has no abstract for them: they are not in the synthesis. Read them if they are not already known to you.' %}</p>
+      <p class="muted">{% trans 'Several of the papers found cite these works, but no abstract of them could be found: they are not in the synthesis. Read them if they are not already known to you.' %}</p>
       <ul>{% for p in result.coverage.unread %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.key }}/">{{ p.title }}</a> <span class="meta">{{ p.authors }}{% if p.year %} · {{ p.year }}{% endif %} · {% blocktrans with n=p.cocited %}cited by {{ n }} of the closest papers found{% endblocktrans %}</span></li>{% endfor %}</ul>
       {% endif %}
 
-      <h2>{% trans 'References' %}</h2>
-      {% if message == 'saved' and collection %}<p class="notice" role="status">{% trans 'The papers are in a new collection:' %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/">{{ collection.name }}</a></p>
-      {% elif message == 'too_many' %}<p class="error">{% trans 'You have reached your number of collections. Delete one to save these papers.' %}</p>{% endif %}
-      {% if not shared %}<form method="post" class="item-actions">{% csrf_token %}
+      <h2 id="references">{% trans 'References' %}</h2>
+      {% if not shared %}<form method="post" class="item-actions" id="save-form">{% csrf_token %}<input type="hidden" name="action" value="save">
         <button class="btn btn-sm btn-ghost" type="submit">{% trans 'Save these papers in a collection' %}</button>
         <span class="muted"><small>{% trans 'to compare them in a table, find their open questions or chat with them' %}</small></span>
       </form>{% endif %}
+      {% if revisable and not shared %}<form method="post" id="revise-form">{% csrf_token %}<input type="hidden" name="action" value="revise">{% endif %}
       <ol class="item-list lit-references">
         {% for p in result.papers %}
         <li class="card" id="ref-{{ p.n }}">
           <p style="margin:0 0 4px"><strong>[{{ p.n }}]</strong> <a href="/{{ LANGUAGE_CODE }}/paper/{{ p.key }}/"><strong>{{ p.title }}</strong></a></p>
           <div class="meta">{{ p.authors }}{% if p.year %} · {{ p.year }}{% endif %}{% if p.venue %} · {{ p.venue }}{% endif %}{% if p.cited_by is not None %} · {% blocktrans count n=p.cited_by %}cited {{ n }} time{% plural %}cited {{ n }} times{% endblocktrans %}{% endif %}{% if p.doi %} · <a href="https://doi.org/{{ p.doi }}" rel="noopener" target="_blank">doi:{{ p.doi }}</a>{% else %} · {{ p.key|paper_ref }}{% endif %}</div>
           <p style="margin:6px 0 0">
+            {% if p.new %}<span class="importance info">{% trans 'New' %}</span>{% endif %}
             {% for label in p.labels %}<span class="importance {% if label == 'founding' %}high{% elif label == 'recent' %}medium{% else %}low{% endif %}">{% if label == 'founding' %}{% trans 'Founding' %}{% elif label == 'recent' %}{% trans 'Recent' %}{% else %}{% trans 'Review' %}{% endif %}</span> {% endfor %}
+            {% if p.status == 'preprint' %}<span class="importance low">{% trans 'Preprint' %}</span>{% elif p.status == 'deposit' %}<span class="importance high" title="{% trans 'Deposited on a repository nobody screens (Zenodo, figshare): not peer reviewed.' %}">{% trans 'Unreviewed deposit' %}</span>{% endif %}
             {% if p.peripheral %}<span class="importance low">{% trans 'Peripheral' %}</span>{% endif %}
             {% if p.approach %}<span class="muted">{{ p.approach }}</span>{% endif %}
+            {% if p.design and p.design != 'other' %}<span class="muted"> · {% if p.design == 'experiment' %}{% trans 'experiment' %}{% elif p.design == 'observation' %}{% trans 'observational study' %}{% elif p.design == 'simulation' %}{% trans 'simulation or model' %}{% elif p.design == 'theory' %}{% trans 'theory' %}{% elif p.design == 'review' %}{% trans 'review' %}{% elif p.design == 'method' %}{% trans 'method' %}{% endif %}</span>{% endif %}
           </p>
+          {% if p.reason %}<p class="muted" style="margin:6px 0 0"><small>{% trans 'Why it is here:' %} {{ p.reason }}</small></p>{% endif %}
+          {% if p.abstract %}<details class="lit-abstract"><summary>{% trans 'Abstract' %}{% if p.full_text %} · {% trans 'conclusions of the full text read too' %}{% endif %}</summary><p>{{ p.abstract_html }}</p></details>{% endif %}
+          {% if revisable and not shared %}<label class="lit-pick"><input type="checkbox" name="exclude" value="{{ p.key }}"> {% trans 'Take it out' %}</label>{% endif %}
         </li>
         {% endfor %}
       </ol>
+      {% if revisable and not shared %}
+      <section class="card section-card" id="adjust" aria-labelledby="adjust-title">
+        <h2 id="adjust-title">{% trans 'Adjust the selection' %}</h2>
+        <p>{% blocktrans with n=max_revised %}Tick the references to take out above, and the papers to put in below: they were screened for this question but left out. The synthesis is written again from your selection, without searching again ({{ n }} papers at most).{% endblocktrans %}</p>
+        {% if result.alternates %}
+        <ul class="item-list lit-alternates">
+          {% for p in result.alternates %}
+          <li><label class="lit-pick"><input type="checkbox" name="include" value="{{ p.key }}"> <strong>{{ p.title }}</strong></label>
+            <div class="meta">{{ p.authors }}{% if p.year %} · {{ p.year }}{% endif %}{% if p.venue %} · {{ p.venue }}{% endif %}{% if p.cited_by is not None %} · {% blocktrans count n=p.cited_by %}cited {{ n }} time{% plural %}cited {{ n }} times{% endblocktrans %}{% endif %}
+              {% if p.relevance == 1 %} · {% trans 'judged peripheral' %}{% endif %}{% if p.status == 'deposit' %} · {% trans 'Unreviewed deposit' %}{% elif p.status == 'preprint' %} · {% trans 'Preprint' %}{% endif %}</div>
+            {% if p.reason %}<div class="muted"><small>{{ p.reason }}</small></div>{% endif %}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <p><button class="btn" type="submit">{% trans 'Write the synthesis again' %}</button></p>
+        <p class="muted"><small>{% trans 'This review stays as it is; the new one has its own page. A couple of minutes.' %}</small></p>
+      </section>
+      </form>
+      {% endif %}
+    {% endif %}
+
+    {% if not shared %}
+    {% if result.coverage.mode != 'collection' %}
+    <section class="card section-card" id="again" aria-labelledby="again-title">
+      <h2 id="again-title">{% trans 'Search again' %}</h2>
+      <p>{% trans 'Rewrite the question or the queries, or run the same ones later to see what was published since: the papers that are not in this review are marked New.' %}</p>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="again">
+        <p><label for="again-question"><strong>{% trans 'Your research question' %}</strong></label></p>
+        <p><textarea id="again-question" name="question" maxlength="{{ max_chars }}" rows="3">{{ result.question }}</textarea></p>
+        <p><label for="again-queries"><strong>{% trans 'Queries, one per line (in English, 6 at most)' %}</strong></label></p>
+        <p><textarea id="again-queries" name="queries" rows="6">{{ links.again }}</textarea></p>
+        <p><button class="btn btn-ghost" type="submit">{% trans 'Search again' %}</button> <span class="muted"><small>{% trans 'Counts as one of your reviews of the day.' %}</small></span></p>
+      </form>
+    </section>
+    {% endif %}
+
+    {% if result.papers %}
+    <section id="next" aria-labelledby="next-title">
+      <h2 id="next-title">{% trans 'Go further' %}</h2>
+      <ul class="tool-features">
+        <li><a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ links.chat }}"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Chat with these papers' %}</a>: {% blocktrans with n=links.chat_max %}ask them your own questions, answered from their full text when the license allows it (the first {{ n }}).{% endblocktrans %}</li>
+        <li><a href="#save-form"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Save them in a collection' %}</a>: {% trans 'a comparison table whose every cell quotes the paper, their open questions, and what the collection is missing.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/?{{ links.scoops }}"><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'Follow this question' %}</a>: {% trans 'an email the day a new paper comes close to it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/teams/?{{ links.teams }}"><i class="fas fa-users" aria-hidden="true"></i> {% trans 'Who works on it?' %}</a>: {% trans 'the teams that sign the recent papers on the question, and referees.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ links.trends }}"><i class="fas fa-chart-line" aria-hidden="true"></i> {% trans 'Is the topic rising?' %}</a>: {% trans 'its papers on arXiv, bioRxiv and medRxiv week after week.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% trans 'once your draft is written, the close papers it does not cite.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Bibliography check' %}</a>: {% trans 'before submitting, retracted papers, preprints published since and citations their abstract does not support.' %}</li>
+      </ul>
+    </section>
+    {% endif %}
     {% endif %}
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The review failed. Try again in a few minutes.' %}</p>
@@ -129,6 +232,7 @@
     {% trans 'Reviewing the literature on your question' as working_title %}
     {% trans 'usually 3 to 6 minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='literature-working' working_steps=steps working_visible=True working_started=row.created %}
+    <p class="muted"><small>{% trans 'You can close this page: we email you the link when the review is ready.' %}</small></p>
     <script>
     window.addEventListener('DOMContentLoaded', function () {
       SP.track(document.getElementById('literature-working'), {{ row.pk }}, function () { location.reload(); });
@@ -136,4 +240,24 @@
     </script>
   {% endif %}
 </div>
+{% if result.papers and not shared %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  var button = document.getElementById('lit-zotero'), status = document.getElementById('lit-zotero-status');
+  if (!button) return;
+  button.addEventListener('click', function () {
+    button.disabled = true;
+    var t = button.dataset;
+    status.textContent = t.sending;
+    SP.post('/{{ LANGUAGE_CODE }}/zotero/send/', {literature: t.key}).then(function (json) {
+      button.disabled = false;
+      if (json.status === 'premium') return status.textContent = t.premium;
+      if (json.status === 'setup') { status.textContent = t.setup + ' '; var a = document.createElement('a'); a.href = json.url; a.textContent = '→'; status.appendChild(a); return; }
+      if (!json.id) return status.textContent = t.failed;
+      SP.wait(json.id, function () { status.textContent = t.sent; }, function () { status.textContent = t.failed; });
+    });
+  });
+});
+</script>
+{% endif %}
 {% endblock %}

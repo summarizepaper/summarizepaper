@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans with title=result.title|truncatechars:80 %}Your literature review is ready: {{ title }}{% endblocktrans %}

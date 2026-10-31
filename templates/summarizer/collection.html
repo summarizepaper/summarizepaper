@@ -30,6 +30,19 @@
     <button type="button" class="btn btn-sm btn-ghost" id="zotero-go">{% trans 'Send to Zotero' %} <span class="badge-premium">Premium</span></button>
     <span class="tool-status" id="zotero-status" aria-live="polite"></span>
   </div>
+  <details class="lit-collection" {% if review_error %}open{% endif %}>
+    <summary><i class="fas fa-book-open" aria-hidden="true"></i> {% trans 'Literature review of the selected papers' %} <span class="badge-premium">Premium+</span></summary>
+    {% if review_error == 'too_few' %}<p class="error">{% trans 'Select at least 3 papers to review them.' %}</p>
+    {% elif review_error == 'quota' %}<p class="error">{% trans 'You have run your literature reviews of the day. Come back tomorrow.' %}</p>{% endif %}
+    {% if can_review %}
+    <form method="post" action="/{{ LANGUAGE_CODE }}/literature-review/collection/{{ collection.pk }}/">{% csrf_token %}
+      <p class="muted"><small>{% trans 'A synthesis by approach of the selected papers (40 at most): where they agree and disagree, what they leave open, each statement with the sentences that support it.' %}</small></p>
+      <p><label for="review-question">{% trans 'Your question (optional)' %}</label><br>
+        <textarea id="review-question" name="question" rows="2" maxlength="600" placeholder="{% trans 'What do these papers say about…' %}"></textarea></p>
+      <p><button class="btn btn-sm" type="submit">{% trans 'Review these papers' %}</button></p>
+    </form>
+    {% else %}<p class="muted">{% trans 'With Premium+, a synthesis by approach of the papers of your collection, each statement with the sentences that support it.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>{% endif %}
+  </details>
   <p class="muted"><small>{% trans 'Exports keep your notes and tags. Filter by a tag to export only its papers. Drag the papers or use the arrows to order them: the analyses read them in this order.' %}{% if analysed|length > chat_max %} {% blocktrans with n=chat_max %}The chat takes the first {{ n }} selected papers.{% endblocktrans %}{% endif %}</small></p>
   {% endif %}
 

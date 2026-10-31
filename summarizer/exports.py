@@ -327,12 +327,16 @@ def zotero_send(request):
     account = ZoteroAccount.objects.filter(user=request.user).first()
     if account is None:
         return JsonResponse({'status': 'setup', 'url': '/%s/integrations/' % get_language()})
-    if request.POST.get('collection'):
-        rows = CollectionPaper.objects.filter(collection__pk=request.POST['collection'], collection__user=request.user)
-        ids = [(r.arxiv_id, r) for r in rows]
+    if request.POST.get('literature'):  # the references of a literature review, as the review keeps them
+        from . import literature
+        metas = literature.zotero_metas(request.user, request.POST['literature'])
     else:
-        ids = [(request.POST.get('arxiv_id', ''), None)]
-    metas = [m for m in (paper_meta(aid, fallback) for aid, fallback in ids if aid) if m]
+        if request.POST.get('collection'):
+            rows = CollectionPaper.objects.filter(collection__pk=request.POST['collection'], collection__user=request.user)
+            ids = [(r.arxiv_id, r) for r in rows]
+        else:
+            ids = [(request.POST.get('arxiv_id', ''), None)]
+        metas = [m for m in (paper_meta(aid, fallback) for aid, fallback in ids if aid) if m]
     if not metas:
         raise Http404
     lang = get_language()

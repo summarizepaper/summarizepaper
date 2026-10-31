@@ -547,6 +547,7 @@ def collection_page(request, pk):
         'followed': followed_count(request.user, collection) if collection.watch else 0,
         'zotero': ZoteroAccount.objects.filter(user=request.user).exists(),
         'can_zotero': access.has_tool(request.user, 'zotero'),
+        'can_review': access.has_tool(request.user, 'literature'), 'review_error': request.GET.get('review', ''),
         'share_url': shared_url(request, collection) if owner else '',
         'templates': comparison.TEMPLATE_CHOICES,
         'template_columns': [(code, [label for _c, label, _h in cols]) for code, cols in comparison.TEMPLATES.items()],

@@ -21,14 +21,15 @@
     <ol class="tool-steps">
       <li>{% trans 'We turn your question into its key concepts, their synonyms, and several literature searches.' %}</li>
       <li>{% trans 'We run them on OpenAlex (journals, preprints and conference papers, open access or not) and on arXiv, by relevance and for the last three years, and look for reviews and the most cited works.' %}</li>
-      <li>{% trans 'We follow the references of the closest papers: the works many of them cite are the founding papers a keyword search misses.' %}</li>
-      <li>{% trans 'We rank the candidates by closeness to your question, an AI screens their abstracts, and we keep 15 to 30 papers, founding and recent.' %}</li>
-      <li>{% trans 'You get a synthesis by approach, a comparison table, where the papers agree and disagree, what they leave open, and the numbered references. Each finding shows the sentence of the abstract that supports it.' %}</li>
+      <li>{% trans 'We follow the citations both ways: the works many of the closest papers cite are the founding papers a keyword search misses, and the recent papers that cite those are the ones written with newer words. Retracted papers are left out.' %}</li>
+      <li>{% trans 'We rank the candidates by closeness to your question, an AI screens their abstracts and says why each one is kept, and we keep 15 to 30 papers, founding and recent, preprints and unreviewed deposits marked as such.' %}</li>
+      <li>{% trans 'We read the conclusions of the papers whose full text is open, then write a synthesis by approach, a comparison table, where the papers agree and disagree, what they leave open, and the numbered references. Each statement shows the sentences of the papers that support it, checked word for word.' %}</li>
+      <li>{% trans 'Take papers out or put others in, search again with your own queries or later to see what is new, and export the review to BibTeX, RIS, Markdown, LaTeX or Zotero.' %}</li>
     </ol>
     <ul class="tool-features">
       <li>{% trans 'To start on a new topic, prepare a proposal or the related-work section of a thesis.' %}</li>
       <li>{% trans 'An exploratory synthesis, not a systematic review: the searches, sources and counts are shown so you can judge the coverage.' %}</li>
-      <li>{% trans 'Save the papers in a collection to compare them in a table or chat with them.' %}</li>
+      <li>{% trans 'Save the papers in a collection to compare them in a table or chat with them, or review a collection you already have.' %}</li>
     </ul>
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with plus_tool=True %}
@@ -44,15 +45,28 @@
       <p><textarea id="question" name="question" maxlength="{{ max_chars }}" required placeholder="{% trans 'e.g. What mechanisms explain the persistence of microplastics in marine sediments?' %}">{{ question }}</textarea></p>
       <p class="muted"><small>{% trans 'In any language. A precise question (a phenomenon, a population, a setting) gives a more focused review than a topic.' %}</small></p>
       <p><button class="btn" type="submit">{% trans 'Review the literature' %}</button></p>
-      <p class="muted"><small>{% blocktrans %}It takes 3 to 6 minutes. {{ per_day }} reviews a day.{% endblocktrans %}</small></p>
+      <p class="muted"><small>{% blocktrans %}It takes 3 to 6 minutes. {{ per_day }} reviews a day.{% endblocktrans %} {% trans 'We email you the link when it is ready.' %}</small></p>
     </form>
+
+    {% if collections %}
+    <form method="post" class="card section-card">
+      {% csrf_token %}
+      <h2>{% trans 'Or review a collection you already have' %}</h2>
+      <p class="muted"><small>{% trans 'No search: the synthesis is written from the selected papers of your collection (3 to 40).' %}</small></p>
+      <p><label for="lit-collection"><strong>{% trans 'Collection' %}</strong></label>
+        <select id="lit-collection" name="collection">{% for c in collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></p>
+      <p><label for="lit-collection-question"><strong>{% trans 'Your question (optional)' %}</strong></label></p>
+      <p><textarea id="lit-collection-question" name="question" maxlength="{{ max_chars }}" rows="2" placeholder="{% trans 'What do these papers say about…' %}"></textarea></p>
+      <p><button class="btn btn-ghost" type="submit">{% trans 'Review this collection' %}</button></p>
+    </form>
+    {% endif %}
 
     {% if reviews %}
     <h2>{% trans 'Your reviews' %}</h2>
     <ul class="item-list">
       {% for r in reviews %}
-      <li class="card"><a href="/{{ LANGUAGE_CODE }}/literature-review/{{ r.key }}/">{% if r.status == 'done' %}{{ r.data.question|default:_('Review') }}{% elif r.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ r.created|date:"j F Y H:i" }}{% if r.status == 'done' %} · {% blocktrans count n=r.data.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}{% endif %}</div></li>
+      {% with d=r.data %}<li class="card"><a href="/{{ LANGUAGE_CODE }}/literature-review/{{ r.key }}/">{% if r.status == 'done' %}{{ d.question|default:_('Review') }}{% elif r.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ r.created|date:"j F Y H:i" }}{% if r.status == 'done' %} · {% blocktrans count n=d.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}{% if d.coverage.mode == 'collection' %} · {% blocktrans with name=d.coverage.collection %}collection “{{ name }}”{% endblocktrans %}{% elif d.coverage.mode == 'revision' or d.revision_of %} · {% trans 'revised' %}{% elif d.previous %} · {% trans 'searched again' %}{% endif %}{% endif %}</div></li>{% endwith %}
       {% endfor %}
     </ul>
     {% endif %}

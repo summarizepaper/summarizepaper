@@ -18747,3 +18747,473 @@ msgid "cited %(shown)s time"
 msgid_plural "cited %(shown)s times"
 msgstr[0] "cité %(shown)s fois"
 msgstr[1] "cité %(shown)s fois"
+
+msgid ""
+"Following the references of the closest papers, and the recent papers that "
+"cite them"
+msgstr ""
+"On suit les références des articles les plus proches, et les articles "
+"récents qui les citent"
+
+msgid "Reading the conclusions of the open full texts"
+msgstr "Lecture des conclusions des textes intégraux en accès libre"
+
+msgid "Checking each statement against the papers"
+msgstr "Vérification de chaque affirmation dans les articles"
+
+msgid "Exploratory literature review written with SummarizePaper on"
+msgstr "Revue de littérature exploratoire écrite avec SummarizePaper le"
+
+msgid ""
+"Exploratory literature review written with SummarizePaper; check each "
+"statement in the papers."
+msgstr ""
+"Revue de littérature exploratoire écrite avec SummarizePaper ; vérifiez "
+"chaque affirmation dans les articles."
+
+msgid ""
+"From a research question or a collection: 15 to 30 founding and recent "
+"papers, grouped by approach, each statement with the sentences that support "
+"it; to adjust, update and export to BibTeX, LaTeX or Zotero."
+msgstr ""
+"À partir d’une question de recherche ou d’une collection : 15 à 30 articles "
+"fondateurs et récents, regroupés par approche, chaque affirmation avec les "
+"phrases qui l’appuient ; à ajuster, mettre à jour et exporter vers BibTeX, "
+"LaTeX ou Zotero."
+
+msgid ""
+"We follow the citations both ways: the works many of the closest papers cite"
+" are the founding papers a keyword search misses, and the recent papers that"
+" cite those are the ones written with newer words. Retracted papers are left"
+" out."
+msgstr ""
+"Nous suivons les citations dans les deux sens : les travaux que citent "
+"beaucoup des articles les plus proches sont les articles fondateurs qu’une "
+"recherche par mots-clés manque, et les articles récents qui les citent sont "
+"ceux écrits avec des mots plus récents. Les articles rétractés sont écartés."
+
+msgid ""
+"We rank the candidates by closeness to your question, an AI screens their "
+"abstracts and says why each one is kept, and we keep 15 to 30 papers, "
+"founding and recent, preprints and unreviewed deposits marked as such."
+msgstr ""
+"Nous classons les candidats par proximité avec votre question, une IA trie "
+"leurs résumés et dit pourquoi chacun est retenu, et nous gardons 15 à 30 "
+"articles, fondateurs et récents, les préprints et les dépôts non relus étant"
+" signalés comme tels."
+
+msgid ""
+"We read the conclusions of the papers whose full text is open, then write a "
+"synthesis by approach, a comparison table, where the papers agree and "
+"disagree, what they leave open, and the numbered references. Each statement "
+"shows the sentences of the papers that support it, checked word for word."
+msgstr ""
+"Nous lisons les conclusions des articles dont le texte intégral est en accès"
+" libre, puis écrivons une synthèse par approche, un tableau comparatif, ce "
+"sur quoi les articles s’accordent et divergent, ce qu’ils laissent ouvert, "
+"et les références numérotées. Chaque affirmation montre les phrases des "
+"articles qui l’appuient, vérifiées mot pour mot."
+
+msgid ""
+"Take papers out or put others in, search again with your own queries or "
+"later to see what is new, and export the review to BibTeX, RIS, Markdown, "
+"LaTeX or Zotero."
+msgstr ""
+"Retirez des articles ou ajoutez-en d’autres, relancez la recherche avec vos "
+"propres requêtes ou plus tard pour voir ce qui est nouveau, et exportez la "
+"revue vers BibTeX, RIS, Markdown, LaTeX ou Zotero."
+
+msgid ""
+"Save the papers in a collection to compare them in a table or chat with "
+"them, or review a collection you already have."
+msgstr ""
+"Enregistrez les articles dans une collection pour les comparer dans un "
+"tableau ou discuter avec eux, ou faites la revue d’une collection que vous "
+"avez déjà."
+
+msgid "We email you the link when it is ready."
+msgstr "Nous vous envoyons le lien par email quand elle est prête."
+
+msgid "Or review a collection you already have"
+msgstr "Ou faites la revue d’une collection que vous avez déjà"
+
+msgid ""
+"No search: the synthesis is written from the selected papers of your "
+"collection (3 to 40)."
+msgstr ""
+"Sans recherche : la synthèse est écrite à partir des articles sélectionnés "
+"de votre collection (3 à 40)."
+
+msgid "Your question (optional)"
+msgstr "Votre question (facultative)"
+
+msgid "What do these papers say about…"
+msgstr "Que disent ces articles sur…"
+
+msgid "Review this collection"
+msgstr "Faire la revue de cette collection"
+
+msgid "collection “%(name)s”"
+msgstr "collection « %(name)s »"
+
+msgid "revised"
+msgstr "révisée"
+
+msgid "searched again"
+msgstr "recherche relancée"
+
+msgid "Written on %(day)s from the papers of the collection “%(name)s”"
+msgstr "Écrite le %(day)s à partir des articles de la collection « %(name)s »"
+
+msgid "Searched on %(day)s"
+msgstr "Recherche du %(day)s"
+
+msgid "revised from an earlier review"
+msgstr "révisée à partir d’une revue précédente"
+
+msgid "searched again after the review of %(day)s"
+msgstr "recherche relancée après la revue du %(day)s"
+
+msgid "compare them in a table"
+msgstr "les comparer dans un tableau"
+
+msgid "find their open questions"
+msgstr "trouver leurs questions ouvertes"
+
+msgid ""
+"Tick the papers to take out or to put in, then write the synthesis again."
+msgstr ""
+"Cochez les articles à retirer ou à ajouter, puis réécrivez la synthèse."
+
+msgid "A synthesis needs at least 2 papers."
+msgstr "Une synthèse demande au moins 2 articles."
+
+msgid "You have revised enough reviews for today. Come back tomorrow."
+msgstr "Vous avez révisé assez de revues pour aujourd’hui. Revenez demain."
+
+msgid "The synthesis and its numbered references"
+msgstr "La synthèse et ses références numérotées"
+
+msgid ""
+"The synthesis with its citations and its bibliography, ready to compile"
+msgstr "La synthèse avec ses citations et sa bibliographie, prête à compiler"
+
+msgid "Sending to Zotero is a Premium feature."
+msgstr "L’envoi vers Zotero est une fonction Premium."
+
+msgid "Connect your Zotero library first:"
+msgstr "Connectez d’abord votre bibliothèque Zotero :"
+
+msgid "Sending failed. Try again later."
+msgstr "L’envoi a échoué. Réessayez plus tard."
+
+msgid "Sent to your Zotero library."
+msgstr "Envoyé dans votre bibliothèque Zotero."
+
+msgid ""
+"BibTeX and RIS go to Zotero, Mendeley, EndNote or LaTeX; the LaTeX file "
+"holds the synthesis with its citations and its bibliography, to start a "
+"related-work section."
+msgstr ""
+"BibTeX et RIS vont vers Zotero, Mendeley, EndNote ou LaTeX ; le fichier "
+"LaTeX contient la synthèse avec ses citations et sa bibliographie, pour "
+"commencer un état de l’art."
+
+msgid "What this review reads"
+msgstr "Ce que lit cette revue"
+
+msgid ""
+"%(n)s paper of the collection, read from its abstract and, when its license "
+"allows it, from the conclusions of its full text."
+msgid_plural ""
+"%(n)s papers of the collection, read from their abstract and, when their "
+"license allows it, from the conclusions of their full text."
+msgstr[0] ""
+"%(n)s article de la collection, lu à partir de son résumé et, quand sa "
+"licence le permet, des conclusions de son texte intégral."
+msgstr[1] ""
+"%(n)s articles de la collection, lus à partir de leur résumé et, quand leur "
+"licence le permet, des conclusions de leur texte intégral."
+
+msgid "Left out, no abstract found:"
+msgstr "Écartés, sans résumé trouvé :"
+
+msgid ""
+"%(published)s published in a journal or proceedings, %(preprints)s "
+"preprints, %(deposits)s deposits nobody reviewed."
+msgstr ""
+"%(published)s publiés dans une revue ou des actes, %(preprints)s préprints, "
+"%(deposits)s dépôts que personne n’a relus."
+
+msgid "The conclusions of %(n)s open full texts were read too."
+msgstr ""
+"Les conclusions de %(n)s textes intégraux en accès libre ont aussi été lues."
+
+msgid ""
+"%(quoted)s of the %(findings)s findings are backed by a sentence found word "
+"for word in a paper."
+msgstr ""
+"%(quoted)s des %(findings)s résultats sont appuyés par une phrase trouvée "
+"mot pour mot dans un article."
+
+msgid ""
+"So are %(quoted)s of the %(total)s points of agreement, disagreement and "
+"gaps."
+msgstr ""
+"De même que %(quoted)s des %(total)s points d’accord, de désaccord et de "
+"lacunes."
+
+msgid "Semantic Scholar did not answer: some often cited works stay unread."
+msgstr ""
+"Semantic Scholar n’a pas répondu : certains travaux souvent cités restent "
+"non lus."
+
+msgid ""
+"An exploratory synthesis, not a systematic review: the papers are read from "
+"their abstracts and the conclusions of their open full texts, and papers "
+"that OpenAlex and arXiv do not index, or that our searches word differently,"
+" can be missing."
+msgstr ""
+"Une synthèse exploratoire, pas une revue systématique : les articles sont "
+"lus à partir de leurs résumés et des conclusions de leurs textes intégraux "
+"en accès libre, et des articles qu’OpenAlex et arXiv n’indexent pas, ou que "
+"nos recherches formulent autrement, peuvent manquer."
+
+msgid "Queries (yours):"
+msgstr "Requêtes (les vôtres) :"
+
+msgid "(%(n)s abstract found on Semantic Scholar or arXiv)"
+msgid_plural "(%(n)s abstracts found on Semantic Scholar or arXiv)"
+msgstr[0] "(%(n)s résumé trouvé sur Semantic Scholar ou arXiv)"
+msgstr[1] "(%(n)s résumés trouvés sur Semantic Scholar ou arXiv)"
+
+msgid "Recent papers citing the founding ones:"
+msgstr "Articles récents qui citent les fondateurs :"
+
+msgid "Left out, retracted:"
+msgstr "Écartés, rétractés :"
+
+msgid "%(n)s paper was not in the previous review: it is marked New."
+msgid_plural ""
+"%(n)s papers were not in the previous review: they are marked New."
+msgstr[0] ""
+"%(n)s article n’était pas dans la revue précédente : il est marqué Nouveau."
+msgstr[1] ""
+"%(n)s articles n’étaient pas dans la revue précédente : ils sont marqués "
+"Nouveau."
+
+msgid ""
+"This summary rests on the findings below, each with the sentences that "
+"support it."
+msgstr ""
+"Ce résumé repose sur les résultats ci-dessous, chacun avec les phrases qui "
+"l’appuient."
+
+msgid ""
+"Several of the papers found cite these works, but no abstract of them could "
+"be found: they are not in the synthesis. Read them if they are not already "
+"known to you."
+msgstr ""
+"Plusieurs des articles trouvés citent ces travaux, mais aucun résumé n’a pu "
+"en être trouvé : ils ne sont pas dans la synthèse. Lisez-les si vous ne les "
+"connaissez pas déjà."
+
+msgid "Preprint"
+msgstr "Préprint"
+
+msgid ""
+"Deposited on a repository nobody screens (Zenodo, figshare): not peer "
+"reviewed."
+msgstr ""
+"Déposé sur une archive que personne ne filtre (Zenodo, figshare) : non relu "
+"par les pairs."
+
+msgid "Unreviewed deposit"
+msgstr "Dépôt non relu"
+
+msgid "experiment"
+msgstr "expérience"
+
+msgid "observational study"
+msgstr "étude observationnelle"
+
+msgid "simulation or model"
+msgstr "simulation ou modèle"
+
+msgid "theory"
+msgstr "théorie"
+
+msgid "review"
+msgstr "revue"
+
+msgid "method"
+msgstr "méthode"
+
+msgid "Why it is here:"
+msgstr "Pourquoi il est là :"
+
+msgid "conclusions of the full text read too"
+msgstr "conclusions du texte intégral lues aussi"
+
+msgid "Take it out"
+msgstr "Le retirer"
+
+msgid "Adjust the selection"
+msgstr "Ajuster la sélection"
+
+msgid ""
+"Tick the references to take out above, and the papers to put in below: they "
+"were screened for this question but left out. The synthesis is written again"
+" from your selection, without searching again (%(n)s papers at most)."
+msgstr ""
+"Cochez ci-dessus les références à retirer, et ci-dessous les articles à "
+"ajouter : ils ont été triés pour cette question mais écartés. La synthèse "
+"est réécrite à partir de votre sélection, sans relancer la recherche (%(n)s "
+"articles au plus)."
+
+msgid "judged peripheral"
+msgstr "jugé périphérique"
+
+msgid "Write the synthesis again"
+msgstr "Réécrire la synthèse"
+
+msgid ""
+"This review stays as it is; the new one has its own page. A couple of "
+"minutes."
+msgstr ""
+"Cette revue reste telle quelle ; la nouvelle a sa propre page. Deux minutes "
+"environ."
+
+msgid ""
+"Rewrite the question or the queries, or run the same ones later to see what "
+"was published since: the papers that are not in this review are marked New."
+msgstr ""
+"Réécrivez la question ou les requêtes, ou relancez les mêmes plus tard pour "
+"voir ce qui a été publié depuis : les articles absents de cette revue sont "
+"marqués Nouveau."
+
+msgid "Queries, one per line (in English, 6 at most)"
+msgstr "Requêtes, une par ligne (en anglais, 6 au plus)"
+
+msgid "Counts as one of your reviews of the day."
+msgstr "Compte comme une de vos revues du jour."
+
+msgid ""
+"ask them your own questions, answered from their full text when the license "
+"allows it (the first %(n)s)."
+msgstr ""
+"posez-leur vos propres questions, avec des réponses tirées de leur texte "
+"intégral quand la licence le permet (les %(n)s premiers)."
+
+msgid "Save them in a collection"
+msgstr "Les enregistrer dans une collection"
+
+msgid ""
+"a comparison table whose every cell quotes the paper, their open questions, "
+"and what the collection is missing."
+msgstr ""
+"un tableau comparatif dont chaque case cite l’article, leurs questions "
+"ouvertes, et ce qui manque à la collection."
+
+msgid "Follow this question"
+msgstr "Suivre cette question"
+
+msgid "an email the day a new paper comes close to it."
+msgstr "un email le jour où un nouvel article s’en approche."
+
+msgid "the teams that sign the recent papers on the question, and referees."
+msgstr ""
+"les équipes qui signent les articles récents sur la question, et des "
+"rapporteurs."
+
+msgid "Is the topic rising?"
+msgstr "Le sujet monte-t-il ?"
+
+msgid "its papers on arXiv, bioRxiv and medRxiv week after week."
+msgstr "ses articles sur arXiv, bioRxiv et medRxiv semaine après semaine."
+
+msgid "once your draft is written, the close papers it does not cite."
+msgstr ""
+"une fois votre brouillon écrit, les articles proches qu’il ne cite pas."
+
+msgid ""
+"before submitting, retracted papers, preprints published since and citations"
+" their abstract does not support."
+msgstr ""
+"avant de soumettre, les articles rétractés, les préprints publiés depuis et "
+"les citations que leur résumé n’appuie pas."
+
+msgid ""
+"You can close this page: we email you the link when the review is ready."
+msgstr ""
+"Vous pouvez fermer cette page : nous vous envoyons le lien par email quand "
+"la revue est prête."
+
+msgid "full text"
+msgstr "texte intégral"
+
+msgid "%(n)s supporting sentence"
+msgid_plural "%(n)s supporting sentences"
+msgstr[0] "%(n)s phrase à l’appui"
+msgstr[1] "%(n)s phrases à l’appui"
+
+msgid ""
+"No paper states it in these words: inferred from what the papers do not "
+"study. Check it."
+msgstr ""
+"Aucun article ne le dit en ces termes : déduit de ce que les articles "
+"n’étudient pas. Vérifiez-le."
+
+msgid ""
+"No sentence of the cited papers states it word for word: check it in the "
+"papers."
+msgstr ""
+"Aucune phrase des articles cités ne le dit mot pour mot : vérifiez-le dans "
+"les articles."
+
+msgid "Your literature review is ready: \"%(question)s\""
+msgstr "Votre revue de littérature est prête : « %(question)s »"
+
+msgid ""
+"%(n)s paper, grouped by approach, with the sentences that support each "
+"statement."
+msgid_plural ""
+"%(n)s papers, grouped by approach, with the sentences that support each "
+"statement."
+msgstr[0] ""
+"%(n)s article, regroupé par approche, avec les phrases qui appuient chaque "
+"affirmation."
+msgstr[1] ""
+"%(n)s articles, regroupés par approche, avec les phrases qui appuient chaque"
+" affirmation."
+
+msgid "Your literature review is ready: %(title)s"
+msgstr "Votre revue de littérature est prête : %(title)s"
+
+msgid "Literature review of the selected papers"
+msgstr "Revue de littérature des articles sélectionnés"
+
+msgid "Select at least 3 papers to review them."
+msgstr "Sélectionnez au moins 3 articles pour en faire la revue."
+
+msgid "You have run your literature reviews of the day. Come back tomorrow."
+msgstr "Vous avez lancé vos revues de littérature du jour. Revenez demain."
+
+msgid ""
+"A synthesis by approach of the selected papers (40 at most): where they "
+"agree and disagree, what they leave open, each statement with the sentences "
+"that support it."
+msgstr ""
+"Une synthèse par approche des articles sélectionnés (40 au plus) : ce sur "
+"quoi ils s’accordent et divergent, ce qu’ils laissent ouvert, chaque "
+"affirmation avec les phrases qui l’appuient."
+
+msgid "Review these papers"
+msgstr "Faire la revue de ces articles"
+
+msgid ""
+"With Premium+, a synthesis by approach of the papers of your collection, "
+"each statement with the sentences that support it."
+msgstr ""
+"Avec Premium+, une synthèse par approche des articles de votre collection, "
+"chaque affirmation avec les phrases qui l’appuient."
