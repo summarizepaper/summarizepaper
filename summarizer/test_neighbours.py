@@ -162,6 +162,19 @@ class PageTests(NeighbourhoodTestCase):
         with mock.patch('summarizer.neighbours.WHY_PER_DAY', 0):
             self.assertEqual(Client().post('/en/neighbours/2101.00001v1/why/').json()['status'], 'busy')
 
+    def test_crawlers_and_busy_visitors_do_not_spend_the_budget_of_readers(self):
+        neighbours.store(self.main.arxiv_id)
+        url = '/en/neighbours/2101.00001v1/why/'
+        with mock.patch('summarizer.generated.chat_json', side_effect=self.why_answer) as chat:
+            bot = Client(HTTP_USER_AGENT='Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
+            self.assertEqual(bot.post(url).json()['status'], 'busy')
+            with mock.patch('summarizer.neighbours.WHY_PER_VISITOR', 0):
+                self.assertEqual(Client().post(url).json()['status'], 'busy')
+                self.assertEqual(chat.call_count, 0)
+                reader = self.client_for(self.user())  # an account does not count against the visitors' share
+                self.assertIn(reader.post(url).json()['status'], ('pending', 'done'))
+        self.assertGreater(chat.call_count, 0)
+
     def test_map_page(self):
         neighbours.store(self.main.arxiv_id)
         page = Client().get('/en/tree/2101.00001v1/')

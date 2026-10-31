@@ -126,14 +126,32 @@ window.SPNeighbours = {init: function () {
       if (json.id) SP.wait(json.id, fill);
     });
   }
+  // asked once the list is in view and the reader has scrolled, moved the pointer, touched or typed: crawlers
+  // that run scripts do none of these, and each sentence costs a model call
   if (d.whyReady !== '1' && checks.length) {
-    if (!('IntersectionObserver' in window)) return whenReady(ask);
-    var seen = new IntersectionObserver(function (entries) {
-      if (!entries.some(function (e) { return e.isIntersecting; })) return;
-      seen.disconnect();
+    var inView = !('IntersectionObserver' in window), human = false, asked = false;
+    function maybeAsk() {
+      if (asked || !inView || !human) return;
+      asked = true;
       whenReady(ask);
-    });
-    seen.observe(box);
+    }
+    var gestures = ['scroll', 'pointermove', 'touchstart', 'keydown'];
+    function onGesture(event) {
+      if (!event.isTrusted) return;
+      human = true;
+      gestures.forEach(function (name) { window.removeEventListener(name, onGesture, true); });
+      maybeAsk();
+    }
+    gestures.forEach(function (name) { window.addEventListener(name, onGesture, {capture: true, passive: true}); });
+    if (!inView) {
+      var seen = new IntersectionObserver(function (entries) {
+        if (!entries.some(function (e) { return e.isIntersecting; })) return;
+        seen.disconnect();
+        inView = true;
+        maybeAsk();
+      });
+      seen.observe(box);
+    }
   }
 }};
 SPNeighbours.init();

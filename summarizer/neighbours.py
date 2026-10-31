@@ -76,6 +76,12 @@ REFRESH_DAYS = 60
 RUN_SECONDS = 900  # the hourly run's share: 15 to 25 seconds a paper, Semantic Scholar's 429s included, so 40 papers
 WHY_PER_DAY = 600
 WHY_KEY = 'neighbours-why:%s'
+# crawlers that run scripts (Googlebot, cloud scrapers) asked for 457 in the first hour: visitors without an account
+# share half of the day's budget, WHY_PER_VISITOR each, so that readers with an account always have the rest
+WHY_ANONYMOUS_PER_DAY = 300
+WHY_ANONYMOUS_KEY = 'neighbours-why-anonymous:%s'
+WHY_PER_VISITOR = 20
+WHY_VISITOR_KEY = 'neighbours-why-visitor:%s:%%s'
 
 # Levels of the cosine similarity of text-embedding-3-small, from the production index (October 2026): the best
 # neighbour of half the papers is above 0.67, of a quarter above 0.73; half of all listed neighbours are above 0.59.
@@ -610,12 +616,17 @@ def covers(row, items):
     return written >= WHY_COVERED * len(items) or row.updated > timezone.now() - WHY_RETRY
 
 
-def start_why(arxiv_id, lang):
-    """Start writing the sentences when the shown items have none yet; the Generated row, or None past the budget."""
+def start_why(arxiv_id, lang, request=None):
+    """Start writing the sentences when the shown items have none yet; the Generated row, or None past the budget
+    (the day's, or for a visitor without an account their share and their own)."""
     data = stored(arxiv_id)
     row = why_row(arxiv_id, lang)
     if data is not None and covers(row, shown(data)):
         return row
+    if request is not None and not request.user.is_authenticated:
+        user, visitor = reader(request)
+        if not sources._spend(WHY_VISITOR_KEY % visitor, WHY_PER_VISITOR) or not sources._spend(WHY_ANONYMOUS_KEY, WHY_ANONYMOUS_PER_DAY):
+            return None
     if not sources._spend(WHY_KEY, WHY_PER_DAY):
         return None
     return generated.start(WHY_KIND, arxiv_id, lang, why_work(arxiv_id, lang), force=True)
@@ -627,6 +638,7 @@ def why_view(request, arxiv_id):
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
     if paper is None:
         raise Http404
+    from .digest_web import BOT_RE
     lang = get_language()
     row = why_row(arxiv_id, lang)
     items = shown(stored(arxiv_id) or {'items': legacy(paper)})
@@ -636,7 +648,9 @@ def why_view(request, arxiv_id):
         return JsonResponse({'status': 'pending', 'id': row.pk})
     if row is not None and row.status == 'failed' and row.updated > timezone.now() - datetime.timedelta(hours=1):
         return JsonResponse({'status': 'busy'})
-    row = start_why(arxiv_id, lang)
+    if BOT_RE.search(request.META.get('HTTP_USER_AGENT', '')):
+        return JsonResponse({'status': 'busy'})
+    row = start_why(arxiv_id, lang, request)
     if row is None:
         return JsonResponse({'status': 'busy'})
     return JsonResponse({'status': row.status, 'id': row.pk, 'data': row.data() if row.status == 'done' else None})
