@@ -19217,3 +19217,8 @@ msgid ""
 msgstr ""
 "Avec Premium+, une synthèse par approche des articles de votre collection, "
 "chaque affirmation avec les phrases qui l’appuient."
+
+msgid "%(n)s more supporting sentence"
+msgid_plural "%(n)s more supporting sentences"
+msgstr[0] "%(n)s autre phrase à l’appui"
+msgstr[1] "%(n)s autres phrases à l’appui"
