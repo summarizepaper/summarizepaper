@@ -5,7 +5,7 @@ import json
 from unittest import mock
 
 import numpy as np
-from django.test import Client, TestCase
+from django.test import override_settings, Client, TestCase
 from django.utils import timezone, translation
 
 from . import neighbours, similar
@@ -350,6 +350,23 @@ class SemanticScholarPacingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(call.call_count, 2)
         self.assertEqual(sleep.call_args_list[0].args, (1.5,))  # the wait after the 429; the pace was already kept
+
+    @override_settings(S2_API_KEY='k')
+    def test_a_key_over_its_rate_or_refused_falls_back_to_calls_without_it(self):
+        from summarizer import citations
+        sent = []
+
+        def send(answers):
+            def call(headers):
+                sent.append(headers)
+                return mock.Mock(status_code=answers.pop(0))
+            return call
+        with mock.patch('summarizer.citations.time.sleep'):
+            self.assertEqual(citations.s2_call(send([429, 429, 429, 200])).status_code, 200)
+        self.assertEqual(sent, [{'x-api-key': 'k'}] * 3 + [{}])
+        sent.clear()
+        self.assertEqual(citations.s2_call(send([403, 200])).status_code, 200)
+        self.assertEqual(sent, [{'x-api-key': 'k'}, {}])
 
 
 class WhyRoundsTests(NeighbourhoodTestCase):

@@ -22,7 +22,6 @@ import re
 import uuid
 
 import requests
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.http import Http404, HttpResponse
@@ -31,7 +30,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, bibliography, digest, generated, result_share, sources
+from . import access, bibliography, citations, digest, generated, result_share, sources
 from .models import Generated
 
 MAX_UPLOAD = 5 * 1024 * 1024
@@ -213,10 +212,10 @@ def s2_published(arxiv_ids):
     """{arxiv id: journal DOI} from Semantic Scholar, for preprints arXiv does not link to a journal."""
     if not arxiv_ids:
         return {}
-    headers = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
     try:
-        response = requests.post(S2_BATCH, params={'fields': 'externalIds,journal,publicationTypes'}, headers=headers,
-                                 json={'ids': ['ARXIV:%s' % a for a in arxiv_ids[:500]]}, timeout=60)
+        response = citations.s2_call(lambda headers: requests.post(
+            S2_BATCH, params={'fields': 'externalIds,journal,publicationTypes'}, headers=headers,
+            json={'ids': ['ARXIV:%s' % a for a in arxiv_ids[:500]]}, timeout=60))
         response.raise_for_status()
         rows = response.json()
     except (requests.RequestException, ValueError):

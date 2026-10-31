@@ -154,19 +154,17 @@ _last_s2 = [0.0]
 def s2_request(method, url, **kwargs):
     """A Semantic Scholar call, SECONDS_BETWEEN_CALLS after the previous one of this process (the key allows one a
     second, shared with the citation alerts and the chat), tried again after a 429; None when unreachable."""
-    for wait in (1.5, 4, 10, None):  # a 429 usually clears within a second
+    def send(headers):
         pause = _last_s2[0] + citations.SECONDS_BETWEEN_CALLS - time.monotonic()
         if pause > 0:
             time.sleep(pause)
         _last_s2[0] = time.monotonic()
-        try:
-            response = requests.request(method, url, headers=citations.s2_headers(), timeout=30, **kwargs)
-        except requests.RequestException:
-            logger.warning('Semantic Scholar unreachable: %s', url)
-            return None
-        if response.status_code != 429 or wait is None:
-            return response
-        time.sleep(wait)
+        return requests.request(method, url, headers=headers, timeout=30, **kwargs)
+    try:
+        return citations.s2_call(send, pauses=(1.5, 4, 10))  # a 429 usually clears within a second
+    except requests.RequestException:
+        logger.warning('Semantic Scholar unreachable: %s', url)
+        return None
 
 
 def s2_get(url, params):

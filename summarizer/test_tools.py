@@ -15,7 +15,7 @@ from django.utils import timezone, translation
 
 from summarizer import audio, changes, citations, conference, digest, generated, letters, library, literature, missed, presskit, questions, refcheck, scoops, slides, sources, teams, trends, usage
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
-                               CollectionPaper, DigestItem, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
+                               CollectionPaper, DigestItem, PaperText, DigestSubscription, DigestVector, FollowedPaper, Generated, PaperVersion,
                                Letter, LetterFeedback, LetterSubscription, PaperAudio, PaperAuthor, PaperHistory, PaperScore, RisingTopics, ScoopMatch,
                                SummaryPaper, TermWeek, UserPlan, WatchedProject, ZoteroAccount)
 
@@ -599,6 +599,8 @@ class LiteratureTests(ToolsTestCase):
         self.assertEqual(found['support'], [{'n': 1, 'quote': self.FOUNDING, 'where': 'abstract'}])
         self.assertEqual((from_text['support'][0]['where'], from_text['papers']), ('text', [1]))
         self.assertEqual(made_up['support'], [])
+        self.assertEqual(found['unquoted'], [])
+        self.assertEqual(result['disagreements'][0]['sides'][0]['unquoted'], [1])
         self.assertEqual(result['consensus'][0]['support'][0]['n'], 2)
         self.assertEqual([d['text'] for d in result['disagreements']], ['Speed.'])  # a disagreement needs two sides
         self.assertEqual(result['disagreements'][0]['papers'], [1, 2])
@@ -764,6 +766,20 @@ class LiteratureTests(ToolsTestCase):
         self.assertContains(client.get(r['Location']), 'from the papers of the collection')
         other = self.client_for(self.user('other', paid=True))
         self.assertEqual(other.post('/en/literature-review/collection/%d/' % collection.pk).status_code, 404)
+
+    def test_the_conclusions_of_an_open_text_are_read_and_its_references_left_out(self):
+        text = ('## 1 Introduction\n' + 'Intro words. ' * 300 + '\n## 5 Discussion\nBurial keeps plastics intact.\n'
+                '## 6 Conclusions\nWe conclude it lasts.\n## References\n[1] Someone 2001.\n')
+        self.assertEqual(literature.closing_sections(text),
+                         '## 5 Discussion Burial keeps plastics intact. ## 6 Conclusions We conclude it lasts.')
+        self.assertEqual(literature.closing_sections('No headings at all. ' * 300 + 'References [1] A.'), '')
+        paper = self.paper('2101.00001v1')
+        ArxivPaper.objects.filter(pk=paper.pk).update(license='http://creativecommons.org/licenses/by/4.0/')
+        PaperText.objects.create(arxiv_id='2101.00001v1', text=text, source='html')
+        with mock.patch('summarizer.sources.arxiv_text') as arxiv_text:
+            self.assertIn('We conclude it lasts.', literature.excerpt_of({'key': '2101.00001v1'}))
+        arxiv_text.assert_not_called()
+        self.assertEqual(literature.excerpt_of({'key': 'doi_10.1000--x', 'license': 'https://www.elsevier.com/tdm'}), '')
 
     def test_a_first_version_review_still_shows(self):
         user = self.user('pro', paid=True)

@@ -246,10 +246,10 @@ def citing_references(project, papers):
     ids = {s2_id(p['arxiv_id']): p['arxiv_id'] for p in papers if s2_id(p['arxiv_id'])}
     if not wanted or not ids:
         return set()
-    headers = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
     try:
-        response = requests.post(S2_BATCH, params={'fields': 'externalIds,references.externalIds'},
-                                  json={'ids': list(ids)}, headers=headers, timeout=60)
+        response = citations.s2_call(lambda headers: requests.post(
+            S2_BATCH, params={'fields': 'externalIds,references.externalIds'}, json={'ids': list(ids)}, headers=headers,
+            timeout=60))
         response.raise_for_status()
         rows = response.json()
     except (requests.RequestException, ValueError):

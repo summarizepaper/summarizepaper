@@ -892,6 +892,10 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .lit-findings li { margin-bottom: 10px; }
 .lit-coverage details { margin-top: 8px; }
 .lit-references li { scroll-margin-top: 80px; }
+.lit-table { min-width: 0; width: 100%; table-layout: fixed; }
+.lit-table td:first-child { min-width: 0; }
+.lit-table th:nth-child(1) { width: 27%; } .lit-table th:nth-child(2) { width: 13%; }
+@media (max-width: 700px) { .lit-table { min-width: 640px; } }
 .lit-support { margin: 4px 0 0; font-size: 14px; }
 .lit-support summary, .lit-abstract summary { cursor: pointer; color: var(--text-muted); font-size: 13px; }
 .lit-support blockquote.key-sentence { margin: 6px 0; }

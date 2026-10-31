@@ -33,7 +33,6 @@ import json
 import logging
 import math
 import re
-import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, wait
 
@@ -52,9 +51,9 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import (access, assistant, digest, evidence, exports, generated, library, mailcheck, result_share, similar,
+from . import (access, assistant, citations, digest, evidence, exports, generated, library, mailcheck, result_share, similar,
                sources)
-from .models import ArxivPaper, Collection, Generated
+from .models import ArxivPaper, Collection, Generated, PaperText
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,7 @@ RESERVED = 5  # places kept for founding and for recent papers
 ALTERNATES = 30  # screened papers left out, shown so the researcher can put them in
 ABSTRACT_CHARS = 2500
 EXCERPT_CHARS = 3500
-TEXT_THREADS = 6
+TEXT_THREADS = 4
 TEXT_SECONDS = 60  # the full texts not read by then are left out: their host is often down
 PER_DAY = 3
 REVISIONS_PER_DAY = 10
@@ -302,23 +301,16 @@ def citing(pool, now_year, since, limited):
 
 
 def s2_batch(ids):
-    """Semantic Scholar's abstract and identifiers of these papers, None when it does not answer. Our key is
-    shared by every tool and often over its rate: once more after a pause, then without the key."""
-    key = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
-    for headers, pause in ((key, 0), (key, 2), ({}, 0)) if key else (({}, 0), ({}, 2)):
-        time.sleep(pause)
-        try:
-            response = requests.post(S2_BATCH, params={'fields': 'abstract,externalIds'}, headers=headers,
-                                     json={'ids': ids}, timeout=60)
-            if response.status_code == 429:
-                continue
-            response.raise_for_status()
-            rows = response.json()
-            return rows if isinstance(rows, list) else None
-        except (requests.RequestException, ValueError):
-            break
-    logger.warning('Semantic Scholar did not answer for %d abstracts', len(ids))
-    return None
+    """Semantic Scholar's abstract and identifiers of these papers, None when it does not answer."""
+    try:
+        response = citations.s2_call(lambda headers: requests.post(
+            S2_BATCH, params={'fields': 'abstract,externalIds'}, headers=headers, json={'ids': ids}, timeout=60))
+        response.raise_for_status()
+        rows = response.json()
+        return rows if isinstance(rows, list) else None
+    except (requests.RequestException, ValueError):
+        logger.warning('Semantic Scholar did not answer for %d abstracts', len(ids))
+        return None
 
 
 def recover(pool, limited):
@@ -460,21 +452,27 @@ def closing_sections(text):
 
 
 def excerpt_of(paper):
-    """The closing sections of a paper's full text, when its license lets us read it ('' otherwise)."""
-    key = paper['key']
+    """The closing sections of a paper's full text, when its license lets us read it ('' otherwise). What the
+    database knows is read first, and the connection given back before any download: the site has 20
+    connections, and a download can take a minute."""
+    key, text = paper['key'], ''
     if sources.is_external(key):
         if not sources.is_open_license(paper.get('license')):
             return ''
-        text, source = sources.full_text(key)
-        if source == 'abstract':
-            return ''
+        known = sources.metadata(key)
+        generated.release_connection()
+        for kind, where in (known or {}).get('text', []):
+            text, _source = sources.read_candidate(kind, where)
+            if len(text) > sources.MIN_TEXT:
+                break
     else:
         row = ArxivPaper.objects.filter(arxiv_id=key).first()
-        if row is not None and sources.is_open_license(row.license):
-            from .paper_source import paper_text
-            text = paper_text(key)
+        stored = PaperText.objects.filter(arxiv_id=key).first() if row is not None and sources.is_open_license(row.license) else None
+        generated.release_connection()
+        if stored is not None and len(stored.text) > 3000:
+            text = stored.text
         else:
-            text, _source = sources.arxiv_text(key)
+            text, _source = sources.arxiv_text(key)  # its own license, read from arXiv (the cache, no database)
     return closing_sections(text) if text and len(text) > 3000 else ''
 
 
@@ -587,6 +585,7 @@ def statement(item, chosen, quoted=True):
                     out['papers'].append(n)
                 break
     out['support'] = support
+    out['unquoted'] = [n for n in out['papers'] if not any(s['n'] == n for s in support)]
     return out
 
 

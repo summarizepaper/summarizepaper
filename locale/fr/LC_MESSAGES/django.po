@@ -19222,3 +19222,16 @@ msgid "%(n)s more supporting sentence"
 msgid_plural "%(n)s more supporting sentences"
 msgstr[0] "%(n)s autre phrase à l’appui"
 msgstr[1] "%(n)s autres phrases à l’appui"
+
+msgid "No supporting sentence found in"
+msgstr "Aucune phrase à l’appui trouvée dans"
+
+msgid ": check what it says there."
+msgstr " : vérifiez ce qu’il en dit."
+
+msgid ""
+"Published in a journal or proceedings: %(published)s · preprints: "
+"%(preprints)s · deposits nobody reviewed: %(deposits)s."
+msgstr ""
+"Publiés dans une revue ou des actes : %(published)s · préprints : "
+"%(preprints)s · dépôts que personne n’a relus : %(deposits)s."

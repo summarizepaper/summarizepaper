@@ -66,7 +66,7 @@
         {% if c.years %}{% blocktrans with first=c.years.0 last=c.years.1 %}Published from {{ first }} to {{ last }}.{% endblocktrans %}{% endif %}
         {% blocktrans with founding=c.labels.founding recent=c.labels.recent reviews=c.labels.review %}{{ founding }} founding papers, {{ recent }} from the last three years, {{ reviews }} reviews.{% endblocktrans %}</p>
       {% endif %}
-      {% if c.statuses %}<p>{% blocktrans with published=c.statuses.published preprints=c.statuses.preprint deposits=c.statuses.deposit %}{{ published }} published in a journal or proceedings, {{ preprints }} preprints, {{ deposits }} deposits nobody reviewed.{% endblocktrans %}
+      {% if c.statuses %}<p>{% blocktrans with published=c.statuses.published preprints=c.statuses.preprint deposits=c.statuses.deposit %}Published in a journal or proceedings: {{ published }} · preprints: {{ preprints }} · deposits nobody reviewed: {{ deposits }}.{% endblocktrans %}
         {% if c.full_text is not None %}{% blocktrans with n=c.full_text %}The conclusions of {{ n }} open full texts were read too.{% endblocktrans %}{% endif %}</p>{% endif %}
       {% if c.findings %}<p>{% blocktrans with quoted=c.quoted findings=c.findings %}{{ quoted }} of the {{ findings }} findings are backed by a sentence found word for word in a paper.{% endblocktrans %}
         {% if c.statements %}{% blocktrans with quoted=c.statements_quoted total=c.statements %}So are {{ quoted }} of the {{ total }} points of agreement, disagreement and gaps.{% endblocktrans %}{% endif %}</p>{% endif %}

@@ -111,16 +111,31 @@ def s2_headers():
     return {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
 
 
+def s2_call(send, pauses=(1.5, 4)):
+    """send(headers) makes one Semantic Scholar request. Our key is shared by every tool and often over its rate
+    (429): the request is made again after each pause, then once without the key, whose limit is counted apart;
+    a refused key (403) goes straight to the call without it. The last response; a RequestException propagates."""
+    key = s2_headers()
+    attempts = [key] * (len(pauses) + 1) + ([{}] if key else [])
+    for i, headers in enumerate(attempts):
+        response = send(headers)
+        last = i == len(attempts) - 1
+        if last or response.status_code not in (403, 429) or (response.status_code == 403 and not headers):
+            return response
+        if response.status_code == 403:
+            return send({})
+        if i < len(pauses):
+            time.sleep(pauses[i])
+    return response
+
+
 def fetch_s2(arxiv_id):
     """{paperId: citing paper} from Semantic Scholar; None when it does not know the paper."""
     citing, offset = {}, 0
     for _ in range(MAX_PAGES):
-        for wait in (5, 20, None):
-            response = requests.get(S2 % s2_ref(arxiv_id), params={'fields': FIELDS, 'limit': PAGE, 'offset': offset},
-                                    headers=s2_headers(), timeout=60)
-            if response.status_code != 429 or wait is None:
-                break
-            time.sleep(wait)
+        response = s2_call(lambda headers: requests.get(S2 % s2_ref(arxiv_id), timeout=60, headers=headers,
+                                                        params={'fields': FIELDS, 'limit': PAGE, 'offset': offset}),
+                           pauses=(5, 20))
         if response.status_code == 404:
             return None
         response.raise_for_status()
@@ -212,8 +227,8 @@ def fetch_meta(paper_id):
             return ([ads_name(a) for a in docs[0].get('author') or []], ' '.join((docs[0].get('abstract') or '').split()),
                     (docs[0].get('doi') or [''])[0])
     time.sleep(SECONDS_BETWEEN_CALLS)  # right after this paper's citations, at Semantic Scholar's pace
-    response = requests.get(S2_PAPER % s2_ref(paper_id), params={'fields': 'authors,abstract,externalIds'},
-                            headers=s2_headers(), timeout=30)
+    response = s2_call(lambda headers: requests.get(S2_PAPER % s2_ref(paper_id), headers=headers, timeout=30,
+                                                    params={'fields': 'authors,abstract,externalIds'}))
     if response.status_code == 404:
         return None
     response.raise_for_status()

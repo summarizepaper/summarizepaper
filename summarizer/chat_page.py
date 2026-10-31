@@ -11,10 +11,8 @@ import datetime
 import logging
 import re
 import secrets
-import time
 
 import requests
-from django.conf import settings
 from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -172,21 +170,15 @@ def reference(title, year, authors, ref, also=()):
 def s2_references(arxiv_id):
     """The references Semantic Scholar knows, None when it does not answer (logged: a 403 is a wrong key,
     a 429 the limit of calls without one)."""
-    headers = {'x-api-key': settings.S2_API_KEY} if getattr(settings, 'S2_API_KEY', '') else {}
-    for wait in (S2_RETRY_SECONDS, None):  # a key allows about one call a second, shared with the citation alerts
-        try:
-            response = requests.get(S2_REFERENCES % citations.s2_ref(citations.base_id(arxiv_id) or arxiv_id),
-                                    params={'fields': 'title,year,authors,externalIds', 'limit': 500},
-                                    headers=headers, timeout=20)
-        except requests.RequestException:
-            logger.warning('Semantic Scholar unreachable for the references of %s', arxiv_id)
-            return None
-        if response.status_code != 429 or wait is None:
-            break
-        time.sleep(wait)
+    try:  # a key allows about one call a second, shared with the citation alerts
+        response = citations.s2_call(lambda headers: requests.get(
+            S2_REFERENCES % citations.s2_ref(citations.base_id(arxiv_id) or arxiv_id), headers=headers, timeout=20,
+            params={'fields': 'title,year,authors,externalIds', 'limit': 500}), pauses=(S2_RETRY_SECONDS,))
+    except requests.RequestException:
+        logger.warning('Semantic Scholar unreachable for the references of %s', arxiv_id)
+        return None
     if response.status_code != 200:
-        logger.warning('Semantic Scholar answered %s for the references of %s (key set: %s)',
-                       response.status_code, arxiv_id, bool(headers))
+        logger.warning('Semantic Scholar answered %s for the references of %s', response.status_code, arxiv_id)
         return None
     found = []
     for row in response.json().get('data') or []:
