@@ -29,7 +29,7 @@ from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, evidence, exports, generated, library, paper_source, sources
+from . import access, evidence, exports, generated, library, paper_source, sources, tdm
 from .models import ArxivPaper, Collection, Generated, PaperText, SummaryPaper
 
 COMPARE_MAX = 25  # papers read by one comparison (and by the open questions)
@@ -219,7 +219,7 @@ def reading(row):
     abstract = meta.get('abstract') or ''
     body, source = '', 'abstract'
     paper = ArxivPaper.objects.filter(arxiv_id=row.arxiv_id).first()
-    if paper is not None and sources.is_open_license(paper.license):
+    if paper is not None and tdm.may_read(paper.license, row.arxiv_id):
         full = paper_source.paper_text(row.arxiv_id)
         if full and len(full) > 3000:
             body = key_sections(full)

@@ -507,9 +507,9 @@ class PipelineTests(TestCase):
              mock.patch('summarizer.insight.create') as structured:
             summarize_now(MNRAS_KEY, 'en')
         self.assertEqual(structured.call_args.args[:2], (MNRAS_KEY, 'en'))
-        read.assert_not_called()
+        read.assert_not_called()  # ND may be read under the TDM exception, but the copy's site could not be asked (tdm.py)
         live = Client().get('/en/paper-live/%s/' % MNRAS_KEY).json()
-        self.assertEqual(live['source_scope'], 'abstract_license')
+        self.assertEqual(live['source_scope'], 'abstract_unavailable')
         self.assertEqual(live['status'], 'done')
         self.assertEqual(PaperText.objects.get(arxiv_id=MNRAS_KEY).source, 'abstract')
         self.assertIn('We reconstruct colours.', book.call_args.args[2])

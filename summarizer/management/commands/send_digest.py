@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, digest, letters, neighbours, publication_alerts, publication_status, scoops, students, teams, trends, usage, saved_searches
+from summarizer import audio, changes, citations, digest, letters, neighbours, publication_alerts, publication_status, scoops, students, tdm, teams, trends, usage, saved_searches
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,7 @@ class Command(BaseCommand):
                            ('placement new papers', lambda: students.watch_new_papers(now, budget, base_url=options['base_url'])),
                            ('topic maps', lambda: teams.watch_maps(now, budget, base_url=options['base_url'])),
                            ('paper neighbourhoods', lambda: neighbours.refresh_due(now)),
+                           ('text and data mining', lambda: tdm.run(now)),
                            # last: once a week it reads two weeks of arXiv and writes topics for a few minutes
                            ('trends', lambda: trends.update(now))):
             try:

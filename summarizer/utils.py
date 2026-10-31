@@ -381,17 +381,19 @@ def has_paper_text(arxiv_id):
 
 
 async def read_paper(arxiv_id, pdf_url):
-    """Full text of an openly licensed paper: arXiv HTML when it exists, else the PDF.
+    """Full text of a paper whose rights let us read it (see tdm.py): arXiv HTML when it exists, else the PDF.
 
     Papers from other sources are read by sources.full_text (publisher XML, then PDF)."""
     from .paper_source import fetch_arxiv_html
-    from . import sources
+    from . import sources, tdm
     if sources.is_external(arxiv_id):
         return await asyncio.to_thread(sources.in_thread, sources.full_text, arxiv_id)
     text = await asyncio.to_thread(fetch_arxiv_html, arxiv_id)
     if text:
         return text, 'html'
     response = await asyncio.to_thread(requests.get, pdf_url, timeout=120)
+    if tdm.document_reserves(response.headers):
+        return '', 'abstract'
     text, _ = await extract_text_from_pdf(response.content)
     return text, 'pdf'
 

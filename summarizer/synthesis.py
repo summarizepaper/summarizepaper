@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_GET
 
-from . import sources, utils, summary_text
+from . import sources, tdm, utils, summary_text
 from .models import ArxivPaper, SummaryPaper, PaperText
 
 
@@ -54,7 +54,7 @@ def fragment(request, arxiv_id):
 def license_scope(paper):
     if paper is None:
         return 'checking'
-    if not sources.is_open_license(paper.license):
+    if not tdm.may_read(paper.license, paper.arxiv_id, ask=False):  # a page load never waits for a site
         return 'abstract_license'
     source = PaperText.objects.filter(arxiv_id=paper.arxiv_id).values_list('source', flat=True).first()
     return ('abstract_unavailable' if source == 'abstract' else 'full_text') if source else 'full_text_allowed'

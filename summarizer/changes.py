@@ -1,7 +1,7 @@
 """What changed between two versions of an arXiv paper (Premium), and an email when a followed paper gets a new one.
 
 arXiv gives each version's abstract and comment ("v2: corrected Fig. 3"). When
-the paper's license lets us read it (see sources.is_open_license), the HTML of
+the paper's rights let us read it (see tdm.py), the HTML of
 both versions is read too and only the paragraphs that differ are given to the
 model, which says what changed: results, method, data, conclusions, an error
 fixed, or only the writing. A comparison is written once per paper, pair of
@@ -29,7 +29,7 @@ from django.utils import timezone, translation
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, digest, generated, mailcheck, paper_source, sources
+from . import access, digest, generated, mailcheck, paper_source, sources, tdm
 from .models import ArxivPaper, FollowedPaper, Generated, PaperVersion, VersionAlert
 
 logger = logging.getLogger(__name__)
@@ -98,11 +98,11 @@ def arxiv_license(base):
 
 
 def can_read(base):
-    """True when the paper's license lets us read its full text (the license is the same for every version):
-    the license we stored when the paper was summarized, or the one arXiv gives."""
+    """True when the paper's rights let us read its full text (the license is the same for every version):
+    the license we stored when the paper was summarized, or the one arXiv gives (see tdm.py)."""
     paper = (ArxivPaper.objects.filter(arxiv_id__startswith=base.replace('/', '--') + 'v')
              .exclude(license=None).exclude(license='').first())
-    return sources.is_open_license(paper.license if paper else arxiv_license(base))
+    return tdm.may_read(paper.license if paper else arxiv_license(base), base)
 
 
 def license_preview(base):
@@ -111,7 +111,7 @@ def license_preview(base):
                .exclude(license__isnull=True).exclude(license='')
                .values_list('license', flat=True).first())
     license = license or cache.get('arxiv-license:%s' % base)
-    return 'unknown' if not license else ('allowed' if sources.is_open_license(license) else 'restricted')
+    return 'unknown' if not license else ('allowed' if tdm.may_read(license, base, ask=False) else 'restricted')
 
 
 def version_html(base, version):

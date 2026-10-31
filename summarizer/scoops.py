@@ -52,7 +52,7 @@ from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, citations, digest, generated, journal_taxonomy, mailcheck, missed, similar, sources, trends
+from . import access, citations, digest, generated, journal_taxonomy, mailcheck, missed, similar, sources, tdm, trends
 from .models import ArxivBatch, Collection, DigestVector, ScoopMatch, WatchedProject
 
 logger = logging.getLogger(__name__)
@@ -645,12 +645,12 @@ def competitor_suggestions(project, matches):
 # --- full-text comparison -----------------------------------------------------------
 
 def paper_full_text(arxiv_id):
-    """The paper's full text when its license lets us read it, else ''."""
+    """The paper's full text when its rights let us read it (see tdm.py), else ''."""
     if arxiv_id.startswith(OPENREVIEW_PREFIX):
         return ''
     if sources.is_external(arxiv_id):
         paper = sources.metadata(arxiv_id)
-        if not paper or not sources.is_open_license(paper.get('license', '')):
+        if not paper or not tdm.may_read(paper.get('license', ''), arxiv_id):
             return ''
         text, source = sources.full_text(arxiv_id)
         return text if source != 'abstract' else ''
@@ -658,7 +658,7 @@ def paper_full_text(arxiv_id):
     text, _ = sources.arxiv_text(base)
     if text:
         return text
-    # most arXiv licenses do not let us read the preprint, but its journal version may be open access
+    # the preprint may be closed to mining (see tdm.py), but its journal version may be open access
     try:
         record = next(iter(digest.fetch_ids([base])), None)
     except digest.ArxivUnavailable:

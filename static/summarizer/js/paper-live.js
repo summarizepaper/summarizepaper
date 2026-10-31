@@ -12,13 +12,13 @@
     checking: 'Vérification de la licence et de l’accès au texte intégral…',
     full_text_allowed: 'La licence permet l’analyse du texte intégral. Nous vérifions sa disponibilité ; un éventuel recours à l’abstract sera signalé ici.',
     full_text: 'Synthèse fondée sur le texte intégral de l’article.',
-    abstract_license: 'Abstract et métadonnées uniquement : le texte intégral n’est pas analysé en raison de la licence de cet article.',
+    abstract_license: 'Abstract et métadonnées uniquement : les droits d’analyse du texte intégral de cet article ne sont pas établis (licence, conditions de la source ou opposition de l’ayant droit).',
     abstract_unavailable: 'Abstract et métadonnées uniquement : le texte intégral n’a pas pu être récupéré. Vérifiez les détails dans l’article original.'
   } : {
     checking: 'Checking the license and access to the full text…',
     full_text_allowed: 'The license permits full-text analysis. We are checking availability and will indicate any fallback to the abstract here.',
     full_text: 'This synthesis is based on the paper’s full text.',
-    abstract_license: 'Abstract and metadata only: this paper’s license does not permit full-text analysis here.',
+    abstract_license: 'Abstract and metadata only: the rights to analyse this paper’s full text are not established (license, source terms or a rights holder’s reservation).',
     abstract_unavailable: 'Abstract and metadata only: the full text could not be retrieved. Check details in the original paper.'
   };
   // Only server-sanitized prose tags are admitted; no attributes, links, images or scripts.

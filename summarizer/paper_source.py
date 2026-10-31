@@ -8,8 +8,9 @@ tried first and the PDF is the fallback.
 PaperText stores the text that was read, so answering a question never
 needs the FAISS index. Papers summarized before PaperText existed get their
 text rebuilt once from the chunks stored in their FAISS docstore. Those indexes
-often kept only the start of the paper: an openly licensed paper whose index
-text is short is read again from arXiv instead.
+often kept only the start of the paper: a paper whose index text is short
+is read again from arXiv instead, when its rights let us read it (see tdm.py).
+So is a text forgotten after it was read under the TDM exception.
 """
 import logging
 import pickle
@@ -66,6 +67,10 @@ def fetch_arxiv_html(arxiv_id):
     # papers without an HTML rendering redirect to the abstract page or return 404
     if response.status_code != 200 or '/html/' not in response.url:
         return None
+    from .tdm import document_reserves
+    if document_reserves(response.headers, response.text):
+        logger.info('arXiv HTML of %s reserves text and data mining', arxiv_id)
+        return None
     text = html_to_text(response.text)
     return text if len(text) > 2000 else None
 
@@ -115,10 +120,11 @@ def text_from_index(arxiv_id):
 
 
 def read_again(arxiv_id):
-    """(text, source) of an openly licensed arXiv paper read from arXiv: its HTML, else its PDF. ('', '') otherwise."""
-    from . import sources
+    """(text, source) of an arXiv paper whose rights let us read it, read from arXiv: its HTML, else its PDF.
+    ('', '') otherwise."""
+    from . import sources, tdm
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
-    if paper is None or sources.is_external(arxiv_id) or not sources.is_open_license(paper.license):
+    if paper is None or sources.is_external(arxiv_id) or not tdm.may_read(paper.license, arxiv_id):
         return '', ''
     text = fetch_arxiv_html(arxiv_id)
     if text:
@@ -130,6 +136,12 @@ def read_again(arxiv_id):
 def paper_text(arxiv_id):
     """Best available text of a paper: stored text, rebuilt index text, or the abstract."""
     row = PaperText.objects.filter(arxiv_id=arxiv_id).first()
+    if row is not None and row.source == 'forgotten':
+        fresh, source = read_again(arxiv_id)
+        if fresh:
+            store_text(arxiv_id, fresh, source)
+            return fresh
+        row = None
     if row is not None and not (row.source == 'index' and len(row.text) < SHORT_INDEX):
         return row.text
     text = row.text if row is not None else text_from_index(arxiv_id)

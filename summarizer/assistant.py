@@ -24,7 +24,7 @@ from django.utils.translation import get_language_info
 
 from .models import AIassistant, ArxivPaper, PaperText
 from .paper_source import paper_text
-from . import sources, usage, chat_vision, publication_status
+from . import sources, tdm, usage, chat_vision, publication_status
 from .utils import ai_models, chat_params
 
 logger = logging.getLogger(__name__)
@@ -120,6 +120,9 @@ Several papers are supplied. Each has a "Cite as" tag, such as [Smith et al. 202
 
 RESTRICTED_NOTE = ('Only the title, authors and abstract are available for this paper: its license does not allow us '
                    'to read the full text. Say so when a question needs more than that.')
+# a text read under the TDM exception (see tdm.py) may be analysed, not published again
+QUOTE_NOTE = ('This paper\'s license does not allow republishing it: answer in your own words and quote at most a '
+              'sentence at a time, never whole paragraphs, sections or tables, even when asked to.')
 SUPPLIED = {
     'full': 'the full text',
     'abstract': 'the title, authors and abstract only (the full text could not be read)',
@@ -325,7 +328,7 @@ def cite_tags(papers):
 def _readable(paper):
     """(the paper's own words we may give the model, where they were read, the kind of text)."""
     # the rule the summary followed when it read the paper (see consumers.LoadingConsumer)
-    if not sources.is_open_license(paper.license):
+    if not tdm.may_read(paper.license, paper.arxiv_id):
         return paper.abstract or '', 'abstract', 'restricted'
     text = paper_text(paper.arxiv_id)
     source = PaperText.objects.filter(arxiv_id=paper.arxiv_id).values_list('source', flat=True).first() or 'abstract'
@@ -362,7 +365,7 @@ def _paper_source(paper, budget, tag='', readable=None, question=''):
     left_out, coverage = [], 1.0
     if kind == 'full':
         text, coverage, left_out = fit(text, budget, question)
-        body = text
+        body = text + ('' if sources.is_open_license(paper.license) else '\n\n' + QUOTE_NOTE)
     else:
         text = text[:budget]
         body = 'Abstract: %s' % text + ('\n\n' + RESTRICTED_NOTE if kind == 'restricted' else '')

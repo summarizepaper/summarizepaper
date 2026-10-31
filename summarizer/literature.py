@@ -52,7 +52,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from . import (access, assistant, citations, digest, evidence, exports, generated, library, mailcheck, result_share, similar,
-               sources)
+               sources, tdm)
 from .models import ArxivPaper, Collection, Generated, PaperText
 
 logger = logging.getLogger(__name__)
@@ -452,22 +452,24 @@ def closing_sections(text):
 
 
 def excerpt_of(paper):
-    """The closing sections of a paper's full text, when its license lets us read it ('' otherwise). What the
+    """The closing sections of a paper's full text, when its rights let us read it ('' otherwise, see tdm.py). What the
     database knows is read first, and the connection given back before any download: the site has 20
     connections, and a download can take a minute."""
     key, text = paper['key'], ''
     if sources.is_external(key):
-        if not sources.is_open_license(paper.get('license')):
+        if not tdm.may_read(paper.get('license'), key):
             return ''
         known = sources.metadata(key)
         generated.release_connection()
         for kind, where in (known or {}).get('text', []):
+            if not sources.may_read_copy(known, kind, where):
+                continue
             text, _source = sources.read_candidate(kind, where)
             if len(text) > sources.MIN_TEXT:
                 break
     else:
         row = ArxivPaper.objects.filter(arxiv_id=key).first()
-        stored = PaperText.objects.filter(arxiv_id=key).first() if row is not None and sources.is_open_license(row.license) else None
+        stored = PaperText.objects.filter(arxiv_id=key).first() if row is not None and tdm.may_read(row.license, key) else None
         generated.release_connection()
         if stored is not None and len(stored.text) > 3000:
             text = stored.text

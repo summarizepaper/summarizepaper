@@ -6,7 +6,7 @@ import asyncio
 import re
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
-from summarizer import access, assistant, chat_table, generated, insight, keypoints, neighbours, sources, summary_text
+from summarizer import access, assistant, chat_table, generated, insight, keypoints, neighbours, sources, summary_text, tdm
 import logging
 
 logger = logging.getLogger(__name__)
@@ -121,7 +121,8 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
             
 
             print('lic',license)
-            public = 1 if sources.is_open_license(license) else 0
+            # the rights to read the full text, apart from the license's (see tdm.py)
+            public = 1 if await asyncio.to_thread(tdm.may_read, license, paper_id) else 0
 
 
             print('pubbbllllliiiiiiccccc',public)
@@ -131,6 +132,8 @@ class EmbeddingConsumer(AsyncWebsocketConsumer):
                 if public==1:
                     #response = requests.get(url)
                     book_text, text_source = await utils.read_paper(paper_id, url)
+                    if not (book_text or '').strip():  # the document itself reserved mining
+                        book_text, text_source = 'Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.', 'abstract'
 
                     ###book_text = utils.extract_text_from_pdf(my_raw_data)
                     print('raw data done')
@@ -265,7 +268,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         
 
         print('lic',license)
-        public = 1 if sources.is_open_license(license) else 0
+        # the rights to read the full text, apart from the license's (see tdm.py)
+        public = 1 if await asyncio.to_thread(tdm.may_read, license, arxiv_id) else 0
 
 
         print('pubbbllllliiiiiiccccc',public)
@@ -283,6 +287,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 
 
                 book_text, text_source = await utils.read_paper(arxiv_id, url)
+                if not (book_text or '').strip():  # the document itself reserved mining
+                    book_text, text_source = 'Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.', 'abstract'
 
                         
                 print('ici')
@@ -350,7 +356,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         '''
 
         print('lic',license)
-        public = 1 if sources.is_open_license(license) else 0
+        # the rights to read the full text, apart from the license's (see tdm.py)
+        public = 1 if await asyncio.to_thread(tdm.may_read, license, arxiv_id) else 0
 
 
         print('pubbbllllliiiiiiccccc',public)
@@ -361,6 +368,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             if public==1:
                 #response = requests.get(url)
                 book_text, text_source = await utils.read_paper(arxiv_id, url)
+                if not (book_text or '').strip():  # the document itself reserved mining
+                    book_text, text_source = 'Authors: '+str(authors)+'. Title: '+title+'. Abstract: '+abstract+'.', 'abstract'
 
 
                 

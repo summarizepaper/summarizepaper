@@ -16,7 +16,7 @@ from django.http import JsonResponse
 from django.utils.translation import get_language
 from django.views.decorators.http import require_POST
 
-from . import access, comparison, generated, library, paper_source, sources
+from . import access, comparison, generated, library, paper_source, tdm
 from .models import ArxivPaper, Collection
 
 SECTION_RE = re.compile(r'^##\s*(?:[\dIVX.]+\s*)?.*(limitation|future|outlook|discussion|conclusion|open (?:question|problem)|'
@@ -38,7 +38,7 @@ def closing_sections(text):
 def paper_block(row):
     """What the model reads of one paper of the collection."""
     paper = ArxivPaper.objects.filter(arxiv_id=row.arxiv_id).first()
-    if paper is not None and sources.is_open_license(paper.license):
+    if paper is not None and tdm.may_read(paper.license, row.arxiv_id):
         text = paper_source.paper_text(row.arxiv_id)
         if text and len(text) > 3000:
             return '<paper id="%s">\nTitle: %s\nAbstract: %s\nSections on what is left open:\n%s\n</paper>' % (

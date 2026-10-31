@@ -13,7 +13,7 @@ from .tool_list import TOOL_GROUPS
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, neighbours, publication_status, reading, sources, exports, insight, summary_text
+from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, neighbours, publication_status, reading, sources, exports, insight, summary_text, tdm
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -526,20 +526,20 @@ def arxiv_unavailable(request, arxiv_id):
 
 
 def license_display(url):
-    """(label shown, whether the full text may be read) of a paper's license."""
+    """(label shown, whether the full text may be read: see tdm.py, without asking any site) of a paper's license."""
     if not url:
         return '', False
-    return sources.license_label(url), sources.is_open_license(url)
+    return sources.license_label(url), tdm.license_status(url) in tdm.READABLE
 
 
 def arxiv_version_redirect(arxiv_id):
     """For a DOI first opened here: its arXiv page, when there is an arXiv version and the DOI's own
-    license does not let us read the text (the arXiv version may, and its page is the one people share)."""
+    rights do not let us read the text (the arXiv version may, and its page is the one people share)."""
     try:
         paper = sources.metadata(arxiv_id)
     except sources.SourceUnavailable:
         return None
-    if paper and paper['arxiv_id'] and not sources.is_open_license(paper['license']):
+    if paper and paper['arxiv_id'] and not tdm.may_read(paper['license'], arxiv_id):
         return redirect(reverse('arxividpage', kwargs={'arxiv_id': digest.site_id(paper['arxiv_id'])}))
     return None
 

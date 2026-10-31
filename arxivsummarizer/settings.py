@@ -45,6 +45,8 @@ DEFAULT_FROM_EMAIL = 'SummarizePaper <contact@summarizepaper.com>'
 MAILCHECK_DNS = sys.argv[1:2] != ['test']
 # per-visitor request limits (access.throttled); off in the test suite, whose requests all come from one address
 THROTTLE = sys.argv[1:2] != ['test']
+# sites asked whether they reserve text and data mining (summarizer/tdm.py); never from the test suite
+TDM_CHECK_NETWORK = sys.argv[1:2] != ['test']
 
 #Premium subscriptions, see summarizer/billing.py
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')

@@ -11,7 +11,7 @@ measured it or whether it is their interpretation.
 import json
 import logging
 
-from . import generated, paper_source, sources
+from . import generated, paper_source, sources, tdm
 from .assistant import SOURCE_POLICY
 from .models import ArxivPaper, Generated, PaperText
 from .presskit import normalized, quote_match
@@ -66,7 +66,7 @@ def structured(answer, source, abstract_only):
 def source_text(paper):
     """(text given to the model, abstract_only)."""
     stored = PaperText.objects.filter(arxiv_id=paper.arxiv_id).only('source').first()
-    if sources.is_open_license(paper.license) and not (stored and stored.source == 'abstract'):
+    if tdm.may_read(paper.license, paper.arxiv_id) and not (stored and stored.source == 'abstract'):
         text = paper_source.paper_text(paper.arxiv_id)
         if text and normalized(text) != normalized(paper.abstract or ''):
             return text[:MAX_CHARS], False

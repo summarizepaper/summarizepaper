@@ -19,8 +19,10 @@ Anything else is an arXiv id. Where the metadata and the text come from:
                        fails; text from Europe PMC, an open PDF, or the copy
                        OpenAlex keeps (content API, needs OPENALEX_API_KEY)
 
-As for arXiv, the full text is read only when the license allows building on
-it (see is_open_license); otherwise the summary is written from the abstract.
+As for arXiv, the full text is read only when the rights of the copy read
+allow mining it (see tdm.py); otherwise the summary is written from the abstract.
+OpenAlex lists each copy of a work with its own license: those whose rights
+are established are read first, and a copy without a license is not read.
 Metadata is kept in ExternalPaper and refreshed at most once a day.
 """
 import contextlib
@@ -37,6 +39,8 @@ from xml.etree import ElementTree
 import requests
 from django.conf import settings
 from django.utils import timezone
+
+from . import tdm
 
 logger = logging.getLogger(__name__)
 
@@ -290,7 +294,7 @@ def _paper(**fields):
     """A paper as every source returns it; 'text' lists where its full text may be read, best first."""
     paper = {'key': '', 'source': '', 'source_name': '', 'title': '', 'abstract': '', 'authors': [],
              'affiliations': [], 'published': '', 'doi': '', 'url': '', 'journal': '', 'category': '',
-             'license': '', 'text': [], 'arxiv_id': ''}
+             'license': '', 'text': [], 'arxiv_id': '', 'licenses': {}}
     paper.update(fields)
     paper['license'] = normalize_license(paper['license'])
     paper['title'] = _clean(paper['title'])
@@ -485,12 +489,15 @@ def openalex_paper(work):
     pmcid = (work.get('ids') or {}).get('pmcid') or ''
     if pmcid:
         text.append(('epmc', pmcid.rstrip('/').rsplit('/', 1)[-1].upper()))
-    # repositories first: publishers often refuse scripts
-    locations = sorted(work.get('locations') or [], key=lambda l: ((l.get('source') or {}).get('type') != 'repository'))
+    # the copies whose rights are established first, then repositories: publishers often refuse scripts
+    licenses = {}
+    locations = sorted(work.get('locations') or [], key=lambda l: (
+        tdm.RANK[tdm.license_status(normalize_license(l.get('license')))], (l.get('source') or {}).get('type') != 'repository'))
     for location in locations:
         url = location.get('pdf_url')
         if url and 'arxiv.org' not in url and ('pdf', url) not in text:
             text.append(('pdf', url))
+            licenses[url] = normalize_license(location.get('license'))  # each copy has its own rights
     if doi and not pmcid:
         text.append(('epmc_doi', doi))  # Europe PMC often has the open text OpenAlex does not link
     arxiv_id = arxiv_of(work)
@@ -516,7 +523,7 @@ def openalex_paper(work):
         url=primary.get('landing_page_url') or ('https://doi.org/%s' % doi if doi else ''),
         journal=('%s preprint' % venue if is_preprint and venue else venue),
         category=((topic.get('field') or {}).get('display_name') or '')[:50],
-        license=best.get('license') or '', text=text, arxiv_id=arxiv_id)
+        license=best.get('license') or '', text=text, arxiv_id=arxiv_id, licenses=licenses)
 
 
 def fetch_openalex(doi):
@@ -720,6 +727,9 @@ def _download(url, params=None):
             if response.status_code != 200:
                 logger.info('Full text %s: HTTP %s', url, response.status_code)
                 return None
+            if tdm.document_reserves(response.headers):
+                logger.info('Full text %s: its rights holder reserves text and data mining', url)
+                return None
             chunks, size = [], 0
             for chunk in response.iter_content(1 << 16):
                 size += len(chunk)
@@ -780,7 +790,7 @@ def read_candidate(kind, where):
 
 
 def arxiv_text(arxiv_id):
-    """(text, source) of the arXiv version of a paper, when its own arXiv license lets us read it."""
+    """(text, source) of the arXiv version of a paper, when the rights of its own arXiv license let us read it."""
     import asyncio
     from .paper_source import fetch_arxiv_html
     from .utils import get_arxiv_metadata
@@ -789,7 +799,7 @@ def arxiv_text(arxiv_id):
     except Exception:
         logger.info('arXiv metadata of %s could not be read', arxiv_id, exc_info=True)
         return '', ''
-    if not row or not row[0] or not is_open_license(row[12]):
+    if not row or not row[0] or tdm.arxiv_status(row[12]) not in tdm.READABLE:
         return '', ''
     text = fetch_arxiv_html(arxiv_id)
     if text:
@@ -807,6 +817,7 @@ def later_places(key, paper):
         fresh = None
     if fresh:
         places += fresh['text']
+        paper['licenses'] = {**fresh.get('licenses', {}), **paper.get('licenses', {})}
     if paper['doi'] and paper['source'] != 'crossref':
         try:
             crossref = fetch_crossref(paper['doi'])
@@ -817,10 +828,23 @@ def later_places(key, paper):
     return places
 
 
+def may_read_copy(paper, kind, where):
+    """Whether the rights of one copy of a paper (one of paper['text']) let the model read it (see tdm.py)."""
+    if kind == 'arxiv':
+        return True  # arxiv_text checks the rights of the arXiv version
+    license_url = paper.get('licenses', {}).get(where, paper['license']) if kind == 'pdf' else paper['license']
+    url = {'epmc': EPMC_XML % where, 'epmc_doi': EPMC_XML % where,
+           'openalex_tei': OPENALEX_CONTENT % (where, 'grobid-xml'), 'openalex_pdf': OPENALEX_CONTENT % (where, 'pdf')}
+    status = tdm.status(license_url, url.get(kind, where))
+    if status not in tdm.READABLE:
+        logger.info('Not reading %s %s of %s: %s', kind, where, paper['key'], status)
+    return status in tdm.READABLE
+
+
 def full_text(key):
     """(text, source) of the paper: 'xml' or 'pdf', or its header and abstract with 'abstract' when no copy could be read.
 
-    Only called for openly licensed papers (see is_open_license).
+    Only called when the paper's license may let us read it (see tdm.may_read); each copy is checked before it is read.
     """
     paper = metadata(key)
     if paper is None:
@@ -831,6 +855,8 @@ def full_text(key):
             if (kind, where) in tried or (kind == 'openalex_pdf' and tei_read):
                 continue  # a TEI was made from this PDF: the PDF has no more text, and costs as much
             tried.add((kind, where))
+            if not may_read_copy(paper, kind, where):
+                continue
             text, source = read_candidate(kind, where)
             if len(text) > MIN_TEXT:
                 return text, source
@@ -1092,7 +1118,7 @@ def search(query, kind='', per_page=25, field='all', filters=None, page=1, keep=
         'more_authors': len(paper['authors']) > 6, 'venue': paper['journal'] or paper['source_name'],
         'published': paper['published'], 'license': license_label(paper['license']),
         'abstract': paper.get('abstract', ''),
-        'open': is_open_license(paper['license']), 'arxiv_id': paper['arxiv_id'].replace('/', '--'),
+        'open': tdm.license_status(paper['license']) in tdm.READABLE, 'arxiv_id': paper['arxiv_id'].replace('/', '--'),
     } for paper in papers], has_more=getattr(papers, 'has_more', len(papers) >= per_page))
 
 
