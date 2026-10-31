@@ -212,6 +212,10 @@
   }
 
   var undated = nodes.filter(function (n) { return !n.time && !n.hidden; }).length;
+  // the legend names only the groups the map shows
+  box.querySelectorAll('.nb-map-legend [data-group]').forEach(function (entry) {
+    entry.hidden = !dated.some(function (n) { return n.group === entry.dataset.group; });
+  });
   if (undated) box.appendChild(el('p', t.undated.replace('{n}', undated), 'nb-map-legend'));
   draw();
   var resizing;

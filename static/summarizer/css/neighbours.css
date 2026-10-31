@@ -74,6 +74,7 @@
 .nb-map .main-line { stroke: var(--accent); stroke-dasharray: 4 4; }
 .nb-map .main-label { fill: var(--accent); font: 700 12px var(--font); }
 .nb-map-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+.nb-map-legend span[hidden] { display: none; }
 .nb-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .nb-map-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .nb-panel { margin-top: 12px; padding: 16px 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }

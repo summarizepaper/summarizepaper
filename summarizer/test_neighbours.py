@@ -144,10 +144,11 @@ class PageTests(NeighbourhoodTestCase):
         url = '/en/neighbours/2101.00001v1/why/'
         with mock.patch('summarizer.generated.chat_json', side_effect=self.why_answer) as chat:
             first = Client().post(url).json()
+            written = chat.call_count
             again = Client().post(url).json()
         self.assertIn(first['status'], ('pending', 'done'))
         self.assertEqual(again['status'], 'done')
-        self.assertEqual(chat.call_count, 1)
+        self.assertEqual(chat.call_count, written)  # written once for every reader
         by_ref = again['data']['by_ref']
         first_ref = neighbours.shown(neighbours.stored(self.main.arxiv_id))[0]['ref']
         self.assertEqual(by_ref[first_ref]['relation'], 'same_question')
@@ -334,3 +335,30 @@ class SemanticScholarPacingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(call.call_count, 2)
         self.assertEqual(sleep.call_args_list[0].args, (1.5,))  # the wait after the 429; the pace was already kept
+
+
+class WhyRoundsTests(NeighbourhoodTestCase):
+    def test_the_neighbours_the_model_skipped_are_asked_again(self):
+        data = neighbours.store(self.main.arxiv_id)
+        Generated.objects.filter(kind=neighbours.KIND).update(content=json.dumps(dict(data, clusters=[[0, 1, 2]])))
+        answers = [{'neighbours': [{'n': 1, 'relation': 'same_question', 'why': 'First.'}], 'groups': []},
+                   {'neighbours': [{'n': 2, 'relation': 'review', 'why': 'Second.'}], 'groups': [{'g': 1, 'name': 'Disks'}]},
+                   {'neighbours': [{'n': n, 'relation': 'context', 'why': 'Later.'} for n in range(3, 20)], 'groups': []}]
+        with mock.patch('summarizer.generated.chat_json', side_effect=answers) as chat:
+            result = neighbours.why_work(self.main.arxiv_id, 'en')(0)
+        self.assertEqual(chat.call_count, 3)
+        second = json.loads(chat.call_args_list[1].args[0])
+        self.assertNotIn(1, [n['n'] for n in second['neighbours']])  # only what is missing
+        self.assertEqual(len(result['by_ref']), len(result['refs']))
+        self.assertEqual(result['clusters'][0]['name'], 'Disks')
+
+    def test_sentences_written_for_too_few_papers_are_written_again_the_next_day(self):
+        data = neighbours.store(self.main.arxiv_id)
+        items = neighbours.shown(data)
+        row = Generated.objects.create(kind=neighbours.WHY_KIND, key=self.main.arxiv_id, lang='en', status='done',
+                                       content=json.dumps({'refs': [i['ref'] for i in items],
+                                                           'by_ref': {items[0]['ref']: {'relation': '', 'why': 'x'}}}))
+        self.assertTrue(neighbours.covers(row, items))  # not again the same day
+        Generated.objects.filter(pk=row.pk).update(updated=timezone.now() - datetime.timedelta(days=2))
+        row.refresh_from_db()
+        self.assertFalse(neighbours.covers(row, items))

@@ -87,9 +87,9 @@
    data-undated="{% trans '{n} papers without a date are only in the list below.' %}"
    data-preprint="{% trans 'preprint, not peer reviewed' %}" data-topics="{% trans 'Sub-topics:' %}" data-cited-times="{% trans 'cited {n} times' %}">
     <div class="nb-map-legend">
-      <span><i style="background:#4f46e5"></i>{% trans 'Closest papers' %}</span>
-      <span><i style="background:#d97706"></i>{% trans 'Prior work it builds on' %}</span>
-      <span><i style="background:#059669"></i>{% trans 'Papers that cite it' %}</span>
+      <span data-group="close"><i style="background:#4f46e5"></i>{% trans 'Closest papers' %}</span>
+      <span data-group="prior"><i style="background:#d97706"></i>{% trans 'Prior work it builds on' %}</span>
+      <span data-group="followup"><i style="background:#059669"></i>{% trans 'Papers that cite it' %}</span>
     </div>
   </div>
   <div class="nb-panel" id="nb-panel" hidden aria-live="polite"></div>

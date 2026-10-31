@@ -545,6 +545,9 @@ def shown(data):
     return [i for group, (_title, count) in GROUPS.items() for i in [x for x in data['items'] if x.get('group') == group][:count]]
 
 
+WHY_ROUNDS = 3  # the model sometimes answers for a few neighbours only: the others are asked again
+
+
 def why_work(arxiv_id, lang):
     def work(pk):
         paper = ArxivPaper.objects.get(arxiv_id=arxiv_id)
@@ -554,29 +557,37 @@ def why_work(arxiv_id, lang):
             return {'refs': [], 'by_ref': {}, 'clusters': []}
         groups = [[data['items'][n] for n in members if n < len(data['items'])] for members in data.get('clusters') or []]
         reading = insight.for_page(arxiv_id, lang) or insight.for_page(arxiv_id, 'en') or {}
-        context = {'paper': {'title': paper.title, 'question': reading.get('question', ''), 'method': reading.get('method', ''),
-                             'abstract': ' '.join((paper.abstract or '').split())[:2000]},
-                   'neighbours': [{'n': n, 'title': i['title'], 'abstract': i['abstract'] or '(no abstract)',
-                                   'link': 'cited by the paper' if i.get('cited') else 'cites the paper' if i.get('cites') else ''}
-                                  for n, i in enumerate(items, 1)],
-                   'groups': [{'g': g, 'titles': [i['title'] for i in members]} for g, members in enumerate(groups, 1)]}
+        about = {'title': paper.title, 'question': reading.get('question', ''), 'method': reading.get('method', ''),
+                 'abstract': ' '.join((paper.abstract or '').split())[:2000]}
         generated.release_connection()
-        answer = generated.chat_json(json.dumps(context, ensure_ascii=False), paid=False, max_tokens=2800, timeout=120,
-                                     system=WHY_SYSTEM.format(language=generated.language_name(lang)))
-        by_ref = {}
-        for row in answer.get('neighbours') or []:
-            if not isinstance(row, dict) or not str(row.get('n', '')).isdigit():
-                continue
-            n = int(row['n'])
-            if 1 <= n <= len(items):
-                relation = row.get('relation') if row.get('relation') in RELATIONS else ''
-                by_ref[items[n - 1]['ref']] = {'relation': relation, 'why': insight.clean(row.get('why'), 300)}
-        names = {}
-        for row in answer.get('groups') or []:
-            if isinstance(row, dict) and str(row.get('g', '')).isdigit() and 1 <= int(row['g']) <= len(groups):
-                names[int(row['g'])] = insight.clean(row.get('name'), 60)
+        by_ref, names = {}, {}
+        for _round in range(WHY_ROUNDS):
+            asked = [(n, i) for n, i in enumerate(items, 1) if i['ref'] not in by_ref]
+            unnamed = [(g, members) for g, members in enumerate(groups, 1) if g not in names]
+            if not asked and not unnamed:
+                break
+            context = {'paper': about,
+                       'neighbours': [{'n': n, 'title': i['title'], 'abstract': i['abstract'] or '(no abstract)',
+                                       'link': 'cited by the paper' if i.get('cited') else 'cites the paper' if i.get('cites') else ''}
+                                      for n, i in asked],
+                       'groups': [{'g': g, 'titles': [i['title'] for i in members]} for g, members in unnamed]}
+            answer = generated.chat_json(json.dumps(context, ensure_ascii=False), paid=False, max_tokens=2800, timeout=120,
+                                         system=WHY_SYSTEM.format(language=generated.language_name(lang)))
+            wanted = dict(asked)
+            for row in answer.get('neighbours') or []:
+                if not isinstance(row, dict) or not str(row.get('n', '')).isdigit() or int(row['n']) not in wanted:
+                    continue
+                why = insight.clean(row.get('why'), 300)
+                if why:
+                    relation = row.get('relation') if row.get('relation') in RELATIONS else ''
+                    by_ref[wanted[int(row['n'])]['ref']] = {'relation': relation, 'why': why}
+            for row in answer.get('groups') or []:
+                if isinstance(row, dict) and str(row.get('g', '')).isdigit() and 1 <= int(row['g']) <= len(groups):
+                    name = insight.clean(row.get('name'), 60)
+                    if name:
+                        names[int(row['g'])] = name
         return {'refs': [i['ref'] for i in items], 'by_ref': by_ref,
-                'clusters': [{'refs': [i['ref'] for i in members], 'name': names.get(g, '')}
+                'clusters': [{'refs': [i['ref'] for i in members], 'name': names[g]}
                              for g, members in enumerate(groups, 1) if names.get(g)]}
     return work
 
@@ -585,8 +596,18 @@ def why_row(arxiv_id, lang):
     return Generated.objects.filter(kind=WHY_KIND, key=arxiv_id, lang=lang).first()
 
 
+WHY_COVERED = 0.8  # share of the shown papers that must have their sentence, or the sentences are written again...
+WHY_RETRY = datetime.timedelta(days=1)  # ...once a day at most
+
+
 def covers(row, items):
-    return row is not None and row.status == 'done' and set(i['ref'] for i in items) <= set(row.data().get('refs') or [])
+    if row is None or row.status != 'done':
+        return False
+    data = row.data()
+    if not set(i['ref'] for i in items) <= set(data.get('refs') or []):
+        return False
+    written = sum(1 for i in items if i['ref'] in (data.get('by_ref') or {}))
+    return written >= WHY_COVERED * len(items) or row.updated > timezone.now() - WHY_RETRY
 
 
 def start_why(arxiv_id, lang):
