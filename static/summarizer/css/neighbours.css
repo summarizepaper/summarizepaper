@@ -19,6 +19,11 @@
 .nb-level-related { background: var(--bg-soft); color: var(--text-muted); }
 .nb-relation { background: var(--accent-soft); color: var(--accent-hover); }
 .nb-link { background: #fffbeb; color: #b45309; }
+.nb-tags .nb-hide { margin-left: auto; padding: 0 4px; border: 0; background: none; color: var(--text-muted); font: 12px var(--font); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.nb-tags .nb-hide:hover { color: var(--danger); }
+.nb-preprint { color: #b45309; }
+.nb-item.is-hidden { color: var(--text-muted); font-size: 14px; }
+.nb-item.is-hidden button { border: 0; background: none; color: var(--accent); font: 600 14px var(--font); cursor: pointer; padding: 0; }
 .nb-title { display: block; color: var(--text); font-weight: 600; font-size: 15px; line-height: 1.4; text-decoration: none; overflow-wrap: anywhere; }
 .nb-title:hover { color: var(--accent); text-decoration: underline; }
 .nb-sub { margin-top: 3px; color: var(--text-muted); font-size: 13px; overflow-wrap: anywhere; }
@@ -60,6 +65,12 @@
 .nb-map .node circle { stroke: #fff; stroke-width: 2; }
 .nb-map .node.is-focused circle, .nb-map .node:focus-visible circle { stroke: var(--text); stroke-width: 2.5; }
 .nb-map .node text { fill: var(--text); font: 600 11px var(--font); paint-order: stroke; stroke: #fff; stroke-width: 3px; pointer-events: none; }
+.nb-map .is-dim { opacity: .15; }
+.nb-topics { align-items: center; }
+.nb-topic { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text); font: 600 12px var(--font); cursor: pointer; }
+.nb-topic::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 3px solid var(--topic); box-sizing: border-box; }
+.nb-topic[aria-pressed="true"] { border-color: var(--topic); background: var(--bg-soft); }
 .nb-map .main-line { stroke: var(--accent); stroke-dasharray: 4 4; }
 .nb-map .main-label { fill: var(--accent); font: 700 12px var(--font); }
 .nb-map-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }

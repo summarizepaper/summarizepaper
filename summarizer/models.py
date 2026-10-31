@@ -1312,3 +1312,21 @@ class OutreachContact(models.Model):
         ordering = ('-created',)
         verbose_name = 'contact de relance'
         verbose_name_plural = 'relances et retours'
+
+
+class NeighbourFeedback(models.Model):
+    """A reader marked a paper listed around another one as not relevant (neighbours.py): it leaves their list,
+    and everyone's once enough readers agree."""
+    arxiv_id = models.CharField(max_length=100)  # the paper whose page lists it
+    ref = models.CharField(max_length=100)  # the paper marked
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    visitor = models.CharField(max_length=64, blank=True, default='')  # hashed address of a visitor without an account
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['arxiv_id', 'ref'])]
+        verbose_name = 'voisin jugé hors sujet'
+        verbose_name_plural = 'voisins jugés hors sujet'
+
+    def __str__(self):
+        return '%s autour de %s' % (self.ref, self.arxiv_id)

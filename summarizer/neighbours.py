@@ -7,7 +7,14 @@ similar.py, so that all are on one scale):
   for a cs paper, recent papers otherwise), which reaches the many fields where few papers are summarized here;
 - prior work: the papers it cites, the closest first: what it builds on rather than the software it uses;
 - follow-ups: the papers that cite it, the closest first.
-A paper both close and cited stays among the close papers, with both facts.
+A paper both close and cited stays among the close papers, with both facts. Among the prior work and the follow-ups,
+closeness is raised a little when Semantic Scholar says one paper uses the other in depth (isInfluential) or for its
+method, and for much-cited follow-ups: Semantic Scholar gives the newest citations of a much-cited paper, so its most
+cited ones come from OpenAlex. Each paper keeps its citation count and whether it is a preprint, so that a reader
+can weigh it; a paper without an abstract is compared by its title alone, and says so.
+
+The map groups the papers alike into a few sub-topics (clusters), named with the sentences. A reader can mark a
+paper not relevant: it leaves their list, and everyone's once HIDDEN_FOR_ALL readers agree.
 
 Computed when a paper is summarized, when a visitor asks to search again, and in the hourly run for the papers
 summarized before this existed or whose neighbourhood is older than REFRESH_DAYS (the index grows, new papers
@@ -26,13 +33,14 @@ import numpy as np
 import requests
 from django.http import Http404, JsonResponse
 from django.utils import timezone
+from django.utils.formats import number_format
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 from django.views.decorators.http import require_POST
 
 from . import arxiv_taxonomy, citations, generated, insight, similar, sources
-from .models import ArxivPaper, Generated, PaperEmbedding, PaperScore, SummaryPaper
+from .models import ArxivPaper, Generated, NeighbourFeedback, PaperEmbedding, PaperScore, SummaryPaper
 
 logger = logging.getLogger(__name__)
 
@@ -40,18 +48,32 @@ KIND = 'neighbours'
 WHY_KIND = 'neighbours_why'
 S2_GRAPH = 'https://api.semanticscholar.org/graph/v1/paper/%s/%s'
 S2_RECOMMEND = 'https://api.semanticscholar.org/recommendations/v1/papers/forpaper/%s'
-S2_FIELDS = 'title,abstract,year,publicationDate,authors,externalIds,venue,journal'
+S2_BATCH = 'https://api.semanticscholar.org/graph/v1/paper/batch'
+S2_FIELDS = 'title,abstract,year,publicationDate,authors,externalIds,venue,journal,citationCount'
+S2_LINK_FIELDS = 'isInfluential,intents,' + S2_FIELDS  # how the citing paper uses the cited one
 RECOMMENDED = 40
 LINKED = 300  # references, and citing papers, read for each paper
+MOST_CITED = 25  # citing papers of a much-cited paper read from OpenAlex, the most cited first
+OPENALEX_PER_DAY = 600
+OPENALEX_KEY = 'openalex-neighbours:%s'
 INDEX_K = 60
-MAX_EMBED = 400
+MAX_EMBED = 450
+# prior work and follow-ups: closeness first, then how the papers use each other and how much a follow-up is cited
+INFLUENTIAL_BONUS = 0.05  # Semantic Scholar: the citation weighs on the citing paper (not a passing mention)
+METHOD_BONUS = 0.03  # a reference whose method the paper uses
+CITED_BONUS = 0.08  # a follow-up cited 10 000 times (log scale)
+CLUSTER_MINS = (0.70, 0.74, 0.78, 0.82)  # average similarity within a sub-topic of the map: the lowest that...
+CLUSTER_SHARE = 0.4  # ...leaves no sub-topic with more than this share of the papers (a dense field is one blob at 0.70)
+CLUSTER_SIZE, MAX_CLUSTERS = 3, 5
+PREPRINT_SERVERS = {'arxiv', 'arxiv.org', 'biorxiv', 'medrxiv', 'chemrxiv', 'ssrn', 'research square', 'preprints',
+                    'preprints.org', 'osf preprints', 'psyarxiv', 'socarxiv', 'techrxiv', 'authorea'}
 CLOSE_KEPT, PRIOR_KEPT, FOLLOWUP_KEPT = 15, 8, 8
 CLOSE_SHOWN, PRIOR_SHOWN, FOLLOWUP_SHOWN = 8, 5, 5
 EDGE_MIN = 0.65  # two neighbours closer than this are linked on the map...
 EDGES_PER_ITEM = 3  # ...each to its few closest
 ABSTRACT_KEPT = 700
 REFRESH_DAYS = 60
-RUN_SECONDS = 600  # the hourly run's share: about 12 seconds a paper, so 50 papers
+RUN_SECONDS = 900  # the hourly run's share: 15 to 25 seconds a paper, Semantic Scholar's 429s included, so 40 papers
 WHY_PER_DAY = 600
 WHY_KEY = 'neighbours-why:%s'
 
@@ -109,7 +131,8 @@ def index_item(paper, similarity):
             'authors': short_authors([a.name for a in paper.authors.all()[:4]]),
             'date': paper.published_arxiv.isoformat()[:10] if paper.published_arxiv else '',
             'venue': venue_of(paper), 'abstract': ' '.join((paper.abstract or '').split())[:ABSTRACT_KEPT],
-            'similarity': round(similarity, 3), 'cited': False, 'cites': False, 'source': 'index'}
+            'similarity': round(similarity, 3), 'citations': None, 'status': 'published' if paper.journal_ref else '',
+            'influential': False, 'method': False, 'cited': False, 'cites': False, 'source': 'index'}
 
 
 def s2_ref(paper_id):
@@ -119,17 +142,32 @@ def s2_ref(paper_id):
     return citations.s2_ref(citations.base_id(paper_id) or paper_id)
 
 
-def s2_get(url, params):
-    """The JSON answer of Semantic Scholar, None when it does not know the paper or does not answer."""
-    for wait in (2, 6, None):  # one call a second with a key, shared with the citation alerts
+_last_s2 = [0.0]
+
+
+def s2_request(method, url, **kwargs):
+    """A Semantic Scholar call, SECONDS_BETWEEN_CALLS after the previous one of this process (the key allows one a
+    second, shared with the citation alerts and the chat), tried again after a 429; None when unreachable."""
+    for wait in (1.5, 4, 10, None):  # a 429 usually clears within a second
+        pause = _last_s2[0] + citations.SECONDS_BETWEEN_CALLS - time.monotonic()
+        if pause > 0:
+            time.sleep(pause)
+        _last_s2[0] = time.monotonic()
         try:
-            response = requests.get(url, params=params, headers=citations.s2_headers(), timeout=30)
+            response = requests.request(method, url, headers=citations.s2_headers(), timeout=30, **kwargs)
         except requests.RequestException:
             logger.warning('Semantic Scholar unreachable: %s', url)
             return None
         if response.status_code != 429 or wait is None:
-            break
+            return response
         time.sleep(wait)
+
+
+def s2_get(url, params):
+    """The JSON answer of Semantic Scholar, None when it does not know the paper or does not answer."""
+    response = s2_request('GET', url, params=params)
+    if response is None:
+        return None
     if response.status_code != 200:
         if response.status_code != 404:
             logger.warning('Semantic Scholar answered %s: %s', response.status_code, url)
@@ -140,8 +178,19 @@ def s2_get(url, params):
         return None
 
 
-def s2_item(paper):
-    """The item of a paper as Semantic Scholar gives it, None without a title or an identifier we can link."""
+def status(venue, journal=''):
+    """'published', 'preprint' or '' (unknown) from the venue names a source gives."""
+    names = [n.strip().lower() for n in (venue, journal) if n and n.strip()]
+    if not names:
+        return ''
+    if all(n in PREPRINT_SERVERS or n.endswith(' preprint') or 'rxiv' in n for n in names):
+        return 'preprint'
+    return 'published'
+
+
+def s2_item(paper, row=None):
+    """The item of a paper as Semantic Scholar gives it, None without a title or an identifier we can link.
+    row: the reference or citation it comes from, which says how one paper uses the other."""
     ids = paper.get('externalIds') or {}
     title = ' '.join((paper.get('title') or '').split())
     if ids.get('ArXiv'):
@@ -155,16 +204,20 @@ def s2_item(paper):
         return None
     journal = (paper.get('journal') or {}).get('name') or ''
     year = paper.get('year')
+    row = row or {}
     return {'ref': ref, 'title': title[:300], 'authors': short_authors([a.get('name', '') for a in paper.get('authors') or []]),
             'date': paper.get('publicationDate') or (str(year) if year else ''),
             'venue': (paper.get('venue') or journal or '')[:120],
             'abstract': ' '.join((paper.get('abstract') or '').split())[:ABSTRACT_KEPT],
+            'citations': paper.get('citationCount'), 'status': status(paper.get('venue') or '', journal),
+            'influential': bool(row.get('isInfluential')), 'method': 'methodology' in (row.get('intents') or []),
             'cited': False, 'cites': False, 'source': 's2'}
 
 
 def s2_candidates(paper):
-    """{'recommended', 'cited', 'cites': [items]} from Semantic Scholar; a list is empty when its call fails."""
-    found = {'recommended': [], 'cited': [], 'cites': []}
+    """{'recommended', 'cited', 'cites': [items], 'more_citing': bool} from Semantic Scholar; a list is empty when
+    its call fails. more_citing: the paper has more citations than one page holds (they come newest first)."""
+    found = {'recommended': [], 'cited': [], 'cites': [], 'more_citing': False}
     ref = s2_ref(paper.arxiv_id)
     if not ref:
         return found
@@ -172,9 +225,63 @@ def s2_candidates(paper):
     body = s2_get(S2_RECOMMEND % ref, {'fields': S2_FIELDS, 'limit': RECOMMENDED, 'from': pool}) or {}
     found['recommended'] = [i for i in map(s2_item, body.get('recommendedPapers') or []) if i]
     for kind, path, field in (('cited', 'references', 'citedPaper'), ('cites', 'citations', 'citingPaper')):
-        time.sleep(citations.SECONDS_BETWEEN_CALLS)
-        body = s2_get(S2_GRAPH % (ref, path), {'fields': S2_FIELDS, 'limit': LINKED}) or {}
-        found[kind] = [i for i in (s2_item(row.get(field) or {}) for row in body.get('data') or []) if i]
+        body = s2_get(S2_GRAPH % (ref, path), {'fields': S2_LINK_FIELDS, 'limit': LINKED}) or {}
+        rows = body.get('data') or []
+        found[kind] = [i for i in (s2_item(row.get(field) or {}, row) for row in rows) if i]
+        if kind == 'cites':
+            found['more_citing'] = len(rows) >= LINKED
+    return found
+
+
+def s2_facts(items):
+    """Citation counts and venues, in one call, for the items of our index Semantic Scholar has not described."""
+    wanted = [i for i in items if i.get('citations') is None]
+    ids = [s2_ref(i['ref']) for i in wanted]
+    pairs = [(i, r) for i, r in zip(wanted, ids) if r]
+    if not pairs:
+        return
+    response = s2_request('POST', S2_BATCH, params={'fields': 'citationCount,venue,journal'}, json={'ids': [r for _, r in pairs]})
+    try:
+        rows = response.json() if response is not None and response.status_code == 200 else []
+    except ValueError:
+        rows = []
+    for (item, _ref), row in zip(pairs, rows if isinstance(rows, list) else []):
+        if row:
+            item['citations'] = row.get('citationCount')
+            item['status'] = item.get('status') or status(row.get('venue') or '', (row.get('journal') or {}).get('name') or '')
+
+
+def openalex_most_cited(paper):
+    """The citing papers of a much-cited paper, the most cited first (Semantic Scholar gives the newest): the
+    follow-ups everyone knows. Two OpenAlex calls, within OPENALEX_PER_DAY; [] when out of budget or unavailable."""
+    if sources.is_external(paper.arxiv_id):
+        doi = sources.key_doi(paper.arxiv_id) if paper.arxiv_id.startswith('doi_') else ''
+    else:
+        doi = '10.48550/arxiv.%s' % (citations.base_id(paper.arxiv_id) or '')
+    if not doi or not sources._spend(OPENALEX_KEY, OPENALEX_PER_DAY):
+        return []
+    try:
+        work = sources._json('%s/works/doi:%s' % (sources.OPENALEX, doi), sources._openalex_params({'select': 'id'}))
+        if not work:
+            return []
+        body = sources._json('%s/works' % sources.OPENALEX, sources._openalex_params({
+            'filter': 'cites:%s' % work['id'].rsplit('/', 1)[-1], 'sort': 'cited_by_count:desc', 'per-page': MOST_CITED,
+            'select': sources.OPENALEX_FIELDS + ',cited_by_count'})) or {}
+    except sources.SourceUnavailable:
+        return []
+    found = []
+    from .digest import site_id
+    for work in body.get('results') or []:
+        meta = sources.openalex_paper(work)
+        ref = site_id(meta['arxiv_id']) if meta.get('arxiv_id') else meta.get('key') or ''
+        if not ref or ref.startswith('doi_h') or not meta.get('title'):
+            continue
+        found.append({'ref': ref, 'title': ' '.join(meta['title'].split())[:300], 'authors': short_authors(meta.get('authors') or []),
+                      'date': meta.get('published') or '', 'venue': (meta.get('journal') or '')[:120],
+                      'abstract': ' '.join((meta.get('abstract') or '').split())[:ABSTRACT_KEPT],
+                      'citations': work.get('cited_by_count'),
+                      'status': 'preprint' if work.get('type') == 'preprint' else status(meta.get('journal') or ''),
+                      'influential': False, 'method': False, 'cited': False, 'cites': True, 'source': 'openalex'})
     return found
 
 
@@ -196,8 +303,31 @@ def known_versions(items):
     return stored
 
 
+def weight(item, group):
+    """How a candidate ranks among the prior work or the follow-ups: closeness, raised by how the papers use each
+    other and, for a follow-up, by how much it is cited."""
+    value = item['similarity'] + (INFLUENTIAL_BONUS if item.get('influential') else 0)
+    if group == 'prior' and item.get('method'):
+        value += METHOD_BONUS
+    if group == 'followup' and item.get('citations'):
+        value += CITED_BONUS * min(1.0, np.log10(1 + item['citations']) / 4)
+    return value
+
+
+def merge(target, item, kind):
+    """The facts a second source gives on a paper already in the pool."""
+    if kind in ('cited', 'cites'):
+        target[kind] = True
+    target['influential'] = target.get('influential') or item.get('influential', False)
+    target['method'] = target.get('method') or item.get('method', False)
+    if target.get('citations') is None and item.get('citations') is not None:
+        target['citations'] = item['citations']
+    if not target.get('status'):
+        target['status'] = item.get('status', '')
+
+
 def compute(paper):
-    """The neighbourhood of a paper, as stored: {'items', 'edges', 'computed', 'counts'}."""
+    """The neighbourhood of a paper, as stored: {'items', 'edges', 'clusters', 'computed', 'counts'}."""
     from .library import work_keys
     similar.ensure(paper)
     query = np.frombuffer(PaperEmbedding.objects.get(arxiv_id=paper.arxiv_id).vector, dtype=np.float32)
@@ -212,15 +342,18 @@ def compute(paper):
             pool[key] = index_item(rows[aid], value)
 
     found = s2_candidates(paper)
+    found['most_cited'] = openalex_most_cited(paper) if found['more_citing'] else []
     pending = {}
-    for kind in ('recommended', 'cited', 'cites'):
+    # the most cited follow-ups before the others: past MAX_EMBED, the last ones are left out
+    for kind in ('recommended', 'cited', 'most_cited', 'cites'):
         for item in found[kind]:
             key = identity(item['ref'])
             if not key or key in own:
                 continue
-            target = pool.get(key) or pending.setdefault(key, item)
-            if kind != 'recommended':
-                target[kind] = True
+            target = pool.get(key) or pending.get(key)
+            if target is None:
+                pending[key] = target = item
+            merge(target, item, 'cites' if kind == 'most_cited' else kind)
     pending = dict(list(pending.items())[:MAX_EMBED])
     if pending:
         texts = ['%s\n\n%s' % (i['title'], i['abstract']) for i in pending.values()]
@@ -230,27 +363,60 @@ def compute(paper):
             item['similarity'] = round(float(vector @ query), 3)
             vectors[key] = vector
             pool[key] = item
-    stored = known_versions([i for i in pool.values() if i['source'] == 's2'])
+    stored = known_versions([i for i in pool.values() if i['source'] != 'index'])
     for key, item in pool.items():
-        if item['source'] == 's2':
+        if item['source'] != 'index':
             item['ref'] = stored.get(key) or (item['ref'] if sources.is_external(item['ref']) else item['ref'] + 'v1')
+        item['title_only'] = not item['abstract']  # its closeness comes from its title alone
 
-    ranked = sorted(pool.items(), key=lambda kv: -kv[1]['similarity'])
     chosen = []
     for group, flag, kept in (('close', None, CLOSE_KEPT), ('prior', 'cited', PRIOR_KEPT), ('followup', 'cites', FOLLOWUP_KEPT)):
         taken = {k for k, _ in chosen}
+        ranked = sorted(pool.items(), key=lambda kv: -(kv[1]['similarity'] if flag is None else weight(kv[1], group)))
         picked = [(k, i) for k, i in ranked if k not in taken and (flag is None or i[flag])][:kept]
         for _key, item in picked:
             item['group'] = group
         chosen += picked
+    s2_facts([i for _k, i in chosen if i['source'] == 'index'])
 
     missing = [i['ref'] for k, i in chosen if k not in vectors]
     for aid, vec in PaperEmbedding.objects.filter(arxiv_id__in=missing, model=similar.MODEL).values_list('arxiv_id', 'vector'):
         vectors[identity(aid)] = np.frombuffer(vec, dtype=np.float32)
     items = [i for _k, i in chosen]
-    return {'items': items, 'edges': edges([vectors.get(k) for k, _i in chosen]),
+    chosen_vectors = [vectors.get(k) for k, _i in chosen]
+    return {'items': items, 'edges': edges(chosen_vectors), 'clusters': clusters(chosen_vectors),
             'computed': timezone.now().isoformat(),
-            'counts': {kind: len(found[kind]) for kind in found} | {'index': len(best)}}
+            'counts': {kind: len(found[kind]) for kind in ('recommended', 'cited', 'cites', 'most_cited')} | {'index': len(best)}}
+
+
+def clusters(vectors):
+    """[[item indexes]] of the sub-topics of the map: average-linkage groups whose papers are, on average, alike
+    above the lowest of CLUSTER_MINS that leaves no group with more than CLUSTER_SHARE of the papers; the
+    MAX_CLUSTERS largest of CLUSTER_SIZE papers or more."""
+    present = [i for i, v in enumerate(vectors) if v is not None]
+    if len(present) < CLUSTER_SIZE:
+        return []
+    sims = np.stack([vectors[i] for i in present]) @ np.stack([vectors[i] for i in present]).T
+    groups = [[n] for n in range(len(present))]
+    largest = max(CLUSTER_SIZE * 2, int(CLUSTER_SHARE * len(present)))
+    for floor in sorted(CLUSTER_MINS, reverse=True):  # merging from the strictest level down, stopping in time
+        merged = [list(g) for g in groups]
+        while len(merged) > 1:
+            best, pair = -1.0, None
+            for a in range(len(merged)):
+                for b in range(a + 1, len(merged)):
+                    value = float(sims[np.ix_(merged[a], merged[b])].mean())
+                    if value > best:
+                        best, pair = value, (a, b)
+            if best < floor:
+                break
+            a, b = pair
+            merged[a] += merged.pop(b)
+        if max(len(g) for g in merged) > largest:
+            break
+        groups = merged
+    kept = sorted((g for g in groups if len(g) >= CLUSTER_SIZE), key=len, reverse=True)[:MAX_CLUSTERS]
+    return [sorted(present[n] for n in g) for g in kept]
 
 
 def edges(vectors):
@@ -368,7 +534,10 @@ For each numbered neighbour, give:
   neighbour does (its name if it has one), never with "Both papers" or "Les deux études"; no number that is not
   in the texts; do not praise.
 "link" says when the neighbour is cited by the paper or cites it.
-Answer with a JSON object {{"neighbours": [{{"n": 1, "relation": "...", "why": "..."}}]}}."""
+Then name each numbered group of titles: the sub-topic its papers share, in 2 to 5 words, in {language}, specific
+enough to tell the groups apart (never just the field of the paper).
+Answer with a JSON object {{"neighbours": [{{"n": 1, "relation": "...", "why": "..."}}],
+"groups": [{{"g": 1, "name": "..."}}]}}."""
 
 
 def shown(data):
@@ -382,15 +551,17 @@ def why_work(arxiv_id, lang):
         data = stored(arxiv_id) or {'items': legacy(paper)}
         items = shown(data)
         if not items:
-            return {'refs': [], 'by_ref': {}}
+            return {'refs': [], 'by_ref': {}, 'clusters': []}
+        groups = [[data['items'][n] for n in members if n < len(data['items'])] for members in data.get('clusters') or []]
         reading = insight.for_page(arxiv_id, lang) or insight.for_page(arxiv_id, 'en') or {}
         context = {'paper': {'title': paper.title, 'question': reading.get('question', ''), 'method': reading.get('method', ''),
                              'abstract': ' '.join((paper.abstract or '').split())[:2000]},
                    'neighbours': [{'n': n, 'title': i['title'], 'abstract': i['abstract'] or '(no abstract)',
                                    'link': 'cited by the paper' if i.get('cited') else 'cites the paper' if i.get('cites') else ''}
-                                  for n, i in enumerate(items, 1)]}
+                                  for n, i in enumerate(items, 1)],
+                   'groups': [{'g': g, 'titles': [i['title'] for i in members]} for g, members in enumerate(groups, 1)]}
         generated.release_connection()
-        answer = generated.chat_json(json.dumps(context, ensure_ascii=False), paid=False, max_tokens=2500, timeout=120,
+        answer = generated.chat_json(json.dumps(context, ensure_ascii=False), paid=False, max_tokens=2800, timeout=120,
                                      system=WHY_SYSTEM.format(language=generated.language_name(lang)))
         by_ref = {}
         for row in answer.get('neighbours') or []:
@@ -400,7 +571,13 @@ def why_work(arxiv_id, lang):
             if 1 <= n <= len(items):
                 relation = row.get('relation') if row.get('relation') in RELATIONS else ''
                 by_ref[items[n - 1]['ref']] = {'relation': relation, 'why': insight.clean(row.get('why'), 300)}
-        return {'refs': [i['ref'] for i in items], 'by_ref': by_ref}
+        names = {}
+        for row in answer.get('groups') or []:
+            if isinstance(row, dict) and str(row.get('g', '')).isdigit() and 1 <= int(row['g']) <= len(groups):
+                names[int(row['g'])] = insight.clean(row.get('name'), 60)
+        return {'refs': [i['ref'] for i in items], 'by_ref': by_ref,
+                'clusters': [{'refs': [i['ref'] for i in members], 'name': names.get(g, '')}
+                             for g, members in enumerate(groups, 1) if names.get(g)]}
     return work
 
 
@@ -444,22 +621,69 @@ def why_view(request, arxiv_id):
     return JsonResponse({'status': row.status, 'id': row.pk, 'data': row.data() if row.status == 'done' else None})
 
 
+# --- readers' judgments ------------------------------------------------------------------
+
+HIDDEN_FOR_ALL = 3  # distinct readers who must mark a paper not relevant before it leaves everyone's list
+MARKS_PER_DAY = 50  # by a visitor without an account
+MARKS_KEY = 'neighbour-marks:%s:%%s'
+
+
+def reader(request):
+    """(user, visitor): who marks, a visitor without an account by their hashed address."""
+    from . import access
+    if request.user.is_authenticated:
+        return request.user, ''
+    return None, access.hash_ip(access.client_ip(request))
+
+
+def hidden_refs(arxiv_id, request=None):
+    """The papers left out of this paper's list: those this reader marked, and those HIDDEN_FOR_ALL readers marked."""
+    user, visitor = reader(request) if request is not None else (None, '')
+    people, mine = {}, set()
+    for ref, user_id, who in NeighbourFeedback.objects.filter(arxiv_id=arxiv_id).values_list('ref', 'user_id', 'visitor'):
+        people.setdefault(ref, set()).add(user_id or who)
+        if (user is not None and user_id == user.pk) or (visitor and who == visitor):
+            mine.add(ref)
+    return mine | {ref for ref, who in people.items() if len(who) >= HIDDEN_FOR_ALL}
+
+
+@require_POST
+def mark_view(request, arxiv_id):
+    """A reader marks a paper of the list as not relevant (or takes it back with undo=1)."""
+    ref = request.POST.get('ref', '')[:100]
+    if not ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists() or not ref:
+        raise Http404
+    user, visitor = reader(request)
+    mine = NeighbourFeedback.objects.filter(arxiv_id=arxiv_id, ref=ref, user=user, visitor=visitor)
+    if request.POST.get('undo') == '1':
+        mine.delete()
+        return JsonResponse({'status': 'shown'})
+    if not mine.exists():
+        if visitor and not sources._spend(MARKS_KEY % visitor, MARKS_PER_DAY):
+            return JsonResponse({'status': 'busy'}, status=429)
+        NeighbourFeedback.objects.create(arxiv_id=arxiv_id, ref=ref, user=user, visitor=visitor)
+    return JsonResponse({'status': 'hidden'})
+
+
 # --- what the pages show ---------------------------------------------------------------
 
 def year(item):
     return (item.get('date') or '')[:4]
 
 
-def for_page(paper, lang, with_map=False):
+def for_page(paper, lang, with_map=False, request=None):
     """{'groups': [{'key', 'title', 'items'}], 'computed', 'why_ready', 'complete', 'relations_json'} for the paper
     and tree pages, with 'map' (see map_data) when asked; None when the paper has no neighbour yet.
-    complete: Semantic Scholar's neighbours are there too."""
+    complete: Semantic Scholar's neighbours are there too. The papers this reader, or enough readers, marked
+    not relevant are left out (the next ones take their place)."""
     data = stored(paper.arxiv_id)
     items = data['items'] if data else legacy(paper)
     if not items:
         return None
+    hidden = hidden_refs(paper.arxiv_id, request)
     row = why_row(paper.arxiv_id, lang)
-    why = row.data().get('by_ref', {}) if row is not None and row.status == 'done' else {}
+    why_data = row.data() if row is not None and row.status == 'done' else {}
+    why = why_data.get('by_ref', {})
     refs = [i['ref'] for i in items]
     summarized = set(SummaryPaper.objects.filter(paper__arxiv_id__in=refs).values_list('paper__arxiv_id', flat=True))
     tldrs = {}
@@ -468,11 +692,12 @@ def for_page(paper, lang, with_map=False):
     groups = []
     for key, (title, count) in GROUPS.items():
         members = []
-        for item in [i for i in items if i.get('group') == key][:count]:
+        for item in [i for i in items if i.get('group') == key and i['ref'] not in hidden][:count]:
             code, label = level(item['similarity'])
             reason = why.get(item['ref']) or {}
             members.append(dict(item, level=code, level_label=label, percent=round(100 * item['similarity']),
                                 year=year(item), summarized=item['ref'] in summarized, tldr=tldrs.get(item['ref'], ''),
+                                citations_shown=number_format(item['citations'], force_grouping=True) if item.get('citations') else '',
                                 relation=reason.get('relation', ''), relation_label=RELATIONS.get(reason.get('relation'), ''),
                                 why=reason.get('why', '')))
         if members:
@@ -481,20 +706,30 @@ def for_page(paper, lang, with_map=False):
     result = {'groups': groups, 'computed': computed, 'why_ready': bool(why), 'complete': data is not None,
               'relations_json': json.dumps({code: str(label) for code, label in RELATIONS.items()}, ensure_ascii=False)}
     if with_map:
-        result['map'] = map_data(paper, items, (data or {}).get('edges') or [], why, summarized)
+        result['map'] = map_data(paper, items, data or {}, why_data, summarized, hidden)
     return result
 
 
-def map_data(paper, items, links, why, summarized):
-    """JSON for the map of the tree page: the paper, every stored neighbour and the edges between them."""
+def map_data(paper, items, data, why_data, summarized, hidden=()):
+    """JSON for the map of the tree page: the paper, every stored neighbour (hidden: marked not relevant), the
+    edges between them and their named sub-topics."""
+    why = why_data.get('by_ref', {})
     nodes = []
     for item in items:
         code, label = level(item['similarity'])
         reason = why.get(item['ref']) or {}
-        nodes.append({k: item.get(k, '') for k in ('ref', 'title', 'authors', 'date', 'venue', 'abstract', 'group')}
+        nodes.append({k: item.get(k, '') for k in ('ref', 'title', 'authors', 'date', 'venue', 'abstract', 'group', 'status')}
                      | {'similarity': item['similarity'], 'cited': item.get('cited', False), 'cites': item.get('cites', False),
+                        'citations': item.get('citations'), 'influential': item.get('influential', False),
                         'level': code, 'level_label': str(label), 'summarized': item['ref'] in summarized,
+                        'hidden': item['ref'] in hidden,
                         'relation_label': str(RELATIONS.get(reason.get('relation'), '')), 'why': reason.get('why', '')})
+    names = {tuple(sorted(c['refs'])): c['name'] for c in why_data.get('clusters') or []}
+    topics = []
+    for members in data.get('clusters') or []:
+        name = names.get(tuple(sorted(items[n]['ref'] for n in members if n < len(items))))
+        if name:
+            topics.append({'members': members, 'name': name})
     main = {'ref': paper.arxiv_id, 'title': paper.title or '',
             'date': paper.published_arxiv.isoformat()[:10] if paper.published_arxiv else ''}
-    return {'main': main, 'nodes': nodes, 'edges': links}
+    return {'main': main, 'nodes': nodes, 'edges': data.get('edges') or [], 'topics': topics}

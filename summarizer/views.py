@@ -562,7 +562,7 @@ def tree(request, arxiv_id):
         cc_format, _public = license_display(paper.license)
 
         alpaper=True
-        neighbourhood = neighbours.for_page(paper, lang, with_map=True)
+        neighbourhood = neighbours.for_page(paper, lang, with_map=True, request=request)
         stuff_for_frontend.update({
             'neighbourhood': neighbourhood,
             'map_data': neighbourhood['map'] if neighbourhood else None,
@@ -1128,7 +1128,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
             stuff_for_frontend.update({
                 'paper':paper,
                 'structured_data':paper_structured_data(paper, sumpaper, lang),
-                'neighbourhood':neighbours.for_page(paper, lang),
+                'neighbourhood':neighbours.for_page(paper, lang, request=request),
                 'keywords':keywords,
                 'sumpaper':sumpaper,
                 'sumlang':sumlang,

@@ -18685,3 +18685,65 @@ msgstr "Apparenté"
 msgctxt "a kind of paper"
 msgid "Review"
 msgstr "Article de revue"
+
+msgid "Hidden from this list."
+msgstr "Masqué de cette liste."
+
+msgid "Similarity of the titles only (no abstract): %(p)s%%"
+msgstr "Similarité des titres seulement (pas de résumé) : %(p)s %%"
+
+msgid "Used in depth by this paper"
+msgstr "Utilisé en profondeur par cet article"
+
+msgid "Uses this paper in depth"
+msgstr "Utilise cet article en profondeur"
+
+msgid "A method it uses"
+msgstr "Une méthode qu’il utilise"
+
+msgid "Not relevant: hide it from this list"
+msgstr "Pas pertinent : le masquer de cette liste"
+
+msgid "preprint, not peer reviewed"
+msgstr "preprint, non relu par les pairs"
+
+msgid "cited {n} times"
+msgstr "cité {n} fois"
+
+msgid ""
+"We compare the title and abstract of this paper with those of every paper "
+"summarized on this site, and with the papers Semantic Scholar recommends, "
+"those it cites and those citing it (for a much-cited paper, its most recent "
+"citations and, from OpenAlex, the most cited ones). Among the prior work and"
+" the follow-ups, the papers that use each other in depth, a method it uses "
+"and the much-cited follow-ups come a little higher. The levels (very close, "
+"close, related) come from the similarity of the texts, not from a judgment "
+"of quality; * marks a paper without an abstract, compared by its title. The "
+"sentence under a paper is written by an AI from the two abstracts: check it "
+"in the papers. A paper marked not relevant by three readers leaves the list."
+msgstr ""
+"Nous comparons le titre et le résumé de cet article avec ceux de tous les "
+"articles résumés sur ce site, et avec les articles que Semantic Scholar "
+"recommande, ceux qu’il cite et ceux qui le citent (pour un article très "
+"cité, ses citations les plus récentes et, depuis OpenAlex, les plus citées)."
+" Parmi les travaux antérieurs et les suites, les articles qui s’utilisent en"
+" profondeur, une méthode qu’il utilise et les suites très citées remontent "
+"un peu. Les niveaux (très proche, proche, apparenté) viennent de la "
+"similarité des textes, pas d’un jugement de qualité ; * signale un article "
+"sans résumé, comparé par son titre. La phrase sous un article est écrite par"
+" une IA à partir des deux résumés : vérifiez-la dans les articles. Un "
+"article jugé hors sujet par trois lecteurs quitte la liste."
+
+msgid "Close to “%(title)s” in your collection “%(collection)s”"
+msgstr "Proche de « %(title)s » de votre collection « %(collection)s »"
+
+msgid "Close to a paper of your collections"
+msgstr "Proche d’un article de vos collections"
+
+msgid "Sub-topics:"
+msgstr "Sous-thèmes :"
+
+msgid "cited %(shown)s time"
+msgid_plural "cited %(shown)s times"
+msgstr[0] "cité %(shown)s fois"
+msgstr[1] "cité %(shown)s fois"

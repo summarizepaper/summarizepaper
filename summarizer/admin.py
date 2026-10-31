@@ -25,7 +25,7 @@ from unfold.widgets import UnfoldAdminTextareaWidget
 from . import activity, guides, letters, usage
 from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestClick,
                      DigestEdition, DigestFeedback,
-                     DigestItem, DigestSubscription, Guide, PaperAuthor, PaperHistory,
+                     DigestItem, DigestSubscription, Guide, NeighbourFeedback, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, EmailEvent, OutreachContact, UserPlan, PremiumGrant, Vote)
 
@@ -509,6 +509,12 @@ admin.site.register(Vote, ModelAdmin)
 admin.site.register(PaperAuthor, ModelAdmin)
 admin.site.register(Search, ModelAdmin)
 admin.site.register(PaperScore, ModelAdmin)
+
+
+@admin.register(NeighbourFeedback)
+class NeighbourFeedbackAdmin(ModelAdmin):
+    list_display = ('ref', 'arxiv_id', 'user', 'created')
+    search_fields = ('ref', 'arxiv_id')
 admin.site.register(PaymentPlan, ModelAdmin)
 
 

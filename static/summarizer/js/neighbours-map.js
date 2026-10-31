@@ -34,7 +34,7 @@
   }
 
   var nodes = data.nodes.map(function (n, i) { return Object.assign({index: i, time: when(n.date)}, n); });
-  var dated = nodes.filter(function (n) { return n.time; });
+  var dated = nodes.filter(function (n) { return n.time && !n.hidden; });
   var mainTime = when(data.main.date);
   var ranked = dated.slice().sort(function (a, b) { return b.similarity - a.similarity; });
 
@@ -52,12 +52,17 @@
     if (!n.summarized) link.rel = 'nofollow';  // its page reads arXiv or the DOI's source: not for crawlers
     title.appendChild(link);
     panel.appendChild(title);
-    panel.appendChild(el('div', [n.authors, (n.date || '').slice(0, 4), n.venue].filter(Boolean).join(' · '), 'nb-sub'));
+    var facts = [n.authors, (n.date || '').slice(0, 4), n.venue, n.status === 'preprint' ? t.preprint : '',
+                 n.citations ? t.citedTimes.replace('{n}', n.citations.toLocaleString(document.documentElement.lang || 'en')) : '', n.topic || ''];
+    panel.appendChild(el('div', facts.filter(Boolean).join(' · '), 'nb-sub'));
     if (n.why) panel.appendChild(el('p', n.why, 'nb-why'));
     if (n.abstract) panel.appendChild(el('p', n.abstract + (n.abstract.length >= 700 ? '…' : '')));
     var buttons = el('div', '', 'nb-panel-actions');
     var open = el('a', n.summarized ? t.open : t.summarize, 'btn btn-sm');
     open.href = link.href;
+    open.dataset.funnel = 'map_neighbour_open';
+    open.dataset.group = n.group;
+    if (!n.summarized) open.rel = 'nofollow';
     buttons.appendChild(open);
     var boxes = checkboxes(n.ref);
     if (boxes.length) {
@@ -72,6 +77,35 @@
     }
     panel.appendChild(buttons);
     panel.hidden = false;
+  }
+
+  // the sub-topics: a coloured ring around their papers, and a legend that singles one out
+  var TOPIC_COLORS = ['#0ea5e9', '#e11d48', '#65a30d', '#9333ea', '#ca8a04'];
+  var chosenTopic = null;
+  (data.topics || []).forEach(function (topic, k) {
+    topic.members.forEach(function (i) {
+      if (!nodes[i]) return;
+      nodes[i].topic = topic.name;
+      nodes[i].topicIndex = k;
+      nodes[i].topicColor = TOPIC_COLORS[k % TOPIC_COLORS.length];
+    });
+  });
+  if ((data.topics || []).length) {
+    var legend = el('div', '', 'nb-map-legend nb-topics');
+    legend.appendChild(el('span', t.topics));
+    data.topics.forEach(function (topic, k) {
+      var chip = el('button', topic.name, 'nb-topic');
+      chip.type = 'button';
+      chip.style.setProperty('--topic', TOPIC_COLORS[k % TOPIC_COLORS.length]);
+      chip.setAttribute('aria-pressed', 'false');
+      chip.addEventListener('click', function () {
+        chosenTopic = chosenTopic === k ? null : k;
+        legend.querySelectorAll('.nb-topic').forEach(function (c, j) { c.setAttribute('aria-pressed', String(j === chosenTopic)); });
+        draw();
+      });
+      legend.appendChild(chip);
+    });
+    box.appendChild(legend);
   }
 
   function draw() {
@@ -123,7 +157,13 @@
       .attr('tabindex', 0).attr('role', 'button')
       .attr('aria-label', function (n) { return n.title + ' (' + n.level_label + ')'; });
     points.append('circle').attr('r', function (n) { return n.level === 'very_close' ? 8 : 6.5; })
-      .attr('fill', function (n) { return COLORS[n.group] || COLORS.close; });
+      .attr('fill', function (n) { return COLORS[n.group] || COLORS.close; })
+      .style('stroke', function (n) { return n.topicColor || null; })
+      .style('stroke-width', function (n) { return n.topicColor ? 3 : null; });
+    points.classed('is-dim', function (n) { return chosenTopic !== null && n.topicIndex !== chosenTopic; });
+    edges.classed('is-dim', function (e) {
+      return chosenTopic !== null && !(byIndex[e[0]].topicIndex === chosenTopic && byIndex[e[1]].topicIndex === chosenTopic);
+    });
     var labels = points.append('text').attr('x', 10).attr('y', 4)
       .attr('text-anchor', function (n) { return n.x > width - 120 ? 'end' : 'start'; })
       .attr('dx', function (n) { return n.x > width - 120 ? -20 : 0; })
@@ -171,7 +211,7 @@
     if (focused) choose(focused);
   }
 
-  var undated = nodes.length - dated.length;
+  var undated = nodes.filter(function (n) { return !n.time && !n.hidden; }).length;
   if (undated) box.appendChild(el('p', t.undated.replace('{n}', undated), 'nb-map-legend'));
   draw();
   var resizing;

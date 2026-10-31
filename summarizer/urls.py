@@ -22,6 +22,7 @@ urlpatterns = [
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.legacy_paper_url),
     path("tree/<str:arxiv_id>/", views.tree, name="tree"),
     path("neighbours/<str:arxiv_id>/why/", neighbours.why_view, name="neighbours_why"),
+    path("neighbours/<str:arxiv_id>/mark/", neighbours.mark_view, name="neighbours_mark"),
     path("bibtex/<str:arxiv_id>/", views.bibtex, name="bibtex"),
     path('saved-searches/', saved_searches.manage, name='saved_searches'),
     path('saved-searches/save/', saved_searches.save, name='save_search'),

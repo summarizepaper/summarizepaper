@@ -1221,7 +1221,7 @@ class TreePageTests(TestCase):
                                            author_order=j)
             # close scores put every paper on the same ring: the old random placement struggled here
             PaperScore.objects.create(from_paper=main, to_paper=other, score=0.30 + i / 1000, active=True)
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             r = Client().get('/en/tree/2401.00001v1/')
         self.assertEqual(r.status_code, 200)
         data = r.context['map_data']

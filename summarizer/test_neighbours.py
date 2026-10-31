@@ -5,11 +5,11 @@ import json
 from unittest import mock
 
 import numpy as np
-from django.test import Client
-from django.utils import timezone
+from django.test import Client, TestCase
+from django.utils import timezone, translation
 
 from . import neighbours, similar
-from .models import Collection, Generated, PaperScore, SummaryPaper
+from .models import Collection, Generated, NeighbourFeedback, PaperScore, SummaryPaper
 from .test_tools import ToolsTestCase
 
 AXES = ['galaxy', 'planet', 'disk', 'star']
@@ -49,6 +49,7 @@ class NeighbourhoodTestCase(ToolsTestCase):
         super().setUp()
         for target, value in (('summarizer.similar.embed', mock.Mock(side_effect=fake_embed)),
                               ('summarizer.neighbours.s2_get', mock.Mock(side_effect=fake_s2)),
+                              ('summarizer.neighbours.s2_request', mock.Mock(return_value=None)),
                               ('summarizer.neighbours.time.sleep', mock.Mock())):
             patcher = mock.patch(target, value)
             patcher.start()
@@ -123,7 +124,7 @@ class PageTests(NeighbourhoodTestCase):
         self.assertContains(page, 'Galaxy disk galaxy')
         # not summarized: its page would read arXiv for every crawler that follows the link
         self.assertContains(page, 'href="/en/paper/2201.00009v1/" rel="nofollow"')
-        self.assertContains(page, 'href="/en/paper/2101.00002v2/">')
+        self.assertContains(page, 'href="/en/paper/2101.00002v2/" data-funnel')
         self.assertContains(page, 'Cited by this paper')
         self.assertContains(page, 'href="/en/literature-review/?question=')
         self.assertContains(page, 'href="/en/scoops/?title=Galaxy%20galaxy%20disk')
@@ -193,3 +194,143 @@ class PageTests(NeighbourhoodTestCase):
         import re
         levels = set(re.findall(r'class="nb-level [^"]*"[^>]*>([^<]*)<', page.content.decode()))
         self.assertTrue(levels and levels <= {'Très proche', 'Proche', 'Apparenté'}, levels)
+
+
+class SignalTests(NeighbourhoodTestCase):
+    def test_prior_work_used_in_depth_and_much_cited_follow_ups_come_first(self):
+        # similarities to the paper: 0.80, then 0.74 but used in depth and for its method (+0.08)
+        refs = [{'citedPaper': s2_paper('Galaxy disk planet', arxiv='1501.00001', year=2015), 'isInfluential': False},
+                {'citedPaper': s2_paper('Galaxy galaxy disk planet planet', arxiv='1501.00002', year=2015), 'isInfluential': True,
+                 'intents': ['methodology']},
+                {'citedPaper': dict(s2_paper('Star star', arxiv='1501.00003'), abstract=None)}]
+        cites = [{'citingPaper': dict(s2_paper('Galaxy planet', arxiv='2301.00001'), citationCount=3)},
+                 {'citingPaper': dict(s2_paper('Galaxy planet', arxiv='2301.00002'), citationCount=None)}]
+        most_cited = [{'ref': '2302.00009', 'title': 'Planet galaxy galaxy', 'authors': 'A B', 'date': '2023-01-01', 'venue': 'Nature',
+                       'abstract': 'planet galaxy galaxy', 'citations': 5000, 'status': 'published', 'influential': False,
+                       'method': False, 'cited': False, 'cites': True, 'source': 'openalex'}]
+
+        def s2(url, params):
+            if 'recommendations' in url:
+                return {'recommendedPapers': []}
+            return {'data': refs if '/references' in url else cites}
+        with mock.patch('summarizer.neighbours.s2_get', side_effect=s2), \
+             mock.patch('summarizer.neighbours.LINKED', 2), \
+             mock.patch('summarizer.neighbours.openalex_most_cited', return_value=most_cited) as openalex, \
+             mock.patch('summarizer.neighbours.CLOSE_KEPT', 0):
+            data = neighbours.compute(self.main)
+        openalex.assert_called_once()  # a full page of citations: there are more, the most cited come from OpenAlex
+        prior = [i for i in data['items'] if i['group'] == 'prior']
+        self.assertEqual(prior[0]['ref'], '1501.00002v1')  # used in depth and for its method
+        self.assertTrue(prior[0]['influential'] and prior[0]['method'])
+        title_only = next(i for i in prior if i['ref'] == '1501.00003v1')
+        self.assertTrue(title_only['title_only'])
+        followups = [i for i in data['items'] if i['group'] == 'followup']
+        self.assertEqual(followups[0]['ref'], '2302.00009v1')
+        self.assertEqual(followups[0]['citations'], 5000)
+        self.assertEqual(data['counts']['most_cited'], 1)
+
+    def test_status_of_a_venue(self):
+        self.assertEqual(neighbours.status('arXiv.org', 'ArXiv'), 'preprint')
+        self.assertEqual(neighbours.status('bioRxiv'), 'preprint')
+        self.assertEqual(neighbours.status('Annual Meeting of the Association for Computational Linguistics'), 'published')
+        self.assertEqual(neighbours.status(''), '')
+
+    def test_openalex_most_cited_reads_the_citing_works(self):
+        work = {'id': 'https://openalex.org/W1', 'doi': 'https://doi.org/10.1234/x', 'display_name': 'Galaxy disk', 'type': 'article',
+                'authorships': [{'author': {'display_name': 'Eve Ng'}}], 'publication_date': '2024-02-03',
+                'primary_location': {'source': {'display_name': 'ApJ'}}, 'cited_by_count': 812, 'locations': []}
+        answers = [{'id': 'https://openalex.org/W9'}, {'results': [work]}]
+        with mock.patch('summarizer.sources._json', side_effect=answers) as get:
+            found = neighbours.openalex_most_cited(self.main)
+        self.assertIn('cites:W9', str(get.call_args_list[1]))
+        self.assertEqual(found[0]['ref'], 'doi_10.1234--x')
+        self.assertEqual((found[0]['citations'], found[0]['status'], found[0]['date']), (812, 'published', '2024-02-03'))
+        with mock.patch('summarizer.neighbours.OPENALEX_PER_DAY', 0), mock.patch('summarizer.sources._json') as get:
+            self.assertEqual(neighbours.openalex_most_cited(self.main), [])
+        get.assert_not_called()
+
+    def test_clusters_group_alike_papers(self):
+        a, b = np.array([1, 0, 0], dtype=np.float32), np.array([0, 1, 0], dtype=np.float32)
+        near = lambda v, e: (v + e) / np.linalg.norm(v + e)
+        vectors = [near(a, np.array([0, 0, 0.1 * i], dtype=np.float32)) for i in range(3)] + \
+                  [near(b, np.array([0, 0, 0.1 * i], dtype=np.float32)) for i in range(4)] + [None]
+        self.assertEqual(neighbours.clusters(vectors), [[3, 4, 5, 6], [0, 1, 2]])
+
+    def test_sub_topics_are_named_with_the_sentences_and_drawn_on_the_map(self):
+        data = neighbours.store(self.main.arxiv_id)
+        Generated.objects.filter(kind=neighbours.KIND).update(content=json.dumps(dict(data, clusters=[[0, 1, 2]])))
+
+        def answer(*args, **kwargs):
+            self.assertIn('"groups"', args[0])
+            return {'neighbours': [], 'groups': [{'g': 1, 'name': 'Galaxy disks'}, {'g': 7, 'name': 'Nothing'}]}
+        with mock.patch('summarizer.generated.chat_json', side_effect=answer):
+            Client().post('/en/neighbours/2101.00001v1/why/')
+        page = Client().get('/en/tree/2101.00001v1/')
+        self.assertEqual(page.context['map_data']['topics'], [{'members': [0, 1, 2], 'name': 'Galaxy disks'}])
+
+
+class MarkTests(NeighbourhoodTestCase):
+    def first_close(self):
+        return neighbours.for_page(self.main, 'en')['groups'][0]['items'][0]['ref']
+
+    def test_a_reader_hides_a_paper_and_takes_it_back(self):
+        neighbours.store(self.main.arxiv_id)
+        ref = self.first_close()
+        client = self.client_for(self.user())
+        url = '/en/neighbours/2101.00001v1/mark/'
+        self.assertEqual(client.post(url, {'ref': ref}).json()['status'], 'hidden')
+        client.post(url, {'ref': ref})  # twice is once
+        self.assertEqual(NeighbourFeedback.objects.count(), 1)
+        page = client.get('/en/paper/2101.00001v1/')
+        self.assertNotContains(page, 'data-ref="%s"' % ref)
+        self.assertContains(Client().get('/en/paper/2101.00001v1/'), 'data-ref="%s"' % ref)  # others still see it
+        client.post(url, {'ref': ref, 'undo': '1'})
+        self.assertContains(client.get('/en/paper/2101.00001v1/'), 'data-ref="%s"' % ref)
+
+    def test_three_readers_hide_it_for_everyone(self):
+        neighbours.store(self.main.arxiv_id)
+        ref = self.first_close()
+        for i in range(3):
+            Client(REMOTE_ADDR='10.0.0.%d' % i).post('/en/neighbours/2101.00001v1/mark/', {'ref': ref})
+        self.assertNotEqual(self.first_close(), ref)
+        self.assertNotContains(Client().get('/en/paper/2101.00001v1/'), 'data-ref="%s"' % ref)
+
+    def test_visitors_without_account_are_limited(self):
+        with mock.patch('summarizer.neighbours.MARKS_PER_DAY', 1):
+            client = Client()
+            self.assertEqual(client.post('/en/neighbours/2101.00001v1/mark/', {'ref': 'a'}).status_code, 200)
+            self.assertEqual(client.post('/en/neighbours/2101.00001v1/mark/', {'ref': 'b'}).status_code, 429)
+
+
+class DigestCollectionTests(NeighbourhoodTestCase):
+    def test_a_new_paper_close_to_a_collected_one_says_so(self):
+        from . import digest
+        from .models import CollectionPaper, DigestSubscription
+        user = self.user()
+        collection = Collection.objects.create(user=user, name='Disks')
+        CollectionPaper.objects.create(collection=collection, arxiv_id='2101.00003v1', title='Planet planet')
+        sub = DigestSubscription.objects.create(user=user, categories='astro-ph.EP')
+        ranking = digest.ranking_for(sub, paid=False)
+        planet, galaxy = fake_embed(['planet', 'galaxy'])
+        self.assertGreater(ranking.score(planet)[0], ranking.score(galaxy)[0])
+        closest = ranking.score(planet)[1]
+        self.assertEqual(closest['kind'], 'collection')
+        entry = {'closest': closest, 'paper': {'categories': ['astro-ph.EP']}, 'primary': True}
+        with translation.override('en'):
+            self.assertEqual(digest.reasons(entry), ['Close to “Planet planet” in your collection “Disks”'])
+            self.assertEqual(digest.reasons(entry, private=False), ['Close to a paper of your collections'])
+        with translation.override('fr'):
+            self.assertEqual(digest.reasons(entry), ['Proche de « Planet planet » de votre collection « Disks »'])
+
+
+class SemanticScholarPacingTests(TestCase):
+    def test_calls_are_paced_and_a_429_is_tried_again(self):
+        answers = [mock.Mock(status_code=429), mock.Mock(status_code=200)]
+        neighbours._last_s2[0] = 0.0
+        with mock.patch('summarizer.neighbours.requests.request', side_effect=answers) as call, \
+             mock.patch('summarizer.neighbours.time.monotonic', side_effect=[100.0, 100.0, 103.2, 103.2]), \
+             mock.patch('summarizer.neighbours.time.sleep') as sleep:
+            response = neighbours.s2_request('GET', 'https://example.org/x')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(call.call_count, 2)
+        self.assertEqual(sleep.call_args_list[0].args, (1.5,))  # the wait after the 429; the pace was already kept

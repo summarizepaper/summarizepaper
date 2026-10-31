@@ -114,7 +114,9 @@ PROFILE_VERSION = 'parts-v1'  # profile_vector holds one row per profile paragra
 PROFILE_PARTS = 5
 PROFILE_CACHE = 'digest-profile:%s'  # embeddings of a profile, shared by the previews and the saved digest
 MAX_FEEDBACK = 60  # latest votes and clicks a ranking reads
-LIKE_WEIGHTS = {'vote': 0.9, 'click': 0.75}  # a liked or opened paper counts a bit less than the profile
+LIKE_WEIGHTS = {'vote': 0.9, 'click': 0.75, 'collection': 0.85}  # a liked, opened or collected paper counts a bit less than the profile
+MAX_COLLECTED = 80  # latest papers of the reader's collections a ranking reads
+EMBED_COLLECTED = 20  # of them embedded at most per ranking, when our index has not embedded them yet
 DISLIKE_WEIGHT = 0.5
 KEYWORD_BOOST = 0.04  # per keyword found (2 at most), with a profile
 DIVERSITY = 0.15
@@ -798,8 +800,35 @@ class Ranking:
         return best, label
 
 
+def collected(user_id, embed=True):
+    """[(vector, label)] of the latest papers of a reader's collections: a new paper close to one they keep is
+    worth their attention. Those our index has not embedded are embedded (a few each time) unless embed is False."""
+    from .models import ArxivPaper, CollectionPaper, PaperEmbedding
+    papers = list(CollectionPaper.objects.filter(collection__user_id=user_id).order_by('-added')
+                  .values_list('arxiv_id', 'title', 'collection__name')[:MAX_COLLECTED])
+    if not papers:
+        return []
+    ids = [a for a, _, _ in papers]
+    vectors = dict(PaperEmbedding.objects.filter(arxiv_id__in=ids, model=similar.MODEL).values_list('arxiv_id', 'vector'))
+    missing = [a for a in ids if a not in vectors]
+    if embed and missing:
+        try:
+            similar.store(list(ArxivPaper.objects.filter(arxiv_id__in=missing[:EMBED_COLLECTED])))
+        except (requests.RequestException, KeyError, ValueError):
+            logger.warning('Collection papers of user %s could not be embedded', user_id)
+        vectors.update(PaperEmbedding.objects.filter(arxiv_id__in=missing, model=similar.MODEL).values_list('arxiv_id', 'vector'))
+    found, seen = [], set()
+    for aid, title, name in papers:
+        if aid in vectors and aid not in seen:
+            seen.add(aid)
+            found.append((np.frombuffer(bytes(vectors[aid]), dtype=np.float32),
+                          {'kind': 'collection', 'id': aid, 'title': short(title or aid), 'collection': short(name, 40)}))
+    return found
+
+
 def ranking_for(subscription, paid, save=True, quick=False):
-    """The Ranking of a digest: its research profile (Premium), and the papers its reader liked, disliked or opened."""
+    """The Ranking of a digest: its research profile (Premium), the papers its reader liked, disliked or opened,
+    and those of their collections."""
     rows, labels = profile_matrix(subscription, save, quick) if paid else (None, [])
     liked, liked_ids, weights, disliked = [], [], [], []
     feedback = DigestFeedback.objects.filter(subscription_id=subscription.pk) if subscription.pk else DigestFeedback.objects.none()
@@ -812,11 +841,15 @@ def ranking_for(subscription, paid, save=True, quick=False):
             weights.append(LIKE_WEIGHTS.get(source, LIKE_WEIGHTS['vote']))
         else:
             disliked.append(vector)
-    if rows is None and not liked:
+    kept = collected(subscription.user_id, embed=not quick) if subscription.pk and subscription.user_id else []
+    if rows is None and not liked and not kept:
         return None
     titles = dict(DigestItem.objects.filter(arxiv_id__in=[a for a, _ in liked_ids]).values_list('arxiv_id', 'title'))
     liked_labels = [{'kind': 'liked' if source == 'vote' else 'opened', 'id': aid, 'title': short(titles.get(aid, aid))}
                     for aid, source in liked_ids]
+    liked += [vector for vector, _ in kept]
+    liked_labels += [label for _, label in kept]
+    weights += [LIKE_WEIGHTS['collection']] * len(kept)
     return Ranking(rows, labels, liked, liked_labels, weights, disliked)
 
 
@@ -1193,6 +1226,10 @@ def reasons(entry, wanted=(), private=True):
     elif kind == 'liked':
         found.append(_('Close to a paper you liked: “%(title)s”') % {'title': closest.get('title')} if private
                      else _('Close to a paper you liked'))
+    elif kind == 'collection':
+        found.append(_('Close to “%(title)s” in your collection “%(collection)s”') % {
+            'title': closest.get('title'), 'collection': closest.get('collection')} if private
+                     else _('Close to a paper of your collections'))
     elif kind == 'opened':
         found.append(_('Close to a paper you opened: “%(title)s”') % {'title': closest.get('title')} if private
                      else _('Close to a paper you opened'))

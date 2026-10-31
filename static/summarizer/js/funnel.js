@@ -10,10 +10,11 @@
     if (['hero', 'needs', 'examples', 'offer', 'recent', 'free', 'preview'].includes(element.dataset.placement)) data.placement = element.dataset.placement;
     if (['paper', 'digest', 'refcheck', 'missed', 'scoops', 'literature', 'chat', 'letters', 'trends', 'saved_searches'].includes(element.dataset.tool)) data.tool = element.dataset.tool;
     if (['astronomy', 'biology', 'computing'].includes(element.dataset.domain)) data.domain = element.dataset.domain;
+    if (['close', 'prior', 'followup'].includes(element.dataset.group)) data.group = element.dataset.group;
     return data;
   }
   document.addEventListener('click', function (event) {
-    var link = event.target.closest('a[data-funnel]');
+    var link = event.target.closest('a[data-funnel], button[data-funnel]');
     if (link) track(link.dataset.funnel, context(link));
   });
   document.addEventListener('submit', function (event) {

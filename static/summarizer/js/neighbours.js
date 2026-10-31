@@ -12,6 +12,11 @@ window.SPNeighbours = {init: function () {
   var status = box.querySelector('.nb-status');
   var checks = Array.prototype.slice.call(box.querySelectorAll('.nb-check'));
 
+  function el(tag, text) {
+    var node = document.createElement(tag);
+    if (text) node.textContent = text;
+    return node;
+  }
   function whenReady(fn) {
     if (window.SP) fn(); else document.addEventListener('DOMContentLoaded', fn);
   }
@@ -76,6 +81,31 @@ window.SPNeighbours = {init: function () {
         }, function () { go.disabled = false; show(d.failed); });
     });
   }
+
+  // a paper marked not relevant leaves the list, for this reader now and for everyone once enough agree
+  box.querySelectorAll('.nb-hide').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var li = button.closest('.nb-item');
+      var ref = li.dataset.ref;
+      var check = li.querySelector('.nb-check');
+      if (check.checked) { check.checked = false; update(); }
+      var kept = Array.prototype.slice.call(li.childNodes);
+      var note = el('span', d.hidden + ' ');
+      var undo = el('button', d.undo);
+      undo.type = 'button';
+      note.appendChild(undo);
+      kept.forEach(function (n) { n.remove(); });
+      li.appendChild(note);
+      li.classList.add('is-hidden');
+      SP.post(d.markUrl, {ref: ref});
+      undo.addEventListener('click', function () {
+        note.remove();
+        kept.forEach(function (n) { li.appendChild(n); });
+        li.classList.remove('is-hidden');
+        SP.post(d.markUrl, {ref: ref, undo: '1'});
+      });
+    });
+  });
 
   // what links each paper to this one
   function fill(data) {
