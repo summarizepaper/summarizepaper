@@ -716,7 +716,8 @@ def review(question, lang, step=lambda name: None, queries=None, previous=None, 
         result['previous'] = {'key': previous['key'], 'searched': previous['searched']}
     if chosen:
         written(result, plan['question'], chosen, lang, step, previous)
-    return result, {'english': plan['question'], 'papers': [stored(p) for p in chosen + alternates]}
+    seen = sorted({p['key'] for p in pool.papers} | {title_key(p['title']) for p in pool.papers})
+    return result, {'english': plan['question'], 'papers': [stored(p) for p in chosen + alternates], 'seen': seen}
 
 
 def revise(parent, pool, include, exclude, lang, step=lambda name: None):
@@ -990,8 +991,8 @@ def literature_shared(request, token):
 
 
 def search_again(request, row):
-    """The same question searched again (with the queries the researcher rewrote): the papers that were not in
-    this review are marked new."""
+    """The same question searched again (with the queries the researcher rewrote): the papers this review's
+    searches had not found at all are marked new, not those it found and left out (screening varies a little)."""
     question = ' '.join(request.POST.get('question', '').split()) or row.data()['question']
     if not MIN_CHARS <= len(question) <= MAX_CHARS:
         return redirect('/%s/literature-review/%s/?m=length' % (get_language(), row.key))
@@ -1000,6 +1001,9 @@ def search_again(request, row):
     data = row.data()
     previous = {'key': row.key, 'searched': data.get('searched') or row.created.date().isoformat(),
                 'seen': {p['key'] for p in data['papers']} | {title_key(p['title']) for p in data['papers']}}
+    pool = pool_of(row)
+    if pool is not None:
+        previous['seen'] |= set(pool.get('seen') or []) | {p['key'] for p in pool['papers']} | {title_key(p['title']) for p in pool['papers']}
     queries = clean_queries(request.POST.get('queries', '').splitlines())  # the same ones: the reviews compare
     edited = bool(queries) and (queries != data['coverage'].get('queries') or bool(data['coverage'].get('edited')))
     return _start(write(question, get_language(), queries, previous, edited), request.user)

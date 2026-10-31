@@ -615,6 +615,7 @@ class LiteratureTests(ToolsTestCase):
         self.assertEqual(result['title'], 'Microplastics in sediments')
         self.assertEqual(result['alternates'], [])  # every paper screened relevant is in
         self.assertIn('2301.00009v1', {p['key'] for p in pool['papers']})
+        self.assertIn('doi_10.1000--w101', pool['seen'])  # every candidate, read or not
         self.assertEqual(result['searched'], timezone.now().date().isoformat())
 
     def test_a_review_searched_again_marks_what_is_new(self):
@@ -740,6 +741,11 @@ class LiteratureTests(ToolsTestCase):
         args = review.call_args[0]
         self.assertEqual((args[3], args[4]['key'], args[5]), (['q one', 'q two'], 'k1', False))
         self.assertIn('doi_10.1000--w1', args[4]['seen'])
+        Generated.objects.create(kind=literature.POOL_KIND, key='k1', user=user, status='done', lang='en',
+                                 content=json.dumps({'english': 'q', 'papers': [], 'seen': ['doi_10.1000--w77']}))
+        with mock.patch('summarizer.literature.review', return_value=made) as review:
+            client.post('/en/literature-review/k1/', {'action': 'again', 'queries': 'q one'})
+        self.assertIn('doi_10.1000--w77', review.call_args[0][4]['seen'])  # found before, left out: not new
 
     def test_a_collection_is_reviewed_from_its_papers(self):
         user = self.user('pro', paid=True)

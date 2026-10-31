@@ -96,7 +96,7 @@
     </section>
     {% endwith %}
 
-    {% if result.new %}<p class="notice" role="status">{% blocktrans count n=result.new %}{{ n }} paper was not in the previous review: it is marked New.{% plural %}{{ n }} papers were not in the previous review: they are marked New.{% endblocktrans %}</p>{% endif %}
+    {% if result.new %}<p class="notice" role="status">{% blocktrans count n=result.new %}{{ n }} paper had not been found by the previous review: it is marked New.{% plural %}{{ n }} papers had not been found by the previous review: they are marked New.{% endblocktrans %}</p>{% endif %}
 
     {% if not result.papers %}
       <p class="notice">{% trans 'No paper with an abstract was found for this question. Try wording it with the terms papers of the field use.' %}</p>
@@ -200,7 +200,7 @@
     {% if result.coverage.mode != 'collection' %}
     <section class="card section-card" id="again" aria-labelledby="again-title">
       <h2 id="again-title">{% trans 'Search again' %}</h2>
-      <p>{% trans 'Rewrite the question or the queries, or run the same ones later to see what was published since: the papers that are not in this review are marked New.' %}</p>
+      <p>{% trans 'Rewrite the question or the queries, or run the same ones later to see what was published since: the papers this review had not found are marked New.' %}</p>
       <form method="post">{% csrf_token %}<input type="hidden" name="action" value="again">
         <p><label for="again-question"><strong>{% trans 'Your research question' %}</strong></label></p>
         <p><textarea id="again-question" name="question" maxlength="{{ max_chars }}" rows="3">{{ result.question }}</textarea></p>
