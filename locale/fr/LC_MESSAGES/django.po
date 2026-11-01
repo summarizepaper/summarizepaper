@@ -22117,3 +22117,100 @@ msgid "%(counter)s result"
 msgid_plural "%(counter)s results"
 msgstr[0] "%(counter)s résultat"
 msgstr[1] "%(counter)s résultats"
+
+msgid "Note saved."
+msgstr "Note enregistrée."
+
+msgid "Set aside the news about “%(title)s”"
+msgstr "Écarter les nouvelles sur « %(title)s »"
+
+msgid "Set aside"
+msgstr "Écarter"
+
+msgid "With a note"
+msgstr "Avec une note"
+
+msgid "Your latest activity"
+msgstr "Votre activité récente"
+
+msgid "Newest papers first"
+msgstr "Articles les plus récents d’abord"
+
+msgid "Digest"
+msgstr "Digest"
+
+msgid "Use them as the reference papers of my digest"
+msgstr "En faire les articles de référence de mon digest"
+
+msgid ""
+"Your key papers can rank the papers of a daily digest by closeness to them."
+msgstr ""
+"Vos articles clés peuvent classer les articles d’un digest quotidien selon "
+"leur proximité avec eux."
+
+msgid ""
+"With Premium, your key papers can rank the papers of your daily digest by "
+"closeness to them."
+msgstr ""
+"Avec Premium, vos articles clés peuvent classer les articles de votre digest"
+" quotidien selon leur proximité avec eux."
+
+msgid "Added to your list"
+msgstr "Ajouté à votre liste"
+
+msgid "What to remember: a method, a result, where you would cite it…"
+msgstr "À retenir : une méthode, un résultat, où le citer…"
+
+msgid "Save the note"
+msgstr "Enregistrer la note"
+
+msgid "Added to your reading list."
+msgstr "Ajouté à votre liste de lecture."
+
+msgid "Add to my reading list"
+msgstr "Ajouter à ma liste de lecture"
+
+msgid ""
+"In My activity, each paper you open while signed in is recorded with the "
+"date, and its title when it is not summarized yet, together with the reading"
+" status (to read, read, key paper) and the private note you give it. Only "
+"you see them. The reading status is also written in your own collections. "
+"You can take a paper or your whole reading history out of the page; the "
+"records of summary requests used for the daily limits stay."
+msgstr ""
+"Dans Mon activité, chaque article que vous ouvrez en étant connecté est "
+"enregistré avec la date, et son titre s’il n’est pas encore résumé, ainsi "
+"que le statut de lecture (à lire, lu, article clé) et la note privée que "
+"vous lui donnez. Personne d’autre ne les voit. Le statut de lecture est "
+"aussi inscrit dans vos propres collections. Vous pouvez retirer un article "
+"ou tout votre historique de lecture de la page ; les traces des demandes de "
+"résumé, qui servent aux limites quotidiennes, restent."
+
+msgid ""
+"You can download your data yourself, in JSON, from the bottom of the My "
+"activity page."
+msgstr ""
+"Vous pouvez télécharger vous-même vos données, au format JSON, en bas de la "
+"page Mon activité."
+
+#, python-format
+msgid "run %(n)s time"
+msgid_plural "run %(n)s times"
+msgstr[0] "lancée %(n)s fois"
+msgstr[1] "lancée %(n)s fois"
+
+msgid "Rank the papers of your digest by closeness to your latest key paper."
+msgid_plural ""
+"Rank the papers of your digest by closeness to your %(n)s latest key papers."
+msgstr[0] ""
+"Classer les articles de votre digest selon leur proximité avec votre dernier"
+" article clé."
+msgstr[1] ""
+"Classer les articles de votre digest selon leur proximité avec vos %(n)s "
+"derniers articles clés."
+
+#, python-format
+msgid "And the %(n)s matching paper"
+msgid_plural "All the %(n)s matching papers"
+msgstr[0] "Et l’article correspondant"
+msgstr[1] "Les %(n)s articles correspondants"

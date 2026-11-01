@@ -1,4 +1,4 @@
-{% load i18n %}{% load dash_slash %}{% load rising %}{% load weekly_letter %}
+{% load i18n %}{% load dash_slash %}{% load rising %}{% load weekly_letter %}{% load reading_marks %}
 <section class="card tools-card" id="tools" data-paper="{{ arxiv_id }}" data-base="/{{ LANGUAGE_CODE }}">
   <h3>{% trans 'Tools for this paper' %}</h3>
 
@@ -27,6 +27,13 @@
       <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
     {% endif %}
   </div>
+
+  {% if request.user.is_authenticated %}
+  <div class="tool-row" id="paper-reading">
+    <span class="tool-label">{% trans 'Reading status' %}</span>
+    {% reading_mark arxiv_id paper.title True %}
+  </div>
+  {% endif %}
 
   <div class="tool-row">
     <span class="tool-label">{% trans 'Export' %}</span>

@@ -118,12 +118,23 @@ class PaperVisit(models.Model):
     title = models.TextField(blank=True, default='')
     visited = models.DateTimeField(blank=True, null=True, default=timezone.now)  # last opened
     requested = models.DateTimeField(blank=True, null=True)  # last summary request
-    reading = models.CharField(max_length=10, blank=True, default='', choices=READING)
+    reading = models.CharField(max_length=10, blank=True, default='', choices=READING)  # also set in the user's collections
+    marked = models.DateTimeField(blank=True, null=True)  # given a status from another tool before being opened
+    note = models.TextField(blank=True, default='')  # the reader's own note, private
     hidden = models.BooleanField(default=False)  # taken out of the history by its reader, until opened again
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['user', 'arxiv_id'], name='unique_user_arxiv_visit')]
         indexes = [models.Index(fields=['user', '-visited'], name='visit_user_recent')]
+
+
+class ActivityState(models.Model):
+    """What a user has seen of the news of My activity: what is new since their last visit, what they set aside."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='activity_state')
+    seen = models.DateTimeField(blank=True, null=True)  # their last visit of the overview
+    previous = models.DateTimeField(blank=True, null=True)  # the visit before: news found after it are marked new
+    known = models.JSONField(default=dict)  # {news key: when it was first shown}
+    dismissed = models.JSONField(default=list)  # news keys set aside
 
 
 class PDFHistory(models.Model):

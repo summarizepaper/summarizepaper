@@ -226,7 +226,11 @@ def save_view(request, subscription, arxiv_id):
     user = subscription.user
     item = DigestItem.objects.filter(arxiv_id=arxiv_id).first()
     status, chosen = None, None
-    if request.method == 'POST':
+    if request.method == 'POST' and request.POST.get('reading') == 'to_read':
+        from . import personal_activity
+        personal_activity.mark(user, library.canonical_id(arxiv_id) or arxiv_id, 'to_read', item.title if item else '')
+        status = 'to_read'
+    elif request.method == 'POST':
         wanted = request.POST.get('collection', '')
         if wanted == 'new':
             if Collection.objects.filter(user=user).count() >= library.limits(access.has_tool(user, 'collections'))['collections']:

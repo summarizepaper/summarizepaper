@@ -335,3 +335,142 @@ class ResearcherSpaceTests(ToolsTestCase):
         response = self.client.get('/fr/history/')
         for text in ('Vue d’ensemble', 'Du nouveau sur vos articles', 'Télécharger mes données'):
             self.assertContains(response, text)
+
+
+class ReadingListTests(ToolsTestCase):
+    """One reading status everywhere, notes, news set aside, the daily check of the papers read."""
+
+    def setUp(self):
+        super().setUp()
+        self.reader = self.user()
+        self.client = self.client_for(self.reader)
+        self.article = self.paper()
+
+    def readings(self, **params):
+        return self.client.get('/en/history/', dict(tab='readings', **params)).context['items']
+
+    def post(self, url, data):
+        return self.client.post(url, data, HTTP_X_REQUESTED_WITH='fetch')
+
+    def test_versions_of_a_paper_are_one_reading(self):
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        self.paper('2101.00001v2', title='Clouds on a hot planet')
+        personal_activity.record_visit(self.reader, '2101.00001v2')
+        self.assertEqual(list(PaperVisit.objects.filter(user=self.reader).values_list('arxiv_id', flat=True)), ['2101.00001v2'])
+
+    def test_marking_from_anywhere_fills_the_reading_list(self):
+        answer = self.post('/en/history/mark/', {'arxiv_id': 'https://arxiv.org/abs/2106.00007', 'status': 'to_read',
+                                                 'title': 'A paper of the digest'}).json()
+        self.assertEqual(answer['reading'], 'to_read')
+        items = self.readings(status='to_read')
+        self.assertEqual([(i['title'], i['date_kind']) for i in items], [('A paper of the digest', 'marked')])
+        self.post('/en/history/mark/', {'arxiv_id': '2106.00007', 'status': ''})
+        self.assertEqual(self.readings(status='to_read'), [])
+        response = self.client.post('/en/history/mark/', {'arxiv_id': '2106.00007', 'status': 'read', 'next': '/en/letters/'})
+        self.assertEqual(response['Location'], '/en/letters/')
+        self.assertEqual(self.client.post('/en/history/mark/', {'arxiv_id': 'nonsense', 'status': 'read'}).status_code, 404)
+
+    def test_paper_page_shows_the_reading_status(self):
+        personal_activity.mark(self.reader, self.article.arxiv_id, 'key')
+        response = self.client.get('/en/paper/%s/' % self.article.arxiv_id)
+        self.assertContains(response, 'id="paper-reading"')
+        self.assertContains(response, 'data-status="key" aria-pressed="true"')
+
+    def test_one_status_in_history_and_own_collections(self):
+        from summarizer.models import CollectionPaper
+        collection = Collection.objects.create(user=self.reader, name='Mine')
+        CollectionPaper.objects.create(collection=collection, arxiv_id='2101.00001v2', title='Clouds on a hot planet')
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        visit = PaperVisit.objects.get(user=self.reader)
+        self.post('/en/history/selection/', {'one': 'read:%d' % visit.pk})
+        self.assertEqual(CollectionPaper.objects.get().reading, 'read')
+        self.client.post('/en/collections/%d/' % collection.pk, {'action': 'paper', 'arxiv_id': '2101.00001v2', 'reading': 'key'},
+                         HTTP_X_REQUESTED_WITH='fetch')
+        self.assertEqual(PaperVisit.objects.get(user=self.reader).reading, 'key')
+
+    def test_notes_are_saved_searched_filtered_and_exported(self):
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        visit = PaperVisit.objects.get(user=self.reader)
+        answer = self.post('/en/history/selection/', {'one': 'note:%d' % visit.pk, 'note_%d' % visit.pk: 'Method for chapter three'}).json()
+        self.assertEqual(answer['note'], 'Method for chapter three')
+        self.assertEqual(len(self.readings(q='chapter three')), 1)
+        self.assertEqual(len(self.readings(status='noted')), 1)
+        bib = self.client.post('/en/history/selection/', {'action': 'bib', 'v': [visit.pk]}).content.decode()
+        self.assertIn('Method for chapter three', bib)
+
+    def test_every_matching_paper_and_sorting(self):
+        import datetime
+        for i in range(25):
+            paper = self.paper('2104.%05dv1' % i, title='Nebula %02d' % (24 - i))
+            paper.published_arxiv = datetime.date(2020, 1, 1) + datetime.timedelta(days=i)
+            paper.save()
+            personal_activity.record_visit(self.reader, paper.arxiv_id)
+        self.client.post('/en/history/selection/', {'action': 'to_read', 'all': '1', 'q': 'Nebula'})
+        self.assertEqual(PaperVisit.objects.filter(user=self.reader, reading='to_read').count(), 25)
+        self.assertEqual(self.readings(sort='title')[0]['title'], 'Nebula 00')
+        self.assertEqual(self.readings(sort='published')[0]['id'], '2104.00024v1')
+
+    def test_news_new_since_last_visit_and_set_aside(self):
+        from summarizer import publication_status
+        from summarizer.models import ActivityState
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        notice = {'status': 'published', 'journal': 'J', 'doi': '10.1/x', 'date': '2019-01-01',
+                  'updates': [{'type': 'retraction', 'doi': '10.1/r'}]}
+        Generated.objects.create(kind=publication_status.KIND, key=self.article.arxiv_id, lang='en', status='done',
+                                 content=json.dumps(notice))
+        news = self.client.get('/en/history/').context['news']
+        self.assertFalse(news[0]['new'])  # a first visit has nothing to compare with
+        ActivityState.objects.update(seen=timezone.now() - timedelta(hours=2), known={})
+        context = self.client.get('/en/history/').context
+        self.assertTrue(context['news'][0]['new'])
+        self.assertEqual(context['news_new'], 1)
+        self.post('/en/history/news/dismiss/', {'keys': context['news'][0]['keys']})
+        self.assertEqual(self.client.get('/en/history/').context['news'], [])
+
+    def test_results_grouped_and_lost_runs_failed(self):
+        for key in ('a', 'b', 'c'):
+            Generated.objects.create(kind='literature', key=key, user=self.reader, status='done',
+                                     content=json.dumps({'question': 'Same question'}))
+        lost = Generated.objects.create(kind='refcheck', key='d', user=self.reader, status='pending')
+        Generated.objects.filter(pk=lost.pk).update(updated=timezone.now() - timedelta(hours=1))
+        results = self.client.get('/en/history/').context['recent_results']
+        self.assertEqual([(r['title'], r['times'], r['status']) for r in results],
+                         [('Bibliography check', 1, 'failed'), ('Same question', 3, 'done')])
+
+    def test_key_papers_become_digest_references(self):
+        from summarizer.models import DigestSubscription
+        paid = self.user('paid', paid=True)
+        client = self.client_for(paid)
+        digest = DigestSubscription.objects.create(user=paid, categories='astro-ph.EP')
+        for i in range(7):
+            personal_activity.mark(paid, '2105.%05dv2' % i, 'key', 'Key %d' % i)
+        self.assertContains(client.get('/en/history/', {'tab': 'readings', 'status': 'key'}), 'Use them as the reference papers')
+        client.post('/en/history/digest-references/', {'digest': digest.pk})
+        digest.refresh_from_db()
+        self.assertEqual(len(digest.reference_list()), 5)
+        self.assertNotIn('v2', digest.reference_papers)
+        self.assertEqual(self.client.post('/en/history/digest-references/', {'digest': digest.pk}).status_code, 404)
+
+    def test_daily_check_reads_versions_and_queues_status_checks(self):
+        from unittest import mock
+        from django.core.cache import cache
+        from summarizer import publication_status
+        personal_activity.record_visit(self.reader, self.article.arxiv_id)
+        with mock.patch('summarizer.digest.fetch_ids', return_value=[{'arxiv_id': '2101.00001v3'}]) as fetch:
+            self.assertEqual(personal_activity.check_readings(timezone.now()), 1)
+            self.assertEqual(personal_activity.check_readings(timezone.now()), 0)  # once a day
+        self.assertEqual(fetch.call_count, 1)
+        self.assertIn(self.article.arxiv_id, cache.get(publication_status.QUEUE_KEY))
+        labels = [x['label'] for n in self.client.get('/en/history/').context['news'] for x in n['news']]
+        self.assertIn('Version 3 is on arXiv', labels)
+
+    def test_digest_save_link_adds_to_the_reading_list(self):
+        from django.core import signing
+        from summarizer import digest
+        from summarizer.models import DigestSubscription
+        subscription = DigestSubscription.objects.create(user=self.reader, categories='astro-ph.EP')
+        token = signing.dumps([subscription.pk, '2107.00001'], salt=digest.SAVE_SALT, compress=True)
+        anonymous = self.client_class()
+        response = anonymous.post('/en/digest/save/%s/' % token, {'reading': 'to_read'})
+        self.assertContains(response, 'Added to your reading list')
+        self.assertEqual(PaperVisit.objects.get(user=self.reader).reading, 'to_read')

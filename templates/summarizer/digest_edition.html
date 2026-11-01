@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n %}{% load reading_marks %}
 
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -68,6 +68,7 @@
         {% if row.pdf_url %}<a href="{{ row.pdf_url }}" rel="noopener">PDF</a>{% endif %}
         <a href="{{ row.save_url }}">&#128278; {% trans 'Save to a collection' %}</a>
         <a href="/{{ LANGUAGE_CODE }}/journal-club/propose/?arxiv_id={{ row.arxiv_id|urlencode }}" rel="nofollow">{% trans 'Propose for the journal club' %}</a>
+        {% reading_mark row.arxiv_id row.title %}
         <a href="{{ row.more_url }}">&#128077; {% trans 'More like this' %}</a>
         <a href="{{ row.less_url }}">&#128078; {% trans 'Less like this' %}</a>
       </div>

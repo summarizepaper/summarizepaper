@@ -15,6 +15,8 @@
   {% elif status == 'full' %}<p class="error">{% trans 'This collection is full.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>
   {% elif status == 'too_many' %}<p class="error">{% trans 'You have as many collections as your plan allows.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>
   {% elif status %}<p class="error">{% trans 'This paper could not be found. Please try again later.' %}</p>{% endif %}
+  {% if status == 'to_read' %}<p class="notice">{% trans 'Added to your reading list.' %} <a href="/{{ LANGUAGE_CODE }}/history/?tab=readings&amp;status=to_read">{% trans 'My reading list' %}</a></p>
+  {% else %}<form method="post"><p><button type="submit" class="btn btn-ghost" name="reading" value="to_read"><i class="fas fa-bookmark" aria-hidden="true"></i> {% trans 'Add to my reading list' %}</button></p></form>{% endif %}
   {% if status != 'added' %}
   <form method="post">
     {% if collections %}

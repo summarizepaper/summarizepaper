@@ -98,3 +98,20 @@
 .activity-news-what { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:14px; }
 .activity-bulk { min-width:0; box-sizing:border-box; }
 .activity-bulk select, .activity-bulk input[type=text] { box-sizing:border-box; min-width:0; }
+.activity-news-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.activity-dismiss { border:0; background:none; font-size:20px; line-height:1; padding:0 4px; color:var(--text-muted,#5b5b6b); cursor:pointer; }
+.activity-dismiss:hover { color:var(--danger,#dc2626); }
+.activity-badge.tone-new { background:var(--accent,#4f46e5); color:#fff; }
+.activity-sort { display:flex; align-items:center; gap:8px; font-size:14px; margin:8px 0; }
+.activity-sort select { font:inherit; font-size:14px; padding:5px 8px; border:1px solid var(--border,#ccc); border-radius:6px; background:var(--surface,#fff); color:var(--text); }
+.activity-key-digest { margin:8px 0 12px; padding:12px 14px; border-radius:var(--radius-sm,8px); background:var(--accent-soft,#eef0ff); font-size:14px; }
+.activity-key-digest p { margin:0 0 8px; }
+.activity-key-digest form { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.activity-key-digest form p { flex-basis:100%; }
+.activity-key-digest button { font:inherit; font-size:14px; font-weight:600; padding:7px 14px; border:0; border-radius:6px; background:var(--accent,#4f46e5); color:#fff; cursor:pointer; }
+.activity-note { margin:6px 0; font-size:14px; }
+.activity-note summary { cursor:pointer; color:var(--text-muted,#5b5b6b); }
+.activity-note textarea { display:block; width:100%; box-sizing:border-box; margin:6px 0; padding:8px; font:inherit; font-size:14px; border:1px solid var(--border,#ccc); border-radius:6px; background:var(--surface,#fff); color:var(--text); }
+.activity-note button { font:inherit; font-size:13px; padding:4px 12px; border:1px solid var(--border,#ccc); border-radius:6px; background:var(--surface,#fff); color:var(--text); cursor:pointer; }
+.activity-note-status { font-size:13px; color:var(--success,#16a34a); }
+.visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }

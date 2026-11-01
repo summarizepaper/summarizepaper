@@ -275,6 +275,14 @@ def queue(arxiv_id):
         cache.set(QUEUE_KEY, ids + [arxiv_id], 7 * 86400)
 
 
+def queue_many(arxiv_ids):
+    """queue() for many papers in one cache write (the papers read lately, see personal_activity.check_readings)."""
+    ids = cache.get(QUEUE_KEY) or []
+    added = [i for i in dict.fromkeys(arxiv_ids) if i not in ids][:max(MAX_QUEUED - len(ids), 0)]
+    if added:
+        cache.set(QUEUE_KEY, ids + added, 7 * 86400)
+
+
 def iso_date(value):
     """('2013-06' ->) (datetime.date(2013, 6, 1), 'F Y'): the date and the format that shows only what is known."""
     parts = [int(n) for n in re.findall(r'\d+', value or '')][:3]

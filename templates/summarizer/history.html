@@ -16,15 +16,16 @@
     <a href="?tab=results" {% if tab == 'results' %}aria-current="page"{% endif %}>{% trans 'Results' %}</a>
     <a href="{% url 'collections' %}">{% trans 'My collections' %} →</a>
   </nav>
-  {% if notice %}<p class="activity-notice" role="status">{% if notice == 'status' %}{% trans 'Reading status saved.' %}{% elif notice == 'hidden' %}{% trans 'Taken out of your history. Opening the paper again brings it back.' %}{% elif notice == 'cleared' %}{% trans 'Your reading history is cleared.' %}{% elif notice == 'removed' %}{% trans 'Conversation deleted.' %}{% elif notice == 'too_many' %}{% trans 'You have reached the number of collections of your plan: choose an existing collection.' %}{% elif notice == 'none' %}{% trans 'Tick at least one paper first.' %}{% endif %}</p>{% endif %}
+  {% if notice %}<p class="activity-notice" role="status">{% if notice == 'status' %}{% trans 'Reading status saved.' %}{% elif notice == 'hidden' %}{% trans 'Taken out of your history. Opening the paper again brings it back.' %}{% elif notice == 'cleared' %}{% trans 'Your reading history is cleared.' %}{% elif notice == 'removed' %}{% trans 'Conversation deleted.' %}{% elif notice == 'too_many' %}{% trans 'You have reached the number of collections of your plan: choose an existing collection.' %}{% elif notice == 'none' %}{% trans 'Tick at least one paper first.' %}{% elif notice == 'note' %}{% trans 'Note saved.' %}{% endif %}</p>{% endif %}
 
   {% if tab == 'overview' %}
   <section class="activity-section" aria-labelledby="news-title">
-    <h2 id="news-title">{% trans 'News about your papers' %}</h2>
+    <h2 id="news-title">{% trans 'News about your papers' %}{% if news_new %} <span class="activity-count-pill">{% blocktrans count n=news_new %}{{ n }} new{% plural %}{{ n }} new{% endblocktrans %}</span>{% endif %}</h2>
     {% if news %}
     <ul class="activity-news">
       {% for n in news %}
-      <li class="activity-news-item tone-{{ n.tone }}"><a class="activity-news-title" href="{{ n.url }}">{{ n.title }}</a>
+      <li class="activity-news-item tone-{{ n.tone }}" data-news><div class="activity-news-head"><a class="activity-news-title" href="{{ n.url }}">{{ n.title }}</a>{% if n.new %} <span class="activity-badge tone-new">{% trans 'New' %}</span>{% endif %}
+        <form method="post" action="{% url 'history_dismiss' %}" class="activity-inline-form" data-dismiss>{% csrf_token %}<input type="hidden" name="keys" value="{{ n.keys }}"><button type="submit" class="activity-dismiss" aria-label="{% blocktrans with title=n.title %}Set aside the news about “{{ title }}”{% endblocktrans %}" title="{% trans 'Set aside' %}">×</button></form></div>
         <span class="activity-news-what">{% for x in n.news %}<span><span class="activity-badge tone-{{ x.tone }}">{{ x.label }}</span>{% if x.link %} <a href="{{ x.link }}"{% if 'doi.org' in x.link %} target="_blank" rel="noopener"{% endif %}>{{ x.link_label }}</a>{% endif %}</span>{% endfor %}</span></li>
       {% endfor %}
     </ul>
@@ -54,7 +55,7 @@
   <section class="activity-section" aria-labelledby="results-title">
     <h2 id="results-title">{% trans 'Your latest results' %}</h2>
     {% if recent_results %}
-    <ul class="activity-mini">{% for r in recent_results %}<li><a href="{{ r.url }}">{{ r.title }}</a><span class="activity-meta">{{ r.tool }} · {{ r.date|date:"j M Y" }}{% if r.state %} · <strong>{{ r.state }}</strong>{% endif %}</span></li>{% endfor %}</ul>
+    <ul class="activity-mini">{% for r in recent_results %}<li><a href="{{ r.url }}">{{ r.title }}</a><span class="activity-meta">{{ r.tool }} · {{ r.date|date:"j M Y" }}{% if r.times > 1 %} · {% blocktrans count n=r.times %}run {{ n }} time{% plural %}run {{ n }} times{% endblocktrans %}{% endif %}{% if r.state %} · <strong>{{ r.state }}</strong>{% endif %}</span></li>{% endfor %}</ul>
     <a class="activity-more" href="?tab=results">{% trans 'All my results' %} →</a>
     {% else %}<p class="activity-help">{% trans 'Your literature reviews, bibliography checks, conference programs and searches of teams will be listed here.' %} <a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a></p>{% endif %}
   </section>
@@ -93,8 +94,31 @@
     <a href="?tab=readings{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if not status %}aria-current="true"{% endif %}>{% trans 'All' %}</a>
     {% for key, label in reading_labels.items %}<a href="?tab=readings&amp;status={{ key }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == key %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
     <a href="?tab=readings&amp;status=unsorted{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == 'unsorted' %}aria-current="true"{% endif %}>{% trans 'No status' %}</a>
+    <a href="?tab=readings&amp;status=noted{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == 'noted' %}aria-current="true"{% endif %}>{% trans 'With a note' %}</a>
     <a href="?tab=readings&amp;status=unsummarized{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == 'unsummarized' %}aria-current="true"{% endif %}>{% trans 'Not summarized yet' %}</a>
   </nav>
+  <form method="get" class="activity-sort">
+    <input type="hidden" name="tab" value="readings">{% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}{% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+    <label for="activity-sort">{% trans 'Sort by' %}</label>
+    <select id="activity-sort" name="sort" data-autosubmit>
+      <option value="" {% if not sort %}selected{% endif %}>{% trans 'Your latest activity' %}</option>
+      <option value="published" {% if sort == 'published' %}selected{% endif %}>{% trans 'Newest papers first' %}</option>
+      <option value="title" {% if sort == 'title' %}selected{% endif %}>{% trans 'Title' %}</option>
+    </select>
+    <noscript><button type="submit">{% trans 'Sort' %}</button></noscript>
+  </form>
+  {% if status == 'key' and items %}
+  <div class="activity-key-digest">
+    {% if key_digest_allowed and key_digests %}
+    <form method="post" action="{% url 'history_digest_references' %}">{% csrf_token %}
+      <p>{% blocktrans count n=key_count %}Rank the papers of your digest by closeness to your latest key paper.{% plural %}Rank the papers of your digest by closeness to your {{ n }} latest key papers.{% endblocktrans %}</p>
+      {% if key_digests|length > 1 %}<select name="digest" aria-label="{% trans 'Digest' %}">{% for d in key_digests %}<option value="{{ d.pk }}">{{ d.name|default:d.categories|truncatechars:60 }}</option>{% endfor %}</select>{% else %}<input type="hidden" name="digest" value="{{ key_digests.0.pk }}">{% endif %}
+      <button type="submit">{% trans 'Use them as the reference papers of my digest' %}</button>
+    </form>
+    {% elif key_digest_allowed %}<p>{% trans 'Your key papers can rank the papers of a daily digest by closeness to them.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Create a digest' %} →</a></p>
+    {% else %}<p>{% trans 'With Premium, your key papers can rank the papers of your daily digest by closeness to them.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>{% endif %}
+  </div>
+  {% endif %}
   {% elif tab == 'results' %}
   <nav class="activity-filters" aria-label="{% trans 'Tool' %}">
     <a href="?tab=results" {% if not kind %}aria-current="true"{% endif %}>{% trans 'All' %}</a>
@@ -106,12 +130,14 @@
 
   {% if items %}
   {% if tab == 'readings' %}
-  <form method="post" action="{% url 'history_selection' %}" class="activity-selection" id="activity-selection">
+  <form method="post" action="{% url 'history_selection' %}" class="activity-selection" id="activity-selection" data-saved="{% trans 'Saved.' %}">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ here }}">
     <fieldset class="activity-bulk">
       <legend>{% trans 'With the ticked papers' %}</legend>
       <label class="activity-check-all"><input type="checkbox" data-check-all> {% trans 'Tick all' %}</label>
+      {% if pagination.paginator.count > items|length %}<label class="activity-check-all" data-all-matching hidden><input type="checkbox" name="all" value="1"> {% blocktrans count n=all_max %}And the {{ n }} matching paper{% plural %}All the {{ n }} matching papers{% endblocktrans %}</label>
+      <input type="hidden" name="q" value="{{ query }}"><input type="hidden" name="status" value="{{ status }}"><input type="hidden" name="sort" value="{{ sort }}">{% endif %}
       <select name="action" aria-label="{% trans 'Action' %}" data-bulk-action>
         <option value="collection">{% trans 'Add to a collection' %}</option>
         <option value="chat">{% trans 'Chat with these papers' %}</option>
@@ -150,12 +176,17 @@
         {% if item.citations %}<span class="activity-badge">{% blocktrans count n=item.citations %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}</span>{% endif %}
         {% for c in item.collections %}<a class="activity-badge tone-collection" href="{{ c.url }}"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ c.name }}</a>{% endfor %}
       </p>
-      <p class="activity-meta">{% if item.visited %}{% trans 'Last opened' %}{% else %}{% trans 'Summary requested' %}{% endif %} · {{ item.date|date:"j F Y, H:i" }} · <span>{{ item.id }}</span>{% if item.category %} · {{ item.category }}{% endif %}</p>
+      <p class="activity-meta">{% if item.date_kind == 'visited' %}{% trans 'Last opened' %}{% elif item.date_kind == 'requested' %}{% trans 'Summary requested' %}{% else %}{% trans 'Added to your list' %}{% endif %} · {{ item.date|date:"j F Y, H:i" }} · <span>{{ item.id }}</span>{% if item.category %} · {{ item.category }}{% endif %}</p>
+      <details class="activity-note"{% if item.note %} open{% endif %}><summary>{% if item.note %}{% trans 'My note' %}{% else %}{% trans 'Add a note' %}{% endif %}</summary>
+        <label class="visually-hidden" for="note{{ item.pk }}">{% trans 'My note' %}</label>
+        <textarea id="note{{ item.pk }}" name="note_{{ item.pk }}" rows="2" maxlength="5000" placeholder="{% trans 'What to remember: a method, a result, where you would cite it…' %}">{{ item.note }}</textarea>
+        <button type="submit" name="one" value="note:{{ item.pk }}">{% trans 'Save the note' %}</button> <span class="activity-note-status" role="status"></span>
+      </details>
       <div class="activity-actions">
         <a href="{{ item.url }}">{% if item.summarized %}{% trans 'Read the paper' %}{% else %}{% trans 'Summarize it' %}{% endif %}</a>
         <a href="{{ item.chat }}">{% trans 'Chat about this paper' %}</a>
         <span class="activity-status" role="group" aria-label="{% trans 'Reading status' %}">
-          {% for key, label in reading_labels.items %}<button type="submit" name="one" value="{% if item.reading == key %}clear{% else %}{{ key }}{% endif %}:{{ item.pk }}" aria-pressed="{% if item.reading == key %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}
+          {% for key, label in reading_labels.items %}<button type="submit" name="one" value="{% if item.reading == key %}clear{% else %}{{ key }}{% endif %}:{{ item.pk }}" data-status="{{ key }}" data-pk="{{ item.pk }}" aria-pressed="{% if item.reading == key %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}
         </span>
         <button type="submit" name="one" value="hide:{{ item.pk }}" class="activity-link-button">{% trans 'Take out of my history' %}</button>
       </div>
@@ -220,7 +251,52 @@
     action.addEventListener('change', sync);
     choice.addEventListener('change', sync);
     sync();
+    var matching = form.querySelector('[data-all-matching]');
+    if (matching) all.addEventListener('change', function () {
+      matching.hidden = !all.checked;
+      if (!all.checked) matching.querySelector('input').checked = false;
+    });
+    // The buttons of a card are saved without reloading the page.
+    form.addEventListener('submit', function (event) {
+      var button = event.submitter;
+      if (!button || button.name !== 'one' || !window.fetch) return;
+      event.preventDefault();
+      var parts = button.value.split(':'), card = button.closest('.activity-item');
+      var data = new FormData();
+      data.append('csrfmiddlewaretoken', form.querySelector('[name=csrfmiddlewaretoken]').value);
+      data.append('one', button.value);
+      if (parts[0] === 'note') data.append('note_' + parts[1], card.querySelector('textarea').value);
+      fetch(form.getAttribute('action'),  // form.action is its <select name=action>
+            {method: 'POST', body: data, headers: {'X-Requested-With': 'fetch'}, credentials: 'same-origin'})
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+        .then(function (answer) {
+          if (parts[0] === 'hide') { card.remove(); return; }
+          if (parts[0] === 'note') { card.querySelector('.activity-note-status').textContent = form.dataset.saved; return; }
+          card.querySelectorAll('button[data-status]').forEach(function (b) {
+            var on = b.dataset.status === answer.reading;
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+            b.value = (on ? 'clear' : b.dataset.status) + ':' + b.dataset.pk;
+          });
+        })
+        .catch(function () {
+          var input = document.createElement('input');
+          input.type = 'hidden'; input.name = 'one'; input.value = button.value;
+          form.appendChild(input); form.submit();
+        });
+    });
   }
+  document.querySelectorAll('[data-autosubmit]').forEach(function (select) {
+    select.addEventListener('change', function () { select.form.submit(); });
+  });
+  document.querySelectorAll('form[data-dismiss]').forEach(function (f) {
+    f.addEventListener('submit', function (event) {
+      if (!window.fetch) return;
+      event.preventDefault();
+      fetch(f.action, {method: 'POST', body: new FormData(f), headers: {'X-Requested-With': 'fetch'}, credentials: 'same-origin'})
+        .then(function (r) { if (r.ok) f.closest('[data-news]').remove(); else f.submit(); })
+        .catch(function () { f.submit(); });
+    });
+  });
   document.querySelectorAll('form[data-confirm]').forEach(function (f) {
     f.addEventListener('submit', function (e) { if (!window.confirm(f.dataset.confirm)) e.preventDefault(); });
   });
