@@ -2292,38 +2292,45 @@ class TeamsTests(ToolsTestCase):
 
 
 class SlidesTests(ToolsTestCase):
-    ANSWER = {'title': 'Clouds on a hot planet', 'slides': [{'title': 'Context', 'bullets': ['Hot planets', ''], 'figure': 2, 'notes': 'Say it.'},
-                         {'title': 'Again', 'bullets': ['Same figure'], 'figure': 2},
-                         {'title': 'Made up', 'bullets': ['x'], 'figure': 9}, {'bullets': ['no title']}],
-              'strengths': ['Big telescope'], 'limitations': ['One planet'], 'questions': ['Why?']}
+    ANSWER = {'title': 'Clouds on a hot planet', 'slides': [{'title': 'Context', 'points': ['Hot planets', ''], 'figure': 'Figure 2', 'notes': 'Say it.'},
+                         {'title': 'Again', 'points': ['Same figure'], 'figure': 'Figure 2'},
+                         {'title': 'Made up', 'points': ['x'], 'figure': 'Figure 9'}, {'points': ['no title']}],
+              'strengths': [{'point': 'Big telescope', 'quote': ''}], 'stated_limitations': [], 'questions': ['Why?']}
+    GALLERY = {'status': 'ready', 'figures': [
+        {'label': 'Figure 1:', 'images': ['https://arxiv.org/html/2101.00001v1/x1.png'], 'caption': 'Figure 1: the spectrum.', 'source_url': ''},
+        {'label': 'Figure 2:', 'images': ['https://arxiv.org/html/2101.00001v1/x2.png'], 'caption': 'Figure 2: the clouds.', 'source_url': ''}]}
+    OPTIONS = {'lang': 'en', 'audience': 'field', 'duration': 20}
 
     def test_figures_only_under_an_open_license_and_once_each(self):
         self.paper()  # CC BY
-        shown = [{'number': 1, 'url': 'https://arxiv.org/html/2101.00001v1/x1.png', 'caption': 'Figure 1: the spectrum.'},
-                 {'number': 2, 'url': 'https://arxiv.org/html/2101.00001v1/x2.png', 'caption': 'Figure 2: the clouds.'}]
-        with mock.patch('summarizer.slides.figures', return_value=shown), \
+        with mock.patch('summarizer.chat_figures.paper_gallery', return_value=self.GALLERY), \
              mock.patch('summarizer.paper_source.paper_text', return_value='Full text of the clouds paper.'), \
+             mock.patch('summarizer.neighbours.stored', return_value={'items': []}), \
              mock.patch('summarizer.generated.chat_json', return_value=self.ANSWER) as chat:
-            deck = slides.write('2101.00001v1', 'en')(0)
+            deck = slides.write('2101.00001v1', self.OPTIONS)(0)
         self.assertIn('Figure 2: the clouds.', chat.call_args[0][0])
-        self.assertEqual([s['title'] for s in deck['slides']], ['Context', 'Again', 'Made up'])
-        self.assertEqual([s['figure'] and s['figure']['number'] for s in deck['slides']], [2, None, None])
-        self.assertEqual(deck['slides'][0]['bullets'], ['Hot planets'])
+        content = [p for p in deck['pages'] if p['kind'] == 'content'][:3]
+        self.assertEqual([p['title'] for p in content], ['Context', 'Again', 'Made up'])
+        self.assertEqual([p['figure'] and deck['figures'][p['figure']]['label'] for p in content], ['Figure 2', None, None])
+        self.assertEqual(content[0]['bullets'], ['Hot planets'])
         self.assertEqual(deck['license'], 'CC BY 4.0')
         ArxivPaper.objects.update(license='http://arxiv.org/licenses/nonexclusive-distrib/1.0/')
-        with mock.patch('summarizer.slides.figures') as figures, \
+        with mock.patch('summarizer.chat_figures.html_source') as html, \
+             mock.patch('summarizer.neighbours.stored', return_value={'items': []}), \
              mock.patch('summarizer.generated.chat_json', return_value=self.ANSWER) as chat:
-            deck = slides.write('2101.00001v1', 'en')(0)
-        figures.assert_not_called()
+            deck = slides.write('2101.00001v1', self.OPTIONS)(0)
+        html.assert_not_called()
         self.assertTrue(deck['abstract_only'])
-        self.assertNotIn('Figure', chat.call_args[0][0])
+        self.assertEqual(deck['figures'], {})
+        self.assertNotIn('Put a figure', chat.call_args.kwargs['system'])
 
     def test_page_is_premium_and_shows_the_deck(self):
         self.paper()
         self.assertContains(self.client_for(self.user()).get('/en/journal-club/2101.00001v1/'), 'Discover Premium')
         client = self.client_for(self.user('pro', paid=True))
-        with mock.patch('summarizer.slides.figures', return_value=[]), \
+        with mock.patch('summarizer.presskit.figures_of', return_value=[]), \
              mock.patch('summarizer.paper_source.paper_text', return_value='Full text.'), \
+             mock.patch('summarizer.neighbours.stored', return_value={'items': []}), \
              mock.patch('summarizer.generated.chat_json', return_value=self.ANSWER):
             self.assertIn('id', client.post('/en/journal-club/2101.00001v1/start/').json())
         page = client.get('/en/journal-club/2101.00001v1/')

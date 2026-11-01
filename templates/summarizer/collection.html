@@ -30,6 +30,11 @@
     <button type="button" class="btn btn-sm btn-ghost" id="zotero-go">{% trans 'Send to Zotero' %} <span class="badge-premium">Premium</span></button>
     <span class="tool-status" id="zotero-status" aria-live="polite"></span>
   </div>
+  <details class="lit-collection">
+    <summary><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {% trans 'Journal club of the selected papers' %} <span class="badge-premium">Premium+</span></summary>
+    <p class="muted"><small>{% trans 'Slides presenting the selected papers together (6 at most, in the order of the collection): each paper in turn, each point with its passage, then how they compare, what they leave open and questions for the discussion. Invite colleagues to the collection so that everyone proposes papers.' %}</small></p>
+    <p><a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/journal-club/collection/{{ collection.pk }}/">{% trans 'Prepare the slides' %}</a></p>
+  </details>
   <details class="lit-collection" {% if review_error %}open{% endif %}>
     <summary><i class="fas fa-book-open" aria-hidden="true"></i> {% trans 'Literature review of the selected papers' %} <span class="badge-premium">Premium+</span></summary>
     {% if review_error == 'too_few' %}<p class="error">{% trans 'Select at least 3 papers to review them.' %}</p>

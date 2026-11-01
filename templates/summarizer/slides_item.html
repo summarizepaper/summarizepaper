@@ -1,0 +1,56 @@
+{% load i18n %}{# One slide of slides.html, with its notes, its sources and its editor; s=None gives the empty slide that “Add a slide” copies. #}
+<article class="slide-item{% if s.figure %} has-figure{% endif %}" data-origin="{% if s %}{{ s.origin|default_if_none:'' }}{% endif %}" data-kind="{{ s.kind|default:'content' }}">
+  <div class="slide-frame">{% language deck_lang %}<section lang="{{ deck_lang }}" class="slide{% if s.kind == 'title' %} slide-title{% endif %}" data-kind="{{ s.kind|default:'content' }}" data-layout="{{ s.layout|default:'right' }}" style="--figure-share:{{ s.figure_size|default:50 }}%; --slide-font:{{ s.text_size|default:30 }}px">
+    <h2 data-preview-title>{{ s.title }}</h2>
+    <div class="slide-body{% if s.figure %} with-figure{% endif %}{% if s.kind == 'columns' %} two-columns{% endif %}">
+      <div class="slide-copy">{% if s.kind == 'columns' %}<h3>{% if s.headings.0 %}{{ s.headings.0 }}{% else %}{% trans 'Strengths' %}{% endif %}</h3>{% endif %}<ul data-preview-bullets>{% for b in s.bullets %}<li>{{ b }}</li>{% endfor %}</ul></div>
+      {% if s.kind == 'columns' %}<div class="slide-secondary"><h3>{% if s.headings.1 %}{{ s.headings.1 }}{% else %}{% trans 'Limits' %}{% endif %}</h3><ul data-preview-secondary>{% for b in s.secondary %}<li>{{ b }}</li>{% endfor %}</ul></div>{% endif %}
+      {% if s.figure %}<figure><img src="{{ s.figure.url }}" alt="{{ s.figure.caption }}" loading="eager"><figcaption>{{ s.figure.credit }}</figcaption></figure>{% endif %}
+    </div>
+    <footer class="slide-credit">SummarizePaper · {{ footer }} <span data-slide-number>{{ number }} / {{ total }}</span></footer>
+  </section>{% endlanguage %}</div>
+  <p class="speaker-notes no-print" data-preview-notes{% if not s.notes %} hidden{% endif %}>{{ s.notes }}</p>
+  {% if s.sources %}
+  <details class="slide-sources no-print"{% if s.checked != s.sources|length %} open{% endif %}>
+    <summary>{% blocktrans with n=s.checked total=s.sources|length %}Sources: {{ n }} of {{ total }} points found in the paper{% endblocktrans %}</summary>
+    <ul>{% for c in s.sources %}
+      <li class="{% if c.verified %}is-verified{% else %}is-unverified{% endif %}">
+        <span class="source-mark" aria-hidden="true">{% if c.verified %}✓{% else %}⚠{% endif %}</span>
+        <span>{{ c.text }}</span>
+        <span class="source-kind">{% if c.kind == 'result' %}{% trans 'Result' %}{% elif c.kind == 'interpretation' %}{% trans 'Interpretation of the authors' %}{% elif c.kind == 'method' %}{% trans 'Method' %}{% else %}{% trans 'Context' %}{% endif %}</span>
+        {% if c.verified %}<blockquote class="deck-quote">« {{ c.quote }} »{% if c.location %} <small>— {{ c.location }}</small>{% endif %}{% if c.link %} <a href="{{ c.link }}" rel="noopener nofollow" target="_blank">{% trans 'Open in the paper' %}</a>{% endif %}</blockquote>
+        {% else %}<small class="source-missing">{% trans 'Not found in the paper: check it before presenting.' %}</small>{% endif %}
+        {% if c.numbers %}<small class="source-missing">{% trans 'Numbers the paper does not state:' %} {{ c.numbers|join:', ' }}</small>{% endif %}
+      </li>{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+  {% if not shared %}
+  <div class="slide-editor no-print">
+    <div class="slide-actions" role="group" aria-label="{% trans 'Slide' %}">
+      <button type="button" class="btn btn-sm btn-ghost" data-action="up" aria-label="{% trans 'Move up' %}">↑</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-action="down" aria-label="{% trans 'Move down' %}">↓</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-action="duplicate">{% trans 'Duplicate' context 'slide action' %}</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-action="add">{% trans 'Add a slide after' %}</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-action="delete">{% trans 'Remove' %}</button>
+    </div>
+    <label>{% trans 'Slide title' %}<input data-edit="title" maxlength="300" value="{{ s.title }}"></label>
+    <label>{% if s.kind == 'columns' %}{% if s.headings.0 %}{{ s.headings.0 }}{% else %}{% trans 'Strengths' %}{% endif %}{% else %}{% trans 'Text (one bullet per line)' %}{% endif %}<textarea data-edit="bullets" rows="4">{% for b in s.bullets %}{{ b }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}</textarea></label>
+    {% if s.kind == 'columns' %}<label>{% if s.headings.1 %}{{ s.headings.1 }}{% else %}{% trans 'Limits' %}{% endif %}<textarea data-edit="secondary" rows="4">{% for b in s.secondary %}{{ b }}{% if not forloop.last %}&#10;{% endif %}{% endfor %}</textarea></label>{% endif %}
+    <label>{% trans 'Speaker notes (excluded from PDF)' %}<textarea data-edit="notes" rows="3" maxlength="3000">{{ s.notes }}</textarea></label>
+    <div class="slide-layout-controls">
+      <label>{% trans 'Text size' %}<select data-edit="text_size"><option value="24"{% if s.text_size == 24 %} selected{% endif %}>{% trans 'Small' %}</option><option value="30"{% if not s or s.text_size == 30 %} selected{% endif %}>{% trans 'Medium' %}</option><option value="36"{% if s.text_size == 36 %} selected{% endif %}>{% trans 'Large' %}</option></select></label>
+      {% if s.kind != 'columns' and figures %}<label>{% trans 'Figure' %}<select data-edit="figure"><option value="">{% trans 'No figure' %}</option>{% for fid, f in figures.items %}<option value="{{ fid }}"{% if fid == s.figure_id %} selected{% endif %}>{{ f.label }}</option>{% endfor %}</select></label>{% endif %}
+      <label class="figure-control">{% trans 'Figure position' %}<select data-edit="layout"><option value="right"{% if s.layout == 'right' or not s %} selected{% endif %}>{% trans 'Right' %}</option><option value="left"{% if s.layout == 'left' %} selected{% endif %}>{% trans 'Left' %}</option><option value="top"{% if s.layout == 'top' %} selected{% endif %}>{% trans 'Top' %}</option><option value="bottom"{% if s.layout == 'bottom' %} selected{% endif %}>{% trans 'Bottom' %}</option></select></label>
+      <label class="figure-control">{% trans 'Figure size' %}<input type="range" data-edit="figure_size" min="25" max="70" value="{{ s.figure_size|default:50 }}"></label>
+    </div>
+    <div class="slide-rewrite" role="group" aria-label="{% trans 'Rewrite this slide' %}">
+      <span>{% trans 'Rewrite:' %}</span>
+      {% if s.kind != 'columns' %}<button type="button" class="btn btn-sm btn-ghost" data-rewrite="shorter">{% trans 'Shorter' %}</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-rewrite="simpler">{% trans 'Simpler' %}</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-rewrite="technical">{% trans 'More technical' %}</button>{% endif %}
+      <button type="button" class="btn btn-sm btn-ghost" data-rewrite="notes">{% trans 'Speaker notes' %}</button>
+    </div>
+  </div>
+  {% endif %}
+</article>

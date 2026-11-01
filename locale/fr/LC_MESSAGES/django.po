@@ -19628,3 +19628,565 @@ msgid_plural "A referee would expect %(n)s of them."
 msgstr[0] "Un rapporteur s’attendrait à en voir %(n)s cité."
 msgstr[1] "Un rapporteur s’attendrait à en voir %(n)s cités."
 
+msgid "Researchers of the field"
+msgstr "Chercheurs du domaine"
+
+msgid "Students new to the topic"
+msgstr "Étudiants qui découvrent le sujet"
+
+msgid "Researchers of another field"
+msgstr "Chercheurs d’un autre domaine"
+
+msgid "10 minutes"
+msgstr "10 minutes"
+
+msgid "20 minutes"
+msgstr "20 minutes"
+
+msgid "45 minutes"
+msgstr "45 minutes"
+
+msgid ""
+"Finding the earlier papers, the citing papers and where the paper stands"
+msgstr ""
+"Recherche des travaux antérieurs, des articles qui le citent et d’où en est "
+"l’article"
+
+msgid "Writing the slides, each point with its passage of the paper"
+msgstr ""
+"Rédaction des slides, chaque point avec son passage de l’article"
+
+msgid "Reading the selected papers and their figures"
+msgstr "Lecture des articles sélectionnés et de leurs figures"
+
+msgid "Figure %(n)s"
+msgstr "Figure %(n)s"
+
+msgid "Retraction notice"
+msgstr "Avis de rétractation"
+
+msgid "Withdrawal notice"
+msgstr "Avis de retrait"
+
+msgid "Removal notice"
+msgstr "Avis de suppression"
+
+msgid "Erratum published"
+msgstr "Erratum publié"
+
+msgid "Corrigendum published"
+msgstr "Corrigendum publié"
+
+msgid ""
+"A newer version (v%(n)s) is on arXiv: check what changed before presenting."
+msgstr ""
+"Une version plus récente (v%(n)s) est sur arXiv : vérifiez ce qui a changé "
+"avant de présenter."
+
+msgid "What the abstract does not say"
+msgstr "Ce que le résumé ne dit pas"
+
+msgid "Only the abstract could be read: these points need the full paper."
+msgstr "Seul le résumé a pu être lu : ces points demandent l’article complet."
+
+msgid "Earlier work and what came next"
+msgstr "Travaux antérieurs et suites"
+
+msgid "What it builds on"
+msgstr "Sur quoi il s’appuie"
+
+msgid "No earlier paper found in our index"
+msgstr "Aucun article antérieur trouvé dans notre index"
+
+msgid "No citing paper found yet"
+msgstr "Aucun article qui le cite pour l’instant"
+
+msgid ""
+"From the papers it cites and the papers that cite it (Semantic Scholar, "
+"OpenAlex and our index), not from the model's memory."
+msgstr ""
+"D’après les articles qu’il cite et ceux qui le citent (Semantic Scholar, "
+"OpenAlex et notre index), pas d’après la mémoire du modèle."
+
+msgid "Where the paper stands"
+msgstr "Où en est l’article"
+
+msgid ""
+"Checked in Crossref and arXiv when the deck was written; check again before "
+"presenting."
+msgstr ""
+"Vérifié dans Crossref et arXiv quand la présentation a été écrite ; vérifiez"
+" à nouveau avant de présenter."
+
+msgid "Limits stated by the authors"
+msgstr "Limites énoncées par les auteurs"
+
+msgid "The authors state no limit in the text we read"
+msgstr "Les auteurs n’énoncent aucune limite dans le texte que nous avons lu"
+
+msgid "Points to discuss (AI reading, to check)"
+msgstr "Points à discuter (lecture d’une IA, à vérifier)"
+
+msgid "Questions"
+msgstr "Questions"
+
+msgid ""
+"The points to discuss are a reading by an AI, not statements of the paper."
+msgstr ""
+"Les points à discuter sont une lecture d’une IA, pas des affirmations de "
+"l’article."
+
+msgid "How the papers compare"
+msgstr "Comment les articles se comparent"
+
+msgid "Where they differ"
+msgstr "Où ils divergent"
+
+msgid ""
+"From the comparison table of the collection, whose cells carry their "
+"passages."
+msgstr ""
+"D’après le tableau comparatif de la collection, dont les cellules portent "
+"leurs passages."
+
+msgid "Written by an AI from the papers: check it against them."
+msgstr "Écrit par une IA à partir des articles : vérifiez-le dans ceux-ci."
+
+msgid "What the papers leave open"
+msgstr "Ce que les articles laissent ouvert"
+
+msgid "From the open questions of the collection."
+msgstr "D’après les questions ouvertes de la collection."
+
+msgid ""
+"The points to discuss are a reading by an AI, not statements of the papers."
+msgstr ""
+"Les points à discuter sont une lecture d’une IA, pas des affirmations des "
+"articles."
+
+msgid "Passages of the paper:"
+msgstr "Passages de l’article :"
+
+msgid ""
+"Slides for your audience and the length of your talk, each point with its "
+"passage of the paper, the earlier work, where the paper stands and the hard "
+"questions to prepare; edit, present, share or export. For one paper or the "
+"papers your team proposes."
+msgstr ""
+"Des slides adaptées à votre public et à la durée de votre exposé, "
+"chaque point avec son passage de l’article, les travaux antérieurs, où en "
+"est l’article et les questions difficiles à préparer ; à modifier, "
+"présenter, partager ou exporter. Pour un article ou ceux que propose votre "
+"équipe."
+
+msgid "A version shared by its presenter on %(date)s. Read-only."
+msgstr "Une version partagée par son présentateur le %(date)s. Lecture seule."
+
+msgid "Back to the collection"
+msgstr "Retour à la collection"
+
+msgid ""
+"The slides present the selected papers of the collection, %(max_papers)s at "
+"most, in its order. Change the selection in the collection to present "
+"others."
+msgstr ""
+"Les slides présentent les articles sélectionnés de la collection, "
+"%(max_papers)s au plus, dans son ordre. Changez la sélection dans la "
+"collection pour en présenter d’autres."
+
+msgid "Select at least two papers of the collection."
+msgstr "Sélectionnez au moins deux articles de la collection."
+
+msgid "Audience"
+msgstr "Public"
+
+msgid "Length of the talk"
+msgstr "Durée de l’exposé"
+
+msgid "Prepare a version with these settings"
+msgstr "Préparer une version avec ces réglages"
+
+msgid "Prepare the slides"
+msgstr "Préparer les slides"
+
+msgid ""
+"The language applies to the titles, text, speaker notes and exports; the "
+"passages of the paper stay in its own language, and so do the labels inside "
+"its figures. The audience and the length set how much context, detail and "
+"how many slides the presentation has. Each set of settings is a presentation"
+" of its own: the others are kept."
+msgstr ""
+"La langue s’applique aux titres, au texte, aux notes de l’orateur et aux "
+"exports ; les passages de l’article restent dans sa langue, comme les "
+"légendes à l’intérieur de ses figures. Le public et la durée fixent la part "
+"de contexte, le niveau de détail et le nombre de slides. Chaque jeu de"
+" réglages donne une présentation à part : les autres sont conservées."
+
+msgid ""
+"The license of this paper only lets us read its abstract: the presentation "
+"will be short (3 or 4 slides), and will say what the abstract does not tell."
+" Check the full paper before presenting it."
+msgstr ""
+"La licence de cet article ne nous permet de lire que son résumé : la "
+"présentation sera courte (3 ou 4 slides) et dira ce que le résumé ne "
+"précise pas. Vérifiez l’article complet avant de le présenter."
+
+msgid ""
+"This is an earlier presentation, written before each point came with its "
+"passage of the paper. Prepare a new version for the checked passages, the "
+"earlier work and where the paper stands; this one and your edits are kept."
+msgstr ""
+"Ceci est une présentation antérieure, écrite avant que chaque point vienne "
+"avec son passage de l’article. Préparez une nouvelle version pour avoir les "
+"passages vérifiés, les travaux antérieurs et où en est l’article ; celle-ci "
+"et vos modifications sont conservées."
+
+msgid ""
+"Your saved version no longer matches this presentation: it is shown as "
+"written. Your earlier edits are kept aside when you save again."
+msgstr ""
+"Votre version enregistrée ne correspond plus à cette présentation : elle est"
+" affichée telle qu’écrite. Vos modifications précédentes sont mises de côté "
+"quand vous enregistrez à nouveau."
+
+msgid "Your journal club presentation, ready in a minute or two."
+msgstr "Votre présentation de journal club, prête en une ou deux minutes."
+
+msgid ""
+"Slides for the audience and the length of your talk, each point with the "
+"passage of the paper that supports it, the figures of the paper when its "
+"license allows it, what to say on each slide, the earlier work and the "
+"papers that cite it, where the paper stands, its strengths, the limits its "
+"authors state, points to discuss, and the hard questions to prepare. Edit, "
+"reorder, present with a presenter view, share or export to PowerPoint and "
+"PDF."
+msgstr ""
+"Des slides adaptées au public et à la durée de votre exposé, chaque "
+"point avec le passage de l’article qui l’étaye, les figures de l’article "
+"quand sa licence le permet, quoi dire sur chaque slide, les travaux "
+"antérieurs et les articles qui le citent, où en est l’article, ses points "
+"forts, les limites qu’énoncent ses auteurs, des points à discuter et les "
+"questions difficiles à préparer. Modifiez, réorganisez, présentez avec une "
+"vue présentateur, partagez ou exportez en PowerPoint et en PDF."
+
+msgid "See the slide “Where the paper stands” before presenting."
+msgstr "Voyez la slide « Où en est l’article » avant de présenter."
+
+msgid "Presenter view"
+msgstr "Vue présentateur"
+
+msgid "Show the sources"
+msgstr "Afficher les sources"
+
+msgid ""
+"Edit the text below each slide, move, duplicate, remove or add slides, pick "
+"another figure of the paper, or ask for a slide to be rewritten. Your saved "
+"version is private until you share it."
+msgstr ""
+"Modifiez le texte sous chaque slide, déplacez, dupliquez, supprimez ou"
+" ajoutez des slides, choisissez une autre figure de l’article ou "
+"demandez la réécriture d’une slide. Votre version enregistrée reste "
+"privée tant que vous ne la partagez pas."
+
+msgid ""
+"PowerPoint includes your current edits and speaker notes, with the passages "
+"of the paper in the notes, editable text and movable figures."
+msgstr ""
+"Le PowerPoint reprend vos modifications en cours et vos notes, avec les "
+"passages de l’article dans les notes, du texte modifiable et des figures "
+"déplaçables."
+
+msgid ""
+"Presenter view: a second window with the notes, the next slide and a timer. "
+"Present full screen on the projector and keep it on your screen; the arrow "
+"keys work in both."
+msgstr ""
+"Vue présentateur : une seconde fenêtre avec les notes, la slide "
+"suivante et un chronomètre. Présentez en plein écran sur le projecteur et "
+"gardez-la sur votre écran ; les flèches du clavier fonctionnent dans les "
+"deux."
+
+msgid "Rewriting the slide…"
+msgstr "Réécriture de la slide…"
+
+msgid "Slide rewritten. Check it, then save your version."
+msgstr "Slide réécrite. Vérifiez-la, puis enregistrez votre version."
+
+msgid "The slide could not be rewritten. Please try again."
+msgstr "La slide n’a pas pu être réécrite. Veuillez réessayer."
+
+msgid "You have rewritten many slides today. Come back tomorrow."
+msgstr ""
+"Vous avez réécrit beaucoup de slides aujourd’hui. Revenez demain."
+
+msgid "Check these numbers, absent from the slide and its passages:"
+msgstr "Vérifiez ces nombres, absents de la slide et de ses passages :"
+
+msgid "Remove this slide?"
+msgstr "Supprimer cette slide ?"
+
+msgid "New slide"
+msgstr "Nouvelle slide"
+
+msgid "Allow pop-ups for this site to open the presenter view."
+msgstr ""
+"Autorisez les fenêtres pop-up pour ce site pour ouvrir la vue présentateur."
+
+msgid "End of the presentation"
+msgstr "Fin de la présentation"
+
+msgid "Elapsed"
+msgstr "Écoulé"
+
+msgid "Planned"
+msgstr "Prévu"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "The hard questions to prepare"
+msgstr "Les questions difficiles à préparer"
+
+msgid ""
+"What the audience is likely to ask, and what the paper lets the presenter "
+"answer. A passage is shown only when it really is in the paper."
+msgstr ""
+"Ce que l’auditoire risque de demander, et ce que l’article permet de "
+"répondre. Un passage n’est affiché que s’il figure réellement dans "
+"l’article."
+
+msgid ""
+"No passage of the paper supports this answer: check it before giving it."
+msgstr ""
+"Aucun passage de l’article n’étaye cette réponse : vérifiez-la avant de la "
+"donner."
+
+msgid "Ask the paper another question"
+msgstr "Poser une autre question à l’article"
+
+msgid "Sharing failed. Please try again."
+msgstr "Le partage a échoué. Veuillez réessayer."
+
+msgid "Save your version first: the link shares the saved version."
+msgstr ""
+"Enregistrez d’abord votre version : le lien partage la version enregistrée."
+
+msgid "Share with the participants"
+msgstr "Partager avec les participants"
+
+msgid ""
+"A read-only link to your saved version, to send before or after the session:"
+" anyone with the link sees the slides, the sources and the hard questions, "
+"without an account. It works for 90 days; share again to update it to your "
+"latest saved version."
+msgstr ""
+"Un lien en lecture seule vers votre version enregistrée, à envoyer avant ou "
+"après la séance : toute personne qui a le lien voit les slides, les "
+"sources et les questions difficiles, sans compte. Il fonctionne 90 jours ; "
+"partagez à nouveau pour le mettre à jour avec votre dernière version "
+"enregistrée."
+
+msgid "Update the shared version"
+msgstr "Mettre à jour la version partagée"
+
+msgid "Share link"
+msgstr "Lien de partage"
+
+msgid "Written by AI on %(date)s from the paper."
+msgstr "Écrit par IA le %(date)s à partir de l’article."
+
+msgid ""
+"A point marked as not found in the paper, or with a number the paper does "
+"not state, is to be checked before presenting."
+msgstr ""
+"Un point signalé comme introuvable dans l’article, ou avec un nombre que "
+"l’article n’énonce pas, est à vérifier avant de présenter."
+
+msgid ""
+"The slides are written from the paper, each point with its passage. It takes"
+" one or two minutes."
+msgstr ""
+"Les slides sont écrites à partir de l’article, chaque point avec son "
+"passage. Cela prend une ou deux minutes."
+
+msgid "Sources: %(n)s of %(total)s points found in the paper"
+msgstr "Sources : %(n)s sur %(total)s points retrouvés dans l’article"
+
+msgid "Interpretation of the authors"
+msgstr "Interprétation des auteurs"
+
+msgid "Not found in the paper: check it before presenting."
+msgstr "Introuvable dans l’article : à vérifier avant de présenter."
+
+msgid "Numbers the paper does not state:"
+msgstr "Nombres que l’article n’énonce pas :"
+
+msgid "Slide"
+msgstr "Slide"
+
+msgid "Add a slide after"
+msgstr "Ajouter une slide après"
+
+msgid "Figure"
+msgstr "Figure"
+
+msgid "No figure"
+msgstr "Aucune figure"
+
+msgid "Rewrite this slide"
+msgstr "Réécrire cette slide"
+
+msgid "Rewrite:"
+msgstr "Réécrire :"
+
+msgid "Shorter"
+msgstr "Plus court"
+
+msgid "Simpler"
+msgstr "Plus simple"
+
+msgid "More technical"
+msgstr "Plus technique"
+
+msgid "Speaker notes"
+msgstr "Notes de l’orateur"
+
+msgid "Propose for the journal club"
+msgstr "Proposer pour le journal club"
+
+msgid ""
+"Keep the papers proposed for your journal club in a collection: invite your "
+"colleagues to it (in its settings) so that everyone proposes papers, sorts "
+"them and leaves notes. The presenter then prepares the slides of one paper, "
+"or of the selected papers of the collection together."
+msgstr ""
+"Gardez les articles proposés pour votre journal club dans une collection : "
+"invitez-y vos collègues (dans ses réglages) pour que chacun propose des "
+"articles, les trie et laisse des notes. Le présentateur prépare ensuite les "
+"slides d’un article, ou des articles sélectionnés de la collection "
+"ensemble."
+
+msgid ""
+"You have reached the number of collections of your plan: choose an existing "
+"one."
+msgstr ""
+"Vous avez atteint le nombre de collections de votre formule : choisissez-en "
+"une existante."
+
+msgid "Add it to"
+msgstr "L’ajouter à"
+
+msgid "Propose this paper"
+msgstr "Proposer cet article"
+
+msgid "With your team"
+msgstr "Avec votre équipe"
+
+msgid ""
+"Propose papers for the next sessions in a collection shared with your "
+"colleagues (“Propose for the journal club” on a paper page, in the weekly "
+"letters and in the daily digest), then prepare the slides of one paper or of"
+" the selected papers of the collection together."
+msgstr ""
+"Proposez des articles pour les prochaines séances dans une collection "
+"partagée avec vos collègues (« Proposer pour le journal club » sur la page "
+"d’un article, dans les lettres hebdomadaires et dans le digest quotidien), "
+"puis préparez les slides d’un article ou des articles sélectionnés de "
+"la collection ensemble."
+
+msgid "Journal club of the selected papers"
+msgstr "Journal club des articles sélectionnés"
+
+msgid ""
+"Slides presenting the selected papers together (6 at most, in the order of "
+"the collection): each paper in turn, each point with its passage, then how "
+"they compare, what they leave open and questions for the discussion. Invite "
+"colleagues to the collection so that everyone proposes papers."
+msgstr ""
+"Des slides qui présentent ensemble les articles sélectionnés (6 au "
+"plus, dans l’ordre de la collection) : chaque article à son tour, chaque "
+"point avec son passage, puis comment ils se comparent, ce qu’ils laissent "
+"ouvert et des questions pour la discussion. Invitez des collègues dans la "
+"collection pour que chacun propose des articles."
+
+msgid ""
+"Open the page of the paper and, in its tools, click “Slides to present it” "
+"(Premium+). Choose the language (16 languages), the audience (researchers of"
+" the field, students, researchers of another field) and the length of the "
+"talk (10, 20 or 45 minutes): in a minute or two you get the slides with what"
+" to say on each. Each point comes with the passage of the paper that "
+"supports it, checked word for word; a point the paper does not support, or a"
+" number it does not state, is marked for you to check. The figures of the "
+"paper are included when its license allows it (CC BY and similar)."
+msgstr ""
+"Ouvrez la page de l’article et, dans ses outils, cliquez sur « Des slides "
+"pour le présenter » (Premium+). Choisissez la langue (16 langues), le public"
+" (chercheurs du domaine, étudiants, chercheurs d’un autre domaine) et la "
+"durée de l’exposé (10, 20 ou 45 minutes) : en une ou deux minutes, vous "
+"obtenez les slides avec quoi dire sur chacune. Chaque point vient avec"
+" le passage de l’article qui l’étaye, vérifié mot pour mot ; un point que "
+"l’article n’étaye pas, ou un nombre qu’il n’énonce pas, est signalé pour que"
+" vous le vérifiiez. Les figures de l’article sont incluses quand sa licence "
+"le permet (CC BY et similaires)."
+
+msgid ""
+"The slides also show the earlier work the paper builds on and the papers "
+"that cite it (from its references and citations, not from the memory of an "
+"AI), where the paper stands (publication, retraction or correction notices, "
+"a newer arXiv version), its strengths, the limits its authors state, points "
+"to discuss marked as an AI reading, and the hard questions the audience is "
+"likely to ask with what the paper lets you answer."
+msgstr ""
+"Les slides montrent aussi les travaux antérieurs sur lesquels "
+"l’article s’appuie et les articles qui le citent (d’après ses références et "
+"ses citations, pas d’après la mémoire d’une IA), où en est l’article "
+"(publication, avis de rétractation ou de correction, version arXiv plus "
+"récente), ses points forts, les limites qu’énoncent ses auteurs, des points "
+"à discuter signalés comme une lecture d’IA, et les questions difficiles que "
+"l’auditoire risque de poser avec ce que l’article permet de répondre."
+
+msgid ""
+"Edit the text and speaker notes, move, duplicate, add or remove slides, pick"
+" another figure of the paper, ask for a slide to be rewritten shorter, "
+"simpler or more technical, and save a private version. Present it full "
+"screen with a presenter view (notes, next slide, timer), share it with the "
+"participants by a read-only link, save it as PDF (16:9, one slide per page, "
+"no notes) or download the PowerPoint (.pptx) with the passages in the "
+"speaker notes."
+msgstr ""
+"Modifiez le texte et les notes, déplacez, dupliquez, ajoutez ou supprimez "
+"des slides, choisissez une autre figure de l’article, demandez qu’une "
+"slide soit réécrite plus courte, plus simple ou plus technique, et "
+"enregistrez une version privée. Présentez-la en plein écran avec une vue "
+"présentateur (notes, slide suivante, chronomètre), partagez-la avec "
+"les participants par un lien en lecture seule, enregistrez-la en PDF (16:9, "
+"une slide par page, sans notes) ou téléchargez le PowerPoint (.pptx) "
+"avec les passages dans les notes."
+
+msgid ""
+"For a team: “Propose for the journal club” adds a paper to a collection you "
+"share with your colleagues; the collection then prepares the slides of its "
+"selected papers together, with how they compare."
+msgstr ""
+"En équipe : « Proposer pour le journal club » ajoute un article à une "
+"collection que vous partagez avec vos collègues ; la collection prépare "
+"ensuite les slides de ses articles sélectionnés ensemble, avec la "
+"façon dont ils se comparent."
+
+msgid ""
+"slides for your audience and the length of your talk, each point with its "
+"passage of the paper, the earlier work and where the paper stands, a "
+"presenter view and a link to share"
+msgstr ""
+"des slides adaptées à votre public et à la durée de votre exposé, "
+"chaque point avec son passage de l’article, les travaux antérieurs et où en "
+"est l’article, une vue présentateur et un lien à partager"
+
+msgid "%(n)s selected paper"
+msgid_plural "%(n)s selected papers"
+msgstr[0] "%(n)s article sélectionné"
+msgstr[1] "%(n)s articles sélectionnés"
+
+msgctxt "slide action"
+msgid "Duplicate"
+msgstr "Dupliquer"

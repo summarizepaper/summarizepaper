@@ -196,8 +196,12 @@ class SlidesEditorTests(ToolsTestCase):
             payload = self.payload()
             payload['pages'][1][field] = value
             self.assertEqual(self.save(payload).status_code, 400)
+        for origin in (99, -1, '1', 1.0):
+            payload = self.payload()
+            payload['pages'][1]['origin'] = origin
+            self.assertEqual(self.save(payload).status_code, 400)
         payload = self.payload()
-        payload['pages'].pop()
+        payload['pages'] = []
         self.assertEqual(self.save(payload).status_code, 400)
         self.assertFalse(Generated.objects.filter(kind='slides_edit').exists())
 

@@ -24,7 +24,8 @@ RESULT_URLS = {'insight': 'arxividpage', 'literature': 'literature_result', 'mis
                'conference': 'conference_result', 'teams': 'teams_result', 'refcheck': 'refcheck_result'}
 TOOL_NAMES = {
     'presskit': 'Kit presse', 'presskit_status': 'Kit presse (statut)', 'presskit_share': 'Kit presse (partage)', 'presskit_experts': 'Kit presse (contacts par pays)', 'slides': 'Journal club',
-    'slides_edit': 'Journal club (édition)', 'literature': 'Revue de littérature', 'missed': 'Qu’ai-je manqué ?',
+    'slides_edit': 'Journal club (édition)', 'slides_v3': 'Journal club', 'slides_coll': 'Journal club (collection)',
+    'slides_edit_v3': 'Journal club (édition)', 'slides_share': 'Journal club (partage)', 'literature': 'Revue de littérature', 'missed': 'Qu’ai-je manqué ?',
     'refcheck': 'Vérification de bibliographie', 'students': 'Stage ou thèse', 'teams': 'Qui travaille dessus ?',
     'conference': 'Compagnon de conférence', 'reading': 'Niveau de lecture', 'compare': 'Comparaison',
     'columns': 'Tableau de collection', 'questions': 'Questions ouvertes', 'changes': 'Changements de version',

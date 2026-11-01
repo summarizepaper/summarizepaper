@@ -27,7 +27,7 @@ _GROUPS = [
         ('integrations/', 'book', _('Zotero, Notion, Obsidian'), False, _('BibTeX, RIS and Markdown exports, and papers sent to Zotero with their summary.')),
     ]),
     (_('Present and meet'), [
-        ('journal-club/', 'chalkboard-teacher', _('Journal club'), 'plus', _('Prepare slides with figures, strengths, limitations and discussion questions, then edit or export them.')),
+        ('journal-club/', 'chalkboard-teacher', _('Journal club'), 'plus', _('Slides for your audience and the length of your talk, each point with its passage of the paper, the earlier work, where the paper stands and the hard questions to prepare; edit, present, share or export. For one paper or the papers your team proposes.')),
         ('conference/', 'calendar-alt', _('Conference companion'), 'plus', _('The talks of a conference program that matter for your research, and the people to meet.')),
     ]),
 ]

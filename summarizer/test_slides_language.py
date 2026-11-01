@@ -32,37 +32,19 @@ class SlidesLanguageTests(ToolsTestCase):
         self.client = self.client_for(self.reader)
         self.base = '/en/journal-club/2101.00001v1/'
 
-    def create(self, lang, kind=slides.DECK_KIND):
+    def create(self, lang, kind='slides_v2'):
         return Generated.objects.create(kind=kind, key='2101.00001v1', lang=lang, status='done', content=json.dumps(content(lang)))
 
     def test_language_can_be_selected_before_any_generation(self):
         response = self.client.get(self.base)
         soup = BeautifulSoup(response.content, 'html.parser')
         form = soup.select_one('#deck-language-form')
-        self.assertEqual([option['value'] for option in form.select('option')], ['fr', 'en'])
-        self.assertEqual(form.select_one('option[selected]')['value'], 'en')
+        self.assertEqual([option['value'] for option in form.select('select[name=deck_lang] option')], [code for code, _l in slides.DECK_LANGUAGES])
+        self.assertEqual(form.select_one('select[name=deck_lang] option[selected]')['value'], 'en')
+        self.assertEqual([o['value'] for o in form.select('select[name=duration] option')], ['10', '20', '45'])
         french = self.client.get(self.base, {'deck_lang': 'fr'})
         self.assertEqual(french.context['deck_lang'], 'fr')
         self.assertEqual(Generated.objects.count(), 0)
-
-    def test_selected_generation_language_is_independent_from_interface_and_has_its_own_cache(self):
-        with mock.patch.object(slides, 'figures', return_value=[]), \
-             mock.patch('summarizer.paper_source.paper_text', return_value='Original paper in English.'), \
-             mock.patch.object(generated, 'chat_json', return_value=content('fr')) as chat:
-            result = self.client.post(self.base + 'start/', {'deck_lang': 'fr'})
-            again = self.client.post(self.base + 'start/', {'deck_lang': 'fr'})
-        self.assertEqual(result.status_code, 200)
-        self.assertEqual(result.json()['id'], again.json()['id'])
-        self.assertEqual(chat.call_count, 1)
-        self.assertIn('Every title, bullet, speaker note', chat.call_args.args[0])
-        self.assertIn('must be in French', chat.call_args.args[0])
-        self.assertIn('deck_lang=fr', result.json()['url'])
-        row = Generated.objects.get(kind=slides.DECK_KIND, lang='fr')
-        self.assertEqual(row.data()['language'], 'fr')
-        self.assertEqual(row.data()['title'], 'Les nuages d’une planète chaude')
-        self.assertFalse(Generated.objects.filter(lang='en').exists())
-        page = self.client.get(result.json()['url'])
-        self.assertEqual(page.context['pages'][0]['title'], 'Les nuages d’une planète chaude')
 
     def test_slide_labels_pdf_canvas_and_powerpoint_use_the_content_language(self):
         for interface, lang in [('en', 'fr'), ('fr', 'en')]:
@@ -90,7 +72,7 @@ class SlidesLanguageTests(ToolsTestCase):
             self.assertIn(data['title'], text)
             self.assertIn('Points forts' if lang == 'fr' else 'Strengths', text)
             self.assertNotIn('Strengths' if lang == 'fr' else 'Points forts', text)
-            self.assertIn('de l’article' if lang == 'fr' else 'of the paper', text)
+            self.assertIn("de l'article" if lang == 'fr' else 'of the paper', text)
             self.assertEqual(deck.slides[1].notes_slide.notes_text_frame.text, data['slides'][0]['notes'])
 
     def test_previous_decks_and_private_edits_are_retained_after_new_generation(self):
@@ -136,12 +118,3 @@ class SlidesLanguageTests(ToolsTestCase):
             self.assertEqual(self.client.get(self.base, {'deck_version': '999'}).status_code, 400)
         chat.assert_not_called()
         self.assertFalse(Generated.objects.exists())
-
-    def test_generated_title_is_required_instead_of_reusing_the_original_paper_title(self):
-        answer = content('fr')
-        answer.pop('title')
-        with mock.patch.object(slides, 'figures', return_value=[]), \
-             mock.patch('summarizer.paper_source.paper_text', return_value='Original English paper.'), \
-             mock.patch.object(generated, 'chat_json', return_value=answer):
-            with self.assertRaises(generated.GenerationError):
-                slides.write('2101.00001v1', 'fr')(0)

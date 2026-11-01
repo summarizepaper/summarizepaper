@@ -22,6 +22,7 @@ from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
 
 from . import sources
+from .chat_figures import IMAGE_HOSTS
 
 MAX_IMAGE_BYTES = 4 * 1024 * 1024
 MAX_IMAGE_PIXELS = 12_000_000
@@ -35,8 +36,11 @@ class ExportError(Exception):
 def safe_image_url(url):
     try:
         parsed = urlsplit(url)
-        return (parsed.scheme == 'https' and parsed.hostname in ('arxiv.org', 'www.arxiv.org', 'export.arxiv.org')
-                and parsed.port in (None, 443) and not parsed.username and not parsed.password and parsed.path.startswith('/html/'))
+        arxiv = parsed.hostname in ('arxiv.org', 'www.arxiv.org', 'export.arxiv.org')
+        # the hosts whose open-licensed figures the gallery shows (chat_figures), arXiv's only from its HTML
+        return (parsed.scheme == 'https' and (parsed.hostname in IMAGE_HOSTS or arxiv)
+                and parsed.port in (None, 443) and not parsed.username and not parsed.password
+                and (parsed.path.startswith('/html/') or not arxiv))
     except ValueError:
         return False
 
@@ -173,7 +177,7 @@ def textbox(slide, name, lines, rect, size, *, bold=False, centered=False, bulle
     for i, text in enumerate(lines):
         paragraph = frame.paragraphs[0] if i == 0 else frame.add_paragraph()
         paragraph.text = clean_text(text)
-        paragraph.font._rPr.set('lang', 'fr-FR' if get_language() == 'fr' else 'en-US')
+        paragraph.font._rPr.set('lang', language_tag())
         paragraph.font.name = '+mj-lt' if bold else '+mn-lt'
         paragraph.font.size = Pt(size)
         paragraph.font.bold = bold
@@ -207,7 +211,23 @@ def body_rects(page, rect):
     return (x, y, width, text_height), (x, y + text_height + gap, width, figure_height)
 
 
-def render_pptx(pages, arxiv_id, license_label, title):
+def language_tag():
+    return {'fr': 'fr-FR', 'en': 'en-US'}.get(get_language() or 'en', get_language() or 'en-US')
+
+
+def notes_text(page):
+    """The speaker notes, then the passages of the paper behind the slide, for the presenter only."""
+    quotes = ['« %s » (%s)' % (s['quote'], s['location']) if s.get('location') else '« %s »' % s['quote']
+              for s in page.get('sources') or [] if s.get('quote')]
+    parts = [page.get('notes') or '']
+    if quotes:
+        parts.append(_('Passages of the paper:') + '\n' + '\n'.join(quotes))
+    return '\n\n'.join(part for part in parts if part)
+
+
+def render_pptx(pages, footer, title):
+    """pages: as slides.shown_pages gives them (each figure a dict with its url and credit); footer: what the
+    foot of each slide names (the paper's identifier, or the collection)."""
     urls = list(dict.fromkeys(p['figure']['url'] for p in pages if p.get('figure')))
     try:
         with ThreadPoolExecutor(max_workers=4) as pool:
@@ -242,7 +262,9 @@ def render_pptx(pages, arxiv_id, license_label, title):
         maximum = page['text_size'] * .75
         if page['kind'] == 'columns':
             width = (rect[2] - .5) / 2
-            for i, (heading, lines) in enumerate(((_('Strengths'), page['bullets']), (_('Limits'), page['secondary']))):
+            headings = (page.get('headings') or [])[:2]
+            headings = headings if len(headings) == 2 else [_('Strengths'), _('Limits')]
+            for i, (heading, lines) in enumerate(((headings[0], page['bullets']), (headings[1], page['secondary']))):
                 column = (rect[0] + i * (width + .5), rect[1] + .6, width, rect[3] - .6)
                 textbox(slide, heading, [heading], (column[0], rect[1], width, .45), 22, bold=True)
                 textbox(slide, heading + ' text', lines, column, text_size(lines, column, maximum, bullets=True), bullets=True)
@@ -259,16 +281,16 @@ def render_pptx(pages, arxiv_id, license_label, title):
                     picture_width, picture_height = image.width * factor, image.height * factor
                 picture = slide.shapes.add_picture(io.BytesIO(data), Inches(x + (width - picture_width) / 2),
                     Inches(y + (height - caption_height - picture_height) / 2), Inches(picture_width), Inches(picture_height))
-                picture.name = 'Figure %s' % page['figure']['number']
-                caption = _('Figure %(number)s of the paper (%(license)s)') % {'number': page['figure']['number'], 'license': license_label}
+                picture.name = page['figure'].get('label') or 'Figure'
+                caption = page['figure'].get('credit') or page['figure'].get('label') or ''
                 textbox(slide, 'Figure credit', [caption], (x, y + height - caption_height, width, caption_height), 10, centered=True, muted=True)
-        textbox(slide, 'Source', ['SummarizePaper · ' + sources.label(arxiv_id)], (.58, 7.04, 10.8, .24), 10, muted=True)
+        textbox(slide, 'Source', ['SummarizePaper · ' + footer], (.58, 7.04, 10.8, .24), 10, muted=True)
         textbox(slide, 'Slide number', ['%s / %s' % (number, len(pages))], (11.8, 7.04, .95, .24), 10, muted=True)
-        if page.get('notes'):
+        if notes_text(page):
             notes = slide.notes_slide.notes_text_frame
-            notes.text = clean_text(page['notes'])
+            notes.text = clean_text(notes_text(page))
             for paragraph in notes.paragraphs:
-                paragraph.font._rPr.set('lang', 'fr-FR' if get_language() == 'fr' else 'en-US')
+                paragraph.font._rPr.set('lang', language_tag())
     output = io.BytesIO()
     presentation.save(output)
     return output.getvalue()

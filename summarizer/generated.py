@@ -154,7 +154,7 @@ def run_now(kind, key, lang, work, user=None):
     return row
 
 
-COLLECTION_KINDS = ('compare', 'questions', 'suggest', 'collection_meta')
+COLLECTION_KINDS = ('compare', 'questions', 'suggest', 'collection_meta', 'slides_coll')
 
 
 def shared_result(row, user):

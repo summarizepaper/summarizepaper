@@ -48,10 +48,32 @@
 .deck.presenting .slide-editor, .deck.presenting .speaker-notes { display:none; }
 #deck-exit { position:fixed; top:12px; right:12px; z-index:10001; opacity:.8; }
 #deck-exit[hidden] { display:none !important; }
+.deck-language label { display:flex; align-items:center; gap:8px; }
+.deck-warning { font-size:16px; }
+.slide-sources { margin:8px 0 0; font-size:14px; }
+.slide-sources summary { cursor:pointer; color:var(--text-muted); }
+.slide-sources ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:10px; }
+.slide-sources li { display:grid; grid-template-columns:1.4em minmax(0,1fr); column-gap:6px; }
+.slide-sources li > :not(.source-mark) { grid-column:2; }
+.source-mark { grid-row:span 4; font-weight:700; }
+.is-verified .source-mark { color:#1a7f37; }
+.is-unverified .source-mark, .source-missing { color:#b42318; }
+.source-kind { font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); }
+.deck-quote { margin:4px 0 0; padding:6px 12px; border-left:3px solid var(--border); font-style:italic; overflow-wrap:anywhere; }
+.deck-quote small, .deck-quote a { font-style:normal; }
+body.hide-sources .slide-sources { display:none; }
+.slide-actions, .slide-rewrite { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.slide-rewrite span { font-size:14px; color:var(--text-muted); }
+.slide-item:not(.has-figure) .figure-control { display:none; }
+.deck-qa details { border-top:1px solid var(--border); padding:10px 0; }
+.deck-qa summary { cursor:pointer; font-weight:600; }
+.deck-share [hidden] { display:none !important; }
+.deck-share-link input { width:min(100%, 520px); }
+.deck.presenting .slide-sources { display:none; }
 @media print {
   @page { size:338.666667mm 190.5mm; margin:0; }
   html, body { margin:0 !important; padding:0 !important; background:#fff !important; }
-  .site-header, .site-footer, .no-print { display:none !important; }
+  .site-header, .site-footer, .no-print, .deck-qa, .deck-share { display:none !important; }
   .page.deck-page { width:1280px; max-width:none; margin:0 !important; padding:0 !important; }
   .deck-page #deck, .deck-page #deck.presenting { display:block; position:static; background:#fff; }
   .deck-page #deck .slide-item { display:block !important; width:1280px; margin:0; break-inside:avoid; break-after:page; page-break-after:always; }

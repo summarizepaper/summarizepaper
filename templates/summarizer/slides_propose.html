@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% block title %}{% trans 'Propose for the journal club' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block content %}
+<div class="page" style="max-width:800px">
+  <header class="page-header">
+    <span class="eyebrow">{% trans 'Journal club' %}</span>
+    <h1>{% trans 'Propose for the journal club' %}</h1>
+    <p class="lead"><a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{{ title }}</a></p>
+  </header>
+  <section class="card section-card">
+    <p>{% trans 'Keep the papers proposed for your journal club in a collection: invite your colleagues to it (in its settings) so that everyone proposes papers, sorts them and leaves notes. The presenter then prepares the slides of one paper, or of the selected papers of the collection together.' %}</p>
+    {% if error == 'too_many' %}<p class="error">{% trans 'You have reached the number of collections of your plan: choose an existing one.' %}</p>{% endif %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="arxiv_id" value="{{ arxiv_id }}">
+      <fieldset style="border:0;padding:0;margin:0 0 14px">
+        <legend>{% trans 'Add it to' %}</legend>
+        {% for c in collections %}<p><label><input type="radio" name="collection" value="{{ c.pk }}"{% if forloop.first %} checked{% endif %}> {{ c.name }}</label></p>{% endfor %}
+        <p><label><input type="radio" name="collection" value="new"{% if not collections %} checked{% endif %}> {% trans 'A new collection:' %}</label>
+          <input type="text" name="name" maxlength="120" value="{% trans 'Journal club' %}" aria-label="{% trans 'Name of the new collection' %}"></p>
+      </fieldset>
+      <button class="btn" type="submit">{% trans 'Propose this paper' %}</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

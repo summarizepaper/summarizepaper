@@ -30,7 +30,8 @@ PLUS_TOOLS = frozenset({'literature', 'students', 'conference', 'presskit', 'jou
 GENERATED_TOOLS = {
     'presskit': 'presskit', 'presskit_status': 'presskit', 'presskit_experts': 'presskit',
     'slides': 'journal_club', 'slides_v2': 'journal_club',
-    'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club',
+    'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club', 'slides_v3': 'journal_club', 'slides_coll': 'journal_club',
+    'slides_edit_v3': 'journal_club', 'slides_edit_backup': 'journal_club', 'slides_share': 'journal_club',
     'compare': 'collections', 'questions': 'collections', 'collection_meta': 'collections', 'suggest': 'collections',
     'zotero_import': 'zotero',
     **{k: k for k in ('missed', 'literature', 'zotero', 'refcheck', 'changes', 'teams', 'conference', 'students')},

@@ -77,6 +77,7 @@
   <div class="tool-row">
     <span class="tool-label">{% trans 'Journal club' %} <span class="badge-premium">Premium+</span></span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id }}/" rel="nofollow">{% trans 'Slides to present it' %}</a>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/journal-club/propose/?arxiv_id={{ arxiv_id|urlencode }}" rel="nofollow">{% trans 'Propose for the journal club' %}</a>
   </div>
 
   {% if not arxiv_id|is_external %}

@@ -75,6 +75,7 @@
           <a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ p.arxiv_id|urlencode }}" rel="nofollow" data-funnel="letter_chat">{% trans 'Ask this paper' %}</a>
           <a href="/{{ LANGUAGE_CODE }}/export/{{ p.arxiv_id }}/ris/" rel="nofollow" data-funnel="letter_export">{% trans 'Cite (RIS)' %}</a>
           <a href="/{{ LANGUAGE_CODE }}/journal-club/{{ p.arxiv_id }}/" rel="nofollow" data-funnel="letter_slides">{% trans 'Journal club' %} <small>Premium+</small></a>
+          <a href="/{{ LANGUAGE_CODE }}/journal-club/propose/?arxiv_id={{ p.arxiv_id|urlencode }}" rel="nofollow" data-funnel="letter_propose">{% trans 'Propose for the journal club' %}</a>
         </div>
         <p class="letter-vote" data-paper="{{ p.arxiv_id }}">{% trans 'Worth knowing?' %} <button type="button" class="letter-vote-button" data-value="1" aria-label="{% trans 'Useful' %}">👍</button> <button type="button" class="letter-vote-button" data-value="-1" aria-label="{% trans 'Not useful' %}">👎</button></p>
         {% if p.presskit_id %}<a class="letter-kit-link" data-funnel="letter_presskit_click" href="/{{ LANGUAGE_CODE }}/press-kit/{{ p.presskit_id }}/?letter={{ letter.pk }}">{% trans 'Prepare a press kit' %} <small>Premium+ →</small></a>{% endif %}

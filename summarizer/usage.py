@@ -100,7 +100,7 @@ TOOL_GROUPS = {
     'presskit': 'presskit', 'presskit_experts': 'presskit',
     'table': 'collections', 'compare': 'collections', 'questions': 'collections', 'missing': 'collections',
     'letters': 'letters', 'letter_summaries': 'letters', 'letter_emails': 'letters',
-    'slides': 'slides', 'slides_v2': 'slides',
+    'slides': 'slides', 'slides_v2': 'slides', 'slides_v3': 'slides', 'slides_coll': 'slides',
     'search_watches': 'saved_searches', 'saved_searches': 'saved_searches',
 }
 TOOL_LABELS = dict(TASK_LABELS, summaries='Résumés et fiches de lecture',
