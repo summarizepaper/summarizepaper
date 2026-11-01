@@ -185,6 +185,7 @@ def clean_talk(raw):
     """A talk as every program gives it: TALK_FIELDS as strings, times as 'HH:MM', the day as 'YYYY-MM-DD' when
     known (else as written)."""
     talk = {k: normalize_accents(' '.join(str(raw.get(k) or '').split())) for k in TALK_FIELDS}
+    talk = {k: '' if re.fullmatch(r'[\W_]*', v) else v for k, v in talk.items()}  # 'Speaker: —'
     talk['abstract'] = talk['abstract'][:conference_import.ABSTRACT_CHARS]
     talk['start'], talk['end'] = clock(talk['start']), clock(talk['end'])
     talk['kind'] = 'poster' if talk['kind'].lower().startswith('poster') else 'talk'
@@ -270,9 +271,8 @@ def dated_label(label, year):
 
 def settle(talks, year=None):
     """The program's talks once read: days told by their weekday dated when the program dates another talk on
-    that weekday, a day carried to the talks of the same session or with a time that follow it, the session and
-    room carried to the timed talks that have neither, a talk listed in two pieces kept once, and an id each
-    ('t0', 't1'...)."""
+    that weekday, a day carried to the talks of the same session or with a time that follow it, a talk listed in
+    two pieces kept once, and an id each ('t0', 't1'...)."""
     dated = {}
     for talk in talks:
         if talk['day'] and not ISO_DAY.match(talk['day']):
@@ -282,11 +282,8 @@ def settle(talks, year=None):
                 dated.setdefault(datetime.date.fromisoformat(talk['day']).weekday(), set()).add(talk['day'])
             except ValueError:
                 talk['day'] = ''
-    last_day, last_session, previous = '', None, None
+    last_day, last_session = '', None
     for talk in talks:
-        if previous and not talk['session'] and not talk['room'] and talk['start'] and talk['day'] in ('', previous['day']):
-            talk['session'], talk['room'] = previous['session'], previous['room']  # a piece that starts within a session
-        previous = talk
         label = re.sub(r'[^a-z]', ' ', talk['day'].lower()).split()
         weekday = next((WEEKDAYS[w] for w in label if w in WEEKDAYS), None)
         if talk['day'] and not ISO_DAY.match(talk['day']) and weekday is not None and len(dated.get(weekday, ())) == 1:
@@ -327,7 +324,12 @@ def read_text(text, step=lambda name: None):
                 for start, piece in chunks(text)]
         listed = []
         for job in jobs:
-            listed.extend(job.result())
+            found = job.result()
+            for talk in found:  # a piece that starts within a session: its first talks are in the last one's
+                if talk['session'] or talk['room'] or not listed or not talk['start']:
+                    break
+                talk['session'], talk['room'] = listed[-1]['session'], listed[-1]['room']
+            listed.extend(found)
             step('list')  # keeps the row alive while a long program is read
     talks = settle(listed, int(year[1]) if year else None)
     read = {}

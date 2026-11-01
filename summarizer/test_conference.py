@@ -115,6 +115,17 @@ class ConferenceTests(ConferenceCase):
         self.assertEqual(read['total'], len(text) + 20000)
         self.assertIn('Protein folding at scale', read['last'])
 
+    def test_a_piece_starting_within_a_session_takes_its_session_and_room(self):
+        pieces = [[{'title': 'A', 'session': 'Tracking', 'room': 'Hall 1', 'start': '9:00'}],
+                  [{'title': 'B', 'start': '9:20'}, {'title': 'C poster', 'session': 'Posters', 'start': '16:00'},
+                   {'title': 'D', 'start': '16:00', 'speakers': '—'}]]
+        with mock.patch('summarizer.conference.chunks', return_value=[(0, 'x'), (1, 'y')]), \
+                mock.patch('summarizer.conference.list_talks', side_effect=lambda *a: [conference.clean_talk(t) for t in pieces.pop(0)]):
+            talks, _ = conference.read_text('x' * 400)
+        self.assertEqual([(t['title'], t['session'], t['room'], t['speakers']) for t in talks],
+                         [('A', 'Tracking', 'Hall 1', ''), ('B', 'Tracking', 'Hall 1', ''), ('C poster', 'Posters', '', ''),
+                          ('D', '', '', '')])
+
     def test_indico_timetables_and_calendar_feeds_are_read_whole(self):
         timetable = {'results': {'99': {'20260714': {
             's1': {'entryType': 'Session', 'slotTitle': 'Posters', 'isPoster': True, 'room': 'Hall',
