@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from summarizer import conference, generated
+from summarizer import conference, generated, usage
 from summarizer.models import ConferenceProgram
 
 FIXTURES = Path(__file__).resolve().parents[2] / 'fixtures'
@@ -139,7 +139,10 @@ class Command(BaseCommand):
                                                            timezone=data['timezone'])
                 for profile in data['profiles']:
                     started = time.monotonic()
-                    result = conference.rank(program, profile['interests'], lang, user)
+                    # its model calls counted for no user: the user made here is never committed, and the worker
+                    # threads' connections would wait for it to record what they use
+                    with usage.task('conference_benchmark'):
+                        result = conference.rank(program, profile['interests'], lang, user)
                     chosen = {t['title']: t for t in result['talks']}
                     strong = {title for title, t in chosen.items() if t['priority'] in ('must', 'should')}
                     out('\n== Ranking for "%s" (%.0f s): %d talks chosen of %d read closely; %d must, %d should, %d maybe' % (
