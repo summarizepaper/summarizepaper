@@ -20190,3 +20190,18 @@ msgstr[1] "%(n)s articles sélectionnés"
 msgctxt "slide action"
 msgid "Duplicate"
 msgstr "Dupliquer"
+
+msgid "Another version: language, audience, length"
+msgstr "Une autre version : langue, public, durée"
+
+msgid "Settings of the presentation"
+msgstr "Réglages de la présentation"
+
+msgid ""
+"Under each slide, its sources: each point with the passage of the paper that"
+" supports it. A point marked as not found in the paper, or with a number the"
+" paper does not state, is to be checked before presenting."
+msgstr ""
+"Sous chaque slide, ses sources : chaque point avec le passage de l’article "
+"qui l’étaye. Un point signalé comme introuvable dans l’article, ou avec un "
+"nombre que l’article n’énonce pas, est à vérifier avant de présenter."

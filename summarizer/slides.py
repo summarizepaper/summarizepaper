@@ -470,7 +470,9 @@ def citation_line(*parts):
 
 
 def reference(item):
-    return citation_line(short_ref(item), item.get('title', ''), item.get('venue'))
+    # an unpublished paper's venue is its arXiv category ('Computation and Language'): its identifier says more
+    venue = item.get('venue') if item.get('status') == 'published' else ''
+    return citation_line(short_ref(item), item.get('title', ''), venue, sources.label(item['ref']) if item.get('ref') else '')
 
 
 def hard_questions(value, papers_by_id, default):

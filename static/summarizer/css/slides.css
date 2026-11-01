@@ -50,6 +50,9 @@
 #deck-exit[hidden] { display:none !important; }
 .deck-language label { display:flex; align-items:center; gap:8px; }
 .deck-warning { font-size:16px; }
+.deck-settings, .deck-help { margin:0 0 14px; }
+.deck-settings > summary, .deck-help > summary { cursor:pointer; font-weight:600; margin-bottom:10px; }
+.deck-settings[open] > summary { margin-bottom:14px; }
 .slide-sources { margin:8px 0 0; font-size:14px; }
 .slide-sources summary { cursor:pointer; color:var(--text-muted); }
 .slide-sources ul { list-style:none; padding:0; margin:8px 0 0; display:grid; gap:10px; }

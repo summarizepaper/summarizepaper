@@ -26,6 +26,8 @@
   </header>
 
   {% if paid %}
+    <details class="deck-settings no-print"{% if not deck %} open{% endif %}>
+    <summary>{% if deck %}{% trans 'Another version: language, audience, length' %}{% else %}{% trans 'Settings of the presentation' %}{% endif %}</summary>
     <form id="deck-language-form" class="deck-language no-print" data-start-url="{{ start_url }}"
       data-error="{% trans 'The presentation could not be prepared. Please try again.' %}"
       data-too-few="{% trans 'Select at least two papers of the collection.' %}"
@@ -40,6 +42,7 @@
       <button type="submit" class="btn" id="deck-go">{% if deck %}{% trans 'Prepare a version with these settings' %}{% else %}{% trans 'Prepare the slides' %}{% endif %}</button>
     </form>
     <p class="muted no-print">{% trans 'The language applies to the titles, text, speaker notes and exports; the passages of the paper stay in its own language, and so do the labels inside its figures. The audience and the length set how much context, detail and how many slides the presentation has. Each set of settings is a presentation of its own: the others are kept.' %}</p>
+    </details>
     {% if abstract_only_expected and not deck %}<p class="notice no-print">{% trans "The license of this paper only lets us read its abstract: the presentation will be short (3 or 4 slides), and will say what the abstract does not tell. Check the full paper before presenting it." %}</p>{% endif %}
     <p class="error no-print" id="deck-language-error" role="alert" hidden></p>
     {% if legacy_deck %}<p class="notice no-print">{% trans 'This is an earlier presentation, written before each point came with its passage of the paper. Prepare a new version for the checked passages, the earlier work and where the paper stands; this one and your edits are kept.' %}</p>{% endif %}
@@ -70,11 +73,15 @@
       <label><input type="checkbox" id="deck-notes" checked> {% trans 'Show the notes' %}</label>
       <label><input type="checkbox" id="deck-sources" checked> {% trans 'Show the sources' %}</label>
     </div>
-    {% if not shared %}
-    <p class="muted no-print">{% trans 'Edit the text below each slide, move, duplicate, remove or add slides, pick another figure of the paper, or ask for a slide to be rewritten. Your saved version is private until you share it.' %}</p>
-    <p class="muted no-print">{% trans 'PowerPoint includes your current edits and speaker notes, with the passages of the paper in the notes, editable text and movable figures.' %}</p>
-    {% endif %}
-    <p class="muted no-print">{% trans 'Presenter view: a second window with the notes, the next slide and a timer. Present full screen on the projector and keep it on your screen; the arrow keys work in both.' %}</p>
+    <details class="deck-help no-print">
+      <summary>{% trans 'How it works' %}</summary>
+      {% if not shared %}
+      <p class="muted">{% trans 'Edit the text below each slide, move, duplicate, remove or add slides, pick another figure of the paper, or ask for a slide to be rewritten. Your saved version is private until you share it.' %}</p>
+      <p class="muted">{% trans 'PowerPoint includes your current edits and speaker notes, with the passages of the paper in the notes, editable text and movable figures.' %}</p>
+      {% endif %}
+      <p class="muted">{% trans 'Presenter view: a second window with the notes, the next slide and a timer. Present full screen on the projector and keep it on your screen; the arrow keys work in both.' %}</p>
+      <p class="muted">{% trans 'Under each slide, its sources: each point with the passage of the paper that supports it. A point marked as not found in the paper, or with a number the paper does not state, is to be checked before presenting.' %}</p>
+    </details>
     <p id="deck-status" role="status" class="no-print"></p>
     <p id="deck-overflow" role="alert" class="error no-print" hidden>{% trans 'Some text does not fit. Shorten it or choose a smaller text size before exporting.' %}</p>
     {% csrf_token %}
