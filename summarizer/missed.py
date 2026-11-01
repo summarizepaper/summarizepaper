@@ -23,27 +23,34 @@ The researcher marks each paper (already cited, not relevant, added), exports th
 a collection, follows the draft with Scoop watch, and, if they kept the draft's text (encrypted, in a second row
 of kind 'missed_draft'), searches again later: the papers the previous search had not found are marked new.
 """
+import contextvars
 import datetime
 import json
 import logging
 import re
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from difflib import SequenceMatcher
 from io import BytesIO, StringIO
 from urllib.parse import urlencode
 
 import numpy as np
+import requests
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.mail import EmailMultiAlternatives
+from django.db import connections
 from django.core.cache import cache
 from django.http import Http404
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import (access, assistant, bibliography, digest, evidence, exports, generated, library, literature, neighbours,
-               result_share, similar, sources)
+from . import (access, assistant, bibliography, digest, evidence, exports, generated, library, literature, mailcheck,
+               neighbours, result_share, similar, sources)
 from .models import Collection, Generated
 
 logger = logging.getLogger(__name__)
@@ -70,6 +77,7 @@ RECENT_YEARS = 3
 JUDGED = 30
 JUDGE_BATCH = 15
 JUDGE_ROUNDS = 2  # the model sometimes answers for a few papers only: the others are asked again
+THREADS = 4  # model calls made at once
 COUPLING_BONUS = 0.02  # each shared reference, up to 4
 COCITED_BONUS = 0.04  # a work the closest candidates cite often
 STANDING_WEIGHT = 0.05
@@ -136,6 +144,19 @@ def split_references(text):
     return text, ''
 
 
+def at_once(calls):
+    """The results of these functions, called in THREADS threads: the model answers them in parallel. Each counts
+    its AI usage as the caller's task and closes its own database connection."""
+    def run(context, call):
+        try:
+            return context.run(call)
+        finally:
+            connections.close_all()
+    contexts = [contextvars.copy_context() for _ in calls]
+    with ThreadPoolExecutor(max_workers=THREADS) as pool:
+        return list(pool.map(run, contexts, calls))
+
+
 def chunks(listing):
     """The reference list in pieces of about REFS_CHUNK characters, cut between lines."""
     pieces, piece = [], ''
@@ -152,10 +173,7 @@ def read_references(listing):
     'volume', 'page', 'doi', 'arxiv'}]."""
     if len(listing.strip()) < 50:
         return []
-    refs = []
-    for piece in chunks(listing):
-        refs += read_piece(piece)
-    return refs
+    return [ref for refs in at_once([lambda piece=piece: read_piece(piece) for piece in chunks(listing)]) for ref in refs]
 
 
 def read_piece(piece):
@@ -403,18 +421,20 @@ def listing(papers):
 
 def judge(papers, summary, excerpt, lang):
     """{index: note} of the model's notes on these papers, each quote kept only if found word for word."""
+    def ask(batch):
+        try:
+            return generated.chat_json(
+                JUDGE.format(summary=summary, language=generated.language_name(lang)), paid=True, max_tokens=6000,
+                system='<draft>\n%s\n</draft>\n\n%s' % (excerpt, listing([papers[i] for i in batch])))
+        except (generated.GenerationError, requests.RequestException, ValueError):
+            logger.warning('The notes of %d papers could not be written', len(batch))
+            return {}
+
     notes = {}
     for _round in range(JUDGE_ROUNDS):
         todo = [i for i in range(len(papers)) if i not in notes]
-        for start in range(0, len(todo), JUDGE_BATCH):
-            batch = todo[start:start + JUDGE_BATCH]
-            try:
-                answer = generated.chat_json(
-                    JUDGE.format(summary=summary, language=generated.language_name(lang)), paid=True, max_tokens=6000,
-                    system='<draft>\n%s\n</draft>\n\n%s' % (excerpt, listing([papers[i] for i in batch])))
-            except generated.GenerationError:
-                logger.warning('The notes of %d papers could not be written', len(batch))
-                continue
+        batches = [todo[start:start + JUDGE_BATCH] for start in range(0, len(todo), JUDGE_BATCH)]
+        for batch, answer in zip(batches, at_once([lambda batch=batch: ask(batch) for batch in batches])):
             for note in answer.get('papers', []):
                 if not isinstance(note, dict) or not re.fullmatch(r'p\d+', str(note.get('id', ''))):
                     continue
@@ -425,10 +445,16 @@ def judge(papers, summary, excerpt, lang):
         draft_quote = str(note.get('draft_quote') or '').strip()
         abstract_quote = str(note.get('abstract_quote') or '').strip()
         found = evidence.find(draft_quote, excerpt) if len(draft_quote) >= 15 else None
-        note['draft_quote'] = ' '.join(found.group().split()) if found else ''
+        note['draft_quote'] = unbroken(' '.join(found.group().split())) if found else ''
         found = evidence.find(abstract_quote, papers[i]['abstract']) if len(abstract_quote) >= 15 else None
         note['abstract_quote'] = ' '.join(found.group().split()) if found else ''
     return notes
+
+
+def unbroken(text):
+    """A sentence of a PDF without the hyphens that cut its words at the end of a line ('predom- inantly'); 'pre-
+    and post-' keeps its own."""
+    return re.sub(r'(?<=[a-z])- (?=[a-z])(?!(?:and|or|to|und|et|ou)\b)', '', text)
 
 
 def short_authors(authors, n=5):
@@ -437,11 +463,13 @@ def short_authors(authors, n=5):
 
 def find(text, lang, step=lambda name: None, bib='', previous=None):
     """The result shown on the page, from the draft's text (and its .bib); step(name) reports progress.
-    previous: {'key', 'searched', 'seen', 'marks'} of the search this one repeats."""
+    previous: {'key', 'searched', 'seen', 'marks', 'facets'} of the search this one repeats, whose description and
+    queries it runs again: what it finds that the previous one had not is then new in the literature, not in the
+    wording of the queries."""
     text = text[:MAX_TEXT_CHARS]
     body, reference_list = split_references(text)
     limited = set()
-    facets = describe(body[:HEAD_CHARS], lang)
+    facets = (previous or {}).get('facets') or describe(body[:HEAD_CHARS], lang)
     refs = bib_references(bib) if bib.strip() else read_references(reference_list)
     step('read')
     resolve(refs, limited, lambda: step('read'))
@@ -522,6 +550,7 @@ def find(text, lang, step=lambda name: None, bib='', previous=None):
                  'from_bib': bool(bib.strip())},
         'limited': sorted(limited), 'searched_on': timezone.now().date().isoformat(),
         'carried': {k: v for k, v in marks.items() if v in ('cited', 'irrelevant')},  # for the searches after this one
+        'facets': facets,
         'previous': {'key': previous['key'], 'searched': previous['searched']} if previous else None,
     }
 
@@ -543,8 +572,27 @@ def write(data, text, lang, bib='', keep=False, previous=None):
                 'content': json.dumps({'text': scoops.seal(draft[:KEPT_CHARS]), 'bib': scoops.seal(bib)})})
             if previous:  # the new search keeps the draft from now on
                 Generated.objects.filter(kind=DRAFT_KIND, key=previous['key'], user=row.user).delete()
+        Generated.objects.filter(pk=pk).update(status='done', content=json.dumps(result), updated=timezone.now())
+        ready_email(pk, result)  # once the link works
         return result
     return work
+
+
+def ready_email(pk, result):
+    """Tell the researcher their search is ready: it takes minutes, and few wait on the page."""
+    row = Generated.objects.select_related('user').filter(pk=pk).first()
+    user = row.user if row is not None else None
+    if user is None or not user.email or mailcheck.undeliverable_reason(user.email):
+        return
+    with translation.override(row.lang):
+        context = {'user': user, 'result': result, 'high': sum(1 for i in result['items'] if i['importance'] == 'high'),
+                   'link': '%s/%s/missed/%s/' % (digest.BASE_URL, row.lang, row.key)}
+        subject = render_to_string('summarizer/missed_email_subject.txt', context).strip()
+        text = render_to_string('summarizer/missed_email.txt', context)
+    try:
+        EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email]).send()
+    except Exception:
+        logger.exception('Could not send the search %s to user %s', row.key, user.pk)
 
 
 def _spend(user):
@@ -662,6 +710,7 @@ def search_again(request, row):
                 'marks': dict(data.get('carried') or {}, **{i.get('key', i.get('arxiv_id')): i['mark'] for i in items
                                                          if 'mark' in i})}
     previous['marks'] = {k: v for k, v in previous['marks'].items() if v}
+    previous['facets'] = data.get('facets')
     previous['seen'] = set(previous['seen'])
     text = scoops.unseal(kept.get('text', ''))
     if not text:

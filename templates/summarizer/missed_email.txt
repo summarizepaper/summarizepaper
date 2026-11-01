@@ -1,0 +1,11 @@
+{% load i18n %}{% blocktrans with name=user.first_name|default:user.username %}Hello {{ name }},{% endblocktrans %}
+
+{% blocktrans with title=result.title %}Your search for the papers your draft does not cite is ready: "{{ title }}"{% endblocktrans %}
+{% if result.items %}
+{% blocktrans count n=result.items|length %}{{ n }} close paper your draft does not cite, with where to cite it.{% plural %}{{ n }} close papers your draft does not cite, with where to cite them.{% endblocktrans %}{% if high %} {% blocktrans count n=high %}A referee would expect {{ n }} of them.{% plural %}A referee would expect {{ n }} of them.{% endblocktrans %}{% endif %}{% else %}
+{% trans 'Your draft already cites every close paper our searches found.' %}{% endif %}
+
+{{ link }}
+
+{% trans 'The SummarizePaper team' %}
+https://www.summarizepaper.com

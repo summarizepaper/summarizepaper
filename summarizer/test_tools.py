@@ -554,6 +554,10 @@ class MissedTests(ToolsTestCase):
         journal = dict(paper, key=sources.doi_key('10.1/a'), doi='10.1/a')
         self.assertEqual(missed.citation_status(journal, set(), set(), set(), [dict(ref, doi='10.1/b')], '')[0], '')
 
+    def test_words_cut_at_the_end_of_a_pdf_line_are_joined(self):
+        self.assertEqual(missed.unbroken('relied predom- inantly on pre- and post-impact data'),
+                         'relied predominantly on pre- and post-impact data')
+
     def test_a_long_reference_list_is_read_in_pieces(self):
         listing = ''.join('Author%d A., 20%02d, ApJ, %d, %d\n' % (i, i % 25, 800 + i, i) for i in range(400))
         pieces = missed.chunks(listing)
@@ -600,6 +604,8 @@ class MissedTests(ToolsTestCase):
         with mock.patch('summarizer.missed.find', return_value=first) as find:
             r = client.post('/en/missed/', {'text': self.DRAFT, 'bib': bib, 'keep': '1'})
         self.assertIn('@article{a', find.call_args[1]['bib'])
+        self.assertEqual(mail.outbox[0].subject, 'The papers your draft does not cite: Clouds of hot Jupiters')
+        self.assertIn('/en/missed/', mail.outbox[0].body)
         row = Generated.objects.get(kind='missed')
         kept = Generated.objects.get(kind=missed.DRAFT_KIND, key=row.key)
         self.assertNotIn('hot Jupiters', kept.content)  # encrypted
@@ -624,6 +630,7 @@ class MissedTests(ToolsTestCase):
         def again(text, lang, step, bib='', previous=None):
             self.assertIn('hot Jupiters', text)
             self.assertEqual(previous['marks'], {coupled: 'irrelevant', '2301.00003v1': 'added'})
+            self.assertEqual(previous['facets']['queries'], ['hot Jupiter clouds', 'transmission spectra clouds'])
             return self.run_find(previous=previous)[0]
         with mock.patch('summarizer.missed.find', side_effect=again):
             r = client.post(page, {'action': 'again'})
@@ -638,8 +645,12 @@ class MissedTests(ToolsTestCase):
         first, _ = self.run_find()
         seen = {i['key'] for i in first['items']} - {'2301.00003v1'}
         coupled = sources.doi_key('10.1000/coupled')
-        result, _ = self.run_find(previous={'key': 'old', 'searched': '2026-10-01', 'seen': seen,
-                                            'marks': {coupled: 'irrelevant', '2301.00003v1': 'added'}})
+        facets = dict(first['facets'], queries=['kept query'])
+        with mock.patch('summarizer.missed.describe') as describe:
+            result, _ = self.run_find(previous={'key': 'old', 'searched': '2026-10-01', 'seen': seen, 'facets': facets,
+                                                'marks': {coupled: 'irrelevant', '2301.00003v1': 'added'}})
+        describe.assert_not_called()  # the same description and queries, so that new means new
+        self.assertEqual(result['queries'], ['kept query'])
         items = {i['key']: i for i in result['items']}
         self.assertNotIn(coupled, items)
         self.assertEqual(result['dismissed'], 1)

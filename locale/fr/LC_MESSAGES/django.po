@@ -19598,3 +19598,33 @@ msgid_plural "%(n)s papers you set aside"
 msgstr[0] "%(n)s article que vous avez écarté"
 msgstr[1] "%(n)s articles que vous avez écartés"
 
+msgid ""
+"Your search for the papers your draft does not cite is ready: \"%(title)s\""
+msgstr ""
+"Votre recherche des articles que votre brouillon ne cite pas est prête : « "
+"%(title)s »"
+
+msgid "The papers your draft does not cite: %(title)s"
+msgstr "Les articles que votre brouillon ne cite pas : %(title)s"
+
+msgid ""
+"You can close this page: we email you the link when the search is ready."
+msgstr ""
+"Vous pouvez fermer cette page : nous vous envoyons le lien par email quand "
+"la recherche est prête."
+
+msgid "%(n)s close paper your draft does not cite, with where to cite it."
+msgid_plural ""
+"%(n)s close papers your draft does not cite, with where to cite them."
+msgstr[0] ""
+"%(n)s article proche que votre brouillon ne cite pas, avec l’endroit où le "
+"citer."
+msgstr[1] ""
+"%(n)s articles proches que votre brouillon ne cite pas, avec l’endroit où "
+"les citer."
+
+msgid "A referee would expect %(n)s of them."
+msgid_plural "A referee would expect %(n)s of them."
+msgstr[0] "Un rapporteur s’attendrait à en voir %(n)s cité."
+msgstr[1] "Un rapporteur s’attendrait à en voir %(n)s cités."
+

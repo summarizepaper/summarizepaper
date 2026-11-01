@@ -91,6 +91,7 @@ TASK_LABELS = {
     'literature': 'Revue de littérature', 'changes': 'Comparaisons de versions',
     'letter_summaries': 'Sélection des lettres', 'presskit_experts': 'Kit presse · spécialistes',
     'suggest': 'Suggestions de recherche', 'conference': 'Compagnon de conférence',
+    'missed': 'Qu’ai-je manqué ?',
 }
 
 

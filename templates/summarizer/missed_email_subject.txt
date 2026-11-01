@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans with title=result.title|truncatechars:80 %}The papers your draft does not cite: {{ title }}{% endblocktrans %}

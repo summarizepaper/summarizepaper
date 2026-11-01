@@ -5,7 +5,8 @@
 
 {% block title %}{% trans 'What did I miss?' %}{% endblock %}
 {% block extra_head_tags %}
-  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />
+  <style>.missed-group > summary { cursor: pointer; list-style-position: outside; } .missed-group > summary h2 { display: inline; } .missed-group { margin: 24px 0 8px; }</style>{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -60,8 +61,8 @@
 
     <div id="papers">
     {% for importance, items in result.groups %}
-      {% if importance == 'low' or importance == 'unjudged' %}<details{% if forloop.first %} open{% endif %}><summary><strong>{% if importance == 'low' %}{% trans 'Related' %}{% else %}{% trans 'Not assessed' %}{% endif %} ({{ items|length }})</strong></summary>
-      {% else %}<h2>{% if importance == 'high' %}{% trans 'Should be cited' %}{% else %}{% trans 'Worth a look' %}{% endif %} ({{ items|length }})</h2>{% endif %}
+      <details class="missed-group"{% if importance == 'high' or importance == 'medium' or forloop.first %} open{% endif %}>
+      <summary><h2>{% if importance == 'high' %}{% trans 'Should be cited' %}{% elif importance == 'medium' %}{% trans 'Worth a look' %}{% elif importance == 'low' %}{% trans 'Related' %}{% else %}{% trans 'Not assessed' %}{% endif %} ({{ items|length }})</h2></summary>
       {% if importance == 'unjudged' %}<p class="muted"><small>{% trans 'The AI could not read these papers: they are close to your draft, judge them yourself.' %}</small></p>{% endif %}
       <ul class="item-list">
         {% for item in items %}
@@ -76,7 +77,7 @@
           {% if item.shared or item.founding %}<div class="meta">{% if item.shared %}<i class="fas fa-project-diagram" aria-hidden="true"></i> {% blocktrans count n=item.shared %}cites {{ n }} of your references{% plural %}cites {{ n }} of your references{% endblocktrans %}{% endif %}{% if item.shared and item.founding %} · {% endif %}{% if item.founding %}{% trans 'often cited by the closest papers' %}{% endif %}</div>{% endif %}
           {% if item.relation %}<p style="margin:8px 0 0">{{ item.relation }}</p>{% endif %}
           {% if item.position %}<p style="margin:6px 0 0"><strong>{% trans 'How to position yourself:' %}</strong> {{ item.position }}</p>{% endif %}
-          {% if not shared and item.draft_quote or not shared and item.section %}<p style="margin:6px 0 0"><strong>{% trans 'Where to cite it:' %}</strong> {% if item.section %}{{ item.section }}{% endif %}{% if item.section and item.draft_quote %} — {% endif %}{% if item.draft_quote %}<q>{{ item.draft_quote }}</q>{% endif %}</p>{% endif %}
+          {% if not shared and item.draft_quote or not shared and item.section %}<p style="margin:6px 0 0"><strong>{% trans 'Where to cite it:' %}</strong> {% if item.section %}{{ item.section }}{% endif %}{% if item.section and item.draft_quote %} — {% endif %}{% if item.draft_quote %}<q>{{ item.draft_quote|truncatewords:30 }}</q>{% endif %}</p>{% endif %}
           {% if item.abstract_quote %}<p class="muted" style="margin:6px 0 0"><small>{% trans 'From its abstract:' %} <q>{{ item.abstract_quote }}</q></small></p>{% endif %}
           {% if not shared %}
           <form method="post" class="item-actions" style="margin-top:8px">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="key" value="{{ item.key }}"><input type="hidden" name="anchor" value="papers">
@@ -89,7 +90,7 @@
         </li>
         {% endfor %}
       </ul>
-      {% if importance == 'low' or importance == 'unjudged' %}</details>{% endif %}
+      </details>
     {% empty %}
       <p class="notice">{% trans 'Your draft already cites every close paper our searches found.' %}</p>
     {% endfor %}
@@ -149,6 +150,7 @@
     {% trans 'Looking for the papers your draft does not cite' as working_title %}
     {% trans 'usually 2 to 5 minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='missed-working' working_steps=steps working_visible=True working_started=row.created %}
+    <p class="muted"><small>{% trans 'You can close this page: we email you the link when the search is ready.' %}</small></p>
     <script>
     window.addEventListener('DOMContentLoaded', function () {
       SP.track(document.getElementById('missed-working'), {{ row.pk }}, function () { location.reload(); });
