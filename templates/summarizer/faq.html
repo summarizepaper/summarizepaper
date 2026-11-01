@@ -170,7 +170,7 @@
       <details id="refcheck">
         <summary>{% trans "How does the bibliography check work?" %}</summary>
         <div class="answer">
-          {% trans "Give your .bib file, and your LaTeX source if you want. We look for each paper on arXiv, OpenAlex and Semantic Scholar: retracted papers come from Retraction Watch through OpenAlex, and preprints published since get their corrected BibTeX entry from Crossref. With the LaTeX source, an AI reads each sentence that cites a paper next to the abstract of that paper. It only knows the abstract, so a flagged citation is something to check, not a proof of error. Your files are not stored." %}
+          {% trans "Give your .bib file (or a Zotero collection), and your manuscript if you want: its LaTeX, your Overleaf project as a .zip, its arXiv identifier, or a PDF. We identify each reference with Crossref, NASA ADS, OpenAlex, arXiv and Semantic Scholar: retracted papers, expressions of concern and corrections come from Retraction Watch and Crossref, and preprints published since (arXiv, bioRxiv, medRxiv...) get their corrected BibTeX entry; you choose which corrections to download. With the LaTeX, an AI reads each sentence with citations next to the abstracts of all the papers it cites, then reads again the sentences flagged against the full text of the papers when their license allows it, and shows the passage of the paper that supports or contradicts them. A flagged citation is something to check, not a proof of error. You can mark each problem, check again after correcting, and have your references watched until your paper is published. Your files are not stored." %}
         </div>
       </details>
       <details id="journal-club">

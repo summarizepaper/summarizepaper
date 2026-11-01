@@ -1122,6 +1122,20 @@ class PublicationAlert(models.Model):
         unique_together = ('user', 'arxiv_id', 'kind', 'doi')
 
 
+class ReferenceWatch(models.Model):
+    """The references of a manuscript a Premium user watches until it is published (see refcheck_watch.py)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reference_watches')
+    check_key = models.CharField(max_length=200)  # the bibliography check (Generated kind 'refcheck') it comes from
+    name = models.CharField(max_length=200, blank=True, default='')
+    refs = models.TextField(default='[]')  # JSON [{key, title, arxiv, doi, state}]; state: what the last check saw
+    created = models.DateTimeField(auto_now_add=True)
+    checked = models.DateTimeField(blank=True, null=True)
+    until = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('user', 'check_key')
+
+
 class AIPrice(models.Model):
     """Price of an OpenAI model, set in the admin, to turn the counted tokens into dollars (see usage.py)."""
     model = models.CharField('modèle', max_length=100, unique=True, help_text='Identifiant exact de l’API OpenAI.')

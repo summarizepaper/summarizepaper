@@ -160,6 +160,12 @@ class BibliographyTests(SimpleTestCase):
 
 
 class BibliographyReportTests(ToolsTestCase):
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch('summarizer.bibliography.Resolver.work', return_value={})  # no Crossref call from the tests
+        patch.start()
+        self.addCleanup(patch.stop)
+
     def test_reports_separate_discrepancies_unresolved_and_identified_without_model_calls(self):
         entries=refcheck.parse_bibtex(BIB)
         data={entries[0]['key']:bib.crossref_record(fixture('andrews')['crossref'][0]),

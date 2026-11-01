@@ -5,7 +5,7 @@
 {% block title %}{% trans 'Bibliography check' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/file_upload_assets.html' %}
-  <meta name="description" content="{% trans 'Check the references of your paper before you submit it: retracted papers, preprints published since with their corrected BibTeX, outdated arXiv versions, duplicates, and citations that the cited abstract does not support.' %}" />
+  <meta name="description" content="{% trans 'Check the references of your paper before you submit it: retracted papers, preprints published since with their corrected BibTeX, outdated arXiv versions, duplicates, and citations that the cited papers do not support, with the passage of the paper.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/refcheck/" />
 {% endblock %}
 
@@ -14,39 +14,60 @@
   <header class="page-header">
     <span class="eyebrow">Premium</span>
     <h1>{% trans 'Bibliography check' %}</h1>
-    <p class="lead">{% trans 'Give us your .bib file, and your LaTeX source if you want: we find the retracted papers, the preprints published since, the outdated versions and duplicates, and the citations that do not say what your sentence claims.' %}</p>
+    <p class="lead">{% trans 'Give us your references, and your manuscript if you want: we find the retracted and corrected papers, the preprints published since, the incomplete entries and duplicates, and the citations the cited papers do not support, with the passage of the paper.' %}</p>
   </header>
 
   {% if anonymous or not paid %}
     <h2>{% trans 'What is checked' %}</h2>
     <ul class="tool-features">
-      <li>{% trans 'Titles, years, journals, volumes, pages and article/book types compared with matching Crossref, NASA ADS and OpenAlex records, including references without a DOI or arXiv identifier.' %}</li>
-      <li>{% trans 'Retracted papers (from Retraction Watch, through OpenAlex) and papers withdrawn from arXiv.' %}</li>
-      <li>{% trans 'Preprints you cite as preprints that have been published in a journal since: we give the corrected BibTeX entry, with the journal, volume, pages and DOI, and a corrected .bib file to download.' %}</li>
-      <li>{% trans 'arXiv versions older than the latest one, and the same paper cited under two keys.' %}</li>
-      <li>{% trans 'With your LaTeX source: an AI reads each sentence with a citation next to the abstract of the cited paper, and flags the sentences the abstract does not support or contradicts.' %}</li>
+      <li>{% trans 'Titles, years, journals, volumes, pages and article/book types compared with matching Crossref, NASA ADS and OpenAlex records, including references without a DOI or arXiv identifier; missing DOIs, volumes and pages filled in.' %}</li>
+      <li>{% trans 'Retracted papers (Retraction Watch, through OpenAlex and Crossref), expressions of concern, published corrections, and papers withdrawn from arXiv.' %}</li>
+      <li>{% trans 'Preprints you cite as preprints (arXiv, bioRxiv, medRxiv, SSRN...) that have been published in a journal since: the corrected BibTeX entry, with the journal, volume, pages and DOI.' %}</li>
+      <li>{% trans 'arXiv versions older than the latest one, and the same paper cited under two keys, its preprint and its published version included.' %}</li>
+      <li>{% trans 'With your LaTeX source: each sentence with citations read with the abstracts of all the papers it cites; the sentences they do not support read again against the full text of the papers when it may be read, with the passage that supports or contradicts them, and the values the paper never states.' %}</li>
+      <li>{% trans 'The keys your LaTeX cites that are missing from your .bib, and the entries it never cites.' %}</li>
     </ul>
-    <p class="muted">{% trans 'Before you submit a paper or a thesis, so a referee does not find a retracted reference or a misquoted result for you.' %}</p>
+    <p class="muted">{% trans 'Before you submit a paper or a thesis, so a referee does not find a retracted reference or a misquoted result for you. Choose the corrections you keep, mark what is intended, check again before resubmitting, and watch your references until the paper is published.' %}</p>
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
     {% else %}
       <div class="upsell"><p>{% trans 'Submit with clean references.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% endif %}
   {% else %}
-    {% if error == 'file' %}<p class="error">{% trans 'Send files of 5 MB at most.' %}</p>
-    {% elif error == 'empty' %}<p class="error">{% trans 'We found no BibTeX entry. Send a .bib file or paste its content.' %}</p>
+    {% if error == 'file' %}<p class="error">{% blocktrans with max=upload_max_mb archive=archive_max_mb %}Send files of {{ max }} MB at most ({{ archive }} MB for an archive).{% endblocktrans %}</p>
+    {% elif error == 'format' %}<p class="error">{% trans 'Send your manuscript as .tex, .zip, .tar.gz or .pdf.' %}</p>
+    {% elif error == 'arxiv' %}<p class="error">{% trans 'This is not an arXiv identifier (for example 2401.01234).' %}</p>
+    {% elif error == 'empty' %}<p class="error">{% trans 'We found no BibTeX entry. Send a .bib file or paste its content, or send your LaTeX project, an arXiv identifier or a PDF.' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} checks a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
+    {% if previous %}<p class="notice">{% blocktrans with date=previous.created|date:"j F Y" %}Checking again after your check of {{ date }}: what it reported and is now solved will be listed, what is new marked New, and your marks kept.{% endblocktrans %}</p>{% endif %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
       {% csrf_token %}
-      {% trans 'Your references (.bib)' as upload_label %}
+      {% if previous %}<input type="hidden" name="previous" value="{{ previous.key }}">{% endif %}
+      <h2>{% trans '1. Your references' %}</h2>
+      {% trans 'Your .bib file' as upload_label %}
       {% include 'summarizer/file_upload.html' with upload_name='bib' upload_accept='.bib,text/plain' upload_formats='.bib / .txt' upload_required_extension='' %}
       <p class="muted">{% trans 'or paste them:' %}</p>
       <p><textarea name="bibtext" placeholder="@article{key, ...}"></textarea></p>
-      {% trans 'Optional: your LaTeX source (.tex), to check what each citation is used for' as upload_label %}
-      {% include 'summarizer/file_upload.html' with upload_name='tex' upload_accept='.tex,text/plain' upload_formats='.tex / .txt' upload_required_extension='' %}
+      {% if zotero %}
+      <p><label for="refcheck-zotero">{% trans 'or check a Zotero collection:' %}</label>
+        <select name="zotero" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/collections/zotero/"><option value="">—</option></select></p>
+      {% else %}
+      <p class="muted"><small>{% trans 'Your references are in Zotero?' %} <a href="/{{ LANGUAGE_CODE }}/integrations/">{% trans 'Connect Zotero' %}</a> {% trans 'to check a collection directly.' %}</small></p>
+      {% endif %}
+
+      <h2>{% trans '2. Your manuscript (optional)' %}</h2>
+      <p class="muted">{% trans 'With the LaTeX, we also check what each citation is used for, the keys missing from your .bib and the entries never cited. A PDF only gives its reference list.' %}</p>
+      {% trans 'Your .tex, your LaTeX project (.zip or .tar.gz exported from Overleaf, with its .bib: no need to send it above), or your PDF' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='source' upload_accept='.tex,.zip,.gz,.tgz,.tar,.pdf,text/plain,application/pdf,application/zip' upload_formats='.tex / .zip / .tar.gz / .pdf' upload_required_extension='' upload_max_bytes=archive_max_bytes upload_max_mb=archive_max_mb %}
+      <p><label for="refcheck-arxiv">{% trans 'or the arXiv identifier of your paper, if it is already on arXiv (we read its LaTeX source):' %}</label>
+        <input type="text" name="arxiv" id="refcheck-arxiv" placeholder="2401.01234" autocomplete="off" style="max-width:16em"></p>
+      <details><summary class="muted">{% trans 'or paste your LaTeX' %}</summary><p><textarea name="textext" placeholder="\begin{document} ..."></textarea></p></details>
+
+      {% if missed_allowed %}
+      <p><label><input type="checkbox" name="missed" value="1"> {% trans 'Also look for the close papers my manuscript does not cite (What did I miss?, counts as one of its searches)' %}</label></p>
+      {% endif %}
       <p><button class="btn" type="submit">{% trans 'Check my references' %}</button></p>
-      <p class="muted"><small>{% trans 'Your files are read once and are not stored. Only the report is kept, in your account.' %}</small></p>
-      <p class="muted"><small>{% trans 'To find the close papers your draft does not cite yet:' %} <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a></small></p>
+      <p class="muted"><small>{% trans 'Your files are read once and are not stored. Only the report is kept, in your account: your corrected .bib, and the sentences whose citations are flagged.' %}</small></p>
     </form>
 
     {% if checks %}
@@ -54,10 +75,25 @@
     <ul class="item-list">
       {% for c in checks %}
       <li class="card"><a href="/{{ LANGUAGE_CODE }}/refcheck/{{ c.key }}/">{% if c.status == 'done' %}{% blocktrans count n=c.data.entries %}{{ n }} reference{% plural %}{{ n }} references{% endblocktrans %}{% elif c.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ c.created|date:"j F Y H:i" }}</div></li>
+        <div class="meta">{{ c.created|date:"j F Y H:i" }}{% if c.status == 'done' %} · <a href="/{{ LANGUAGE_CODE }}/refcheck/?previous={{ c.key }}">{% trans 'Check again after corrections' %}</a>{% endif %}</div></li>
       {% endfor %}
     </ul>
     {% endif %}
   {% endif %}
 </div>
+{% if zotero %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  var select = document.getElementById('refcheck-zotero');
+  fetch(select.dataset.url, {credentials: 'same-origin'}).then(function (r) { return r.json(); }).then(function (data) {
+    (data.collections || []).forEach(function (c) {
+      var option = document.createElement('option');
+      option.value = c.key;
+      option.textContent = c.name + ' (' + c.items + ')';
+      select.appendChild(option);
+    });
+  }).catch(function () {});
+});
+</script>
+{% endif %}
 {% endblock %}

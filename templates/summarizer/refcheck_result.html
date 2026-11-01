@@ -4,7 +4,19 @@
 
 {% block title %}{% trans 'Bibliography check' %}{% endblock %}
 {% block extra_head_tags %}
-  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />
+<style>
+  .refcheck-filters { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+  .refcheck-filters button[aria-pressed="true"] { font-weight:600; outline:2px solid currentColor; }
+  .refcheck-issue { margin-top:10px; }
+  .refcheck-marks { display:inline-flex; flex-wrap:wrap; gap:4px; margin-left:4px; vertical-align:middle; }
+  .refcheck-diff { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .refcheck-diff pre { margin:0; overflow-x:auto; }
+  @media (max-width: 700px) { .refcheck-diff { grid-template-columns:1fr; } }
+  .refcheck-where { font-size:.85em; }
+  .refcheck-paper { margin-top:6px; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="page">
@@ -17,8 +29,14 @@
 
   {% if result %}
     {% if not shared %}{% if result.with_tex %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check. The report quotes the sentences of your manuscript whose citations are flagged.' as what %}{% else %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check.' as what %}{% endif %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if message == 'too_many' %}<p class="error">{% trans 'You have reached the number of collections of your plan. Delete one to save these references.' %}</p>
+    {% elif message == 'no_ids' %}<p class="error">{% trans 'None of these references has a DOI or an arXiv identifier: they cannot be kept in a collection.' %}</p>
+    {% elif message == 'watching' %}<p class="notice" role="status">{% trans 'Your references are watched: we email you when one of them is published, retracted or corrected.' %}</p>{% endif %}
     {% if not result.summary %}<p class="notice">{% trans 'This report predates the extended metadata checks. Run a new check to compare titles, years, journals, volumes, pages and entry types.' %} <a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Run a new check' %}</a></p>{% endif %}
     {% if result.limited %}<p class="error">{% trans 'Our daily budget of literature searches (OpenAlex) ran out during this check: retractions and titles were not checked for some references. Run it again tomorrow for a complete check.' %}</p>{% endif %}
+    {% if result.origin == 'pdf' %}<p class="notice">{% trans 'The references were read from the reference list of your PDF: a value may have been misread, and there is no .bib to correct. Send your LaTeX and .bib to check what each citation is used for.' %}</p>
+    {% elif result.origin == 'bbl' %}<p class="notice">{% trans 'The references were read from the .bbl of your LaTeX source (there was no .bib): there is no .bib to correct.' %}</p>{% endif %}
+
     <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference analysed.{% plural %}{{ n }} references analysed.{% endblocktrans %}
       {% if result.counts.error %}<span class="importance high">{% blocktrans count n=result.counts.error %}{{ n }} serious problem{% plural %}{{ n }} serious problems{% endblocktrans %}</span>{% endif %}
       {% if result.counts.warning %}<span class="importance medium">{% blocktrans count n=result.counts.warning %}{{ n }} to fix{% plural %}{{ n }} to fix{% endblocktrans %}</span>{% endif %}</p>
@@ -28,40 +46,103 @@
     {% endif %}
     {% if result.lookup_limited %}<p class="notice">{% trans 'The lookup limit was reached. Some references could not be checked; no conclusion is drawn about their validity.' %}</p>{% endif %}
     {% if result.sources_unavailable %}<p class="notice">{% trans 'Some sources did not respond:' %} {{ result.sources_unavailable|join:', ' }}. {% trans 'Unresolved references can be checked again later.' %}</p>{% endif %}
-    {% if result.fixed_bib %}
-    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
+
+    {% if result.previous %}
+    <section class="card section-card" aria-labelledby="previous-title">
+      <h2 id="previous-title">{% blocktrans with date=result.previous.date %}Since your check of {{ date }}{% endblocktrans %}</h2>
+      <p>{% blocktrans count n=result.previous.solved|length %}{{ n }} problem solved.{% plural %}{{ n }} problems solved.{% endblocktrans %}
+        {% blocktrans count n=result.new_count %}{{ n }} new problem, marked New.{% plural %}{{ n }} new problems, marked New.{% endblocktrans %}
+        {% if not shared %}<a href="/{{ LANGUAGE_CODE }}/refcheck/{{ result.previous.key }}/">{% trans 'Previous report' %}</a>{% endif %}</p>
+      {% if result.previous.solved %}<details><summary>{% trans 'Solved' %}</summary><ul>{% for s in result.previous.solved %}<li><code>{{ s.key }}</code> · {{ s.label }}</li>{% endfor %}</ul></details>{% endif %}
+    </section>
     {% endif %}
 
-    {% if result.problems %}
+    {% if result.fixed_bib %}
+    <section class="card section-card" aria-labelledby="bib-title">
+      <h2 id="bib-title">{% trans 'Corrected .bib' %}</h2>
+      {% if result.corrections %}
+      <form method="get" id="bib-form" action="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/">
+        <input type="hidden" name="sel" value="1">
+        <p>{% blocktrans count n=result.corrected %}{{ n }} entry can be corrected. Untick below the corrections you do not want, then download.{% plural %}{{ n }} entries can be corrected. Untick below the corrections you do not want, then download.{% endblocktrans %}</p>
+        <p class="item-actions"><button class="btn" type="submit">{% trans 'Download the .bib with the chosen corrections' %}</button>
+          <button class="btn btn-ghost" type="submit" name="only" value="1">{% trans 'Only the corrected entries' %}</button></p>
+      </form>
+      {% else %}
+      <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <section id="problems" aria-labelledby="problems-title">
+    <h2 id="problems-title">{% trans 'References' %}</h2>
+    {% if result.active %}
+    <div class="refcheck-filters" role="group" aria-label="{% trans 'Show' %}" data-refcheck-filters>
+      <button type="button" class="btn btn-sm btn-ghost" data-filter="all" aria-pressed="true">{% trans 'All' %} ({{ result.active|length }})</button>
+      {% if result.counts.error %}<button type="button" class="btn btn-sm btn-ghost" data-filter="error" aria-pressed="false">{% trans 'Serious' %} ({{ result.counts.error }})</button>{% endif %}
+      {% if result.counts.warning %}<button type="button" class="btn btn-sm btn-ghost" data-filter="warning" aria-pressed="false">{% trans 'To fix' %} ({{ result.counts.warning }})</button>{% endif %}
+      {% if result.counts.info %}<button type="button" class="btn btn-sm btn-ghost" data-filter="info" aria-pressed="false">{% trans 'For information' %} ({{ result.counts.info }})</button>{% endif %}
+      {% if result.previous and result.new_count %}<button type="button" class="btn btn-sm btn-ghost" data-filter="new" aria-pressed="false">{% trans 'New' %}</button>{% endif %}
+    </div>
     <ul class="item-list">
-      {% for item in result.problems %}
-      <li class="card">
-        <p style="margin:0 0 4px"><code>{{ item.key }}</code> · <strong>{{ item.title }}</strong></p>
-        {% for issue in item.issues %}
-        <div style="margin-top:8px">
-          {% if issue.kind == 'retracted' %}<span class="importance high">{% trans 'Retracted' %}</span> {% trans 'This paper has been retracted. Remove it, or cite it as retracted.' %}
+      {% for item in result.active %}
+      <li class="card" id="ref-{{ forloop.counter }}" data-level="{{ item.level }}" data-new="{% for issue in item.active %}{% if issue.new %}1{% endif %}{% endfor %}">
+        <p style="margin:0 0 4px"><code>{{ item.key }}</code> · <strong>{{ item.title }}</strong>
+          {% if item.arxiv %}· <a href="https://arxiv.org/abs/{{ item.arxiv }}" target="_blank" rel="noopener">arXiv:{{ item.arxiv }}</a>{% elif item.doi %}· <a href="https://doi.org/{{ item.doi }}" target="_blank" rel="noopener">{{ item.doi }}</a>{% endif %}</p>
+        {% for issue in item.active %}
+        <div class="refcheck-issue">
+          {% if issue.new %}<span class="importance good">{% trans 'New' %}</span>{% endif %}
+          {% if issue.kind == 'retracted' %}<span class="importance high">{% trans 'Retracted' %}</span> {% trans 'This paper has been retracted. Remove it, or cite it as retracted.' %}{% if issue.notice %} <a href="https://doi.org/{{ issue.notice }}" target="_blank" rel="noopener">{% trans 'Retraction notice' %}</a>{% endif %}
           {% elif issue.kind == 'withdrawn' %}<span class="importance high">{% trans 'Withdrawn' %}</span> {% trans 'Withdrawn from arXiv by its authors:' %} <em>{{ issue.detail }}</em>
+          {% elif issue.kind == 'concern' %}<span class="importance medium">{% trans 'Expression of concern' %}</span> {% trans 'The journal has published an expression of concern about this paper: check that you can still rely on it.' %}{% if issue.notice %} <a href="https://doi.org/{{ issue.notice }}" target="_blank" rel="noopener">{% trans 'Notice' %}</a>{% endif %}
+          {% elif issue.kind == 'corrected' %}<span class="importance medium">{% trans 'Correction published' %}</span> {% trans 'A correction to this paper has been published: check that it does not change what you cite.' %}{% if issue.notice %} <a href="https://doi.org/{{ issue.notice }}" target="_blank" rel="noopener">{% trans 'Correction' %}</a>{% endif %}
           {% elif issue.kind == 'published' %}<span class="importance medium">{% trans 'Final publication available' %}</span> {% blocktrans with journal=issue.journal %}Cited as a preprint, but published in {{ journal }}.{% endblocktrans %} <a href="https://doi.org/{{ issue.doi }}" target="_blank" rel="noopener">{{ issue.doi }}</a>
-            <details style="margin-top:6px"><summary>{% trans 'Corrected entry' %}</summary><pre class="bibtex">{{ issue.bibtex }}</pre></details>
-          {% elif issue.kind == 'duplicate' %}<span class="importance medium">{% trans 'Duplicate' %}</span> {% blocktrans with other=issue.other %}The same paper as <code>{{ other }}</code>.{% endblocktrans %}
+          {% elif issue.kind == 'duplicate' %}<span class="importance medium">{% trans 'Duplicate' %}</span> {% if issue.pair %}{% blocktrans with other=issue.other %}The same work as <code>{{ other }}</code>: one cites the preprint, the other its published version. Keep only the published version.{% endblocktrans %}{% else %}{% blocktrans with other=issue.other %}The same paper as <code>{{ other }}</code>.{% endblocktrans %}{% endif %}
           {% elif issue.kind == 'arxiv_missing' %}<span class="importance medium">{% trans 'Not found' %}</span> {% blocktrans with id=issue.arxiv %}The arXiv record for {{ id }} could not be verified. Check the identifier or try again later.{% endblocktrans %}
-          {% elif issue.kind == 'old_version' %}<span class="importance low">{% trans 'Older version' %}</span> {% blocktrans with cited=issue.cited latest=issue.latest %}You cite {{ cited }}; the latest version is {{ latest }}.{% endblocktrans %}
+          {% elif issue.kind == 'old_version' %}<span class="importance low">{% trans 'Older version' %}</span> {% blocktrans with cited=issue.cited latest=issue.latest %}You cite {{ cited }}; the latest version is {{ latest }}.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/changes/{{ issue.arxiv|default:item.arxiv }}/">{% trans 'What changed between the versions' %}</a>
           {% elif issue.kind == 'metadata' %}<span class="importance medium">{% trans 'Reference to correct' %}</span>
             <a href="{{ issue.url }}" target="_blank" rel="noopener">{% blocktrans with source=issue.source %}Record found in {{ source }}{% endblocktrans %}</a>
             <ul>{% for change in issue.changes %}<li>
               <strong>{% if change.field == 'title' %}{% trans 'Title' %}{% elif change.field == 'year' %}{% trans 'Year' %}{% elif change.field == 'journal' %}{% trans 'Journal' %}{% elif change.field == 'volume' %}{% trans 'Volume' %}{% elif change.field == 'pages' %}{% trans 'Pages' %}{% elif change.field == 'type' %}{% trans 'Entry type' %}{% endif %} :</strong>
               <del>{{ change.before }}</del> → <ins>{{ change.after }}</ins>
             </li>{% endfor %}</ul>
-            <details><summary>{% trans 'Suggested corrected entry — review before using' %}</summary><pre class="bibtex">{{ issue.bibtex }}</pre></details>
+          {% elif issue.kind == 'incomplete' %}<span class="importance low">{% trans 'Incomplete entry' %}</span>
+            {% if issue.filled %}{% trans 'Added from the record that identifies it:' %} {% for name, value in issue.filled.items %}<code>{{ name }} = {{ value }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}.{% endif %}
+            {% if issue.missing %}{% trans 'Still missing:' %} {{ issue.missing|join:', ' }}.{% endif %}
           {% elif issue.kind == 'unknown' %}<span class="importance low">{% trans 'Reference unresolved' %}</span> {% trans 'No sufficiently reliable matching record was found in the sources consulted. This reference is not necessarily incorrect.' %}
           {% endif %}
+          {% if not shared %}<form method="post" class="refcheck-marks">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="target" value="{{ item.key }}|{{ issue.kind }}"><input type="hidden" name="anchor" value="problems">
+            <button class="btn btn-sm btn-ghost" name="mark" value="fixed">{% trans 'Fixed' %}</button>
+            <button class="btn btn-sm btn-ghost" name="mark" value="intended" title="{% trans 'I cite it this way on purpose' %}">{% trans 'Intended' %}</button>
+            <button class="btn btn-sm btn-ghost" name="mark" value="ignored">{% trans 'Ignore' %}</button></form>{% endif %}
         </div>
         {% endfor %}
+        {% for issue in item.marked %}<div class="refcheck-issue muted">{{ issue.label }} · {% if issue.mark == 'fixed' %}{% trans 'Fixed' %}{% elif issue.mark == 'intended' %}{% trans 'Intended' %}{% else %}{% trans 'Ignored' %}{% endif %}
+          {% if not shared %}<form method="post" class="refcheck-marks">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="target" value="{{ item.key }}|{{ issue.kind }}"><input type="hidden" name="anchor" value="problems">
+          <button class="btn btn-sm btn-ghost" name="mark" value="">{% trans 'Undo' %}</button></form>{% endif %}</div>{% endfor %}
+        {% if item.correction %}
+        <details class="refcheck-issue"><summary>{% trans 'Suggested corrected entry — review before using' %}</summary>
+          <div class="refcheck-diff"><div><p class="muted">{% trans 'Your entry' %}</p><pre class="bibtex">{{ item.correction.before }}</pre></div>
+            <div><p class="muted">{% trans 'Corrected' %}</p><pre class="bibtex">{{ item.correction.after }}</pre></div></div>
+        </details>
+        <p style="margin:6px 0 0"><label><input type="checkbox" name="k" value="{{ item.key }}" form="bib-form" checked> {% trans 'Keep this correction in the downloaded .bib' %}</label></p>
+        {% else %}{% for issue in item.active %}{% if issue.bibtex and not result.corrections %}
+        <details class="refcheck-issue"><summary>{% trans 'Corrected entry' %}</summary><pre class="bibtex">{{ issue.bibtex }}</pre></details>
+        {% endif %}{% endfor %}{% endif %}
       </li>
       {% endfor %}
     </ul>
     {% else %}
     <p class="notice">{% trans 'No discrepancy detected in the fields we could compare.' %}</p>
+    {% endif %}
+
+    {% if result.done %}
+    <details class="card section-card" id="marked">
+      <summary><strong>{% blocktrans count n=result.done|length %}{{ n }} reference you marked{% plural %}{{ n }} references you marked{% endblocktrans %}</strong></summary>
+      <ul class="item-list">{% for item in result.done %}{% for issue in item.marked %}<li>
+        <code>{{ item.key }}</code> · {{ item.title }} <span class="muted">· {{ issue.label }} · {% if issue.mark == 'fixed' %}{% trans 'Fixed' %}{% elif issue.mark == 'intended' %}{% trans 'Intended' %}{% else %}{% trans 'Ignored' %}{% endif %}</span>
+        {% if not shared %}<form method="post" class="refcheck-marks">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="target" value="{{ item.key }}|{{ issue.kind }}"><input type="hidden" name="anchor" value="marked">
+          <button class="btn btn-sm btn-ghost" name="mark" value="">{% trans 'Undo' %}</button></form>{% endif %}</li>{% endfor %}{% endfor %}</ul>
+    </details>
     {% endif %}
 
     {% if result.identified %}
@@ -70,31 +151,111 @@
       <ul>{% for item in result.identified %}<li><code>{{ item.key }}</code> · <a href="{{ item.source_url }}" target="_blank" rel="noopener">{{ item.title }}</a> — {{ item.source }}</li>{% endfor %}</ul>
     </details>
     {% endif %}
+    </section>
+
+    {% if result.undefined or result.uncited %}
+    <section class="card section-card" aria-labelledby="keys-title">
+      <h2 id="keys-title">{% trans 'Your LaTeX and your .bib' %}</h2>
+      {% if result.undefined %}<p><span class="importance medium">{% trans 'Missing from the .bib' %}</span> {% trans 'Your LaTeX cites these keys, which your .bib does not define: they will print as [?].' %}</p>
+      <p>{% for k in result.undefined %}<code>{{ k }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      {% if result.uncited %}<details><summary>{% blocktrans count n=result.uncited|length %}{{ n }} entry of your .bib is never cited{% plural %}{{ n }} entries of your .bib are never cited{% endblocktrans %}</summary>
+        <p class="muted">{% trans 'They are not printed in the bibliography; nothing to fix unless you meant to cite them.' %}</p>
+        <p>{% for k in result.uncited %}<code>{{ k }}</code>{% if not forloop.last %}, {% endif %}{% endfor %}</p></details>{% endif %}
+    </section>
+    {% endif %}
 
     {% if result.with_tex %}
-    <h2>{% trans 'Citations to check' %}</h2>
-    {% if result.claims %}
-    <p class="muted">{% blocktrans with n=result.claims_checked %}{{ n }} citations read next to the abstract of the cited paper. Only the abstract is known: a citation flagged here may be right, check it in the paper.{% endblocktrans %}</p>
+    <section id="claims" aria-labelledby="claims-title">
+    <h2 id="claims-title">{% trans 'Citations to check' %}</h2>
+    <p class="muted">{% if result.claims_citing %}{% blocktrans with n=result.claims_checked total=result.claims_citing %}{{ n }} sentences with citations read out of {{ total }}: those that attribute a result, a value or a method to a paper first.{% endblocktrans %}{% else %}{% blocktrans with n=result.claims_checked %}{{ n }} citations read next to the abstract of the cited paper.{% endblocktrans %}{% endif %}
+      {% trans 'Each sentence is read with the abstracts of all the papers it cites; those flagged are read again against the full text of the papers when it may be read. A flagged citation may be right: check it in the paper.' %}</p>
+    {% if result.open_claims %}
     <ul class="item-list">
-      {% for c in result.claims %}
-      <li class="card">
-        <span class="importance {% if c.verdict == 'contradicted' %}high{% else %}medium{% endif %}">{% if c.verdict == 'contradicted' %}{% trans 'The abstract says otherwise' %}{% else %}{% trans 'Not in the abstract' %}{% endif %}</span>
-        <code>{{ c.key }}</code> · {{ c.title }}
+      {% for c in result.open_claims %}
+      <li class="card" id="claim-{{ c.index }}">
+        {% if c.new %}<span class="importance good">{% trans 'New' %}</span>{% endif %}
+        {% if c.verdict == 'contradicted' %}<span class="importance high">{% if c.passage %}{% trans 'The paper says otherwise' %}{% else %}{% trans 'The abstract says otherwise' %}{% endif %}</span>
+        {% elif c.numbers_absent %}<span class="importance medium">{% trans 'Value not found in the paper' %}</span>
+        {% elif c.not_in_full_text %}<span class="importance medium">{% trans 'Not found in the full text' %}</span>
+        {% else %}<span class="importance medium">{% trans 'Not in the abstract' %}</span>{% endif %}
+        {% if c.file %}<span class="muted refcheck-where">{{ c.file }}{% if c.line %}, {% blocktrans with n=c.line %}line {{ n }}{% endblocktrans %}{% endif %}</span>{% endif %}
         <blockquote class="key-sentence">{{ c.sentence }}</blockquote>
         <p style="margin:4px 0 0">{{ c.reason }}</p>
+        {% if c.numbers_absent %}<p class="muted">{% trans 'Values the cited paper never states:' %} {{ c.numbers_absent|join:', ' }}</p>{% endif %}
+        {% if c.passage %}<blockquote>{{ c.passage.quote }}</blockquote>
+          <p class="muted refcheck-where"><code>{{ c.passage.key }}</code>{% if c.passage.location %} · {{ c.passage.location }}{% endif %}{% if c.passage.figure %} · {{ c.passage.figure }}{% endif %}{% if c.passage.link %} · <a href="{{ c.passage.link }}" target="_blank" rel="noopener">{% trans 'Open the paper at this passage' %}</a>{% endif %}</p>{% endif %}
+        {% for p in c.papers %}
+        <div class="refcheck-paper"><code>{{ p.key }}</code> · {% if p.url %}<a href="{{ p.url }}" target="_blank" rel="noopener">{{ p.title }}</a>{% else %}{{ p.title }}{% endif %}
+          {% if p.chat and not shared %}{% blocktrans asvar ask with s=c.sentence|truncatechars:400 %}Does this paper support this sentence: “{{ s }}”? Quote the passage.{% endblocktrans %}
+          · <a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ p.chat|urlencode }}&amp;ask={{ ask|urlencode }}"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Check in the paper' %}</a>{% endif %}
+          {% if p.abstract %}<details><summary class="muted">{% trans 'Abstract' %}</summary><p>{{ p.abstract }}</p></details>{% endif %}</div>
+        {% endfor %}
+        {% if not shared %}<form method="post" class="item-actions" style="margin-top:8px">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="target" value="claim|{{ c.index }}"><input type="hidden" name="anchor" value="claims">
+          <button class="btn btn-sm btn-ghost" name="mark" value="fixed">{% trans 'Fixed' %}</button>
+          <button class="btn btn-sm btn-ghost" name="mark" value="intended">{% trans 'Correct as it is' %}</button>
+          <button class="btn btn-sm btn-ghost" name="mark" value="ignored">{% trans 'Ignore' %}</button></form>{% endif %}
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="notice">{% blocktrans with n=result.claims_checked %}The {{ n }} citations we could read all match the abstract of the cited paper.{% endblocktrans %}</p>
+    <p class="notice">{% blocktrans with n=result.claims_checked %}The {{ n }} citations we could read all match the cited papers.{% endblocktrans %}</p>
     {% endif %}
+    {% if result.confirmed %}
+    <details class="card section-card"><summary>{% blocktrans count n=result.confirmed|length %}{{ n }} sentence not supported by the abstracts, confirmed by the full text{% plural %}{{ n }} sentences not supported by the abstracts, confirmed by the full text{% endblocktrans %}</summary>
+      <ul class="item-list">{% for c in result.confirmed %}<li><blockquote class="key-sentence">{{ c.sentence }}</blockquote>
+        {% if c.passage %}<blockquote>{{ c.passage.quote }}</blockquote><p class="muted refcheck-where"><code>{{ c.passage.key }}</code>{% if c.passage.location %} · {{ c.passage.location }}{% endif %}{% if c.passage.link %} · <a href="{{ c.passage.link }}" target="_blank" rel="noopener">{% trans 'Open the paper at this passage' %}</a>{% endif %}</p>{% endif %}</li>{% endfor %}</ul>
+    </details>
     {% endif %}
-    {% if not shared %}<p class="muted" style="margin-top:24px">{% trans 'Is a close paper missing from your references?' %} <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a> {% trans 'finds the close papers your draft does not cite: give it the same .bib with your PDF.' %}</p>{% endif %}
+    {% if result.marked_claims %}
+    <details class="card section-card"><summary>{% blocktrans count n=result.marked_claims|length %}{{ n }} citation you marked{% plural %}{{ n }} citations you marked{% endblocktrans %}</summary>
+      <ul class="item-list">{% for c in result.marked_claims %}<li><blockquote class="key-sentence">{{ c.sentence }}</blockquote>
+        <span class="muted">{% if c.mark == 'fixed' %}{% trans 'Fixed' %}{% elif c.mark == 'intended' %}{% trans 'Correct as it is' %}{% else %}{% trans 'Ignored' %}{% endif %}</span>
+        {% if not shared %}<form method="post" class="refcheck-marks">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="target" value="claim|{{ c.index }}"><input type="hidden" name="anchor" value="claims">
+          <button class="btn btn-sm btn-ghost" name="mark" value="">{% trans 'Undo' %}</button></form>{% endif %}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+    </section>
+    {% endif %}
+
+    {% if not shared %}
+    <section id="next" aria-labelledby="next-title">
+      <h2 id="next-title">{% trans 'Go further' %}</h2>
+      <ul class="tool-features">
+        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/?previous={{ row.key }}"><i class="fas fa-redo" aria-hidden="true"></i> {% trans 'Check again after your corrections' %}</a>: {% trans 'send your corrected files: what is solved and what is new is shown, and your marks are kept.' %}</li>
+        {% if result.refs %}
+        <li>{% if watch %}<i class="fas fa-bell" aria-hidden="true"></i> <strong>{% trans 'Your references are watched' %}</strong>: {% blocktrans with date=watch.until|date:"j F Y" %}we email you when one of them is published, retracted or corrected, until {{ date }}.{% endblocktrans %}
+          <form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="unwatch">{% trans 'Stop watching' %}</button></form>
+          {% else %}<form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm" name="action" value="watch"><i class="fas fa-bell" aria-hidden="true"></i> {% trans 'Watch my references until publication' %}</button></form>: {% trans 'between submission and the proofs, an email when a preprint you cite is published, or a paper you cite is retracted or corrected.' %}{% endif %}</li>
+        <li><form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="collection"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Keep my references in a collection' %}</button></form>: {% trans 'chat with all of them, compare them in a table, and find what the collection is missing.' %}</li>
+        {% endif %}
+        <li>{% if missed %}<a href="/{{ LANGUAGE_CODE }}/missed/{{ missed.key }}/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% if missed.status == 'done' %}{% trans 'the close papers your manuscript does not cite, found with these references.' %}{% else %}{% trans 'the search for the close papers your manuscript does not cite is running.' %}{% endif %}
+          {% else %}<a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% trans 'finds the close papers your draft does not cite: give it the same .bib with your PDF.' %}{% endif %}</li>
+      </ul>
+    </section>
+    {% endif %}
+    <script>
+    (function () {
+      var group = document.querySelector('[data-refcheck-filters]');
+      if (!group) return;
+      group.addEventListener('click', function (event) {
+        var button = event.target.closest('button[data-filter]');
+        if (!button) return;
+        var filter = button.dataset.filter;
+        group.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b === button ? 'true' : 'false'); });
+        document.querySelectorAll('#problems li[data-level]').forEach(function (card) {
+          card.hidden = !(filter === 'all' || card.dataset.level === filter || (filter === 'new' && card.dataset.new));
+        });
+      });
+    })();
+    </script>
+  {% elif row.status == 'no_source' %}
+    <p class="error">{{ failure|default:_('The check failed. Check that your file is BibTeX, and try again.') }}</p>
+    <p><a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Run a new check' %}</a></p>
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The check failed. Check that your file is BibTeX, and try again.' %}</p>
   {% else %}
     {% trans 'Checking your references' as working_title %}
-    {% trans 'usually 1 to 3 minutes' as working_time %}
+    {% trans 'usually 1 to 5 minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='refcheck-working' working_steps=steps working_visible=True working_started=row.created %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {

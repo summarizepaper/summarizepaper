@@ -557,13 +557,15 @@ def find(text, lang, step=lambda name: None, bib='', previous=None):
 
 # --- pages -------------------------------------------------------------------
 
-def write(data, text, lang, bib='', keep=False, previous=None):
+def write(data, text, lang, bib='', keep=False, previous=None, refcheck_key=''):
     def work(pk):
         generated.progress(pk, 'read')
         draft = pdf_text(data) if data is not None else text
         if len(draft.strip()) < 200:
             raise generated.GenerationError('no text found in the draft')
         result = find(draft, lang, lambda name: generated.progress(pk, name), bib=bib, previous=previous)
+        if refcheck_key:
+            result['refcheck_key'] = refcheck_key
         if keep:
             from . import scoops
             row = Generated.objects.get(pk=pk)
@@ -626,11 +628,24 @@ def missed_page(request):
         else:
             data = upload.read() if upload is not None else None
             bib = bib_upload.read().decode('utf-8', errors='replace') if bib_upload is not None else ''
-            return _start(request, write(data, text, get_language(), bib, keep=bool(request.POST.get('keep'))))
+            return _start(request, write(data, text, get_language(), bib, keep=bool(request.POST.get('keep')),
+                                         refcheck_key=start_refcheck(request, bib)))
     searches = Generated.objects.filter(kind='missed', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/missed.html', {'paid': paid, 'error': error, 'searches': searches,
+                                                      'refcheck_allowed': access.has_tool(request.user, 'refcheck'),
                                                       'per_day': PER_DAY, 'upload_max_bytes': MAX_UPLOAD, 'upload_max_mb': MAX_UPLOAD // (1024 * 1024),
                                                       'bib_max_bytes': MAX_BIB_UPLOAD})
+
+
+def start_refcheck(request, bib):
+    """The bibliography check of the same .bib, when asked for: the key of its report, else ''."""
+    from . import refcheck
+    if not (request.POST.get('refcheck') and refcheck.parse_bibtex(bib) and access.has_tool(request.user, 'refcheck')
+            and refcheck._spend(request.user)):
+        return ''
+    load = refcheck.loader(bib, '', 'main.tex', None, None, '', None)
+    return generated.start('refcheck', uuid.uuid4().hex, get_language(), refcheck.write(load, get_language(), request.user),
+                           user=request.user).key
 
 
 def kept_draft(row):
@@ -754,6 +769,8 @@ def missed_result(request, key):
         'row': row, 'result': result, 'paid': True, 'steps': STEPS, 'message': request.GET.get('m'),
         'links': links(result) if result else None, 'kept': result is not None and kept_draft(row) is not None,
         'per_day': PER_DAY, 'share_url': result_share.shared_url(request, row, 'missed'),
+        'refcheck': Generated.objects.filter(kind='refcheck', key=result.get('refcheck_key'), user=request.user).first()
+        if result and result.get('refcheck_key') else None,
         'collection': Collection.objects.filter(pk=request.GET.get('c'), user=request.user).first()
         if request.GET.get('c', '').isdigit() else None})
 

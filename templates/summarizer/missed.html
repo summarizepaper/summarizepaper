@@ -50,6 +50,7 @@
       {% trans 'Its BibTeX file (optional)' as upload_label %}
       {% include 'summarizer/file_upload.html' with upload_name='bib' upload_accept='.bib' upload_formats='.bib' upload_required_extension='.bib' upload_max_bytes=bib_max_bytes upload_max_mb=5 %}
       <p class="muted"><small>{% trans 'With your .bib, every reference is recognized exactly; without it, we read the reference list of your draft.' %}</small></p>
+      {% if refcheck_allowed %}<p><label><input type="checkbox" name="refcheck" value="1"> {% trans 'Also check this .bib (Bibliography check: retracted papers, preprints published since, entries to correct; counts as one of its checks)' %}</label></p>{% endif %}
       <p><label><input type="checkbox" name="keep" value="1"> {% trans 'Keep the text of my draft, encrypted, to search again later (you can delete it at any time)' %}</label></p>
       <p><button class="btn" type="submit">{% trans 'Find what I missed' %}</button></p>
       <p class="muted"><small>{% trans 'Your draft is read to run the searches and is not stored unless you tick the box above. The list of papers found is kept in your account, with for each the sentence of your draft where to cite it.' %}</small></p>

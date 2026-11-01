@@ -23,7 +23,7 @@ _GROUPS = [
         ('press-kit/', 'newspaper', _('Press kit'), 'plus', _('Talk about a paper in public without overstating it: a draft release and the questions journalists will ask for its authors, strengths and weaknesses for a researcher asked to comment, reporting angles and questions for the authors for a journalist, every quote checked against the paper.')),
         ('literature-review/', 'book-open', _('Literature review'), 'plus', _('From a research question or a collection: 15 to 30 founding and recent papers, grouped by approach, each statement with the sentences that support it; to adjust, update and export to BibTeX, LaTeX or Zotero.')),
         ('missed/', 'search', _('What did I miss?'), True, _('The papers close to your draft that it does not cite, even those written with other words: found through your references, each with where to cite it; to export, and to search again before resubmitting.')),
-        ('refcheck/', 'tasks', _('Bibliography check'), True, _('Retracted papers, preprints published since, outdated versions, and citations the cited abstract does not support.')),
+        ('refcheck/', 'tasks', _('Bibliography check'), True, _('Retracted and corrected papers, preprints published since, entries to correct and duplicates, and citations the cited papers do not support, with the passage; then your references watched until publication.')),
         ('integrations/', 'book', _('Zotero, Notion, Obsidian'), False, _('BibTeX, RIS and Markdown exports, and papers sent to Zotero with their summary.')),
     ]),
     (_('Present and meet'), [

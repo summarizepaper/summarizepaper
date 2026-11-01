@@ -134,7 +134,8 @@
       <h2 id="next-title">{% trans 'Go further' %}</h2>
       <ul class="tool-features">
         <li><a href="/{{ LANGUAGE_CODE }}/scoops/?{{ links.scoops }}"><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'Watch this draft' %}</a>: {% trans 'until it is published, an email the day a new paper comes close to it.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Bibliography check' %}</a>: {% trans 'before submitting, retracted papers, preprints published since and citations their abstract does not support.' %}</li>
+        {% if refcheck %}<li><a href="/{{ LANGUAGE_CODE }}/refcheck/{{ refcheck.key }}/"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Bibliography check' %}</a>: {% trans 'the check of the same .bib: retracted papers, preprints published since and entries to correct.' %}</li>
+        {% else %}<li><a href="/{{ LANGUAGE_CODE }}/refcheck/"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Bibliography check' %}</a>: {% trans 'before submitting, retracted papers, preprints published since and citations their abstract does not support.' %}</li>{% endif %}
         {% if result.active %}
         <li><a href="#save-form"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Save them in a collection' %}</a>: {% trans 'a comparison table whose every cell quotes the paper, their open questions, and what the collection is missing.' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ links.chat }}"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Chat with these papers' %}</a>: {% blocktrans with n=links.chat_max %}ask them your own questions, answered from their full text when the license allows it (the first {{ n }}).{% endblocktrans %}</li>

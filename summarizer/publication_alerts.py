@@ -97,6 +97,15 @@ def check(now, limit=MAX_CHECKED_PER_DAY):
     return queued
 
 
+def allowed(user):
+    """Followed papers come with citation alerts, watched references with the bibliography check."""
+    return access.has_tool(user, 'citations') or access.has_tool(user, 'refcheck')
+
+
+def manage_url(user, base_url, lang):
+    return '%s/%s/%s/' % (base_url, lang, 'citations' if access.has_tool(user, 'citations') else 'refcheck')
+
+
 def items_of(alerts, base_url, lang):
     """The queued alerts as email items, in the active language."""
     from .collection_tools import NOTICE_LABELS
@@ -108,7 +117,7 @@ def items_of(alerts, base_url, lang):
 def bundle_section(user, base_url, lang):
     """The queued alerts as a section of the user's digest (see digest_bundle), in the active language."""
     alerts = list(PublicationAlert.objects.filter(user=user, emailed=False))
-    if not alerts or not access.has_tool(user, 'citations'):
+    if not alerts or not allowed(user):
         return None
     items = []
     for item in items_of(alerts, base_url, lang):
@@ -119,7 +128,7 @@ def bundle_section(user, base_url, lang):
             label = item['label']
         items.append({'title': item['title'], 'url': item['url'], 'label': label, 'note': ''})
     return {'title': translation.gettext('Published, retracted or corrected'), 'items': items, 'more': 0,
-            'manage_url': '%s/%s/citations/' % (base_url, lang),
+            'manage_url': manage_url(user, base_url, lang),
             'commit': lambda: PublicationAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(emailed=True)}
 
 
@@ -134,14 +143,14 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
         if sent >= budget:
             break
         alerts = list(PublicationAlert.objects.filter(user=user, emailed=False))
-        if not user.email or user.email.strip().lower() in suppressed or not access.has_tool(user, 'citations'):
+        if not user.email or user.email.strip().lower() in suppressed or not allowed(user):
             PublicationAlert.objects.filter(pk__in=[a.pk for a in alerts]).update(emailed=True)
             continue
         lang = user.digests.values_list('lang', flat=True).first() or 'en'
         with translation.override(lang):
             items = items_of(alerts, base_url, lang)
             context = {'items': items, 'count': len(items), 'base_url': base_url,
-                       'manage_url': '%s/%s/citations/' % (base_url, lang)}
+                       'manage_url': manage_url(user, base_url, lang)}
             subject = render_to_string('publications/subject.txt', context).strip()
             text = render_to_string('publications/email.txt', context)
             html = render_to_string('publications/email.html', context)
@@ -160,5 +169,10 @@ def send_alerts(now, budget, base_url=digest.BASE_URL):
 def run(now, budget):
     """From the hourly digest run: check once a day, then send within the email budget."""
     if cache.add(DAILY_KEY % now.date(), True, 86400):
+        from . import refcheck_watch
         check(now)
+        try:
+            refcheck_watch.check(now)
+        except Exception:
+            logger.exception('Reference watches could not be checked')
     return send_alerts(now, budget) if budget > 0 else 0

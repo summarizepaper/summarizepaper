@@ -179,9 +179,9 @@ def select(entry, candidates):
 
 
 class Resolver:
-    def __init__(self, openalex_allowed=lambda: True):
-        self.remaining = MAX_CALLS
-        self.deadline = time.monotonic() + 180
+    def __init__(self, openalex_allowed=lambda: True, max_calls=MAX_CALLS, seconds=180):
+        self.remaining = max_calls
+        self.deadline = time.monotonic() + seconds
         self.unavailable = set()
         self.checked = set()
         self.limited = False
@@ -222,6 +222,12 @@ class Resolver:
         body = self.query('Crossref', sources.CROSSREF % quote(doi, safe=''), {'mailto': 'contact@summarizepaper.com'})
         record = crossref_record(body.get('message') or {})
         return record if record['doi'] == doi and record['fields'].get('title') else None
+
+    def work(self, doi):
+        """The Crossref record of a DOI as Crossref gives it (notices, relations, type), {} when unknown. The
+        lookup by DOI is the same request as doi(): one call for both."""
+        body = self.query('Crossref', sources.CROSSREF % quote(doi, safe=''), {'mailto': 'contact@summarizepaper.com'})
+        return body.get('message') if isinstance(body.get('message'), dict) else {}
 
     def crossref(self, params):
         body = self.query('Crossref', 'https://api.crossref.org/works', dict(params, rows=5, mailto='contact@summarizepaper.com'))
@@ -284,6 +290,9 @@ def normalized_query(value):
     return re.sub(r'[^\w\s.,/&-]', ' ', value)[:300]
 
 
+RETRACTED_TITLE = re.compile(r'^\s*(?:retracted|withdrawn|retraction)(?:\s+article)?\s*[:\-–—]\s*', re.I)
+
+
 def differences(entry, record):
     f, c = entry['fields'], record['fields']
     found = []
@@ -292,6 +301,9 @@ def differences(entry, record):
         if not before or not after:
             continue  # missing source fields are not evidence of an error
         a, b = normalized(before), normalized(after)
+        if field == 'title' and RETRACTED_TITLE.match(after):
+            after = RETRACTED_TITLE.sub('', after)  # a notice's label, not the title the paper was published with
+            b = normalized(after)
         if field == 'year':
             if before in record['years']:
                 continue  # online and print years may both be legitimate
