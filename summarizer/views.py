@@ -778,15 +778,21 @@ def citation_meta(paper):
     tags += [('citation_author', a.name) for a in paper.authors.all()[:100]]
     if paper.published_arxiv:
         tags.append(('citation_publication_date', paper.published_arxiv.strftime('%Y/%m/%d')))
+    published = None
     if sources.is_external(paper.arxiv_id):
         if paper.journal_ref:
             tags.append(('citation_journal_title', paper.journal_ref))
     else:
-        tags += [('citation_arxiv_id', ref), ('citation_publisher', 'arXiv'),
-                 ('citation_pdf_url', 'https://arxiv.org/pdf/%s' % ref)]
+        published = exports.published_version(paper)  # a reference manager saves the version to cite
+        if published:
+            tags.append(('citation_journal_title', published['journal']))
+        tags += [('citation_arxiv_id', ref)] + ([] if published else [('citation_publisher', 'arXiv')]) + \
+            [('citation_pdf_url', 'https://arxiv.org/pdf/%s' % ref)]
     if paper.abstract:
         tags.append(('citation_abstract', ' '.join(paper.abstract.split())))
-    if paper.link_doi and 'doi.org' in paper.link_doi:
+    if published:
+        tags.append(('citation_doi', published['doi']))
+    elif paper.link_doi and 'doi.org' in paper.link_doi:
         tags.append(('citation_doi', paper.link_doi.split('doi.org/')[-1]))
     return tags
 

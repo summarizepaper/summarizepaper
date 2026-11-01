@@ -382,7 +382,7 @@ class CollectionTests(ToolsTestCase):
 class ExportTests(ToolsTestCase):
     def test_zotero_username_is_not_silently_converted_to_a_user_id(self):
         client = self.client_for(self.user(paid=True))
-        with mock.patch('summarizer.exports.check_zotero') as check:
+        with mock.patch('summarizer.zotero.check_key') as check:
             for username in ('ExampleUser', 'Example123'):
                 response = client.post('/en/integrations/', {'library_id': username, 'api_key': 'dummySecretForTest'})
                 self.assertContains(response, 'numeric Zotero user ID, not your username')
@@ -393,7 +393,7 @@ class ExportTests(ToolsTestCase):
     def test_zotero_key_is_masked_and_invalid_characters_are_not_silently_removed(self):
         client = self.client_for(self.user(paid=True))
         self.assertContains(client.get('/en/integrations/'), 'type="password" name="api_key"')
-        with mock.patch('summarizer.exports.check_zotero') as check:
+        with mock.patch('summarizer.zotero.check_key') as check:
             response = client.post('/en/integrations/', {'library_id': '123', 'api_key': 'dummy&SecretForTest'})
             self.assertContains(response, 'Copy the API key exactly')
             self.assertNotContains(response, 'dummy&amp;SecretForTest')
@@ -401,7 +401,7 @@ class ExportTests(ToolsTestCase):
 
     def test_ris_import_needs_no_connection_and_contains_original_abstract(self):
         paper = self.paper()
-        with mock.patch('summarizer.exports.requests.get') as get:
+        with mock.patch('summarizer.zotero.requests.get') as get:
             response = Client().get('/en/export/2101.00001v1/ris/')
         self.assertContains(response, 'AB  - '+paper.abstract)
         self.assertNotContains(response, 'Long summary of the clouds.')
@@ -426,29 +426,28 @@ class ExportTests(ToolsTestCase):
         self.assertContains(page, '/en/register/?next=/en/paper/2101.00001v1/')
 
     def test_zotero_connect_and_send(self):
+        from summarizer.test_zotero import FakeZotero
         self.paper()
         user = self.user(paid=True)
         client = self.client_for(user)
         self.assertEqual(client.post('/en/zotero/send/', {'arxiv_id': '2101.00001v1'}).json()['status'], 'setup')
-        with mock.patch('summarizer.exports.check_zotero', return_value=False):
+        with mock.patch('summarizer.zotero.check_key', return_value=None):
             self.assertContains(client.post('/en/integrations/', {'library_id': '123', 'api_key': 'abc'}), 'did not accept')
-        with mock.patch('summarizer.exports.check_zotero', return_value=True):
+        fake = FakeZotero()
+        with fake:
             client.post('/en/integrations/', {'library_id': '123', 'api_key': 'abc'})
-        self.assertTrue(ZoteroAccount.objects.filter(user=user, library_id='123').exists())
-        posts = []
-
-        def fake_post(url, json=None, **kwargs):
-            posts.append((url, json))
-            return mock.Mock(json=lambda: {'successful': {'0': {'key': 'ITEMKEY'}}}, raise_for_status=lambda: None)
-        with mock.patch('summarizer.exports.requests.post', side_effect=fake_post):
-            client.post('/en/zotero/send/', {'arxiv_id': '2101.00001v1'})
-        self.assertEqual(posts[0][0], 'https://api.zotero.org/users/123/items')
-        item = posts[0][1][0]
+            account = ZoteroAccount.objects.get(user=user, library_id='123')
+            self.assertNotIn('abc', account.secret)  # encrypted at rest
+            self.assertEqual((account.api_key, account.username), ('abc', 'ann_z'))
+            data = Generated.objects.get(pk=client.post('/en/zotero/send/', {'arxiv_id': '2101.00001v1'}).json()['id']).data()
+        self.assertEqual((data['saved'], data['existing']), (1, 0))
+        self.assertTrue(data['open'].startswith('zotero://select/library/items/'))
+        item = fake.only_item()
         self.assertEqual((item['itemType'], item['archiveID'], item['creators'][0]['lastName']), ('preprint', 'arXiv:2101.00001', 'Lee'))
-        note = posts[1][1][0]
-        self.assertEqual(note['parentItem'], 'ITEMKEY')
-        self.assertIn('Long summary of the clouds.', note['note'])
-        self.assertEqual(Generated.objects.get(kind='zotero').data(), {'saved': 1})
+        self.assertIn('Citation Key: lee2021clouds', item['extra'])
+        note = fake.notes_of(item['key'])[0]
+        self.assertIn('Long summary of the clouds.', note)
+        self.assertIn('Summary written by an AI model (SummarizePaper) from arXiv:2101.00001v1', note)
         self.assertEqual(self.client_for(self.user('free')).post('/en/zotero/send/', {'arxiv_id': '2101.00001v1'}).status_code, 403)
 
 
@@ -871,9 +870,11 @@ class LiteratureTests(ToolsTestCase):
         self.assertEqual(self.client_for(self.user('other', paid=True)).get('/en/literature-review/k1/export/bib/').status_code, 404)
         self.assertEqual(client.post('/en/zotero/send/', {'literature': 'k1'}).json()['status'], 'setup')
         ZoteroAccount.objects.create(user=user, library_id='1', api_key='k')
-        with mock.patch('summarizer.exports.send_to_zotero', return_value=2) as send:
+        with mock.patch('summarizer.zotero.send', return_value={'saved': 2, 'existing': 0, 'failed': 0, 'keys': ['', '']}) as send, \
+             mock.patch('summarizer.zotero.collections', return_value=[]), \
+             mock.patch('summarizer.zotero.create', return_value={0: 'COLL0001'}):
             client.post('/en/zotero/send/', {'literature': 'k1'})
-        self.assertEqual([item['title'] for item, _note in send.call_args[0][1]], ['Sinks', 'Sinks'])
+        self.assertEqual([e['meta']['title'] for e in send.call_args[0][1]], ['Sinks', 'Sinks'])
 
     def test_a_review_is_revised_from_its_pool_without_searching_again(self):
         user = self.user('pro', paid=True)

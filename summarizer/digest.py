@@ -1760,6 +1760,7 @@ def _digest_context(request, subscription, digests, paid, error=False):
         'premium': PREMIUM,
         'max_authors': MAX_AUTHORS,
         'max_references': MAX_REFERENCES,
+        'zotero_fill': request.user.is_authenticated and access.has_tool(request.user, 'zotero'),
         'saved': request.GET.get('saved') == '1',
         'preview': request.GET.get('preview'),
         'hours': [(h, hour_label(h)) for h in range(24)],

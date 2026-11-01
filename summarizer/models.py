@@ -710,6 +710,11 @@ class Collection(models.Model):
     share_expires = models.DateTimeField(blank=True, null=True)
     share_notes = models.BooleanField(default=False)  # the shared page shows the owner's notes
     invite_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # joins as an editor
+    # the Zotero collection it is synced with (zotero.py): its key, and the library ('users/1', 'groups/2') it is in
+    zotero_key = models.CharField(max_length=20, blank=True, default='')
+    zotero_library = models.CharField(max_length=40, blank=True, default='')
+    zotero_synced = models.DateTimeField(blank=True, null=True)
+    zotero_removed = models.TextField(blank=True, default='')  # items of papers removed here, to take out of it at the next sync
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -731,6 +736,7 @@ class CollectionPaper(models.Model):
     reading = models.CharField(max_length=10, blank=True, default='', choices=READING)
     selected = models.BooleanField(default=True)  # read by the comparison table, the open questions and the chat
     position = models.PositiveIntegerField(default=0)  # the order its owner gave; papers never moved keep 0
+    zotero_key = models.CharField(max_length=20, blank=True, default='')  # its item in the synced Zotero collection
     added = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -879,12 +885,43 @@ class PaperAudio(models.Model):
         unique_together = ('arxiv_id', 'lang')
 
 
+def zotero_cipher():
+    """Encrypts the Zotero keys at rest: ZOTERO_KEY_SECRET, or SECRET_KEY when it is empty."""
+    import base64
+    import hashlib
+    from cryptography.fernet import Fernet
+    from django.conf import settings
+    secret = getattr(settings, 'ZOTERO_KEY_SECRET', '') or settings.SECRET_KEY
+    return Fernet(base64.urlsafe_b64encode(hashlib.sha256(('zotero-key:' + secret).encode()).digest()))
+
+
 class ZoteroAccount(models.Model):
-    """Where 'Send to Zotero' writes, for a Premium user (see exports.py)."""
+    """A Premium user's Zotero library, read and written through the web API (see zotero.py)."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='zotero')
     library_id = models.CharField(max_length=40)  # the numeric userID shown on zotero.org/settings/keys
-    api_key = models.CharField(max_length=100)
+    secret = models.TextField(blank=True, default='')  # the API key, encrypted (zotero_cipher)
+    username = models.CharField(max_length=100, blank=True, default='')  # for the links to zotero.org
+    library = models.CharField(max_length=40, blank=True, default='')  # '' the personal library, 'groups/<id>' a group's
+    library_name = models.CharField(max_length=200, blank=True, default='')
+    inbox = models.CharField(max_length=20, blank=True, default='')  # the collection single papers go to ('' the library root)
+    inbox_name = models.CharField(max_length=200, blank=True, default='')
     created = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def api_key(self):
+        from cryptography.fernet import InvalidToken
+        try:
+            return zotero_cipher().decrypt(self.secret.encode()).decode() if self.secret else ''
+        except InvalidToken:  # SECRET_KEY changed: the library must be connected again
+            return ''
+
+    @api_key.setter
+    def api_key(self, value):
+        self.secret = zotero_cipher().encrypt(value.encode()).decode()
+
+    def prefix(self):
+        """The path of the library in the API: 'users/123' or 'groups/456'."""
+        return self.library or 'users/%s' % self.library_id
 
 
 class TermWeek(models.Model):

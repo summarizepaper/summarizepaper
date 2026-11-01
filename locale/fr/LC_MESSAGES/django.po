@@ -20922,3 +20922,339 @@ msgid "Your bibliography check is ready (%(n)s reference)"
 msgid_plural "Your bibliography check is ready (%(n)s references)"
 msgstr[0] "Votre vérification de bibliographie est prête (%(n)s référence)"
 msgstr[1] "Votre vérification de bibliographie est prête (%(n)s références)"
+
+msgid ""
+"the BibTeX entry of each paper, or of a whole collection, with one key per "
+"paper and the special characters and acronyms of titles protected."
+msgstr ""
+"l’entrée BibTeX de chaque article, ou d’une collection entière, avec une clé"
+" par article et les caractères spéciaux et sigles des titres protégés."
+
+msgid ""
+"a note per paper with its properties (citation key, DOI, authors, year, "
+"tags, reading status), its key points and its summary; a collection "
+"downloads as a folder to drop in your vault, with a note linking its papers."
+msgstr ""
+"une note par article avec ses propriétés (clé de citation, DOI, auteurs, "
+"année, tags, statut de lecture), ses points clés et son résumé ; une "
+"collection se télécharge comme un dossier à déposer dans votre coffre, avec "
+"une note qui relie ses articles."
+
+msgid ""
+"the Markdown of a paper to import as a page, and the spreadsheet of a "
+"collection to import as a database."
+msgstr ""
+"le Markdown d’un article à importer comme page, et le tableur d’une "
+"collection à importer comme base de données."
+
+msgid ""
+"A paper published since its preprint is exported as its published version: "
+"journal and DOI, with its arXiv identifier kept. Each summary says it was "
+"written by an AI model, from which version of the paper and when."
+msgstr ""
+"Un article publié depuis son préprint est exporté dans sa version publiée : "
+"revue et DOI, avec son identifiant arXiv conservé. Chaque résumé indique "
+"qu’il a été écrit par un modèle d’IA, à partir de quelle version de "
+"l’article et quand."
+
+msgid "Your Zotero library"
+msgstr "Votre bibliothèque Zotero"
+
+msgid ""
+"Papers sent without duplicates: a paper already in your library gets the "
+"collection, tags and notes it lacks."
+msgstr ""
+"Des articles envoyés sans doublon : un article déjà dans votre bibliothèque "
+"reçoit la collection, les tags et les notes qui lui manquent."
+
+msgid ""
+"A collection kept in sync with a Zotero collection, both ways: papers added "
+"or removed on one side follow on the other, and your notes, tags, reading "
+"status, retractions, corrections and published versions reach Zotero."
+msgstr ""
+"Une collection synchronisée avec une collection Zotero, dans les deux sens :"
+" les articles ajoutés ou retirés d’un côté suivent de l’autre, et vos notes,"
+" tags, statuts de lecture, rétractations, corrections et versions publiées "
+"arrivent dans Zotero."
+
+msgid ""
+"A bibliography check written back into Zotero: tags and a note on each "
+"retracted, corrected or since-published reference, and the published version"
+" added next to its preprint."
+msgstr ""
+"Une vérification de bibliographie reportée dans Zotero : des tags et une "
+"note sur chaque référence rétractée, corrigée ou publiée depuis, et la "
+"version publiée ajoutée à côté de son préprint."
+
+msgid ""
+"A literature review sent as a Zotero collection with a subcollection per "
+"approach, each paper with the statements it supports and its sentence that "
+"supports them."
+msgstr ""
+"Une revue de littérature envoyée comme collection Zotero avec une sous-"
+"collection par approche, chaque article avec les affirmations qu’il soutient"
+" et sa phrase qui les soutient."
+
+msgid ""
+"Your Zotero collections as reference papers for your daily digest and your "
+"scoop watch."
+msgstr ""
+"Vos collections Zotero comme articles de référence pour votre digest "
+"quotidien et votre veille anti-scoop."
+
+#, python-format
+msgid "Connected to the Zotero account %(name)s (%(id)s)."
+msgstr "Connecté au compte Zotero %(name)s (%(id)s)."
+
+msgid "Library used"
+msgstr "Bibliothèque utilisée"
+
+msgid "My library"
+msgstr "Ma bibliothèque"
+
+msgid "Group:"
+msgstr "Groupe :"
+
+msgid "Use it"
+msgstr "L’utiliser"
+
+msgid "To use a group library, connect a key that may write to your groups."
+msgstr ""
+"Pour utiliser la bibliothèque d’un groupe, connectez une clé qui peut écrire"
+" dans vos groupes."
+
+msgid "Single papers go to"
+msgstr "Les articles envoyés seuls vont dans"
+
+msgid "the root of the library"
+msgstr "la racine de la bibliothèque"
+
+msgid "Your Zotero collections"
+msgstr "Vos collections Zotero"
+
+msgid ""
+"Open one as a collection here to chat with its papers, compare them in a "
+"table, find the papers it may be missing, follow their citations or write "
+"its literature review; it stays in sync with Zotero."
+msgstr ""
+"Ouvrez-en une comme collection ici pour discuter avec ses articles, les "
+"comparer dans un tableau, trouver les articles qui lui manquent peut-être, "
+"suivre leurs citations ou écrire sa revue de littérature ; elle reste "
+"synchronisée avec Zotero."
+
+msgid "Open as a collection"
+msgstr "Ouvrir comme collection"
+
+msgid "Check its references"
+msgstr "Vérifier ses références"
+
+msgid "Importing… this takes a minute for a large collection."
+msgstr "Import en cours… compter une minute pour une grande collection."
+
+msgid "Your Zotero connection has to be renewed: connect your library again."
+msgstr ""
+"Votre connexion à Zotero doit être renouvelée : connectez de nouveau votre "
+"bibliothèque."
+
+msgid ""
+"Zotero did not confirm the connection. Try again, or paste a key below."
+msgstr ""
+"Zotero n’a pas confirmé la connexion. Réessayez, ou collez une clé ci-"
+"dessous."
+
+msgid "Connect my Zotero library"
+msgstr "Connecter ma bibliothèque Zotero"
+
+msgid ""
+"Zotero asks you to log in and to allow SummarizePaper to read and write your"
+" library and your groups. No key to copy."
+msgstr ""
+"Zotero vous demande de vous connecter et d’autoriser SummarizePaper à lire "
+"et écrire votre bibliothèque et vos groupes. Aucune clé à copier."
+
+msgid "Or paste a key"
+msgstr "Ou collez une clé"
+
+msgid "To use a group library, also give the key write access to your groups."
+msgstr ""
+"Pour utiliser la bibliothèque d’un groupe, donnez aussi à la clé le droit "
+"d’écrire dans vos groupes."
+
+msgid ""
+"Your key is stored encrypted and only used to read and write your library "
+"when you ask."
+msgstr ""
+"Votre clé est stockée chiffrée et ne sert qu’à lire et écrire votre "
+"bibliothèque quand vous le demandez."
+
+msgid "%%(n)s papers added, the last added to Zotero first."
+msgstr "%%(n)s articles ajoutés, les derniers ajoutés dans Zotero d’abord."
+
+msgid "No paper of this collection has a DOI or an arXiv identifier."
+msgstr "Aucun article de cette collection n’a de DOI ni d’identifiant arXiv."
+
+msgid "Take them from a Zotero collection"
+msgstr "Les prendre dans une collection Zotero"
+
+msgid ""
+"A note per paper with its properties, in a folder to drop in your vault"
+msgstr ""
+"Une note par article avec ses propriétés, dans un dossier à déposer dans "
+"votre coffre"
+
+msgid "To import in Notion as a database, or in a spreadsheet"
+msgstr "À importer dans Notion comme base de données, ou dans un tableur"
+
+msgid "Spreadsheet or Notion (CSV)"
+msgstr "Tableur ou Notion (CSV)"
+
+msgid ""
+"Papers added or removed on either side follow on the other; your notes, "
+"tags, reading status and the notices found reach Zotero"
+msgstr ""
+"Les articles ajoutés ou retirés d’un côté suivent de l’autre ; vos notes, "
+"tags, statuts de lecture et les avis trouvés arrivent dans Zotero"
+
+msgid "Sync with Zotero"
+msgstr "Synchroniser avec Zotero"
+
+msgid "Send to Zotero and keep in sync"
+msgstr "Envoyer vers Zotero et synchroniser"
+
+#, python-format
+msgid "Synced with Zotero on %(date)s."
+msgstr "Synchronisée avec Zotero le %(date)s."
+
+msgid ""
+"In sync with Zotero: %%(saved)s papers created, %%(existing)s already there,"
+" %%(added)s added from Zotero."
+msgstr ""
+"Synchronisée avec Zotero : %%(saved)s articles créés, %%(existing)s déjà "
+"présents, %%(added)s ajoutés depuis Zotero."
+
+msgid "Open in Zotero"
+msgstr "Ouvrir dans Zotero"
+
+msgid "A note with its properties: citation key, DOI, authors, year"
+msgstr "Une note avec ses propriétés : clé de citation, DOI, auteurs, année"
+
+msgid "Already in your Zotero library: the notes it lacked were added."
+msgstr ""
+"Déjà dans votre bibliothèque Zotero : les notes qui lui manquaient ont été "
+"ajoutées."
+
+msgid "Writing into Zotero…"
+msgstr "Écriture dans Zotero…"
+
+msgid ""
+"%%(tagged)s references tagged in Zotero, %%(added)s published versions "
+"added."
+msgstr ""
+"%%(tagged)s références marquées dans Zotero, %%(added)s versions publiées "
+"ajoutées."
+
+msgid "Not found in your library:"
+msgstr "Absentes de votre bibliothèque :"
+
+msgid "Write these findings into Zotero"
+msgstr "Reporter ces résultats dans Zotero"
+
+msgid ""
+"a tag (Retracted, Correction published, Published version available...) and "
+"a note on each reference concerned in your library, and the published "
+"version of each preprint added next to it. The problems you marked intended "
+"or ignored are left out."
+msgstr ""
+"un tag (Retracted, Correction published, Published version available...) et "
+"une note sur chaque référence concernée de votre bibliothèque, et la version"
+" publiée de chaque préprint ajoutée à côté. Les problèmes que vous avez "
+"marqués voulus ou ignorés sont laissés de côté."
+
+msgid ""
+"A Zotero collection with a subcollection per approach, each paper with the "
+"statements it supports"
+msgstr ""
+"Une collection Zotero avec une sous-collection par approche, chaque article "
+"avec les affirmations qu’il soutient"
+
+msgid "Finding the Zotero collection"
+msgstr "Recherche de la collection Zotero"
+
+msgid "Adding the papers new in Zotero"
+msgstr "Ajout des articles nouveaux dans Zotero"
+
+msgid "Writing the papers, notes and tags into Zotero"
+msgstr "Écriture des articles, notes et tags dans Zotero"
+
+msgid "My note"
+msgstr "Ma note"
+
+#, python-format
+msgid ""
+"Found by SummarizePaper on %(date)s in Crossref, OpenAlex, Retraction Watch "
+"and arXiv."
+msgstr ""
+"Trouvé par SummarizePaper le %(date)s dans Crossref, OpenAlex, Retraction "
+"Watch et arXiv."
+
+msgid ""
+"Its published version was added to your library next to it, as a related "
+"item."
+msgstr ""
+"Sa version publiée a été ajoutée à votre bibliothèque à côté, comme document"
+" connexe."
+
+msgid "no sentence of this paper quoted"
+msgstr "aucune phrase de cet article citée"
+
+#, python-format
+msgid "Literature review: %(title)s"
+msgstr "Revue de littérature : %(title)s"
+
+#, python-format
+msgid ""
+"Exploratory review written with SummarizePaper on %(date)s; check each "
+"statement in the paper."
+msgstr ""
+"Revue exploratoire écrite avec SummarizePaper le %(date)s ; vérifiez chaque "
+"affirmation dans l’article."
+
+msgid "Included in the review, not cited by a statement."
+msgstr "Inclus dans la revue, sans être cité par une affirmation."
+
+#, python-format
+msgid ""
+"Summary written by an AI model (SummarizePaper) from %(source)s on %(date)s."
+" Check it against the paper."
+msgstr ""
+"Résumé écrit par un modèle d’IA (SummarizePaper) à partir de %(source)s le "
+"%(date)s. À vérifier dans l’article."
+
+msgid "Authors"
+msgstr "Auteurs"
+
+msgid "Date"
+msgstr "Date"
+
+msgid ""
+"Exports to BibTeX, RIS, Obsidian and Notion; with Premium, a collection kept"
+" in sync with Zotero, and your bibliography check and literature review "
+"written into it."
+msgstr ""
+"Exports vers BibTeX, RIS, Obsidian et Notion ; avec Premium, une collection "
+"synchronisée avec Zotero, et votre vérification de bibliographie et votre "
+"revue de littérature reportées dedans."
+
+msgid "BibTeX, RIS, Obsidian and Notion exports"
+msgstr "Exports BibTeX, RIS, Obsidian et Notion"
+
+msgid "Zotero kept in sync, without duplicates, with your checks and reviews"
+msgstr "Zotero synchronisé, sans doublon, avec vos vérifications et revues"
+
+#, python-format
+msgid "%(n)s paper removed from the Zotero collection was removed here."
+msgid_plural ""
+"%(n)s papers removed from the Zotero collection were removed here."
+msgstr[0] "%(n)s article retiré de la collection Zotero a été retiré ici."
+msgstr[1] ""
+"%(n)s articles retirés de la collection Zotero ont été retirés ici."

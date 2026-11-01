@@ -141,8 +141,8 @@ def features():
             (_('Rewrites for another reader or language'), '', _('%d per day') % readings, unlimited, unlimited),
             (_('Collections'), 'collections/', _('3 of 20 papers'), _('100 of 200 papers'), _('100 of 200 papers')),
             (_('Comparison tables and open questions of a collection'), 'collections/', False, True, True),
-            (_('BibTeX, RIS and Markdown exports'), 'integrations/', True, True, True),
-            (_('Papers sent to Zotero with their summary'), 'integrations/', False, True, True),
+            (_('BibTeX, RIS, Obsidian and Notion exports'), 'integrations/', True, True, True),
+            (_('Zotero kept in sync, without duplicates, with your checks and reviews'), 'integrations/', False, True, True),
         ]),
         (_('Follow your field'), [
             (_('Daily digest'), 'digest/', _('One digest'), _('Up to 5, ranked for you, read aloud'),

@@ -129,19 +129,27 @@ class ImportTests(CollectionsTestCase):
         self.assertEqual(collection.papers.count(), 2)
 
     def test_zotero_collection_is_imported(self):
+        from .test_zotero import FakeZotero
+        from . import zotero
         user = self.user(paid=True)
         ZoteroAccount.objects.create(user=user, library_id='123', api_key='k')
         collection = Collection.objects.create(user=user, name='Z')
         self.paper()
-        items = [{'data': {'itemType': 'preprint', 'archiveID': 'arXiv:2101.00001'}},
-                 {'data': {'itemType': 'journalArticle', 'DOI': '10.1093/mnras/stad1234'}},
-                 {'data': {'itemType': 'book', 'title': 'No id'}}, {'data': {'itemType': 'note'}}]
-        self.assertEqual(collection_tools.zotero_ref({'extra': 'arXiv: 2101.00009v2'}), '2101.00009v2')
-        with mock.patch('summarizer.collection_tools.zotero_get', return_value=items), \
-             mock.patch('summarizer.library.lookup_many', return_value={'2101.00001': ('Clouds', 'Ann')}):
-            r = self.client_for(user).post('/en/collections/%d/zotero/' % collection.pk, {'key': 'ABCD1234'}).json()
+        fake = FakeZotero()
+        key = fake.collection('Thesis')
+        for data in ({'itemType': 'preprint', 'title': 'Clouds', 'archiveID': 'arXiv:2101.00001'},
+                     {'itemType': 'journalArticle', 'title': 'Galaxies', 'DOI': '10.1093/mnras/stad1234'},
+                     {'itemType': 'book', 'title': 'No id'}):
+            fake.add(dict(data, collections=[key]))
+        self.assertEqual(zotero.zotero_ref({'extra': 'arXiv: 2101.00009v2'}), '2101.00009v2')
+        with fake, mock.patch('summarizer.library.lookup_many', return_value={'2101.00001': ('Clouds', 'Ann')}):
+            r = self.client_for(user).post('/en/collections/%d/zotero/' % collection.pk, {'key': key}).json()
         data = Generated.objects.get(pk=r['id']).data()
         self.assertEqual((data['added'], data['unknown'], data['skipped']), (1, 1, 1))
+        collection.refresh_from_db()
+        self.assertEqual(collection.zotero_key, key)
+        self.assertTrue(collection.papers.get().zotero_key)  # linked to its item: nothing written twice
+        self.assertEqual(data['saved'], 0)
         free = self.user('free')
         mine = Collection.objects.create(user=free, name='F')
         self.assertEqual(self.client_for(free).post('/en/collections/%d/zotero/' % mine.pk, {'key': 'ABCD1234'}).status_code, 403)

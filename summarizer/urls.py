@@ -1,7 +1,7 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 from . import (views, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web)
+               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web, zotero)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -109,15 +109,20 @@ urlpatterns = [
     path("collections/<int:pk>/refresh/", collection_tools.refresh_start, name="collection_refresh"),
     path("collections/<int:pk>/suggest/", collection_tools.suggest_start, name="collection_suggest"),
     path("collections/<int:pk>/zotero/", collection_tools.zotero_import_start, name="collection_zotero_import"),
-    path("collections/zotero/", collection_tools.zotero_collections, name="collection_zotero_list"),
+    path("collections/zotero/", zotero.collections_view, name="collection_zotero_list"),
     path("collections/shared/<str:token>/", library.shared_page, name="collection_shared"),
     path("collections/join/<str:token>/", library.join, name="collection_join"),
     path("collections/shared/<str:token>/copy/", library.shared_copy, name="collection_shared_copy"),
     path("collections/<int:pk>/questions/", questions.questions_start, name="collection_questions"),
     path("collections/<int:pk>/export/<str:fmt>/", library.collection_export, name="collection_export"),
     path("export/<str:arxiv_id>/<str:fmt>/", exports.export_paper, name="export_paper"),
-    path("integrations/", exports.zotero_settings, name="integrations"),
-    path("zotero/send/", exports.zotero_send, name="zotero_send"),
+    path("integrations/", zotero.integrations_page, name="integrations"),
+    path("integrations/zotero/connect/", zotero.oauth_start, name="zotero_oauth"),
+    path("integrations/zotero/callback/", zotero.oauth_callback, name="zotero_oauth_callback"),
+    path("zotero/send/", zotero.send_view, name="zotero_send"),
+    path("zotero/open/", zotero.open_view, name="zotero_open"),
+    path("zotero/references/", zotero.references_view, name="zotero_references"),
+    path("refcheck/<str:key>/zotero/", zotero.refcheck_view, name="refcheck_zotero"),
     path("missed/", missed.missed_page, name="missed"),
     path("literature-review/", literature.literature_page, name="literature"),
     path("literature-review/collection/<int:pk>/", literature.literature_from_collection, name="literature_collection"),

@@ -45,7 +45,7 @@
       <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'ris' %}">RIS</a>
       <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'md' %}" title="{% trans 'The synthesis and its numbered references' %}">Markdown</a>
       <a class="btn btn-sm btn-ghost" href="{% url 'literature_export' row.key 'tex' %}" title="{% trans 'The synthesis with its citations and its bibliography, ready to compile' %}">LaTeX</a>
-      <button type="button" class="btn btn-sm btn-ghost" id="lit-zotero" data-key="{{ row.key }}" data-sending="{% trans 'Sending…' %}" data-premium="{% trans 'Sending to Zotero is a Premium feature.' %}" data-setup="{% trans 'Connect your Zotero library first:' %}" data-failed="{% trans 'Sending failed. Try again later.' %}" data-sent="{% trans 'Sent to your Zotero library.' %}">{% trans 'Send to Zotero' %}</button>
+      <button type="button" class="btn btn-sm btn-ghost" id="lit-zotero" data-key="{{ row.key }}" data-sending="{% trans 'Sending…' %}" data-premium="{% trans 'Sending to Zotero is a Premium feature.' %}" data-setup="{% trans 'Connect your Zotero library first:' %}" data-failed="{% trans 'Sending failed. Try again later.' %}" data-sent="{% trans 'Sent to your Zotero library.' %}" data-open="{% trans 'Open in Zotero' %}" title="{% trans 'A Zotero collection with a subcollection per approach, each paper with the statements it supports' %}">{% trans 'Send to Zotero' %}</button>
       <span class="tool-status" id="lit-zotero-status" aria-live="polite"></span>
       {% endif %}
     </div>
@@ -254,7 +254,10 @@ window.addEventListener('DOMContentLoaded', function () {
       if (json.status === 'premium') return status.textContent = t.premium;
       if (json.status === 'setup') { status.textContent = t.setup + ' '; var a = document.createElement('a'); a.href = json.url; a.textContent = '→'; status.appendChild(a); return; }
       if (!json.id) return status.textContent = t.failed;
-      SP.wait(json.id, function () { status.textContent = t.sent; }, function () { status.textContent = t.failed; });
+      SP.wait(json.id, function (data) {
+        status.textContent = t.sent + ' ';
+        if (data && data.open) { var a = document.createElement('a'); a.href = data.open; a.textContent = t.open; status.appendChild(a); }
+      }, function () { status.textContent = t.failed; });
     });
   });
 });

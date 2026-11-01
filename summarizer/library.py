@@ -30,7 +30,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, citations, digest, exports, sources
+from . import access, citations, digest, exports, sources, zotero
 from django.db.models import Max
 
 from .models import (AnnouncedPaper, ArxivPaper, Collection, CollectionMember, CollectionPaper, ExternalPaper,
@@ -44,7 +44,7 @@ SYNC_ADD = 10  # more than this are added in the background: each DOI is one loo
 MAX_UPLOAD = 2 * 1024 * 1024
 SHARE_DAYS = 90  # a shared link works this long after its last sharing
 READING = [('to_read', _('To read')), ('read', _('Read')), ('key', _('Key paper'))]
-ADD_RESULTS = ('added', 'updated', 'already', 'duplicate', 'unknown', 'full', 'skipped')
+ADD_RESULTS = ('added', 'updated', 'already', 'duplicate', 'unknown', 'full', 'skipped', 'removed')
 
 
 def limits(paid):
@@ -459,7 +459,9 @@ def collection_page(request, pk):
             collection.save(update_fields=['name', 'updated'])
             return _page(collection, 'settings')
         if action == 'remove':
-            collection.papers.filter(arxiv_id=request.POST.get('arxiv_id')).delete()
+            removed = collection.papers.filter(arxiv_id=request.POST.get('arxiv_id'))
+            zotero.forget(collection, [k for k in removed.values_list('zotero_key', flat=True) if k])
+            removed.delete()
             if fetch:
                 return JsonResponse({'status': 'removed'})
             return _page(collection, 'papers')
@@ -545,7 +547,7 @@ def collection_page(request, pk):
         'meta_row': meta_row, 'meta_checked': meta_checked, 'meta_steps': collection_tools.META_STEPS,
         'can_follow': access.has_tool(request.user, 'citations'), 'max_followed': citations.MAX_FOLLOWED,
         'followed': followed_count(request.user, collection) if collection.watch else 0,
-        'zotero': ZoteroAccount.objects.filter(user=request.user).exists(),
+        'zotero': ZoteroAccount.objects.filter(user=request.user).exists(), 'sync_steps': zotero.SYNC_STEPS,
         'can_zotero': access.has_tool(request.user, 'zotero'),
         'can_review': access.has_tool(request.user, 'literature'), 'review_error': request.GET.get('review', ''),
         'share_url': shared_url(request, collection) if owner else '',
@@ -603,8 +605,8 @@ def export_name(collection):
 
 @login_required
 def collection_export(request, pk, fmt):
-    """bib, ris, md: the papers (with a tag only, ?tag=), with their notes and tags; list: the papers as a
-    spreadsheet; csv: the comparison table."""
+    """bib, ris, md, obsidian (a folder of notes): the papers (with a tag only, ?tag=), with their notes and tags;
+    list: the papers as a spreadsheet (a Notion database); csv: the comparison table."""
     from . import comparison
     collection = editable(request, pk)
     lang = get_language()
@@ -622,7 +624,8 @@ def collection_export(request, pk, fmt):
         return list_csv(rows, filename)
     metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in rows) if m]
     notes = {p.arxiv_id: (p.note, p.tags) for p in rows}
-    return exports.export_many(metas, fmt, filename, lang, notes=notes)
+    status = {p.arxiv_id: str(dict(READING).get(p.reading, '')) for p in rows if p.reading}
+    return exports.export_many(metas, fmt, filename, lang, notes=notes, status=status)
 
 
 def list_csv(papers, filename):

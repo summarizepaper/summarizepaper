@@ -245,12 +245,39 @@
           {% else %}<form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm" name="action" value="watch"><i class="fas fa-bell" aria-hidden="true"></i> {% trans 'Watch my references until publication' %}</button></form>: {% trans 'between submission and the proofs, an email when a preprint you cite is published, or a paper you cite is retracted or corrected.' %}{% endif %}</li>
         <li><form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="collection"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Keep my references in a collection' %}</button></form>: {% trans 'chat with all of them, compare them in a table, and find what the collection is missing.' %}</li>
         {% endif %}
+        {% if zotero_issues %}
+        <li><button type="button" class="btn btn-sm btn-ghost" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/refcheck/{{ row.key }}/zotero/"
+              data-sending="{% trans 'Writing into Zotero…' %}" data-setup="{% trans 'Connect your Zotero library first.' %}"
+              data-premium="{% trans 'This is a Premium feature.' %}" data-failed="{% trans 'Zotero is not reachable right now. Try again in a moment.' %}"
+              data-done="{% trans '%(tagged)s references tagged in Zotero, %(added)s published versions added.' %}"
+              data-missing="{% trans 'Not found in your library:' %}"><i class="fas fa-book" aria-hidden="true"></i> {% trans 'Write these findings into Zotero' %}</button>:
+          {% trans 'a tag (Retracted, Correction published, Published version available...) and a note on each reference concerned in your library, and the published version of each preprint added next to it. The problems you marked intended or ignored are left out.' %}{% if not zotero_ready %} <a href="/{{ LANGUAGE_CODE }}/integrations/">{% trans 'Connect Zotero' %}</a>{% endif %}
+          <span class="tool-status" id="refcheck-zotero-status" aria-live="polite"></span></li>
+        {% endif %}
         <li>{% if missed %}<a href="/{{ LANGUAGE_CODE }}/missed/{{ missed.key }}/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% if missed.status == 'done' %}{% trans 'the close papers your manuscript does not cite, found with these references.' %}{% else %}{% trans 'the search for the close papers your manuscript does not cite is running.' %}{% endif %}
           {% else %}<a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% trans 'finds the close papers your draft does not cite: give it the same .bib with your PDF.' %}{% endif %}</li>
       </ul>
     </section>
     {% endif %}
     <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      var button = document.getElementById('refcheck-zotero'), status = document.getElementById('refcheck-zotero-status');
+      if (!button) return;
+      var t = button.dataset;
+      button.addEventListener('click', function () {
+        button.disabled = true;
+        status.textContent = t.sending;
+        SP.post(t.url, {}).then(function (json) {
+          if (json.status === 'premium') { button.disabled = false; return status.textContent = t.premium; }
+          if (json.status === 'setup') { button.disabled = false; status.textContent = t.setup + ' '; var a = document.createElement('a'); a.href = json.url; a.textContent = '→'; return status.appendChild(a); }
+          if (!json.id) { button.disabled = false; return status.textContent = t.failed; }
+          SP.wait(json.id, function (data) {
+            status.textContent = t.done.replace('%(tagged)s', data.tagged).replace('%(added)s', data.added) +
+              (data.missing.length ? ' ' + t.missing + ' ' + data.missing.join(' · ') : '');
+          }, function () { button.disabled = false; status.textContent = t.failed; });
+        });
+      });
+    });
     (function () {
       var filter = 'all';
       function applyFilter() {

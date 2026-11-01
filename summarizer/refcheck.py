@@ -685,7 +685,7 @@ def carried(result, previous):
     return [{'key': k, 'kind': kind} for (k, kind), _mark in old.items() if (k, kind) not in now and kind != 'unknown'][:200]
 
 
-def write(load, lang, user=None, previous=None, with_missed=False):
+def write(load, lang, user=None, previous=None, with_missed=False, zotero_collection=''):
     def work(pk):
         generated.progress(pk, 'read')
         try:
@@ -698,6 +698,8 @@ def write(load, lang, user=None, previous=None, with_missed=False):
                                   'solved': carried(result, previous.data())}
         if with_missed and user is not None:
             result['missed_key'] = start_missed(user, lang, bib, texts, pdf)
+        if zotero_collection:  # its findings can be written back into that collection
+            result['zotero_collection'] = zotero_collection
         Generated.objects.filter(pk=pk).update(status='done', content=json.dumps(result), updated=timezone.now())
         ready_email(pk, result)  # once the link works: a check that reads full texts takes minutes
         return result
@@ -804,6 +806,7 @@ def refcheck_page(request):
     previous = Generated.objects.filter(kind='refcheck', user=request.user, status='done',
                                         key=request.POST.get('previous') or request.GET.get('previous') or '-').first()
     zotero = ZoteroAccount.objects.filter(user=request.user).first() if access.has_tool(request.user, 'zotero') else None
+    zotero = zotero if zotero is not None and zotero.api_key else None
     origin = request.POST.get('from') or request.GET.get('from') or ''
     lent = borrowed(request, origin) if origin else None
     if request.method == 'POST' and paid:
@@ -841,11 +844,13 @@ def refcheck_page(request):
                     missed_quota(request.user)
                 load = loader(bib, tex, tex_name, archive, pdf, arxiv, (zotero, collection) if collection and zotero else None)
                 row = generated.start('refcheck', uuid.uuid4().hex, get_language(),
-                                      write(load, get_language(), request.user, previous, with_missed), user=request.user)
+                                      write(load, get_language(), request.user, previous, with_missed,
+                                            collection if collection and zotero else ''), user=request.user)
                 return redirect('/%s/refcheck/%s/' % (get_language(), row.key))
     checks = Generated.objects.filter(kind='refcheck', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/refcheck.html', {
         'paid': paid, 'error': error, 'checks': checks, 'per_day': PER_DAY, 'previous': previous, 'zotero': zotero,
+        'zotero_selected': request.POST.get('zotero') or request.GET.get('zotero', ''),
         'lent': lent, 'lent_from': origin if lent else '',
         'recheck_free': previous is not None and cache.get(RECHECK_KEY % previous.key) is None,
         'missed_allowed': access.has_tool(request.user, 'missed'),
@@ -963,6 +968,9 @@ def refcheck_result(request, key):
         'row': row, 'result': result, 'steps': STEPS, 'message': request.GET.get('m'),
         'failure': FAILURES.get(row.error) if row.status == 'no_source' else None,
         'watch': ReferenceWatch.objects.filter(user=request.user, check_key=row.key).first(),
+        'zotero_ready': access.has_tool(request.user, 'zotero') and ZoteroAccount.objects.filter(user=request.user).exists(),
+        'zotero_issues': sum(1 for p in (result or {}).get('active', []) for i in p['active']
+                             if i['kind'] in ('retracted', 'withdrawn', 'concern', 'corrected', 'published')),
         'missed': Generated.objects.filter(kind='missed', key=result.get('missed_key'), user=request.user).first()
         if result and result.get('missed_key') else None,
         'share_url': result_share.shared_url(request, row, 'refcheck')})

@@ -25,11 +25,12 @@
     <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ chat_ids }}">{% trans 'Chat with the selected papers' %}</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/bib/">BibTeX</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/ris/">RIS</a>
+    <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/obsidian/" title="{% trans 'A note per paper with its properties, in a folder to drop in your vault' %}">Obsidian (.zip)</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/md/">Markdown</a>
-    <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/list/">{% trans 'Spreadsheet (CSV)' %}</a>
+    <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/list/" title="{% trans 'To import in Notion as a database, or in a spreadsheet' %}">{% trans 'Spreadsheet or Notion (CSV)' %}</a>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/refcheck/?from=collection:{{ collection.pk }}" title="{% trans 'Retracted or corrected papers, preprints published since, entries to correct' %}"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check these references' %}</a>
-    <button type="button" class="btn btn-sm btn-ghost" id="zotero-go">{% trans 'Send to Zotero' %} <span class="badge-premium">Premium</span></button>
-    <span class="tool-status" id="zotero-status" aria-live="polite"></span>
+    <button type="button" class="btn btn-sm btn-ghost" id="zotero-go" title="{% trans 'Papers added or removed on either side follow on the other; your notes, tags, reading status and the notices found reach Zotero' %}">{% if not owner %}{% trans 'Send to Zotero' %}{% elif collection.zotero_key %}{% trans 'Sync with Zotero' %}{% else %}{% trans 'Send to Zotero and keep in sync' %}{% endif %} <span class="badge-premium">Premium</span></button>
+    <span class="tool-status" id="zotero-status" aria-live="polite">{% if collection.zotero_synced %}{% blocktrans with date=collection.zotero_synced|date:"j F Y H:i" %}Synced with Zotero on {{ date }}.{% endblocktrans %}{% endif %}</span>
   </div>
   <details class="lit-collection">
     <summary><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {% trans 'Journal club of the selected papers' %} <span class="badge-premium">Premium+</span></summary>
@@ -57,6 +58,7 @@
     {% if added.added %}{% blocktrans count n=added.added %}{{ n }} paper added.{% plural %}{{ n }} papers added.{% endblocktrans %} {% endif %}
     {% if added.updated %}{% blocktrans count n=added.updated %}{{ n }} paper replaced by its newer version.{% plural %}{{ n }} papers replaced by their newer version.{% endblocktrans %} {% endif %}
     {% if added.duplicate %}{% blocktrans count n=added.duplicate %}{{ n }} was already there as its preprint or published version.{% plural %}{{ n }} were already there as their preprint or published version.{% endblocktrans %} {% endif %}
+    {% if added.removed %}{% blocktrans count n=added.removed %}{{ n }} paper removed from the Zotero collection was removed here.{% plural %}{{ n }} papers removed from the Zotero collection were removed here.{% endblocktrans %} {% endif %}
     {% if added.already %}{% blocktrans count n=added.already %}{{ n }} was already in the collection.{% plural %}{{ n }} were already in the collection.{% endblocktrans %} {% endif %}
     {% if added.unknown %}{% blocktrans count n=added.unknown %}{{ n }} identifier was not found.{% plural %}{{ n }} identifiers were not found.{% endblocktrans %} {% endif %}
     {% if added.skipped %}{% blocktrans count n=added.skipped %}{{ n }} entry has no arXiv identifier or DOI.{% plural %}{{ n }} entries have no arXiv identifier or DOI.{% endblocktrans %} {% endif %}
@@ -438,6 +440,8 @@
      data-remove="{% trans 'Remove this paper from the collection?' %}"
      data-sending="{% trans 'Sending…' %}"
      data-sent="{% trans 'Saved in your Zotero library.' %}"
+     data-synced="{% trans 'In sync with Zotero: %(saved)s papers created, %(existing)s already there, %(added)s added from Zotero.' %}"
+     data-open-zotero="{% trans 'Open in Zotero' %}"
      data-setup="{% trans 'Connect your Zotero library first.' %}"
      data-loading="{% trans 'Loading…' %}"
      data-unavailable="{% trans 'Zotero is not reachable right now. Try again in a moment.' %}"

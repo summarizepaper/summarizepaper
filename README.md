@@ -49,7 +49,7 @@ Free tools are open to every account; :star: marks Premium and :star::star: Prem
 | [Literature review](https://www.summarizepaper.com/en/literature-review/) :star::star: | From a research question: 15 to 30 founding and recent papers grouped by approach, with a referenced synthesis | |
 | [What did I miss?](https://www.summarizepaper.com/en/missed/) :star: | Papers close to your draft that it does not cite | |
 | [Bibliography check](https://www.summarizepaper.com/en/refcheck/) :star: | Retracted papers, preprints published since, outdated versions, citations the cited abstract does not support (.bib and .tex) | |
-| [Zotero, Notion, Obsidian](https://www.summarizepaper.com/en/integrations/) | BibTeX, RIS and Markdown exports; papers sent to Zotero with their summary | |
+| [Zotero, Notion, Obsidian](https://www.summarizepaper.com/en/integrations/) | BibTeX, RIS, Obsidian and Notion exports; Zotero without duplicates, collections kept in sync both ways, bibliography checks and literature reviews written back | |
 
 ### Present and meet
 
@@ -75,7 +75,7 @@ Semantic Scholar, NASA ADS, OpenReview, ORCID, bioRxiv and medRxiv. Stripe for P
 | Paper text and sources | `paper_source.py` (arXiv HTML, then PDF), `sources.py` (DOI, bioRxiv, medRxiv, OSF, HAL, Europe PMC, OpenAlex), `publication_status.py`, `bibliography.py` |
 | Summaries | `consumers.py` (websocket), `assistant.py`, `keypoints.py`, `summary_text.py`, `reading.py` (other reader or language), `evidence.py` (claims found in the text), `generated.py` (background results polled by the page) |
 | Chat | `chat_page.py`, `chat_table.py` (comparison tables), `chat_figures.py`, `chat_vision.py`, `comparison.py` |
-| Collections | `library.py`, `collection_tools.py`, `questions.py`, `publication_alerts.py`, `exports.py` (BibTeX, RIS, Markdown, Zotero) |
+| Collections | `library.py`, `collection_tools.py`, `questions.py`, `publication_alerts.py`, `exports.py` (BibTeX, RIS, Obsidian, Notion), `zotero.py` (Zotero web API: sending, sync, write-back, OAuth) |
 | Following a field | `digest.py`, `digest_web.py`, `digest_bundle.py`, `saved_searches.py`, `trends.py`, `trends_web.py`, `trend_sources.py`, `letters.py`, `audio.py` (read aloud), `synthesis.py` |
 | Research tools | `scoops.py`, `citations.py`, `changes.py` (versions), `teams.py`, `students.py`, `student_papers.py`, `student_sources.py`, `missed.py`, `refcheck.py`, `literature.py`, `presskit.py`, `presskit_pdf.py`, `slides.py`, `slides_pptx.py`, `conference.py`, `result_share.py` |
 | Accounts and billing | `accounts.py` (email links, Google sign-in, bot checks), `access.py` (quotas, never trusts the browser), `billing.py` (Stripe), `premium_tools.py`, `reactivation.py` |

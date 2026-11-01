@@ -32,7 +32,8 @@
     <span class="tool-label">{% trans 'Export' %}</span>
     <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog">BibTeX</a> ·
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/ris/" rel="nofollow">RIS (Zotero, Mendeley, EndNote)</a> ·
-    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow">Markdown (Notion, Obsidian)</a>
+    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow" title="{% trans 'A note with its properties: citation key, DOI, authors, year' %}">Obsidian (Markdown)</a> ·
+    <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/notion/" rel="nofollow">Notion (Markdown)</a>
   </div>
 
   <div class="tools-advanced">
@@ -109,6 +110,8 @@
        data-open="{% trans 'Open' %}"
        data-sending="{% trans 'Sending…' %}"
        data-sent="{% trans 'Saved in your Zotero library.' %}"
+       data-already-zotero="{% trans 'Already in your Zotero library: the notes it lacked were added.' %}"
+       data-open-zotero="{% trans 'Open in Zotero' %}"
        data-setup="{% trans 'Connect your Zotero library first.' %}"
        data-following="{% trans 'You will get an email when new papers cite it.' %}"
        data-unfollowed="{% trans 'You no longer follow its citations.' %}"

@@ -1,25 +1,23 @@
-"""Getting papers out of SummarizePaper: BibTeX, RIS, Markdown, and 'Send to Zotero'.
+"""Getting papers out of SummarizePaper as files: BibTeX, RIS, Markdown (Obsidian, Notion) and an Obsidian vault.
 
-BibTeX goes to LaTeX, RIS to Zotero, Mendeley and EndNote, Markdown to Notion
-and Obsidian (paste or import the file). With Premium, 'Send to Zotero' writes
-the paper and a note with its summary and key points straight into the user's
-Zotero library through the Zotero web API.
+BibTeX goes to LaTeX, RIS to Zotero, Mendeley and EndNote, Markdown to Obsidian (with its properties) and Notion.
+A preprint published since is exported as its published version (journal and DOI, its arXiv id kept), so that
+our own files pass the bibliography check. Every summary exported says it was written by a model, from which
+version of the paper and when. The Zotero web API (sending, syncing, writing back) is in zotero.py.
 """
+import io
 import json
 import re
+import zipfile
 
-import requests
-from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
-from django.utils.html import escape
+from django.http import Http404, HttpResponse
 from django.utils.translation import get_language
-from django.views.decorators.http import require_POST
-from django.views.decorators.debug import sensitive_post_parameters
+from django.utils.translation import gettext as _
 
-from . import access, generated, keypoints, sources
-from .models import AnnouncedPaper, ArxivPaper, CollectionPaper, SummaryPaper, ZoteroAccount
+from . import keypoints, publication_status, sources
+from .models import AnnouncedPaper, ArxivPaper, SummaryPaper
 
-ZOTERO_API = 'https://api.zotero.org'
+MAX_AUTHORS_SHOWN = 20
 
 
 def bare_ref(arxiv_id):
@@ -31,6 +29,19 @@ def bare_ref(arxiv_id):
 
 def file_name(arxiv_id):
     return re.sub(r'[^A-Za-z0-9._-]+', '_', bare_ref(arxiv_id))
+
+
+def published_version(paper):
+    """{journal, doi, year} of the journal version of an arXiv paper: Crossref's when the editorial check found it,
+    otherwise the DOI and journal reference its authors declared on arXiv. None for a preprint."""
+    report = publication_status.latest(paper.arxiv_id) or {}
+    if report.get('status') == 'published' and report.get('doi') and report.get('journal'):
+        return {'journal': report['journal'], 'doi': report['doi'], 'year': (report.get('date') or '')[:4]}
+    doi = sources.clean_doi(paper.link_doi or '')
+    if doi and not sources.ARXIV_DOI_RE.match(doi) and paper.journal_ref:
+        year = re.search(r'\b(?:19|20)\d{2}\b', paper.journal_ref)
+        return {'journal': ' '.join(paper.journal_ref.split()), 'doi': doi, 'year': year.group() if year else ''}
+    return None
 
 
 def paper_meta(arxiv_id, fallback=None):
@@ -45,6 +56,7 @@ def paper_meta(arxiv_id, fallback=None):
             'category': paper.category or '', 'abstract': ' '.join((paper.abstract or '').split()),
             'doi': paper.link_doi.split('doi.org/')[-1] if paper.link_doi and 'doi.org' in paper.link_doi else '',
             'journal': paper.journal_ref or '',
+            'published': None if sources.is_external(arxiv_id) else published_version(paper),
         }
     announced = AnnouncedPaper.objects.filter(arxiv_id=arxiv_id).first()
     if announced is not None:
@@ -74,62 +86,131 @@ def is_preprint(meta):
     return 'preprint' in (meta['journal'] or '').lower() or not meta['journal']
 
 
+def journal_of(meta):
+    """(journal, DOI, year) of the version to cite: the published one when there is one, else ('', DOI, year)."""
+    published = meta.get('published')
+    if published:
+        return published['journal'], published['doi'], published['year'] or meta['year']
+    if sources.is_external(meta['arxiv_id']) and not is_preprint(meta):
+        return meta['journal'], meta['doi'], meta['year']
+    return '', meta['doi'], meta['year']
+
+
+def paper_url(meta):
+    if sources.is_external(meta['arxiv_id']):
+        return sources.ref_url(meta['arxiv_id'])
+    return 'https://arxiv.org/abs/%s' % bare_ref(meta['arxiv_id'])
+
+
+# --- BibTeX -------------------------------------------------------------------------------------------------
+
+def cite_key(meta):
+    """lee2021clouds: the first author's family name, the year it appeared, the first word of more than 3 letters."""
+    first_word = next((w for w in re.findall(r'[A-Za-z]+', meta['title']) if len(w) > 3), 'paper')
+    last_name = re.sub(r'[^A-Za-z]', '', split_name(meta['authors'][0])[1]) if meta['authors'] else ''
+    return '%s%s%s' % ((last_name or 'paper').lower(), meta['year'], first_word.lower())
+
+
+def unique_keys(keys):
+    """The keys with a letter added to those several papers share (smith2020a, smith2020b...)."""
+    counts = {}
+    for key in keys:
+        counts[key] = counts.get(key, 0) + 1
+    taken, out = {}, []
+    for key in keys:
+        if counts[key] > 1:
+            taken[key] = taken.get(key, 0) + 1
+            key += 'abcdefghijklmnopqrstuvwxyz'[(taken[key] - 1) % 26]
+        out.append(key)
+    return out
+
+
+def cite_keys(entries):
+    """Each BibTeX entry with a key no other entry has, and the keys in order."""
+    parts = [entry.split(',', 1) for entry in entries]
+    keys = unique_keys([head.split('{', 1)[1] for head, _rest in parts])
+    return ['%s{%s,%s' % (head.split('{', 1)[0], key, rest) for (head, rest), key in zip(parts, keys)], keys
+
+
+def _protected(word):
+    """A word whose capitals a bibliography style must keep (GPT, JWST, LaTeX, McDonald, 3D) in braces."""
+    text = word.group()
+    return '{%s}' % text if any(c.isupper() for c in text[1:]) else text
+
+
+def bib_text(text):
+    """A title or a journal for BibTeX: LaTeX's special characters escaped outside math, acronyms protected.
+    A text that already holds LaTeX (braces or commands) only gets its bare &, % and # escaped."""
+    text = ' '.join((text or '').split())
+    parts = re.split(r'(\$[^$]*\$)', text)
+    if any('{' in p or '\\' in p for p in parts[::2]):
+        return re.sub(r'(?<!\\)([&%#])', r'\\\1', text)
+    for i in range(0, len(parts), 2):
+        escaped = re.sub(r'([&%#_])', r'\\\1', parts[i])
+        parts[i] = re.sub(r"[A-Za-z0-9][A-Za-z0-9'-]*", _protected, escaped)
+    return ''.join(parts)
+
+
 def bibtex_entry(meta):
     ref = bare_ref(meta['arxiv_id'])
-    first_word = next((w for w in re.findall(r'[A-Za-z]+', meta['title']) if len(w) > 3), 'paper')
-    last_name = re.sub(r'[^A-Za-z]', '', meta['authors'][0].split()[-1]) if meta['authors'] else 'paper'
-    cite_key = '%s%s%s' % (last_name.lower(), meta['year'], first_word.lower())
+    journal, doi, year = journal_of(meta)
+    authors = '  author={%s},' % ' and '.join(re.sub(r'(?<!\\)&', r'\\&', a) for a in meta['authors'])
     if sources.is_external(meta['arxiv_id']):
-        lines = ['@%s{%s,' % ('misc' if is_preprint(meta) else 'article', cite_key),
-                 '  title={%s},' % meta['title'], '  author={%s},' % ' and '.join(meta['authors']),
-                 '  year={%s},' % meta['year']]
-        if meta['journal'] and not is_preprint(meta):
-            lines.append('  journal={%s},' % meta['journal'])
+        lines = ['@%s{%s,' % ('misc' if is_preprint(meta) else 'article', cite_key(meta)),
+                 '  title={%s},' % bib_text(meta['title']), authors, '  year={%s},' % meta['year']]
+        if journal:
+            lines.append('  journal={%s},' % bib_text(journal))
         elif meta['journal']:
-            lines.append('  howpublished={%s},' % meta['journal'])
-        if meta['doi']:
-            lines.append('  doi={%s},' % meta['doi'])
+            lines.append('  howpublished={%s},' % bib_text(meta['journal']))
+        if doi:
+            lines.append('  doi={%s},' % doi)
         lines.append('  url={%s}' % sources.ref_url(meta['arxiv_id']))
         lines.append('}')
         return '\n'.join(lines) + '\n'
-    lines = [
-        '@misc{%s,' % cite_key,
-        '  title={%s},' % meta['title'],
-        '  author={%s},' % ' and '.join(meta['authors']),
-        '  year={%s},' % meta['year'],
-        '  eprint={%s},' % ref,
-        '  archivePrefix={arXiv},',
-    ]
+    lines = ['@%s{%s,' % ('article' if journal else 'misc', cite_key(meta)),
+             '  title={%s},' % bib_text(meta['title']), authors, '  year={%s},' % year]
+    if journal:
+        lines.append('  journal={%s},' % bib_text(journal))
+    lines += ['  eprint={%s},' % ref, '  archivePrefix={arXiv},']
     if meta['category']:
         lines.append('  primaryClass={%s},' % meta['category'])
-    if meta['doi']:
-        lines.append('  doi={%s},' % meta['doi'])
-    lines.append('  url={https://arxiv.org/abs/%s}' % ref)
+    if doi:
+        lines.append('  doi={%s},' % doi)
+    lines.append('  url={%s}' % ('https://doi.org/%s' % doi if journal else 'https://arxiv.org/abs/%s' % ref))
     lines.append('}')
     return '\n'.join(lines) + '\n'
 
 
+# --- RIS ----------------------------------------------------------------------------------------------------
+
 def ris_entry(meta):
     ref = bare_ref(meta['arxiv_id'])
     external = sources.is_external(meta['arxiv_id'])
-    lines = ['TY  - %s' % ('JOUR' if external and not is_preprint(meta) else 'PREP'), 'TI  - %s' % meta['title']]
+    journal, doi, year = journal_of(meta)
+    lines = ['TY  - %s' % ('JOUR' if journal else 'PREP'), 'TI  - %s' % meta['title']]
     lines += ['AU  - %s' % a for a in meta['authors']]
-    if meta['year']:
-        lines.append('PY  - %s' % meta['year'])
-    if meta['date']:
+    if year:
+        lines.append('PY  - %s' % year)
+    if meta['date'] and not meta.get('published'):
         lines.append('DA  - %s' % meta['date'].replace('-', '/'))
     if meta['abstract']:
         lines.append('AB  - %s' % meta['abstract'])
-    if meta['doi']:
-        lines.append('DO  - %s' % meta['doi'])
+    if doi:
+        lines.append('DO  - %s' % doi)
+    if journal:
+        lines.append('T2  - %s' % journal)
+    elif external and meta['journal']:
+        lines.append('PB  - %s' % meta['journal'])
     if external:
-        if meta['journal']:
-            lines.append('%s  - %s' % ('T2' if not is_preprint(meta) else 'PB', meta['journal']))
         lines += ['UR  - %s' % sources.ref_url(meta['arxiv_id']), 'ER  - ']
     else:
-        lines += ['PB  - arXiv', 'AN  - arXiv:%s' % ref, 'UR  - https://arxiv.org/abs/%s' % ref, 'ER  - ']
+        if not journal:
+            lines.append('PB  - arXiv')
+        lines += ['AN  - arXiv:%s' % ref, 'UR  - https://arxiv.org/abs/%s' % ref, 'ER  - ']
     return '\n'.join(lines) + '\n'
 
+
+# --- Markdown -----------------------------------------------------------------------------------------------
 
 def summary_of(arxiv_id, lang):
     row = SummaryPaper.objects.filter(paper__arxiv_id=arxiv_id, lang=lang).first()
@@ -138,30 +219,90 @@ def summary_of(arxiv_id, lang):
     return row
 
 
-def markdown_entry(meta, lang):
-    ref = bare_ref(meta['arxiv_id'])
-    lines = ['# %s' % meta['title'], '']
+def provenance(arxiv_id, row):
+    """What a summary is: written by a model, from which version of the paper, when."""
+    source = sources.label(arxiv_id) if sources.is_external(arxiv_id) else 'arXiv:%s' % arxiv_id.replace('--', '/')
+    return _('Summary written by an AI model (SummarizePaper) from %(source)s on %(date)s. Check it against the paper.') % {
+        'source': source, 'date': (row.updated or row.created).date().isoformat()}
+
+
+def authors_line(authors):
+    shown = ', '.join(authors[:MAX_AUTHORS_SHOWN])
+    return shown + (' et al.' if len(authors) > MAX_AUTHORS_SHOWN else '')
+
+
+def page_url(meta, lang):
+    return 'https://www.summarizepaper.com/%s/paper/%s/' % (lang, meta['arxiv_id'])
+
+
+def _yaml(value):
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def obsidian_tag(tag):
+    """An Obsidian tag: no spaces, not only digits."""
+    tag = re.sub(r'[^\w/-]+', '-', tag.strip(), flags=re.UNICODE).strip('-')
+    return tag if tag and not tag.isdigit() else ''
+
+
+def frontmatter(meta, lang, key, tags=(), status=''):
+    """The properties of an Obsidian note: YAML that Dataview and the Zotero plugins read."""
+    journal, doi, year = journal_of(meta)
+    lines = ['---', 'title: %s' % _yaml(meta['title'])]
     if meta['authors']:
-        lines.append('**Authors:** %s  ' % ', '.join(meta['authors'][:20]))
+        lines += ['authors:'] + ['  - %s' % _yaml(a) for a in meta['authors'][:100]]
+    if year:
+        lines.append('year: %s' % year)
+    if journal:
+        lines.append('journal: %s' % _yaml(journal))
+    if doi:
+        lines.append('doi: %s' % _yaml(doi))
+    if not sources.is_external(meta['arxiv_id']):
+        lines.append('arxiv: %s' % _yaml(bare_ref(meta['arxiv_id'])))
+    lines += ['citekey: %s' % _yaml(key), 'url: %s' % _yaml('https://doi.org/%s' % doi if journal else paper_url(meta)),
+              'summarizepaper: %s' % _yaml(page_url(meta, lang))]
+    tags = [t for t in (obsidian_tag(t) for t in tags) if t]
+    if tags:
+        lines += ['tags:'] + ['  - %s' % _yaml(t) for t in tags]
+    if status:
+        lines.append('status: %s' % _yaml(status))
+    return '\n'.join(lines + ['---', ''])
+
+
+def markdown_entry(meta, lang, key=None, tags=(), status=''):
+    """The note of a paper; with key, Obsidian properties first (citekey, DOI, tags...)."""
+    ref = bare_ref(meta['arxiv_id'])
+    journal, doi, _year = journal_of(meta)
+    lines = [frontmatter(meta, lang, key, tags, status)] if key else []
+    lines += ['# %s' % meta['title'], '']
+    if meta['authors']:
+        lines.append('**%s:** %s  ' % (_('Authors'), authors_line(meta['authors'])))
+    if journal:
+        lines.append('**%s:** %s  ' % (_('Published in'), journal))
+    if doi and journal:
+        lines.append('**DOI:** [%s](https://doi.org/%s)  ' % (doi, doi))
     if sources.is_external(meta['arxiv_id']):
-        if meta['journal']:
-            lines.append('**Published in:** %s  ' % meta['journal'])
-        lines.append('**%s:** [%s](%s)  ' % (sources.label(meta['arxiv_id']).split(':')[0], ref, sources.ref_url(meta['arxiv_id'])))
+        if meta['journal'] and not journal:
+            lines.append('**%s:** %s  ' % (_('Published in'), meta['journal']))
+        if not (doi and journal):
+            lines.append('**%s:** [%s](%s)  ' % (sources.label(meta['arxiv_id']).split(':')[0], ref, sources.ref_url(meta['arxiv_id'])))
     else:
         lines.append('**arXiv:** [%s](https://arxiv.org/abs/%s)  ' % (ref, ref))
     if meta['date']:
-        lines.append('**Date:** %s  ' % meta['date'])
-    lines.append('**Summary page:** https://www.summarizepaper.com/%s/paper/%s/' % (lang, meta['arxiv_id']))
+        lines.append('**%s:** %s  ' % (_('Date'), meta['date']))
+    lines.append('**%s:** %s' % (_('Summary page'), page_url(meta, lang)))
     lines.append('')
     row = summary_of(meta['arxiv_id'], lang)
     if row is not None and row.notes:
-        lines += ['## Key points', ''] + ['- %s' % p for p in keypoints.stored_points(row.notes)] + ['']
+        lines += ['## %s' % _('Key points'), ''] + ['- %s' % p for p in keypoints.stored_points(row.notes)] + ['']
     if row is not None:
-        lines += ['## Summary', '', row.summary.strip(), '']
+        lines += ['## %s' % _('Summary'), '', row.summary.strip(), '', '_%s_' % provenance(meta['arxiv_id'], row), '']
     elif meta['abstract']:
-        lines += ['## Abstract', '', meta['abstract'], '']
+        lines += ['## %s' % _('Abstract'), '', meta['abstract'], '']
     return '\n'.join(lines)
 
+
+# --- downloads ----------------------------------------------------------------------------------------------
 
 def _download(text, filename, content_type):
     response = HttpResponse(text, content_type=content_type)
@@ -170,14 +311,16 @@ def _download(text, filename, content_type):
 
 
 def export_paper(request, arxiv_id, fmt):
+    """ris; md: the note for Obsidian, with its properties; notion: the same note without them."""
     meta = paper_meta(arxiv_id)
     if meta is None:
         raise Http404
     name = file_name(arxiv_id)
     if fmt == 'ris':
         return _download(ris_entry(meta), name + '.ris', 'application/x-research-info-systems; charset=utf-8')
-    if fmt == 'md':
-        return _download(markdown_entry(meta, get_language()), name + '.md', 'text/markdown; charset=utf-8')
+    if fmt in ('md', 'notion'):
+        key = cite_key(meta) if fmt == 'md' else None
+        return _download(markdown_entry(meta, get_language(), key), (key or name) + '.md', 'text/markdown; charset=utf-8')
     raise Http404
 
 
@@ -197,157 +340,69 @@ def with_note(entry, fmt, note, tags):
         lines = ['KW  - %s' % t for t in tags] + (['N1  - %s' % ' '.join(note.split())] if note else [])
         return entry.replace('ER  - ', '\n'.join(lines + ['ER  - ']), 1)
     extra = ['**Tags:** %s  ' % ', '.join(tags)] if tags else []
-    return entry.rstrip() + '\n\n' + '\n'.join(extra + (['## My note', '', note] if note else [])) + '\n'
+    return entry.rstrip() + '\n\n' + '\n'.join(extra + (['## %s' % _('My note'), '', note] if note else [])) + '\n'
 
 
-def export_many(metas, fmt, filename, lang, notes=None):
-    """notes: {arxiv_id: (note, tags)} to add to each entry."""
+def export_many(metas, fmt, filename, lang, notes=None, status=None):
+    """notes: {arxiv_id: (note, tags)} to add to each entry; status: {arxiv_id: reading status}, for Obsidian."""
     notes = notes or {}
 
     def entries(write):
         return [with_note(write(m), fmt, *notes.get(m['arxiv_id'], ('', ''))) for m in metas]
     if fmt == 'bib':
-        return _download('\n'.join(entries(bibtex_entry)), filename + '.bib', 'application/x-bibtex; charset=utf-8')
+        return _download('\n'.join(cite_keys(entries(bibtex_entry))[0]), filename + '.bib',
+                         'application/x-bibtex; charset=utf-8')
     if fmt == 'ris':
         return _download('\n'.join(entries(ris_entry)), filename + '.ris',
                          'application/x-research-info-systems; charset=utf-8')
     if fmt == 'md':
         return _download('\n\n---\n\n'.join(entries(lambda m: markdown_entry(m, lang))), filename + '.md',
                          'text/markdown; charset=utf-8')
+    if fmt == 'obsidian':
+        return _download(obsidian_vault(metas, filename, lang, notes, status or {}), filename + '.zip', 'application/zip')
     raise Http404
 
 
-# --- Zotero ------------------------------------------------------------------
-
-def zotero_item(meta, lang):
-    """The Zotero item and its child note (summary and key points)."""
-    ref = bare_ref(meta['arxiv_id'])
-    item = {
-        'itemType': 'preprint', 'title': meta['title'],
-        'creators': [_creator(a) for a in meta['authors'][:100]],
-        'abstractNote': meta['abstract'], 'repository': 'arXiv', 'archiveID': 'arXiv:%s' % ref,
-        'date': meta['date'], 'url': 'https://arxiv.org/abs/%s' % ref, 'DOI': meta['doi'],
-        'tags': [{'tag': 'SummarizePaper'}],
-    }
-    if sources.is_external(meta['arxiv_id']):
-        item.pop('archiveID')
-        item['url'] = sources.ref_url(meta['arxiv_id'])
-        if is_preprint(meta):
-            item['repository'] = (meta['journal'] or '').replace(' preprint', '').split(',')[0]
-        else:
-            item.pop('repository')
-            item.update({'itemType': 'journalArticle', 'publicationTitle': meta['journal']})
-    row = summary_of(meta['arxiv_id'], lang)
-    note = None
-    if row is not None:
-        points = ''.join('<li>%s</li>' % escape(p) for p in keypoints.stored_points(row.notes))
-        note = ('<h1>SummarizePaper</h1>%s<h2>Summary</h2><p>%s</p>'
-                '<p><a href="https://www.summarizepaper.com/%s/paper/%s/">summarizepaper.com</a></p>') % (
-            '<h2>Key points</h2><ul>%s</ul>' % points if points else '', escape(row.summary), lang, meta['arxiv_id'])
-    return item, note
+def obsidian_vault(metas, name, lang, notes, status):
+    """A folder for an Obsidian vault: one note per paper, named by its citekey, with its properties, and a note
+    for the collection that links them all."""
+    keys = unique_keys([cite_key(m) for m in metas])
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as archive:
+        index = ['# %s' % name, '']
+        for meta, key in zip(metas, keys):
+            note, tags = notes.get(meta['arxiv_id'], ('', ''))
+            tag_list = [t.strip() for t in (tags or '').split(',') if t.strip()]
+            body = markdown_entry(meta, lang, key, tags=tag_list, status=status.get(meta['arxiv_id'], ''))
+            if note.strip():
+                body = body.rstrip() + '\n\n## %s\n\n%s\n' % (_('My note'), note.strip())
+            body = body.rstrip() + '\n\n%s: [[%s]]\n' % (_('Collection'), name)
+            archive.writestr('%s/%s.md' % (name, key), body)
+            _journal, _doi, year = journal_of(meta)
+            index.append('- [[%s]] %s%s' % (key, meta['title'], ' (%s)' % year if year else ''))
+        archive.writestr('%s/%s.md' % (name, name), '\n'.join(index) + '\n')
+    return out.getvalue()
 
 
-def _creator(name):
-    parts = name.rsplit(' ', 1)
-    if len(parts) == 2:
-        return {'creatorType': 'author', 'firstName': parts[0], 'lastName': parts[1]}
-    return {'creatorType': 'author', 'name': name}
+# --- authors ------------------------------------------------------------------------------------------------
+
+PARTICLES = {'van', 'von', 'der', 'den', 'de', 'del', 'della', 'di', 'da', 'dos', 'das', 'du', 'la', 'le', 'ter', 'ten',
+             'bin', 'ibn', 'al', 'el', 'zu', 'y', 'st', 'st.', 'mac'}
 
 
-def zotero_post(account, items):
-    response = requests.post('%s/users/%s/items' % (ZOTERO_API, account.library_id), json=items, timeout=30,
-                             headers={'Zotero-API-Key': account.api_key, 'Zotero-API-Version': '3'})
-    response.raise_for_status()
-    return response.json()
-
-
-def send_to_zotero(account, pairs):
-    """Write the (item, note) pairs; returns how many papers were saved."""
-    saved = 0
-    for start in range(0, len(pairs), 25):  # the API takes 50 objects per call: 25 papers and their notes
-        chunk = pairs[start:start + 25]
-        result = zotero_post(account, [item for item, _ in chunk])
-        notes = []
-        for index, (_, note) in enumerate(chunk):
-            key = (result.get('successful', {}).get(str(index)) or {}).get('key')
-            if key:
-                saved += 1
-                if note:
-                    notes.append({'itemType': 'note', 'parentItem': key, 'note': note, 'tags': [{'tag': 'SummarizePaper'}]})
-        if notes:
-            zotero_post(account, notes)
-    return saved
-
-
-def check_zotero(library_id, api_key):
-    """True when the key exists, belongs to this library and may write to it."""
-    try:
-        response = requests.get('%s/keys/%s' % (ZOTERO_API, api_key), timeout=15)
-        if response.status_code != 200:
-            return False
-        info = response.json()
-    except (requests.RequestException, ValueError):
-        return False
-    return str(info.get('userID')) == str(library_id) and bool(info.get('access', {}).get('user', {}).get('write'))
-
-
-@sensitive_post_parameters('api_key')
-def zotero_settings(request):
-    if not request.user.is_authenticated:
-        return render(request, 'summarizer/integrations.html', {'anonymous': True})
-    paid = access.has_tool(request.user, 'zotero')
-    account = ZoteroAccount.objects.filter(user=request.user).first()
-    error = False
-    error_code = ''
-    library_id = ''
-    if request.method == 'POST' and paid:
-        if request.POST.get('action') == 'disconnect':
-            ZoteroAccount.objects.filter(user=request.user).delete()
-            return redirect('/%s/integrations/' % get_language())
-        library_id = request.POST.get('library_id', '').strip()
-        api_key = request.POST.get('api_key', '').strip()
-        if not re.fullmatch(r'[0-9]{1,40}', library_id):
-            error_code = 'user_id'
-        elif not re.fullmatch(r'[A-Za-z0-9]{1,100}', api_key):
-            error_code = 'api_key'
-        elif check_zotero(library_id, api_key):
-            ZoteroAccount.objects.update_or_create(user=request.user, defaults={'library_id': library_id, 'api_key': api_key})
-            return redirect('/%s/integrations/?saved=1' % get_language())
-        error = True
-    return render(request, 'summarizer/integrations.html', {
-        'paid': paid, 'account': account, 'error': error, 'error_code': error_code,
-        'library_id': library_id[:40], 'saved': request.GET.get('saved') == '1'})
-
-
-@require_POST
-def zotero_send(request):
-    """Send one paper (arxiv_id) or a collection (collection) to Zotero, in the background."""
-    if not access.has_tool(request.user, 'zotero'):
-        return JsonResponse({'status': 'premium'}, status=403)
-    account = ZoteroAccount.objects.filter(user=request.user).first()
-    if account is None:
-        return JsonResponse({'status': 'setup', 'url': '/%s/integrations/' % get_language()})
-    if request.POST.get('literature'):  # the references of a literature review, as the review keeps them
-        from . import literature
-        metas = literature.zotero_metas(request.user, request.POST['literature'])
-    elif request.POST.get('missed'):  # the papers a draft does not cite, as the search keeps them
-        from . import missed
-        metas = missed.zotero_metas(request.user, request.POST['missed'])
-    else:
-        if request.POST.get('collection'):
-            rows = CollectionPaper.objects.filter(collection__pk=request.POST['collection'], collection__user=request.user)
-            ids = [(r.arxiv_id, r) for r in rows]
-        else:
-            ids = [(request.POST.get('arxiv_id', ''), None)]
-        metas = [m for m in (paper_meta(aid, fallback) for aid, fallback in ids if aid) if m]
-    if not metas:
-        raise Http404
-    lang = get_language()
-    import uuid
-
-    def work(pk):
-        pairs = [zotero_item(m, lang) for m in metas]
-        generated.release_connection()
-        return {'saved': send_to_zotero(account, pairs)}
-    row = generated.start('zotero', uuid.uuid4().hex, lang, work, user=request.user)
-    return JsonResponse({'status': row.status, 'id': row.pk})
+def split_name(name):
+    """(given names, family name): 'Jean-Pierre van der Waals' -> ('Jean-Pierre', 'van der Waals'),
+    'Lee, Ann' -> ('Ann', 'Lee'). The family name alone for a one-word name."""
+    name = ' '.join((name or '').split())
+    if ',' in name:
+        family, given = [p.strip() for p in name.split(',', 1)]
+        return given, family
+    words = name.split(' ')
+    if len(words) < 2:
+        return '', name
+    start = len(words) - 1
+    while start > 1 and words[start - 1].lower() in PARTICLES:
+        start -= 1
+    if words[-1].rstrip('.').lower() in ('jr', 'sr', 'ii', 'iii') and len(words) > 2:
+        return ' '.join(words[:-2]), '%s %s' % (words[-2], words[-1])
+    return ' '.join(words[:start]), ' '.join(words[start:])

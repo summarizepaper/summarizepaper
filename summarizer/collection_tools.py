@@ -11,7 +11,7 @@
   bounded whatever the number of indexed papers. Papers already there in another version are left out. The
   references papers share are often software, data or generic methods (SciPy, emcee...): a small model call
   sets them apart from the research a review is expected to know.
-- import_ids() and zotero_import(): adding many papers at once, a lookup per DOI, out of the request.
+- import_ids(): adding many papers at once, a lookup per DOI, out of the request (a Zotero collection: zotero.py).
 """
 import json
 import logging
@@ -29,9 +29,9 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, changes, chat_page, citations, comparison, digest, exports, generated, publication_status, similar, sources
+from . import access, changes, chat_page, citations, comparison, digest, generated, publication_status, similar, sources
 from .models import (ArxivPaper, CitationCache, Collection, CollectionPaper, ExternalPaper, Generated, PaperEmbedding,
-                     PaperVersion, ZoteroAccount)
+                     PaperVersion)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,6 @@ ARXIV_SECONDS = 3  # arXiv asks for one query every three seconds
 SUGGEST_MAX = 15
 CLASSIFY_MAX = 40  # shared references the model sorts into research and tools
 NOTICE_TITLE = re.compile(r'\s*(?:erratum|corrigendum|correction|retraction)\b', re.I)
-ZOTERO_MAX = 500
 META_STEPS = [
     ('status', _('Checking where each paper was published, and any retraction or correction')),
     ('citations', _('Counting the citations')),
@@ -112,7 +111,7 @@ def facts(papers, versions=None):
         for notice in report.get('updates') or []:
             text, level = NOTICE_LABELS.get(notice.get('type'), ('', INFO))
             if text and text not in [n['label'] for n in notices]:
-                notices.append({'label': text, 'tone': level, 'doi': notice.get('doi', '')})
+                notices.append({'label': text, 'tone': level, 'doi': notice.get('doi', ''), 'type': notice.get('type')})
         newer = None
         if aid in arxiv_bases:
             base, version = arxiv_bases[aid]
@@ -168,6 +167,13 @@ def refresh(collection_pk):
                         versions[base] = version
             except digest.ArxivUnavailable:
                 logger.warning('arXiv versions of a collection failed')
+        collection = Collection.objects.filter(pk=collection_pk).first()
+        if collection is not None and collection.zotero_key:  # what was found, as tags in its Zotero collection
+            from . import zotero
+            try:
+                zotero.write_notices(collection)
+            except Exception:
+                logger.warning('Notices of collection %s could not be written into Zotero', collection_pk)
         return {'versions': versions, 'checked_at': now.isoformat(), 'papers': len(ids)}
     return work
 
@@ -349,99 +355,22 @@ def start_import(request, collection, ids, paid, skipped=0):
                            import_ids(collection.pk, ids, paid, skipped), user=request.user)
 
 
-ARXIV_IN_ZOTERO = re.compile(r'(?:arxiv\.org/(?:abs|pdf)/|arxiv:\s*)((?:\d{4}\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?/\d{7})(?:v\d+)?)', re.I)
-
-
-def zotero_ref(data):
-    """The arXiv id or DOI of a Zotero item, '' when it has neither."""
-    for field in ('archiveID', 'url', 'extra'):
-        match = ARXIV_IN_ZOTERO.search(str(data.get(field) or ''))
-        if match:
-            return match.group(1)
-    doi = sources.clean_doi(str(data.get('DOI') or '')) or sources.clean_doi(
-        (re.search(r'^DOI:\s*(\S+)', str(data.get('extra') or ''), re.I | re.M) or [None, ''])[1])
-    return doi or ''
-
-
-def zotero_get(account, path, params=None):
-    response = requests.get('%s/users/%s/%s' % (exports.ZOTERO_API, account.library_id, path), params=params or {},
-                            headers={'Zotero-API-Key': account.api_key, 'Zotero-API-Version': '3'}, timeout=30)
-    response.raise_for_status()
-    return response.json()
-
-
-def zotero_items(account, key):
-    """The references of the top items of a Zotero collection: (arXiv ids or DOIs, items without either)."""
-    refs, skipped = [], 0
-    for start in range(0, ZOTERO_MAX, 100):
-        items = zotero_get(account, 'collections/%s/items/top' % key, {'format': 'json', 'limit': 100, 'start': start})
-        for item in items:
-            data = item.get('data') or {}
-            if data.get('itemType') in ('attachment', 'note'):
-                continue
-            ref = zotero_ref(data)
-            if ref:
-                refs.append(ref)
-            else:
-                skipped += 1
-        if len(items) < 100:
-            break
-    return refs, skipped
-
-
-def zotero_access(request):
-    if not access.has_tool(request.user, 'zotero'):
-        return None, JsonResponse({'status': 'premium'}, status=403)
-    account = ZoteroAccount.objects.filter(user=request.user).first()
-    if account is None:
-        return None, JsonResponse({'status': 'setup', 'url': '/%s/integrations/' % get_language()})
-    return account, None
-
-
-@login_required
-def zotero_collections(request):
-    """The user's Zotero collections, to choose the one to import. JSON."""
-    account, refused = zotero_access(request)
-    if refused:
-        return refused
-    try:
-        found = []
-        for start in range(0, 300, 100):
-            page = zotero_get(account, 'collections', {'limit': 100, 'start': start})
-            found += [{'key': c.get('key'), 'name': (c.get('data') or {}).get('name', ''),
-                       'items': (c.get('meta') or {}).get('numItems', 0)} for c in page]
-            if len(page) < 100:
-                break
-    except (requests.RequestException, ValueError):
-        return JsonResponse({'status': 'unavailable'})
-    return JsonResponse({'status': 'done', 'collections': sorted(found, key=lambda c: c['name'].lower())})
-
-
-def zotero_import(collection_pk, account, key, paid):
-    def work(pk):
-        from .library import add_many, canonical_id
-        generated.progress(pk, 'read')
-        refs, skipped = zotero_items(account, key)
-        ids = [i for i in dict.fromkeys(canonical_id(r) for r in refs) if i]
-        skipped += len(refs) - len(ids)
-        generated.progress(pk, 'add')
-        counts = add_many(Collection.objects.get(pk=collection_pk), ids, paid)
-        counts['skipped'] = counts.get('skipped', 0) + skipped
-        return counts
-    return work
-
-
 @login_required
 @require_POST
 def zotero_import_start(request, pk):
+    """A Zotero collection imported into this collection, which is then kept in sync with it (zotero.py)."""
+    from . import zotero
     collection = _mine(request, pk)
-    account, refused = zotero_access(request)
+    account, refused = zotero.account_of(request)
     if refused:
         return refused
+    if collection.user_id != request.user.id:  # it would be kept in sync with the editor's library, not the owner's
+        return JsonResponse({'status': 'owner'}, status=403)
     key = request.POST.get('key', '')
     if not re.fullmatch(r'[A-Z0-9]{8}', key):
         return JsonResponse({'status': 'unknown'}, status=400)
-    row = generated.start('zotero_import', uuid.uuid4().hex, get_language(),
-                          zotero_import(collection.pk, account, key, access.has_tool(request.user, 'collections')),
+    row = generated.start('zotero_sync', uuid.uuid4().hex, get_language(),
+                          zotero.sync_collection(collection.pk, account.pk, get_language(),
+                                                 access.has_tool(request.user, 'collections'), key),
                           user=request.user)
     return JsonResponse({'status': row.status, 'id': row.pk})

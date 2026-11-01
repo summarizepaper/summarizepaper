@@ -33,6 +33,10 @@ OPENAI_KEY = os.getenv('OPENAI_KEY')
 # optional: a Semantic Scholar API key raises the rate limit of the citation alerts
 S2_API_KEY = os.getenv('S2_API_KEY', '')
 SCOOP_DRAFT_KEY = os.getenv('SCOOP_DRAFT_KEY', '')  # encrypts the drafts kept by the scoop watch; SECRET_KEY when empty
+ZOTERO_KEY_SECRET = os.getenv('ZOTERO_KEY_SECRET', '')  # encrypts the Zotero keys; SECRET_KEY when empty
+# the OAuth application registered on zotero.org/oauth/apps: one-click connection when both are set
+ZOTERO_CLIENT_KEY = os.getenv('ZOTERO_CLIENT_KEY', '')
+ZOTERO_CLIENT_SECRET = os.getenv('ZOTERO_CLIENT_SECRET', '')
 # NASA ADS token: the citation alerts take their citing papers from ADS when it knows the paper
 ADS_TOKEN = os.getenv('ADS_TOKEN', '')
 # optional: an OpenAlex API key (free) for journal searches and the full texts OpenAlex keeps (see sources.py)

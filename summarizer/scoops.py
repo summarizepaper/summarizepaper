@@ -1037,7 +1037,8 @@ def scoops_page(request):
         'paid': paid, 'projects': projects, 'error': error, 'max_projects': MAX_PROJECTS, 'min_chars': MIN_CHARS,
         'author_name': projects[0].author_name if projects else '',
         'collections': Collection.objects.filter(user=request.user).order_by('name') if paid else [],
-        'prior_years': PRIOR_YEARS, 'aspects': ASPECTS,
+        'prior_years': PRIOR_YEARS, 'aspects': ASPECTS, 'zotero_fill': access.has_tool(request.user, 'zotero'),
+        'max_references': MAX_REFERENCES,
         'open_collection': json.dumps(str(_('Open the collection')), ensure_ascii=False),
         'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024), 'form': request.POST if error else {  # from a saved search
             'title': request.GET.get('title', '')[:300], 'description': request.GET.get('description', '')[:5000]}})

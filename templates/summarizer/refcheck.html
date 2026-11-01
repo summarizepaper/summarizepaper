@@ -52,7 +52,7 @@
       <p><textarea name="bibtext" placeholder="@article{key, ...}"></textarea></p>
       {% if zotero %}
       <p><label for="refcheck-zotero">{% trans 'or check a Zotero collection:' %}</label>
-        <select name="zotero" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/collections/zotero/"><option value="">—</option></select></p>
+        <select name="zotero" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/collections/zotero/" data-selected="{{ zotero_selected }}"><option value="">—</option></select></p>
       {% else %}
       <p class="muted"><small>{% trans 'Your references are in Zotero?' %} <a href="/{{ LANGUAGE_CODE }}/integrations/">{% trans 'Connect Zotero' %}</a> {% trans 'to check a collection directly.' %}</small></p>
       {% endif %}
@@ -92,6 +92,7 @@ window.addEventListener('DOMContentLoaded', function () {
       var option = document.createElement('option');
       option.value = c.key;
       option.textContent = c.name + ' (' + c.items + ')';
+      option.selected = c.key === select.dataset.selected;
       select.appendChild(option);
     });
   }).catch(function () {});

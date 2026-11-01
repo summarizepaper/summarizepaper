@@ -321,7 +321,13 @@
       if (json.status === 'premium') return zs.textContent = t.premium;
       if (json.status === 'setup') { zs.textContent = t.setup + ' '; var a = document.createElement('a'); a.href = json.url; a.textContent = '→'; zs.appendChild(a); return; }
       if (!json.id) return zs.textContent = t.failed;
-      SP.wait(json.id, function () { zs.textContent = t.sent; }, function () { zs.textContent = t.failed; });
+      SP.wait(json.id, function (data) {
+        data = data || {};
+        zs.textContent = t.synced.replace('%(saved)s', data.saved || 0).replace('%(existing)s', data.existing || 0)
+          .replace('%(added)s', data.added || 0) + ' ';
+        if (data.open) { var a = document.createElement('a'); a.href = data.open; a.textContent = t.openZotero; zs.appendChild(a); }
+        if ((data.added || data.removed) && !data.failed) setTimeout(function () { location.reload(); }, 2500);
+      }, function () { zs.textContent = t.failed; });
     });
   });
 

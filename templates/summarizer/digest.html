@@ -176,6 +176,7 @@
         <p><label for="reference_papers">{% blocktrans %}Or give up to {{ max_references }} papers close to your work (arXiv ids, DOIs or links, comma-separated):{% endblocktrans %}</label></p>
         {% include 'summarizer/arxiv_picker.html' with target='reference_papers' separator='comma' %}
         <p><input type="text" id="reference_papers" name="reference_papers" value="{{ subscription.reference_papers }}" placeholder="2310.01234, 10.1093/mnras/stad1234"></p>
+        {% if zotero_fill %}{% include 'summarizer/zotero_fill.html' with target='reference_papers' n=max_references separator='comma' %}{% endif %}
         <p><label for="authors">{% blocktrans %}Authors to follow, in any category (up to {{ max_authors }}, comma-separated):{% endblocktrans %}</label>
         <input type="text" id="authors" name="authors" value="{{ subscription.authors }}" placeholder="Sara Seager, Yann LeCun"></p>
         <p><label for="volume">{% trans 'How many papers' %}</label>
@@ -244,4 +245,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script defer src="{% static_v 'summarizer/js/digest.js' %}"></script>{% endblock %}
+{% block scripts %}<script defer src="{% static_v 'summarizer/js/digest.js' %}"></script>{% if zotero_fill %}<script defer src="{% static_v 'summarizer/js/zotero.js' %}"></script>{% endif %}{% endblock %}

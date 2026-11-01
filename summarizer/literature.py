@@ -1071,23 +1071,7 @@ def metas(result):
     return out
 
 
-def cite_keys(entries):
-    """Each BibTeX entry with a key no other entry has (smith2020a, smith2020b...), and the keys in order."""
-    keys, seen, out = [], {}, []
-    for entry in entries:
-        head, rest = entry.split(',', 1)
-        kind, key = head.split('{', 1)
-        seen[key] = seen.get(key, 0) + 1
-        keys.append(key)
-        out.append((kind, key, rest))
-    counts = {k: n for k, n in seen.items() if n > 1}
-    taken = {}
-    for i, (kind, key, rest) in enumerate(out):
-        if key in counts:
-            taken[key] = taken.get(key, 0) + 1
-            keys[i] = key + 'abcdefghijklmnopqrstuvwxyz'[(taken[key] - 1) % 26]
-        out[i] = '%s{%s,%s' % (kind, keys[i], rest)
-    return out, keys
+cite_keys = exports.cite_keys  # each BibTeX entry with a key no other entry has, and the keys
 
 
 LATEX_SPECIAL = {'\\': r'\textbackslash{}', '&': r'\&', '%': r'\%', '$': r'\$', '#': r'\#', '_': r'\_', '{': r'\{',

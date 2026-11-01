@@ -338,15 +338,13 @@ def arxiv_source(paper_id):
 
 def zotero_bibtex(account, key, limit=500):
     """BibTeX of the top items of a Zotero collection, as Zotero exports them."""
-    from .exports import ZOTERO_API
+    from . import zotero
     parts = []
     for start in range(0, limit, 100):
         try:
-            response = requests.get('%s/users/%s/collections/%s/items/top' % (ZOTERO_API, account.library_id, key),
-                                    params={'format': 'bibtex', 'limit': 100, 'start': start}, timeout=30,
-                                    headers={'Zotero-API-Key': account.api_key, 'Zotero-API-Version': '3'})
-            response.raise_for_status()
-        except requests.RequestException:
+            response = zotero.call(account, 'GET', 'collections/%s/items/top' % key,
+                                   params={'format': 'bibtex', 'limit': 100, 'start': start})
+        except zotero.Unavailable:
             raise generated.SourceUnavailable('zotero')
         parts.append(response.text)
         if int(response.headers.get('Total-Results') or 0) <= start + 100:

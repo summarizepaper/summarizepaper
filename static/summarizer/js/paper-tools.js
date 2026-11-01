@@ -82,7 +82,10 @@ window.SPPaperTools = {init: function () {
       if (refused(zoteroStatus, json)) return;
       if (json.status === 'setup') return show(zoteroStatus, t.setup, {href: json.url, text: '→'});
       if (!json.id) return show(zoteroStatus, t.failed);
-      SP.wait(json.id, function () { show(zoteroStatus, t.sent); }, function () { show(zoteroStatus, t.failed); });
+      SP.wait(json.id, function (data) {
+        data = data || {};
+        show(zoteroStatus, data.existing ? t.alreadyZotero : t.sent, data.open ? {href: data.open, text: t.openZotero} : null);
+      }, function () { show(zoteroStatus, t.failed); });
     });
   });
 

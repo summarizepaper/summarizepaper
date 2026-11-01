@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -316,3 +316,4 @@
   {% endif %}
 </div>
 {% endblock %}
+{% block scripts %}{% if zotero_fill %}<script defer src="{% static_v 'summarizer/js/zotero.js' %}"></script>{% endif %}{% endblock %}

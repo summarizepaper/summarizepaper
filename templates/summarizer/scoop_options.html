@@ -1,7 +1,8 @@
 {% load i18n %}<p><label>{% trans 'Competing teams: one author name per line. Their new papers are always read, even when they are not very close.' %}<br>
   <textarea name="competitors" rows="3" placeholder="Jane Doe&#10;Wei Zhang">{{ values.competitors }}</textarea></label></p>
 <p><label>{% trans 'Key references of the project: arXiv ids or DOIs, one per line. A new paper that cites several of them is read.' %}<br>
-  <textarea name="references" rows="3" placeholder="2101.00001&#10;10.1093/mnras/stad1234">{{ values.references }}</textarea></label></p>
+  <textarea name="references" id="scoop-references{% if values.pk %}-{{ values.pk }}{% endif %}" rows="3" placeholder="2101.00001&#10;10.1093/mnras/stad1234">{{ values.references }}</textarea></label></p>
+{% if zotero_fill %}{% if values.pk %}{% include 'summarizer/zotero_fill.html' with target='scoop-references-'|add:values.pk|stringformat:'s' n=max_references separator='line' %}{% else %}{% include 'summarizer/zotero_fill.html' with target='scoop-references' n=max_references separator='line' %}{% endif %}{% endif %}
 <fieldset class="scoop-notify"><legend>{% trans 'Emails' %}</legend>
   <label><input type="radio" name="notify" value="daily"{% if values.notify != 'strong' %} checked{% endif %}> {% trans 'Every overlap the day it is found' %}</label><br>
   <label><input type="radio" name="notify" value="strong"{% if values.notify == 'strong' %} checked{% endif %}> {% trans 'Strong overlaps at once, partial ones in a weekly email' %}</label>
