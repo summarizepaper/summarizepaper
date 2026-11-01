@@ -1,5 +1,5 @@
 """How well the conference companion reads a program and ranks its talks, on a real program annotated by hand.
-Writes nothing (everything happens in a transaction rolled back).
+Its user and program are deleted at the end.
 
 python manage.py conference_benchmark                 # reading (web page and PDF layouts) and ranking
 python manage.py conference_benchmark --only rank     # ranking only; --only read: reading only
@@ -21,18 +21,13 @@ from pathlib import Path
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
-from django.db import transaction
 
-from summarizer import conference, generated, usage
+from summarizer import conference, usage
 from summarizer.models import ConferenceProgram
 
 FIXTURES = Path(__file__).resolve().parents[2] / 'fixtures'
 FIXTURE = FIXTURES / 'conference_benchmark.json'
 CONFERENCES = {'acat': FIXTURE, 'scipy': FIXTURES / 'conference_benchmark_scipy.json'}
-
-
-class Rollback(Exception):
-    pass
 
 
 def web_text(data):
@@ -132,47 +127,45 @@ class Command(BaseCommand):
     def rank(self, data, lang):
         out = self.stdout.write
         talks = conference.settle([conference.clean_talk(t) for t in data['talks']])
+        # a user and a program of its own, committed (the worker threads record the model calls they make from
+        # their own connections: in a transaction they would wait for it) and deleted at the end
+        user = User.objects.create_user('conference-benchmark-%s' % time.time_ns())
         try:
-            with transaction.atomic():
-                user = User.objects.create_user('conference-benchmark-%s' % time.time_ns())
-                program = ConferenceProgram.objects.create(user=user, name=data['name'], talks=json.dumps(talks),
-                                                           timezone=data['timezone'])
-                for profile in data['profiles']:
-                    started = time.monotonic()
-                    # its model calls counted for no user: the user made here is never committed, and the worker
-                    # threads' connections would wait for it to record what they use
-                    with usage.task('conference_benchmark'):
-                        result = conference.rank(program, profile['interests'], lang, user)
-                    chosen = {t['title']: t for t in result['talks']}
-                    strong = {title for title, t in chosen.items() if t['priority'] in ('must', 'should')}
-                    out('\n== Ranking for "%s" (%.0f s): %d talks chosen of %d read closely; %d must, %d should, %d maybe' % (
-                        profile['id'], time.monotonic() - started, len(chosen), result['judged'],
-                        *(sum(1 for t in result['talks'] if t['priority'] == p) for p in conference.PRIORITIES)))
-                    core_strong = [c for c in profile['core'] if c in strong]
-                    out('core talks chosen as must or should: %d of %d; chosen at all: %d' % (
-                        len(core_strong), len(profile['core']), sum(1 for c in profile['core'] if c in chosen)))
-                    vectors = conference.program_vectors(program, talks)
-                    scores = (vectors @ conference.interest_rows(profile['interests']).T).max(axis=1)
-                    place = {talks[n]['title']: p + 1 for p, n in enumerate(scores.argsort()[::-1])}
-                    for title in profile['core']:
-                        if title not in strong:
-                            out('  core %s (%d by closeness): %s' % (chosen[title]['priority'] if title in chosen else 'left out',
-                                                                     place.get(title, 0), title[:90]))
-                    off = [o for o in profile['off'] if o in strong]
-                    out('off-topic talks chosen as must or should: %d of %d' % (len(off), len(profile['off'])))
-                    for title in off:
-                        out('  off topic but %s: %s (%s)' % (chosen[title]['priority'], title[:80], chosen[title]['why'][:100]))
-                    papers = [t for t in result['talks'] if t.get('paper')]
-                    out('papers found: %d of %d chosen talks looked for: %d by title, %d close papers of the speaker' % (
-                        len(papers), min(len(chosen), conference.PAPERS), sum(1 for t in papers if t['paper'].get('match') != 'speaker'),
-                        sum(1 for t in papers if t['paper'].get('match') == 'speaker')))
-                    for t in papers:
-                        out('  %s\n    -> [%s %s] %s (%s)' % (t['title'][:90], t['paper'].get('match', 'title'), t['paper'].get('closeness') or '',
-                                                         t['paper']['title'][:90], t['paper']['key']))
-                    out('people to meet: %s' % ', '.join(p['name'] for p in result['people'][:10]))
-                    out('themes: %s' % '; '.join('%s (%d)' % (t['name'], t['count']) for t in result['themes']))
-                    for t in result['talks'][:3]:
-                        out('  e.g. [%s] %s\n     why: %s\n     ask: %s' % (t['priority'], t['title'][:80], t['why'], t['ask']))
-                raise Rollback
-        except Rollback:
-            pass
+            program = ConferenceProgram.objects.create(user=user, name=data['name'], talks=json.dumps(talks),
+                                                       timezone=data['timezone'])
+            for profile in data['profiles']:
+                started = time.monotonic()
+                with usage.task('conference_benchmark'):
+                    result = conference.rank(program, profile['interests'], lang, user)
+                chosen = {t['title']: t for t in result['talks']}
+                strong = {title for title, t in chosen.items() if t['priority'] in ('must', 'should')}
+                out('\n== Ranking for "%s" (%.0f s): %d talks chosen of %d read closely; %d must, %d should, %d maybe' % (
+                    profile['id'], time.monotonic() - started, len(chosen), result['judged'],
+                    *(sum(1 for t in result['talks'] if t['priority'] == p) for p in conference.PRIORITIES)))
+                core_strong = [c for c in profile['core'] if c in strong]
+                out('core talks chosen as must or should: %d of %d; chosen at all: %d' % (
+                    len(core_strong), len(profile['core']), sum(1 for c in profile['core'] if c in chosen)))
+                vectors = conference.program_vectors(program, talks)
+                scores = (vectors @ conference.interest_rows(profile['interests']).T).max(axis=1)
+                place = {talks[n]['title']: p + 1 for p, n in enumerate(scores.argsort()[::-1])}
+                for title in profile['core']:
+                    if title not in strong:
+                        out('  core %s (%d by closeness): %s' % (chosen[title]['priority'] if title in chosen else 'left out',
+                                                                 place.get(title, 0), title[:90]))
+                off = [o for o in profile['off'] if o in strong]
+                out('off-topic talks chosen as must or should: %d of %d' % (len(off), len(profile['off'])))
+                for title in off:
+                    out('  off topic but %s: %s (%s)' % (chosen[title]['priority'], title[:80], chosen[title]['why'][:100]))
+                papers = [t for t in result['talks'] if t.get('paper')]
+                out('papers found: %d of %d chosen talks looked for: %d by title, %d close papers of the speaker' % (
+                    len(papers), min(len(chosen), conference.PAPERS), sum(1 for t in papers if t['paper'].get('match') != 'speaker'),
+                    sum(1 for t in papers if t['paper'].get('match') == 'speaker')))
+                for t in papers:
+                    out('  %s\n    -> [%s %s] %s (%s)' % (t['title'][:90], t['paper'].get('match', 'title'), t['paper'].get('closeness') or '',
+                                                     t['paper']['title'][:90], t['paper']['key']))
+                out('people to meet: %s' % ', '.join(p['name'] for p in result['people'][:10]))
+                out('themes: %s' % '; '.join('%s (%d)' % (t['name'], t['count']) for t in result['themes']))
+                for t in result['talks'][:3]:
+                    out('  e.g. [%s] %s\n     why: %s\n     ask: %s' % (t['priority'], t['title'][:80], t['why'], t['ask']))
+        finally:
+            user.delete()
