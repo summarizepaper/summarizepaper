@@ -115,10 +115,10 @@ class FakeZotero:
                 return self.answer({'items': [k for k, v in self.deleted.items() if v > int(params['since'])]})
             if path[0] == 'items' and path[2:] == ['fulltext']:
                 return self.answer({'content': self.fulltext[path[1]]}) if path[1] in self.fulltext else self.answer({}, 404)
-            if path == ['items', 'top']:  # quick search: a phrase in the titles, or in every field
+            if path == ['items', 'top']:  # quick search: titles, creators and years only, as the real API
                 query = params.get('q', '').lower()
-                fields = (lambda d: [d.get('title', '')]) if params.get('qmode') != 'everything' else \
-                    (lambda d: [str(v) for v in d.values()])
+                fields = lambda d: [d.get('title', ''), str(d.get('date', ''))] + \
+                    [c.get('lastName') or c.get('name', '') for c in d.get('creators', [])]
                 return self.answer([i for i in self.top() if any(query in f.lower() for f in fields(i['data']))])
             if path[0] == 'items' and len(path) == 2:
                 return self.answer(self.items[path[1]]) if path[1] in self.items else self.answer({}, 404)
@@ -210,6 +210,15 @@ class ExportTests(ToolsTestCase):
 class ZoteroTests(ToolsTestCase):
     def account(self, user, **kw):
         return ZoteroAccount.objects.create(user=user, library_id='123', api_key='k', username='ann_z', **kw)
+
+    def test_a_paper_whose_title_changed_is_found_by_its_first_author(self):
+        meta = {'arxiv_id': '2101.00001v1', 'title': 'Clouds on a hot planet', 'doi': '', 'authors': ['Ann Lee']}
+        with FakeZotero() as fake:
+            key = fake.add({'itemType': 'journalArticle', 'title': 'Thick hazes of a warm world', 'extra': 'arXiv: 2101.00001',
+                            'creators': [{'creatorType': 'author', 'firstName': 'Ann', 'lastName': 'Lee'}]})
+            account = ZoteroAccount(library_id='123', api_key='k')
+            self.assertIsNone(zotero.find(account, zotero.meta_identifiers(meta), meta['title']))
+            self.assertEqual(zotero.find(account, zotero.meta_identifiers(meta), meta['title'], author='Ann Lee')['key'], key)
 
     def test_a_paper_already_in_the_library_is_not_duplicated(self):
         self.paper()

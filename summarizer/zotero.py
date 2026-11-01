@@ -294,10 +294,11 @@ def item_identifiers(data):
     return found
 
 
-def find(account, wanted, title, items=None):
-    """The item of the library (or of these items) that is this paper, or None. The library is searched with one
-    word at a time, so that the answer does not depend on how Zotero combines words: the rarest-looking word of
-    the title, then each DOI and the arXiv id in all the fields."""
+def find(account, wanted, title, items=None, author=''):
+    """The item of the library (or of these items) that is this paper, or None. Zotero's quick search reads the
+    titles, creators and years only (not DOIs nor archive ids), and one word at a time does not depend on how it
+    combines words: the longest word of the title, then the first author's family name (a title changed between
+    the preprint and the journal); the DOI, arXiv id or title of each item found decides."""
     def match(found):
         for item in found:
             data = item.get('data') or {}
@@ -307,10 +308,9 @@ def find(account, wanted, title, items=None):
     if items is not None:
         return match(items)
     words = sorted(re.findall(r'[^\W\d_]{4,}', re.sub(r'\$[^$]*\$', ' ', title or '')), key=len, reverse=True)
-    searches = [(words[0], 'titleCreatorYear')] if words else []
-    searches += [(value, 'everything') for kind, value in sorted(wanted) if kind in ('doi', 'arxiv')]
-    for query, mode in searches:
-        found = match(get(account, 'items/top', {'q': query, 'qmode': mode, 'limit': SEARCH_LIMIT}))
+    family = exports.split_name(author)[1].split()[-1] if author and exports.split_name(author)[1] else ''
+    for query in [q for q in dict.fromkeys(words[:1] + [family]) if q]:
+        found = match(get(account, 'items/top', {'q': query, 'qmode': 'titleCreatorYear', 'limit': SEARCH_LIMIT}))
         if found is not None:
             return found
     return None
@@ -439,7 +439,8 @@ def send(account, entries, collection='', step=lambda: None):
                 item = None  # deleted in Zotero since
             if item and (item.get('data') or {}).get('deleted'):
                 item = None
-        item = item or find(account, meta_identifiers(entry['meta']), entry['meta']['title'])
+        item = item or find(account, meta_identifiers(entry['meta']), entry['meta']['title'],
+                            author=(entry['meta']['authors'] or [''])[0])
         if item is None:
             new.append(index)
             continue
