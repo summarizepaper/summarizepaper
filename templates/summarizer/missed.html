@@ -20,16 +20,16 @@
   {% if anonymous or not paid %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
-      <li>{% trans 'Upload the PDF of your draft, or paste its title, abstract, introduction and references.' %}</li>
-      <li>{% trans 'We write several searches from your draft, run them on arXiv and on the open-access journals and preprints, and gather the papers they find.' %}</li>
-      <li>{% trans 'We remove the papers your draft already cites, found by their arXiv identifier, their DOI or their title in your references.' %}</li>
-      <li>{% trans 'We rank the others by closeness to your draft, and an AI reads the closest ones.' %}</li>
-      <li>{% trans 'You get the list, from "should be cited" to "related", with for each paper how it relates to your work (same problem, competing method, earlier result, data set to use) and how to position yourself against it.' %}</li>
+      <li>{% trans 'Upload the PDF of your draft, or paste its text with its references; add its .bib file if you have one.' %}</li>
+      <li>{% trans 'We read your references, even in styles that print no title, and find them in the citation graph.' %}</li>
+      <li>{% trans 'We search arXiv and the journals and preprints with queries written from your question, your method and your data, and add the papers that cite several of your references and the founding papers of the field.' %}</li>
+      <li>{% trans 'We remove the papers you already cite and retracted papers, and set apart those your references probably cite under another form.' %}</li>
+      <li>{% trans 'An AI reads the closest papers with the beginning of your draft: for each, whether a referee would expect it, how it relates to your work, how to position yourself, and the sentence of your draft where to cite it.' %}</li>
     </ol>
     <ul class="tool-features">
       <li>{% trans 'Before submitting a paper or a thesis chapter, so a reviewer does not find the missing reference for you.' %}</li>
-      <li>{% trans 'When starting on a new topic, to find the closest work quickly.' %}</li>
-      <li>{% trans 'Your draft is read once and is not stored.' %}</li>
+      <li>{% trans 'Mark each paper, export them to BibTeX or Zotero, and search again before resubmitting: what is new since is marked.' %}</li>
+      <li>{% trans 'Your draft is read once and is not stored, unless you ask us to keep it, encrypted, to search again.' %}</li>
     </ul>
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
@@ -38,6 +38,7 @@
     {% endif %}
   {% else %}
     {% if error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
+    {% elif error == 'bib' %}<p class="error">{% trans 'Send a .bib file of 5 MB at most.' %}</p>
     {% elif error == 'empty' %}<p class="error">{% trans 'Send a PDF, or paste at least the title, abstract and references of your draft.' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
@@ -46,8 +47,13 @@
       {% include 'summarizer/file_upload.html' with upload_name='draft' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
       <p class="muted">{% trans 'or paste its text (title, abstract, introduction and references are enough):' %}</p>
       <p><textarea name="text"></textarea></p>
+      {% trans 'Its BibTeX file (optional)' as upload_label %}
+      {% include 'summarizer/file_upload.html' with upload_name='bib' upload_accept='.bib' upload_formats='.bib' upload_required_extension='.bib' upload_max_bytes=bib_max_bytes upload_max_mb=5 %}
+      <p class="muted"><small>{% trans 'With your .bib, every reference is recognized exactly; without it, we read the reference list of your draft.' %}</small></p>
+      <p><label><input type="checkbox" name="keep" value="1"> {% trans 'Keep the text of my draft, encrypted, to search again later (you can delete it at any time)' %}</label></p>
       <p><button class="btn" type="submit">{% trans 'Find what I missed' %}</button></p>
-      <p class="muted"><small>{% trans 'Your draft is read once to run the searches and is not stored. Only the list of papers found is kept, in your account.' %}</small></p>
+      <p class="muted"><small>{% trans 'Your draft is read to run the searches and is not stored unless you tick the box above. The list of papers found is kept in your account, with for each the sentence of your draft where to cite it.' %}</small></p>
+      <p class="muted"><small>{% trans 'To check the references you already have (retracted papers, preprints published since, citations their abstract does not support):' %} <a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Bibliography check' %}</a></small></p>
     </form>
 
     {% if searches %}

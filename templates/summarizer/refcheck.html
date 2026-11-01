@@ -46,6 +46,7 @@
       {% include 'summarizer/file_upload.html' with upload_name='tex' upload_accept='.tex,text/plain' upload_formats='.tex / .txt' upload_required_extension='' %}
       <p><button class="btn" type="submit">{% trans 'Check my references' %}</button></p>
       <p class="muted"><small>{% trans 'Your files are read once and are not stored. Only the report is kept, in your account.' %}</small></p>
+      <p class="muted"><small>{% trans 'To find the close papers your draft does not cite yet:' %} <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a></small></p>
     </form>
 
     {% if checks %}

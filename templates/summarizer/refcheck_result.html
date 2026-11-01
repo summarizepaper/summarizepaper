@@ -89,6 +89,7 @@
     <p class="notice">{% blocktrans with n=result.claims_checked %}The {{ n }} citations we could read all match the abstract of the cited paper.{% endblocktrans %}</p>
     {% endif %}
     {% endif %}
+    {% if not shared %}<p class="muted" style="margin-top:24px">{% trans 'Is a close paper missing from your references?' %} <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a> {% trans 'finds the close papers your draft does not cite: give it the same .bib with your PDF.' %}</p>{% endif %}
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The check failed. Check that your file is BibTeX, and try again.' %}</p>
   {% else %}

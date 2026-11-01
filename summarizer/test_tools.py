@@ -124,7 +124,7 @@ class ProgressTests(ToolsTestCase):
         page = client.get('/en/missed/k1/')
         self.assertContains(page, 'class="spinner"')
         self.assertContains(page, 'data-step="review"')
-        self.assertContains(page, 'Searching arXiv and the journals for close papers')
+        self.assertContains(page, 'Searching arXiv, the journals, and the papers that cite your references')
         self.assertContains(page, 'data-started=')
 
 
@@ -453,31 +453,132 @@ class ExportTests(ToolsTestCase):
 
 
 class MissedTests(ToolsTestCase):
-    def candidates(self):
-        def paper(aid, title):
-            return {'arxiv_id': aid, 'title': title, 'abstract': title + ' abstract', 'authors': ['A B'],
-                    'published': timezone.now(), 'categories': ['cs.LG']}
-        return [paper('2301.00001v1', 'Already cited by id'), paper('2301.00002v2', 'A paper cited by its long title'),
-                paper('2301.00003v1', 'Relevant missing paper'), paper('2301.00004v1', 'Other missing paper')]
+    find = staticmethod(missed.find)  # the real one, when a test replaces it
+    INTRO = 'We measure the clouds of hot Jupiters with transmission spectra from space. '
+    DRAFT = ('Clouds of hot Jupiters\n1. Introduction\n' + INTRO * 12 +
+             'Clouds were first seen in transmission by earlier surveys of giant planets. ' + INTRO * 4 +
+             '\nReferences\n[1] Lee A., Ray B., 2019, ApJ, 880, 12\n[2] Kim C., 2020, arXiv:2301.00001\n'
+             '[3] Diaz E., "A paper cited by its long title", 2021, doi:10.1000/ref.two\n')
 
-    def test_cited_papers_are_dropped_and_the_rest_ranked(self):
-        draft = ('My draft on learning. ' * 20 + '\nReferences\n[1] X, arXiv:2301.00001\n'
-                 '[2] Y, "A paper cited by its long title", 2023.')
-        plan = {'title': 'My draft', 'summary': 'It learns.', 'queries': ['learning', 'deep learning']}
-        notes = {'items': [{'id': '2301.00003v1', 'relation': 'Same problem.', 'importance': 'high'},
-                           {'id': '2301.00004v1', 'relation': 'Side.', 'importance': 'low'}]}
+    def arxiv(self, aid, title, author='Ann Bell', year=2024):
+        return {'arxiv_id': aid, 'title': title, 'abstract': title + ' with transmission spectra of clouds.',
+                'authors': [author], 'published': timezone.now().replace(year=year), 'categories': ['astro-ph.EP']}
 
-        def embed(texts):
-            return np.array([[1.0, 0.0]] + [[0.6, 0.8] if 'Other' in t else [0.8, 0.6] for t in texts[1:]], dtype=np.float32)
-        with mock.patch('summarizer.generated.chat_json', side_effect=[plan, notes]), \
-             mock.patch('summarizer.digest.arxiv_get', return_value=self.candidates()) as search, \
-             mock.patch('summarizer.sources.search_papers', return_value=[]), \
-             mock.patch('summarizer.similar.embed', side_effect=embed):
-            result = missed.find(draft, 'en')
-        self.assertEqual(search.call_args_list[1][0][0]['search_query'], 'all:deep AND all:learning')
-        self.assertEqual(result['cited'], 2)
-        self.assertEqual([i['arxiv_id'] for i in result['items']], ['2301.00003v1', '2301.00004v1'])
-        self.assertEqual(result['items'][0]['importance'], 'high')
+    def work(self, wid, title, doi, refs=(), year=2022):
+        words = (title + ' clouds measured in transmission spectra').split()
+        return {'id': 'https://openalex.org/' + wid, 'doi': 'https://doi.org/' + doi, 'display_name': title,
+                'abstract_inverted_index': {w: [i] for i, w in enumerate(words)}, 'publication_date': '%d-05-01' % year,
+                'authorships': [{'author': {'display_name': 'Carl Diaz'}}], 'type': 'article', 'cited_by_count': 40,
+                'primary_location': {'source': {'display_name': 'Icarus', 'type': 'journal'}},
+                'referenced_works': ['https://openalex.org/' + r for r in refs], 'is_retracted': False}
+
+    def model(self, prompt, **kwargs):
+        system = kwargs.get('system') or ''
+        if 'beginning of a research draft' in prompt:
+            return {'title': 'Clouds of hot Jupiters', 'title_local': 'Clouds of hot Jupiters', 'abstract': 'Clouds.',
+                    'question': 'Which clouds?', 'method': 'Transmission spectra.', 'data': '', 'results': 'Clouds.',
+                    'core': 'hot Jupiter clouds', 'queries': ['hot Jupiter clouds', 'transmission spectra clouds']}
+        if 'reference list' in prompt:
+            return {'references': [['Lee', '2019', '', 'ApJ', '880', '12', '', ''], ['Kim', '2020', '', '', '', '', '', '2301.00001'],
+                                   ['Diaz', '2021', 'A paper cited by its long title', '', '', '', '10.1000/ref.two', '']]}
+        papers = re.findall(r'<paper id="(p\d+)">\nTitle: (.*)', system)
+        return {'papers': [{'id': pid, 'importance': 'none' if 'Off topic' in title else 'high', 'kind': 'same_question',
+                            'relation': 'Same clouds.', 'position': 'Cite it for the first clouds.', 'section': 'Introduction',
+                            'draft_quote': 'Clouds were first seen in transmission by earlier surveys of giant planets.'
+                            if 'Missing' in title else 'A sentence the draft never wrote at all.',
+                            'abstract_quote': title + ' with transmission spectra'} for pid, title in papers]}
+
+    def openalex(self, params, limited):
+        found = params.get('filter', '')
+        if found.startswith('doi:'):
+            return [{'id': 'https://openalex.org/W100'}, {'id': 'https://openalex.org/W101'}]
+        if found.startswith('cites:'):
+            return [self.work('W200', 'Coupled paper on cloud spectra', '10.1000/coupled', refs=['W100', 'W101']),
+                    self.work('W201', 'Loosely coupled paper on clouds', '10.1000/loose', refs=['W100'])]
+        if 'search' in params:
+            return [self.work('W300', 'Journal paper on cloudy giant planets', '10.1000/journal')]
+        return []
+
+    def embed(self, texts):
+        return np.array([[0.9, 0.44] if 'Off topic' in t else [1.0, 0.0] if 'Clouds.' in t or len(t) < 30 else [0.8, 0.6]
+                         for t in texts], dtype=np.float32)
+
+    def run_find(self, **kwargs):
+        papers = [self.arxiv('2301.00001v1', 'Already cited by id'),
+                  self.arxiv('2301.00002v2', 'A paper cited by its long title'),
+                  self.arxiv('2301.00003v1', 'Missing paper on cloudy planets'),
+                  self.arxiv('2301.00004v1', 'Off topic paper on galaxies'),
+                  self.arxiv('2301.00005v1', 'A study without title in the references', author='Ann Lee', year=2019),
+                  self.arxiv('2301.00006v1', 'Clouds of hot Jupiters')]
+        with mock.patch('summarizer.generated.chat_json', side_effect=self.model), \
+             mock.patch('summarizer.digest.arxiv_get', return_value=papers), \
+             mock.patch('summarizer.literature.works', side_effect=self.openalex), \
+             mock.patch('summarizer.bibliography.Resolver.resolve', return_value=None) as resolve, \
+             mock.patch('summarizer.similar.embed', side_effect=self.embed):
+            result = self.find(self.DRAFT, 'en', **kwargs)
+        return result, resolve
+
+    def test_cited_papers_are_recognized_even_without_titles(self):
+        result, resolve = self.run_find()
+        self.assertEqual(resolve.call_count, 1)  # Lee 2019 has no identifier: looked up for the citation graph
+        keys = [i['key'] for i in result['items']]
+        self.assertIn('2301.00003v1', keys)
+        self.assertNotIn('2301.00001v1', keys)  # its arXiv id is in the references
+        self.assertNotIn('2301.00002v2', keys)  # its title is
+        self.assertNotIn('2301.00006v1', keys)  # the draft itself, on arXiv
+        self.assertEqual([p['key'] for p in result['probable']], ['2301.00005v1'])  # Lee 2019, no title printed
+        self.assertEqual(result['probable'][0]['ref'], 'Lee 2019')
+        self.assertEqual(result['unrelated'], 1)
+        self.assertEqual(result['refs'], {'read': 3, 'identified': 2, 'in_graph': 2, 'from_bib': False})
+        self.assertEqual(result['limited'], [])
+
+    def test_papers_citing_the_references_are_found_and_quotes_checked(self):
+        result, _ = self.run_find()
+        items = {i['key']: i for i in result['items']}
+        coupled = items[sources.doi_key('10.1000/coupled')]
+        self.assertEqual((coupled['shared'], coupled['found_by']), (2, ['coupled']))
+        self.assertNotIn(sources.doi_key('10.1000/loose'), items)  # cites only one of the references
+        self.assertIn(sources.doi_key('10.1000/journal'), items)
+        found = items['2301.00003v1']
+        self.assertEqual(found['draft_quote'], 'Clouds were first seen in transmission by earlier surveys of giant planets.')
+        self.assertEqual(found['abstract_quote'], 'Missing paper on cloudy planets with transmission spectra')
+        self.assertEqual((found['importance'], found['kind'], found['section']), ('high', 'same_question', 'Introduction'))
+        self.assertEqual(coupled['draft_quote'], '')  # not in the draft: dropped
+
+    def test_a_reference_identified_as_another_paper_is_not_probable(self):
+        paper = {'key': '2502.09999v1', 'doi': '', 'openalex': '', 'title': 'Variability of planetary nebulae',
+                 'authors': ['Sumit Bhattacharjee'], 'year': 2025}
+        ref = {'author': 'bhattacharjee', 'year': 2025, 'title': '', 'doi': '', 'arxiv': ''}
+        self.assertEqual(missed.citation_status(paper, set(), set(), set(), [ref], '')[0], 'probable')
+        self.assertEqual(missed.citation_status(paper, set(), set(), set(), [dict(ref, arxiv='2502.05502')], '')[0], '')
+        journal = dict(paper, key=sources.doi_key('10.1/a'), doi='10.1/a')
+        self.assertEqual(missed.citation_status(journal, set(), set(), set(), [dict(ref, doi='10.1/b')], '')[0], '')
+
+    def test_a_long_reference_list_is_read_in_pieces(self):
+        listing = ''.join('Author%d A., 20%02d, ApJ, %d, %d\n' % (i, i % 25, 800 + i, i) for i in range(400))
+        pieces = missed.chunks(listing)
+        self.assertGreater(len(pieces), 1)
+        self.assertEqual(''.join(pieces), listing)
+        self.assertTrue(all(len(p) <= missed.REFS_CHUNK for p in pieces))
+        with mock.patch('summarizer.generated.chat_json', return_value={'references': [['Lee', '2019']]}) as model:
+            self.assertEqual(len(missed.read_references(listing)), len(pieces))
+        self.assertEqual(model.call_count, len(pieces))
+
+    def test_a_bib_file_gives_the_references(self):
+        bib = '@article{lee19, author={Lee, Ann and Ray, Bo}, year={2019}, journal={ApJ}, volume={880}, pages={12}}'
+        result, _ = self.run_find(bib=bib)
+        self.assertEqual(result['refs']['read'], 1)
+        self.assertTrue(result['refs']['from_bib'])
+        self.assertIn('2301.00005v1', [p['key'] for p in result['probable']])
+
+    def test_a_used_up_budget_is_said(self):
+        with mock.patch('summarizer.sources.tool_search_allowed', return_value=False):
+            self.assertEqual(literature.works({'search': 'x'}, missed.reasons(limited := set())), [])
+        self.assertEqual(limited, {'budget'})
+        user = self.user('pro', paid=True)
+        Generated.objects.create(kind='missed', key='k', user=user, status='done', content=json.dumps(
+            {'version': 2, 'title': 'T', 'items': [], 'searched': 3, 'cited': 1, 'limited': ['budget'], 'searched_on': '2026-11-01'}))
+        self.assertContains(self.client_for(user).get('/en/missed/k/'), 'could only be searched in part')
 
     def test_page_is_premium_and_draft_text_is_searched(self):
         self.assertContains(self.client_for(self.user()).get('/en/missed/'), 'Discover Premium')
@@ -488,6 +589,64 @@ class MissedTests(ToolsTestCase):
         self.assertEqual(find.call_args[0][0].strip(), ('word ' * 100).strip())
         self.assertContains(client.get(r['Location']), 'already cites every close paper')
         self.assertContains(client.get('/en/missed/'), 'Draft T')
+        self.assertFalse(Generated.objects.filter(kind=missed.DRAFT_KIND).exists())  # not kept unless asked
+
+    def test_marks_exports_and_search_again_from_the_kept_draft(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        user = self.user('pro', paid=True)
+        client = self.client_for(user)
+        first, _ = self.run_find()
+        bib = SimpleUploadedFile('refs.bib', b'@article{a, author={Lee, Ann}, year={2019}, title={Old}}')
+        with mock.patch('summarizer.missed.find', return_value=first) as find:
+            r = client.post('/en/missed/', {'text': self.DRAFT, 'bib': bib, 'keep': '1'})
+        self.assertIn('@article{a', find.call_args[1]['bib'])
+        row = Generated.objects.get(kind='missed')
+        kept = Generated.objects.get(kind=missed.DRAFT_KIND, key=row.key)
+        self.assertNotIn('hot Jupiters', kept.content)  # encrypted
+        page = r['Location']
+        coupled = sources.doi_key('10.1000/coupled')
+        client.post(page, {'action': 'mark', 'key': coupled, 'mark': 'irrelevant'})
+        client.post(page, {'action': 'mark', 'key': '2301.00003v1', 'mark': 'added'})
+        shown = client.get(page)
+        self.assertContains(shown, 'Added to my references')
+        self.assertContains(shown, '1 paper you set aside')
+        self.assertContains(shown, 'Where to cite it:')
+        french = client.get(page.replace('/en/', '/fr/', 1))
+        self.assertContains(french, 'Où le citer')
+        self.assertContains(french, 'Surveiller ce brouillon')
+        exported = client.get(page + 'export/bib/').content.decode()
+        self.assertIn('Missing paper on cloudy planets', exported)
+        self.assertNotIn('Coupled paper', exported)
+        titles = [m['title'] for m in missed.zotero_metas(user, row.key)]
+        self.assertIn('Missing paper on cloudy planets', titles)
+        self.assertNotIn('Coupled paper on cloud spectra', titles)
+
+        def again(text, lang, step, bib='', previous=None):
+            self.assertIn('hot Jupiters', text)
+            self.assertEqual(previous['marks'], {coupled: 'irrelevant', '2301.00003v1': 'added'})
+            return self.run_find(previous=previous)[0]
+        with mock.patch('summarizer.missed.find', side_effect=again):
+            r = client.post(page, {'action': 'again'})
+        new = Generated.objects.exclude(pk=row.pk).get(kind='missed')
+        result = new.data()
+        self.assertEqual(result['previous']['key'], row.key)
+        self.assertEqual(Generated.objects.get(kind=missed.DRAFT_KIND).key, new.key)  # the kept text moved
+        client.post(r['Location'], {'action': 'forget'})
+        self.assertFalse(Generated.objects.filter(kind=missed.DRAFT_KIND).exists())
+
+    def test_marks_carry_over_to_a_new_search(self):
+        first, _ = self.run_find()
+        seen = {i['key'] for i in first['items']} - {'2301.00003v1'}
+        coupled = sources.doi_key('10.1000/coupled')
+        result, _ = self.run_find(previous={'key': 'old', 'searched': '2026-10-01', 'seen': seen,
+                                            'marks': {coupled: 'irrelevant', '2301.00003v1': 'added'}})
+        items = {i['key']: i for i in result['items']}
+        self.assertNotIn(coupled, items)
+        self.assertEqual(result['dismissed'], 1)
+        self.assertTrue(items['2301.00003v1']['new'])
+        self.assertEqual(items['2301.00003v1']['mark'], 'added')
+        self.assertFalse(items[sources.doi_key('10.1000/journal')]['new'])
+        self.assertEqual(result['carried'], {coupled: 'irrelevant'})  # still left out by the search after
 
 
 class LiteratureTests(ToolsTestCase):
@@ -3188,7 +3347,7 @@ class PageTests(ToolsTestCase):
                     '/en/trends/', '/fr/letters/', '/en/letters/ai/', '/en/premium/'):
             self.assertEqual(client.get(url).status_code, 200, url)
         for url, text in (('/en/collections/', 'Chat with all the papers of a collection'),
-                          ('/en/missed/', 'We remove the papers your draft already cites'),
+                          ('/en/missed/', 'We remove the papers you already cite'),
                           ('/fr/citations/', 'Créer un compte gratuit'),
                           ('/en/integrations/', 'See what Premium includes')):
             self.assertContains(Client().get(url), text, msg_prefix=url)

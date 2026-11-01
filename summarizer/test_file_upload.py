@@ -6,8 +6,8 @@ class FileUploadTests(ToolsTestCase):
     def test_paid_forms_have_accessible_dropzones_with_server_limits_in_both_languages(self):
         client = self.client_for(self.user(paid=True))
         for lang in ('fr', 'en'):
-            for tool, fields, limit in [('refcheck', ('bib', 'tex'), 5), ('missed', ('draft',), 20),
-                                        ('scoops', ('draft',), 20), ('conference', ('program_pdf',), 20)]:
+            for tool, fields in [('refcheck', [('bib', 5, ''), ('tex', 5, '')]), ('missed', [('draft', 20, '.pdf'), ('bib', 5, '.bib')]),
+                                 ('scoops', [('draft', 20, '.pdf')]), ('conference', [('program_pdf', 20, '.pdf')])]:
                 with self.subTest(lang=lang, tool=tool):
                     response = client.get('/%s/%s/' % (lang, tool))
                     self.assertEqual(response.status_code, 200)
@@ -15,7 +15,7 @@ class FileUploadTests(ToolsTestCase):
                     boxes = soup.select('[data-file-upload]')
                     self.assertEqual(len(boxes), len(fields))
                     self.assertEqual(len(soup.select('script[src*="file-upload.js"]')), 1)
-                    for box, name in zip(boxes, fields):
+                    for box, (name, limit, extension) in zip(boxes, fields):
                         self.assertEqual(int(box['data-max-bytes']), limit * 1024 * 1024)
                         self.assertEqual(int(box['data-max-mb']), limit)
                         file_input = box.select_one('input[type=file]')
@@ -26,9 +26,9 @@ class FileUploadTests(ToolsTestCase):
                         self.assertEqual(box.select_one('[data-file-clear]')['type'], 'button')
                         self.assertEqual(box.select_one('[data-file-error]')['role'], 'alert')
                         self.assertEqual(box.select_one('[data-file-status]')['aria-live'], 'polite')
-                        self.assertEqual(box.get('data-required-extension'), '' if tool == 'refcheck' else '.pdf')
+                        self.assertEqual(box.get('data-required-extension'), extension)
                     if lang == 'fr':
                         self.assertIn('Déposez votre fichier ici', soup.get_text())
-                        self.assertIn('Jusqu’à %s Mo' % limit, soup.get_text())
+                        self.assertIn('Jusqu’à %s Mo' % fields[0][1], soup.get_text())
                     ids = [tag['id'] for tag in soup.select('[id]')]
                     self.assertEqual(len(ids), len(set(ids)))

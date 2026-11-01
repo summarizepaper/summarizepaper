@@ -553,17 +553,28 @@ class ToolsWithOtherSourcesTests(TestCase):
         self.assertEqual(texts, ['Galaxy quenching time-scales\n\nWe reconstruct colours.'])
 
     def test_what_did_i_miss_searches_the_journals_too(self):
-        from summarizer import missed
+        from summarizer import literature, missed
         arxiv = [{'arxiv_id': '2301.03702v1', 'title': 'Quenching on arXiv', 'abstract': 'A.', 'authors': ['A B'],
                   'published': datetime.datetime(2023, 1, 1), 'categories': ['astro-ph.GA']}]
-        open_papers = [journal_paper(arxiv_id='2301.03702'),  # the same paper, already given by arXiv
-                       journal_paper(key='doi_10.1--j', doi='10.1/j', title='A journal paper', arxiv_id=''),
-                       journal_paper(key='doi_10.1--n', doi='10.1/n', title='No abstract', abstract='', arxiv_id='')]
+
+        def work(wid, doi, title, abstract=True, arxiv=''):
+            return {'id': 'https://openalex.org/' + wid, 'doi': 'https://doi.org/' + doi, 'display_name': title,
+                    'abstract_inverted_index': {'Quenching.': [0]} if abstract else None, 'publication_date': '2023-02-01',
+                    'authorships': [{'author': {'display_name': 'A B'}}], 'type': 'article', 'cited_by_count': 3,
+                    'primary_location': {'source': {'display_name': 'MNRAS', 'type': 'journal'}},
+                    'locations': [{'landing_page_url': 'https://arxiv.org/abs/' + arxiv}] if arxiv else [],
+                    'referenced_works': [], 'is_retracted': False}
+        works = [work('W1', '10.1093/mnras/q', 'Quenching on arXiv', arxiv='2301.03702'),  # its journal version
+                 work('W2', '10.1/j', 'A journal paper'), work('W3', '10.1/n', 'No abstract', abstract=False)]
+        pool, limited = literature.Pool(), set()
         with mock.patch('summarizer.digest.arxiv_get', return_value=arxiv), \
-             mock.patch('summarizer.sources.search_papers', return_value=open_papers):
-            found = missed.search(['galaxy quenching'])
-        self.assertEqual([c['arxiv_id'] for c in found], ['2301.03702v1', 'doi_10.1--j'])
-        self.assertTrue(missed.cited(found[1], set(), '', {'10.1/j'}))
+             mock.patch('summarizer.literature.works', return_value=works):
+            missed.search(pool, ['galaxy quenching'], limited)
+        journal, empty = sources.doi_key('10.1/j'), sources.doi_key('10.1/n')
+        self.assertEqual([p['key'] for p in pool.papers], ['2301.03702v1', journal, empty])
+        self.assertEqual(pool.papers[0]['venue'], 'MNRAS')  # the arXiv preprint knows where it was published
+        self.assertEqual([p['key'] for p in pool.readable()], ['2301.03702v1', journal])
+        self.assertEqual(missed.citation_status(pool.papers[1], set(), {'10.1/j'}, set(), [], '')[0], 'cited')
 
     def test_assistant_reads_what_the_summary_read(self):
         from summarizer import assistant

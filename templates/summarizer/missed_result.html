@@ -13,30 +13,141 @@
     {% if shared %}<p class="muted">{% trans 'Shared search for uncited papers' %} · <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'Find the papers your own draft does not cite' %}</a></p>
     {% else %}<p><a href="/{{ LANGUAGE_CODE }}/missed/">← {% trans 'What did I miss?' %}</a></p>{% endif %}
     <h1>{% if result.title %}{{ result.title }}{% else %}{% trans 'Your draft' %}{% endif %}</h1>
+    {% if result %}<p class="meta">{% blocktrans with day=result.day|date:"j F Y" %}Searched on {{ day }}{% endblocktrans %}
+      {% if result.previous and not shared %} · <a href="/{{ LANGUAGE_CODE }}/missed/{{ result.previous.key }}/">{% blocktrans with day=result.previous.day|date:"j F Y" %}searched again after the search of {{ day }}{% endblocktrans %}</a>{% endif %}</p>{% endif %}
   </header>
 
+  {% if message == 'saved' and collection %}<p class="notice" role="status">{% trans 'The papers are in a new collection:' %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/">{{ collection.name }}</a> · <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/#table">{% trans 'compare them in a table' %}</a></p>
+  {% elif message == 'too_many' %}<p class="error">{% trans 'You have reached your number of collections. Delete one to save these papers.' %}</p>
+  {% elif message == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>
+  {% elif message == 'forgotten' %}<p class="notice" role="status">{% trans 'The text of your draft is deleted.' %}</p>
+  {% elif message == 'unreadable' %}<p class="error">{% trans 'The kept text of your draft could not be read. Run a new search from your draft.' %}</p>{% endif %}
+
   {% if result %}
-    {% if not shared %}{% trans 'Anyone with this link sees these papers and how they relate to your draft, never who sent it. The page shows the title found for your draft; the draft itself is not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
-    <p class="muted">{% blocktrans with searched=result.searched cited=result.cited %}{{ searched }} papers found by our searches; {{ cited }} of them are already cited by your draft.{% endblocktrans %}</p>
-    {% if result.items %}
-    <ul class="item-list">
-      {% for item in result.items %}
-      <li class="card">
-        <span class="importance {{ item.importance }}">{% if item.importance == 'high' %}{% trans 'Should be cited' %}{% elif item.importance == 'medium' %}{% trans 'Worth a look' %}{% else %}{% trans 'Related' %}{% endif %}</span>
-        <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/paper/{{ item.arxiv_id }}/"><strong>{{ item.title }}</strong></a></p>
-        <div class="meta">{{ item.authors }}{% if item.year %} · {{ item.year }}{% endif %} · {{ item.arxiv_id|paper_ref }} · {% blocktrans with s=item.similarity %}{{ s }}% similar{% endblocktrans %}</div>
-        {% if item.relation %}<p style="margin:8px 0 0">{{ item.relation }}</p>{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <p class="notice">{% trans 'Your draft already cites every close paper our searches found.' %}</p>
+    {% if not shared %}{% trans 'Anyone with this link sees these papers and how they relate to your draft, never who sent it. The page shows the title found for your draft; neither the draft nor its sentences are shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+
+    <section class="card section-card" aria-labelledby="coverage-title">
+      <h2 id="coverage-title">{% trans 'What we searched' %}</h2>
+      <p>{% blocktrans with searched=result.searched cited=result.cited %}{{ searched }} papers found by our searches; {{ cited }} of them are already cited by your draft.{% endblocktrans %}
+      {% if result.refs %}{% if result.refs.from_bib %}{% blocktrans count n=result.refs.read %}{{ n }} reference read from your .bib file.{% plural %}{{ n }} references read from your .bib file.{% endblocktrans %}{% else %}{% blocktrans count n=result.refs.read %}{{ n }} reference read in your draft.{% plural %}{{ n }} references read in your draft.{% endblocktrans %}{% endif %}
+      {% blocktrans count n=result.refs.in_graph %}{{ n }} of them found in the citation graph, to look for the papers that cite them.{% plural %}{{ n }} of them found in the citation graph, to look for the papers that cite them.{% endblocktrans %}{% endif %}
+      {% if result.unrelated %}{% blocktrans count n=result.unrelated %}{{ n }} close paper did not concern your draft once read, and is left out.{% plural %}{{ n }} close papers did not concern your draft once read, and are left out.{% endblocktrans %}{% endif %}</p>
+      {% if result.new_count and result.previous %}<p><span class="importance info">{% trans 'New' %}</span> {% blocktrans count n=result.new_count %}{{ n }} paper the previous search had not found.{% plural %}{{ n }} papers the previous search had not found.{% endblocktrans %}</p>{% endif %}
+      {% if 'budget' in result.limited or 'openalex' in result.limited %}<p class="error">{% trans 'The journals and preprints could only be searched in part (our daily share of the open index was used up, or it did not answer): this list mostly comes from arXiv. Search again tomorrow for a complete result.' %}</p>
+      {% elif 'arxiv' in result.limited %}<p class="error">{% trans 'arXiv did not answer every search: some arXiv papers may be missing.' %}</p>{% endif %}
+      {% if result.queries %}<details><summary>{% trans 'The queries we ran' %}</summary><ul>{% for q in result.queries %}<li>{{ q }}</li>{% endfor %}</ul></details>{% endif %}
+    </section>
+
+    {% if result.active %}
+    <div class="item-actions lit-actions">
+      <strong>{% trans 'Export' %}</strong>
+      {% if shared %}
+      <a class="btn btn-sm btn-ghost" href="{% url 'missed_shared_export' token 'bib' %}">BibTeX</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'missed_shared_export' token 'ris' %}">RIS</a>
+      {% else %}
+      <a class="btn btn-sm btn-ghost" href="{% url 'missed_export' row.key 'bib' %}">BibTeX</a>
+      <a class="btn btn-sm btn-ghost" href="{% url 'missed_export' row.key 'ris' %}">RIS</a>
+      <button type="button" class="btn btn-sm btn-ghost" id="missed-zotero" data-key="{{ row.key }}" data-sending="{% trans 'Sending…' %}" data-premium="{% trans 'Sending to Zotero is a Premium feature.' %}" data-setup="{% trans 'Connect your Zotero library first:' %}" data-failed="{% trans 'Sending failed. Try again later.' %}" data-sent="{% trans 'Sent to your Zotero library.' %}">{% trans 'Send to Zotero' %}</button>
+      <span class="tool-status" id="missed-zotero-status" aria-live="polite"></span>
+      {% endif %}
+    </div>
+    {% if not shared %}<p class="muted"><small>{% trans 'The exports hold the papers below, without those you mark already cited or not relevant.' %}</small></p>
+    <form method="post" class="item-actions" id="save-form">{% csrf_token %}<input type="hidden" name="action" value="save">
+      <button class="btn btn-sm btn-ghost" type="submit">{% trans 'Save these papers in a collection' %}</button>
+      <span class="muted"><small>{% trans 'to compare them in a table, find their open questions or chat with them' %}</small></span>
+    </form>{% endif %}
+    {% endif %}
+
+    <div id="papers">
+    {% for importance, items in result.groups %}
+      {% if importance == 'low' or importance == 'unjudged' %}<details{% if forloop.first %} open{% endif %}><summary><strong>{% if importance == 'low' %}{% trans 'Related' %}{% else %}{% trans 'Not assessed' %}{% endif %} ({{ items|length }})</strong></summary>
+      {% else %}<h2>{% if importance == 'high' %}{% trans 'Should be cited' %}{% else %}{% trans 'Worth a look' %}{% endif %} ({{ items|length }})</h2>{% endif %}
+      {% if importance == 'unjudged' %}<p class="muted"><small>{% trans 'The AI could not read these papers: they are close to your draft, judge them yourself.' %}</small></p>{% endif %}
+      <ul class="item-list">
+        {% for item in items %}
+        <li class="card" id="item-{{ item.key }}">
+          <span class="importance {% if importance == 'unjudged' %}low{% else %}{{ importance }}{% endif %}">{% if importance == 'high' %}{% trans 'Should be cited' %}{% elif importance == 'medium' %}{% trans 'Worth a look' %}{% elif importance == 'low' %}{% trans 'Related' %}{% else %}{% trans 'Not assessed' %}{% endif %}</span>
+          {% if item.new and result.previous %}<span class="importance info">{% trans 'New' %}</span>{% endif %}
+          {% if item.kind %}<span class="importance low">{% if item.kind == 'same_question' %}{% trans 'Same question' %}{% elif item.kind == 'competing_method' %}{% trans 'Competing method' %}{% elif item.kind == 'prior_result' %}{% trans 'Earlier result' %}{% elif item.kind == 'method' %}{% trans 'A method you could use' %}{% elif item.kind == 'data' %}{% trans 'Data or tool' %}{% elif item.kind == 'review' %}{% trans 'Review' %}{% else %}{% trans 'Context' %}{% endif %}</span>{% endif %}
+          {% if item.mark == 'added' %}<span class="importance good">{% trans 'Added to my references' %}</span>{% endif %}
+          <p style="margin:8px 0 4px"><a href="/{{ LANGUAGE_CODE }}/paper/{{ item.key }}/"><strong>{{ item.title }}</strong></a></p>
+          <div class="meta">{{ item.authors }}{% if item.year %} · {{ item.year }}{% endif %}{% if item.venue %} · {{ item.venue }}{% endif %}{% if item.status == 'preprint' %} · {% trans 'preprint' %}{% endif %}{% if item.cited_by %} · {% blocktrans count n=item.cited_by %}cited {{ n }} time{% plural %}cited {{ n }} times{% endblocktrans %}{% endif %} · {% if item.doi %}<a href="https://doi.org/{{ item.doi }}" rel="noopener" target="_blank">doi:{{ item.doi }}</a>{% else %}{{ item.key|paper_ref }}{% endif %}
+            · {% if item.level == 'very_close' %}{% trans 'Very close' context 'closeness of two papers' %}{% elif item.level == 'close' %}{% trans 'Close' context 'closeness of two papers' %}{% else %}{% trans 'Related' context 'closeness of two papers' %}{% endif %}</div>
+          {% if item.shared or item.founding %}<div class="meta">{% if item.shared %}<i class="fas fa-project-diagram" aria-hidden="true"></i> {% blocktrans count n=item.shared %}cites {{ n }} of your references{% plural %}cites {{ n }} of your references{% endblocktrans %}{% endif %}{% if item.shared and item.founding %} · {% endif %}{% if item.founding %}{% trans 'often cited by the closest papers' %}{% endif %}</div>{% endif %}
+          {% if item.relation %}<p style="margin:8px 0 0">{{ item.relation }}</p>{% endif %}
+          {% if item.position %}<p style="margin:6px 0 0"><strong>{% trans 'How to position yourself:' %}</strong> {{ item.position }}</p>{% endif %}
+          {% if not shared and item.draft_quote or not shared and item.section %}<p style="margin:6px 0 0"><strong>{% trans 'Where to cite it:' %}</strong> {% if item.section %}{{ item.section }}{% endif %}{% if item.section and item.draft_quote %} — {% endif %}{% if item.draft_quote %}<q>{{ item.draft_quote }}</q>{% endif %}</p>{% endif %}
+          {% if item.abstract_quote %}<p class="muted" style="margin:6px 0 0"><small>{% trans 'From its abstract:' %} <q>{{ item.abstract_quote }}</q></small></p>{% endif %}
+          {% if not shared %}
+          <form method="post" class="item-actions" style="margin-top:8px">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="key" value="{{ item.key }}"><input type="hidden" name="anchor" value="papers">
+            {% if item.mark == 'added' %}<button class="btn btn-sm btn-ghost" name="mark" value="">{% trans 'Undo' %}</button>
+            {% else %}<button class="btn btn-sm btn-ghost" name="mark" value="added" title="{% trans 'I add it to my references' %}">{% trans 'Added' %}</button>{% endif %}
+            <button class="btn btn-sm btn-ghost" name="mark" value="cited">{% trans 'Already cited' %}</button>
+            <button class="btn btn-sm btn-ghost" name="mark" value="irrelevant">{% trans 'Not relevant' %}</button>
+          </form>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% if importance == 'low' or importance == 'unjudged' %}</details>{% endif %}
+    {% empty %}
+      <p class="notice">{% trans 'Your draft already cites every close paper our searches found.' %}</p>
+    {% endfor %}
+    </div>
+
+    {% if result.probable %}
+    <details class="card section-card">
+      <summary><strong>{% blocktrans count n=result.probable|length %}{{ n }} paper your references probably cite already{% plural %}{{ n }} papers your references probably cite already{% endblocktrans %}</strong></summary>
+      <p class="muted"><small>{% trans 'A reference of your draft without a title has the same first author and year: check that it is this paper.' %}</small></p>
+      <ul>{% for p in result.probable %}<li><a href="/{{ LANGUAGE_CODE }}/paper/{{ p.key }}/">{{ p.title }}</a> <span class="muted">({{ p.authors }}{% if p.year %}, {{ p.year }}{% endif %}) · {% blocktrans with ref=p.ref %}your reference: {{ ref }}{% endblocktrans %}</span></li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+
+    {% if result.marked and not shared %}
+    <details class="card section-card" id="marked">
+      <summary><strong>{% blocktrans count n=result.marked|length %}{{ n }} paper you set aside{% plural %}{{ n }} papers you set aside{% endblocktrans %}</strong></summary>
+      <ul class="item-list">{% for item in result.marked %}<li>
+        <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="key" value="{{ item.key }}"><input type="hidden" name="anchor" value="marked">
+          <a href="/{{ LANGUAGE_CODE }}/paper/{{ item.key }}/">{{ item.title }}</a> <span class="muted">· {% if item.mark == 'cited' %}{% trans 'Already cited' %}{% else %}{% trans 'Not relevant' %}{% endif %}</span>
+          <button class="btn btn-sm btn-ghost" name="mark" value="">{% trans 'Undo' %}</button></form></li>{% endfor %}</ul>
+      <p class="muted"><small>{% trans 'A new search of this draft leaves these papers out.' %}</small></p>
+    </details>
+    {% endif %}
+
+    {% if not shared %}
+    <section class="card section-card" id="again" aria-labelledby="again-title">
+      <h2 id="again-title">{% trans 'Search again' %}</h2>
+      {% if kept %}
+      <p>{% trans 'Before you resubmit, search again from the kept text of your draft: the papers this search had not found are marked New, and those you set aside stay out.' %}</p>
+      <form method="post" class="item-actions">{% csrf_token %}
+        <button class="btn btn-ghost" name="action" value="again">{% trans 'Search again' %}</button>
+        <button class="btn btn-sm btn-ghost" name="action" value="forget">{% trans 'Delete the text of my draft' %}</button>
+      </form>
+      <p class="muted"><small>{% trans 'Counts as one of your searches of the day.' %}</small></p>
+      {% else %}
+      <p>{% trans 'To search again later without sending your draft again, tick “Keep the text of my draft” on your next search.' %} <a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'New search' %}</a></p>
+      {% endif %}
+    </section>
+
+    <section id="next" aria-labelledby="next-title">
+      <h2 id="next-title">{% trans 'Go further' %}</h2>
+      <ul class="tool-features">
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/?{{ links.scoops }}"><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'Watch this draft' %}</a>: {% trans 'until it is published, an email the day a new paper comes close to it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Bibliography check' %}</a>: {% trans 'before submitting, retracted papers, preprints published since and citations their abstract does not support.' %}</li>
+        {% if result.active %}
+        <li><a href="#save-form"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Save them in a collection' %}</a>: {% trans 'a comparison table whose every cell quotes the paper, their open questions, and what the collection is missing.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ links.chat }}"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Chat with these papers' %}</a>: {% blocktrans with n=links.chat_max %}ask them your own questions, answered from their full text when the license allows it (the first {{ n }}).{% endblocktrans %}</li>
+        {% endif %}
+        <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?{{ links.literature }}"><i class="fas fa-book-open" aria-hidden="true"></i> {% trans 'Literature review' %}</a>: {% trans 'the founding and recent papers on your topic, grouped by approach, for your related-work section.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/teams/?{{ links.teams }}"><i class="fas fa-users" aria-hidden="true"></i> {% trans 'Who works on it?' %}</a>: {% trans 'the teams that sign the recent papers on the question, and referees.' %}</li>
+      </ul>
+    </section>
     {% endif %}
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The search failed. If you sent a PDF, check that it holds text (not only scanned images), and try again.' %}</p>
   {% else %}
     {% trans 'Looking for the papers your draft does not cite' as working_title %}
-    {% trans 'usually 1 to 3 minutes' as working_time %}
+    {% trans 'usually 2 to 5 minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='missed-working' working_steps=steps working_visible=True working_started=row.created %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {
@@ -45,4 +156,24 @@
     </script>
   {% endif %}
 </div>
+{% if result.active and not shared %}
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  var button = document.getElementById('missed-zotero'), status = document.getElementById('missed-zotero-status');
+  if (!button) return;
+  button.addEventListener('click', function () {
+    button.disabled = true;
+    var t = button.dataset;
+    status.textContent = t.sending;
+    SP.post('/{{ LANGUAGE_CODE }}/zotero/send/', {missed: t.key}).then(function (json) {
+      button.disabled = false;
+      if (json.status === 'premium') return status.textContent = t.premium;
+      if (json.status === 'setup') { status.textContent = t.setup + ' '; var a = document.createElement('a'); a.href = json.url; a.textContent = '→'; status.appendChild(a); return; }
+      if (!json.id) return status.textContent = t.failed;
+      SP.wait(json.id, function () { status.textContent = t.sent; }, function () { status.textContent = t.failed; });
+    });
+  });
+});
+</script>
+{% endif %}
 {% endblock %}

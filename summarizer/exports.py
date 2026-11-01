@@ -330,6 +330,9 @@ def zotero_send(request):
     if request.POST.get('literature'):  # the references of a literature review, as the review keeps them
         from . import literature
         metas = literature.zotero_metas(request.user, request.POST['literature'])
+    elif request.POST.get('missed'):  # the papers a draft does not cite, as the search keeps them
+        from . import missed
+        metas = missed.zotero_metas(request.user, request.POST['missed'])
     else:
         if request.POST.get('collection'):
             rows = CollectionPaper.objects.filter(collection__pk=request.POST['collection'], collection__user=request.user)
