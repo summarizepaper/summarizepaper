@@ -27,6 +27,7 @@
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/ris/">RIS</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/md/">Markdown</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/list/">{% trans 'Spreadsheet (CSV)' %}</a>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/refcheck/?from=collection:{{ collection.pk }}" title="{% trans 'Retracted or corrected papers, preprints published since, entries to correct' %}"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check these references' %}</a>
     <button type="button" class="btn btn-sm btn-ghost" id="zotero-go">{% trans 'Send to Zotero' %} <span class="badge-premium">Premium</span></button>
     <span class="tool-status" id="zotero-status" aria-live="polite"></span>
   </div>

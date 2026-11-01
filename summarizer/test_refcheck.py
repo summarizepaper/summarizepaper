@@ -248,6 +248,46 @@ class CheckTests(ToolsTestCase):
         self.assertEqual([c.get('mark') or c.get('new') for c in result['claims']], ['fixed', True])
 
 
+class MoreCheckTests(ToolsTestCase):
+    def test_a_preprint_published_since_is_not_also_corrected_from_the_preprint_record(self):
+        bib = '@misc{bio, author={Lee, Ann}, title={My own title of the preprint}, year={2020}, doi={10.1101/2020.02.02.2}}'
+        works = {'10.1101/2020.02.02.2': {'title': ['Cells'], 'type': 'posted-content'},
+                 '10.1038/later': {'title': ['Cells, <i>published</i>'], 'container-title': ['Nature']}}
+        with lookups(records={}, works=works, resolved={'bio': matched('10.1101/2020.02.02.2', title='Preprint title')}):
+            result = refcheck.check(bib, '', 'en')
+        self.assertEqual([i['kind'] for i in result['problems'][0]['issues']], ['published'])
+        self.assertIn('title = {Cells, published}', result['corrections']['bio']['after'])
+
+    def test_a_short_title_identifies_a_paper_with_the_same_words_year_and_journal(self):
+        from summarizer import bibliography
+        entry = refcheck.parse_bibtex('@article{l, author={LeCun, Yann and Bengio, Yoshua}, title={Deep learning}, journal={Nature}, year={2015}}')[0]
+        found = dict(matched('10.1038/nature14539', title='Deep learning', journal='Nature'), years=['2015'],
+                     authors=['lecun', 'bengio', 'hinton'])
+        self.assertTrue(bibliography.match_score(entry, found))
+        self.assertFalse(bibliography.match_score(entry, dict(found, years=['2016'])))
+
+    def test_the_profile_counts_the_age_the_preprints_the_venues_and_the_self_citations(self):
+        bib = ('@article{a, author={Lee, Ann}, title={A}, journal={ApJ}, year={2024}}\n'
+               '@article{b, author={Roe, Al}, title={B}, journal={ApJ}, year={2010}}\n'
+               '@misc{c, author={Doe, J.}, title={C}, eprint={2101.00001}, year={2021}}')
+        tex = '\\author{Ann Lee \\and Bob Ray}\n\\begin{document}\nText \\cite{a,b,c}.\n\\end{document}'
+        with lookups(records={}, works={}), mock.patch('summarizer.generated.chat_json', return_value={'items': []}):
+            profile = refcheck.check(bib, tex, 'en')['profile']
+        self.assertEqual((profile['venues'], profile['self'], profile['self_keys'], profile['authors']),
+                         ([('The Astrophysical Journal', 2)], 1, ['a'], ['lee', 'ray']))
+        self.assertEqual((profile['oldest'], profile['newest'], profile['preprints']), (2010, 2024, 1))
+
+    def test_what_a_sentence_attributes_as_a_result_comes_before_background(self):
+        claims = [{'sentence': 'S%d is long enough to be read [k].' % i, 'previous': '', 'keys': ['k'], 'order': i, 'file': 'f', 'line': i}
+                  for i in range(2)]
+        answer = {'items': [{'id': '0', 'verdict': 'unclear', 'use': 'background'}, {'id': '1', 'verdict': 'unclear', 'use': 'result'}]}
+        with mock.patch('summarizer.refcheck_claims.citing_sentences', return_value=claims), \
+             mock.patch('summarizer.refcheck_claims.full_text', return_value=None), \
+             mock.patch('summarizer.generated.chat_json', return_value=answer):
+            result = refcheck_claims.run([('f', '')], {'k': {'title': 'K', 'abstract': 'About K.', 'arxiv': '', 'doi': ''}}, 'en')
+        self.assertEqual([c['order'] for c in result['claims']], [1, 0])
+
+
 class PageTests(ToolsTestCase):
     def report(self, user, **extra):
         with lookups(), mock.patch('summarizer.generated.chat_json', return_value={'items': [
@@ -341,6 +381,51 @@ class PageTests(ToolsTestCase):
         self.assertEqual(Generated.objects.filter(kind='refcheck').count(), 1)
         self.assertEqual(missed.Generated.objects.get(kind='missed').data()['refcheck_key'],
                          Generated.objects.get(kind='refcheck').key)
+
+
+class FlowTests(PageTests):
+    def test_the_report_is_emailed_and_a_first_check_again_is_free(self):
+        from django.core import mail
+        user = self.user('pro', paid=True)
+        client = self.client_for(user)
+        with lookups(), mock.patch('summarizer.generated.chat_json', return_value={'items': []}):
+            first = client.post('/en/refcheck/', {'bibtext': BIB})['Location']
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(first, mail.outbox[0].body)
+        self.assertIn('serious problem', mail.outbox[0].body)
+        key = first.split('/')[-2]
+        with mock.patch('summarizer.refcheck.PER_DAY', 1), lookups(), \
+             mock.patch('summarizer.generated.chat_json', return_value={'items': []}):
+            self.assertContains(client.get('/en/refcheck/?previous=%s' % key), 'not counted')
+            again = client.post('/en/refcheck/', {'bibtext': BIB, 'previous': key})
+            self.assertEqual(again.status_code, 302)  # free, although the day's single check was used
+            refused = client.post('/en/refcheck/', {'bibtext': BIB, 'previous': key})
+        self.assertContains(refused, 'checks a day')
+
+    def test_the_references_of_a_collection_or_a_literature_review_are_checked(self):
+        from summarizer.models import CollectionPaper
+        user = self.user('pro', paid=True)
+        client = self.client_for(user)
+        self.paper()
+        collection = Collection.objects.create(user=user, name='Hot planets')
+        CollectionPaper.objects.create(collection=collection, arxiv_id='2101.00001v1', title='Clouds on a hot planet')
+        self.assertContains(client.get('/en/collections/%s/' % collection.pk), '/en/refcheck/?from=collection:%s' % collection.pk)
+        self.assertContains(client.get('/en/refcheck/?from=collection:%s' % collection.pk), 'Hot planets')
+        with mock.patch('summarizer.refcheck.check', return_value={'entries': 1, 'problems': []}) as check:
+            client.post('/en/refcheck/', {'from': 'collection:%s' % collection.pk})
+        self.assertIn('2101.00001', check.call_args[0][0])
+        other = self.client_for(self.user('other', paid=True))
+        self.assertNotContains(other.get('/en/refcheck/?from=collection:%s' % collection.pk), 'Hot planets')
+
+    def test_a_mark_answers_in_json_for_the_page_to_update_itself(self):
+        user = self.user('pro', paid=True)
+        self.report(user)
+        response = self.client_for(user).post('/en/refcheck/k1/', {'action': 'mark', 'target': 'pre|published', 'mark': 'fixed'},
+                                              HTTP_X_REQUESTED_WITH='fetch')
+        self.assertEqual(response.json(), {'ok': True})
+        page = self.client_for(user).get('/en/refcheck/k1/')
+        self.assertContains(page, 'id="counts"')
+        self.assertContains(page, 'Profile of your bibliography')
 
 
 class WatchTests(ToolsTestCase):

@@ -39,11 +39,13 @@
     {% elif error == 'arxiv' %}<p class="error">{% trans 'This is not an arXiv identifier (for example 2401.01234).' %}</p>
     {% elif error == 'empty' %}<p class="error">{% trans 'We found no BibTeX entry. Send a .bib file or paste its content, or send your LaTeX project, an arXiv identifier or a PDF.' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} checks a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
-    {% if previous %}<p class="notice">{% blocktrans with date=previous.created|date:"j F Y" %}Checking again after your check of {{ date }}: what it reported and is now solved will be listed, what is new marked New, and your marks kept.{% endblocktrans %}</p>{% endif %}
+    {% if previous %}<p class="notice">{% blocktrans with date=previous.created|date:"j F Y" %}Checking again after your check of {{ date }}: what it reported and is now solved will be listed, what is new marked New, and your marks kept.{% endblocktrans %}{% if recheck_free %} {% trans 'This check again is not counted in your checks of the day.' %}{% endif %}</p>{% endif %}
+    {% if lent %}<p class="notice">{% blocktrans with name=lent.0 %}The references of “{{ name }}” will be checked. Add your manuscript below to also check what each citation is used for.{% endblocktrans %}</p>{% endif %}
     <form method="post" enctype="multipart/form-data" class="card section-card">
       {% csrf_token %}
       {% if previous %}<input type="hidden" name="previous" value="{{ previous.key }}">{% endif %}
-      <h2>{% trans '1. Your references' %}</h2>
+      {% if lent %}<input type="hidden" name="from" value="{{ lent_from }}">{% endif %}
+      <h2>{% trans '1. Your references' %}</h2>{% if lent %}<p class="muted">{% trans 'Optional: other references to check with them.' %}</p>{% endif %}
       {% trans 'Your .bib file' as upload_label %}
       {% include 'summarizer/file_upload.html' with upload_name='bib' upload_accept='.bib,text/plain' upload_formats='.bib / .txt' upload_required_extension='' %}
       <p class="muted">{% trans 'or paste them:' %}</p>

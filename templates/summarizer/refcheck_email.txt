@@ -1,0 +1,11 @@
+{% load i18n %}{% blocktrans with name=user.first_name|default:user.username %}Hello {{ name }},{% endblocktrans %}
+
+{% blocktrans count n=result.entries %}The check of your {{ n }} reference is ready.{% plural %}The check of your {{ n }} references is ready.{% endblocktrans %}
+{% if result.counts.error %}{% blocktrans count n=result.counts.error %}{{ n }} serious problem (retracted or withdrawn paper).{% plural %}{{ n }} serious problems (retracted or withdrawn papers).{% endblocktrans %}
+{% endif %}{% if result.counts.warning %}{% blocktrans count n=result.counts.warning %}{{ n }} reference to fix.{% plural %}{{ n }} references to fix.{% endblocktrans %}
+{% endif %}{% if result.with_tex %}{% blocktrans count n=claims %}{{ n }} citation to check in your manuscript.{% plural %}{{ n }} citations to check in your manuscript.{% endblocktrans %}
+{% endif %}
+{{ link }}
+
+{% trans 'The SummarizePaper team' %}
+https://www.summarizepaper.com

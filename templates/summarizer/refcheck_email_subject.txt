@@ -1,0 +1,1 @@
+{% load i18n %}{% blocktrans count n=result.entries %}Your bibliography check is ready ({{ n }} reference){% plural %}Your bibliography check is ready ({{ n }} references){% endblocktrans %}

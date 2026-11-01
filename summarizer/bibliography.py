@@ -147,7 +147,8 @@ def match_score(entry, candidate):
         return 130 + similarity
     if f.get('publisher') and not f.get('journal') and candidate['type'] == 'article' and c.get('journal'):
         return 0  # a review of a book may repeat its title and name its author
-    if similarity < .90 or len(title) < 20:
+    # a short title ('Deep learning') identifies a paper only with the same words, year and journal
+    if similarity < .90 or (len(title) < 20 and not (title == other and same_year and checks[0] is True)):
         return 0
     agree, conflict = checks.count(True), checks.count(False)
     if conflict >= 2 or (conflict and agree + int(same_year) < 2):

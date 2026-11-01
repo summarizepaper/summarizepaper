@@ -221,7 +221,7 @@
         <li><a href="/{{ LANGUAGE_CODE }}/teams/?{{ links.teams }}"><i class="fas fa-users" aria-hidden="true"></i> {% trans 'Who works on it?' %}</a>: {% trans 'the teams that sign the recent papers on the question, and referees.' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ links.trends }}"><i class="fas fa-chart-line" aria-hidden="true"></i> {% trans 'Is the topic rising?' %}</a>: {% trans 'its papers on arXiv, bioRxiv and medRxiv week after week.' %}</li>
         <li><a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% trans 'once your draft is written, the close papers it does not cite.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Bibliography check' %}</a>: {% trans 'before submitting, retracted papers, preprints published since and citations their abstract does not support.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/?from=literature:{{ row.key }}"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check these references' %}</a>: {% trans 'retracted or corrected papers and preprints published since, before you cite them; add your manuscript to check what each citation says.' %}</li>
       </ul>
     </section>
     {% endif %}

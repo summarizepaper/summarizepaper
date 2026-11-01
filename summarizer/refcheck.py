@@ -36,7 +36,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.translation import get_language
@@ -58,6 +58,7 @@ ARXIV_BATCH = 100
 S2_BATCH = 'https://api.semanticscholar.org/graph/v1/paper/batch'
 PER_DAY = 10
 QUOTA_KEY = 'refcheck-quota:%s:%s'
+RECHECK_KEY = 'refcheck-recheck:%s'
 VERSION = 3
 LEVELS = ('error', 'warning', 'info')
 MARKS = ('intended', 'fixed', 'ignored')
@@ -485,7 +486,8 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
                    (('publisher', 'institution') if server else ()))
             issues.append({'kind': 'published', 'level': 'warning', 'doi': published, 'corrects': True,
                            'journal': fields.get('journal') or (record or {}).get('journal_ref', '')})
-        changes = bibliography.differences(entry, matched) if matched else []
+        # a preprint published since is corrected from its published version, not from the preprint's record
+        changes = bibliography.differences(entry, matched) if matched and not (published and as_preprint[key]) else []
         if changes:
             fields = {c['field']: c['after'] for c in changes if c['field'] != 'type'}
             if matched['doi']:
@@ -543,7 +545,7 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
             if issue.pop('corrects', False) and item['key'] in corrected:
                 issue['bibtex'] = corrected[item['key']]
 
-    claims = {'claims': [], 'confirmed': [], 'checked': 0, 'citing': 0, 'readable': 0}
+    claims = {'claims': [], 'confirmed': [], 'checked': 0, 'citing': 0, 'readable': 0, 'full_texts_tried': 0, 'full_texts_read': 0}
     undefined, uncited = [], []
     if texts:
         step('claims')
@@ -581,7 +583,47 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
         'sources_unavailable': sorted(resolver.unavailable), 'lookup_limited': resolver.limited or bool(skipped),
         'metadata_checked': len(metadata), 'undefined': undefined, 'uncited': uncited,
         'refs': [{k: i[k] for k in ('key', 'title', 'arxiv', 'doi')} for i in items if i['arxiv'] or i['doi']],
+        'full_texts_tried': claims['full_texts_tried'], 'full_texts_read': claims['full_texts_read'],
+        'profile': profile(entries, items, as_preprint, texts),
     }
+
+
+def manuscript_authors(texts):
+    """The family names of the manuscript's authors, from its \\author commands."""
+    names = []
+    for _name, tex in texts[:1]:
+        for found in re.findall(r'\\author\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{[^{}]*\})*)\}', refcheck_sources.strip_comments(tex)):
+            found = re.sub(r'\\(?:thanks|footnote|inst|affil|email)\s*\{(?:[^{}]|\{[^{}]*\})*\}|\$[^$]*\$|\^\{?[^}\s]*\}?', ' ', found)
+            found = re.sub(r'\\(?:and|AND)\b|\\\\|,|;', ' and ', found)
+            names += bibliography.families(re.sub(r'\\[a-zA-Z]+|[{}~]', ' ', found))
+    return [n for n in dict.fromkeys(names) if len(n) > 1]
+
+
+def profile(entries, items, as_preprint, texts):
+    """What a referee sees at a glance of a bibliography: its age, its preprints, its venues, its self-citations."""
+    now = timezone.now().year
+    years = sorted(int(e['fields']['year']) for e in entries if re.fullmatch(r'(1[5-9]|20)\d\d', e['fields'].get('year', '').strip()))
+    venues = {}
+    for entry in entries:
+        journal = plain(entry['fields'].get('journal', '') or entry['fields'].get('booktitle', ''))
+        if journal and 'arxiv' not in journal.lower():
+            name = bibliography.journal_name(journal)
+            venues[name] = venues.get(name, 0) + 1
+    mine = set(manuscript_authors(texts))
+    own = [e['key'] for e in entries if mine & set(bibliography.families(e['fields'].get('author', '')))] if mine else None
+    return {
+        'with_id': sum(1 for i in items if i['arxiv'] or i['doi']),
+        'preprints': sum(1 for e in entries if as_preprint.get(e['key']) or is_preprint_entry(e) and ids_arxiv(e)),
+        'median_age': now - years[len(years) // 2] if years else None, 'dated': len(years),
+        'recent': sum(1 for y in years if y >= now - 5), 'oldest': years[0] if years else None,
+        'newest': years[-1] if years else None,
+        'venues': sorted(venues.items(), key=lambda v: (-v[1], v[0]))[:5],
+        'self': len(own) if own is not None else None, 'self_keys': (own or [])[:30], 'authors': sorted(mine)[:20],
+    }
+
+
+def ids_arxiv(entry):
+    return identify(entry)[0]
 
 
 def paper_card(paper, key):
@@ -637,8 +679,32 @@ def write(load, lang, user=None, previous=None, with_missed=False):
                                   'solved': carried(result, previous.data())}
         if with_missed and user is not None:
             result['missed_key'] = start_missed(user, lang, bib, texts, pdf)
+        Generated.objects.filter(pk=pk).update(status='done', content=json.dumps(result), updated=timezone.now())
+        ready_email(pk, result)  # once the link works: a check that reads full texts takes minutes
         return result
     return work
+
+
+def ready_email(pk, result):
+    """Tell the researcher their check is ready, with what it found."""
+    from django.conf import settings
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.utils import translation
+    from . import mailcheck
+    row = Generated.objects.select_related('user').filter(pk=pk).first()
+    user = row.user if row is not None else None
+    if user is None or not user.email or mailcheck.undeliverable_reason(user.email):
+        return
+    with translation.override(row.lang):
+        context = {'user': user, 'result': result, 'claims': len(result.get('claims', [])),
+                   'link': '%s/%s/refcheck/%s/' % (digest.BASE_URL, row.lang, row.key)}
+        subject = render_to_string('summarizer/refcheck_email_subject.txt', context).strip()
+        text = render_to_string('summarizer/refcheck_email.txt', context)
+    try:
+        EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [user.email]).send()
+    except Exception:
+        logger.exception('Could not send the bibliography check %s to user %s', row.key, user.pk)
 
 
 def start_missed(user, lang, bib, texts, pdf):
@@ -655,6 +721,30 @@ def _spend(user):
     key = QUOTA_KEY % (user.pk, timezone.now().date())
     cache.add(key, 0, 86400)
     return cache.incr(key) <= PER_DAY
+
+
+def free_recheck(previous):
+    """The first check again of a report is not counted: it is the use the tool is for."""
+    return previous is not None and cache.add(RECHECK_KEY % previous.key, True, 90 * 86400)
+
+
+def borrowed(request, value):
+    """(label, BibTeX) of the references of one of the user's collections or literature reviews, None otherwise."""
+    kind, _sep, key = (value or '').partition(':')
+    try:
+        if kind == 'collection' and key.isdigit():
+            from . import library
+            collection = library.editable(request, int(key))
+            return collection.name, library.collection_export(request, collection.pk, 'bib').content.decode('utf-8')
+        if kind == 'literature' and key:
+            from . import literature
+            row = Generated.objects.filter(kind='literature', key=key, user=request.user, status='done').first()
+            if row is not None:
+                result = row.data()
+                return result.get('title') or _('Literature review'), literature.export_result(row, 'bib').content.decode('utf-8')
+    except Http404:
+        return None
+    return None
 
 
 def _text(upload, pasted):
@@ -695,8 +785,12 @@ def refcheck_page(request):
     previous = Generated.objects.filter(kind='refcheck', user=request.user, status='done',
                                         key=request.POST.get('previous') or request.GET.get('previous') or '-').first()
     zotero = ZoteroAccount.objects.filter(user=request.user).first() if access.has_tool(request.user, 'zotero') else None
+    origin = request.POST.get('from') or request.GET.get('from') or ''
+    lent = borrowed(request, origin) if origin else None
     if request.method == 'POST' and paid:
         bib = _text(request.FILES.get('bib'), request.POST.get('bibtext', ''))
+        if lent is not None and bib is not None:
+            bib = lent[1] + '\n\n' + bib
         source = request.FILES.get('source')
         tex, tex_name, archive, pdf = request.POST.get('textext', '').strip(), 'main.tex', None, None
         arxiv = refcheck_sources.arxiv_id(request.POST.get('arxiv', ''))
@@ -721,7 +815,7 @@ def refcheck_page(request):
                 error = 'empty'
             elif not (bib.strip() or archive is not None or arxiv or pdf is not None or (collection and zotero)):
                 error = 'empty'
-            elif not _spend(request.user):
+            elif not (free_recheck(previous) or _spend(request.user)):
                 error = 'quota'
             else:
                 with_missed = bool(request.POST.get('missed')) and access.has_tool(request.user, 'missed') and \
@@ -733,6 +827,8 @@ def refcheck_page(request):
     checks = Generated.objects.filter(kind='refcheck', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/refcheck.html', {
         'paid': paid, 'error': error, 'checks': checks, 'per_day': PER_DAY, 'previous': previous, 'zotero': zotero,
+        'lent': lent, 'lent_from': origin if lent else '',
+        'recheck_free': previous is not None and cache.get(RECHECK_KEY % previous.key) is None,
         'missed_allowed': access.has_tool(request.user, 'missed'),
         'upload_max_bytes': MAX_UPLOAD, 'upload_max_mb': MAX_UPLOAD // (1024 * 1024),
         'archive_max_bytes': MAX_ARCHIVE, 'archive_max_mb': MAX_ARCHIVE // (1024 * 1024)})
@@ -830,7 +926,9 @@ def refcheck_result(request, key):
         if result_share.act(row, action):
             return redirect('/%s/refcheck/%s/' % (get_language(), row.key))
         if action == 'mark':
-            mark(row, request.POST.get('target', ''), request.POST.get('mark', ''))
+            done = mark(row, request.POST.get('target', ''), request.POST.get('mark', ''))
+            if request.headers.get('X-Requested-With') == 'fetch':  # the page updates itself, without reloading
+                return JsonResponse({'ok': done})
             return redirect('/%s/refcheck/%s/#%s' % (get_language(), row.key, request.POST.get('anchor', 'problems')))
         if action == 'watch':
             from . import refcheck_watch

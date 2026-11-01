@@ -16,6 +16,8 @@
 """
 import logging
 import re
+import threading
+import time
 from bisect import bisect_right
 from decimal import Decimal
 
@@ -31,6 +33,12 @@ FULL_TEXTS = 12  # cited papers read in full, for the flagged sentences
 DEEP_PER_CALL = 4
 PASSAGES = 6
 PASSAGE_CHARS = 1200
+ARXIV_AT_ONCE = 2  # arXiv asks robots to go slowly: full texts are read two at a time, a second apart
+ARXIV_SECONDS = 1
+ARXIV_SLOTS = threading.BoundedSemaphore(ARXIV_AT_ONCE)
+ARXIV_CLOCK = threading.Lock()
+LAST_ARXIV = [0.0]
+USE_ORDER = {'result': 0, 'comparison': 1, 'method': 2, 'data': 3, 'background': 4, '': 5}
 
 CITE_RE = re.compile(r'\\(?!nocite\b)([A-Za-z]*[cC]ite[a-zA-Z]*)\*?')
 ARGS_RE = re.compile(r'\s*(?:\[[^\]]*\]\s*){0,2}\{([^}]*)\}')
@@ -231,11 +239,22 @@ def check_claims(claims, papers, lang):
 
 # --- the full text -------------------------------------------------------------
 
+def polite_arxiv_text(arxiv_id):
+    """sources.arxiv_text, ARXIV_AT_ONCE at a time and ARXIV_SECONDS apart, whatever the checks running."""
+    with ARXIV_SLOTS:
+        with ARXIV_CLOCK:
+            wait = LAST_ARXIV[0] + ARXIV_SECONDS - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)
+            LAST_ARXIV[0] = time.monotonic()
+        return sources.arxiv_text(arxiv_id)
+
+
 def full_text(paper):
     """{'text', 'source', 'arxiv_id'} of a cited paper when its rights let us read it, else None."""
     try:
         if paper.get('arxiv'):
-            text, source = sources.arxiv_text(paper['arxiv'])
+            text, source = polite_arxiv_text(paper['arxiv'])
             if len(text) > sources.MIN_TEXT:
                 return {'text': text, 'source': source, 'arxiv_id': paper['arxiv']}
         if paper.get('doi'):
@@ -285,6 +304,7 @@ def deepen(flagged, papers, lang):
     wanted = list(dict.fromkeys(k for c in sorted(flagged, key=lambda c: c['verdict'] != 'contradicted')
                                 for k in c['concerned'] if k in papers))[:FULL_TEXTS]
     texts = dict(zip(wanted, at_once([lambda key=key: full_text(papers[key]) for key in wanted])))
+    counted = {'tried': len(wanted), 'read': sum(1 for t in texts.values() if t)}
     readable_claims = []
     for claim in flagged:
         read = [k for k in claim['concerned'] if texts.get(k)]
@@ -336,7 +356,7 @@ def deepen(flagged, papers, lang):
             elif verdict in VERDICTS:
                 claim.update(verdict='contradicted' if claim['verdict'] == 'contradicted' else 'unclear',
                              reason=reason or claim['reason'], not_in_full_text=True)
-    return flagged
+    return flagged, counted
 
 
 def run(texts, papers, lang, step=lambda: None):
@@ -345,10 +365,13 @@ def run(texts, papers, lang, step=lambda: None):
     readable_ones = [c for c in every if any((papers.get(k) or {}).get('abstract') for k in c['keys'])]
     claims = chosen(readable_ones)
     flagged = check_claims(claims, papers, lang) if claims else []
+    counted = {'tried': 0, 'read': 0}
     if flagged:
         step()
-        flagged = deepen(flagged, papers, lang)
-    flagged.sort(key=lambda c: (c['verdict'] != 'contradicted', c['order']))
+        flagged, counted = deepen(flagged, papers, lang)
+    # what a sentence attributes as a result or a comparison matters more than a background reference
+    flagged.sort(key=lambda c: (c['verdict'] != 'contradicted', USE_ORDER.get(c.get('use', ''), 5), c['order']))
     return {'claims': [c for c in flagged if c['verdict'] != 'supported'],
             'confirmed': [c for c in flagged if c['verdict'] == 'supported'],
-            'checked': len(claims), 'citing': len(every), 'readable': len(readable_ones)}
+            'checked': len(claims), 'citing': len(every), 'readable': len(readable_ones),
+            'full_texts_tried': counted['tried'], 'full_texts_read': counted['read']}

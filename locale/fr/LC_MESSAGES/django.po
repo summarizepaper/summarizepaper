@@ -20801,3 +20801,124 @@ msgstr ""
 "Articles rétractés ou corrigés, preprints publiés depuis, entrées à corriger"
 " et doublons, et citations que les articles cités ne soutiennent pas, avec "
 "le passage ; puis vos références surveillées jusqu’à la publication."
+
+msgid "This check again is not counted in your checks of the day."
+msgstr ""
+"Cette nouvelle vérification n’est pas comptée dans vos vérifications du "
+"jour."
+
+msgid ""
+"The references of “%(name)s” will be checked. Add your manuscript below to "
+"also check what each citation is used for."
+msgstr ""
+"Les références de « %(name)s » seront vérifiées. Ajoutez votre manuscrit ci-"
+"dessous pour vérifier aussi à quoi sert chaque citation."
+
+msgid "Optional: other references to check with them."
+msgstr "Facultatif : d’autres références à vérifier avec elles."
+
+msgid "Profile of your bibliography"
+msgstr "Profil de votre bibliographie"
+
+msgid ""
+"Median age of the references: %(age)s years (from %(oldest)s to %(newest)s)."
+msgstr "Âge médian des références : %(age)s ans (de %(oldest)s à %(newest)s)."
+
+msgid "%(n)s of %(total)s dated references is from the last five years."
+msgid_plural ""
+"%(n)s of %(total)s dated references are from the last five years."
+msgstr[0] ""
+"%(n)s des %(total)s références datées est des cinq dernières années."
+msgstr[1] ""
+"%(n)s des %(total)s références datées sont des cinq dernières années."
+
+msgid "%(n)s reference cited as a preprint."
+msgid_plural "%(n)s references cited as preprints."
+msgstr[0] "%(n)s référence citée comme preprint."
+msgstr[1] "%(n)s références citées comme preprints."
+
+msgid "%(n)s of %(total)s reference has a DOI or an arXiv identifier."
+msgid_plural ""
+"%(n)s of %(total)s references have a DOI or an arXiv identifier."
+msgstr[0] "%(n)s des %(total)s références a un DOI ou un identifiant arXiv."
+msgstr[1] "%(n)s des %(total)s références ont un DOI ou un identifiant arXiv."
+
+msgid "Most cited venues:"
+msgstr "Revues les plus citées :"
+
+msgid "%(n)s of %(total)s reference is signed by an author of the manuscript."
+msgid_plural ""
+"%(n)s of %(total)s references are signed by an author of the manuscript."
+msgstr[0] ""
+"%(n)s des %(total)s références est signée par un auteur du manuscrit."
+msgstr[1] ""
+"%(n)s des %(total)s références sont signées par un auteur du manuscrit."
+
+msgid ""
+"For information: referees often look at how recent the references are and "
+"how many are self-citations. Nothing here is an error."
+msgstr ""
+"Pour information : les rapporteurs regardent souvent si les références sont "
+"récentes et combien sont des autocitations. Rien ici n’est une erreur."
+
+msgid ""
+"Full texts read: %(n)s of the %(total)s papers concerned (the others are "
+"closed to text mining or could not be fetched)."
+msgstr ""
+"Textes intégraux lus : %(n)s sur les %(total)s articles concernés (les "
+"autres sont fermés à la fouille de textes ou n’ont pas pu être récupérés)."
+
+msgid "cited for a result"
+msgstr "cité pour un résultat"
+
+msgid "cited for a comparison"
+msgstr "cité pour une comparaison"
+
+msgid "cited for a method"
+msgstr "cité pour une méthode"
+
+msgid "cited for data"
+msgstr "cité pour des données"
+
+msgid "cited as background"
+msgstr "cité comme contexte"
+
+msgid ""
+"Retracted or corrected papers, preprints published since, entries to correct"
+msgstr ""
+"Articles rétractés ou corrigés, preprints publiés depuis, entrées à corriger"
+
+msgid "Check these references"
+msgstr "Vérifier ces références"
+
+msgid ""
+"retracted or corrected papers and preprints published since, before you cite"
+" them; add your manuscript to check what each citation says."
+msgstr ""
+"articles rétractés ou corrigés et preprints publiés depuis, avant de les "
+"citer ; ajoutez votre manuscrit pour vérifier ce que dit chaque citation."
+
+msgid "The check of your %(n)s reference is ready."
+msgid_plural "The check of your %(n)s references is ready."
+msgstr[0] "La vérification de votre %(n)s référence est prête."
+msgstr[1] "La vérification de vos %(n)s références est prête."
+
+msgid "%(n)s serious problem (retracted or withdrawn paper)."
+msgid_plural "%(n)s serious problems (retracted or withdrawn papers)."
+msgstr[0] "%(n)s problème grave (article rétracté ou retiré)."
+msgstr[1] "%(n)s problèmes graves (articles rétractés ou retirés)."
+
+msgid "%(n)s reference to fix."
+msgid_plural "%(n)s references to fix."
+msgstr[0] "%(n)s référence à corriger."
+msgstr[1] "%(n)s références à corriger."
+
+msgid "%(n)s citation to check in your manuscript."
+msgid_plural "%(n)s citations to check in your manuscript."
+msgstr[0] "%(n)s citation à vérifier dans votre manuscrit."
+msgstr[1] "%(n)s citations à vérifier dans votre manuscrit."
+
+msgid "Your bibliography check is ready (%(n)s reference)"
+msgid_plural "Your bibliography check is ready (%(n)s references)"
+msgstr[0] "Votre vérification de bibliographie est prête (%(n)s référence)"
+msgstr[1] "Votre vérification de bibliographie est prête (%(n)s références)"

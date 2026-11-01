@@ -37,7 +37,7 @@
     {% if result.origin == 'pdf' %}<p class="notice">{% trans 'The references were read from the reference list of your PDF: a value may have been misread, and there is no .bib to correct. Send your LaTeX and .bib to check what each citation is used for.' %}</p>
     {% elif result.origin == 'bbl' %}<p class="notice">{% trans 'The references were read from the .bbl of your LaTeX source (there was no .bib): there is no .bib to correct.' %}</p>{% endif %}
 
-    <p class="lead">{% blocktrans count n=result.entries %}{{ n }} reference analysed.{% plural %}{{ n }} references analysed.{% endblocktrans %}
+    <p class="lead" id="counts">{% blocktrans count n=result.entries %}{{ n }} reference analysed.{% plural %}{{ n }} references analysed.{% endblocktrans %}
       {% if result.counts.error %}<span class="importance high">{% blocktrans count n=result.counts.error %}{{ n }} serious problem{% plural %}{{ n }} serious problems{% endblocktrans %}</span>{% endif %}
       {% if result.counts.warning %}<span class="importance medium">{% blocktrans count n=result.counts.warning %}{{ n }} to fix{% plural %}{{ n }} to fix{% endblocktrans %}</span>{% endif %}</p>
     {% if result.summary %}
@@ -164,11 +164,27 @@
     </section>
     {% endif %}
 
+    {% if result.profile %}{% with p=result.profile %}
+    <details class="card section-card" id="profile">
+      <summary><strong>{% trans 'Profile of your bibliography' %}</strong></summary>
+      <ul>
+        {% if p.median_age is not None %}<li>{% blocktrans with age=p.median_age oldest=p.oldest newest=p.newest %}Median age of the references: {{ age }} years (from {{ oldest }} to {{ newest }}).{% endblocktrans %}
+          {% blocktrans count n=p.recent with total=p.dated %}{{ n }} of {{ total }} dated references is from the last five years.{% plural %}{{ n }} of {{ total }} dated references are from the last five years.{% endblocktrans %}</li>{% endif %}
+        <li>{% blocktrans count n=p.preprints %}{{ n }} reference cited as a preprint.{% plural %}{{ n }} references cited as preprints.{% endblocktrans %}
+          {% blocktrans count n=p.with_id with total=result.entries %}{{ n }} of {{ total }} reference has a DOI or an arXiv identifier.{% plural %}{{ n }} of {{ total }} references have a DOI or an arXiv identifier.{% endblocktrans %}</li>
+        {% if p.venues %}<li>{% trans 'Most cited venues:' %} {% for name, n in p.venues %}{{ name }} ({{ n }}){% if not forloop.last %}, {% endif %}{% endfor %}.</li>{% endif %}
+        {% if p.self is not None %}<li>{% blocktrans count n=p.self with total=result.entries %}{{ n }} of {{ total }} reference is signed by an author of the manuscript.{% plural %}{{ n }} of {{ total }} references are signed by an author of the manuscript.{% endblocktrans %}{% if p.self_keys %} <span class="muted">({{ p.self_keys|join:', ' }})</span>{% endif %}</li>{% endif %}
+      </ul>
+      <p class="muted"><small>{% trans 'For information: referees often look at how recent the references are and how many are self-citations. Nothing here is an error.' %}</small></p>
+    </details>
+    {% endwith %}{% endif %}
+
     {% if result.with_tex %}
     <section id="claims" aria-labelledby="claims-title">
     <h2 id="claims-title">{% trans 'Citations to check' %}</h2>
     <p class="muted">{% if result.claims_citing %}{% blocktrans with n=result.claims_checked total=result.claims_citing %}{{ n }} sentences with citations read out of {{ total }}: those that attribute a result, a value or a method to a paper first.{% endblocktrans %}{% else %}{% blocktrans with n=result.claims_checked %}{{ n }} citations read next to the abstract of the cited paper.{% endblocktrans %}{% endif %}
-      {% trans 'Each sentence is read with the abstracts of all the papers it cites; those flagged are read again against the full text of the papers when it may be read. A flagged citation may be right: check it in the paper.' %}</p>
+      {% trans 'Each sentence is read with the abstracts of all the papers it cites; those flagged are read again against the full text of the papers when it may be read. A flagged citation may be right: check it in the paper.' %}
+      {% if result.full_texts_tried %}{% blocktrans with n=result.full_texts_read total=result.full_texts_tried %}Full texts read: {{ n }} of the {{ total }} papers concerned (the others are closed to text mining or could not be fetched).{% endblocktrans %}{% endif %}</p>
     {% if result.open_claims %}
     <ul class="item-list">
       {% for c in result.open_claims %}
@@ -178,6 +194,7 @@
         {% elif c.numbers_absent %}<span class="importance medium">{% trans 'Value not found in the paper' %}</span>
         {% elif c.not_in_full_text %}<span class="importance medium">{% trans 'Not found in the full text' %}</span>
         {% else %}<span class="importance medium">{% trans 'Not in the abstract' %}</span>{% endif %}
+        {% if c.use == 'result' %}<span class="muted refcheck-where">{% trans 'cited for a result' %} ·</span>{% elif c.use == 'comparison' %}<span class="muted refcheck-where">{% trans 'cited for a comparison' %} ·</span>{% elif c.use == 'method' %}<span class="muted refcheck-where">{% trans 'cited for a method' %} ·</span>{% elif c.use == 'data' %}<span class="muted refcheck-where">{% trans 'cited for data' %} ·</span>{% elif c.use == 'background' %}<span class="muted refcheck-where">{% trans 'cited as background' %} ·</span>{% endif %}
         {% if c.file %}<span class="muted refcheck-where">{{ c.file }}{% if c.line %}, {% blocktrans with n=c.line %}line {{ n }}{% endblocktrans %}{% endif %}</span>{% endif %}
         <blockquote class="key-sentence">{{ c.sentence }}</blockquote>
         <p style="margin:4px 0 0">{{ c.reason }}</p>
@@ -235,16 +252,43 @@
     {% endif %}
     <script>
     (function () {
-      var group = document.querySelector('[data-refcheck-filters]');
-      if (!group) return;
-      group.addEventListener('click', function (event) {
-        var button = event.target.closest('button[data-filter]');
-        if (!button) return;
-        var filter = button.dataset.filter;
-        group.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b === button ? 'true' : 'false'); });
+      var filter = 'all';
+      function applyFilter() {
+        var group = document.querySelector('[data-refcheck-filters]');
+        if (!group) return;
+        group.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.filter === filter ? 'true' : 'false'); });
         document.querySelectorAll('#problems li[data-level]').forEach(function (card) {
           card.hidden = !(filter === 'all' || card.dataset.level === filter || (filter === 'new' && card.dataset.new));
         });
+      }
+      document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-refcheck-filters] button[data-filter]');
+        if (!button) return;
+        filter = button.dataset.filter;
+        applyFilter();
+      });
+      // a mark updates the report in place: the reader keeps their place in a long list
+      document.addEventListener('submit', function (event) {
+        var form = event.target;
+        var submitter = event.submitter;
+        if (!form.querySelector('input[name=action][value=mark]') || !window.fetch || !window.FormData) return;
+        event.preventDefault();
+        var data = new FormData(form);
+        if (submitter && submitter.name) data.append(submitter.name, submitter.value);
+        fetch(location.pathname, {method: 'POST', body: data, credentials: 'same-origin',
+                                  headers: {'X-Requested-With': 'fetch'}})
+          .then(function (r) { return r.ok ? fetch(location.pathname, {credentials: 'same-origin'}) : Promise.reject(); })
+          .then(function (r) { return r.text(); })
+          .then(function (html) {
+            var fresh = new DOMParser().parseFromString(html, 'text/html');
+            ['problems', 'claims', 'counts'].forEach(function (id) {
+              var now = document.getElementById(id), next = fresh.getElementById(id);
+              if (now && next) now.replaceWith(next);
+            });
+            applyFilter();
+            if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise();
+          })
+          .catch(function () { form.submit(); });
       });
     })();
     </script>
