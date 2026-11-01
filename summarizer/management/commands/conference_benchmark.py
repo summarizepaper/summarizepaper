@@ -111,12 +111,12 @@ class Command(BaseCommand):
         out('%d talks listed, %d of the %d of the program (%.0f%%), %d not in it%s' % (
             len(talks), len(matched), len(truth), 100 * len(matched) / len(truth), sum(1 for _, m in found if not m),
             ', reading cut: %s' % read if read else ''))
-        def truth(talk, field):  # the presenter as the tool writes names; the first speaker when the program names none
+        def expected(talk, field):  # the presenter as the tool writes names; the first speaker when the program names none
             if field != 'presenter':
                 return talk[field] or ''
             return conference.person_name(talk['presenter'] or (conference.speaker_names(talk['speakers']) or [''])[0])
         for field in ('day', 'start', 'end', 'room', 'presenter'):
-            right = sum(1 for t, m in matched.values() if (t[field] or '').lower() == truth(m, field).lower())
+            right = sum(1 for t, m in matched.values() if (t[field] or '').lower() == expected(m, field).lower())
             out('  %-9s right for %d of %d (%.0f%%)' % (field, right, len(matched), 100 * right / max(1, len(matched))))
         missed = [m['title'] for m in truth if id(m) not in matched]
         for title in missed[:15]:
@@ -125,7 +125,7 @@ class Command(BaseCommand):
             if not m:
                 out('  not in the program: %s' % t['title'][:100])
         for field in ('day', 'room', 'presenter'):
-            wrong = [(t['title'], t[field], truth(m, field)) for t, m in matched.values() if (t[field] or '').lower() != truth(m, field).lower()]
+            wrong = [(t['title'], t[field], expected(m, field)) for t, m in matched.values() if (t[field] or '').lower() != expected(m, field).lower()]
             for title, got, want in wrong[:8]:
                 out('  %s %r instead of %r: %s' % (field, got or '(none)', want, title[:70]))
 
