@@ -26,6 +26,7 @@ MAX_FILES = 300
 MAX_UNPACKED = 30 * 1024 * 1024
 MAX_DOWNLOAD = 60 * 1024 * 1024
 BBL_BATCH = 40
+REFERENCE_CHARS = 600  # a printed reference is shorter: what follows the last one is the text after the list
 ARXIV_ID_RE = re.compile(r'^\s*(?:arxiv:\s*|https?://arxiv\.org/(?:abs|pdf)/)?(\d{4}\.\d{4,5}|[a-z\-]+(?:\.[A-Z]{2})?/\d{7})(v\d+)?(?:\.pdf)?\s*$', re.I)
 INPUT_RE = re.compile(r'\\(?:input|include|subfile)\s*\{([^}]+)\}')
 BIB_RE = re.compile(r'\\(?:bibliography|addbibresource)\s*(?:\[[^\]]*\])?\{([^}]+)\}')
@@ -276,13 +277,29 @@ def pdf_bibtex(data):
     listing = missed.split_references(text)[1]
     if not listing:
         raise Unreadable('no_references')
-    items = [('ref%d' % (i + 1), line) for i, line in enumerate(reference_lines(listing))]
+    items = [('ref%d' % (i + 1), line) for i, line in enumerate(reference_lines(listing, text))]
     read = read_items(items)
     return '\n\n'.join(entry_of(key, read[key], text) for key, text in items if key in read)
 
 
-def reference_lines(listing):
+def numbered_references(text):
+    """The references of a numbered list, wherever a two-column PDF put them: a [12] followed by a name (an
+    initial and a capitalized word) and a year within the reference is one, a [12] in a sentence is not; the last
+    of each number is kept, in the order of the numbers."""
+    starts = [m for m in re.finditer(r'(?:^|\s)\[(\d{1,3})\]\s+', text[:400000])]
+    found = {}
+    for start, following in zip(starts, starts[1:] + [None]):
+        reference = ' '.join(text[start.end():following.start() if following else len(text)].split())[:REFERENCE_CHARS]
+        if re.match(r"[A-Z][\w´'’.\-]*,?\s+[A-Z]", reference) and re.search(r'\b(?:1[89]|20)\d\d[a-z]?\b', reference):
+            found[int(start.group(1))] = '[%s] %s' % (start.group(1), reference)
+    return [found[n] for n in sorted(found)]
+
+
+def reference_lines(listing, whole=''):
     """The references of a printed list: split at their numbers ([12], 12.) or, without numbers, at blank lines."""
+    numbered = numbered_references(whole or listing)
+    if len(numbered) >= 5:
+        return numbered[:400]
     listing = listing[:120000]
     parts = re.split(r'\n\s*(?=\[\d{1,3}\]|\d{1,3}\.\s+[A-Z])', '\n' + listing)
     if len(parts) < 5:

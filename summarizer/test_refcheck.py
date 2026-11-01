@@ -83,6 +83,27 @@ class ReadingTests(ToolsTestCase):
     def test_values_written_with_a_k_or_m_suffix_are_the_same_values(self):
         self.assertEqual(refcheck_claims.scaled('a vocabulary of about 37K tokens and 1.2M pairs, 3 kg'), {'37000', '1200000'})
 
+    def test_a_two_column_pdf_gives_its_numbered_references_in_order_and_not_the_citations_of_its_text(self):
+        text = ('Body cites [2] that is it and [3] we use. [2] Y. Bengio and A. Roe. Long title. In NIPS, 2014.\n'
+                '[3] C.-Y. Lee, S. Xie. Deeply-supervised nets. arXiv:1409.5185, 2014.\n[4] D. Ray. Four. Nature, 2001.\n'
+                '[5] E. Moe. Five. Science, 2002.\nAppendix text cites [4] again here.\nReferences\n'
+                '[1] A. Smith. One. ApJ, 1999.\n')
+        refs = refcheck_sources.reference_lines('', text)
+        self.assertEqual([r[:4] for r in refs], ['[1] ', '[2] ', '[3] ', '[4] ', '[5] '])
+        self.assertTrue(refs[3].startswith('[4] D. Ray. Four. Nature, 2001.'))
+
+    def test_the_authors_of_the_manuscript_leave_out_their_affiliations_and_emails(self):
+        tex = ('\\author{Ashish Vaswani\\thanks{Equal.}\\\\ Google Brain\\\\ \\texttt{a@google.com} \\And Noam Shazeer\\\\ '
+               'Google Brain \\AND Aidan N. Gomez$^\\dagger$\\\\ University of Toronto}')
+        self.assertEqual(refcheck.manuscript_authors([('ms.tex', tex)]), ['vaswani', 'shazeer', 'gomez'])
+        self.assertEqual(refcheck.manuscript_authors([('a.tex', '\\author{Ann Lee}\\affiliation{U}\\author{B. Ray}')]), ['lee', 'ray'])
+
+    def test_passages_are_found_by_the_stems_of_the_words(self):
+        claim = {'sentence': 'We used learned positional embeddings [k].', 'previous': ''}
+        text = '\n\n'.join(['Filler about convolutions and kernels, nothing else here at all. ' * 3] * 12 +
+                           ['We equip the model with position embeddings that are learned during training. ' * 2])
+        self.assertIn('position embeddings', ' '.join(refcheck_claims.passages(claim, text)[-1:]))
+
     def test_sentences_that_attribute_a_result_are_read_first(self):
         claims = [{'sentence': 'See e.g. the reviews [a, b, c, d, e].', 'keys': list('abcde'), 'order': 0},
                   {'sentence': 'Smith showed a 12.5% excess [s].', 'keys': ['s'], 'order': 1},
@@ -257,6 +278,16 @@ class MoreCheckTests(ToolsTestCase):
             result = refcheck.check(bib, '', 'en')
         self.assertEqual([i['kind'] for i in result['problems'][0]['issues']], ['published'])
         self.assertIn('title = {Cells, published}', result['corrections']['bio']['after'])
+
+    def test_references_read_from_a_pdf_only_report_a_wrong_year(self):
+        bib = '@article{ref1, author={Lee}, title={A long enough title for matching}, journal={TNN}, year={1994}}'
+        record = matched('10.1/a', title='A long enough title for matching', journal='IEEE Transactions on Neural Networks',
+                         year='1995', volume='5', pages='157-166')
+        with lookups(records={}, resolved={'ref1': record}):
+            result = refcheck.check(bib, '', 'en', origin='pdf')
+        issue = result['problems'][0]['issues'][0]
+        self.assertEqual((issue['kind'], [c['field'] for c in issue['changes']]), ('metadata', ['year']))
+        self.assertEqual(len(result['problems'][0]['issues']), 1)  # no 'incomplete' from what the PDF does not print
 
     def test_a_short_title_identifies_a_paper_with_the_same_words_year_and_journal(self):
         from summarizer import bibliography

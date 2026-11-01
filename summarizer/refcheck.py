@@ -488,6 +488,8 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
                            'journal': fields.get('journal') or (record or {}).get('journal_ref', '')})
         # a preprint published since is corrected from its published version, not from the preprint's record
         changes = bibliography.differences(entry, matched) if matched and not (published and as_preprint[key]) else []
+        if origin != 'bib':  # references read from a PDF or a .bbl: only a wrong year is no artefact of the reading
+            changes = [c for c in changes if c['field'] == 'year']
         if changes:
             fields = {c['field']: c['after'] for c in changes if c['field'] != 'type'}
             if matched['doi']:
@@ -499,7 +501,7 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
             update(key, {k: v for k, v in fields.items() if k not in updates.get(key, {}).get('fields', {})}, kind)
             issues.append({'kind': 'metadata', 'level': 'warning', 'changes': changes, 'corrects': True,
                            'source': matched['source'], 'url': matched['url']})
-        filled, missing = completion(entry, matched) if not (published and as_preprint[key]) else ({}, [])
+        filled, missing = completion(entry, matched) if origin == 'bib' and not (published and as_preprint[key]) else ({}, [])
         filled = {k: v for k, v in filled.items() if k not in updates.get(key, {}).get('fields', {})}
         if filled or missing:
             if filled:
@@ -589,13 +591,18 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
 
 
 def manuscript_authors(texts):
-    """The family names of the manuscript's authors, from its \\author commands."""
+    """The family names of the manuscript's authors, from its \\author commands: in each author, only the first
+    line (the next ones are affiliations and emails), and only a name of two to five words."""
     names = []
     for _name, tex in texts[:1]:
-        for found in re.findall(r'\\author\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{[^{}]*\})*)\}', refcheck_sources.strip_comments(tex)):
-            found = re.sub(r'\\(?:thanks|footnote|inst|affil|email)\s*\{(?:[^{}]|\{[^{}]*\})*\}|\$[^$]*\$|\^\{?[^}\s]*\}?', ' ', found)
-            found = re.sub(r'\\(?:and|AND)\b|\\\\|,|;', ' and ', found)
-            names += bibliography.families(re.sub(r'\\[a-zA-Z]+|[{}~]', ' ', found))
+        for found in re.findall(r'\\author\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}',
+                                refcheck_sources.strip_comments(tex)):
+            found = re.sub(r'\\(?:thanks|footnote|inst|affil|affiliation|email|orcid)\s*\{(?:[^{}]|\{[^{}]*\})*\}|\$[^$]*\$', ' ', found)
+            for part in re.split(r'\\(?:and|And|AND)\b|,|;|\band\b', found):
+                line = re.split(r'\\\\|\\newline', part)[0]
+                words = re.sub(r'\\[a-zA-Z]+\*?(?:\{[^}]*\})?|[{}~^*\d†‡]', ' ', line).split()
+                if '@' not in line and 2 <= len(words) <= 5:
+                    names.append(bibliography.normalized(words[-1]))
     return [n for n in dict.fromkeys(names) if len(n) > 1]
 
 

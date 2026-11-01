@@ -31,7 +31,7 @@ PAPERS_PER_CLAIM = 5
 ABSTRACT_CHARS = 1800
 FULL_TEXTS = 16  # cited papers read in full, for the flagged sentences
 DEEP_PER_CALL = 4
-PASSAGES = 6
+PASSAGES = 8
 PASSAGE_CHARS = 1200
 ARXIV_AT_ONCE = 2  # arXiv asks robots to go slowly: full texts are read two at a time, a second apart
 ARXIV_SECONDS = 1
@@ -272,7 +272,8 @@ def full_text(paper):
 
 
 def words(text):
-    return {w.lower() for w in WORD.findall(text)} - STOP
+    """The stems of a text's words (their first six letters): 'positional' meets 'position', 'embeddings' 'embedding'."""
+    return {w.lower()[:6] for w in WORD.findall(text) if w.lower() not in STOP}
 
 
 def passages(claim, text):
