@@ -55,9 +55,9 @@ def pdf_text(data):
         if t['day'] != day:
             day, session = t['day'], None
             out.append('\n%s\n' % datetime.date.fromisoformat(day).strftime('%A, %B %-d').upper())
-        if t['session'] != session:
+        if t['session'] != session or not t['session']:
             session = t['session']
-            first = '%s (%s)' % (session or 'Plenary', t['room'])
+            first = '%s (%s)' % (session or 'Talk', t['room'])
             out.append('%s  %s' % (twelve(t['start']), first) if t['kind'] == 'poster' else first)
         speaker = '%s — %s' % (t['speakers'], t['affiliation']) if t['affiliation'] else t['speakers']
         if t['kind'] == 'poster':
@@ -111,8 +111,12 @@ class Command(BaseCommand):
         out('%d talks listed, %d of the %d of the program (%.0f%%), %d not in it%s' % (
             len(talks), len(matched), len(truth), 100 * len(matched) / len(truth), sum(1 for _, m in found if not m),
             ', reading cut: %s' % read if read else ''))
+        def truth(talk, field):  # the presenter as the tool writes names; the first speaker when the program names none
+            if field != 'presenter':
+                return talk[field] or ''
+            return conference.person_name(talk['presenter'] or (conference.speaker_names(talk['speakers']) or [''])[0])
         for field in ('day', 'start', 'end', 'room', 'presenter'):
-            right = sum(1 for t, m in matched.values() if (t[field] or '').lower() == (m[field] or '').lower())
+            right = sum(1 for t, m in matched.values() if (t[field] or '').lower() == truth(m, field).lower())
             out('  %-9s right for %d of %d (%.0f%%)' % (field, right, len(matched), 100 * right / max(1, len(matched))))
         missed = [m['title'] for m in truth if id(m) not in matched]
         for title in missed[:15]:
@@ -120,9 +124,10 @@ class Command(BaseCommand):
         for t, m in found:
             if not m:
                 out('  not in the program: %s' % t['title'][:100])
-        wrong_day = [(t['title'], t['day'], m['day']) for t, m in matched.values() if t['day'] != m['day']]
-        for title, got, want in wrong_day[:10]:
-            out('  day %s instead of %s: %s' % (got or '(none)', want, title[:80]))
+        for field in ('day', 'room', 'presenter'):
+            wrong = [(t['title'], t[field], truth(m, field)) for t, m in matched.values() if (t[field] or '').lower() != truth(m, field).lower()]
+            for title, got, want in wrong[:8]:
+                out('  %s %r instead of %r: %s' % (field, got or '(none)', want, title[:70]))
 
     def rank(self, data, lang):
         out = self.stdout.write
