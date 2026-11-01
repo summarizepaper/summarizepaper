@@ -1,4 +1,4 @@
-.conf-tabs{display:flex;gap:6px;margin:16px 0 18px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.conf-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 18px}
 .conf-tabs a{flex:none;padding:6px 12px;border:1px solid var(--border);border-radius:999px;color:inherit;text-decoration:none;white-space:nowrap;font-size:.92rem}
 .conf-tabs a[aria-current=page]{background:var(--accent);border-color:var(--accent);color:#fff}
 .conf-tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -23,4 +23,5 @@
 .conf-actions{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .conf-form-step{font-size:1.05rem;margin:20px 0 8px}
 .conf-person p{margin:0 0 4px}.conf-person .importance{margin-left:6px}
-@media(max-width:600px){.conf-tabs{margin-left:-4px;margin-right:-4px}.conf-filters label{flex:1 1 100%}.conf-filters select,.conf-filters input[type=search]{width:100%;max-width:none}}
+@media(max-width:600px){.conf-tabs a{padding:5px 10px;font-size:.88rem}.conf-filters label{flex:1 1 100%}.conf-filters select,.conf-filters input[type=search]{width:100%;max-width:none}}
+.conf-talk.conf-compact .conf-title{margin:6px 0 2px;font-size:.95rem}.conf-compact .conf-mark{margin-top:6px}

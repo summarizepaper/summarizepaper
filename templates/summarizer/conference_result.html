@@ -44,7 +44,7 @@
       {% for day, items in days %}
         <h2 class="conf-day">{% if day %}{% if day.year %}{{ day|date:"l j F Y" }}{% else %}{{ day }}{% endif %}{% else %}{% trans 'Day not given' %}{% endif %}</h2>
         <ul class="item-list conf-list">
-          {% for item in items %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash can_mark=True compact=False %}{% endfor %}
+          {% for item in items %}{% if item.role == 'maybe' %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=None can_mark=True compact=True %}{% else %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash can_mark=True compact=False %}{% endif %}{% endfor %}
         </ul>
       {% empty %}
         <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
@@ -78,7 +78,7 @@
       </form>
       <p class="muted">{% blocktrans count n=all_count %}{{ n }} talk{% plural %}{{ n }} talks{% endblocktrans %}{% if all_pages > 1 %} · {% blocktrans with p=all_page n=all_pages %}page {{ p }} of {{ n }}{% endblocktrans %}{% endif %}</p>
       <ul class="item-list conf-list">
-        {% for t in all_talks %}{% include 'summarizer/conference_talk.html' with talk=t role=t.chosen.priority mark=t.mark going=None clash=None can_mark=True compact=True %}{% endfor %}
+        {% for t in all_talks %}{% include 'summarizer/conference_talk.html' with talk=t role=t.chosen.priority mark=t.mark going=None clash=None can_mark=True compact='all' %}{% endfor %}
       </ul>
       {% if all_pages > 1 %}<nav class="conf-pages">{% if all_page > 1 %}<a href="?view=all&q={{ all_query|urlencode }}&day={{ all_day|urlencode }}&theme={{ all_theme }}&page={{ all_page|add:'-1' }}">← {% trans 'Previous' %}</a>{% endif %}
         {% if all_page < all_pages %}<a href="?view=all&q={{ all_query|urlencode }}&day={{ all_day|urlencode }}&theme={{ all_theme }}&page={{ all_page|add:'1' }}">{% trans 'Next' %} →</a>{% endif %}</nav>{% endif %}
@@ -91,7 +91,7 @@
         <li class="card conf-person">
           <p><strong>{{ p.name }}</strong>{% if p.affiliation %} · {{ p.affiliation }}{% endif %}
             {% if p.cites %}<span class="importance good">{% blocktrans with t=p.cites|truncatechars:80 %}Cites your paper “{{ t }}”{% endblocktrans %}</span>{% endif %}</p>
-          {% for t in p.talk_list %}<div class="meta">{{ t.title }}{% if t.start %} · {{ t.day }} {{ t.start }}{% endif %}{% if t.room %} · {{ t.room }}{% endif %}</div>{% endfor %}
+          {% for t in p.talk_list %}<div class="meta">{{ t.title }}{% if t.start %} · {% if t.when.year %}{{ t.when|date:"D j M" }}{% else %}{{ t.day }}{% endif %} {{ t.start }}{% endif %}{% if t.room %} · {{ t.room }}{% endif %}</div>{% endfor %}
           {% if p.openalex %}<p class="meta"><a href="https://openalex.org/{{ p.openalex }}" rel="noopener" target="_blank">{% trans 'Their papers' %}</a></p>{% endif %}
           {% if owner and program %}
             {% if p.mail.status == 'done' %}
@@ -138,7 +138,7 @@
       {% if owner %}
       <section class="card section-card">
         <h2>{% trans 'The preprints in a collection' %}</h2>
-        <p>{% trans 'The preprints of the talks you marked going or seen, or else of your program, to read, compare and keep in sync with Zotero.' %}</p>
+        <p>{% trans 'The preprints of the talks you marked going or seen (looked for now), or else of your program, to read, compare and keep in sync with Zotero.' %}</p>
         <form method="post" class="tool-row">{% csrf_token %}<input type="hidden" name="action" value="collection">
           <select name="collection" aria-label="{% trans 'Collection' %}"><option value="new">{% trans 'A new collection' %}</option>{% for c in collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select>
           <button class="btn btn-sm">{% trans 'Add the preprints' %}</button></form>

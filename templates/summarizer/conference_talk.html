@@ -1,6 +1,7 @@
 {% load i18n %}
-{# One talk of a program. Expects talk, and: role (must, should, maybe, yours, going), mark, going, clash, can_mark, owner, shared, compact. #}
-<li class="card conf-talk{% if mark.state == 'skip' %} conf-skipped{% endif %}"{% if talk.id %} id="talk-{{ talk.id }}"{% endif %}>
+{% comment %}One talk of a program. Expects talk, and: role (must, should, maybe, yours, going), mark, going, clash, can_mark,
+owner, shared, compact (no why nor question; 'all': with its day too).{% endcomment %}
+<li class="card conf-talk{% if mark.state == 'skip' %} conf-skipped{% endif %}{% if compact %} conf-compact{% endif %}"{% if talk.id %} id="talk-{{ talk.id }}"{% endif %}>
   <div class="conf-talk-head">
     {% if role == 'must' %}<span class="importance high">{% trans 'Do not miss it' %}</span>
     {% elif role == 'should' %}<span class="importance medium">{% trans 'Worth it' %}</span>
@@ -11,7 +12,7 @@
     {% if talk.scoop %}<span class="importance high conf-scoop">{% blocktrans with p=talk.scoop.project %}Close to your project “{{ p }}”{% endblocktrans %}</span>{% endif %}
   </div>
   <p class="conf-title"><strong>{% if talk.url %}<a href="{{ talk.url }}" rel="noopener" target="_blank">{{ talk.title }}</a>{% else %}{{ talk.title }}{% endif %}</strong></p>
-  <div class="meta">{% if compact %}{% if talk.day %}{{ talk.day }} · {% endif %}{% endif %}{% if talk.start %}<strong>{{ talk.start }}{% if talk.end %}–{{ talk.end }}{% endif %}</strong> · {% elif talk.time %}{{ talk.time }} · {% endif %}{{ talk.speakers|default:talk.presenter }}{% if talk.affiliation %} ({{ talk.affiliation }}){% endif %}{% if talk.session %} · {{ talk.session }}{% endif %}{% if talk.room %} · {{ talk.room }}{% endif %}</div>
+  <div class="meta">{% if compact == 'all' and talk.day %}{% if talk.when.year %}{{ talk.when|date:"D j M" }}{% else %}{{ talk.day }}{% endif %} · {% endif %}{% if talk.start %}<strong>{{ talk.start }}{% if talk.end %}–{{ talk.end }}{% endif %}</strong> · {% elif talk.time %}{{ talk.time }} · {% endif %}{{ talk.speakers|default:talk.presenter }}{% if talk.affiliation %} ({{ talk.affiliation }}){% endif %}{% if talk.session %} · {{ talk.session }}{% endif %}{% if talk.room %} · {{ talk.room }}{% endif %}</div>
   {% if clash %}<p class="conf-clash">⚠ {% trans 'At the same time as' %} {{ clash|join:' · ' }}</p>{% endif %}
   {% if talk.scoop.why %}<p class="conf-why">{{ talk.scoop.why }}</p>{% endif %}
   {% if talk.why and not compact %}<p class="conf-why">{{ talk.why }}</p>{% endif %}

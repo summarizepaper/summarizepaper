@@ -293,6 +293,12 @@ class ConferenceTests(ToolsTestCase):
         collection = Collection.objects.get(user=owner)
         self.assertEqual((add.call_args[0][1], collection.name), (['2601.00001'], 'EAS 2026'))
         self.assertIn('added=1', r['Location'])
+        client.post(url, {'action': 'mark', 'talk': 't1', 'state': 'seen'})
+        paper = {'key': '2602.00002', 'title': 'Exomoons', 'authors': []}
+        with mock.patch('summarizer.library.add_many', return_value={'added': 1}) as add, \
+                mock.patch('summarizer.conference.find_paper', return_value=paper) as find:
+            client.post(url, {'action': 'collection', 'collection': str(collection.pk)})
+        self.assertEqual((add.call_args[0][1], find.call_args[0][0]['id']), (['2602.00002'], 't1'))  # the talk seen
         client.post(url, {'action': 'note', 'talk': 't0', 'note': 'Silicate clouds at 1500 K'})
         client.post(url, {'action': 'mail', 'person': 'Ann Lee'})
         draft = Generated.objects.get(kind='conference_mail')
