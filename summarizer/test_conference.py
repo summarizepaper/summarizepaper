@@ -90,6 +90,12 @@ class ConferenceTests(ToolsTestCase):
                          [('t0', 'A', '2026-07-14'), ('t1', 'B', '2026-07-14'), ('t2', 'C', '2026-07-14'),
                           ('t3', 'D', 'Wednesday')])
         self.assertEqual((talks[0]['speakers'], talks[0]['abstract'], talks[0]['presenter']), ('Ann Lee', 'Longer abstract', 'Ann Lee'))
+        twice = conference.settle([conference.clean_talk(t) for t in (
+            {'title': 'Updates from the organizers', 'day': '2024-03-12', 'start': '09:00'},
+            {'title': 'Updates from the organizers', 'day': '2024-03-13', 'start': '09:00'})])
+        self.assertEqual([t['day'] for t in twice], ['2024-03-12', '2024-03-13'])  # two talks, not one listed twice
+        self.assertEqual(conference.day_heading('MONDAY, MARCH 11\nTUESDAY, MARCH 12\nPlenary\n9:00 AM   Mardi gras\n'),
+                         'TUESDAY, MARCH 12')
 
     def test_a_long_program_is_read_in_pieces_and_says_where_it_stopped(self):
         text = 'Tuesday 14 July 2026\n\nClouds on hot Jupiters, by Ann Lee\n\n' + 'x ' * 7000 + '\n\nExomoons with Gaia\n\nProtein'

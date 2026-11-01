@@ -137,6 +137,7 @@ def chunks(text):
         end = min(len(text), start + CHUNK)
         if end < len(text):
             cut = text.rfind('\n\n', start + CHUNK // 2, end)
+            cut = cut if cut > 0 else text.rfind('\n', start + CHUNK // 2, end)  # a booklet has no blank lines
             end = cut if cut > 0 else end
         pieces.append((start, text[start:end]))
         start = end
@@ -168,19 +169,34 @@ def clean_talk(raw):
     return talk
 
 
-def list_talks(piece, head='', before=''):
+def day_heading(text):
+    """The last short line of text without a time that names a weekday or a date: the day the next piece of the
+    program starts in."""
+    for line in reversed(text[-60000:].splitlines()):
+        line = ' '.join(line.split())
+        if not line or len(line) > 80 or re.search(r'\d{1,2}\s*[:h.]\s*\d{2}', line):
+            continue
+        plain = re.findall(r'[a-z]+', unicodedata.normalize('NFKD', line.lower()).encode('ascii', 'ignore').decode())
+        if any(len(w) > 3 and w in WEEKDAYS for w in plain) or dated_label(line, 2000):
+            return line
+    return ''
+
+
+def list_talks(piece, head='', before='', heading=''):
     answer = generated.chat_json(
         'Above is a piece of a conference program. List every talk, poster or contributed presentation in it (not the '
         'breaks, sessions headers alone, or social events), the talks that begin in <before> excepted. Keep the title '
-        'and names as written. ' + UNTRUSTED + ' Answer with a JSON object {"talks": [{"title": "...", '
+        'and names as written. A talk\'s day is the closest day heading above it in <program>, or else <last_day_heading>; '
+        'leave it empty when there is none (never take the first day of <program_start>, read only for the year). '
+        + UNTRUSTED + ' Answer with a JSON object {"talks": [{"title": "...", '
         '"speakers": "names as written", "presenter": "the one who gives it, when the program marks them (underlined, '
         'starred, \'presented by\'), else the first name", "affiliation": "the presenter\'s institution if given, '
         'or empty", "session": "session name or empty", "kind": "talk or poster", "day": "YYYY-MM-DD when the date '
         'can be told (<program_start> gives the year and dates), else the day as written, or empty", "start": '
         '"HH:MM in 24 hours, or empty", "end": "HH:MM in 24 hours, or empty", "room": "room or empty", "abstract": '
         '"its abstract if given, at most 600 characters, or empty"}]}.', paid=False, max_tokens=8000,
-        system='<program_start>\n%s\n</program_start>\n<before>\n%s\n</before>\n<program>\n%s\n</program>' % (
-            head, before, piece))
+        system='<program_start>\n%s\n</program_start>\n<last_day_heading>%s</last_day_heading>\n<before>\n%s\n'
+               '</before>\n<program>\n%s\n</program>' % (head, heading, before, piece))
     return [clean_talk(t) for t in answer.get('talks', []) if isinstance(t, dict) and str(t.get('title', '')).strip()]
 
 
@@ -239,14 +255,16 @@ def settle(talks, year=None):
         key = title_key(talk['title'])
         if not key:
             continue
-        kept = unique.get(key)
+        # the same talk listed in two pieces, not two talks of one title on two days ('Updates from the organizers')
+        kept = next((k for k in unique.get(key, []) if not (k['start'] and talk['start'] and
+                                                            (k['start'], k['day']) != (talk['start'], talk['day']))), None)
         if kept is None:
-            unique[key] = talk
+            unique.setdefault(key, []).append(talk)
             continue
         for field in TALK_FIELDS:  # a talk cut between two pieces: each listing may have what the other missed
             if not kept[field] or (field == 'abstract' and len(talk[field]) > len(kept[field])):
                 kept[field] = talk[field]
-    settled = list(unique.values())
+    settled = sorted((t for kept in unique.values() for t in kept), key=lambda t: talks.index(t))
     for n, talk in enumerate(settled):
         talk['id'] = 't%d' % n
     return settled
@@ -261,7 +279,8 @@ def read_text(text, step=lambda name: None):
     head = text[:HEAD]
     step('list')
     with ThreadPoolExecutor(PARALLEL) as pool:
-        jobs = [pool.submit(sources.closing(list_talks), piece, head if start else '', text[max(0, start - BEFORE):start])
+        jobs = [pool.submit(sources.closing(list_talks), piece, head if start else '', text[max(0, start - BEFORE):start],
+                            day_heading(text[:start]))
                 for start, piece in chunks(text)]
         listed = []
         for job in jobs:
