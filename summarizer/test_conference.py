@@ -162,6 +162,24 @@ class ConferenceTests(ToolsTestCase):
             found = conference_import.read_link('https://pretalx.com/conf-26/schedule/', None)
             self.assertEqual(found['source'], 'https://pretalx.com/conf-26/schedule/export/schedule.ics')
 
+    def test_a_server_error_is_tried_again_then_told(self):
+        answers = [conference_import.LinkError('answered 502'), ('https://x.org/', 'text/html', b'<p>ok</p>')]
+
+        def once(url):
+            answer = answers.pop(0)
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+        with mock.patch('summarizer.conference_import.fetch_once', side_effect=once), \
+                mock.patch('summarizer.conference_import.time.sleep') as sleep:
+            self.assertEqual(conference_import.fetch('https://x.org/')[2], b'<p>ok</p>')
+        sleep.assert_called_once()
+        user = self.user('pro', paid=True)
+        client = self.client_for(user)
+        with mock.patch('summarizer.conference_import.read_link', side_effect=conference_import.LinkError('answered 503')):
+            r = client.post('/en/conference/', {'url': 'https://example.org/program', 'interests': 'clouds of hot planets'})
+        self.assertContains(client.get(r['Location']), 'The conference website did not answer')
+
     def test_only_public_links_are_fetched(self):
         for url in ('http://127.0.0.1/admin', 'http://localhost:8000/', 'file:///etc/passwd', 'http://10.0.0.1/',
                     'http://user:pw@example.org/', 'ftp://example.org/x'):

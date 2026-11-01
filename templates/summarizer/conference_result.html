@@ -171,7 +171,8 @@
     {% endif %}
     <p class="muted"><small>{% trans 'Read from the program by an AI: check the times and rooms on the conference website.' %}</small></p>
   {% elif row.status == 'failed' %}
-    {% if link_error %}<p class="error">{% trans 'We could not read this link: it may be private, or not a program. Paste the program, or send its PDF.' %}</p>
+    {% if link_down %}<p class="error">{% trans 'The conference website did not answer. Try again in a few minutes, or paste the program.' %}</p>
+    {% elif link_error %}<p class="error">{% trans 'We could not read this link: it may be private, or not a program. Paste the program, or send its PDF.' %}</p>
     {% else %}<p class="error">{% trans 'Reading the program failed. If you sent a PDF, check that it holds text, and try again.' %}</p>{% endif %}
     <p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
   {% else %}

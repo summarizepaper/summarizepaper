@@ -984,7 +984,7 @@ def conference_result(request, key):
         row.status = 'failed'  # lost in a restart
     context = {'row': row, 'result': result, 'steps': STEPS, 'owner': owner, 'program': program,
                'share_url': result_share.shared_url(request, row, 'conference') if owner else '',
-               'link_error': 'LinkError' in (row.error or '')}
+               'link_error': 'LinkError' in (row.error or ''), 'link_down': 'LinkError: answered 5' in (row.error or '')}
     if result is not None:
         marks = {m.talk: {'state': m.state, 'note': m.note}
                  for m in ConferenceMark.objects.filter(program=program, user=request.user)} if program else {}

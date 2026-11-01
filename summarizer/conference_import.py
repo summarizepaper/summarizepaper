@@ -10,6 +10,7 @@ import ipaddress
 import json
 import re
 import socket
+import time
 from urllib.parse import urljoin, urlsplit
 
 import requests
@@ -20,6 +21,7 @@ from . import sources
 MAX_BYTES = 12 * 1024 * 1024
 TIMEOUT = (5, 30)
 REDIRECTS = 4
+RETRY_SECONDS = 3
 ABSTRACT_CHARS = 1500
 INDICO_RE = re.compile(r'^(?P<base>.*?)/event/(?P<id>\d+)(?:/|$)')
 PRETALX_RE = re.compile(r'^(?P<event>https?://[^/]+/[\w-]+)/(?:schedule|talk|speaker)(?:/|$)')
@@ -40,7 +42,18 @@ def public_host(host):
 
 
 def fetch(url):
-    """(final url, content type, bytes) of a public http(s) link, redirects checked one by one."""
+    """(final url, content type, bytes) of a public http(s) link, redirects checked one by one; a server error is
+    tried again once, a few seconds later."""
+    try:
+        return fetch_once(url)
+    except LinkError as e:
+        if not str(e).startswith('answered 5'):
+            raise
+        time.sleep(RETRY_SECONDS)
+        return fetch_once(url)
+
+
+def fetch_once(url):
     for _ in range(REDIRECTS + 1):
         parts = urlsplit(url)
         if parts.scheme not in ('http', 'https') or not parts.hostname or parts.username or parts.password \
