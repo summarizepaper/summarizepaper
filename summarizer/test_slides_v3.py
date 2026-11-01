@@ -411,3 +411,20 @@ class ProductionFixesTests(DeckTestCase):
         big = io.BytesIO()
         Image.new('RGB', (4555, 3941), 'white').save(big, 'PNG')
         self.assertEqual(Image.open(io.BytesIO(slides_pptx.normalized_image(big.getvalue()))).size, (1387, 1200))
+
+    def test_the_model_gets_no_publication_data_and_extra_questions_go_to_the_notes(self):
+        self.article.journal_ref = 'Nature Astronomy 5, 1 (2021)'
+        self.article.link_doi = '10.1038/x'
+        self.article.save()
+        questions = ['Question %d about the clouds?' % i for i in range(6)]
+        deck = self.generate(reply=answer(questions=questions, discussion_points=['A', 'B', 'C', 'D'])).data()
+        sent = json.loads(self.chat.call_args.args[0])['source_documents']
+        self.assertNotIn('publication_check', sent)
+        self.assertNotIn('journal_ref', sent['metadata'])
+        self.assertNotIn('doi', sent['metadata'])
+        self.assertIn('Write about the science only', self.chat.call_args.kwargs['system'])
+        discussion = next(p for p in deck['pages'] if p['title'] == 'Pour la discussion')
+        self.assertEqual(discussion['secondary'], questions[:4])
+        self.assertEqual(len(discussion['bullets']), 3)
+        self.assertIn('– Question 5 about the clouds?', discussion['notes'])
+        self.assertIn('– D', discussion['notes'])

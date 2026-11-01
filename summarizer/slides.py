@@ -113,8 +113,9 @@ Every point that says what a paper did or found carries in "quote" the exact pas
 whether it is a "result" (measured, computed or proved), an "interpretation" (concluded or suggested by the
 authors), "method" or "context". A point you cannot support with a passage has an empty quote: write as few of
 them as possible. Never invent a number, a result, a publication or a peer review.
-Slide titles have no numbers ("Context", not "1. Context"). Do not write about the publication or the peer review of a
-paper on your slides: a slide of its own gives what was checked."""
+Slide titles have no numbers ("Context", not "1. Context"). Questions are under 20 words too.
+Write about the science only: no point on where or whether a paper is published or peer reviewed (a slide of its own
+gives what was checked), nor on the documents or checks you were given."""
 
 PROMPT = """You prepare a journal club presentation of the paper in source_documents, for {audience}, to be
 given in about {minutes} minutes.
@@ -122,7 +123,6 @@ given in about {minutes} minutes.
 Make {plan}.
 related_work lists the closest earlier papers we know and papers that cite this one, with their abstracts:
 compare with them only, and never call the result the first beyond what they allow.
-publication_check says what has been checked of its publication: never say more than it establishes.
 {figures}{abstract_only}Answer with a JSON object:
 {{"title": "the paper title translated into {language}",
   "slides": [{{"title": "...", "points": [{{"text": "...", "quote": "...", "kind": "result|interpretation|method|context"}}],
@@ -493,6 +493,18 @@ def texts(value, limit=6):
     return [clean(v, 400) for v in value if clean(v, 400)][:limit] if isinstance(value, list) else []
 
 
+DISCUSSION_SHOWN, QUESTIONS_SHOWN = 3, 4  # what fits a slide; the rest goes to its notes
+
+
+def discussion_page(points, questions, note):
+    """The page of points to discuss and questions, the ones that do not fit in its notes."""
+    extra = points[DISCUSSION_SHOWN:] + questions[QUESTIONS_SHOWN:]
+    return {'kind': 'columns', 'title': gettext('For the discussion'), 'figure': None, 'sources': [],
+            'headings': [gettext('Points to discuss (AI reading, to check)'), gettext('Questions')],
+            'bullets': points[:DISCUSSION_SHOWN], 'secondary': questions[:QUESTIONS_SHOWN],
+            'notes': '\n'.join([note] + ['– ' + line for line in extra])}
+
+
 def content_pages(answer, figures, sources_of):
     """The model's slides, each point checked against the paper of its slide (sources_of(slide) -> (source, text))."""
     pages = []
@@ -547,12 +559,20 @@ def translated(pages, answer, asked):
     if not mapping:
         return pages
     for page in pages:
-        for field in ('title', 'notes'):
-            page[field] = mapping.get(page.get(field), page.get(field))
+        page['title'] = mapping.get(page.get('title'), page.get('title'))
+        if page.get('notes'):
+            page['notes'] = '\n'.join(mapping.get(line, line) for line in page['notes'].split('\n'))
         for field in ('headings', 'bullets', 'secondary'):
             if isinstance(page.get(field), list):
                 page[field] = [mapping.get(line, line) for line in page[field]]
     return pages
+
+
+def metadata(paper, scope):
+    """What the model knows of a paper besides its text: its authors, not its publication (a slide of its own)."""
+    from . import presskit
+    known = {k: v for k, v in presskit.provenance(paper, scope).items() if k not in ('doi', 'journal_ref', 'published')}
+    return dict(known, authors=[a.name for a in paper.authors.all()[:20]])
 
 
 def write(arxiv_id, opts):
@@ -584,8 +604,8 @@ def write(arxiv_id, opts):
         with translation.override(lang):
             lines, warnings = standing(paper, report)
         asked = to_translate(lang, lines + warnings)
-        documents = {'metadata': dict(presskit.provenance(paper, scope), authors=[a.name for a in paper.authors.all()[:20]]),
-                     'text': source_text, 'publication_check': report, 'related_work': related, 'figures': captions}
+        documents = {'metadata': metadata(paper, scope),
+                     'text': source_text, 'related_work': related, 'figures': captions}
         if asked:
             documents['labels_to_translate'] = asked
         language = generated.language_name(lang)
@@ -660,10 +680,8 @@ def deck_pages(paper, title, answer, figures, source, source_text, abstract_only
                   'headings': [gettext('Strengths'), gettext('Limits stated by the authors')],
                   'bullets': strengths[:4], 'secondary': stated[:4] or [gettext('The authors state no limit in the text we read')],
                   'sources': [dict(c, column=0) for c in strength_checks[:4]] + [dict(c, column=1) for c in stated_checks[:4]], 'notes': ''})
-    pages.append({'kind': 'columns', 'title': gettext('For the discussion'), 'figure': None, 'sources': [],
-                  'headings': [gettext('Points to discuss (AI reading, to check)'), gettext('Questions')],
-                  'bullets': (texts(answer.get('discussion_points'), 4) + unsourced)[:5], 'secondary': texts(answer.get('questions'), 6),
-                  'notes': gettext('The points to discuss are a reading by an AI, not statements of the paper.')})
+    pages.append(discussion_page((texts(answer.get('discussion_points'), 4) + unsourced)[:5], texts(answer.get('questions'), 6),
+                                 gettext('The points to discuss are a reading by an AI, not statements of the paper.')))
     cited = [r for r, _t in relations[:4]] + followups[:2]
     pages.append({'kind': 'content', 'title': gettext('References'), 'figure': None, 'sources': [], 'notes': '',
                   'bullets': [citation_line(presskit.byline(paper), paper.title, sources.label(paper.arxiv_id))]
@@ -694,8 +712,7 @@ def collection_write(collection_pk, ids, opts):
             found, shown = figure_list(presskit.figures_of(paper)[:8], paper, prefix='p%d' % index)
             figures.update(found)
             captions += [dict(c, paper=paper.arxiv_id) for c in shown]
-            documents.append({'id': paper.arxiv_id, 'metadata': dict(presskit.provenance(paper, 'abstract' if abstract_only else 'full_text'),
-                                                                    authors=[a.name for a in paper.authors.all()[:20]]),
+            documents.append({'id': paper.arxiv_id, 'metadata': metadata(paper, 'abstract' if abstract_only else 'full_text'),
                               'text': text_read})
         generated.progress(pk, 'write')
         language = generated.language_name(lang)
@@ -735,10 +752,8 @@ def collection_write(collection_pk, ids, opts):
             if open_questions:
                 pages.append({'kind': 'content', 'title': gettext('What the papers leave open'), 'bullets': open_questions, 'figure': None,
                               'sources': [], 'notes': gettext('From the open questions of the collection.'), 'headings': []})
-            pages.append({'kind': 'columns', 'title': gettext('For the discussion'), 'figure': None, 'sources': [],
-                          'headings': [gettext('Points to discuss (AI reading, to check)'), gettext('Questions')],
-                          'bullets': texts(answer.get('discussion_points'), 4), 'secondary': texts(answer.get('questions'), 6),
-                          'notes': gettext('The points to discuss are a reading by an AI, not statements of the papers.')})
+            pages.append(discussion_page(texts(answer.get('discussion_points'), 4), texts(answer.get('questions'), 6),
+                                         gettext('The points to discuss are a reading by an AI, not statements of the papers.')))
             pages.append({'kind': 'content', 'title': gettext('References'), 'figure': None, 'sources': [], 'notes': '', 'headings': [],
                           'bullets': [citation_line(presskit.byline(p), p.title, sources.label(p.arxiv_id)) for p in papers]})
         pages = translated(pages, answer, asked)
