@@ -80,7 +80,7 @@
             steps.forEach(function (li) { li.classList.remove('is-current'); li.classList.add('is-done'); });
             return done(json.data);
           }
-          if (json.status === 'failed' || Date.now() - tracking > 600000) {
+          if (json.status === 'failed' || json.status === 'no_source' || Date.now() - tracking > 600000) {
             clearInterval(timer);
             panel.classList.add('is-failed');
             if (failed) failed();

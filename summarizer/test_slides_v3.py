@@ -2,6 +2,7 @@
 rewriting a slide, sharing, the decks of a collection and proposing a paper."""
 import copy
 import io
+import re
 import json
 from unittest import mock
 
@@ -375,3 +376,38 @@ class ProposeTests(DeckTestCase):
 
     def test_paper_tools_letters_and_digest_link_to_the_proposal(self):
         self.assertContains(self.client.get('/en/journal-club/'), '/en/collections/')
+
+
+class ProductionFixesTests(DeckTestCase):
+    def test_languages_without_catalog_get_the_fixed_labels_from_the_model(self):
+        labels = {'Where the paper stands': 'Wo der Artikel steht', 'Strengths': 'Stärken', 'References': 'Literatur',
+                  'Editorial status not confirmed by the sources checked': 'Status nicht bestätigt', 'Ignored': 'x'}
+        row = self.generate(opts={'lang': 'de', 'audience': 'field', 'duration': 20}, reply=answer(labels=labels))
+        sent = json.loads(self.chat.call_args.args[0])['source_documents']
+        self.assertIn('Where the paper stands', sent['labels_to_translate'])
+        self.assertIn('labels_to_translate', self.chat.call_args.kwargs['system'])
+        self.assertEqual(sent['metadata']['authors'], ['Ann Lee', 'Bob Ray'])
+        deck = row.data()
+        titles = [p['title'] for p in deck['pages']]
+        self.assertIn('Wo der Artikel steht', titles)
+        self.assertIn('Literatur', titles)
+        self.assertIn('Status nicht bestätigt', deck['standing'])
+        limits = next(p for p in deck['pages'] if p['kind'] == 'columns' and p['headings'][0] == 'Stärken')
+        self.assertTrue(limits)
+        french = self.generate(opts={'lang': 'fr', 'audience': 'field', 'duration': 20})
+        self.assertNotIn('labels_to_translate', json.loads(self.chat.call_args.args[0])['source_documents'])
+        self.assertIn('no numbers', self.chat.call_args.kwargs['system'])
+
+    def test_svg_in_points_wrapped_base64_and_large_rasters_are_exported(self):
+        png = io.BytesIO()
+        Image.new('RGB', (4, 4), 'red').save(png, 'PNG')
+        import base64
+        wrapped = '\n'.join(re.findall('.{1,8}', base64.b64encode(png.getvalue()).decode()))
+        svg = ('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="418.08pt" height="258.96pt" '
+               'viewBox="0 0 418.08 258.96"><rect width="100" height="50" fill="blue"/>'
+               '<image width="4" height="4" xlink:href="data:image/png;base64,%s"/></svg>' % wrapped).encode()
+        out = Image.open(io.BytesIO(slides_pptx.normalized_image(svg)))
+        self.assertEqual(out.size, (1800, 1115))
+        big = io.BytesIO()
+        Image.new('RGB', (4555, 3941), 'white').save(big, 'PNG')
+        self.assertEqual(Image.open(io.BytesIO(slides_pptx.normalized_image(big.getvalue()))).size, (1387, 1200))

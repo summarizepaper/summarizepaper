@@ -112,7 +112,9 @@ no ellipsis. Keep each point under 20 words. Plain text: no LaTeX, no Markdown.
 Every point that says what a paper did or found carries in "quote" the exact passage that supports it, and says
 whether it is a "result" (measured, computed or proved), an "interpretation" (concluded or suggested by the
 authors), "method" or "context". A point you cannot support with a passage has an empty quote: write as few of
-them as possible. Never invent a number, a result, a publication or a peer review."""
+them as possible. Never invent a number, a result, a publication or a peer review.
+Slide titles have no numbers ("Context", not "1. Context"). Do not write about the publication or the peer review of a
+paper on your slides: a slide of its own gives what was checked."""
 
 PROMPT = """You prepare a journal club presentation of the paper in source_documents, for {audience}, to be
 given in about {minutes} minutes.
@@ -511,6 +513,48 @@ def content_pages(answer, figures, sources_of):
     return pages
 
 
+# The labels of the pages we write ourselves. French has its catalog; for the other languages without one, the
+# model translates them in the same call (labels_to_translate), with the lines of where_the_paper_stands.
+CATALOG_LANGUAGES = ('en', 'fr')
+FIXED_LABELS = (
+    'Strengths and limits', 'Strengths', 'Limits stated by the authors', 'The authors state no limit in the text we read',
+    'For the discussion', 'Points to discuss (AI reading, to check)', 'Questions',
+    'The points to discuss are a reading by an AI, not statements of the paper.',
+    'The points to discuss are a reading by an AI, not statements of the papers.',
+    'What the abstract does not say', 'Only the abstract could be read: these points need the full paper.',
+    'Earlier work and what came next', 'What it builds on', 'Papers that cite it', 'No earlier paper found in our index',
+    'No citing paper found yet',
+    "From the papers it cites and the papers that cite it (Semantic Scholar, OpenAlex and our index), not from the model's memory.",
+    'Where the paper stands', 'Checked in Crossref and arXiv when the deck was written; check again before presenting.',
+    'References', 'How the papers compare', 'Where they agree', 'Where they differ',
+    'From the comparison table of the collection, whose cells carry their passages.',
+    'Written by an AI from the papers: check it against them.', 'What the papers leave open',
+    'From the open questions of the collection.',
+)
+LABELS_RULE = ('labels_to_translate lists labels of slides we write ourselves: translate each into {language} in '
+               '"labels": {{"<the label exactly as given>": "<its translation>"}}; keep names, DOIs and dates.\n')
+
+
+def to_translate(lang, extra=()):
+    """The labels the model translates for a language without a catalog, [] otherwise."""
+    return [] if lang in CATALOG_LANGUAGES else list(dict.fromkeys(list(FIXED_LABELS) + [l for l in extra if l]))
+
+
+def translated(pages, answer, asked):
+    """The pages with the labels we wrote in English replaced by the model's translation of them."""
+    labels = answer.get('labels') if isinstance(answer.get('labels'), dict) else {}
+    mapping = {k: clean(v, 400) for k, v in labels.items() if k in asked and isinstance(v, str) and clean(v, 400)}
+    if not mapping:
+        return pages
+    for page in pages:
+        for field in ('title', 'notes'):
+            page[field] = mapping.get(page.get(field), page.get(field))
+        for field in ('headings', 'bullets', 'secondary'):
+            if isinstance(page.get(field), list):
+                page[field] = [mapping.get(line, line) for line in page[field]]
+    return pages
+
+
 def write(arxiv_id, opts):
     lang = opts['lang']
 
@@ -537,10 +581,15 @@ def write(arxiv_id, opts):
         related = [{'id': i['ref'], 'title': clean(i.get('title'), 300), 'authors': i.get('authors', ''), 'date': i.get('date', ''),
                     'relation': 'earlier' if i in prior else 'cites this paper', 'abstract': clean(i.get('abstract'), ABSTRACT_CHARS)}
                    for i in prior + followups]
-        documents = {'metadata': presskit.provenance(paper, scope), 'text': source_text, 'publication_check': report,
-                     'related_work': related, 'figures': captions}
+        with translation.override(lang):
+            lines, warnings = standing(paper, report)
+        asked = to_translate(lang, lines + warnings)
+        documents = {'metadata': dict(presskit.provenance(paper, scope), authors=[a.name for a in paper.authors.all()[:20]]),
+                     'text': source_text, 'publication_check': report, 'related_work': related, 'figures': captions}
+        if asked:
+            documents['labels_to_translate'] = asked
         language = generated.language_name(lang)
-        prompt = PROMPT.format(
+        prompt = (LABELS_RULE.format(language=language) if asked else '') + PROMPT.format(
             language=language, audience=AUDIENCE_PROMPTS[opts['audience']], minutes=opts['duration'],
             plan=ABSTRACT_PLAN if abstract_only else PLANS[opts['duration']],
             figures='Put a figure on a slide when it helps, by its label, at most once each.\n' if captions else '',
@@ -552,8 +601,10 @@ def write(arxiv_id, opts):
         if not title:
             raise generated.GenerationError('missing presentation title in the requested language')
         with translation.override(lang):
-            pages = deck_pages(paper, title, answer, figures, source, source_text, abstract_only, report, prior, followups)
-            lines, warnings = standing(paper, report)
+            pages = translated(deck_pages(paper, title, answer, figures, source, source_text, abstract_only, report, prior, followups),
+                               answer, asked)
+        mapping = {line: translated([{'title': line}], answer, asked)[0]['title'] for line in lines + warnings}
+        lines, warnings = [mapping[l] for l in lines], [mapping[w] for w in warnings]
         return {'generation_version': 3, 'title': title, 'language': lang, 'audience': opts['audience'],
                 'duration': opts['duration'], 'abstract_only': abstract_only, 'scope': scope,
                 'label': sources.label(arxiv_id), 'license': sources.license_label(paper.license or ''),
@@ -643,15 +694,18 @@ def collection_write(collection_pk, ids, opts):
             found, shown = figure_list(presskit.figures_of(paper)[:8], paper, prefix='p%d' % index)
             figures.update(found)
             captions += [dict(c, paper=paper.arxiv_id) for c in shown]
-            documents.append({'id': paper.arxiv_id, 'metadata': presskit.provenance(paper, 'abstract' if abstract_only else 'full_text'),
+            documents.append({'id': paper.arxiv_id, 'metadata': dict(presskit.provenance(paper, 'abstract' if abstract_only else 'full_text'),
+                                                                    authors=[a.name for a in paper.authors.all()[:20]]),
                               'text': text_read})
         generated.progress(pk, 'write')
         language = generated.language_name(lang)
-        prompt = COLLECTION_PROMPT.format(
+        asked = to_translate(lang)
+        prompt = (LABELS_RULE.format(language=language) if asked else '') + COLLECTION_PROMPT.format(
             count=len(papers), language=language, audience=AUDIENCE_PROMPTS[opts['audience']], minutes=opts['duration'],
             plan=COLLECTION_PLANS[opts['duration']],
             figures='Put a figure on a slide of its paper when it helps, by its label, at most once each.\n' if captions else '')
-        answer = generated.chat_json(json.dumps({'source_documents': {'papers': documents, 'figures': captions}}, ensure_ascii=False),
+        answer = generated.chat_json(json.dumps({'source_documents': dict({'papers': documents, 'figures': captions},
+                                                                          **({'labels_to_translate': asked} if asked else {}))}, ensure_ascii=False),
                                      paid=True, max_tokens=9000, system=SOURCE_POLICY + '\n' + prompt)
         title = clean(answer.get('title'), 300)
         if not title:
@@ -687,6 +741,7 @@ def collection_write(collection_pk, ids, opts):
                           'notes': gettext('The points to discuss are a reading by an AI, not statements of the papers.')})
             pages.append({'kind': 'content', 'title': gettext('References'), 'figure': None, 'sources': [], 'notes': '', 'headings': [],
                           'bullets': [citation_line(presskit.byline(p), p.title, sources.label(p.arxiv_id)) for p in papers]})
+        pages = translated(pages, answer, asked)
         for page in pages:
             page.setdefault('notes', '')
             page.setdefault('headings', [])

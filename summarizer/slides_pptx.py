@@ -25,7 +25,8 @@ from . import sources
 from .chat_figures import IMAGE_HOSTS
 
 MAX_IMAGE_BYTES = 4 * 1024 * 1024
-MAX_IMAGE_PIXELS = 12_000_000
+MAX_IMAGE_PIXELS = 40_000_000  # arXiv heatmaps reach 4555 x 3941; decoded one at a time (EXPORT_WORKERS)
+EXPORT_WORKERS = 2
 MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 
 
@@ -58,7 +59,7 @@ def svg_png(data, width_limit=1800, height_limit=1200):
             href = next((v for k, v in node.attrib.items() if etree.QName(k).localname == 'href'), '')
             if not re.match(r'^data:image/(png|jpeg);base64,', href, flags=re.I):
                 raise ExportError
-            raster = base64.b64decode(href.split(',', 1)[1], validate=True)
+            raster = base64.b64decode(re.sub(r'\s+', '', href.split(',', 1)[1]), validate=True)  # LaTeX exports wrap it
             if len(raster) > MAX_IMAGE_BYTES or not raster.startswith((b'\x89PNG\r\n\x1a\n', b'\xff\xd8')):
                 raise ExportError
             for attr in node.attrib:
@@ -82,12 +83,18 @@ def svg_png(data, width_limit=1800, height_limit=1200):
             float(re.match(r'[\d.]+', root.get('width', '800')).group()),
             float(re.match(r'[\d.]+', root.get('height', '600')).group()))
         ratio = width / height
+        drawn = '0 0 %s %s' % (width, height)  # the user units the drawing uses
         if not math.isfinite(ratio) or not .05 <= ratio <= 20:
             raise ValueError
     except (ValueError, ZeroDivisionError, AttributeError):
         raise ExportError
     width, height = ((width_limit, round(width_limit / ratio)) if ratio >= width_limit / height_limit
                      else (round(height_limit * ratio), height_limit))
+    # resvg refuses sizes in points ('418.08pt', as arXiv's LaTeX figures give them): the size is set in pixels
+    root.set('width', str(width))
+    root.set('height', str(height))
+    if len(box) != 4:
+        root.set('viewBox', drawn)
     return resvg_py.svg_to_bytes(svg_string=etree.tostring(root, encoding='unicode'), width=width, height=height)
 
 
@@ -230,7 +237,7 @@ def render_pptx(pages, footer, title):
     foot of each slide names (the paper's identifier, or the collection)."""
     urls = list(dict.fromkeys(p['figure']['url'] for p in pages if p.get('figure')))
     try:
-        with ThreadPoolExecutor(max_workers=4) as pool:
+        with ThreadPoolExecutor(max_workers=EXPORT_WORKERS) as pool:
             images = dict(zip(urls, pool.map(sources.closing(figure_bytes), urls)))
     except ExportError:
         raise ExportError(_('A figure could not be included. Please try the PowerPoint export again later.'))
