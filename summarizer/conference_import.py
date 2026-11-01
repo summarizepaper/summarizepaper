@@ -164,6 +164,7 @@ def ics_time(name, params, value):
 def ics_talks(text):
     """The events of a calendar feed as talks, and its time zone."""
     text = re.sub(r'\r?\n[ \t]', '', text)  # unfold the long lines
+    pretalx = bool(re.search(r'^PRODID:.*pretalx', text, re.I | re.M))  # its summaries are 'Title - Speaker, Speaker'
     talks, zone = [], ''
     for block in re.findall(r'BEGIN:VEVENT(.*?)END:VEVENT', text, re.S):
         fields = {}
@@ -179,7 +180,10 @@ def ics_talks(text):
         zone = zone or start_zone
         description = ics_value(fields.get('DESCRIPTION', ('', ''))[1])
         speakers = re.search(r'^(?:speakers?|presenters?|orateurs?)\s*:\s*(.+)$', description, re.I | re.M)
-        talks.append({'title': ' '.join(summary.split()), 'speakers': speakers[1].strip() if speakers else '',
+        speakers = speakers[1].strip() if speakers else ''
+        if pretalx and not speakers and ' - ' in summary:
+            summary, speakers = summary.rsplit(' - ', 1)
+        talks.append({'title': ' '.join(summary.split()), 'speakers': speakers,
                       'presenter': '', 'affiliation': '', 'session': ics_value(fields.get('CATEGORIES', ('', ''))[1]),
                       'kind': 'talk', 'day': day, 'start': start, 'end': end,
                       'room': ics_value(fields.get('LOCATION', ('', ''))[1]),

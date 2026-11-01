@@ -145,6 +145,9 @@ class ConferenceTests(ToolsTestCase):
         self.assertEqual((name, zone), ('Sched conf', 'Europe/Paris'))
         self.assertEqual((talks[0]['title'], talks[0]['speakers'], talks[0]['start'], talks[0]['end'], talks[0]['abstract']),
                          ('Clouds, again', 'Ann Lee', '10:00', '10:30', 'Speakers: Ann Lee A long abstract'))
+        _, talks, _ = conference_import.ics_talks('PRODID:-//pretalx//x\r\nBEGIN:VEVENT\r\nSUMMARY:Clouds - and more - Ann Lee\, Bo Ray\r\n'
+                                                  'DTSTART:20260714T080000Z\r\nEND:VEVENT\r\n')
+        self.assertEqual((talks[0]['title'], talks[0]['speakers'], talks[0]['start']), ('Clouds - and more', 'Ann Lee, Bo Ray', '08:00'))
 
     def test_only_public_links_are_fetched(self):
         for url in ('http://127.0.0.1/admin', 'http://localhost:8000/', 'file:///etc/passwd', 'http://10.0.0.1/',

@@ -16,6 +16,7 @@ day by day, and the people to meet.
    annotate, share with a team that sees who goes where, and follow up after the conference (preprints to a
    collection, notes, a first email to the people met).
 """
+import contextvars
 import datetime
 import hashlib
 import json
@@ -127,6 +128,13 @@ def result_data(data, private=True):
     return result
 
 
+def closing(function):
+    """sources.closing, in a copy of the caller's context: the model calls of the worker threads are counted for the
+    conference companion and its user (usage.task), not as another task."""
+    context = contextvars.copy_context()
+    return lambda *args: context.copy().run(sources.in_thread, function, *args)
+
+
 # --- reading the program ------------------------------------------------------------
 
 def chunks(text):
@@ -229,8 +237,9 @@ def dated_label(label, year):
 
 def settle(talks, year=None):
     """The program's talks once read: days told by their weekday dated when the program dates another talk on
-    that weekday, a day carried to the talks of the same session or with a time that follow it, a talk listed in
-    two pieces kept once, and an id each ('t0', 't1'...)."""
+    that weekday, a day carried to the talks of the same session or with a time that follow it, the session and
+    room carried to the timed talks that have neither, a talk listed in two pieces kept once, and an id each
+    ('t0', 't1'...)."""
     dated = {}
     for talk in talks:
         if talk['day'] and not ISO_DAY.match(talk['day']):
@@ -240,8 +249,11 @@ def settle(talks, year=None):
                 dated.setdefault(datetime.date.fromisoformat(talk['day']).weekday(), set()).add(talk['day'])
             except ValueError:
                 talk['day'] = ''
-    last_day, last_session = '', None
+    last_day, last_session, previous = '', None, None
     for talk in talks:
+        if previous and not talk['session'] and not talk['room'] and talk['start'] and talk['day'] in ('', previous['day']):
+            talk['session'], talk['room'] = previous['session'], previous['room']  # a piece that starts within a session
+        previous = talk
         label = re.sub(r'[^a-z]', ' ', talk['day'].lower()).split()
         weekday = next((WEEKDAYS[w] for w in label if w in WEEKDAYS), None)
         if talk['day'] and not ISO_DAY.match(talk['day']) and weekday is not None and len(dated.get(weekday, ())) == 1:
@@ -278,7 +290,7 @@ def read_text(text, step=lambda name: None):
     year = re.search(r'\b(20\d{2}|19\d{2})\b', text[:HEAD])
     step('list')
     with ThreadPoolExecutor(PARALLEL) as pool:
-        jobs = [pool.submit(sources.closing(list_talks), piece, year[1] if year else '', day_heading(text[:start]))
+        jobs = [pool.submit(closing(list_talks), piece, year[1] if year else '', day_heading(text[:start]))
                 for start, piece in chunks(text)]
         listed = []
         for job in jobs:
@@ -352,7 +364,7 @@ def program_vectors(program, talks):
         return np.frombuffer(bytes(program.vectors), dtype=np.float32).reshape(len(talks), -1)
     batches = [texts[i:i + EMBED_BATCH] for i in range(0, len(texts), EMBED_BATCH)]
     with ThreadPoolExecutor(4) as pool:
-        vectors = np.vstack(list(pool.map(sources.closing(similar.embed), batches)))
+        vectors = np.vstack(list(pool.map(closing(similar.embed), batches)))
     program.vectors, program.vector_key = vectors.tobytes(), key
     program.save(update_fields=['vectors', 'vector_key'])
     return vectors
@@ -583,10 +595,10 @@ def rank(program, interests, lang, user, project=None, collection=None, names=()
     step('write')
     batches = [shortlist[i:i + JUDGE_BATCH] for i in range(0, len(shortlist), JUDGE_BATCH)]
     with ThreadPoolExecutor(6) as pool:
-        alerts_job = pool.submit(sources.closing(scoop_alerts), projects, talks, vectors, lang)
-        themes_job = pool.submit(sources.closing(themes), talks, vectors, lang)
+        alerts_job = pool.submit(closing(scoop_alerts), projects, talks, vectors, lang)
+        themes_job = pool.submit(closing(themes), talks, vectors, lang)
         notes = {}
-        for found in pool.map(sources.closing(lambda b: judge(b, described, lang)), batches):
+        for found in pool.map(closing(lambda b: judge(b, described, lang)), batches):
             notes.update(found)
         alerts = alerts_job.result()
         theme_list, theme_of = themes_job.result()
@@ -604,7 +616,7 @@ def rank(program, interests, lang, user, project=None, collection=None, names=()
     since = (max((t['day'][:4] for t in talks if ISO_DAY.match(t['day'])), default='') or str(timezone.now().year))
     since = int(since) - PAPER_YEARS
     with ThreadPoolExecutor(4) as pool:
-        papers = list(pool.map(sources.closing(lambda t: find_paper(t, since)), chosen[:PAPERS]))
+        papers = list(pool.map(closing(lambda t: find_paper(t, since)), chosen[:PAPERS]))
     for talk, paper in zip(chosen, papers):
         if paper:
             talk['paper'] = paper
