@@ -276,11 +276,11 @@ def queue(arxiv_id):
 
 
 def queue_many(arxiv_ids):
-    """queue() for many papers in one cache write (the papers read lately, see personal_activity.check_readings)."""
+    """The papers read lately (see personal_activity.check_readings), checked before the papers queued by
+    page views, which crawlers fill the queue with."""
+    first = list(dict.fromkeys(arxiv_ids))[:MAX_QUEUED]
     ids = cache.get(QUEUE_KEY) or []
-    added = [i for i in dict.fromkeys(arxiv_ids) if i not in ids][:max(MAX_QUEUED - len(ids), 0)]
-    if added:
-        cache.set(QUEUE_KEY, ids + added, 7 * 86400)
+    cache.set(QUEUE_KEY, (first + [i for i in ids if i not in set(first)])[:MAX_QUEUED], 7 * 86400)
 
 
 def iso_date(value):

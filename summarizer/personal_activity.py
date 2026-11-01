@@ -753,8 +753,9 @@ def check_readings(now):
     from . import changes, digest, publication_status
     if not cache.add(CHECK_DAILY_KEY % now.date(), True, 86400):
         return 0
-    ids = list(PaperVisit.objects.filter(Q(visited__gte=now - timedelta(days=CHECK_DAYS)) | Q(marked__gte=now - timedelta(days=CHECK_DAYS)))
-               .order_by('-visited').values_list('arxiv_id', flat=True).distinct()[:CHECK_MAX * 2])
+    since = now - timedelta(days=CHECK_DAYS)
+    ids = list(PaperVisit.objects.filter(Q(visited__gte=since) | Q(requested__gte=since) | Q(marked__gte=since))
+               .order_by('-pk').values_list('arxiv_id', flat=True)[:CHECK_MAX * 2])
     ids = list(dict.fromkeys(ids))[:CHECK_MAX]
     bases = sorted({changes.base_id(i)[0] for i in ids if not sources.is_external(i)})
     checked = 0

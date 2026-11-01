@@ -335,6 +335,9 @@ class ResearcherSpaceTests(ToolsTestCase):
         response = self.client.get('/fr/history/')
         for text in ('Vue d’ensemble', 'Du nouveau sur vos articles', 'Télécharger mes données'):
             self.assertContains(response, text)
+        privacy = self.client.get('/fr/privacy/')
+        self.assertContains(privacy, 'Personne d’autre ne les voit')
+        self.assertContains(privacy, '/fr/history/export/')
 
 
 class ReadingListTests(ToolsTestCase):
@@ -463,6 +466,18 @@ class ReadingListTests(ToolsTestCase):
         self.assertIn(self.article.arxiv_id, cache.get(publication_status.QUEUE_KEY))
         labels = [x['label'] for n in self.client.get('/en/history/').context['news'] for x in n['news']]
         self.assertIn('Version 3 is on arXiv', labels)
+
+    def test_daily_check_takes_summary_requests_and_goes_first_in_a_full_queue(self):
+        from unittest import mock
+        from django.core.cache import cache
+        from summarizer import publication_status
+        cache.set(publication_status.QUEUE_KEY, ['crawled%d' % i for i in range(publication_status.MAX_QUEUED)])
+        personal_activity.record_request(self.reader, self.article.arxiv_id)
+        PaperVisit.objects.update(visited=None)
+        with mock.patch('summarizer.digest.fetch_ids', return_value=[{'arxiv_id': '2101.00001v2'}]):
+            self.assertEqual(personal_activity.check_readings(timezone.now()), 1)
+        queue = cache.get(publication_status.QUEUE_KEY)
+        self.assertEqual((queue[0], len(queue)), (self.article.arxiv_id, publication_status.MAX_QUEUED))
 
     def test_digest_save_link_adds_to_the_reading_list(self):
         from django.core import signing
