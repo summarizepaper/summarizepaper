@@ -128,6 +128,20 @@ class PaperVisit(models.Model):
         indexes = [models.Index(fields=['user', '-visited'], name='visit_user_recent')]
 
 
+class ToolUse(models.Model):
+    """A shared result (a press kit, a journal club deck: one row per paper and options, read by everyone) that a
+    user started, opened from its tool or edited: their Results in My activity list it (personal_activity.py)."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tool_uses')
+    row = models.ForeignKey('Generated', on_delete=models.CASCADE, related_name='uses')
+    url = models.CharField(max_length=500)  # its page, with the options it was made with
+    title = models.CharField(max_length=500, blank=True, default='')  # the paper or collection it is about
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'row')
+
+
 class ActivityState(models.Model):
     """What a user has seen of the news of My activity: what is new since their last visit, what they set aside."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='activity_state')

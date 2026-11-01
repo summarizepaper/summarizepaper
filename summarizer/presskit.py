@@ -943,6 +943,10 @@ def presskit_start(request, arxiv_id):
     if existing and existing.user_id and existing.user_id != request.user.pk:
         raise Http404
     row = generated.start('presskit', arxiv_id, lang, write(arxiv_id, lang), force=request.POST.get('again') == '1')
+    if request.user.is_authenticated:
+        from .personal_activity import record_use
+        paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).values_list('title', flat=True).first()
+        record_use(request.user, row, '/%s/press-kit/%s/' % (lang, arxiv_id), paper or arxiv_id)
     return JsonResponse({'status': row.status, 'id': row.pk})
 
 

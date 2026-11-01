@@ -1159,7 +1159,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'quota_left':chat_page.quota_left(request),
                 'paper_share':chat_page.current_share(request, arxiv_id),
                 'citation_meta':citation_meta(paper),
-                'publication_info':publication_status.for_page(paper),
+                'publication_info':publication_status.for_page(paper, request),
                 'insight':paper_insight,
                 'insight_unavailable': insight.unavailable(arxiv_id, lang),
                 'topic':keywords[0] if keywords else '',

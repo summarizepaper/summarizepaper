@@ -57,7 +57,7 @@
     {% if recent_results %}
     <ul class="activity-mini">{% for r in recent_results %}<li><a href="{{ r.url }}">{{ r.title }}</a><span class="activity-meta">{{ r.tool }} · {{ r.date|date:"j M Y" }}{% if r.times > 1 %} · {% blocktrans count n=r.times %}run {{ n }} time{% plural %}run {{ n }} times{% endblocktrans %}{% endif %}{% if r.state %} · <strong>{{ r.state }}</strong>{% endif %}</span></li>{% endfor %}</ul>
     <a class="activity-more" href="?tab=results">{% trans 'All my results' %} →</a>
-    {% else %}<p class="activity-help">{% trans 'Your literature reviews, bibliography checks, conference programs and searches of teams will be listed here.' %} <a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a></p>{% endif %}
+    {% else %}<p class="activity-help">{% trans 'Your literature reviews, bibliography checks, press kits, journal club slides, conference programs and searches of teams will be listed here.' %} <a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a></p>{% endif %}
   </section>
 
   {% if suggestions %}
@@ -218,7 +218,7 @@
   <div class="card activity-empty">
     {% if query or status or kind %}<h2>{% trans 'No matching activity' %}</h2><p>{% trans 'Try a shorter search or another keyword.' %}</p>
     {% elif tab == 'conversations' %}<h2>{% trans 'No conversations yet' %}</h2><p>{% trans 'Ask a question about a paper. You can return to the exchange here.' %}</p><a href="{% url 'chat' %}">{% trans 'Start a conversation' %} →</a>
-    {% elif tab == 'results' %}<h2>{% trans 'No results yet' %}</h2><p>{% trans 'Your literature reviews, bibliography checks, conference programs and searches of teams will be listed here.' %}</p><a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a>
+    {% elif tab == 'results' %}<h2>{% trans 'No results yet' %}</h2><p>{% trans 'Your literature reviews, bibliography checks, press kits, journal club slides, conference programs and searches of teams will be listed here.' %}</p><a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a>
     {% else %}<h2>{% trans 'No readings yet' %}</h2><p>{% trans 'Open a paper while signed in to find it here later.' %}</p><a href="/{{ LANGUAGE_CODE }}/getting-started/">{% trans 'Explore an example' %} →</a>{% endif %}
   </div>
   {% endif %}

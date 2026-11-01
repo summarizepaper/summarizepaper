@@ -247,7 +247,13 @@ class PaperPageRefreshTests(ToolsTestCase):
                                                link_doi='http://arxiv.org/abs/1307.0983v2', journal_ref='')
 
     def test_page_shows_no_fake_doi_and_queues_the_check(self):
-        info = status.for_page(self.paper)
+        from django.contrib.auth.models import AnonymousUser
+        from django.test import RequestFactory
+        status.for_page(self.paper)  # no reader known: nothing queued
+        self.assertIsNone(status.cache.get(status.QUEUE_KEY))
+        request = RequestFactory().get('/', HTTP_USER_AGENT='Mozilla/5.0 Firefox/130.0')
+        request.user = AnonymousUser()
+        info = status.for_page(self.paper, request)
         self.assertEqual((info['doi'], info['journal'], info['published']), ('', '', None))
         self.assertEqual(status.cache.get(status.QUEUE_KEY), ['1307.0983v2'])
 

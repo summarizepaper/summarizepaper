@@ -257,6 +257,7 @@ def display_context(report):
 # missing or old, and the hourly run checks a few of them at arXiv's pace (refresh_queued).
 QUEUE_KEY = 'publication-status-queue'
 MAX_QUEUED = 500
+ANONYMOUS_QUEUED = 250
 MAX_REFRESHED_PER_RUN = 30
 ARXIV_SECONDS = 3
 SHOWN_EVERY = datetime.timedelta(days=30)
@@ -269,10 +270,12 @@ def page_due(report):
     return stale(report, PUBLISHED_SHOWN_EVERY if report.get('status') == 'published' else SHOWN_EVERY)
 
 
-def queue(arxiv_id):
+def queue(arxiv_id, first=False, limit=MAX_QUEUED):
+    """first: checked before the others (a signed-in reader); limit: queued only while the queue is shorter."""
     ids = cache.get(QUEUE_KEY) or []
-    if arxiv_id not in ids and len(ids) < MAX_QUEUED:
-        cache.set(QUEUE_KEY, ids + [arxiv_id], 7 * 86400)
+    if arxiv_id in ids or (not first and len(ids) >= limit):
+        return
+    cache.set(QUEUE_KEY, ([arxiv_id] + ids)[:MAX_QUEUED] if first else ids + [arxiv_id], 7 * 86400)
 
 
 def queue_many(arxiv_ids):
@@ -292,13 +295,17 @@ def iso_date(value):
         return None, ''
 
 
-def for_page(paper):
+def for_page(paper, request=None):
     """What the paper page shows of the paper's publication: {doi, journal, published, published_format, accepted,
-    forthcoming}. The journal comes from Crossref when it confirmed the publication, else the arXiv journal reference."""
+    forthcoming}. The journal comes from Crossref when it confirmed the publication, else the arXiv journal reference.
+    A missing or old check is queued for a reader, not for a crawler: crawlers read every page and filled the
+    queue. A signed-in reader's paper goes first; visitors without an account fill half of the queue at most."""
+    from . import access
     row = Generated.objects.filter(kind=KIND, key=paper.arxiv_id, lang='en').first()
     report = row.data() if row and row.content else None
-    if page_due(report) and not sources.is_external(paper.arxiv_id):
-        queue(paper.arxiv_id)
+    if page_due(report) and not sources.is_external(paper.arxiv_id) and request is not None and not access.crawler(request):
+        signed_in = request.user.is_authenticated
+        queue(paper.arxiv_id, first=signed_in, limit=MAX_QUEUED if signed_in else ANONYMOUS_QUEUED)
     report = report or {}
     confirmed = report.get('status') in ('published', 'forthcoming')
     doi = (confirmed and report.get('doi')) or report.get('arxiv_doi') or sources.clean_doi(paper.link_doi or '') or ''

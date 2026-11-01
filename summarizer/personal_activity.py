@@ -34,7 +34,7 @@ from . import sources
 from .models import (ActivityState, AIassistant, ArxivPaper, ChatConversation, ChatShare, Collection, CollectionPaper,
                      DigestSubscription, FollowedPaper, Generated, LetterSubscription, PaperAuthor, PaperHistory,
                      PaperScore, PaperVisit, PublicationAlert, ReferenceWatch, SavedSearch, TopicMapWatch,
-                     VersionAlert, WatchedProject)
+                     ToolUse, VersionAlert, WatchedProject)
 
 PER_PAGE = 20
 NEWS_DAYS = 90  # alerts of followed papers older than this are no longer news
@@ -75,6 +75,14 @@ RESULT_KINDS = {
     'students': (gettext_lazy('Find a research placement'), 'students', lambda d: d.get('title')),
     'conference': (gettext_lazy('Conference companion'), 'conference', lambda d: d.get('name')),
 }
+# Shared results (one row per paper and options, read by every user): listed through the user's ToolUse rows
+SHARED_KINDS = {
+    'presskit': gettext_lazy('Press kit'),
+    'slides_v3': gettext_lazy('Journal club'), 'slides_v2': gettext_lazy('Journal club'), 'slides': gettext_lazy('Journal club'),
+    'slides_coll': gettext_lazy('Journal club'),
+}
+FILTERS = [(k, v[0]) for k, v in RESULT_KINDS.items()] + [('presskit', gettext_lazy('Press kit')),
+                                                            ('journal-club', gettext_lazy('Journal club'))]
 
 
 # --- recording ---------------------------------------------------------------------------
@@ -116,6 +124,13 @@ def record_request(user, arxiv_id):
     if user is None or not user.is_authenticated:
         return
     save_visit(user, arxiv_id, requested=timezone.now(), hidden=False)
+
+
+def record_use(user, row, url, title):
+    """A shared result the user started or edited, for their Results (the latest use first)."""
+    if not isinstance(row, Generated) or row.pk is None:
+        return
+    ToolUse.objects.update_or_create(user=user, row=row, defaults={'url': url[:500], 'title': ' '.join(str(title).split())[:500]})
 
 
 def sync_collections(user, ids, status):
@@ -404,14 +419,18 @@ def describe_results(rows, grouped=False):
     lang = get_language()
     items, same = [], {}
     for row in rows:
-        name, path, title = RESULT_KINDS[row.kind]
-        data = row.data() if row.status == 'done' and row.content else {}
         status = row.status
         if status == 'pending' and row.updated < timezone.now() - generated.STALE:
             status = 'failed'  # lost with a restarted dyno: its tool starts it again when asked
         state = {'pending': _('In progress…'), 'done': ''}.get(status, _('Failed'))
-        item = {'tool': name, 'title': (title(data) if data else '') or name, 'state': state, 'times': 1,
-                'url': '/%s/%s/%s/' % (lang, path, row.key), 'date': row.created, 'status': status}
+        if row.kind in SHARED_KINDS:
+            name, text, url = SHARED_KINDS[row.kind], row.use_title, row.use_url
+        else:
+            name, path, title = RESULT_KINDS[row.kind]
+            data = row.data() if row.status == 'done' and row.content else {}
+            text, url = title(data) if data else '', '/%s/%s/%s/' % (lang, path, row.key)
+        item = {'tool': name, 'title': text or name, 'state': state, 'times': 1, 'url': url, 'date': row.date,
+                'status': status}
         key = (row.kind, item['title'])
         if grouped and status == 'done' and key in same:
             same[key]['times'] += 1
@@ -422,8 +441,18 @@ def describe_results(rows, grouped=False):
 
 
 def results(user, kind=''):
-    rows = Generated.objects.filter(user=user, kind__in=[kind] if kind in RESULT_KINDS else list(RESULT_KINDS))
-    return rows.order_by('-created', '-pk')
+    """The user's results, newest first: their own rows, and the shared rows they started or edited (dated by
+    their latest use). kind: a key of RESULT_KINDS, 'presskit' or 'journal-club'."""
+    own = list(RESULT_KINDS) if kind not in RESULT_KINDS else [kind]
+    shared = [k for k in SHARED_KINDS if kind in ('', k) or kind == 'journal-club' and k != 'presskit']
+    if kind and kind not in RESULT_KINDS:
+        own = []
+    uses = ToolUse.objects.filter(user=user, row=OuterRef('pk'))
+    rows = Generated.objects.filter(Q(user=user, kind__in=own) | Q(kind__in=shared, pk__in=Subquery(
+        ToolUse.objects.filter(user=user).values('row_id'))))
+    rows = rows.annotate(use_url=Subquery(uses.values('url')[:1]), use_title=Subquery(uses.values('title')[:1]),
+                         date=Coalesce(Subquery(uses.values('updated')[:1]), 'created'))
+    return rows.order_by('-date', '-pk')
 
 
 def close_to_reading(user, read_ids, limit=5):
@@ -571,7 +600,7 @@ def page(request):
     status = request.GET.get('status', '')
     kind = request.GET.get('kind', '')
     context = {'tab': tab, 'query': query, 'status': status, 'kind': kind, 'items': [],
-               'reading_labels': reading_labels(), 'result_kinds': [(k, v[0]) for k, v in RESULT_KINDS.items()],
+               'reading_labels': reading_labels(), 'result_kinds': FILTERS,
                'notice': request.GET.get('done', '')}
     if tab == 'overview':
         context.update(overview(request))
@@ -585,7 +614,7 @@ def page(request):
     elif tab == 'conversations':
         rows = conversations(request, query)
     else:
-        kind = kind if kind in RESULT_KINDS else ''
+        kind = kind if kind in dict(FILTERS) else ''
         rows = results(request.user, kind)
     result = Paginator(rows, PER_PAGE).get_page(request.GET.get('page'))
     if tab == 'readings':
@@ -832,6 +861,9 @@ def export_data(request):
         'results': [{'tool': k, 'id': key, 'status': s, 'date': when(d)} for k, key, s, d in
                     Generated.objects.filter(user=user, kind__in=list(RESULT_KINDS)).order_by('pk')
                     .values_list('kind', 'key', 'status', 'created')],
+        'press_kits_and_journal_clubs': [{'tool': k, 'title': t, 'link': u, 'last_used': when(d)} for k, t, u, d in
+                                         ToolUse.objects.filter(user=user).order_by('pk')
+                                         .values_list('row__kind', 'title', 'url', 'updated')],
     }
     response = HttpResponse(json.dumps(data, ensure_ascii=False, indent=1), content_type='application/json; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="summarizepaper-%s.json"' % timezone.localdate().isoformat()

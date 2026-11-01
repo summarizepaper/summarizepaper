@@ -489,3 +489,53 @@ class ReadingListTests(ToolsTestCase):
         response = anonymous.post('/en/digest/save/%s/' % token, {'reading': 'to_read'})
         self.assertContains(response, 'Added to your reading list')
         self.assertEqual(PaperVisit.objects.get(user=self.reader).reading, 'to_read')
+
+
+class SharedResultsAndCrawlersTests(ToolsTestCase):
+    """Press kits and journal club decks in the Results of those who made them; the publication queue for readers."""
+
+    def setUp(self):
+        super().setUp()
+        self.article = self.paper()
+
+    def test_press_kit_and_decks_started_or_edited_are_listed(self):
+        from unittest import mock
+        pro = self.user('pro', paid=True)
+        client = self.client_for(pro)
+        kit = Generated.objects.create(kind='presskit', key=self.article.arxiv_id, lang='en', status='done', content='{}')
+        deck = Generated.objects.create(kind='slides_v3', key=self.article.arxiv_id + '|students|10', lang='fr', status='pending')
+        with mock.patch('summarizer.generated.start', side_effect=[kit, deck]):
+            client.post('/en/press-kit/%s/start/' % self.article.arxiv_id)
+            client.post('/en/journal-club/%s/start/' % self.article.arxiv_id,
+                        {'deck_lang': 'fr', 'audience': 'students', 'duration': '10'})
+        items = client.get('/en/history/', {'tab': 'results'}).context['items']
+        self.assertEqual([(str(i['tool']), i['title']) for i in items],
+                         [('Journal club', 'Clouds on a hot planet'), ('Press kit', 'Clouds on a hot planet')])
+        self.assertIn('/journal-club/%s/?' % self.article.arxiv_id, items[0]['url'])
+        self.assertIn('audience=students', items[0]['url'])
+        self.assertEqual(items[1]['url'], '/en/press-kit/%s/' % self.article.arxiv_id)
+        only = client.get('/en/history/', {'tab': 'results', 'kind': 'journal-club'}).context['items']
+        self.assertEqual([str(i['tool']) for i in only], ['Journal club'])
+        other = self.client_for(self.user('other'))
+        self.assertEqual(other.get('/en/history/', {'tab': 'results'}).context['items'], [])
+        export = json.loads(client.get('/en/history/export/').content)
+        self.assertEqual(len(export['press_kits_and_journal_clubs']), 2)
+
+    def test_publication_checks_are_queued_for_readers_not_crawlers(self):
+        from django.core.cache import cache
+        from summarizer import publication_status
+        url = '/en/paper/%s/' % self.article.arxiv_id
+        browser = 'Mozilla/5.0 (Macintosh) Firefox/130.0'
+        for agent in ('Googlebot/2.1', 'python-requests/2.32'):
+            self.client.get(url, HTTP_USER_AGENT=agent)
+        self.client.get(url, HTTP_USER_AGENT=browser, HTTP_X_FORWARDED_FOR='114.119.130.1')  # a crawler network
+        self.assertEqual(cache.get(publication_status.QUEUE_KEY) or [], [])
+        self.client.get(url, HTTP_USER_AGENT=browser)
+        self.assertEqual(cache.get(publication_status.QUEUE_KEY), [self.article.arxiv_id])
+        crowded = ['other%d' % i for i in range(publication_status.ANONYMOUS_QUEUED)]
+        cache.set(publication_status.QUEUE_KEY, crowded)
+        second = self.paper('2101.00002v1')
+        self.client.get('/en/paper/%s/' % second.arxiv_id, HTTP_USER_AGENT=browser)
+        self.assertNotIn(second.arxiv_id, cache.get(publication_status.QUEUE_KEY))  # visitors fill half at most
+        self.client_for(self.user()).get('/en/paper/%s/' % second.arxiv_id, HTTP_USER_AGENT=browser)
+        self.assertEqual(cache.get(publication_status.QUEUE_KEY)[0], second.arxiv_id)  # a reader goes first

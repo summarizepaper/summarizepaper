@@ -791,6 +791,9 @@ class PaperSubject:
     def footer(self, deck):
         return deck.get('label') or sources.label(self.arxiv_id)
 
+    def title(self):
+        return self.paper.title or self.arxiv_id
+
 
 class CollectionSubject:
     def __init__(self, request, pk):
@@ -814,6 +817,9 @@ class CollectionSubject:
 
     def footer(self, deck):
         return deck.get('label') or self.collection.name
+
+    def title(self):
+        return self.collection.name
 
 
 def paid(request):
@@ -891,6 +897,9 @@ def start_deck(request, subject):
     if getattr(subject, 'ids', None) is not None and len(subject.ids) < 2:
         return JsonResponse({'status': 'too_few'}, status=400)
     row = subject.start(opts)
+    if request.user.is_authenticated:
+        from .personal_activity import record_use
+        record_use(request.user, row, subject.url('slides', opts, '3'), subject.title())
     return JsonResponse({'status': row.status, 'id': row.pk, 'url': subject.url('slides', opts, '3')})
 
 
@@ -938,6 +947,9 @@ def save_deck(request, subject):
             edits = [dict({k: v for k, v in p.items() if k in EDITED}, figure=p.get('figure') or '') for p in pages]
             Generated.objects.update_or_create(kind=kind, key=key, lang=row.lang,
                                                defaults={'user': request.user, 'status': 'done', 'content': json.dumps({'pages': edits})})
+        from .personal_activity import record_use
+        opts = options(request.GET, request.LANGUAGE_CODE)
+        record_use(request.user, row, subject.url('slides', opts, request.GET.get('deck_version')), subject.title())
     except (ValueError, TypeError, AttributeError):
         return JsonResponse({'status': 'invalid'}, status=400)
     return JsonResponse({'status': 'saved', 'revision': revision_of(pages)})

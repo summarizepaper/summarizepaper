@@ -63,6 +63,14 @@ def client_ip(request):
     )
 
 
+def crawler(request):
+    """Whether a request comes from a crawler: by its user agent, or from the networks of crawlers that pass
+    for browsers (context_processors.UNTRACKED_NETWORKS)."""
+    from .context_processors import untracked
+    from .digest_web import BOT_RE
+    return bool(BOT_RE.search(request.META.get('HTTP_USER_AGENT', ''))) or untracked(client_ip(request))
+
+
 def client_ip_from_scope(scope):
     headers = {k.decode("latin1").lower(): v.decode("latin1") for k, v in scope.get("headers", [])}
     client = scope.get("client") or (None, None)
