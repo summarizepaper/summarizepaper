@@ -80,6 +80,9 @@ class ReadingTests(ToolsTestCase):
         with mock.patch('summarizer.generated.chat_json', return_value=answer):
             self.assertEqual(refcheck_claims.check_claims(claims, papers, 'en'), [])
 
+    def test_values_written_with_a_k_or_m_suffix_are_the_same_values(self):
+        self.assertEqual(refcheck_claims.scaled('a vocabulary of about 37K tokens and 1.2M pairs, 3 kg'), {'37000', '1200000'})
+
     def test_sentences_that_attribute_a_result_are_read_first(self):
         claims = [{'sentence': 'See e.g. the reviews [a, b, c, d, e].', 'keys': list('abcde'), 'order': 0},
                   {'sentence': 'Smith showed a 12.5% excess [s].', 'keys': ['s'], 'order': 1},

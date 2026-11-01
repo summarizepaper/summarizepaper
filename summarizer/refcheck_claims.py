@@ -17,6 +17,7 @@
 import logging
 import re
 from bisect import bisect_right
+from decimal import Decimal
 
 from . import evidence, generated, presskit, sources, tdm
 
@@ -47,6 +48,7 @@ RESULT_WORDS = re.compile(
     r'predict\w*|prove[dns]?|reveal\w*|establish\w*|conclud\w*|confirm\w*|obtain\w*|deriv\w*|indicat\w*|'
     r'suggest\w*|argu\w*|claim\w*|propos\w*|introduc\w*|achiev\w*|outperform\w*|improv\w*|first)\b', re.I)
 BACKGROUND = re.compile(r'\b(?:e\.g\.|see|reviews?|references therein|among others|for instance|such as)\b', re.I)
+SCALED = re.compile(r'(?<![\w.])(\d+(?:\.\d+)?)\s?([kKM])\b')
 VALUE = re.compile(r'\d+(?:[.,]\d+)?\s*(?:\\?%|\\sigma|σ|\\pm|±)|\d+\.\d+')
 WORD = re.compile(r'[A-Za-z][A-Za-z\-]{3,}')
 STOP = frozenset('this that with from have were which their these those also than then there been into such '
@@ -268,6 +270,15 @@ def significant_values(sentence):
     return {v for v in values if '.' in v or (v.isdigit() and len(v) >= 2 and not re.fullmatch(r'(1[89]|20)\d\d', v))}
 
 
+def scaled(text):
+    """The values a text writes with a k or M suffix (37K, 1.2M tokens), as plain numbers."""
+    values = set()
+    for number, suffix in SCALED.findall(text):
+        value = Decimal(number) * (1000 if suffix in 'kK' else 1000000)
+        values.add(str(value.normalize().quantize(Decimal(1)) if value == value.to_integral() else value.normalize()))
+    return values
+
+
 def deepen(flagged, papers, lang):
     """Read again the flagged claims against the full text of the papers concerned, when it can be read."""
     from .missed import at_once
@@ -284,7 +295,7 @@ def deepen(flagged, papers, lang):
             if values and all(texts.get(k) for k in claim['keys']):
                 stated = set()
                 for key in claim['keys']:
-                    stated |= evidence.with_roundings(evidence.numbers(texts[key]['text']))
+                    stated |= evidence.with_roundings(evidence.numbers(texts[key]['text']) | scaled(texts[key]['text']))
                 claim['numbers_absent'] = sorted(values - stated)
 
     def ask(batch):
