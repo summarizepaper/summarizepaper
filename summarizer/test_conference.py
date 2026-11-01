@@ -149,6 +149,19 @@ class ConferenceTests(ToolsTestCase):
                                                   'DTSTART:20260714T080000Z\r\nEND:VEVENT\r\n')
         self.assertEqual((talks[0]['title'], talks[0]['speakers'], talks[0]['start']), ('Clouds - and more', 'Ann Lee, Bo Ray', '08:00'))
 
+    def test_a_page_leads_to_its_calendar_feed(self):
+        feed = b'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:Clouds\r\nDTSTART:20260714T080000Z\r\nEND:VEVENT\r\nEND:VCALENDAR'
+        pages = {'https://conf.example.org/program': ('text/html', b'<title>Conf 26</title><a href="/agenda.ics">iCal</a>'),
+                 'https://conf.example.org/agenda.ics': ('text/calendar', feed),
+                 'https://pretalx.com/conf-26/schedule/': ('text/plain', b'\x1b[1mOpening\x1b[0m drawing'),
+                 'https://pretalx.com/conf-26/schedule/export/schedule.ics': ('text/calendar', feed)}
+        with mock.patch('summarizer.conference_import.fetch', side_effect=lambda url: (url,) + pages[url]):
+            found = conference_import.read_link('https://conf.example.org/program', None)
+            self.assertEqual((found['name'], found['talks'][0]['title'], found['source']),
+                             ('Conf 26', 'Clouds', 'https://conf.example.org/agenda.ics'))
+            found = conference_import.read_link('https://pretalx.com/conf-26/schedule/', None)
+            self.assertEqual(found['source'], 'https://pretalx.com/conf-26/schedule/export/schedule.ics')
+
     def test_only_public_links_are_fetched(self):
         for url in ('http://127.0.0.1/admin', 'http://localhost:8000/', 'file:///etc/passwd', 'http://10.0.0.1/',
                     'http://user:pw@example.org/', 'ftp://example.org/x'):

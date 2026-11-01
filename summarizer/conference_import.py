@@ -1,6 +1,7 @@
 """Conference programs read from a link: an Indico event through its timetable API (exact days, times, rooms,
 presenters and abstracts, for thousands of contributions), a calendar feed (.ics, as Sched, Pretalx and Indico
-give), or any other page or PDF, whose text the model then reads (conference.list_talks).
+give, or the one a page links to), or any other page or PDF, whose text the model then reads
+(conference.list_talks).
 
 Only public addresses are fetched: a program link is typed by a researcher, never an address of our network.
 """
@@ -21,6 +22,8 @@ TIMEOUT = (5, 30)
 REDIRECTS = 4
 ABSTRACT_CHARS = 1500
 INDICO_RE = re.compile(r'^(?P<base>.*?)/event/(?P<id>\d+)(?:/|$)')
+PRETALX_RE = re.compile(r'^(?P<event>https?://[^/]+/[\w-]+)/(?:schedule|talk|speaker)(?:/|$)')
+ANSI_RE = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
 
 
 class LinkError(Exception):
@@ -200,6 +203,32 @@ def is_ics(kind, data):
 
 # --- any link -----------------------------------------------------------------------
 
+def feed_links(url, kind, data):
+    """The calendar feeds a page leads to, best first: the export of a Pretalx schedule (which answers a script
+    with a drawing of its timetable), the feed a page declares or links to."""
+    links = []
+    match = PRETALX_RE.match(url)
+    if match:
+        links.append(match['event'] + '/schedule/export/schedule.ics')
+    if 'html' in kind:
+        soup = BeautifulSoup(data[:2000000], 'html.parser')
+        for tag in soup.find_all(['link', 'a'], href=True):
+            if tag.get('type', '').lower() == 'text/calendar' or re.search(r'\.ics(?:$|\?)', tag['href']):
+                links.append(urljoin(url, tag['href']))
+    return list(dict.fromkeys(links))[:3]
+
+
+def read_feed(url):
+    try:
+        _, kind, data = fetch(url)
+    except LinkError:
+        return None
+    if not is_ics(kind, data):
+        return None
+    name, talks, zone = ics_talks(data.decode('utf-8', 'replace'))
+    return {'name': name, 'talks': talks, 'timezone': zone, 'source': url} if talks else None
+
+
 def read_link(url, pdf_text):
     """{'name', 'talks', 'timezone'} when the program comes structured, else {'name', 'text'} for the model to read.
     pdf_text: the reader of a PDF's text (missed.pdf_text). Raises LinkError."""
@@ -220,9 +249,13 @@ def read_link(url, pdf_text):
         return {'name': name, 'talks': talks, 'timezone': zone, 'source': url}
     if kind == 'application/pdf' or data[:5] == b'%PDF-':
         return {'name': '', 'text': pdf_text(data), 'source': url}
+    for link in feed_links(final, kind, data):
+        feed = read_feed(link)
+        if feed:
+            return dict(feed, name=feed['name'] or (title_of(data) if 'html' in kind else ''))
     if 'html' in kind or data.lstrip()[:1] == b'<':
         return {'name': title_of(data), 'text': html_text(data), 'source': url}
-    return {'name': '', 'text': data.decode('utf-8', 'replace'), 'source': url}
+    return {'name': '', 'text': ANSI_RE.sub('', data.decode('utf-8', 'replace')), 'source': url}
 
 
 def utc_stamp(day, time, zone):
