@@ -29,7 +29,7 @@ MAX_CLAIMS = 60  # sentences read next to the abstracts, CLAIMS_PER_CALL per mod
 CLAIMS_PER_CALL = 12
 PAPERS_PER_CLAIM = 5
 ABSTRACT_CHARS = 1800
-FULL_TEXTS = 12  # cited papers read in full, for the flagged sentences
+FULL_TEXTS = 16  # cited papers read in full, for the flagged sentences
 DEEP_PER_CALL = 4
 PASSAGES = 6
 PASSAGE_CHARS = 1200
@@ -201,7 +201,9 @@ def judge(batch, papers, start, lang):
         'Each claim above is a sentence of a research draft, its citations shown as [key], the sentence before it, '
         'and the abstracts of the papers it cites. Judge each sentence as a whole: does what it attributes to the '
         'cited papers agree with them? "supported" when it does, or when the papers are cited as background on a '
-        'topic they are about (a list of papers cited for one general statement only needs each to be about it); '
+        'topic they are about (a list of papers cited for one general statement only needs each to be about it). A '
+        'sentence citing several papers is "supported" as soon as one of them says what it states, even when the '
+        'others do not; '
         '"unclear" when the abstracts do not say it (the full text may); "contradicted" when an abstract says '
         'otherwise or the sentence clearly misrepresents a paper (another result, sign, object or conclusion). What '
         'the sentence says in its own name, without attributing it to the papers, is not judged. For "unclear" and '
@@ -301,13 +303,14 @@ def scaled(text):
 def deepen(flagged, papers, lang):
     """Read again the flagged claims against the full text of the papers concerned, when it can be read."""
     from .missed import at_once
+    # the papers concerned first, then the others the sentence cites: one of them may say it
     wanted = list(dict.fromkeys(k for c in sorted(flagged, key=lambda c: c['verdict'] != 'contradicted')
-                                for k in c['concerned'] if k in papers))[:FULL_TEXTS]
+                                for k in c['concerned'] + c['keys'] if k in papers))[:FULL_TEXTS]
     texts = dict(zip(wanted, at_once([lambda key=key: full_text(papers[key]) for key in wanted])))
     counted = {'tried': len(wanted), 'read': sum(1 for t in texts.values() if t)}
     readable_claims = []
     for claim in flagged:
-        read = [k for k in claim['concerned'] if texts.get(k)]
+        read = [k for k in dict.fromkeys(claim['concerned'] + claim['keys']) if texts.get(k)]
         if read:
             readable_claims.append((claim, read))
             claim['full_text'] = read
@@ -328,7 +331,8 @@ def deepen(flagged, papers, lang):
             blocks.append('\n'.join(block + ['</claim>']))
         answer = generated.chat_json(
             'Each claim above is a sentence of a research draft, its citations shown as [key], and passages of the full '
-            'text of the cited papers. Say whether the papers support what the sentence attributes to them: '
+            'text of the cited papers. Say whether the papers support what the sentence attributes to them (one of them '
+            'saying it is enough): '
             '"supported", "unclear" (the passages do not say it) or "contradicted" (a passage says otherwise). For '
             '"supported" and "contradicted", give in "paper" the key of the paper and copy in "quote" the passage that '
             'shows it, word for word from the passages, one or two sentences. Explain in %s in one sentence. Answer '

@@ -53,6 +53,10 @@
     ["M1", "supported", "background", "Transformer models now dominate natural language processing \\cite{vaswani,devlin,brown}."],
     ["M2", "supported", "background", "Deep networks are trained with adaptive stochastic optimizers and normalization layers \\cite{kingma,ioffe}."],
     ["M3", "flagged", "claim", "Both BERT and GPT-3 are pre-trained with a left-to-right objective only \\cite{devlin,brown}."],
-    ["M4", "supported", "multi", "Batch normalization reduces the number of training steps fourteenfold \\cite{he,ioffe}."]
+    ["M4", "supported", "multi", "Batch normalization reduces the number of training steps fourteenfold \\cite{he,ioffe}."],
+    ["M5", "supported", "multi", "Adaptive moment estimation is a first-order method for stochastic objective functions \\cite{ioffe,kingma}."],
+    ["M6", "supported", "multi", "Large language models now reach 175 billion parameters \\cite{devlin,brown}."],
+    ["M7", "flagged", "multi", "Both residual networks and vision transformers process images with recurrent layers \\cite{he,dosovitskiy}."],
+    ["M8", "flagged", "multi", "GW150914 and the new boson seen by ATLAS were both detected in 2012 \\cite{ligo,atlas}."]
   ]
 }
