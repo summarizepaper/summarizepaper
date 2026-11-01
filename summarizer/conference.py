@@ -35,6 +35,7 @@ from django.core.cache import cache
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.crypto import constant_time_compare, salted_hmac
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
@@ -80,6 +81,7 @@ REFRESH_EVERY = datetime.timedelta(hours=23)
 REFRESH_DURING = datetime.timedelta(hours=3)  # while it goes on
 REFRESH_PER_RUN = 10
 REFRESH_BY_HAND = datetime.timedelta(minutes=10)
+NOTIFIED_BY_HAND = 50  # change emails sent when a program is read again by hand
 CHANGED = ('day', 'start', 'end', 'room')
 MAX_CHANGES = 300
 ZONES = ('Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid', 'Europe/Rome', 'Europe/Zurich', 'Europe/Athens',
@@ -145,6 +147,17 @@ def result_data(data, private=True):
         result.pop('interests', None)
         result.pop('basis', None)
     return result
+
+
+def spared(function, default):
+    """function, giving default (and logging why) when it fails: a part of a ranking that may be missing."""
+    def run(*args):
+        try:
+            return function(*args)
+        except Exception:
+            logger.exception('Conference companion: %s failed', getattr(function, '__name__', 'a step'))
+            return default
+    return run
 
 
 def closing(function):
@@ -670,8 +683,9 @@ def people(chosen, own_keys, cited_by):
 
 
 def rank(program, interests, lang, user, project=None, collection=None, names=(), step=lambda name: None):
-    """The result of one researcher's ranking of a program already read (see the module's docstring)."""
-    talks = program.talk_list()
+    """The result of one researcher's ranking of a program already read (see the module's docstring). The model's
+    reading of the shortlist must succeed in part at least; the alerts, themes and preprints may fail alone."""
+    talks = [t for t in program.talk_list() if not t.get('cancelled')]
     if not talks:
         return {'program': program.pk, 'talks': [], 'listed': 0, 'people': [], 'yours': [], 'themes': []}
     step('rank')
@@ -691,13 +705,18 @@ def rank(program, interests, lang, user, project=None, collection=None, names=()
     step('write')
     batches = [shortlist[i:i + JUDGE_BATCH] for i in range(0, len(shortlist), JUDGE_BATCH)]
     with ThreadPoolExecutor(6) as pool:
-        alerts_job = pool.submit(closing(scoop_alerts), projects, talks, vectors, lang)
-        themes_job = pool.submit(closing(themes), talks, vectors, lang)
-        notes = {}
-        for found in pool.map(closing(lambda b: judge(b, described, lang)), batches):
-            notes.update(found)
+        alerts_job = pool.submit(closing(spared(scoop_alerts, {})), projects, talks, vectors, lang)
+        themes_job = pool.submit(closing(spared(themes, ([], {}))), talks, vectors, lang)
+        notes, unread = {}, 0
+        for batch, found in zip(batches, pool.map(closing(spared(lambda b: judge(b, described, lang), None)), batches)):
+            if found is None:
+                unread += len(batch)
+            else:
+                notes.update(found)
         alerts = alerts_job.result()
         theme_list, theme_of = themes_job.result()
+    if batches and unread == len(shortlist):
+        raise generated.GenerationError('the model could not read the talks')
     chosen = [dict(t, **notes[t['id']]) for t in shortlist if t['id'] in notes]
     for talk in chosen:
         if talk['id'] in alerts:
@@ -706,7 +725,7 @@ def rank(program, interests, lang, user, project=None, collection=None, names=()
     step('papers')
     since = paper_since(talks)
     with ThreadPoolExecutor(4) as pool:
-        papers = list(pool.map(closing(lambda t: find_paper(t, since)), chosen[:PAPERS]))
+        papers = list(pool.map(closing(spared(lambda t: find_paper(t, since), None)), chosen[:PAPERS]))
     for talk, paper in zip(chosen, papers):
         if paper:
             talk['paper'] = paper
@@ -716,7 +735,7 @@ def rank(program, interests, lang, user, project=None, collection=None, names=()
     for n, theme in enumerate(theme_list):
         theme['chosen'] = sum(1 for t in chosen if t['theme'] == n)
     return result_data({
-        'program': program.pk, 'talks': chosen, 'listed': len(talks), 'judged': len(shortlist),
+        'program': program.pk, 'talks': chosen, 'listed': len(talks), 'judged': len(shortlist) - unread, 'unread': unread,
         'yours': [t['id'] for t in talks if t['id'] in yours], 'people': people(chosen, own_keys, cited_by),
         'scoops': [dict(alert, id=talk_id) for talk_id, alert in alerts.items()],
         'themes': theme_list, 'theme_of': theme_of, 'interests': interests,
@@ -779,22 +798,36 @@ def zone_of(program):
 
 def merge_talks(old, new):
     """(talks, changes) of a program read again: each talk keeps its id (and so the marks and notes on it), found
-    by its title, on the same day when one title is given twice; a new talk gets a new id; a talk no longer in the
-    program is kept, cancelled. changes: [{'talk', 'title', 'what': {field: [before, now]}} or {..., 'cancelled'}]."""
+    by its title, on the same day when one title is given twice, or else, its title corrected, at the same time by
+    the same presenter (renamed); a new talk gets a new id; a talk no longer in the program is kept, cancelled.
+    changes: [{'talk', 'title', 'what': {field: [before, now]}}, {..., 'cancelled'} or {..., 'added'}]."""
     pool = defaultdict(list)
     for talk in old:
         pool[title_key(talk['title'])].append(talk)
-    next_id = 1 + max((int(t['id'][1:]) for t in old if t['id'][1:].isdigit()), default=-1)
-    merged, changes, kept = [], [], set()
+    matches = []
     for talk in new:
         candidates = pool.get(title_key(talk['title'])) or []
         match = next((t for t in candidates if t['day'] == talk['day']), None) or (candidates[0] if candidates else None)
+        if match is not None:
+            candidates.remove(match)
+        matches.append(match)
+    found = {id(m) for m in matches if m is not None}
+    left = [t for t in old if id(t) not in found]
+    for n, talk in enumerate(new):
+        match = next((t for t in left if renamed(t, talk)), None) if matches[n] is None else None
+        if match is not None:
+            left.remove(match)
+            matches[n] = match
+    next_id = 1 + max((int(t['id'][1:]) for t in old if t['id'][1:].isdigit()), default=-1)
+    merged, changes, kept = [], [], set()
+    for talk, match in zip(new, matches):
         talk = {k: v for k, v in talk.items() if k != 'cancelled'}
         if match is None:
             talk['id'] = 't%d' % next_id
             next_id += 1
+            if old:
+                changes.append({'talk': talk['id'], 'title': talk['title'], 'added': True})
         else:
-            candidates.remove(match)
             talk['id'] = match['id']
             kept.add(match['id'])
             what = {f: [match.get(f, ''), talk[f]] for f in CHANGED if match.get(f, '') != talk[f]}
@@ -811,12 +844,36 @@ def merge_talks(old, new):
     return merged, changes
 
 
+def renamed(old, new):
+    """The same talk, its title corrected: same day and time, and same presenter or a close title."""
+    if not (old['start'] and old['start'] == new['start'] and old['day'] == new['day']):
+        return False
+    key = digest.name_key(old['presenter'] or '')
+    if key and new['presenter']:
+        return digest.same_author(key, new['presenter'])
+    a, b = words(old['title']), words(new['title'])
+    return bool(a and b) and len(a & b) / len(a | b) >= 0.5
+
+
+def to_zone(talks, zone):
+    """Talks whose days and times are in UTC moved to zone (IANA)."""
+    for talk in talks:
+        if ISO_DAY.match(talk['day']) and talk['start']:
+            if talk['end']:
+                _, talk['end'] = conference_import.local(talk['day'], talk['end'], zone)
+            talk['day'], talk['start'] = conference_import.local(talk['day'], talk['start'], zone)
+    return talks
+
+
 def refresh(program, now):
     """Read a program from Indico or its feed again and keep its changes (see merge_talks); [] when nothing changed
     or when the source no longer gives a program that can be trusted (empty, or most talks gone)."""
     found = conference_import.read_link(program.source, missed.pdf_text)
     old = program.talk_list()
     new = settle([clean_talk(t) for t in found.get('talks', [])])
+    zone = found.get('timezone') or program.timezone
+    if zone == 'UTC' and program.timezone not in ('', 'UTC'):  # times in UTC moved by set_zone: moved again
+        new, zone = to_zone(new, program.timezone), program.timezone
     program.refreshed = now
     if not new or len(new) < len([t for t in old if not t.get('cancelled')]) / 2:
         logger.warning('Program %s read again with %d talks instead of %d: kept as it was', program.pk, len(new), len(old))
@@ -826,7 +883,7 @@ def refresh(program, now):
     for change in changes:
         change['at'] = now.isoformat()
     program.talks = json.dumps(talks, ensure_ascii=False)
-    program.timezone = (found.get('timezone') or program.timezone)[:60]
+    program.timezone = zone[:60]
     program.first_day, program.last_day = day_span(talks)
     program.changes = json.dumps((program.change_list() + changes)[-MAX_CHANGES:], ensure_ascii=False)
     program.save(update_fields=['talks', 'timezone', 'first_day', 'last_day', 'changes', 'refreshed'])
@@ -835,17 +892,43 @@ def refresh(program, now):
 
 def latest_rows(program):
     """{user id: their latest finished ranking of this program}."""
+    from django.db.models import Q
     rows = {}
     users = [program.user_id] + list(program.members.values_list('user_id', flat=True))
-    for row in Generated.objects.filter(kind='conference', user_id__in=users, status='done').order_by('-created'):
+    # the rows of this program found by the database first (content is the result's JSON), then checked
+    mentions = Q(content__contains='"program": %d,' % program.pk) | Q(content__contains='"program": %d}' % program.pk)
+    for row in Generated.objects.filter(mentions, kind='conference', user_id__in=users, status='done').order_by('-created'):
         if row.user_id not in rows and row.data().get('program') == program.pk:
             rows[row.user_id] = row
     return rows
 
 
+def added_close(program, rows, added):
+    """{user id: ids of the talks added to the program that are as close to their research as the talks their
+    ranking chose ('must' or 'should')}."""
+    talks = {t['id']: t for t in program.talk_list() if t['id'] in added and not t.get('cancelled')}
+    wanted = {}
+    for user_id, row in rows.items():
+        data = row.data()
+        scores = [t['similarity'] for t in data.get('talks', []) if t.get('priority') in ('must', 'should')
+                  and isinstance(t.get('similarity'), (int, float))]
+        if data.get('interests') and scores:
+            wanted[user_id] = (data['interests'], min(scores) / 100)
+    if not talks or not wanted:
+        return {}
+    ids, users = list(talks), list(wanted)
+    vectors = similar.embed([talk_text(talks[i]) for i in ids] + [wanted[u][0][:similar.MAX_INPUT_CHARS] for u in users])
+    found = {}
+    for n, user_id in enumerate(users):
+        scores = vectors[:len(ids)] @ vectors[len(ids) + n]
+        found[user_id] = {ids[k] for k in range(len(ids)) if scores[k] >= wanted[user_id][1]}
+    return found
+
+
 def concerned(program, changes):
     """{user: (row to link, [changes of the talks in their program])}: those who mark a talk going or whose latest
-    ranking holds it ('must' or 'should', or their own), but those who asked for no emails."""
+    ranking holds it ('must' or 'should', or their own), or a talk added to the program as close to their research
+    as those; but those who asked for no emails."""
     from django.contrib.auth.models import User
     changed = {c['talk'] for c in changes}
     rows = latest_rows(program)
@@ -857,6 +940,13 @@ def concerned(program, changes):
         data = row.data()
         talks[user_id] |= {t['id'] for t in data.get('talks', []) if t.get('priority') in ('must', 'should')} & changed
         talks[user_id] |= set(data.get('yours', [])) & changed
+    added = {c['talk'] for c in changes if c.get('added')}
+    if added:
+        try:
+            for user_id, close in added_close(program, rows, added).items():
+                talks[user_id] |= close
+        except Exception:
+            logger.exception('New talks of program %s could not be compared with the rankings', program.pk)
     quiet = set(program.quiet_ids())
     found = {}
     for user in User.objects.filter(pk__in=[u for u, t in talks.items() if t and u not in quiet]):
@@ -872,6 +962,8 @@ def change_lines(change, program):
     from django.utils.translation import gettext as _t
     if change.get('cancelled'):
         return [_t('Cancelled')]
+    if change.get('added'):
+        return [_t('New in the program')]
     what = change.get('what', {})
 
     def when(day, start):
@@ -937,13 +1029,26 @@ def refresh_due(now, budget, base_url='https://www.summarizepaper.com'):
             logger.exception('Program %s could not be read again', program.pk)
             ConferenceProgram.objects.filter(pk=program.pk).update(refreshed=now)
             continue
-        if not changes:
-            continue
-        for user, (row, theirs) in concerned(program, changes).items():
-            if sent >= budget:
-                return sent
-            if theirs and user.email and user.email.strip().lower() not in suppressed and send_changes(user, program, row, theirs, base_url):
-                sent += 1
+        sent += notify(program, changes, base_url, budget - sent, suppressed)
+        if sent >= budget:
+            break
+    return sent
+
+
+def notify(program, changes, base_url, budget, suppressed=None, but=None):
+    """Email the changes of a program read again to those they concern (concerned), but the user but (who read it
+    again and sees them); how many emails were sent."""
+    from . import mailcheck
+    if not changes or budget <= 0:
+        return 0
+    suppressed = mailcheck.suppressed() if suppressed is None else suppressed
+    sent = 0
+    for user, (row, theirs) in concerned(program, changes).items():
+        if sent >= budget:
+            break
+        if theirs and user != but and user.email and user.email.strip().lower() not in suppressed \
+                and send_changes(user, program, row, theirs, base_url):
+            sent += 1
     return sent
 
 
@@ -1049,20 +1154,22 @@ def person_label(user):
     return user.first_name or user.username.split('@')[0]
 
 
-def access_row(request, key):
-    """(row, program, owner): the owner opens their result with the tool; a team member opens it always."""
-    if not request.user.is_authenticated:
+def access_row(request, key, user=None):
+    """(row, program, owner): the owner opens their result with the tool; a team member opens it always. user: the
+    one a calendar feed is for, when the request carries no session."""
+    user = user or request.user
+    if not user.is_authenticated:
         raise Http404
     row = Generated.objects.filter(kind='conference', key=key).first()
     if row is None:
         raise Http404
     program_pk = row.data().get('program') if row.status == 'done' else None
     program = ConferenceProgram.objects.filter(pk=program_pk).first() if program_pk else None
-    if row.user_id == request.user.id:
-        if not access.has_tool(request.user, 'conference'):
+    if row.user_id == user.id:
+        if not access.has_tool(user, 'conference'):
             raise Http404
         return row, program, True
-    if program is not None and ConferenceMember.objects.filter(program=program, user=request.user).exists():
+    if program is not None and ConferenceMember.objects.filter(program=program, user=user).exists():
         return row, program, False
     raise Http404
 
@@ -1198,6 +1305,30 @@ def mail_work(program_pk, user, name, interests, lang):
     return work
 
 
+def papers_key(program, user):
+    return '%s:%s' % (program.pk, user.pk)
+
+
+def papers_work(program_pk, user, result, marked, wanted):
+    """The background work that puts the preprints of one's talks in a collection (marked_papers looks for those
+    of the marked talks, a few seconds each): {'added': n, 'collection': pk}, or {'added': 'full'} when one's plan
+    allows no new collection."""
+    def work(pk):
+        program = ConferenceProgram.objects.get(pk=program_pk)
+        ids = list(dict.fromkeys(p['key'] for p in marked_papers(program, result, marked)))[:COLLECTION_PAPERS]
+        if not ids:
+            return {'added': 0}
+        paid = access.has_tool(user, 'collections')
+        collection = Collection.objects.filter(user=user, pk=wanted).first() if wanted.isdigit() else None
+        if collection is None:
+            if Collection.objects.filter(user=user).count() >= library.limits(paid)['collections']:
+                return {'added': 'full'}
+            collection = Collection.objects.create(user=user, name=(program.name or 'Conference')[:120])
+        counts = library.add_many(collection, ids, paid)
+        return {'added': counts.get('added', 0) + counts.get('updated', 0), 'collection': collection.pk}
+    return work
+
+
 def set_zone(program, zone):
     """The time zone of a program whose times were not told in one: times in UTC are moved to it."""
     from zoneinfo import ZoneInfo
@@ -1208,12 +1339,7 @@ def set_zone(program, zone):
     except (KeyError, ValueError):
         return '?view=after&error=zone'
     if program.timezone == 'UTC':
-        talks = program.talk_list()
-        for talk in talks:
-            if ISO_DAY.match(talk['day']) and talk['start']:
-                if talk['end']:
-                    _, talk['end'] = conference_import.local(talk['day'], talk['end'], zone)
-                talk['day'], talk['start'] = conference_import.local(talk['day'], talk['start'], zone)
+        talks = to_zone(program.talk_list(), zone)
         program.talks = json.dumps(talks, ensure_ascii=False)
         program.first_day, program.last_day = day_span(talks)
     program.timezone = zone
@@ -1259,8 +1385,12 @@ def act(request, row, program, owner, result):
             return '?view=after&refreshed=recent'
         try:
             changes = refresh(program, timezone.now())
-        except conference_import.LinkError:
+        except Exception as e:
+            if not isinstance(e, conference_import.LinkError):
+                logger.exception('Program %s could not be read again', program.pk)
             return '?view=after&refreshed=failed'
+        # the others are told as by the reading of every few hours, which will not see these changes again
+        notify(program, changes, '%s://%s' % (request.scheme, request.get_host()), NOTIFIED_BY_HAND, but=request.user)
         return '?view=after&refreshed=%d' % len(changes)
     if program is not None and action == 'quiet':
         quiet = set(program.quiet_ids()) ^ {request.user.pk}
@@ -1280,18 +1410,10 @@ def act(request, row, program, owner, result):
     if program is not None and action == 'collection':
         marked = list(ConferenceMark.objects.filter(program=program, user=request.user, state__in=('going', 'seen'))
                       .values_list('talk', flat=True))
-        ids = list(dict.fromkeys(p['key'] for p in marked_papers(program, result, marked)))[:COLLECTION_PAPERS]
-        if not ids:
-            return '?view=after&added=0'
-        paid = access.has_tool(request.user, 'collections')
-        wanted = request.POST.get('collection', 'new')
-        collection = Collection.objects.filter(user=request.user, pk=wanted).first() if wanted.isdigit() else None
-        if collection is None:
-            if Collection.objects.filter(user=request.user).count() >= library.limits(paid)['collections']:
-                return '?view=after&added=full'
-            collection = Collection.objects.create(user=request.user, name=(program.name or 'Conference')[:120])
-        counts = library.add_many(collection, ids, paid)
-        return '?view=after&added=%s&collection=%s' % (counts.get('added', 0) + counts.get('updated', 0), collection.pk)
+        generated.start('conference_papers', papers_key(program, request.user), get_language(),
+                        papers_work(program.pk, request.user, result, marked, request.POST.get('collection', 'new')),
+                        user=request.user, force=True)
+        return '?view=after&papers=1#papers'
     if not owner:
         return None
     if result_share.act(row, action):
@@ -1363,10 +1485,12 @@ def conference_result(request, key):
         scoops = [dict(talk_by_id[a['id']], scoop=a, mark=marks.get(a['id'], {}), changed=changed.get(a['id']))
                   for a in result.get('scoops', []) if a['id'] in talk_by_id and a['id'] not in chosen_ids]
         by_id = {t.get('id'): t for t in result['talks'] if t.get('id')}
+        mails = {row.key: row for row in Generated.objects.filter(
+            kind='conference_mail', lang=get_language(),
+            key__in=[mail_key(program, p['name']) for p in result['people']])} if program and owner else {}
         for person in result['people']:
             person['talk_list'] = [by_id[i] for i in person.get('talks', []) if i in by_id]
-            person['mail'] = Generated.objects.filter(kind='conference_mail', key=mail_key(program, person['name']),
-                                                      lang=get_language()).first() if program and owner else None
+            person['mail'] = mails.get(mail_key(program, person['name'])) if mails else None
         context.update({
             'view': view, 'days': by_day(items, talks), 'marks': marks, 'timed': any(i['talk'].get('start') for i in items),
             'clash_count': sum(1 for i in items if i.get('clash')), 'read': result.get('read') or {},
@@ -1376,7 +1500,11 @@ def conference_result(request, key):
             'projects': WatchedProject.objects.filter(user=request.user).exclude(description=''),
             'collections': Collection.objects.filter(user=request.user),
             'names': '\n'.join(result.get('basis', {}).get('names', [])) if owner else '',
-            'added': request.GET.get('added'), 'added_collection': request.GET.get('collection', ''),
+            'papers_job': Generated.objects.filter(kind='conference_papers', key=papers_key(program, request.user),
+                                                   lang=get_language()).first() if program and request.GET.get('papers') else None,
+            'feed_url': feed_url(request, row) if program else '',
+            'keep_auto': bool(program and program.first_day and program.last_day and program.first_day - datetime.timedelta(days=2)
+                              <= timezone.now().astimezone(zone_of(program)).date() <= program.last_day),
             'form_error': request.GET.get('error', ''), 'zone': program.timezone if program else '',
             'scoops': scoops, 'during': during, 'changes_shown': [(talk_by_id[t]['title'], lines) for t, lines in changed.items()
                                                                   if t in talk_by_id and any(i['talk'].get('id') == t for i in items)],
@@ -1405,13 +1533,13 @@ def conference_join(request, token):
     program = ConferenceProgram.objects.filter(team_token=token).first() if token else None
     if program is None:
         raise Http404
-    latest = next((r for r in Generated.objects.filter(kind='conference', user=program.user, status='done').order_by('-created')
-                   if r.data().get('program') == program.pk), None)
+    rows = latest_rows(program)
+    latest = rows.get(program.user_id)
     if latest is None:
         raise Http404
     target = '/%s/conference/%s/' % (get_language(), latest.key)
     if program.user_id == request.user.id or ConferenceMember.objects.filter(program=program, user=request.user).exists():
-        own = latest_rows(program).get(request.user.pk)  # a member's own ranking of the program, when they made one
+        own = rows.get(request.user.pk)  # a member's own ranking of the program, when they made one
         return redirect('/%s/conference/%s/' % (get_language(), own.key) if own else target)
     if request.method == 'POST':
         ConferenceMember.objects.get_or_create(program=program, user=request.user)
@@ -1439,21 +1567,56 @@ def ics_line(line):
     return '\r\n'.join(out)
 
 
+def feed_token(row, user):
+    """The secret of the calendar feed of one's program: its row, its user and their signature."""
+    return '%s-%s-%s' % (row.key, user.pk, salted_hmac('conference-feed', '%s:%s' % (row.key, user.pk)).hexdigest()[:32])
+
+
+def feed_url(request, row):
+    return 'webcal://%s/%s/conference/feed/%s.ics' % (request.get_host(), get_language(), feed_token(row, request.user))
+
+
 def conference_calendar(request, key):
-    """The talks of one's program with a day and a time, as a calendar file: those marked going and one's own when
-    some are marked, else the chosen ones but the 'if you have time'."""
+    """The talks of one's program with a day and a time, as a calendar file (calendar_text)."""
     row, program, owner = access_row(request, key)
     if row.status != 'done' or program is None:
         raise Http404
-    result = result_data(row.data(), private=owner)
-    marks = {m.talk: {'state': m.state, 'note': m.note} for m in ConferenceMark.objects.filter(program=program, user=request.user)}
+    response = HttpResponse(calendar_text(row, program, owner, request.user, notes=True), content_type='text/calendar; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (re.sub(r'[^A-Za-z0-9_-]+', '-', program.name).strip('-') or 'conference')
+    return response
+
+
+def conference_feed(request, token):
+    """The same calendar as a feed a calendar app subscribes to and reads again: the talks that move or are
+    cancelled move or leave it. Opened without a session (the token says whose it is), so without one's notes."""
+    from django.contrib.auth.models import User
+    key, _, rest = token.rpartition('-')
+    key, _, user_id = key.rpartition('-')
+    user = User.objects.filter(pk=user_id).first() if user_id.isdigit() else None
+    row = Generated.objects.filter(kind='conference', key=key).first() if user else None
+    if row is None or not constant_time_compare(token, feed_token(row, user)):
+        raise Http404
+    row, program, owner = access_row(request, key, user)
+    if row.status != 'done' or program is None:
+        raise Http404
+    response = HttpResponse(calendar_text(row, program, owner, user, notes=False), content_type='text/calendar; charset=utf-8')
+    response['Cache-Control'] = 'private, max-age=900'
+    return response
+
+
+def calendar_text(row, program, owner, user, notes):
+    """The talks of one's program with a day and a time, as they are now in the program: those marked going and
+    one's own when some are marked, else the chosen ones but the 'if you have time'; notes: with one's notes."""
+    result = current(result_data(row.data(), private=owner), program)
+    marks = {m.talk: {'state': m.state, 'note': m.note} for m in ConferenceMark.objects.filter(program=program, user=user)}
     items = program_items(result, program, marks)
     if any(m['state'] == 'going' for m in marks.values()):
         items = [i for i in items if i['role'] == 'yours' or marks.get(i['talk']['id'], {}).get('state') == 'going']
     else:
         items = [i for i in items if i['role'] != 'maybe']
     lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SummarizePaper//Conference companion//EN', 'CALSCALE:GREGORIAN',
-             'X-WR-CALNAME:%s' % ics_text(program.name or 'Conference')]
+             'X-WR-CALNAME:%s' % ics_text(program.name or 'Conference'), 'REFRESH-INTERVAL;VALUE=DURATION:PT3H',
+             'X-PUBLISHED-TTL:PT3H']
     stamp = timezone.now().strftime('%Y%m%dT%H%M%SZ')
     for item in items:
         talk = item['talk']
@@ -1461,16 +1624,14 @@ def conference_calendar(request, key):
             continue
         end = talk['end'] or '%02d:%02d' % divmod(min(minutes(talk['start']) + TALK_MINUTES, 23 * 60 + 59), 60)
         description = '\n\n'.join(v for v in (talk['speakers'], talk.get('why', ''), talk.get('ask', ''),
-                                              marks.get(talk['id'], {}).get('note', ''), talk['url']) if v)
+                                              marks.get(talk['id'], {}).get('note', '') if notes else '', talk['url']) if v)
         lines += ['BEGIN:VEVENT', 'UID:%s-%s@summarizepaper.com' % (program.pk, talk['id']), 'DTSTAMP:%s' % stamp,
                   'DTSTART:%s' % conference_import.utc_stamp(talk['day'], talk['start'], program.timezone),
                   'DTEND:%s' % conference_import.utc_stamp(talk['day'], end, program.timezone),
                   'SUMMARY:%s' % ics_text(talk['title']), 'LOCATION:%s' % ics_text(talk['room']),
                   'DESCRIPTION:%s' % ics_text(description)] + (['URL:%s' % talk['url']] if talk['url'] else []) + ['END:VEVENT']
     lines.append('END:VCALENDAR')
-    response = HttpResponse('\r\n'.join(ics_line(l) for l in lines) + '\r\n', content_type='text/calendar; charset=utf-8')
-    response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (re.sub(r'[^A-Za-z0-9_-]+', '-', program.name).strip('-') or 'conference')
-    return response
+    return '\r\n'.join(ics_line(l) for l in lines) + '\r\n'
 
 
 def conference_notes(request, key):
@@ -1478,7 +1639,7 @@ def conference_notes(request, key):
     row, program, owner = access_row(request, key)
     if row.status != 'done' or program is None:
         raise Http404
-    result = result_data(row.data(), private=owner)
+    result = current(result_data(row.data(), private=owner), program)
     marks = {m.talk: {'state': m.state, 'note': m.note} for m in ConferenceMark.objects.filter(program=program, user=request.user)}
     lang = get_language()
     labels = {'en': ('My program', 'Notes', 'Preprint', 'People to meet', 'cites your paper'),
@@ -1509,7 +1670,8 @@ def conference_notes(request, key):
 
 
 SERVICE_WORKER = """// The conference companion's pages, kept on the device to be read without a network (conference wifi):
-// each page and its styles are fetched first, and the copy last fetched is given when the network fails.
+// each page and its styles are fetched first, and the copy last fetched is given when the network fails. The page
+// also puts its other views in the cache (conference.js), without the headers of a navigation: matched ignoring Vary.
 const CACHE = 'conference-v1';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
@@ -1526,7 +1688,7 @@ self.addEventListener('fetch', event => {
       caches.open(CACHE).then(cache => cache.put(request, copy));
     }
     return response;
-  }).catch(() => caches.match(request).then(found => found || Response.error())));
+  }).catch(() => caches.match(request, {ignoreVary: true}).then(found => found || Response.error())));
 });
 """
 

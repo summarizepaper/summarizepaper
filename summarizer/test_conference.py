@@ -326,7 +326,8 @@ class ConferenceTests(ConferenceCase):
             r = client.post(url, {'action': 'collection', 'collection': 'new'})
         collection = Collection.objects.get(user=owner)
         self.assertEqual((add.call_args[0][1], collection.name), (['2601.00001'], 'EAS 2026'))
-        self.assertIn('added=1', r['Location'])
+        self.assertEqual(r['Location'], url + '?view=after&papers=1#papers')  # looked for in the background
+        self.assertContains(client.get(url + '?view=after&papers=1'), '1 preprints added.')
         client.post(url, {'action': 'mark', 'talk': 't1', 'state': 'seen'})
         paper = {'key': '2602.00002', 'title': 'Exomoons', 'authors': []}
         with mock.patch('summarizer.library.add_many', return_value={'added': 1}) as add, \
@@ -356,9 +357,9 @@ class ConferenceChangesTests(ConferenceCase):
         self.assertEqual((by_title['Exomoons with Gaia']['id'], by_title['Clouds on hot Jupiters']['id'],
                           by_title['A late talk']['id']), ('t1', 't0', 't4'))
         self.assertTrue(by_title['Protein folding at scale']['cancelled'])
-        self.assertEqual({c['title']: c.get('what') or 'cancelled' for c in changes},
+        self.assertEqual({c['title']: c.get('what') or ('added' if c.get('added') else 'cancelled') for c in changes},
                          {'Exomoons with Gaia': {'start': ['09:10', '11:00'], 'end': ['09:30', '11:20'], 'room': ['B', 'C']},
-                          'Protein folding at scale': 'cancelled'})
+                          'Protein folding at scale': 'cancelled', 'A late talk': 'added'})
         with translation_override('en'):
             self.assertEqual(conference.change_lines(changes[0], None), ['09:10 → 11:00', 'Room: B → C'])
 
@@ -477,3 +478,100 @@ class ConferenceChangesTests(ConferenceCase):
             paper = FIND_PAPER(talk, 2023)
         self.assertEqual((paper['match'], paper['key'][:4], paper['title'], paper['closeness']),
                          ('speaker', 'doi_', 'Silicate clouds of WASP-17b', 0.9))
+
+
+class ConferenceFollowsTests(ConferenceCase):
+    """A program read again without false changes, a renamed talk, cancelled talks left out of a ranking, the emails
+    of a reading by hand and of the talks added, the calendar feed, and a ranking that loses a part only."""
+
+    def test_a_program_in_utc_moved_to_its_zone_reads_again_without_false_changes(self):
+        owner = self.user('pro', paid=True)
+        utc = [dict(TALKS[0], start='07:00', end='07:20'), dict(TALKS[1], start='07:10', end='07:30')]
+        program = self.program(owner, talks=utc, timezone='UTC', source='https://example.org/f.ics', source_kind='feed')
+        conference.set_zone(program, 'Europe/Paris')
+        with mock.patch('summarizer.conference_import.read_link', return_value={'talks': utc, 'timezone': 'UTC', 'kind': 'feed'}):
+            self.assertEqual(conference.refresh(program, timezone.now()), [])
+        program.refresh_from_db()
+        self.assertEqual((program.timezone, program.talk_list()[0]['start']), ('Europe/Paris', '09:00'))
+
+    def test_a_talk_whose_title_is_corrected_keeps_its_marks(self):
+        old = conference.settle([conference.clean_talk(t) for t in TALKS])
+        new = conference.settle([conference.clean_talk(t) for t in [dict(TALKS[0], title='Clouds on hot Jupiters seen by JWST')] + TALKS[1:]])
+        talks, changes = conference.merge_talks(old, new)
+        self.assertEqual((talks[0]['id'], talks[0]['title'], changes), ('t0', 'Clouds on hot Jupiters seen by JWST', []))
+        other = conference.settle([conference.clean_talk(t) for t in [dict(TALKS[0], title='Dark matter halos', speakers='Max Power')] + TALKS[1:]])
+        _, changes = conference.merge_talks(old, other)  # another talk in its slot
+        self.assertEqual(sorted((c['title'], 'added' if c.get('added') else 'cancelled') for c in changes),
+                         [('Clouds on hot Jupiters', 'cancelled'), ('Dark matter halos', 'added')])
+
+    def test_a_ranking_leaves_out_the_cancelled_talks(self):
+        user = self.user('pro', paid=True)
+        program = self.program(user)
+        talks = program.talk_list()
+        talks[0]['cancelled'] = True
+        program.talks = json.dumps(talks)
+        program.save()
+        result = conference.rank(program, 'Clouds of exoplanets', 'en', user)
+        self.assertEqual(([t['title'] for t in result['talks']], result['listed']), (['Exomoons with Gaia'], 3))
+
+    def test_a_reading_by_hand_emails_the_others_and_the_talks_added_close_to_their_research(self):
+        owner = self.user('pro', paid=True)
+        owner.email = 'pro@example.org'
+        owner.save()
+        program = self.program(owner, source='https://indico.example.org/event/9/', source_kind='indico')
+        row = self.ranked(owner, program)
+        mate = self.user('bob')
+        mate.email = 'bob@example.org'
+        mate.save()
+        ConferenceMember.objects.create(program=program, user=mate)
+        ConferenceMark.objects.create(program=program, user=mate, talk='t2', state='going')
+        new = TALKS[:2] + TALKS[3:] + [{'title': 'Clouds of brown dwarfs', 'speakers': 'Eve Moss', 'day': '2026-07-15',
+                                        'start': '15:00', 'abstract': 'Clouds again.'},
+                                       {'title': 'Protein design', 'speakers': 'Max Power', 'day': '2026-07-15', 'start': '16:00'}]
+        with mock.patch('summarizer.conference_import.read_link', return_value={'talks': new, 'kind': 'indico'}):
+            r = self.client_for(mate).post('/en/conference/%s/' % row.key, {'action': 'refresh'})
+        self.assertIn('refreshed=3', r['Location'])
+        self.assertEqual([m.to[0] for m in mail.outbox], ['pro@example.org'])  # not the one who read it again
+        body = mail.outbox[0].body
+        self.assertIn('Clouds of brown dwarfs', body)
+        self.assertIn('New in the program', body)
+        self.assertNotIn('Protein', body)  # far from the research, and the cancelled talk is not in the owner's program
+
+    def test_a_calendar_feed_follows_the_program_without_the_notes(self):
+        owner = self.user('pro', paid=True)
+        program = self.program(owner, timezone='Europe/Paris')
+        row = self.ranked(owner, program)
+        client = self.client_for(owner)
+        url = '/en/conference/%s/' % row.key
+        client.post(url, {'action': 'note', 'talk': 't0', 'note': 'Ask about silicates'})
+        feed = client.get(url + '?view=after').context['feed_url']
+        self.assertTrue(feed.startswith('webcal://testserver/en/conference/feed/'))
+        path = feed[len('webcal://testserver'):]
+        calendar = Client().get(path).content.decode().replace('\r\n ', '')
+        self.assertIn('DTSTART:20260714T070000Z', calendar)
+        self.assertNotIn('silicates', calendar)
+        talks = program.talk_list()
+        talks[0]['start'], talks[0]['end'] = '10:00', '10:20'  # moved, as a reading again does
+        program.talks = json.dumps(talks)
+        program.save()
+        self.assertIn('DTSTART:20260714T080000Z', Client().get(path).content.decode())
+        self.assertIn('DTSTART:20260714T080000Z', client.get(url + 'calendar.ics').content.decode())
+        self.assertEqual(Client().get(path.replace('.ics', '0.ics')).status_code, 404)
+        self.assertEqual(Client().get('/en/conference/feed/%s-%s-x.ics' % (row.key, owner.pk)).status_code, 404)
+
+    def test_a_ranking_loses_the_batch_or_the_preprints_that_fail_only(self):
+        user = self.user('pro', paid=True)
+        program = self.program(user)
+
+        def failing(prompt, **kwargs):
+            if 'A researcher goes to the conference' in prompt and 'Exomoons' in kwargs['system']:
+                raise ValueError('malformed answer')
+            return chat(prompt, **kwargs)
+        with mock.patch.object(conference, 'JUDGE_BATCH', 1), mock.patch('summarizer.generated.chat_json', side_effect=failing), \
+                mock.patch('summarizer.conference.find_paper', side_effect=RuntimeError('OpenAlex')), \
+                self.assertLogs('summarizer.conference', 'ERROR'):
+            result = conference.rank(program, 'Clouds of exoplanets', 'en', user)
+        self.assertEqual(([t['title'] for t in result['talks']], result['unread']), (['Clouds on hot Jupiters'], 1))
+        with mock.patch('summarizer.generated.chat_json', side_effect=ValueError('down')), self.assertLogs('summarizer.conference', 'ERROR'), \
+                self.assertRaises(conference.generated.GenerationError):
+            conference.rank(program, 'Clouds of exoplanets', 'en', user)

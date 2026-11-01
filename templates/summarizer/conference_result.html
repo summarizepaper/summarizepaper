@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="page conf-page"{% if program and not shared %} data-conf-offline="/{{ LANGUAGE_CODE }}/conference/sw.js"{% endif %}>
+<div class="page conf-page"{% if program and not shared %} data-conf-offline="/{{ LANGUAGE_CODE }}/conference/sw.js"{% if keep_auto %} data-conf-auto{% endif %}{% endif %}>
   <p class="notice conf-offline" data-offline-note hidden>{% trans 'No network: this page as you last opened it.' %}</p>
   <header class="page-header">
     {% if shared %}<p class="muted">{% trans 'Shared conference program' %} · <a href="/{{ LANGUAGE_CODE }}/conference/">{% trans 'Make your own program' %}</a></p>
@@ -23,6 +23,7 @@
     {% if result.talks or result.yours %}
     <p class="muted">{% blocktrans count n=result.listed with chosen=result.talks|length %}{{ chosen }} talks for you, out of {{ n }} in the program.{% plural %}{{ chosen }} talks for you, out of {{ n }} in the program.{% endblocktrans %}{% if result.judged %} {% blocktrans with judged=result.judged %}The AI read the {{ judged }} closest to your research.{% endblocktrans %}{% endif %}</p>
     {% endif %}
+    {% if result.unread and owner %}<p class="notice">{% blocktrans count n=result.unread %}The AI could not read {{ n }} close talk: rank the program again below to have it read.{% plural %}The AI could not read {{ n }} close talks: rank the program again below to have them read.{% endblocktrans %} <a href="?view=after">{% trans 'Rank it again' %}</a></p>{% endif %}
 
     {% if program and not shared %}
     <nav class="conf-tabs" aria-label="{% trans 'Views of the program' %}">
@@ -61,7 +62,8 @@
 
     {% elif view == 'day' %}
       {% if timed %}
-      <p class="conf-actions"><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Add to my calendar' %}</a>
+      <p class="conf-actions"><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Add to my calendar' %}</a> <a class="btn btn-sm btn-ghost" href="?view=after#export">{% trans 'Subscribe: it follows the changes' %}</a>
+        <button type="button" class="btn btn-sm btn-ghost" data-conf-keep data-kept="✓ {% trans 'Kept on this device' %}" hidden>{% trans 'Keep it for offline use' %}</button>
         <span class="muted">{% if zone %}{% blocktrans %}Times of the conference ({{ zone }}).{% endblocktrans %}{% else %}{% trans 'Times as written in the program.' %}{% endif %}
         {% trans 'Mark the talks you go to: the calendar then holds only them and your own.' %}</span></p>
       {% endif %}
@@ -163,12 +165,18 @@
       </ul>
 
     {% elif view == 'after' %}
-      {% if added %}<p class="notice">{% if added == 'full' %}{% trans 'You have as many collections as your plan allows: choose an existing one.' %}{% elif added == '0' %}{% trans 'No preprint was found for these talks.' %}{% else %}{% blocktrans %}{{ added }} preprints added.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ added_collection }}/">{% trans 'Open the collection' %}</a>{% endif %}</p>{% endif %}
+      {% if papers_job.status == 'pending' %}
+        {% trans 'Looking for the preprints of your talks' as working_title %}{% trans 'usually under a minute' as working_time %}
+        {% include 'summarizer/working.html' with working_id='papers-working' working_steps=None working_visible=True working_started=papers_job.created %}
+        <script>window.addEventListener('DOMContentLoaded', function () { SP.track(document.getElementById('papers-working'), {{ papers_job.pk }}, function () { location.reload(); }); });</script>
+      {% elif papers_job.status == 'done' %}{% with added=papers_job.data.added %}
+        <p class="notice" id="papers">{% if added == 'full' %}{% trans 'You have as many collections as your plan allows: choose an existing one.' %}{% elif not added %}{% trans 'No preprint was found for these talks.' %}{% else %}{% blocktrans %}{{ added }} preprints added.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ papers_job.data.collection }}/">{% trans 'Open the collection' %}</a>{% endif %}</p>{% endwith %}
+      {% elif papers_job %}<p class="error" id="papers">{% trans 'Looking for the preprints failed. Try again in a few minutes.' %}</p>{% endif %}
       {% if refreshed %}<p class="notice">{% if refreshed == 'recent' %}{% trans 'The program was read again a few minutes ago.' %}{% elif refreshed == 'failed' %}{% trans 'The conference website did not answer. Try again in a few minutes, or paste the program.' %}{% elif refreshed == '0' %}{% trans 'Read again: nothing changed.' %}{% else %}{% blocktrans count n=refreshed|add:0 %}Read again: {{ n }} talk changed.{% plural %}Read again: {{ n }} talks changed.{% endblocktrans %}{% endif %}</p>{% endif %}
       {% if can_refresh %}
       <section class="card section-card">
         <h2>{% trans 'Changes to the program' %}</h2>
-        <p>{% trans 'We read this program again every day in the two weeks before the conference, and every three hours while it goes on: when a talk of your program moves or is cancelled, you get an email, and these pages show its new time and room.' %}</p>
+        <p>{% trans 'We read this program again every day in the two weeks before the conference, and every three hours while it goes on: when a talk of your program moves or is cancelled, or a talk as close to your research is added, you get an email, and these pages and your calendar show its new time and room.' %}</p>
         <form method="post" class="item-actions">{% csrf_token %}
           <button class="btn btn-sm btn-ghost" name="action" value="refresh">⟳ {% trans 'Read it again now' %}</button>
           <button class="btn btn-sm btn-ghost" name="action" value="quiet">{% if quiet %}{% trans 'Email me the changes' %}{% else %}{% trans 'No change emails' %}{% endif %}</button></form>
@@ -187,9 +195,12 @@
       </section>
       {% endif %}
       <section class="card section-card">
-        <h2>{% trans 'Export' %}</h2>
-        <p><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Calendar (.ics)' %}</a> <a class="btn btn-sm btn-ghost" href="notes.md">{% trans 'My program and notes (Markdown)' %}</a></p>
-        <p class="muted"><small>{% trans 'The calendar holds the talks you marked “Going” and your own, or, before you mark any, your program but the “if you have time”. The Markdown file opens in Obsidian or Notion.' %}</small></p>
+        <h2 id="export">{% trans 'Export' %}</h2>
+        <p><a class="btn btn-sm" href="{{ feed_url }}">📅 {% trans 'Subscribe in my calendar' %}</a> <a class="btn btn-sm btn-ghost" href="calendar.ics">{% trans 'Calendar (.ics)' %}</a> <a class="btn btn-sm btn-ghost" href="notes.md">{% trans 'My program and notes (Markdown)' %}</a>
+          <button type="button" class="btn btn-sm btn-ghost" data-conf-keep data-kept="✓ {% trans 'Kept on this device' %}" hidden>{% trans 'Keep it for offline use' %}</button></p>
+        <div class="tool-row link-row"><input type="text" readonly value="https://{{ feed_url|slice:'9:' }}" id="feed-url" aria-label="{% trans 'Calendar link' %}">
+          <button type="button" class="btn btn-sm" data-copy="feed-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button></div>
+        <p class="muted"><small>{% trans 'Subscribed, your calendar follows the program: a talk that moves moves in it too, a cancelled one leaves it. In Google Calendar, add the link above with “From URL”. It holds no notes; keep it to yourself. The calendar holds the talks you marked “Going” and your own, or, before you mark any, your program but the “if you have time”. The Markdown file opens in Obsidian or Notion.' %}</small></p>
       </section>
       <section class="card section-card">
         <h2>{% trans 'The preprints in a collection' %}</h2>

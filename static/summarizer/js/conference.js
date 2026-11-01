@@ -11,6 +11,18 @@
       return response.json();
     });
   }
+  // every view of the program put in the cache the service worker reads without a network
+  var VIEWS = ['', '?view=now', '?view=day', '?view=priority', '?view=people', '?view=all'];
+  function keep() {
+    var base = location.pathname;
+    return caches.open('conference-v1').then(function (cache) {
+      return Promise.all(VIEWS.map(function (view) {
+        return fetch(base + view, {credentials: 'same-origin'}).then(function (response) {
+          if (response.ok) return cache.put(base + view, response);
+        });
+      }));
+    });
+  }
   function init() {
     document.querySelectorAll('[data-conf-mark]').forEach(function (form) {
       form.addEventListener('submit', function (event) {
@@ -48,6 +60,22 @@
       window.addEventListener('online', show);
       window.addEventListener('offline', show);
       show();
+      document.querySelectorAll('[data-conf-keep]').forEach(function (button) {
+        button.hidden = !('caches' in window);
+        button.addEventListener('click', function () {
+          button.disabled = true;
+          keep().then(function () { button.textContent = button.dataset.kept; })
+            .catch(function () { button.disabled = false; });
+        });
+      });
+      // while the conference goes on, its views are kept on the device once an hour without asking
+      if (offline.hasAttribute('data-conf-auto') && 'caches' in window && navigator.onLine) {
+        var stamp = 'conf-kept:' + location.pathname, last = 0;
+        try { last = +localStorage.getItem(stamp) || 0; } catch (e) {}
+        if (Date.now() - last > 3600000) {
+          keep().then(function () { try { localStorage.setItem(stamp, String(Date.now())); } catch (e) {} }).catch(function () {});
+        }
+      }
     }
     var picker = document.querySelector('[data-digest-profile]');
     var interests = document.querySelector('[data-interests]');
