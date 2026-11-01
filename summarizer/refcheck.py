@@ -165,6 +165,8 @@ def identify(entry):
         arxiv, doi = match.group(1), ''
     # the eprint field is an arXiv id; elsewhere, an id only counts next to the word arXiv
     candidates = [(f.get('eprint', ''), True)] + [(f.get(k, ''), False) for k in ('url', 'journal', 'note', 'howpublished')]
+    if f.get('journal', '').strip('{} ').lower() == 'corr':  # DBLP: journal = {CoRR}, volume = {abs/1412.6980}
+        candidates.append((f.get('volume', ''), True))
     for value, trusted in candidates:
         found = re.search(r'(\d{4}\.\d{4,5}|[a-z\-]+(?:\.[A-Z]{2})?/\d{7})(v\d+)?', value)
         if found and (trusted or 'arxiv' in value.lower()):

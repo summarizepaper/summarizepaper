@@ -31,7 +31,7 @@ INPUT_RE = re.compile(r'\\(?:input|include|subfile)\s*\{([^}]+)\}')
 BIB_RE = re.compile(r'\\(?:bibliography|addbibresource)\s*(?:\[[^\]]*\])?\{([^}]+)\}')
 BIBITEM_RE = re.compile(r'\\bibitem\s*(?:\[(?:[^\[\]]|\[[^\]]*\])*\])?\s*\{([^}]+)\}')
 DOI_IN_TEXT = re.compile(r'\b(10\.\d{4,9}/[^\s{}"\\,]+)')
-ARXIV_IN_TEXT = re.compile(r'(?:arxiv[:\s/]*(?:abs/)?|eprint\s*[={]\s*)(\d{4}\.\d{4,5}|[a-z\-]+(?:\.[A-Z]{2})?/\d{7})', re.I)
+ARXIV_IN_TEXT = re.compile(r'(?:arxiv[:\s/]*(?:abs/)?|eprint\s*[={]\s*|corr\W+(?:vol\.?\s*)?abs/)(\d{4}\.\d{4,5}|[a-z\-]+(?:\.[A-Z]{2})?/\d{7})', re.I)
 
 
 class Unreadable(Exception):

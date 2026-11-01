@@ -66,6 +66,20 @@ class ReadingTests(ToolsTestCase):
         self.assertEqual(refcheck_claims.readable(r'The value $H_0 = 73.0 \pm 1.0$~\citep{b} in \S\ref{s}.'),
                          r'The value $H_0 = 73.0 \pm 1.0$ [b] in ….')
 
+    def test_tables_are_no_sentences_and_dblp_corr_entries_are_arxiv_papers(self):
+        tex = '\\begin{document}\n\\begin{tabular}{lc}\nByteNet \\cite{b} & 23.75 \\\\\n\\end{tabular}\nThe method of \\citet{m} is used here.\n\\end{document}'
+        self.assertEqual([(s['line'], s['keys']) for s in refcheck_claims.citing_sentences([('t.tex', tex)])], [(5, ['m'])])
+        entry = refcheck.parse_bibtex('@article{adam, title={Adam}, journal={CoRR}, volume={abs/1412.6980}, year={2014}}')[0]
+        self.assertEqual(refcheck.identify(entry), ('1412.6980', '', ''))
+        self.assertEqual(refcheck_sources.ARXIV_IN_TEXT.search('Kingma, D. Adam. CoRR, abs/1412.6980, 2014').group(1), '1412.6980')
+
+    def test_a_paper_without_abstract_never_flags_a_sentence(self):
+        claims = [{'sentence': 'X does Y [a, b].', 'previous': '', 'keys': ['a', 'b'], 'order': 0}]
+        papers = {'a': {'title': 'A', 'abstract': ''}, 'b': {'title': 'B', 'abstract': 'About Z.'}}
+        answer = {'items': [{'id': '0', 'verdict': 'unclear', 'keys': ['a']}]}
+        with mock.patch('summarizer.generated.chat_json', return_value=answer):
+            self.assertEqual(refcheck_claims.check_claims(claims, papers, 'en'), [])
+
     def test_sentences_that_attribute_a_result_are_read_first(self):
         claims = [{'sentence': 'See e.g. the reviews [a, b, c, d, e].', 'keys': list('abcde'), 'order': 0},
                   {'sentence': 'Smith showed a 12.5% excess [s].', 'keys': ['s'], 'order': 1},

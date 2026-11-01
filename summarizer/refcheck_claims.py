@@ -2,12 +2,13 @@
 
 1. The LaTeX is cut into sentences, each with its file and line. A sentence ends at . ! ? before a capital (not
    after e.g., et al., Fig. or an initial), at a blank line, a heading, an \\item or a caption. Every citation
-   command counts (\\citep, \\Citet, \\citeyear, \\parencite, \\cites{a}{b}...), \\nocite excepted.
+   command counts (\\citep, \\Citet, \\citeyear, \\parencite, \\cites{a}{b}...), \\nocite excepted. Tables are
+   left out: their cells are no sentences.
 2. A long manuscript has more citing sentences than are read: those that attribute a result, a value or a
    method to one or two papers come first, lists of background references last. The report says how many
    sentences were read out of how many.
 3. Each sentence is judged once, with ALL the papers it cites and the sentence before it: a statement cited to
-   two papers is supported when one of them says it.
+   two papers is supported when one of them says it. A paper without an abstract never makes a sentence flagged.
 4. The sentences flagged on the abstracts are read again against the full text of the papers concerned, when
    their rights let us read it (tdm.py): the model must copy the passage that supports or contradicts the
    sentence, and a passage the paper does not contain word for word is never shown (evidence.find). The values
@@ -33,6 +34,7 @@ PASSAGE_CHARS = 1200
 CITE_RE = re.compile(r'\\(?!nocite\b)([A-Za-z]*[cC]ite[a-zA-Z]*)\*?')
 ARGS_RE = re.compile(r'\s*(?:\[[^\]]*\]\s*){0,2}\{([^}]*)\}')
 NOCITE_RE = re.compile(r'\\nocite\s*\{([^}]*)\}')
+TABLE_RE = re.compile(r'\\begin\{(tabular\*?|tabularx|longtable|tabulary|array)\}.*?\\end\{\1\}', re.S)
 BREAK_RE = re.compile(
     r'(?<=[.!?])\s+(?=[A-Z\\$(\[])'
     r'|\n[ \t]*\n\s*'
@@ -98,6 +100,8 @@ def body_range(text):
 def sentences(tex):
     """[(line, LaTeX text)] of the sentences of a LaTeX file, comments and preamble left out."""
     text = '\n'.join(re.sub(r'(?<!\\)%.*', '', line) for line in tex.split('\n'))
+    # a table is no sentence: its cells read as noise (its caption stays); lines keep their numbers
+    text = TABLE_RE.sub(lambda m: re.sub(r'[^\n]', ' ', m.group(0)), text)
     start, end = body_range(text)
     newlines = [i for i, c in enumerate(text) if c == '\n']
     pieces, i = [], start
@@ -191,7 +195,8 @@ def judge(batch, papers, start, lang):
         '"unclear" when the abstracts do not say it (the full text may); "contradicted" when an abstract says '
         'otherwise or the sentence clearly misrepresents a paper (another result, sign, object or conclusion). What '
         'the sentence says in its own name, without attributing it to the papers, is not judged. For "unclear" and '
-        '"contradicted", list in "keys" the cited papers concerned and explain in %s in one sentence. Say also how the '
+        '"contradicted", list in "keys" the cited papers concerned and explain in %s in one sentence. A paper given '
+        'without its abstract cannot be judged: never flag a sentence for what such a paper may say. Say also how the '
         'sentence uses its citations: "background", "method", "data", "result" or "comparison". Answer with a JSON '
         'object {"items": [{"id": "claim id", "verdict": "supported|unclear|contradicted", "use": "...", "keys": '
         '["key"], "reason": "..."}]}.' % generated.language_name(lang),
@@ -214,6 +219,9 @@ def check_claims(claims, papers, lang):
             except (TypeError, ValueError, IndexError):
                 continue
             keys = [k for k in (item.get('keys') or []) if k in claim['keys']] or claim['keys']
+            keys = [k for k in keys if (papers.get(k) or {}).get('abstract')]  # nothing is concluded from no abstract
+            if not keys:
+                continue
             flagged.append(dict(claim, verdict=item['verdict'], use=item.get('use') if item.get('use') in USES else '',
                                 concerned=keys, reason=str(item.get('reason', '')).strip()))
     return flagged
