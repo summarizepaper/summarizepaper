@@ -9,7 +9,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from summarizer import assistant, changes, generated, paper_source, sources, synthesis, tdm
-from summarizer.models import ArxivPaper, ExternalPaper, PaperText, TdmCount, TdmDecision
+from summarizer.models import ArxivPaper, ExternalPaper, PaperText, PickledData, TdmCount, TdmDecision
 from summarizer.test_sources import JATS, MNRAS, MNRAS_KEY, journal_paper
 
 CC_BY = 'http://creativecommons.org/licenses/by/4.0/'
@@ -51,6 +51,21 @@ class StatusTests(TestCase):
             self.assertEqual(tdm.license_status(url), tdm.EXCEPTION, url)
         for url in ('', None, 'https://www.elsevier.com/tdm/userlicense/1.0/', 'http://example.org/terms'):
             self.assertEqual(tdm.license_status(url), tdm.REVIEW, url)
+
+    def test_only_the_robots_txt_groups_that_apply_to_us_are_kept(self):
+        robots = ('Sitemap: https://example.org/s.xml\nUser-agent: GPTBot\nDisallow: /\n\n'
+                  'User-agent: Googlebot\nUser-agent: SummarizePaper\nDisallow: /private\n\n'
+                  'User-agent: CCBot\nDisallow: /\n\nUser-agent: *\nDisallow: /search\n')
+        kept = tdm._our_rules(robots)
+        self.assertNotIn('GPTBot', kept)
+        self.assertNotIn('CCBot', kept)
+        with site(robots=robots):
+            self.assertTrue(tdm.site_reserves('https://example.org/private/x.pdf'))
+            self.assertFalse(tdm.site_reserves('https://example.org/search'))  # our group applies, not *'s
+            self.assertFalse(tdm.site_reserves('https://example.org/paper.pdf'))
+        with site(robots='User-agent: *\nDisallow: /search\n'):
+            cache.clear()
+            self.assertTrue(tdm.site_reserves('https://example.org/search'))
 
     def test_open_licenses_never_ask_the_site(self):
         with site(error=AssertionError('asked')):
@@ -244,6 +259,33 @@ class RetentionTests(TestCase):
             tdm.forget_texts(timezone.now() + datetime.timedelta(days=tdm.KEEP_DAYS + 1))
             self.assertEqual(paper_source.paper_text('2101.00001v1'), 'Abstract 2101.00001v1.')
 
+    def test_old_indexes_of_papers_without_an_open_license_are_deleted(self):
+        ArxivPaper.objects.create(arxiv_id='2001.00001v1', title='T', abstract='Abstract.', license=ARXIV)
+        ArxivPaper.objects.create(arxiv_id='2001.00002v1', title='T', abstract='Abstract.', license=CC_BY)
+        for arxiv_id in ('2001.00001v1', '2001.00002v1', '2101.00005v1'):
+            PickledData.objects.create(arxiv_id=arxiv_id, docstore_pickle=b'x', buffer=b'', index_to_docstore_id_pickle=b'x')
+        self.assertEqual(tdm.forget_texts(), 3)
+        self.assertEqual(sorted(PickledData.objects.values_list('arxiv_id', flat=True)), ['2001.00002v1'])
+        self.assertEqual(PaperText.objects.get(arxiv_id='2001.00001v1').source, 'forgotten')
+        self.assertEqual(PaperText.objects.get(arxiv_id='2101.00005v1').source, 'html')  # read yesterday: kept
+        self.assertFalse(PaperText.objects.filter(arxiv_id='2001.00002v1').exists())
+        with mock.patch('summarizer.paper_source.read_again', return_value=('', '')):
+            self.assertEqual(paper_source.paper_text('2001.00001v1'), 'Abstract.')  # never rebuilt from the index
+
+    def test_a_paper_read_thanks_to_a_site_decision_is_forgotten_and_read_again_from_its_source(self):
+        ArxivPaper.objects.create(arxiv_id=MNRAS_KEY, title='T', abstract='Abstract.', license=CC_BY_ND)
+        ArxivPaper.objects.create(arxiv_id='key:closed', title='T', abstract='Abstract.', license='')
+        for key in (MNRAS_KEY, 'key:closed'):
+            PaperText.objects.create(arxiv_id=key, text='Text', source='xml')
+        PaperText.objects.filter(arxiv_id__in=(MNRAS_KEY, 'key:closed')).update(
+            updated=timezone.now() - datetime.timedelta(days=tdm.KEEP_DAYS + 1))
+        tdm.forget_texts()
+        self.assertEqual(PaperText.objects.get(arxiv_id='key:closed').source, 'forgotten')
+        with mock.patch('summarizer.sources.full_text', return_value=('Whole paper. ' * 500, 'xml')) as read:
+            self.assertTrue(paper_source.paper_text(MNRAS_KEY).startswith('Whole paper.'))
+        read.assert_called_once_with(MNRAS_KEY)
+        self.assertEqual(PaperText.objects.get(arxiv_id=MNRAS_KEY).source, 'xml')
+
 
 def store(paper):
     ExternalPaper.objects.create(key=MNRAS_KEY, source='openalex', doi=MNRAS, fetched=timezone.now(), metadata=json.dumps(paper))
@@ -321,3 +363,12 @@ class ReuseRuleTests(TestCase):
                 generated.chat_json('prompt', system=system)
             sent = post.call_args.kwargs['json']['messages'][0]['content']
             self.assertEqual(sent.count(generated.REUSE_RULE), 1)
+
+
+class PageTests(TestCase):
+    def test_the_public_page_says_what_the_robot_does(self):
+        page = self.client.get('/en/tdm/')
+        self.assertContains(page, 'SummarizePaper/1.0')
+        self.assertContains(page, '%d days after it was read' % tdm.KEEP_DAYS)
+        self.assertIn('/en/tdm/', sources.USER_AGENT)
+

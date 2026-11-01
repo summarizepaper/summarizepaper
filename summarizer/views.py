@@ -460,6 +460,10 @@ def legal(request):
 
     return render(request, "summarizer/legal-notice.html", stuff_for_frontend)
 
+def tdm_policy(request):
+    from . import tdm
+    return render(request, "summarizer/tdm.html", {'keep_days': tdm.KEEP_DAYS, 'agent': tdm.ROBOTS_AGENT})
+
 def about(request):
     stuff_for_frontend = {}
 

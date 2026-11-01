@@ -26,8 +26,9 @@ Each summary counts the answer it got (TdmCount), shown in the admin next to wha
 
 Only the first two are read. A text read under the exception is never shown
 back beyond short quotes (assistant.QUOTE_NOTE), and is forgotten KEEP_DAYS
-after it was read (forget_texts): the paper is read again when it is asked
-about. PDFs are read in memory and never written anywhere.
+after it was read (forget_texts): the paper is read again, from its own
+source, when it is asked about. PDFs are read in memory and never written
+anywhere. What the robot does is told publicly at /tdm/ (templates/summarizer/tdm.html).
 """
 import datetime
 import fnmatch
@@ -57,7 +58,7 @@ ARXIV_URLS = ('https://arxiv.org/html/', 'https://arxiv.org/pdf/')
 ROBOTS_AGENT = 'SummarizePaper'
 POLICY_KEY = 'tdm-policy:%s'
 POLICY_SECONDS = 2 * 86400  # arXiv's is asked again every hour (run): page loads, which never ask, always know it
-MAX_ROBOTS = 100000  # characters kept of a robots.txt (the cache is small); the rules come first
+MAX_ROBOTS = 20000  # characters kept of the groups of a robots.txt that apply to us (the cache is small)
 TIMEOUT = 10
 KEEP_DAYS = 30
 DECISIONS_KEY = 'tdm-decisions'
@@ -110,9 +111,30 @@ def _policy(origin, ask=True, refresh=False):
             logger.warning('TDM policy of %s: tdmrep.json is not a list of rules', origin)
             return None  # a file we cannot understand may say no
     # a robots.txt that is missing or refused (4xx) puts no limit (RFC 9309)
-    found = {'tdmrep': rules, 'robots': robots.text[:MAX_ROBOTS] if robots.status_code == 200 else ''}
+    found = {'tdmrep': rules, 'robots': _our_rules(robots.text) if robots.status_code == 200 else ''}
     cache.set(key, found, POLICY_SECONDS)
     return found
+
+
+def _our_rules(robots):
+    """The groups of a robots.txt that apply to us, as urllib.robotparser picks them (our agent's, or every agent's):
+    publishers' files list hundreds of other robots, and the cache is small."""
+    kept, group, ours, agents = [], [], False, False
+    for line in robots.splitlines():
+        field = line.split('#', 1)[0].split(':', 1)
+        name = field[0].strip().lower() if len(field) == 2 else ''
+        if name == 'user-agent':
+            if not agents:  # a new group starts
+                kept += group if ours else []
+                group, ours = [], False
+            agents = True
+            agent = field[1].strip().lower()
+            ours = ours or agent == '*' or (agent != '' and agent in ROBOTS_AGENT.lower())
+        elif name:
+            agents = False
+        group.append(line)
+    kept += group if ours else []
+    return '\n'.join(kept)[:MAX_ROBOTS]
 
 
 def site_reserves(url, ask=True):
@@ -220,16 +242,29 @@ def run(now):
 
 
 def forget_texts(now=None):
-    """Forget the texts read under the exception KEEP_DAYS after they were read (paper_source.paper_text reads the
-    paper again when it is asked about). Returns how many were forgotten."""
-    from django.db.models import Q
-    from .models import ArxivPaper, PaperText
+    """Forget the full texts of papers without an open license KEEP_DAYS after they were read, whatever let us read
+    them (their license, a site decision): the stored text, and the chunks of an index from before PaperText, which
+    hold the paper as well (paper_source.paper_text reads the paper again when it is asked about). Returns how many
+    papers were forgotten."""
+    from .models import ArxivPaper, PaperText, PickledData
     cutoff = (now or timezone.now()) - datetime.timedelta(days=KEEP_DAYS)
-    candidates = (ArxivPaper.objects.filter(Q(license__icontains='arxiv.org/licenses/') | Q(license__icontains='/by-nd')
-                                            | Q(license__icontains='/by-nc-nd'))
-                  .filter(arxiv_id__in=PaperText.objects.filter(updated__lt=cutoff)
-                          .exclude(source__in=('abstract', 'forgotten')).values('arxiv_id'))
-                  .values_list('arxiv_id', 'license'))
-    stale = [arxiv_id for arxiv_id, license in candidates if license_status(license) == EXCEPTION]
-    return sum(PaperText.objects.filter(arxiv_id__in=stale[start:start + 500]).update(text='', source='forgotten')
-               for start in range(0, len(stale), 500))
+    read = set(PaperText.objects.filter(updated__lt=cutoff).exclude(source__in=('abstract', 'forgotten'))
+               .values_list('arxiv_id', flat=True))
+    indexed = set(PickledData.objects.values_list('arxiv_id', flat=True))  # none was made in the last KEEP_DAYS
+    keys = sorted(read | indexed)
+    licenses = {}
+    for start in range(0, len(keys), 500):
+        licenses.update(ArxivPaper.objects.filter(arxiv_id__in=keys[start:start + 500]).values_list('arxiv_id', 'license'))
+    stale = [key for key in keys if license_status(licenses.get(key)) != ALLOWED]
+    forgotten = 0
+    for start in range(0, len(stale), 500):
+        chunk = stale[start:start + 500]
+        texts = set(PaperText.objects.filter(arxiv_id__in=chunk).values_list('arxiv_id', flat=True))
+        forgotten += PaperText.objects.filter(arxiv_id__in=chunk, updated__lt=cutoff).exclude(
+            source__in=('abstract', 'forgotten')).update(text='', source='forgotten')
+        # a paper known only by its index stays known as read (utils.has_paper_text), and is read again when asked about
+        alone = [key for key in chunk if key not in texts]
+        PaperText.objects.bulk_create([PaperText(arxiv_id=key, text='', source='forgotten') for key in alone])
+        forgotten += len(alone)
+        PickledData.objects.filter(arxiv_id__in=chunk).delete()
+    return forgotten

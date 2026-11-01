@@ -44,7 +44,7 @@ from . import tdm
 
 logger = logging.getLogger(__name__)
 
-USER_AGENT = 'SummarizePaper/1.0 (+https://www.summarizepaper.com; mailto:contact@summarizepaper.com)'
+USER_AGENT = 'SummarizePaper/1.0 (+https://www.summarizepaper.com/en/tdm/; mailto:contact@summarizepaper.com)'  # the page says what it reads
 TIMEOUT = 20
 PDF_TIMEOUT = 120
 MAX_PDF_BYTES = 60 * 1024 * 1024

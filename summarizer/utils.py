@@ -391,7 +391,7 @@ async def read_paper(arxiv_id, pdf_url):
     text = await asyncio.to_thread(fetch_arxiv_html, arxiv_id)
     if text:
         return text, 'html'
-    response = await asyncio.to_thread(requests.get, pdf_url, timeout=120)
+    response = await asyncio.to_thread(requests.get, pdf_url, timeout=120, headers={'User-Agent': sources.USER_AGENT})
     if tdm.document_reserves(response.headers):
         return '', 'abstract'
     text, _ = await extract_text_from_pdf(response.content)

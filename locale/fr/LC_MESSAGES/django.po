@@ -19254,3 +19254,6 @@ msgstr[0] ""
 msgstr[1] ""
 "%(n)s articles n’avaient pas été trouvés par la revue précédente : ils sont "
 "marqués Nouveau."
+
+msgid "Text and data mining"
+msgstr "Fouille de textes et de données"

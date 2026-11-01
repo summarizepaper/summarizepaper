@@ -59,8 +59,8 @@ def html_to_text(html):
 def fetch_arxiv_html(arxiv_id):
     """Text of the arXiv HTML rendering, or None when the paper has none."""
     try:
-        response = requests.get(ARXIV_HTML % arxiv_ref(arxiv_id), timeout=60,
-                                headers={'User-Agent': 'SummarizePaper (https://www.summarizepaper.com)'})
+        from .sources import USER_AGENT
+        response = requests.get(ARXIV_HTML % arxiv_ref(arxiv_id), timeout=60, headers={'User-Agent': USER_AGENT})
     except requests.RequestException:
         logger.exception('arXiv HTML fetch failed for %s', arxiv_id)
         return None
@@ -120,12 +120,15 @@ def text_from_index(arxiv_id):
 
 
 def read_again(arxiv_id):
-    """(text, source) of an arXiv paper whose rights let us read it, read from arXiv: its HTML, else its PDF.
-    ('', '') otherwise."""
+    """(text, source) of a paper whose rights let us read it, read from its own source: arXiv's HTML, else its PDF,
+    or a copy of a paper from another source (sources.full_text). ('', '') otherwise."""
     from . import sources, tdm
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
-    if paper is None or sources.is_external(arxiv_id) or not tdm.may_read(paper.license, arxiv_id):
+    if paper is None or not tdm.may_read(paper.license, arxiv_id):
         return '', ''
+    if sources.is_external(arxiv_id):
+        text, source = sources.full_text(arxiv_id)
+        return (text, source) if source != 'abstract' else ('', '')
     text = fetch_arxiv_html(arxiv_id)
     if text:
         return text, 'html'

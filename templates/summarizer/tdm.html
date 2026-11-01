@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %} {% trans 'Text and data mining' %} - SummarizePaper {% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="How SummarizePaper reads research papers to summarize them, which reservations it respects, and how long it keeps what it read." />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/tdm/" />
+  <style>
+    .tdm .lang-note { color: var(--text-muted); }
+    .tdm hr { margin: 48px 0 32px; border: 0; border-top: 1px solid var(--border); }
+    .tdm code { overflow-wrap: anywhere; }
+  </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+
+<main class="page prose tdm">
+  <header class="page-header"><h1>Text and data mining</h1></header>
+  <p class="lang-note"><i>In english.</i></p>
+
+  <h2>What our robot does</h2>
+  <p>SummarizePaper reads research papers so that a language model can summarize them and answer questions about them. Its requests carry the user agent <code>{{ agent }}/1.0</code> and a link to this page.</p>
+  <p>We do not republish the papers. Our summaries and answers are our own text: they quote a paper in short sentences at most, and only an open license (CC BY, CC BY-SA, CC BY-NC, CC BY-NC-SA, CC0, public domain) lets us show its figures again.</p>
+
+  <h2>When we read a full text</h2>
+  <p>We read the full text of a paper when its license allows it, or when the text and data mining exception allows it (EU directive 2019/790, article 4; French intellectual property code, article L122-5-3): the copy is open to anyone, the terms of the site it comes from were read, and the rights holder did not reserve mining. Otherwise we only use the paper's title and abstract.</p>
+  <p>We respect these reservations:</p>
+  <ul>
+    <li>the site's <code>/.well-known/tdmrep.json</code> file (<a href="https://www.w3.org/community/reports/tdmrep/CG-FINAL-tdmrep-20240510/">TDMRep</a>);</li>
+    <li>a <code>tdm-reservation: 1</code> HTTP header, or the <code>tdm-reservation</code> meta tag of an HTML page;</li>
+    <li>the site's <code>robots.txt</code>, for the agent <code>{{ agent }}</code> or for every agent.</li>
+  </ul>
+  <p>Finding no reservation is not enough: a paper whose rights are not established is not read until we have read the terms of its source.</p>
+
+  <h2>What we keep</h2>
+  <p>PDFs are read in memory and never stored. The text of a paper without an open license is deleted {{ keep_days }} days after it was read; we read the paper again if someone asks about it later. We keep only our summaries.</p>
+
+  <h2>Objections</h2>
+  <p>To reserve mining of your content, publish a TDMRep reservation or a <code>robots.txt</code> rule for <code>{{ agent }}</code>; we check them again at least every two days. You can also write to <a href="mailto:contact@summarizepaper.com">contact@summarizepaper.com</a>: we stop reading the site and delete what we kept from it.</p>
+
+  <hr>
+  <p class="lang-note"><i>En français.</i></p>
+
+  <h2>Ce que fait notre robot</h2>
+  <p>SummarizePaper lit des articles de recherche pour qu'un modèle de langage les résume et réponde aux questions à leur sujet. Ses requêtes portent l'agent <code>{{ agent }}/1.0</code> et un lien vers cette page.</p>
+  <p>Nous ne republions pas les articles. Nos résumés et nos réponses sont rédigés avec nos propres mots : ils citent un article en quelques phrases au plus, et seule une licence ouverte (CC BY, CC BY-SA, CC BY-NC, CC BY-NC-SA, CC0, domaine public) nous permet de reprendre ses figures.</p>
+
+  <h2>Quand nous lisons le texte intégral</h2>
+  <p>Nous lisons le texte intégral d'un article quand sa licence le permet, ou quand l'exception de fouille de textes et de données le permet (directive UE 2019/790, article 4 ; code de la propriété intellectuelle, article L122-5-3) : la copie est accessible à tous, nous avons lu les conditions du site d'où elle vient, et le titulaire des droits ne s'est pas opposé à la fouille. Sinon, nous n'utilisons que le titre et le résumé de l'article.</p>
+  <p>Nous respectons ces oppositions :</p>
+  <ul>
+    <li>le fichier <code>/.well-known/tdmrep.json</code> du site (<a href="https://www.w3.org/community/reports/tdmrep/CG-FINAL-tdmrep-20240510/">TDMRep</a>) ;</li>
+    <li>un en-tête HTTP <code>tdm-reservation: 1</code>, ou la balise meta <code>tdm-reservation</code> d'une page HTML ;</li>
+    <li>le <code>robots.txt</code> du site, pour l'agent <code>{{ agent }}</code> ou pour tous les agents.</li>
+  </ul>
+  <p>L'absence d'opposition ne suffit pas : un article dont les droits ne sont pas établis n'est pas lu tant que nous n'avons pas lu les conditions de sa source.</p>
+
+  <h2>Ce que nous conservons</h2>
+  <p>Les PDF sont lus en mémoire et jamais enregistrés. Le texte d'un article sans licence ouverte est supprimé {{ keep_days }} jours après sa lecture ; nous relisons l'article si quelqu'un pose une question à son sujet plus tard. Nous ne gardons que nos résumés.</p>
+
+  <h2>Opposition</h2>
+  <p>Pour vous opposer à la fouille de vos contenus, publiez une réservation TDMRep ou une règle <code>robots.txt</code> pour <code>{{ agent }}</code> ; nous les vérifions de nouveau tous les deux jours au plus. Vous pouvez aussi écrire à <a href="mailto:contact@summarizepaper.com">contact@summarizepaper.com</a> : nous cessons de lire le site et supprimons ce que nous en avions gardé.</p>
+</main>
+
+{% endblock %}

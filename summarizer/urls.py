@@ -56,6 +56,7 @@ urlpatterns = [
     path("history/", views.history, name="history"),
     path("privacy/", views.privacy, name="privacy"),
     path("legal-notice/", views.legal, name="legal"),
+    path("tdm/", views.tdm_policy, name="tdm"),
     path("update-cache/", views.update_cache, name="update_cache"),
     path("vote/<str:paper_id>/", views.vote, name="vote"),
     path("email-updates/", email_updates.signup, name="email_updates"),
