@@ -175,6 +175,9 @@ class ExportTests(ToolsTestCase):
         self.assertEqual(exports.split_name('Jean-Pierre van der Waals'), ('Jean-Pierre', 'van der Waals'))
         self.assertEqual(exports.split_name('Lee, Ann'), ('Ann', 'Lee'))
         self.assertEqual(exports.split_name('Plato'), ('', 'Plato'))
+        meta = {'authors': ['Daniel Beránek'], 'year': 2026, 'title': 'A DIO/ODI-Informed Guardrail'}
+        self.assertEqual(exports.cite_key(meta), 'beranek2026informed')
+        self.assertEqual(exports.bib_text(meta['title']), 'A {DIO}/{ODI}-Informed Guardrail')
         self.assertEqual(zotero.creator('Ludwig van Beethoven')['lastName'], 'van Beethoven')
 
 

@@ -8,6 +8,7 @@ version of the paper and when. The Zotero web API (sending, syncing, writing bac
 import io
 import json
 import re
+import unicodedata
 import zipfile
 
 from django.http import Http404, HttpResponse
@@ -105,9 +106,11 @@ def paper_url(meta):
 # --- BibTeX -------------------------------------------------------------------------------------------------
 
 def cite_key(meta):
-    """lee2021clouds: the first author's family name, the year it appeared, the first word of more than 3 letters."""
+    """lee2021clouds: the first author's family name (Beránek: beranek), the year it appeared, the first word of more
+    than 3 letters."""
     first_word = next((w for w in re.findall(r'[A-Za-z]+', meta['title']) if len(w) > 3), 'paper')
-    last_name = re.sub(r'[^A-Za-z]', '', split_name(meta['authors'][0])[1]) if meta['authors'] else ''
+    family = split_name(meta['authors'][0])[1] if meta['authors'] else ''
+    last_name = re.sub(r'[^A-Za-z]', '', unicodedata.normalize('NFKD', family).encode('ascii', 'ignore').decode())
     return '%s%s%s' % ((last_name or 'paper').lower(), meta['year'], first_word.lower())
 
 
@@ -147,7 +150,7 @@ def bib_text(text):
         return re.sub(r'(?<!\\)([&%#])', r'\\\1', text)
     for i in range(0, len(parts), 2):
         escaped = re.sub(r'([&%#_])', r'\\\1', parts[i])
-        parts[i] = re.sub(r"[A-Za-z0-9][A-Za-z0-9'-]*", _protected, escaped)
+        parts[i] = re.sub(r"[A-Za-z0-9][A-Za-z0-9']*", _protected, escaped)
     return ''.join(parts)
 
 
