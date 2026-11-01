@@ -6,7 +6,7 @@
 {% block title %}{% trans 'What did I miss?' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />
-  <style>.missed-group > summary { cursor: pointer; list-style-position: outside; } .missed-group > summary h2 { display: inline; } .missed-group { margin: 24px 0 8px; }</style>{% endblock %}
+  <style>.missed-group > summary { cursor: pointer; list-style-position: inside; } .missed-group > summary h2 { display: inline; } .missed-group { margin: 24px 0 8px; }</style>{% endblock %}
 
 {% block content %}
 <div class="page">
