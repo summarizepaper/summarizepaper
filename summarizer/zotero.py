@@ -18,6 +18,7 @@
   holding the statements of the review it supports and its sentence that supports them.
 """
 import base64
+import datetime
 import hashlib
 import hmac
 import html
@@ -25,6 +26,7 @@ import logging
 import re
 import secrets
 import time
+import unicodedata
 import urllib.parse
 import uuid
 
@@ -51,6 +53,9 @@ OAUTH = 'https://www.zotero.org/oauth'
 TAG = 'SummarizePaper'
 BATCH = 50  # objects per write
 MAX_ITEMS = 500  # items read from one collection
+DAILY = datetime.timedelta(hours=20)  # a collection kept in sync is synced again after this, by the hourly run
+DAILY_PER_RUN = 5
+MAX_PDF = 40 * 1024 * 1024
 SEARCH_LIMIT = 100  # items read for each search of the library
 NOTICE_TAGS = {'retracted': 'Retracted', 'withdrawn': 'Withdrawn', 'concern': 'Expression of concern',
                'corrected': 'Correction published', 'published': 'Published version available'}
@@ -182,15 +187,41 @@ def ensure_collection(account, name, parent='', known=None):
     return created[0]
 
 
+def fetch(account, path, params=None):
+    """(JSON, version of the library) of a read."""
+    response = call(account, 'GET', path, params=params or {})
+    try:
+        return response.json(), _seconds(response.headers.get('Last-Modified-Version'))
+    except ValueError:
+        raise Unavailable('not JSON')
+
+
 def collection_items(account, key):
-    """The top items of a collection (at most MAX_ITEMS), and whether that is all of them."""
-    items = []
+    """The top items of a collection (at most MAX_ITEMS), whether that is all of them, and the library's version."""
+    items, version = [], 0
     for start in range(0, MAX_ITEMS, 100):
-        page = get(account, 'collections/%s/items/top' % key, {'format': 'json', 'limit': 100, 'start': start})
+        page, read = fetch(account, 'collections/%s/items/top' % key, {'format': 'json', 'limit': 100, 'start': start})
+        version = version or read
         items += [i for i in page if (i.get('data') or {}).get('itemType') not in ('note', 'attachment', 'annotation')]
         if len(page) < 100:
-            return items, True
-    return items, False
+            return items, True, version
+    return items, False, version
+
+
+def changes_since(account, version):
+    """(top items changed since this version of the library, trashed ones included; keys of the items deleted
+    since; the library's version now), or None when more changed than MAX_ITEMS (the whole collection is read)."""
+    changed, now = [], 0
+    for start in range(0, MAX_ITEMS, 100):
+        page, read = fetch(account, 'items/top', {'since': version, 'includeTrashed': 1, 'limit': 100, 'start': start})
+        now = now or read
+        changed += page
+        if len(page) < 100:
+            break
+    else:
+        return None
+    deleted, _read = fetch(account, 'deleted', {'since': version})
+    return changed, set((deleted or {}).get('items') or []), now
 
 
 def open_link(account, key, kind='items'):
@@ -484,28 +515,39 @@ def link_collection(account, collection, key=''):
         collection.save(update_fields=['zotero_key', 'zotero_library', 'zotero_removed', 'zotero_synced'])
 
 
-def pull(account, collection, paid, step=lambda: None):
+def pull(account, collection, paid, step=lambda: None, full=True):
     """Adds to the collection the papers of its Zotero collection it lacks, and takes out those removed from Zotero
-    since the last sync. Counts as library.add_many gives them, with 'skipped' (items without DOI nor arXiv id)
-    and 'removed'."""
+    (or put in its trash) since the last sync. Not full: only what changed in the library since the last sync is
+    read. (counts as library.add_many gives them, with 'skipped': items without DOI nor arXiv id, and 'removed';
+    the library's version read)."""
     from .library import add_many, canonical_id
-    items, complete_list = collection_items(account, collection.zotero_key)
     rows = list(collection.papers.all())
-    left = link_rows(rows, items)
-    removed = 0
-    if complete_list and collection.zotero_synced:
-        present = {i['key'] for i in items}
-        gone = [r for r in rows if r.zotero_key and r.zotero_key not in present]
-        removed = len(gone)
-        CollectionPaper.objects.filter(pk__in=[r.pk for r in gone]).delete()
+    changes = changes_since(account, collection.zotero_version) \
+        if not full and collection.zotero_version and collection.zotero_synced else None
+    gone = []
+    if changes is None:
+        items, complete_list, version = collection_items(account, collection.zotero_key)
+        left = link_rows(rows, items)
+        if complete_list and collection.zotero_synced:
+            present = {i['key'] for i in items}
+            gone = [r for r in rows if r.zotero_key and r.zotero_key not in present]
+    else:
+        changed, deleted, version = changes
+        inside = [i for i in changed if collection.zotero_key in ((i.get('data') or {}).get('collections') or [])
+                  and not (i.get('data') or {}).get('deleted')]
+        out = ({i['key'] for i in changed} - {i['key'] for i in inside}) | deleted
+        gone = [r for r in rows if r.zotero_key and r.zotero_key in out]
+        linked = {r.zotero_key for r in rows if r.zotero_key}
+        left = link_rows([r for r in rows if not r.zotero_key], [i for i in inside if i['key'] not in linked])
+    CollectionPaper.objects.filter(pk__in=[r.pk for r in gone]).delete()
     refs = [zotero_ref(i.get('data') or {}) for i in left]
     ids = [i for i in dict.fromkeys(canonical_id(r) for r in refs if r) if i]
     step()
     counts = add_many(collection, ids, paid) if ids else {}
     link_rows(list(collection.papers.filter(zotero_key='')), left)
     counts['skipped'] = counts.get('skipped', 0) + sum(1 for r in refs if not r)
-    counts['removed'] = removed
-    return counts
+    counts['removed'] = len(gone)
+    return counts, version
 
 
 def forget(collection, keys):
@@ -544,31 +586,71 @@ def collection_entries(collection, lang, rows=None):
     return entries, kept
 
 
+def synchronize(collection, account, lang, paid, key='', full=True, step=lambda name: None):
+    """Keeps a collection and its Zotero collection together (key: a Zotero collection to link it to first). Not
+    full (the daily sync): only what changed on either side since the last sync is read and written."""
+    started = timezone.now()
+    link_collection(account, collection, key)
+    take_out(account, collection)
+    step('pull')
+    counts, version = pull(account, collection, paid, step=lambda: step('pull'), full=full)
+    step('push')
+    rows = list(collection.papers.all())
+    if not full and collection.zotero_synced:
+        since = collection.zotero_synced
+        rows = [r for r in rows if not r.zotero_key or r.added >= started or (r.changed and r.changed > since)]
+    entries, rows = collection_entries(collection, lang, rows)
+    result = send(account, entries, collection.zotero_key, step=lambda: step('push'))
+    for row, item_key in zip(rows, result.pop('keys')):
+        if item_key and row.zotero_key != item_key:
+            row.zotero_key = item_key
+            row.save(update_fields=['zotero_key'])
+    Collection.objects.filter(pk=collection.pk).update(zotero_synced=started, zotero_version=version, zotero_lang=lang)
+    return dict(counts, **result, open=open_link(account, collection.zotero_key, 'collections'),
+                web=web_link(account, collection.zotero_key, 'collections'))
+
+
 def sync_collection(collection_pk, account_pk, lang, paid, key=''):
-    """Keeps a collection and its Zotero collection together (key: a Zotero collection to link it to first)."""
+    """The sync asked from a page, in the background: everything is read and written."""
     def work(pk):
         collection = Collection.objects.get(pk=collection_pk)
         account = ZoteroAccount.objects.get(pk=account_pk)
         generated.progress(pk, 'link')
         try:
-            link_collection(account, collection, key)
-            take_out(account, collection)
-            generated.progress(pk, 'pull')
-            counts = pull(account, collection, paid, step=lambda: generated.progress(pk, 'pull'))
-            generated.progress(pk, 'push')
-            entries, rows = collection_entries(collection, lang)
-            result = send(account, entries, collection.zotero_key, step=lambda: generated.progress(pk, 'push'))
+            return synchronize(collection, account, lang, paid, key, step=lambda name: generated.progress(pk, name))
         except Unavailable as e:
             logger.warning('Zotero sync of collection %s failed: %s', collection_pk, e)
             raise generated.SourceUnavailable('zotero')
-        for row, item_key in zip(rows, result.pop('keys')):
-            if item_key and row.zotero_key != item_key:
-                row.zotero_key = item_key
-                row.save(update_fields=['zotero_key'])
-        Collection.objects.filter(pk=collection.pk).update(zotero_synced=timezone.now())
-        return dict(counts, **result, open=open_link(account, collection.zotero_key, 'collections'),
-                    web=web_link(account, collection.zotero_key, 'collections'))
     return work
+
+
+def run(now):
+    """From the hourly run: the collections kept in sync with Zotero that were not synced for a day, a few at a
+    time: what changed on either side, the notices found since (retractions, published versions) as tags, and
+    their papers queued for a new editorial check. Returns how many were synced."""
+    from django.db.models import Q
+    from . import publication_status
+    due = Collection.objects.exclude(zotero_key='').filter(
+        Q(zotero_synced__isnull=True) | Q(zotero_synced__lt=now - DAILY)).select_related('user').order_by('zotero_synced')
+    done = 0
+    for collection in due[:DAILY_PER_RUN * 4]:
+        if done >= DAILY_PER_RUN:
+            break
+        account = ZoteroAccount.objects.filter(user=collection.user).first()
+        if account is None or not account.api_key or collection.zotero_library != account.prefix() \
+                or not access.has_tool(collection.user, 'zotero'):
+            continue
+        for arxiv_id in collection.papers.values_list('arxiv_id', flat=True):
+            publication_status.queue(arxiv_id)
+        try:
+            synchronize(collection, account, collection.zotero_lang or 'en', access.has_tool(collection.user, 'collections'),
+                        full=False)
+            write_notices(collection)
+            done += 1
+        except Exception:
+            logger.warning('Daily Zotero sync of collection %s failed', collection.pk, exc_info=True)
+            Collection.objects.filter(pk=collection.pk).update(zotero_synced=now)  # tried again tomorrow
+    return done
 
 
 def write_notices(collection):
@@ -589,6 +671,98 @@ def write_notices(collection):
             except Unavailable:
                 continue
     return written
+
+
+# --- a check read from Zotero ------------------------------------------------------------------------------
+
+SHORT_TITLE_SKIP = {'a', 'an', 'the', 'some', 'from', 'on', 'in', 'to', 'of', 'do', 'with', 'and', 'or', 'for', 'at',
+                    'by', 'as', 'via', 'der', 'die', 'das', 'ein', 'eine', 'un', 'une', 'la', 'le', 'les', 'el', 'los',
+                    'las', 'de', 'des', 'del', 'du', 'et', 'und'}
+
+
+def _ascii(text):
+    return unicodedata.normalize('NFKD', text or '').encode('ascii', 'ignore').decode()
+
+
+def citation_keys(data):
+    """The keys a manuscript may cite a Zotero item with, the likeliest first: the one pinned in Zotero (Better
+    BibTeX's 'Citation Key:'), Better BibTeX's default (lee + CloudsHotPlanet + 2021), and ours (lee2021clouds)."""
+    keys = []
+    pinned = data.get('citationKey') or (re.search(r'^\s*(?:Citation Key|bibtex)\s*:\s*(\S+)', data.get('extra') or '',
+                                                   re.I | re.M) or [None, ''])[1]
+    if pinned:
+        keys.append(pinned)
+    creators = [c for c in data.get('creators') or [] if c.get('creatorType', 'author') == 'author'] or \
+        list(data.get('creators') or [])
+    first = creators[0] if creators else {}
+    family = first.get('lastName') or first.get('name') or ''
+    year = (re.search(r'\d{4}', str(data.get('date') or '')) or [None])[0] or ''
+    words = [w for w in re.findall(r'[A-Za-z0-9]+', _ascii(data.get('title', ''))) if w.lower() not in SHORT_TITLE_SKIP][:3]
+    short = ''.join(w[:1].upper() + w[1:] for w in words)
+    for name in (family, family.split()[-1] if family.split() else ''):
+        name = re.sub(r'[^A-Za-z0-9]', '', _ascii(name)).lower()
+        if name:
+            keys.append(name + short + year)
+    full = ' '.join(filter(None, [first.get('firstName', ''), family]))
+    if full:
+        keys.append(exports.cite_key({'authors': [full], 'year': year, 'title': data.get('title', '')}))
+    return list(dict.fromkeys(keys))
+
+
+def keyed(found, cited):
+    """The BibTeX of a Zotero collection with each entry under the key the manuscript cites it with (or the key
+    pinned in Zotero), and {key: Zotero item key}. found: [{'bibtex', 'item', 'keys'}]."""
+    entries, library, used = [], {}, set()
+    for entry in found:
+        head = re.match(r'\s*@\w+\s*\{\s*([^,\s]+)\s*,', entry['bibtex'])
+        if not head:
+            continue
+        key = next((k for k in entry['keys'] if k in cited and k not in used), None) or \
+            (entry['keys'][0] if entry['pinned'] and entry['keys'][0] not in used else head.group(1))
+        used.add(key)
+        library[key] = entry['item']
+        entries.append(entry['bibtex'][:head.start(1)] + key + entry['bibtex'][head.end(1):])
+    return '\n\n'.join(entries), library
+
+
+def own_full_text(account, item_key):
+    """The text of the PDF a researcher keeps in Zotero for an item: Zotero's full-text index, else the file itself.
+    Read for their own check only, never stored."""
+    from .missed import pdf_text
+    children = get(account, 'items/%s/children' % item_key)
+    for child in children:
+        data = child.get('data') or {}
+        if data.get('itemType') != 'attachment' or data.get('contentType') != 'application/pdf':
+            continue
+        try:
+            text = (get(account, 'items/%s/fulltext' % child['key']) or {}).get('content') or ''
+        except Unavailable:
+            text = ''
+        if len(text) > sources.MIN_TEXT:
+            return text
+        if data.get('linkMode') in ('imported_file', 'imported_url'):
+            try:
+                pdf = call(account, 'GET', 'items/%s/file' % child['key']).content
+                text = pdf_text(pdf) if len(pdf) <= MAX_PDF else ''
+            except Exception:
+                text = ''
+            if len(text) > sources.MIN_TEXT:
+                return text
+    return ''
+
+
+def reader(account, library):
+    """For the bibliography check: key -> the full text of the paper from the researcher's own PDF in Zotero."""
+    def read(key):
+        if key not in library:
+            return None
+        try:
+            text = own_full_text(account, library[key])
+        except Exception:
+            logger.info('Zotero full text of %s could not be read', key, exc_info=True)
+            return None
+        return {'text': text, 'source': 'zotero', 'arxiv_id': key} if text else None
+    return read
 
 
 # --- a bibliography check written back ----------------------------------------------------------------------

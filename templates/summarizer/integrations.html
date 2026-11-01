@@ -28,8 +28,9 @@
   <h2>{% trans 'Your Zotero library' %} <span class="badge-premium">Premium</span></h2>
   <ul>
     <li>{% trans 'Papers sent without duplicates: a paper already in your library gets the collection, tags and notes it lacks.' %}</li>
-    <li>{% trans 'A collection kept in sync with a Zotero collection, both ways: papers added or removed on one side follow on the other, and your notes, tags, reading status, retractions, corrections and published versions reach Zotero.' %}</li>
+    <li>{% trans 'A collection kept in sync with a Zotero collection, both ways: papers added or removed on one side follow on the other, and your notes, tags, reading status, retractions, corrections and published versions reach Zotero.' %} {% trans 'It is synced again every day, so a retraction found tomorrow reaches your library without you doing anything.' %}</li>
     <li>{% trans 'A bibliography check written back into Zotero: tags and a note on each retracted, corrected or since-published reference, and the published version added next to its preprint.' %}</li>
+    <li>{% trans 'A Zotero collection checked with your manuscript: the citation keys of Better BibTeX are recognised, and the sentences flagged are read again against the PDFs you keep in Zotero (for your check only, never stored).' %}</li>
     <li>{% trans 'A literature review sent as a Zotero collection with a subcollection per approach, each paper with the statements it supports and its sentence that supports them.' %}</li>
     <li>{% trans 'Your Zotero collections as reference papers for your daily digest and your scoop watch.' %}</li>
   </ul>
@@ -38,7 +39,7 @@
   {% elif not paid %}
     <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
   {% elif account %}
-    {% if saved %}<p class="notice" role="status">{% trans 'Your Zotero library is connected.' %}</p>{% endif %}
+    {% if saved %}<p class="notice" role="status" data-funnel-view="zotero_connected">{% trans 'Your Zotero library is connected.' %}</p>{% endif %}
     <p>{% if account.username %}{% blocktrans with name=account.username id=account.library_id %}Connected to the Zotero account {{ name }} ({{ id }}).{% endblocktrans %}{% else %}{% blocktrans with id=account.library_id %}Connected to the Zotero library {{ id }}.{% endblocktrans %}{% endif %}</p>
 
     {% if libraries %}
@@ -85,7 +86,7 @@
     {% if expired %}<p class="error" role="alert">{% trans 'Your Zotero connection has to be renewed: connect your library again.' %}</p>{% endif %}
     {% if error_code == 'oauth' %}<p class="error" role="alert">{% trans 'Zotero did not confirm the connection. Try again, or paste a key below.' %}</p>{% endif %}
     {% if oauth %}
-      <p><a class="btn" href="/{{ LANGUAGE_CODE }}/integrations/zotero/connect/">{% trans 'Connect my Zotero library' %}</a></p>
+      <p><a class="btn" href="/{{ LANGUAGE_CODE }}/integrations/zotero/connect/" data-funnel="zotero_connect_oauth">{% trans 'Connect my Zotero library' %}</a></p>
       <p class="muted"><small>{% trans 'Zotero asks you to log in and to allow SummarizePaper to read and write your library and your groups. No key to copy.' %}</small></p>
       <details><summary>{% trans 'Or paste a key' %}</summary>
     {% endif %}
@@ -94,7 +95,7 @@
       <li>{% blocktrans %}Open <a href="https://www.zotero.org/settings/keys" target="_blank" rel="noopener">zotero.org/settings/keys</a> and copy <em>Your userID for use in API calls</em>.{% endblocktrans %}</li>
       <li>{% trans 'Click "Create new private key", tick "Allow library access" and "Allow write access", save, and copy the key.' %} {% trans 'To use a group library, also give the key write access to your groups.' %}</li>
     </ol>
-    <form method="post">
+    <form method="post" data-funnel="zotero_connect_key">
       {% csrf_token %}
       <p><label>{% trans 'Zotero user ID' %}<br><input type="text" name="library_id" value="{{ library_id }}" inputmode="numeric" pattern="[0-9]+" maxlength="40" aria-describedby="zotero-id-help" required></label><br><small id="zotero-id-help">{% trans 'Numbers only, for example 1234567. This is different from your Zotero username.' %}</small></p>
       <p><label>{% trans 'API key' %}<br><input type="password" name="api_key" autocomplete="off" spellcheck="false" maxlength="100" required></label></p>

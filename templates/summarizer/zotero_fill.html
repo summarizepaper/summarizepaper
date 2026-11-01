@@ -2,7 +2,7 @@
      data-loading="{% trans 'Loading…' %}" data-unavailable="{% trans 'Zotero is not reachable right now. Try again in a moment.' %}"
      data-empty="{% trans 'Your Zotero library has no collection.' %}" data-setup="{% trans 'Connect your Zotero library first.' %}"
      data-filled="{% trans '%(n)s papers added, the last added to Zotero first.' %}" data-none="{% trans 'No paper of this collection has a DOI or an arXiv identifier.' %}">
-  <button type="button" class="btn btn-sm btn-ghost">{% trans 'Take them from a Zotero collection' %}</button>
+  <button type="button" class="btn btn-sm btn-ghost" data-funnel="zotero_fill_references">{% trans 'Take them from a Zotero collection' %}</button>
   <select hidden aria-label="{% trans 'Zotero collection' %}"></select>
   <span class="tool-status" aria-live="polite"></span>
 </div>

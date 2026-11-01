@@ -84,6 +84,7 @@ window.SPPaperTools = {init: function () {
       if (!json.id) return show(zoteroStatus, t.failed);
       SP.wait(json.id, function (data) {
         data = data || {};
+        if (data.failed) return show(zoteroStatus, t.zoteroFailed);
         show(zoteroStatus, data.existing ? t.alreadyZotero : t.sent, data.open ? {href: data.open, text: t.openZotero} : null);
       }, function () { show(zoteroStatus, t.failed); });
     });

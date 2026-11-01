@@ -42,7 +42,7 @@
 
   <div class="tool-row">
     <span class="tool-label">Zotero</span>
-    <button type="button" class="link-button" id="zotero-go">{% trans 'Send to Zotero with its summary' %}</button>
+    <button type="button" class="link-button" id="zotero-go" data-funnel="zotero_send_paper">{% trans 'Send to Zotero with its summary' %}</button>
     <span class="tool-status" id="zotero-status"></span>
   </div>
 
@@ -112,6 +112,7 @@
        data-sent="{% trans 'Saved in your Zotero library.' %}"
        data-already-zotero="{% trans 'Already in your Zotero library: the notes it lacked were added.' %}"
        data-open-zotero="{% trans 'Open in Zotero' %}"
+       data-zotero-failed="{% trans 'Zotero did not accept this paper. Try again in a moment.' %}"
        data-setup="{% trans 'Connect your Zotero library first.' %}"
        data-following="{% trans 'You will get an email when new papers cite it.' %}"
        data-unfollowed="{% trans 'You no longer follow its citations.' %}"

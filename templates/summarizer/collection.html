@@ -29,8 +29,8 @@
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/md/">Markdown</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/list/" title="{% trans 'To import in Notion as a database, or in a spreadsheet' %}">{% trans 'Spreadsheet or Notion (CSV)' %}</a>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/refcheck/?from=collection:{{ collection.pk }}" title="{% trans 'Retracted or corrected papers, preprints published since, entries to correct' %}"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check these references' %}</a>
-    <button type="button" class="btn btn-sm btn-ghost" id="zotero-go" title="{% trans 'Papers added or removed on either side follow on the other; your notes, tags, reading status and the notices found reach Zotero' %}">{% if not owner %}{% trans 'Send to Zotero' %}{% elif collection.zotero_key %}{% trans 'Sync with Zotero' %}{% else %}{% trans 'Send to Zotero and keep in sync' %}{% endif %} <span class="badge-premium">Premium</span></button>
-    <span class="tool-status" id="zotero-status" aria-live="polite">{% if collection.zotero_synced %}{% blocktrans with date=collection.zotero_synced|date:"j F Y H:i" %}Synced with Zotero on {{ date }}.{% endblocktrans %}{% endif %}</span>
+    <button type="button" class="btn btn-sm btn-ghost" id="zotero-go" data-funnel="zotero_sync" title="{% trans 'Papers added or removed on either side follow on the other; your notes, tags, reading status and the notices found reach Zotero' %}">{% if not owner %}{% trans 'Send to Zotero' %}{% elif collection.zotero_key %}{% trans 'Sync with Zotero' %}{% else %}{% trans 'Send to Zotero and keep in sync' %}{% endif %} <span class="badge-premium">Premium</span></button>
+    <span class="tool-status" id="zotero-status" aria-live="polite">{% if collection.zotero_synced %}{% blocktrans with date=collection.zotero_synced|date:"j F Y H:i" %}Synced with Zotero on {{ date }}.{% endblocktrans %} {% trans 'Synced again every day.' %}{% endif %}</span>
   </div>
   <details class="lit-collection">
     <summary><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i> {% trans 'Journal club of the selected papers' %} <span class="badge-premium">Premium+</span></summary>
@@ -201,7 +201,7 @@
       {% else %}
         <button type="button" class="btn btn-sm btn-ghost" id="zotero-import-load">{% trans 'Choose a Zotero collection' %}</button>
         <select id="zotero-import-pick" aria-label="{% trans 'Zotero collection' %}" hidden></select>
-        <button type="button" class="btn btn-sm" id="zotero-import-go" hidden>{% trans 'Import' %}</button>
+        <button type="button" class="btn btn-sm" id="zotero-import-go" data-funnel="zotero_import" hidden>{% trans 'Import' %}</button>
         <span class="tool-status" id="zotero-import-status" aria-live="polite"></span>
       {% endif %}
     </div>
@@ -442,6 +442,7 @@
      data-sent="{% trans 'Saved in your Zotero library.' %}"
      data-synced="{% trans 'In sync with Zotero: %(saved)s papers created, %(existing)s already there, %(added)s added from Zotero.' %}"
      data-open-zotero="{% trans 'Open in Zotero' %}"
+     data-zotero-failed="{% trans '%(n)s papers could not be written: sync again later.' %}"
      data-setup="{% trans 'Connect your Zotero library first.' %}"
      data-loading="{% trans 'Loading…' %}"
      data-unavailable="{% trans 'Zotero is not reachable right now. Try again in a moment.' %}"

@@ -324,7 +324,7 @@
       SP.wait(json.id, function (data) {
         data = data || {};
         zs.textContent = t.synced.replace('%(saved)s', data.saved || 0).replace('%(existing)s', data.existing || 0)
-          .replace('%(added)s', data.added || 0) + ' ';
+          .replace('%(added)s', data.added || 0) + ' ' + (data.failed ? t.zoteroFailed.replace('%(n)s', data.failed) + ' ' : '');
         if (data.open) { var a = document.createElement('a'); a.href = data.open; a.textContent = t.openZotero; zs.appendChild(a); }
         if ((data.added || data.removed) && !data.failed) setTimeout(function () { location.reload(); }, 2500);
       }, function () { zs.textContent = t.failed; });

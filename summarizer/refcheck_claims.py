@@ -10,7 +10,7 @@
 3. Each sentence is judged once, with ALL the papers it cites and the sentence before it: a statement cited to
    two papers is supported when one of them says it. A paper without an abstract never makes a sentence flagged.
 4. The sentences flagged on the abstracts are read again against the full text of the papers concerned, when
-   their rights let us read it (tdm.py): the model must copy the passage that supports or contradicts the
+   their rights let us read it (tdm.py) or the researcher keeps the PDF in Zotero (read for them only, not stored): the model must copy the passage that supports or contradicts the
    sentence, and a passage the paper does not contain word for word is never shown (evidence.find). The values
    a sentence attributes to a paper whose full text we read and that the paper never states are reported too.
 """
@@ -301,13 +301,15 @@ def scaled(text):
     return values
 
 
-def deepen(flagged, papers, lang):
-    """Read again the flagged claims against the full text of the papers concerned, when it can be read."""
+def deepen(flagged, papers, lang, own_text=None):
+    """Read again the flagged claims against the full text of the papers concerned, when it can be read: open
+    full texts, else the researcher's own copy (own_text: key -> full text or None, from their Zotero library)."""
     from .missed import at_once
     # the papers concerned first, then the others the sentence cites: one of them may say it
     wanted = list(dict.fromkeys(k for c in sorted(flagged, key=lambda c: c['verdict'] != 'contradicted')
                                 for k in c['concerned'] + c['keys'] if k in papers))[:FULL_TEXTS]
-    texts = dict(zip(wanted, at_once([lambda key=key: full_text(papers[key]) for key in wanted])))
+    texts = dict(zip(wanted, at_once([lambda key=key: full_text(papers[key]) or (own_text(key) if own_text else None)
+                                      for key in wanted])))
     counted = {'tried': len(wanted), 'read': sum(1 for t in texts.values() if t)}
     readable_claims = []
     for claim in flagged:
@@ -364,7 +366,7 @@ def deepen(flagged, papers, lang):
     return flagged, counted
 
 
-def run(texts, papers, lang, step=lambda: None):
+def run(texts, papers, lang, step=lambda: None, own_text=None):
     """{'claims': flagged, 'confirmed': supported by the full text, 'checked', 'citing'}."""
     every = citing_sentences(texts)
     readable_ones = [c for c in every if any((papers.get(k) or {}).get('abstract') for k in c['keys'])]
@@ -373,7 +375,7 @@ def run(texts, papers, lang, step=lambda: None):
     counted = {'tried': 0, 'read': 0}
     if flagged:
         step()
-        flagged, counted = deepen(flagged, papers, lang)
+        flagged, counted = deepen(flagged, papers, lang, own_text)
     # what a sentence attributes as a result or a comparison matters more than a background reference
     flagged.sort(key=lambda c: (c['verdict'] != 'contradicted', USE_ORDER.get(c.get('use', ''), 5), c['order']))
     return {'claims': [c for c in flagged if c['verdict'] != 'supported'],

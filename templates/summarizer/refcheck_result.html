@@ -246,7 +246,7 @@
         <li><form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="collection"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Keep my references in a collection' %}</button></form>: {% trans 'chat with all of them, compare them in a table, and find what the collection is missing.' %}</li>
         {% endif %}
         {% if zotero_issues %}
-        <li><button type="button" class="btn btn-sm btn-ghost" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/refcheck/{{ row.key }}/zotero/"
+        <li><button type="button" class="btn btn-sm btn-ghost" id="refcheck-zotero" data-funnel="zotero_refcheck_write" data-url="/{{ LANGUAGE_CODE }}/refcheck/{{ row.key }}/zotero/"
               data-sending="{% trans 'Writing into Zotero…' %}" data-setup="{% trans 'Connect your Zotero library first.' %}"
               data-premium="{% trans 'This is a Premium feature.' %}" data-failed="{% trans 'Zotero is not reachable right now. Try again in a moment.' %}"
               data-done="{% trans '%(tagged)s references tagged in Zotero, %(added)s published versions added.' %}"

@@ -3,14 +3,14 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, digest, letters, neighbours, publication_alerts, publication_status, scoops, students, tdm, teams, trends, usage, saved_searches
+from summarizer import audio, changes, citations, digest, letters, neighbours, publication_alerts, publication_status, scoops, students, tdm, teams, trends, usage, saved_searches, zotero
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     help = ('Email the digests that are due at this hour (run every hour), then the scoop, citation, version, publication, saved-search and topic map alerts and letters '
-            'within what is left of the hourly email budget, and the neighbourhoods of papers. --user sends now, ignoring the schedule.')
+            'within what is left of the hourly email budget, the neighbourhoods of papers and the daily Zotero syncs. --user sends now, ignoring the schedule.')
 
     def add_arguments(self, parser):
         parser.add_argument('--dry-run', action='store_true', help='Select papers and write blurbs, send nothing.')
@@ -43,6 +43,7 @@ class Command(BaseCommand):
                            ('topic maps', lambda: teams.watch_maps(now, budget, base_url=options['base_url'])),
                            ('paper neighbourhoods', lambda: neighbours.refresh_due(now)),
                            ('text and data mining', lambda: tdm.run(now)),
+                           ('zotero sync', lambda: zotero.run(now)),
                            # last: once a week it reads two weeks of arXiv and writes topics for a few minutes
                            ('trends', lambda: trends.update(now))):
             try:

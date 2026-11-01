@@ -336,17 +336,24 @@ def arxiv_source(paper_id):
     return archive_files(data, name=paper_id.replace('/', '_'))
 
 
-def zotero_bibtex(account, key, limit=500):
-    """BibTeX of the top items of a Zotero collection, as Zotero exports them."""
+def zotero_references(account, key, limit=500):
+    """The top items of a Zotero collection as Zotero exports them to BibTeX, each with its item key and the keys a
+    manuscript may cite it with: [{'bibtex', 'item', 'keys', 'pinned'}]."""
     from . import zotero
-    parts = []
+    found = []
     for start in range(0, limit, 100):
         try:
-            response = zotero.call(account, 'GET', 'collections/%s/items/top' % key,
-                                   params={'format': 'bibtex', 'limit': 100, 'start': start})
+            page = zotero.get(account, 'collections/%s/items/top' % key,
+                              {'format': 'json', 'include': 'bibtex,data', 'limit': 100, 'start': start})
         except zotero.Unavailable:
             raise generated.SourceUnavailable('zotero')
-        parts.append(response.text)
-        if int(response.headers.get('Total-Results') or 0) <= start + 100:
+        for item in page:
+            data = item.get('data') or {}
+            if item.get('bibtex') and data.get('itemType') not in ('note', 'attachment', 'annotation'):
+                keys = zotero.citation_keys(data)
+                pinned = bool(data.get('citationKey') or re.search(r'^\s*(?:Citation Key|bibtex)\s*:', data.get('extra') or '',
+                                                                   re.I | re.M))
+                found.append({'bibtex': item['bibtex'].strip(), 'item': item['key'], 'keys': keys, 'pinned': pinned})
+        if len(page) < 100:
             break
-    return '\n\n'.join(parts)
+    return found

@@ -52,7 +52,8 @@
       <p><textarea name="bibtext" placeholder="@article{key, ...}"></textarea></p>
       {% if zotero %}
       <p><label for="refcheck-zotero">{% trans 'or check a Zotero collection:' %}</label>
-        <select name="zotero" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/collections/zotero/" data-selected="{{ zotero_selected }}"><option value="">—</option></select></p>
+        <select name="zotero" id="refcheck-zotero" data-url="/{{ LANGUAGE_CODE }}/collections/zotero/" data-selected="{{ zotero_selected }}"><option value="">—</option></select><br>
+        <small class="muted">{% trans 'Your manuscript is matched with the citation keys of Better BibTeX. The flagged sentences are also checked against the PDFs you keep in Zotero, read for your check only and never stored.' %}</small></p>
       {% else %}
       <p class="muted"><small>{% trans 'Your references are in Zotero?' %} <a href="/{{ LANGUAGE_CODE }}/integrations/">{% trans 'Connect Zotero' %}</a> {% trans 'to check a collection directly.' %}</small></p>
       {% endif %}

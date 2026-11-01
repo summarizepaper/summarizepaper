@@ -370,7 +370,8 @@ def update_paper(collection, post):
         paper.selected = post['selected'] in ('1', 'true', 'on')
         fields.append('selected')
     if fields:
-        paper.save(update_fields=fields)
+        paper.changed = timezone.now()  # the next Zotero sync writes it
+        paper.save(update_fields=fields + ['changed'])
     return paper
 
 

@@ -715,6 +715,8 @@ class Collection(models.Model):
     zotero_library = models.CharField(max_length=40, blank=True, default='')
     zotero_synced = models.DateTimeField(blank=True, null=True)
     zotero_removed = models.TextField(blank=True, default='')  # items of papers removed here, to take out of it at the next sync
+    zotero_version = models.PositiveBigIntegerField(default=0)  # the library version read by the last sync: the next reads what changed since
+    zotero_lang = models.CharField(max_length=10, blank=True, default='')  # the language of the notes written by the nightly sync
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -737,6 +739,7 @@ class CollectionPaper(models.Model):
     selected = models.BooleanField(default=True)  # read by the comparison table, the open questions and the chat
     position = models.PositiveIntegerField(default=0)  # the order its owner gave; papers never moved keep 0
     zotero_key = models.CharField(max_length=20, blank=True, default='')  # its item in the synced Zotero collection
+    changed = models.DateTimeField(blank=True, null=True)  # its note, tags or reading status last changed here
     added = models.DateTimeField(auto_now_add=True)
 
     class Meta:

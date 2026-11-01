@@ -362,8 +362,9 @@ def completion(entry, matched):
     return filled, missing
 
 
-def check(bib, tex, lang, step=lambda name: None, origin='bib'):
-    """The report on a bibliography. tex: the LaTeX as a string, or [(file name, LaTeX)] in reading order."""
+def check(bib, tex, lang, step=lambda name: None, origin='bib', own_text=None):
+    """The report on a bibliography. tex: the LaTeX as a string, or [(file name, LaTeX)] in reading order.
+    own_text: key -> the full text of a cited paper from the researcher's own copy (Zotero), or None."""
     LIMITED.set(False)
     texts = [('main.tex', tex)] if isinstance(tex, str) else list(tex or [])
     texts = [(name, text) for name, text in texts if text and text.strip()]
@@ -553,7 +554,7 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
         step('claims')
         papers = {i['key']: {'title': i['title'], 'abstract': i['abstract'], 'arxiv': i['arxiv'], 'doi': i['doi']}
                   for i in items}
-        claims = refcheck_claims.run(texts, papers, lang, lambda: step('deep'))
+        claims = refcheck_claims.run(texts, papers, lang, lambda: step('deep'), own_text=own_text)
         keys, everything = refcheck_claims.cited_keys(texts)
         undefined = [k for k in keys if k not in by_key]
         if not everything and origin == 'bib':
@@ -689,10 +690,10 @@ def write(load, lang, user=None, previous=None, with_missed=False, zotero_collec
     def work(pk):
         generated.progress(pk, 'read')
         try:
-            bib, texts, origin, pdf = load()
+            bib, texts, origin, pdf, own = load()
         except refcheck_sources.Unreadable as e:
             raise generated.SourceUnavailable(str(e))
-        result = check(bib, texts, lang, lambda name: generated.progress(pk, name), origin=origin)
+        result = check(bib, texts, lang, lambda name: generated.progress(pk, name), origin=origin, own_text=own)
         if previous is not None:
             result['previous'] = {'key': previous.key, 'date': previous.created.date().isoformat(),
                                   'solved': carried(result, previous.data())}
@@ -777,24 +778,32 @@ def _text(upload, pasted):
 
 
 def loader(bib, tex, tex_name, archive, pdf, arxiv, zotero):
-    """What the check reads, gathered in the background: (bib, texts, origin, PDF bytes or None)."""
+    """What the check reads, gathered in the background: (bib, texts, origin, PDF bytes or None, reader of the
+    researcher's own PDFs in Zotero or None). The entries of a Zotero collection take the keys the manuscript cites
+    them with (zotero.keyed)."""
     def load():
+        from . import zotero as zotero_api
         texts, origin, references = [], 'bib', bib
-        if zotero is not None:
-            references = refcheck_sources.zotero_bibtex(*zotero) + '\n\n' + references
+        found = refcheck_sources.zotero_references(*zotero) if zotero is not None else []
         files = refcheck_sources.archive_files(archive) if archive is not None else \
             refcheck_sources.arxiv_source(arxiv) if arxiv else None
         if files is not None:
             texts = refcheck_sources.manuscript(files)
-            if not parse_bibtex(references):
+            if not parse_bibtex(references) and not found:
                 references, origin = refcheck_sources.references_of(files, texts)
         if tex:
             texts = [(tex_name, tex)]
+        own = None
+        if found:
+            cited = set(refcheck_claims.cited_keys(texts)[0]) if texts else set()
+            library_bib, library = zotero_api.keyed(found, cited)
+            references = library_bib + '\n\n' + references
+            own = zotero_api.reader(zotero[0], library)
         if pdf is not None and not parse_bibtex(references):
             references, origin = refcheck_sources.pdf_bibtex(pdf), 'pdf'
         if not parse_bibtex(references):
             raise refcheck_sources.Unreadable('no_references')
-        return references, texts, origin, pdf
+        return references, texts, origin, pdf, own
     return load
 
 

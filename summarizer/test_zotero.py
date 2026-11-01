@@ -1,5 +1,6 @@
 """Tests of the exports (BibTeX, RIS, Obsidian, Notion) and of Zotero: sending without duplicates, collections kept
 in sync both ways, a bibliography check and a literature review written back, the pickers and the connection."""
+import datetime
 import io
 import json
 import re
@@ -21,6 +22,7 @@ class FakeZotero:
     def __init__(self, user='123', write=True, groups=()):
         self.user, self.write, self.groups = user, write, list(groups)
         self.items, self.collections, self.calls, self.count = {}, {}, [], 0
+        self.version, self.deleted, self.fulltext = 1, {}, {}  # the library's version; deleted keys; attachment texts
         self.patches = [mock.patch('summarizer.zotero.requests.request', side_effect=self.request),
                         mock.patch('summarizer.zotero.requests.get', side_effect=self.get),
                         mock.patch('summarizer.zotero.time.sleep')]
@@ -41,8 +43,19 @@ class FakeZotero:
     def add(self, data):
         key = self.new_key()
         data = dict(data, key=key, collections=list(data.get('collections', [])), tags=list(data.get('tags', [])))
-        self.items[key] = {'key': key, 'version': 1, 'data': data}
+        self.version += 1
+        self.items[key] = {'key': key, 'version': self.version, 'data': data}
         return key
+
+    def change(self, key, **fields):
+        """The researcher changes an item in Zotero."""
+        self.version += 1
+        self.items[key]['data'].update(fields)
+        self.items[key]['version'] = self.version
+
+    def delete(self, key):
+        self.version += 1
+        self.deleted[self.items.pop(key)['key']] = self.version
 
     def collection(self, name, parent=''):
         key = self.new_key()
@@ -57,14 +70,22 @@ class FakeZotero:
     def notes_of(self, key):
         return [i['data']['note'] for i in self.items.values() if i['data'].get('parentItem') == key]
 
-    def top(self, collection=None):
-        return [i for i in self.items.values() if i['data']['itemType'] != 'note' and not i['data'].get('parentItem')
+    def top(self, collection=None, trashed=False):
+        return [i for i in self.items.values() if i['data']['itemType'] not in ('note', 'attachment')
+                and not i['data'].get('parentItem') and (trashed or not i['data'].get('deleted'))
                 and (collection is None or collection in i['data']['collections'])]
 
-    @staticmethod
-    def answer(body=None, status=200):
-        return mock.Mock(status_code=status, headers={}, json=lambda: body,
-                         text=body if isinstance(body, str) else json.dumps(body))
+    def answer(self, body=None, status=200):
+        return mock.Mock(status_code=status, headers={'Last-Modified-Version': str(self.version)}, json=lambda: body,
+                         content=body if isinstance(body, bytes) else b'',
+                         text=body if isinstance(body, str) else json.dumps(body) if not isinstance(body, bytes) else '')
+
+    def with_bibtex(self, items, params):
+        if 'bibtex' not in params.get('include', ''):
+            return items
+        return [dict(i, bibtex='@article{%s_%s,\n  title={%s}\n}' % (
+            i['data'].get('creators', [{}])[0].get('lastName', 'x').lower(), i['key'].lower(), i['data'].get('title', '')))
+            for i in items]
 
     def get(self, url, **kwargs):
         if '/keys/' in url:
@@ -86,7 +107,14 @@ class FakeZotero:
                          'meta': {'numItems': len(self.top(k))}} for k, c in self.collections.items()]
                 return self.answer(rows[start:start + limit])
             if path[0] == 'collections' and path[2:] == ['items', 'top']:
-                return self.answer(self.top(path[1])[start:start + limit])
+                return self.answer(self.with_bibtex(self.top(path[1]), params)[start:start + limit])
+            if path == ['items', 'top'] and 'since' in params:
+                found = [i for i in self.top(trashed=bool(params.get('includeTrashed'))) if i['version'] > int(params['since'])]
+                return self.answer(found[start:start + limit])
+            if path == ['deleted']:
+                return self.answer({'items': [k for k, v in self.deleted.items() if v > int(params['since'])]})
+            if path[0] == 'items' and path[2:] == ['fulltext']:
+                return self.answer({'content': self.fulltext[path[1]]}) if path[1] in self.fulltext else self.answer({}, 404)
             if path == ['items', 'top']:  # quick search: a phrase in the titles, or in every field
                 query = params.get('q', '').lower()
                 fields = (lambda d: [d.get('title', '')]) if params.get('qmode') != 'everything' else \
@@ -102,9 +130,7 @@ class FakeZotero:
             return self.answer({'successful': {str(n): {'key': self.collection(c['name'], c.get('parentCollection', ''))}
                                                for n, c in enumerate(json)}})
         if method == 'PATCH' and path[0] == 'items':
-            item = self.items[path[1]]
-            item['data'].update(json)
-            item['version'] += 1
+            self.change(path[1], **json)
             return self.answer(None, 204)
         return self.answer({}, 404)
 
@@ -363,3 +389,71 @@ class ZoteroTests(ToolsTestCase):
             self.assertEqual(ZoteroAccount.objects.get(pk=account.pk).api_key, '')
             self.assertEqual(self.client_for(account.user).post('/en/zotero/send/', {'arxiv_id': '2101.00001v1'}).json()['status'],
                              'setup')
+
+
+class ZoteroCheckAndDailySyncTests(ToolsTestCase):
+    def account(self, user):
+        return ZoteroAccount.objects.create(user=user, library_id='123', api_key='k', username='ann_z')
+
+    def test_the_keys_a_manuscript_may_cite_an_item_with(self):
+        data = {'title': 'Clouds on a hot planet', 'date': '2021-01-04', 'extra': '',
+                'creators': [{'creatorType': 'author', 'firstName': 'Ann', 'lastName': 'Lee'}]}
+        self.assertEqual(zotero.citation_keys(data), ['leeCloudsHotPlanet2021', 'lee2021clouds'])
+        self.assertEqual(zotero.citation_keys(dict(data, extra='tex.x: 1\nCitation Key: lee_clouds'))[0], 'lee_clouds')
+        accented = dict(data, creators=[{'creatorType': 'author', 'firstName': 'Daniel', 'lastName': 'Beránek'}])
+        self.assertEqual(zotero.citation_keys(accented)[0], 'beranekCloudsHotPlanet2021')
+
+    def test_a_zotero_collection_is_checked_with_the_manuscript_keys_and_the_researchers_pdfs(self):
+        from . import refcheck
+        account = self.account(self.user(paid=True))
+        text = 'We measured the cloud top pressure of the planet at 3.2 mbar with transmission spectra. ' * 60
+        with FakeZotero() as fake:
+            key = fake.collection('Draft')
+            lee = fake.add({'itemType': 'journalArticle', 'title': 'Clouds on a hot planet', 'date': '2021', 'collections': [key],
+                            'creators': [{'creatorType': 'author', 'firstName': 'Ann', 'lastName': 'Lee'}]})
+            pdf = fake.add({'itemType': 'attachment', 'parentItem': lee, 'contentType': 'application/pdf', 'linkMode': 'imported_file'})
+            fake.fulltext[pdf] = text
+            fake.add({'itemType': 'journalArticle', 'title': 'Hazes', 'date': '2020', 'collections': [key],
+                      'extra': 'Citation Key: smith_hazes', 'creators': [{'creatorType': 'author', 'lastName': 'Smith'}]})
+            fake.add({'itemType': 'journalArticle', 'title': 'Never cited', 'date': '2019', 'collections': [key],
+                      'creators': [{'creatorType': 'author', 'lastName': 'Ray'}]})
+            tex = 'Clouds sit at 3.2 mbar \\citep{leeCloudsHotPlanet2021}. Hazes too \\citep{smith_hazes}.'
+            bib, texts, origin, _pdf, own = refcheck.loader('', tex, 'main.tex', None, None, '', (account, key))()
+            self.assertIn('@article{leeCloudsHotPlanet2021,', bib)  # the key the manuscript cites
+            self.assertIn('@article{smith_hazes,', bib)  # pinned in Zotero
+            self.assertIn('@article{ray_', bib)  # neither cited nor pinned: Zotero's own key
+            read = own('leeCloudsHotPlanet2021')
+        self.assertEqual((read['source'], read['text']), ('zotero', text))
+        self.assertIsNone(own('ray_x'))
+
+    def test_the_daily_sync_reads_only_what_changed(self):
+        self.paper('2101.00001v1')
+        self.paper('2101.00002v1', title='Hazes on a warm planet')
+        user = self.user(paid=True)
+        self.account(user)
+        collection = Collection.objects.create(user=user, name='Thesis')
+        clouds = CollectionPaper.objects.create(collection=collection, arxiv_id='2101.00001v1', title='Clouds on a hot planet',
+                                                authors='Ann Lee')
+        free = self.user('free')
+        ZoteroAccount.objects.create(user=free, library_id='9', api_key='k')
+        Collection.objects.create(user=free, name='Lapsed', zotero_key='COLLBBBB', zotero_library='users/9')
+        with FakeZotero() as fake, mock.patch('summarizer.library.lookup_many',
+                                              return_value={'2101.00002': ('Hazes on a warm planet', 'Ann Lee')}):
+            key = fake.collection('Thesis')
+            before = fake.version
+            self.client_for(user).post('/en/zotero/send/', {'collection': collection.pk})
+            collection.refresh_from_db()
+            # the version read before writing: the next sync sees what changed since, its own writes included
+            self.assertEqual((collection.zotero_version, collection.zotero_lang), (before, 'en'))
+            item = CollectionPaper.objects.get(pk=clouds.pk).zotero_key
+            # in Zotero: a paper added to the collection, the other put in the trash; here: nothing changed
+            fake.add({'itemType': 'preprint', 'title': 'Hazes on a warm planet', 'archiveID': 'arXiv:2101.00002',
+                      'collections': [key]})
+            fake.change(item, deleted=1)
+            fake.calls.clear()
+            self.assertEqual(zotero.run(timezone.now() + datetime.timedelta(days=1)), 1)  # not the lapsed Premium
+        self.assertEqual(list(collection.papers.values_list('arxiv_id', flat=True)), ['2101.00002'])
+        reads = [path for method, path in fake.calls if method == 'GET']
+        self.assertNotIn('collections/%s/items/top' % key, reads)  # what changed only
+        self.assertIn('items/top', reads)
+        self.assertFalse([c for c in fake.calls if c[0] == 'PATCH' and c[1] == 'items/%s' % item])  # nothing written back to it
