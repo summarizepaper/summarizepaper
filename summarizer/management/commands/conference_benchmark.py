@@ -139,9 +139,13 @@ class Command(BaseCommand):
                     core_strong = [c for c in profile['core'] if c in strong]
                     out('core talks chosen as must or should: %d of %d; chosen at all: %d' % (
                         len(core_strong), len(profile['core']), sum(1 for c in profile['core'] if c in chosen)))
+                    vectors = conference.program_vectors(program, talks)
+                    scores = (vectors @ conference.interest_rows(profile['interests']).T).max(axis=1)
+                    place = {talks[n]['title']: p + 1 for p, n in enumerate(scores.argsort()[::-1])}
                     for title in profile['core']:
                         if title not in strong:
-                            out('  core %s: %s' % (chosen[title]['priority'] if title in chosen else 'left out', title[:90]))
+                            out('  core %s (%d by closeness): %s' % (chosen[title]['priority'] if title in chosen else 'left out',
+                                                                     place.get(title, 0), title[:90]))
                     off = [o for o in profile['off'] if o in strong]
                     out('off-topic talks chosen as must or should: %d of %d' % (len(off), len(profile['off'])))
                     for title in off:
