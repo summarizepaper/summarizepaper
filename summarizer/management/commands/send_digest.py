@@ -3,13 +3,13 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, digest, letters, neighbours, publication_alerts, publication_status, scoops, students, tdm, teams, trends, usage, saved_searches, zotero
+from summarizer import audio, changes, citations, conference, digest, letters, neighbours, publication_alerts, publication_status, scoops, students, tdm, teams, trends, usage, saved_searches, zotero
 
 logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = ('Email the digests that are due at this hour (run every hour), then the scoop, citation, version, publication, saved-search and topic map alerts and letters '
+    help = ('Email the digests that are due at this hour (run every hour), then the scoop, citation, version, publication, saved-search, topic map and conference change alerts and letters '
             'within what is left of the hourly email budget, the neighbourhoods of papers and the daily Zotero syncs. --user sends now, ignoring the schedule.')
 
     def add_arguments(self, parser):
@@ -41,6 +41,7 @@ class Command(BaseCommand):
                            ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url'])),
                            ('placement new papers', lambda: students.watch_new_papers(now, budget, base_url=options['base_url'])),
                            ('topic maps', lambda: teams.watch_maps(now, budget, base_url=options['base_url'])),
+                           ('conference changes', lambda: conference.refresh_due(now, budget, base_url=options['base_url'])),
                            ('paper neighbourhoods', lambda: neighbours.refresh_due(now)),
                            ('text and data mining', lambda: tdm.run(now)),
                            ('zotero sync', lambda: zotero.run(now)),
@@ -53,6 +54,6 @@ class Command(BaseCommand):
                 logger.exception('Hourly step %s failed', name)
                 continue
             if name in ('scoop alerts', 'citation alerts', 'version alerts', 'letter emails', 'search watches', 'publication alerts',
-                        'placement reminders', 'placement new papers', 'topic maps'):
+                        'placement reminders', 'placement new papers', 'topic maps', 'conference changes'):
                 budget -= done
             self.stdout.write('%s: %s' % (name, done))

@@ -1,0 +1,8 @@
+{% load i18n %}{% trans 'The program of the conference changed for talks you go to or that matter for your research:' %}
+{% for c in changes %}
+- {{ c.title }}
+  {{ c.lines|join:" · " }}
+{% endfor %}
+{% trans 'Your program, with the new times and rooms:' %} {{ url }}
+
+{% trans 'You receive this email because you plan to go to this conference. Stop these emails on the page of your program, under “Export, team and after”.' %}

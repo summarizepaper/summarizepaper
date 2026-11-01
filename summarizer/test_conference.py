@@ -1,12 +1,15 @@
 """Tests of the conference companion: reading a program (text, Indico, calendar feed), ranking it, the program
 day by day with its clashes, marks, notes, the team, the calendar and notes exports, and the follow-up."""
+import datetime
 import json
 from unittest import mock
 
 import numpy as np
+from django.core import mail
 from django.core.cache import cache
 from django.test import Client
 from django.utils import timezone
+from django.utils.translation import override as translation_override
 
 from summarizer import conference, conference_import
 from summarizer.models import (CitationCache, Collection, ConferenceMark, ConferenceMember, ConferenceProgram,
@@ -59,7 +62,7 @@ def chat(prompt, **kwargs):
     raise AssertionError(prompt[:80])
 
 
-class ConferenceTests(ToolsTestCase):
+class ConferenceCase(ToolsTestCase):
     def setUp(self):
         super().setUp()
         for target, effect in (('summarizer.generated.chat_json', chat), ('summarizer.similar.embed', embed),
@@ -77,6 +80,8 @@ class ConferenceTests(ToolsTestCase):
         return Generated.objects.create(kind='conference', key='k%s' % Generated.objects.count(), user=user, lang='en',
                                         status='done', content=json.dumps(dict(result, name=program.name)))
 
+
+class ConferenceTests(ConferenceCase):
     def test_times_and_days_are_read_whatever_their_form(self):
         self.assertEqual([conference.clock(v) for v in ('9:05', '09h05', '2.30 pm', '14:30:00', '12 am', 'noon', '25:00')],
                          ['09:05', '09:05', '14:30', '14:30', '00:00', '', ''])
@@ -325,3 +330,139 @@ class ConferenceTests(ToolsTestCase):
         self.assertEqual(Generated.objects.filter(kind='conference_mail').count(), 1)
         client.post(url, {'action': 'mail', 'person': 'Somebody Else'})  # not one of the people to meet
         self.assertEqual(Generated.objects.filter(kind='conference_mail').count(), 1)
+
+
+class ConferenceChangesTests(ConferenceCase):
+    """The program read again (changes, emails), the view of now, the team, the time zone, names and preprints."""
+
+    def test_a_program_read_again_keeps_ids_and_tells_what_changed(self):
+        old = conference.settle([conference.clean_talk(t) for t in TALKS])
+        new = conference.settle([conference.clean_talk(dict(TALKS[1], room='C', start='11:00', end='11:20')),
+                                 conference.clean_talk(TALKS[0]), conference.clean_talk(TALKS[3]),
+                                 conference.clean_talk({'title': 'A late talk', 'day': '2026-07-15', 'start': '16:00'})])
+        talks, changes = conference.merge_talks(old, new)
+        by_title = {t['title']: t for t in talks}
+        self.assertEqual((by_title['Exomoons with Gaia']['id'], by_title['Clouds on hot Jupiters']['id'],
+                          by_title['A late talk']['id']), ('t1', 't0', 't4'))
+        self.assertTrue(by_title['Protein folding at scale']['cancelled'])
+        self.assertEqual({c['title']: c.get('what') or 'cancelled' for c in changes},
+                         {'Exomoons with Gaia': {'start': ['09:10', '11:00'], 'end': ['09:30', '11:20'], 'room': ['B', 'C']},
+                          'Protein folding at scale': 'cancelled'})
+        with translation_override('en'):
+            self.assertEqual(conference.change_lines(changes[0], None), ['09:10 → 11:00', 'Room: B → C'])
+
+    def test_changes_are_read_hourly_emailed_and_shown(self):
+        owner = self.user('pro', paid=True)
+        owner.email = 'pro@example.org'
+        owner.save()
+        program = self.program(owner, source='https://indico.example.org/event/9/', source_kind='indico',
+                               first_day=timezone.localdate() + datetime.timedelta(days=3),
+                               last_day=timezone.localdate() + datetime.timedelta(days=4))
+        row = self.ranked(owner, program)
+        mate = self.user('bob')
+        mate.email = 'bob@example.org'
+        mate.save()
+        ConferenceMember.objects.create(program=program, user=mate)
+        ConferenceMark.objects.create(program=program, user=mate, talk='t2', state='going')
+        moved = [dict(TALKS[0], room='Amphi'), TALKS[1], TALKS[3]]  # Protein folding is cancelled
+        with mock.patch('summarizer.conference_import.read_link', return_value={'talks': moved, 'kind': 'indico'}):
+            sent = conference.refresh_due(timezone.now(), 10)
+            again = conference.refresh_due(timezone.now(), 10)  # read a moment ago: not again
+        self.assertEqual((sent, again), (2, 0))
+        mails = {m.to[0]: m for m in mail.outbox}
+        self.assertIn('Room: A → Amphi', mails['pro@example.org'].body)  # a talk not to miss of the owner's ranking
+        self.assertIn('Cancelled', mails['bob@example.org'].body)  # the talk the colleague goes to
+        self.assertNotIn('Amphi', mails['bob@example.org'].body)
+        page = self.client_for(owner).get('/en/conference/%s/' % row.key)
+        self.assertContains(page, 'Changed: Room: A → Amphi')
+        self.assertContains(page, 'Changed in the program this week')
+        client = self.client_for(mate)
+        client.post('/en/conference/%s/' % row.key, {'action': 'quiet'})
+        program.refresh_from_db()
+        self.assertEqual(program.quiet_ids(), [mate.pk])
+        self.assertNotIn('Protein', client.get('/en/conference/%s/calendar.ics' % row.key).content.decode())
+
+    def test_now_shows_the_talk_on_and_the_next_ones(self):
+        owner = self.user('pro', paid=True)
+        program = self.program(owner, timezone='Europe/Paris', first_day=datetime.date(2026, 7, 14),
+                               last_day=datetime.date(2026, 7, 15))
+        row = self.ranked(owner, program)
+        moment = datetime.datetime(2026, 7, 14, 7, 5, tzinfo=datetime.timezone.utc)  # 9:05 in Paris
+        with mock.patch('summarizer.conference.timezone.now', return_value=moment):
+            page = self.client_for(owner).get('/en/conference/%s/' % row.key).content.decode()
+        self.assertIn('aria-current="page">Now', page)
+        now, upcoming = page.split('>Next<') if '>Next<' in page else (page, '')
+        self.assertIn('Clouds on hot Jupiters', now.split('<h2>Now</h2>')[1])
+        self.assertIn('Exomoons with Gaia', upcoming)
+        with mock.patch('summarizer.conference.timezone.now', return_value=moment + datetime.timedelta(days=5)):
+            self.assertContains(self.client_for(owner).get('/en/conference/%s/?view=now' % row.key), 'The conference is over')
+        sw = self.client_for(owner).get('/en/conference/sw.js')
+        self.assertEqual(sw['Content-Type'], 'application/javascript')
+
+    def test_a_colleague_ranks_the_shared_program_and_sees_what_nobody_covers(self):
+        owner = self.user('pro', paid=True)
+        program = self.program(owner, team_token='team1')
+        row = self.ranked(owner, program)
+        mate = self.user('bob', paid=True)
+        client = self.client_for(mate)
+        client.post('/en/conference/team/team1/')
+        self.assertContains(client.get('/en/conference/%s/?view=day' % row.key), 'Nobody from the team yet')
+        r = client.post('/en/conference/%s/' % row.key, {'action': 'rank', 'interests': 'Exomoons and their detection'})
+        own = Generated.objects.filter(kind='conference', user=mate).get()
+        self.assertEqual((r['Location'], own.data()['program']), ('/en/conference/%s/' % own.key, program.pk))
+        self.assertEqual(client.get('/en/conference/team/team1/')['Location'], '/en/conference/%s/' % own.key)
+        self.client_for(owner).post('/en/conference/%s/' % row.key, {'action': 'mark', 'talk': 't0', 'state': 'going'})
+        page = client.get('/en/conference/%s/?view=day' % own.key)
+        self.assertContains(page, 'Also going: pro')
+        unpaid = self.user('eve')
+        ConferenceMember.objects.create(program=program, user=unpaid)
+        self.assertEqual(self.client_for(unpaid).post('/en/conference/%s/' % row.key, {
+            'action': 'rank', 'interests': 'Exomoons and their detection'}).status_code, 404)
+
+    def test_scoop_alerts_stay_apart_from_the_ranking_and_posters_never_clash(self):
+        user = self.user('pro', paid=True)
+        vector = np.array([0.0, 1.0], dtype=np.float32)  # a project on proteins: not the interests
+        WatchedProject.objects.create(user=user, title='Folding', description='Protein folding at scale',
+                                      vector=vector.tobytes(), facet_vectors=np.vstack([vector, vector]).tobytes())
+        program = self.program(user, talks=TALKS + [{'title': 'Poster on clouds', 'kind': 'poster', 'day': '2026-07-14',
+                                                      'start': '09:00', 'end': '10:30', 'room': 'Hall'}])
+        result = conference.rank(program, 'Clouds of exoplanets', 'en', user)
+        self.assertEqual([s['id'] for s in result['scoops']], ['t2'])
+        self.assertNotIn('Protein folding at scale', [t['title'] for t in result['talks']])
+        row = Generated.objects.create(kind='conference', key='s', user=user, lang='en', status='done',
+                                       content=json.dumps(dict(result, name='EAS')))
+        page = self.client_for(user).get('/en/conference/s/?view=priority')
+        self.assertContains(page, 'Close to your projects in progress')
+        items = [{'talk': t, 'role': 'should'} for t in program.talk_list() if t['start'] == '09:00']
+        conference.clashes(items)
+        self.assertEqual([i['clash'] for i in items], [[], []])  # a talk and a poster at 9:00: the poster is seen any time
+
+    def test_times_in_utc_move_to_the_conference_zone(self):
+        feed = ('BEGIN:VCALENDAR\r\nX-WR-TIMEZONE:Europe/Paris\r\nBEGIN:VEVENT\r\nSUMMARY:Clouds\r\n'
+                'DTSTART:20260714T080000Z\r\nDTEND:20260714T083000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n')
+        _, talks, zone = conference_import.ics_talks(feed)
+        self.assertEqual((talks[0]['start'], talks[0]['end'], zone), ('10:00', '10:30', 'Europe/Paris'))
+        owner = self.user('pro', paid=True)
+        program = self.program(owner, timezone='UTC')
+        row = self.ranked(owner, program)
+        client = self.client_for(owner)
+        self.assertContains(client.get('/en/conference/%s/?view=after' % row.key), 'gives its times in UTC')
+        client.post('/en/conference/%s/' % row.key, {'action': 'zone', 'zone': 'America/New_York'})
+        program.refresh_from_db()
+        self.assertEqual((program.timezone, program.talk_list()[0]['day'], program.talk_list()[0]['start']),
+                         ('America/New_York', '2026-07-14', '05:00'))
+
+    def test_names_and_a_close_paper_by_the_speaker(self):
+        self.assertEqual([conference.person_name(n) for n in ('Dr Jerome LAURET', 'Prof. Ann SEXTON-KENNEDY', 'ATLAS')],
+                         ['Jerome Lauret', 'Ann Sexton-Kennedy', 'ATLAS'])
+        self.assertEqual(conference.clean_talk({'title': 'x', 'speakers': 'Dr Ann Lee, Prof. Bob Ray'})['speakers'], 'Ann Lee, Bob Ray')
+        talk = conference.clean_talk(TALKS[0])
+        work = {'display_name': 'Silicate clouds of WASP-17b', 'doi': 'https://doi.org/10.1/x', 'publication_date': '2025-01-01',
+                'authorships': [{'author': {'id': 'https://openalex.org/A1', 'display_name': 'Ann Lee'}}],
+                'abstract_inverted_index': {'clouds': [0]}}
+        answers = [{'results': []}, {'results': [work, dict(work, authorships=[])]}]
+        with mock.patch('summarizer.sources._json', side_effect=lambda *a, **k: answers.pop(0)), \
+                mock.patch('summarizer.similar.embed', return_value=np.array([[1.0, 0.0], [0.9, 0.436]], dtype=np.float32)):
+            paper = FIND_PAPER(talk, 2023)
+        self.assertEqual((paper['match'], paper['key'][:4], paper['title'], paper['closeness']),
+                         ('speaker', 'doi_', 'Silicate clouds of WASP-17b', 0.9))

@@ -3,9 +3,11 @@ Writes nothing (everything happens in a transaction rolled back).
 
 python manage.py conference_benchmark                 # reading (web page and PDF layouts) and ranking
 python manage.py conference_benchmark --only rank     # ranking only; --only read: reading only
+python manage.py conference_benchmark --conference scipy
 
-The program is ACAT 2024 (fixtures/conference_benchmark.json), 175 contributions over five days, as its Indico
-timetable gives them: the truth of each talk's day, times, room and presenter. Reading: the program is written
+The programs are ACAT 2024 (fixtures/conference_benchmark.json), 175 contributions over five days, as its Indico
+timetable gives them, and SciPy 2024 (conference_benchmark_scipy.json), 112 talks from climate to microscopy, as its
+Pretalx feed gives them: the truth of each talk's day, times, room and presenter. Reading: the program is written
 out as a researcher would paste it, from the conference's website (day headers with the year, times, speakers,
 abstracts) and from a PDF booklet (no year but on the cover, 12-hour times, no abstracts), and read by the model;
 it prints the talks found and missed, and how often their day, start, end, room and presenter are right.
@@ -24,7 +26,9 @@ from django.db import transaction
 from summarizer import conference, generated
 from summarizer.models import ConferenceProgram
 
-FIXTURE = Path(__file__).resolve().parents[2] / 'fixtures' / 'conference_benchmark.json'
+FIXTURES = Path(__file__).resolve().parents[2] / 'fixtures'
+FIXTURE = FIXTURES / 'conference_benchmark.json'
+CONFERENCES = {'acat': FIXTURE, 'scipy': FIXTURES / 'conference_benchmark_scipy.json'}
 
 
 class Rollback(Exception):
@@ -38,9 +42,9 @@ def web_text(data):
         if t['day'] != day:
             day, session = t['day'], None
             out.append('\n%s\n' % datetime.date.fromisoformat(day).strftime('%A %-d %B %Y'))
-        if t['session'] != session:
+        if t['session'] != session or not t['session']:
             session = t['session']
-            out.append('%s\n%s' % (session or 'Plenary', t['room']))
+            out.append('%s\n%s' % (session or 'Talk', t['room']))
         out.append('%s → %s  %s\nSpeaker: %s%s\n%s\n' % (t['start'], t['end'], t['title'], t['speakers'] or '—',
                                                         ' (%s)' % t['affiliation'] if t['affiliation'] else '', t['abstract']))
     return '\n'.join(out)
@@ -87,14 +91,19 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--only', default='', choices=['', 'read', 'rank'])
         parser.add_argument('--lang', default='en')
+        parser.add_argument('--conference', default='all', choices=['all'] + sorted(CONFERENCES))
 
     def handle(self, *args, **options):
-        data = json.loads(FIXTURE.read_text())
-        if options['only'] != 'rank':
-            for layout, text in (('web page', web_text(data)), ('PDF booklet', pdf_text(data))):
-                self.read(layout, text, data['talks'])
-        if options['only'] != 'read':
-            self.rank(data, options['lang'])
+        for name, path in CONFERENCES.items():
+            if options['conference'] not in ('all', name):
+                continue
+            data = json.loads(path.read_text())
+            self.stdout.write('\n######## %s' % data['name'])
+            if options['only'] != 'rank':
+                for layout, text in (('web page', web_text(data)), ('PDF booklet', pdf_text(data))):
+                    self.read(layout, text, data['talks'])
+            if options['only'] != 'read':
+                self.rank(data, options['lang'])
 
     def read(self, layout, text, truth):
         out = self.stdout.write
@@ -151,9 +160,12 @@ class Command(BaseCommand):
                     for title in off:
                         out('  off topic but %s: %s (%s)' % (chosen[title]['priority'], title[:80], chosen[title]['why'][:100]))
                     papers = [t for t in result['talks'] if t.get('paper')]
-                    out('preprints found: %d of %d chosen talks looked for' % (len(papers), min(len(chosen), conference.PAPERS)))
-                    for t in papers[:8]:
-                        out('  %s\n    -> %s (%s)' % (t['title'][:90], t['paper']['title'][:90], t['paper']['key']))
+                    out('papers found: %d of %d chosen talks looked for: %d by title, %d close papers of the speaker' % (
+                        len(papers), min(len(chosen), conference.PAPERS), sum(1 for t in papers if t['paper'].get('match') != 'speaker'),
+                        sum(1 for t in papers if t['paper'].get('match') == 'speaker')))
+                    for t in papers:
+                        out('  %s\n    -> [%s %s] %s (%s)' % (t['title'][:90], t['paper'].get('match', 'title'), t['paper'].get('closeness') or '',
+                                                         t['paper']['title'][:90], t['paper']['key']))
                     out('people to meet: %s' % ', '.join(p['name'] for p in result['people'][:10]))
                     out('themes: %s' % '; '.join('%s (%d)' % (t['name'], t['count']) for t in result['themes']))
                     for t in result['talks'][:3]:

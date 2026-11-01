@@ -156,6 +156,7 @@ urlpatterns = [
     path("conference/", conference.conference_page, name="conference"),
     path("conference/shared/<str:token>/", conference.conference_shared, name="conference_shared"),
     path("conference/team/<str:token>/", conference.conference_join, name="conference_join"),
+    path("conference/sw.js", conference.conference_service_worker, name="conference_sw"),
     path("conference/<str:key>/calendar.ics", conference.conference_calendar, name="conference_calendar"),
     path("conference/<str:key>/notes.md", conference.conference_notes, name="conference_notes"),
     path("conference/<str:key>/", conference.conference_result, name="conference_result"),

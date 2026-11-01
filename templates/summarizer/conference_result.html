@@ -9,7 +9,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="page conf-page">
+<div class="page conf-page"{% if program and not shared %} data-conf-offline="/{{ LANGUAGE_CODE }}/conference/sw.js"{% endif %}>
+  <p class="notice conf-offline" data-offline-note hidden>{% trans 'No network: this page as you last opened it.' %}</p>
   <header class="page-header">
     {% if shared %}<p class="muted">{% trans 'Shared conference program' %} · <a href="/{{ LANGUAGE_CODE }}/conference/">{% trans 'Make your own program' %}</a></p>
     {% elif owner %}<p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
@@ -25,6 +26,7 @@
 
     {% if program and not shared %}
     <nav class="conf-tabs" aria-label="{% trans 'Views of the program' %}">
+      {% if during or view == 'now' %}<a href="?view=now"{% if view == 'now' %} aria-current="page"{% endif %}>{% trans 'Now' %}</a>{% endif %}
       <a href="?view=day"{% if view == 'day' %} aria-current="page"{% endif %}>{% trans 'Day by day' %}</a>
       <a href="?view=priority"{% if view == 'priority' %} aria-current="page"{% endif %}>{% trans 'By priority' %}</a>
       <a href="?view=all"{% if view == 'all' %} aria-current="page"{% endif %}>{% trans 'Whole program' %}</a>
@@ -34,7 +36,30 @@
     </nav>
     {% endif %}
 
-    {% if view == 'day' %}
+    {% if changes_shown and view != 'after' %}
+    <div class="notice"><p><strong>{% trans 'Changed in the program this week:' %}</strong></p>
+      <ul>{% for title, lines in changes_shown %}<li>{{ title|truncatechars:90 }}: {{ lines|join:' · ' }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    {% if uncovered_count and view in 'now day' %}<p class="notice">{% blocktrans count n=uncovered_count %}{{ n }} talk not to miss has nobody from the team yet.{% plural %}{{ n }} talks not to miss have nobody from the team yet.{% endblocktrans %}</p>{% endif %}
+
+    {% if view == 'now' %}
+      <section class="conf-now">
+      {% if now_state == 'after' %}
+        <p class="notice">{% trans 'The conference is over.' %} <a href="?view=after">{% trans 'Your notes, the preprints and the people to write to' %}</a></p>
+      {% else %}
+        {% if now_state == 'before' %}<p class="conf-now-time">{% blocktrans with d=now_first|date:"l j F" %}The conference starts on {{ d }}. Its first talks for you:{% endblocktrans %}</p>
+        {% else %}<p class="conf-now-time"><strong>{{ now_time|date:"H:i" }}</strong> · {% if zone %}{{ zone }}{% endif %}</p>{% endif %}
+        {% if now_on %}<h2>{% trans 'Now' %}</h2>
+        <ul class="item-list conf-list">{% for item in now_on %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash changed=item.changed uncovered=item.uncovered can_mark=True compact=False %}{% endfor %}</ul>{% endif %}
+        {% if now_next %}<h2>{% trans 'Next' %}</h2>
+        <ul class="item-list conf-list">{% for item in now_next %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash changed=item.changed uncovered=item.uncovered can_mark=True compact=False %}{% endfor %}</ul>{% endif %}
+        {% if now_later %}<h2>{% trans 'Later today' %}</h2>
+        <ul class="item-list conf-list">{% for item in now_later %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=None changed=item.changed uncovered=item.uncovered can_mark=True compact=True %}{% endfor %}</ul>{% endif %}
+        {% if not now_on and not now_next and not now_later %}<p class="muted">{% trans 'Nothing more in your program today.' %} <a href="?view=day">{% trans 'Day by day' %}</a></p>{% endif %}
+      {% endif %}
+      </section>
+
+    {% elif view == 'day' %}
       {% if timed %}
       <p class="conf-actions"><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Add to my calendar' %}</a>
         <span class="muted">{% if zone %}{% blocktrans %}Times of the conference ({{ zone }}).{% endblocktrans %}{% else %}{% trans 'Times as written in the program.' %}{% endif %}
@@ -44,7 +69,7 @@
       {% for day, items in days %}
         <h2 class="conf-day">{% if day %}{% if day.year %}{{ day|date:"l j F Y" }}{% else %}{{ day }}{% endif %}{% else %}{% trans 'Day not given' %}{% endif %}</h2>
         <ul class="item-list conf-list">
-          {% for item in items %}{% if item.role == 'maybe' %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=None can_mark=True compact=True %}{% else %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash can_mark=True compact=False %}{% endif %}{% endfor %}
+          {% for item in items %}{% if item.role == 'maybe' %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=None changed=item.changed uncovered=None can_mark=True compact=True %}{% else %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash changed=item.changed uncovered=item.uncovered can_mark=True compact=False %}{% endif %}{% endfor %}
         </ul>
       {% empty %}
         <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
@@ -52,9 +77,17 @@
 
     {% elif view == 'priority' %}
       {% if not shared and not program %}{% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+      {% if scoops %}
+      <h2>{% trans 'Close to your projects in progress' %}</h2>
+      <p class="muted">{% trans 'Talks that may overlap a project of your scoop watch, whatever your interests for this ranking.' %}</p>
+      <ul class="item-list conf-list">
+        {% for t in scoops %}{% include 'summarizer/conference_talk.html' with talk=t role='scoop' mark=t.mark going=None clash=None changed=t.changed can_mark=True compact=False %}{% endfor %}
+      </ul>
+      <h2>{% trans 'For your interests' %}</h2>
+      {% endif %}
       {% if result.talks %}
       <ul class="item-list conf-list">
-        {% for t in result.talks %}{% include 'summarizer/conference_talk.html' with talk=t role=t.priority mark=t.mark going=t.going clash=None can_mark=program compact=False %}{% endfor %}
+        {% for t in result.talks %}{% include 'summarizer/conference_talk.html' with talk=t role=t.priority mark=t.mark going=t.going clash=None changed=t.changed can_mark=program compact=False %}{% endfor %}
       </ul>
       {% else %}
       <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
@@ -91,6 +124,7 @@
         <li class="card conf-person">
           <p><strong>{{ p.name }}</strong>{% if p.affiliation %} · {{ p.affiliation }}{% endif %}
             {% if p.cites %}<span class="importance good">{% blocktrans with t=p.cites|truncatechars:80 %}Cites your paper “{{ t }}”{% endblocktrans %}</span>{% endif %}</p>
+          {% if p.with %}<p class="muted conf-with">{% trans 'with' %} {{ p.with|join:', ' }}</p>{% endif %}
           {% for t in p.talk_list %}<div class="meta">{{ t.title }}{% if t.start %} · {% if t.when.year %}{{ t.when|date:"D j M" }}{% else %}{{ t.day }}{% endif %} {{ t.start }}{% endif %}{% if t.room %} · {{ t.room }}{% endif %}</div>{% endfor %}
           {% if p.openalex %}<p class="meta"><a href="https://openalex.org/{{ p.openalex }}" rel="noopener" target="_blank">{% trans 'Their papers' %}</a></p>{% endif %}
           {% if owner and program %}
@@ -130,12 +164,33 @@
 
     {% elif view == 'after' %}
       {% if added %}<p class="notice">{% if added == 'full' %}{% trans 'You have as many collections as your plan allows: choose an existing one.' %}{% elif added == '0' %}{% trans 'No preprint was found for these talks.' %}{% else %}{% blocktrans %}{{ added }} preprints added.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ added_collection }}/">{% trans 'Open the collection' %}</a>{% endif %}</p>{% endif %}
+      {% if refreshed %}<p class="notice">{% if refreshed == 'recent' %}{% trans 'The program was read again a few minutes ago.' %}{% elif refreshed == 'failed' %}{% trans 'The conference website did not answer. Try again in a few minutes, or paste the program.' %}{% elif refreshed == '0' %}{% trans 'Read again: nothing changed.' %}{% else %}{% blocktrans count n=refreshed|add:0 %}Read again: {{ n }} talk changed.{% plural %}Read again: {{ n }} talks changed.{% endblocktrans %}{% endif %}</p>{% endif %}
+      {% if can_refresh %}
+      <section class="card section-card">
+        <h2>{% trans 'Changes to the program' %}</h2>
+        <p>{% trans 'We read this program again every day in the two weeks before the conference, and every three hours while it goes on: when a talk of your program moves or is cancelled, you get an email, and these pages show its new time and room.' %}</p>
+        <form method="post" class="item-actions">{% csrf_token %}
+          <button class="btn btn-sm btn-ghost" name="action" value="refresh">⟳ {% trans 'Read it again now' %}</button>
+          <button class="btn btn-sm btn-ghost" name="action" value="quiet">{% if quiet %}{% trans 'Email me the changes' %}{% else %}{% trans 'No change emails' %}{% endif %}</button></form>
+        {% if program.refreshed %}<p class="muted"><small>{% blocktrans with d=program.refreshed|date:"j F H:i" %}Last read on {{ d }}.{% endblocktrans %}</small></p>{% endif %}
+      </section>
+      {% endif %}
+      {% if zones and owner %}
+      <section class="card section-card">
+        <h2>{% trans 'Time zone of the conference' %}</h2>
+        <p>{% if zone == 'UTC' %}{% trans 'This program gives its times in UTC: choose the time zone of the conference to see them as on site.' %}{% else %}{% trans 'This program does not say its time zone: choose it so that your calendar puts the talks at the right time.' %}{% endif %}</p>
+        {% if form_error == 'zone' %}<p class="error">{% trans 'Choose a time zone of the list.' %}</p>{% endif %}
+        <form method="post" class="tool-row">{% csrf_token %}<input type="hidden" name="action" value="zone">
+          <input type="text" name="zone" list="conf-zones" placeholder="Europe/Paris" aria-label="{% trans 'Time zone' %}">
+          <datalist id="conf-zones">{% for z in zones %}<option value="{{ z }}">{% endfor %}</datalist>
+          <button class="btn btn-sm">{% trans 'Save' %}</button></form>
+      </section>
+      {% endif %}
       <section class="card section-card">
         <h2>{% trans 'Export' %}</h2>
         <p><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Calendar (.ics)' %}</a> <a class="btn btn-sm btn-ghost" href="notes.md">{% trans 'My program and notes (Markdown)' %}</a></p>
         <p class="muted"><small>{% trans 'The calendar holds the talks you marked “Going” and your own, or, before you mark any, your program but the “if you have time”. The Markdown file opens in Obsidian or Notion.' %}</small></p>
       </section>
-      {% if owner %}
       <section class="card section-card">
         <h2>{% trans 'The preprints in a collection' %}</h2>
         <p>{% trans 'The preprints of the talks you marked going or seen (looked for now), or else of your program, to read, compare and keep in sync with Zotero.' %}</p>
@@ -143,6 +198,14 @@
           <select name="collection" aria-label="{% trans 'Collection' %}"><option value="new">{% trans 'A new collection' %}</option>{% for c in collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select>
           <button class="btn btn-sm">{% trans 'Add the preprints' %}</button></form>
       </section>
+      {% if not owner %}
+      <section class="card section-card">
+        <h2>{% trans 'Your team' %}</h2>
+        {% if members %}<p class="muted">{% trans 'In the team:' %} {{ members|join:', ' }}</p>{% endif %}
+        <p>{% trans 'These talks were chosen for the research of the one who invited you. Rank the program for your own research: your team still sees who goes where.' %}</p>
+      </section>
+      {% endif %}
+      {% if owner %}
       <section class="card section-card">
         <h2>{% trans 'Your team' %}</h2>
         <p>{% trans 'Colleagues who join see this program and mark the talks they go to: each one sees who covers which session.' %}</p>
@@ -156,8 +219,10 @@
         {% endif %}
       </section>
       {% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}
+      {% endif %}
+      {% if can_rank %}
       <section class="card section-card">
-        <h2>{% trans 'Rank it again' %}</h2>
+        <h2>{% if owner %}{% trans 'Rank it again' %}{% else %}{% trans 'Rank it for your research' %}{% endif %}</h2>
         <p class="muted">{% trans 'With other interests, another project or for a colleague: the program is not read again, it takes about a minute.' %}</p>
         {% if form_error == 'interests' %}<p class="error">{% trans 'Describe your research in a few words at least, or choose a project or a collection.' %}</p>{% elif form_error == 'quota' %}<p class="error">{% trans 'You ranked many programs today. Come back tomorrow.' %}</p>{% endif %}
         <form method="post">{% csrf_token %}<input type="hidden" name="action" value="rank">

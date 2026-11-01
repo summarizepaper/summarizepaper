@@ -39,6 +39,16 @@
         }).catch(function () { form.submit(); });
       });
     });
+    // the pages of a program kept on the device, to read them without a network
+    var offline = document.querySelector('[data-conf-offline]');
+    if (offline && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register(offline.dataset.confOffline).catch(function () {});
+      var note = document.querySelector('[data-offline-note]');
+      var show = function () { if (note) note.hidden = navigator.onLine; };
+      window.addEventListener('online', show);
+      window.addEventListener('offline', show);
+      show();
+    }
     var picker = document.querySelector('[data-digest-profile]');
     var interests = document.querySelector('[data-interests]');
     if (picker && interests) {

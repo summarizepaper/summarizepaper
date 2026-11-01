@@ -762,6 +762,13 @@ class ConferenceProgram(models.Model):
     vector_key = models.CharField(max_length=64, blank=True, default='')
     read = models.TextField(blank=True, default='')  # JSON {'chars', 'total', 'last'} when the program was cut
     team_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # joins the team
+    # 'indico' or 'feed' (read again while the conference comes and goes on: conference.refresh), 'page', 'pdf', 'text'
+    source_kind = models.CharField(max_length=10, blank=True, default='')
+    refreshed = models.DateTimeField(blank=True, null=True)
+    first_day = models.DateField(blank=True, null=True)  # of its dated talks
+    last_day = models.DateField(blank=True, null=True)
+    changes = models.TextField(blank=True, default='')  # JSON list, see conference.refresh
+    quiet = models.TextField(blank=True, default='')  # JSON list of the ids of the users who want no change emails
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -770,6 +777,12 @@ class ConferenceProgram(models.Model):
 
     def talk_list(self):
         return json.loads(self.talks or '[]')
+
+    def change_list(self):
+        return json.loads(self.changes or '[]')
+
+    def quiet_ids(self):
+        return json.loads(self.quiet or '[]')
 
     def __str__(self):
         return self.name or 'Program %s' % self.pk

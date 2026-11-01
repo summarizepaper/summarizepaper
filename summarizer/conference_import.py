@@ -100,6 +100,15 @@ def indico_text(html):
     return re.sub(r'\s+', ' ', BeautifulSoup(html or '', 'html.parser').get_text(' ')).strip()
 
 
+def slides(entry, base):
+    """The link of the first slides attached to an Indico contribution ('' if none yet)."""
+    for attached in ((entry.get('attachments') or {}).get('files') or []):
+        path = attached.get('download_url') or ''
+        if re.search(r'\.(pdf|pptx?|key|odp)$', path, re.I):
+            return urljoin(base + '/', path.lstrip('/'))
+    return ''
+
+
 def indico_talks(timetable, base, event):
     """The contributions of an Indico timetable (export/timetable/<id>.json), in time order, and its time zone."""
     days = next(iter((timetable.get('results') or {}).values()), None) or {}
@@ -118,7 +127,8 @@ def indico_talks(timetable, base, event):
                 'day': start.get('date') or '', 'start': (start.get('time') or '')[:5], 'end': (end.get('time') or '')[:5],
                 'room': entry.get('room') or room, 'abstract': indico_text(entry.get('description'))[:ABSTRACT_CHARS],
                 'url': '%s/event/%s/contributions/%s/' % (base, event, entry['contributionId'])
-                       if entry.get('contributionId') else ''}
+                       if entry.get('contributionId') else '',
+                'slides': slides(entry, base)}
         if talk['title']:
             talks.append(talk)
 
@@ -156,6 +166,17 @@ def read_indico(url):
     except (LinkError, ValueError, IndexError, AttributeError):
         pass
     return name, talks, zone
+
+
+def local(day, time, zone):
+    """(day, time) of a UTC day and time in zone (IANA); unchanged when zone is unknown."""
+    try:
+        from zoneinfo import ZoneInfo
+        moment = datetime.datetime.strptime('%s %s' % (day, time), '%Y-%m-%d %H:%M').replace(tzinfo=datetime.timezone.utc)
+        moment = moment.astimezone(ZoneInfo(zone))
+    except (KeyError, ValueError, ImportError):
+        return day, time
+    return moment.strftime('%Y-%m-%d'), moment.strftime('%H:%M')
 
 
 # --- calendar feeds ---------------------------------------------------------------
@@ -205,6 +226,14 @@ def ics_talks(text):
                       'room': ics_value(fields.get('LOCATION', ('', ''))[1]),
                       'abstract': ' '.join(description.split())[:ABSTRACT_CHARS],
                       'url': ics_value(fields.get('URL', ('', ''))[1])[:500]})
+    declared = re.search(r'^X-WR-TIMEZONE:(.+)$', text, re.M)
+    declared = ics_value(declared[1]) if declared else ''
+    if zone == 'UTC' and declared and declared != 'UTC':  # times in UTC, the conference's zone said apart
+        for talk in talks:
+            if talk['day'] and talk['start']:
+                _, talk['end'] = local(talk['day'], talk['end'], declared) if talk['end'] else ('', '')
+                talk['day'], talk['start'] = local(talk['day'], talk['start'], declared)
+        zone = declared
     talks.sort(key=lambda t: (t['day'], t['start']))
     name = re.search(r'^X-WR-CALNAME:(.+)$', text, re.M)
     return (ics_value(name[1])[:200] if name else ''), talks, zone
@@ -239,7 +268,7 @@ def read_feed(url):
     if not is_ics(kind, data):
         return None
     name, talks, zone = ics_talks(data.decode('utf-8', 'replace'))
-    return {'name': name, 'talks': talks, 'timezone': zone, 'source': url} if talks else None
+    return {'name': name, 'talks': talks, 'timezone': zone, 'source': url, 'kind': 'feed'} if talks else None
 
 
 def read_link(url, pdf_text):
@@ -250,25 +279,25 @@ def read_link(url, pdf_text):
         url = 'https://' + url
     indico = read_indico(url)
     if indico:
-        return {'name': indico[0], 'talks': indico[1], 'timezone': indico[2], 'source': url}
+        return {'name': indico[0], 'talks': indico[1], 'timezone': indico[2], 'source': url, 'kind': 'indico'}
     final, kind, data = fetch(url)
     indico = read_indico(final) if final != url else None
     if indico:
-        return {'name': indico[0], 'talks': indico[1], 'timezone': indico[2], 'source': url}
+        return {'name': indico[0], 'talks': indico[1], 'timezone': indico[2], 'source': final, 'kind': 'indico'}
     if is_ics(kind, data):
         name, talks, zone = ics_talks(data.decode('utf-8', 'replace'))
         if not talks:
             raise LinkError('an empty calendar')
-        return {'name': name, 'talks': talks, 'timezone': zone, 'source': url}
+        return {'name': name, 'talks': talks, 'timezone': zone, 'source': url, 'kind': 'feed'}
     if kind == 'application/pdf' or data[:5] == b'%PDF-':
-        return {'name': '', 'text': pdf_text(data), 'source': url}
+        return {'name': '', 'text': pdf_text(data), 'source': url, 'kind': 'pdf'}
     for link in feed_links(final, kind, data):
         feed = read_feed(link)
         if feed:
             return dict(feed, name=feed['name'] or (title_of(data) if 'html' in kind else ''))
     if 'html' in kind or data.lstrip()[:1] == b'<':
-        return {'name': title_of(data), 'text': html_text(data), 'source': url}
-    return {'name': '', 'text': ANSI_RE.sub('', data.decode('utf-8', 'replace')), 'source': url}
+        return {'name': title_of(data), 'text': html_text(data), 'source': url, 'kind': 'page'}
+    return {'name': '', 'text': ANSI_RE.sub('', data.decode('utf-8', 'replace')), 'source': url, 'kind': 'page'}
 
 
 def utc_stamp(day, time, zone):

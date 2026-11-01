@@ -21738,3 +21738,180 @@ msgid ""
 msgstr ""
 "Le site de la conférence n'a pas répondu. Réessayez dans quelques minutes, "
 "ou collez le programme."
+
+msgid "No network: this page as you last opened it."
+msgstr ""
+"Pas de réseau : cette page telle que vous l'avez ouverte la dernière fois."
+
+msgid "Now"
+msgstr "Maintenant"
+
+msgid "Changed in the program this week:"
+msgstr "Changé dans le programme cette semaine :"
+
+#, python-format
+msgid "%(n)s talk not to miss has nobody from the team yet."
+msgid_plural "%(n)s talks not to miss have nobody from the team yet."
+msgstr[0] ""
+"%(n)s présentation à ne pas manquer n'a encore personne de l'équipe."
+msgstr[1] ""
+"%(n)s présentations à ne pas manquer n'ont encore personne de l'équipe."
+
+msgid "The conference is over."
+msgstr "La conférence est terminée."
+
+msgid "Your notes, the preprints and the people to write to"
+msgstr "Vos notes, les prépublications et les personnes à qui écrire"
+
+#, python-format
+msgid "The conference starts on %(d)s. Its first talks for you:"
+msgstr ""
+"La conférence commence le %(d)s. Ses premières présentations pour vous :"
+
+msgid "Later today"
+msgstr "Plus tard aujourd'hui"
+
+msgid "Nothing more in your program today."
+msgstr "Plus rien dans votre programme aujourd'hui."
+
+msgid "Close to your projects in progress"
+msgstr "Proches de vos projets en cours"
+
+msgid ""
+"Talks that may overlap a project of your scoop watch, whatever your "
+"interests for this ranking."
+msgstr ""
+"Des présentations qui pourraient recouper un projet de votre veille anti-"
+"scoop, quels que soient les intérêts de ce classement."
+
+msgid "For your interests"
+msgstr "Pour vos intérêts"
+
+msgid "with"
+msgstr "avec"
+
+msgid "The program was read again a few minutes ago."
+msgstr "Le programme a été relu il y a quelques minutes."
+
+msgid "Read again: nothing changed."
+msgstr "Relu : rien n'a changé."
+
+#, python-format
+msgid "Read again: %(n)s talk changed."
+msgid_plural "Read again: %(n)s talks changed."
+msgstr[0] "Relu : %(n)s présentation a changé."
+msgstr[1] "Relu : %(n)s présentations ont changé."
+
+msgid "Changes to the program"
+msgstr "Changements du programme"
+
+msgid ""
+"We read this program again every day in the two weeks before the conference,"
+" and every three hours while it goes on: when a talk of your program moves "
+"or is cancelled, you get an email, and these pages show its new time and "
+"room."
+msgstr ""
+"Nous relisons ce programme chaque jour dans les deux semaines avant la "
+"conférence, et toutes les trois heures pendant : quand une présentation de "
+"votre programme est déplacée ou annulée, vous recevez un email, et ces pages"
+" montrent sa nouvelle heure et sa nouvelle salle."
+
+msgid "Read it again now"
+msgstr "Le relire maintenant"
+
+msgid "Email me the changes"
+msgstr "M'envoyer les changements par email"
+
+msgid "No change emails"
+msgstr "Pas d'email de changement"
+
+#, python-format
+msgid "Last read on %(d)s."
+msgstr "Relu pour la dernière fois le %(d)s."
+
+msgid "Time zone of the conference"
+msgstr "Fuseau horaire de la conférence"
+
+msgid ""
+"This program gives its times in UTC: choose the time zone of the conference "
+"to see them as on site."
+msgstr ""
+"Ce programme donne ses heures en UTC : choisissez le fuseau horaire de la "
+"conférence pour les voir comme sur place."
+
+msgid ""
+"This program does not say its time zone: choose it so that your calendar "
+"puts the talks at the right time."
+msgstr ""
+"Ce programme ne dit pas son fuseau horaire : choisissez-le pour que votre "
+"agenda place les présentations à la bonne heure."
+
+msgid "Choose a time zone of the list."
+msgstr "Choisissez un fuseau horaire de la liste."
+
+msgid ""
+"These talks were chosen for the research of the one who invited you. Rank "
+"the program for your own research: your team still sees who goes where."
+msgstr ""
+"Ces présentations ont été choisies pour la recherche de la personne qui vous"
+" a invité. Classez le programme pour votre propre recherche : votre équipe "
+"voit toujours qui va où."
+
+msgid "Rank it for your research"
+msgstr "Le classer pour votre recherche"
+
+msgid "Cancelled"
+msgstr "Annulée"
+
+msgid "Nobody from the team yet"
+msgstr "Personne de l'équipe pour l'instant"
+
+msgid "Changed:"
+msgstr "Changé :"
+
+msgid "Slides"
+msgstr "Transparents"
+
+msgid "A close paper by the speaker:"
+msgstr "Un article proche de l'orateur :"
+
+msgid "your conference"
+msgstr "votre conférence"
+
+#, python-format
+msgid "A talk of your program changed: %(name)s"
+msgid_plural "%(n)s talks of your program changed: %(name)s"
+msgstr[0] "Une présentation de votre programme a changé : %(name)s"
+msgstr[1] "%(n)s présentations de votre programme ont changé : %(name)s"
+
+msgid ""
+"The program of the conference changed for talks you go to or that matter for"
+" your research:"
+msgstr ""
+"Le programme de la conférence a changé pour des présentations où vous allez "
+"ou qui comptent pour votre recherche :"
+
+msgid "Your program, with the new times and rooms:"
+msgstr "Votre programme, avec les nouvelles heures et salles :"
+
+msgid ""
+"You receive this email because you plan to go to this conference. Stop these"
+" emails on the page of your program, under “Export, team and after”."
+msgstr ""
+"Vous recevez cet email parce que vous prévoyez d'aller à cette conférence. "
+"Arrêtez ces emails sur la page de votre programme, sous « Export, équipe et "
+"après »."
+
+msgid "Your program, with the new times and rooms"
+msgstr "Votre programme, avec les nouvelles heures et salles"
+
+msgid "In the program again"
+msgstr "De nouveau au programme"
+
+#, python-format
+msgid "Room: %(before)s → %(now)s"
+msgstr "Salle : %(before)s → %(now)s"
+
+#, python-format
+msgid "Ends at %(time)s"
+msgstr "Finit à %(time)s"

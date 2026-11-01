@@ -25,3 +25,9 @@
 .conf-person p{margin:0 0 4px}.conf-person .importance{margin-left:6px}
 @media(max-width:600px){.conf-tabs a{padding:5px 10px;font-size:.88rem}.conf-filters label{flex:1 1 100%}.conf-filters select,.conf-filters input[type=search]{width:100%;max-width:none}}
 .conf-talk.conf-compact .conf-title{margin:6px 0 2px;font-size:.95rem}.conf-compact .conf-mark{margin-top:6px}
+.conf-changed{margin:8px 0 0;color:#1d4ed8;font-size:.92rem;font-weight:600}
+.conf-cancelled .conf-title{text-decoration:line-through;opacity:.7}
+.conf-uncovered{background:#fef3c7;color:#92400e}
+.conf-now-time{font-size:1.1rem;margin:0 0 4px}.conf-now h2{font-size:1.05rem;margin:20px 0 8px}
+.conf-offline{position:sticky;top:0;z-index:3;margin:0 0 12px}
+.conf-with{font-size:.9rem}
