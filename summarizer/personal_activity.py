@@ -17,8 +17,8 @@ from urllib.parse import urlencode, unquote, urlsplit
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Exists, F, Max, OuterRef, Q, Subquery, TextField, Value
-from django.db.models.functions import Coalesce, Concat, Greatest, StrIndex
+from django.db.models import Max, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -36,6 +36,7 @@ from .models import (AIassistant, ArxivPaper, ChatConversation, ChatShare, Colle
 PER_PAGE = 20
 NEWS_DAYS = 90  # alerts of followed papers older than this are no longer news
 NEWS_SCAN = 200  # recent readings whose stored facts are looked at for news
+MATCHED_PAPERS = 5000  # papers matching a conversation search, at most
 STATUSES = ('to_read', 'read', 'key')
 TABS = ('overview', 'readings', 'conversations', 'results')
 
@@ -383,17 +384,18 @@ def conversations(request, query):
         questions = own
         for word in query.split()[:12]:
             questions = questions.filter(query__icontains=word)
-        # CSV membership uses delimiters: a short ID must not match a different paper.
-        papers = paper_matches(query).annotate(position=StrIndex(
-            Concat(Value(','), OuterRef('papers'), Value(','), output_field=TextField()),
-            Concat(Value(','), F('arxiv_id'), Value(','), output_field=TextField())))
-        linked = papers.filter(Q(arxiv_id=OuterRef('arxiv_id')) | Q(position__gt=0))
-        matched = own.annotate(has_paper=Exists(linked)).filter(
-            Q(arxiv_id__in=Subquery(questions.values('arxiv_id'))) | Q(has_paper=True)).values('arxiv_id')
+        rooms = set(questions.values_list('arxiv_id', flat=True))
+        # The papers matched once, then the user's own exchanges read in Python: a subquery per exchange
+        # over every paper took seconds.
+        papers = set(paper_matches(query).values_list('arxiv_id', flat=True)[:MATCHED_PAPERS])
+        if papers:
+            for room, discussed in own.values_list('arxiv_id', 'papers'):
+                if room in papers or papers.intersection((discussed or '').split(',')):
+                    rooms.add(room)
         named = Q()
         for word in query.split()[:12]:
             named &= Q(name__icontains=word)
-        rows = rows.filter(Q(arxiv_id__in=Subquery(matched)) | named)
+        rows = rows.filter(Q(arxiv_id__in=rooms) | named)
     return rows.order_by('-created', '-pk')
 
 
