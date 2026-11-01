@@ -1008,6 +1008,8 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                     lang=lang,
                     ip_address=hashed_ip_address
                 )
+                from .personal_activity import record_request
+                record_request(userinst, arxiv_id)
 
                 if ArxivPaper.objects.filter(arxiv_id=arxiv_id).exists():
                     print('deja')
@@ -1211,7 +1213,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
 
         if request.method == 'GET' and request.user.is_authenticated:
             from .personal_activity import record_visit
-            record_visit(request.user, arxiv_id)
+            record_visit(request.user, arxiv_id, title=(stuff_for_frontend.get('details') or {}).get('title', ''))
         return render(request, "summarizer/paper_detail.html" if _fragment else "summarizer/arxividpage.html", stuff_for_frontend)
 
 

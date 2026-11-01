@@ -108,13 +108,21 @@ class PaperHistory(models.Model):
         return self.arxiv_id#+' '+self.user.username
 
 class PaperVisit(models.Model):
-    """Last authenticated reading, independent of summary generation quotas."""
+    """A paper in a user's reading history (personal_activity.py), independent of summary generation quotas:
+    opened while signed in, or summarized at their request. A paper not summarized yet has no ArxivPaper row:
+    it is kept by its id and the title its page showed."""
+    READING = [('', ''), ('to_read', 'To read'), ('read', 'Read'), ('key', 'Key paper')]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    paper = models.ForeignKey('ArxivPaper', on_delete=models.CASCADE)
-    visited = models.DateTimeField(default=timezone.now)
+    arxiv_id = models.CharField(max_length=100, default='')
+    paper = models.ForeignKey('ArxivPaper', blank=True, null=True, on_delete=models.CASCADE)
+    title = models.TextField(blank=True, default='')
+    visited = models.DateTimeField(blank=True, null=True, default=timezone.now)  # last opened
+    requested = models.DateTimeField(blank=True, null=True)  # last summary request
+    reading = models.CharField(max_length=10, blank=True, default='', choices=READING)
+    hidden = models.BooleanField(default=False)  # taken out of the history by its reader, until opened again
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['user', 'paper'], name='unique_user_paper_visit')]
+        constraints = [models.UniqueConstraint(fields=['user', 'arxiv_id'], name='unique_user_arxiv_visit')]
         indexes = [models.Index(fields=['user', '-visited'], name='visit_user_recent')]
 
 

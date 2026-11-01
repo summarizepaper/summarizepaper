@@ -21915,3 +21915,205 @@ msgstr "Salle : %(before)s → %(now)s"
 #, python-format
 msgid "Ends at %(time)s"
 msgstr "Finit à %(time)s"
+
+msgid ""
+"What changed about your papers, your reading list, your conversations and "
+"the results of your tools, in one place."
+msgstr ""
+"Ce qui a changé sur vos articles, votre liste de lecture, vos conversations "
+"et les résultats de vos outils, au même endroit."
+
+msgid "Overview"
+msgstr "Vue d’ensemble"
+
+msgid "Reading status saved."
+msgstr "Statut de lecture enregistré."
+
+msgid "Taken out of your history. Opening the paper again brings it back."
+msgstr "Retiré de votre historique. Rouvrir l’article l’y remet."
+
+msgid "Your reading history is cleared."
+msgstr "Votre historique de lecture est effacé."
+
+msgid "Conversation deleted."
+msgstr "Conversation supprimée."
+
+msgid ""
+"You have reached the number of collections of your plan: choose an existing "
+"collection."
+msgstr ""
+"Vous avez atteint le nombre de collections de votre offre : choisissez une "
+"collection existante."
+
+msgid "Tick at least one paper first."
+msgstr "Cochez d’abord au moins un article."
+
+msgid "News about your papers"
+msgstr "Du nouveau sur vos articles"
+
+msgid "See my readings"
+msgstr "Voir mes lectures"
+
+msgid ""
+"Nothing new. A retraction or correction of a paper you read, its journal "
+"publication or a new arXiv version will show here."
+msgstr ""
+"Rien de nouveau. La rétractation ou la correction d’un article que vous avez"
+" lu, sa publication en revue ou une nouvelle version arXiv s’afficheront "
+"ici."
+
+msgid "Follow your papers to be told by email"
+msgstr "Suivez vos articles pour recevoir un email à chaque nouveauté"
+
+msgid "Pick up where you left off"
+msgstr "Reprendre où vous en étiez"
+
+msgid "All my readings"
+msgstr "Toutes mes lectures"
+
+msgid "My reading list"
+msgstr "Ma liste de lecture"
+
+msgid "Mark papers “To read” in your readings to keep a reading list."
+msgstr ""
+"Marquez des articles « À lire » dans vos lectures pour tenir une liste de "
+"lecture."
+
+msgid "Your latest results"
+msgstr "Vos derniers résultats"
+
+msgid "All my results"
+msgstr "Tous mes résultats"
+
+msgid ""
+"Your literature reviews, bibliography checks, conference programs and "
+"searches of teams will be listed here."
+msgstr ""
+"Vos revues de littérature, vérifications de bibliographie, programmes de "
+"conférence et recherches d’équipes seront listés ici."
+
+msgid "See the tools"
+msgstr "Voir les outils"
+
+msgid "Close to your recent reading"
+msgstr "Proches de vos lectures récentes"
+
+msgid "Close to “%(title)s”"
+msgstr "Proche de « %(title)s »"
+
+msgid "Get the new papers on a topic: save a search"
+msgstr "Recevoir les nouveaux articles d’un sujet : enregistrez une recherche"
+
+msgid "What you follow"
+msgstr "Ce que vous suivez"
+
+msgid "You follow nothing yet."
+msgstr "Vous ne suivez encore rien."
+
+msgid "Also available:"
+msgstr "Aussi disponibles :"
+
+msgid "With the ticked papers"
+msgstr "Avec les articles cochés"
+
+msgid "Tick all"
+msgstr "Tout cocher"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Export to BibTeX"
+msgstr "Exporter en BibTeX"
+
+msgid "Export to RIS (Zotero, Mendeley, EndNote)"
+msgstr "Exporter en RIS (Zotero, Mendeley, EndNote)"
+
+msgid "Mark “%(label)s”"
+msgstr "Marquer « %(label)s »"
+
+msgid "Remove the reading status"
+msgstr "Retirer le statut de lecture"
+
+msgid "Take out of my history"
+msgstr "Retirer de mon historique"
+
+msgid "Tick “%(title)s”"
+msgstr "Cocher « %(title)s »"
+
+msgid "Version %(n)s is on arXiv"
+msgstr "La version %(n)s est sur arXiv"
+
+msgid "Followed"
+msgstr "Suivi"
+
+msgid "Last question:"
+msgstr "Dernière question :"
+
+msgid "Shared by link"
+msgstr "Partagée par lien"
+
+msgid "Delete this conversation? Its shared link stops working."
+msgstr ""
+"Supprimer cette conversation ? Son lien de partage ne fonctionnera plus."
+
+msgid "No results yet"
+msgstr "Aucun résultat pour l’instant"
+
+msgid ""
+"Take every paper out of your reading history? Your collections are not "
+"changed."
+msgstr ""
+"Retirer tous les articles de votre historique de lecture ? Vos collections "
+"ne changent pas."
+
+msgid "Clear my reading history"
+msgstr "Effacer mon historique de lecture"
+
+msgid "Your data"
+msgstr "Vos données"
+
+msgid ""
+"Your history is private: only you see it. Readings are recorded when you "
+"open a paper while signed in."
+msgstr ""
+"Votre historique est privé : personne d’autre ne le voit. Une lecture est enregistrée"
+" quand vous ouvrez un article en étant connecté."
+
+msgid "Download my data (JSON)"
+msgstr "Télécharger mes données (JSON)"
+
+msgid "Read the notice"
+msgstr "Lire l’avis"
+
+msgid "Published in %(journal)s since you read it"
+msgstr "Publié dans %(journal)s depuis votre lecture"
+
+msgid "a journal"
+msgstr "une revue"
+
+msgid "Journal version"
+msgstr "Version publiée"
+
+msgid "Followed papers"
+msgstr "Articles suivis"
+
+msgid "Watched bibliographies"
+msgstr "Bibliographies surveillées"
+
+msgid "Followed topics"
+msgstr "Sujets suivis"
+
+msgid "My readings"
+msgstr "Mes lectures"
+
+#, python-format
+msgid "And %(n)s more in your readings."
+msgid_plural "And %(n)s more in your readings."
+msgstr[0] "Et %(n)s autre dans vos lectures."
+msgstr[1] "Et %(n)s autres dans vos lectures."
+
+#, python-format
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] "%(counter)s résultat"
+msgstr[1] "%(counter)s résultats"

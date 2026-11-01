@@ -8,39 +8,174 @@
 {% endblock %}
 {% block content %}
 <div class="page activity">
-  <header class="page-header"><h1>{% trans 'My activity' %}</h1><p class="lead">{% trans 'Find your recent reading and pick up your conversations.' %}</p></header>
+  <header class="page-header"><h1>{% trans 'My activity' %}</h1><p class="lead">{% trans 'What changed about your papers, your reading list, your conversations and the results of your tools, in one place.' %}</p></header>
   <nav class="activity-tabs" aria-label="{% trans 'Activity type' %}">
-    <a href="{{ readings_url }}" {% if tab == 'readings' %}aria-current="page"{% endif %}>{% trans 'Readings' %}</a>
-    <a href="{{ conversations_url }}" {% if tab == 'conversations' %}aria-current="page"{% endif %}>{% trans 'Conversations' %}</a>
+    <a href="?tab=overview" {% if tab == 'overview' %}aria-current="page"{% endif %}>{% trans 'Overview' %}</a>
+    <a href="?tab=readings" {% if tab == 'readings' %}aria-current="page"{% endif %}>{% trans 'Readings' %}</a>
+    <a href="?tab=conversations" {% if tab == 'conversations' %}aria-current="page"{% endif %}>{% trans 'Conversations' %}</a>
+    <a href="?tab=results" {% if tab == 'results' %}aria-current="page"{% endif %}>{% trans 'Results' %}</a>
     <a href="{% url 'collections' %}">{% trans 'My collections' %} →</a>
   </nav>
+  {% if notice %}<p class="activity-notice" role="status">{% if notice == 'status' %}{% trans 'Reading status saved.' %}{% elif notice == 'hidden' %}{% trans 'Taken out of your history. Opening the paper again brings it back.' %}{% elif notice == 'cleared' %}{% trans 'Your reading history is cleared.' %}{% elif notice == 'removed' %}{% trans 'Conversation deleted.' %}{% elif notice == 'too_many' %}{% trans 'You have reached the number of collections of your plan: choose an existing collection.' %}{% elif notice == 'none' %}{% trans 'Tick at least one paper first.' %}{% endif %}</p>{% endif %}
+
+  {% if tab == 'overview' %}
+  <section class="activity-section" aria-labelledby="news-title">
+    <h2 id="news-title">{% trans 'News about your papers' %}</h2>
+    {% if news %}
+    <ul class="activity-news">
+      {% for n in news %}
+      <li class="activity-news-item tone-{{ n.tone }}"><a class="activity-news-title" href="{{ n.url }}">{{ n.title }}</a>
+        <span class="activity-news-what">{% for x in n.news %}<span><span class="activity-badge tone-{{ x.tone }}">{{ x.label }}</span>{% if x.link %} <a href="{{ x.link }}"{% if 'doi.org' in x.link %} target="_blank" rel="noopener"{% endif %}>{{ x.link_label }}</a>{% endif %}</span>{% endfor %}</span></li>
+      {% endfor %}
+    </ul>
+    {% if news_more %}<p class="activity-help">{% blocktrans count n=news_more %}And {{ n }} more in your readings.{% plural %}And {{ n }} more in your readings.{% endblocktrans %} <a href="?tab=readings">{% trans 'See my readings' %}</a></p>{% endif %}
+    {% else %}
+    <p class="activity-help">{% trans 'Nothing new. A retraction or correction of a paper you read, its journal publication or a new arXiv version will show here.' %} <a href="/{{ LANGUAGE_CODE }}/citations/">{% trans 'Follow your papers to be told by email' %}</a></p>
+    {% endif %}
+  </section>
+
+  <div class="activity-columns">
+    <section class="activity-section" aria-labelledby="recent-title">
+      <h2 id="recent-title">{% trans 'Pick up where you left off' %}</h2>
+      {% if recent %}
+      <ul class="activity-mini">{% for item in recent %}<li><a href="{{ item.url }}">{{ item.title }}</a><span class="activity-meta">{% if item.authors %}{{ item.authors }} · {% endif %}{{ item.date|date:"j M" }}</span></li>{% endfor %}</ul>
+      <a class="activity-more" href="?tab=readings">{% trans 'All my readings' %} →</a>
+      {% else %}<p class="activity-help">{% trans 'Open a paper while signed in to find it here later.' %} <a href="/{{ LANGUAGE_CODE }}/getting-started/">{% trans 'Explore an example' %} →</a></p>{% endif %}
+    </section>
+    <section class="activity-section" aria-labelledby="pile-title">
+      <h2 id="pile-title">{% trans 'To read' %}{% if to_read_count %} <span class="activity-count-pill">{{ to_read_count }}</span>{% endif %}</h2>
+      {% if to_read %}
+      <ul class="activity-mini">{% for item in to_read %}<li><a href="{{ item.url }}">{{ item.title }}</a><span class="activity-meta">{% if item.authors %}{{ item.authors }}{% endif %}{% if item.year %} · {{ item.year }}{% endif %}</span></li>{% endfor %}</ul>
+      <a class="activity-more" href="?tab=readings&amp;status=to_read">{% trans 'My reading list' %} →</a>
+      {% else %}<p class="activity-help">{% trans 'Mark papers “To read” in your readings to keep a reading list.' %}</p>{% endif %}
+    </section>
+  </div>
+
+  <section class="activity-section" aria-labelledby="results-title">
+    <h2 id="results-title">{% trans 'Your latest results' %}</h2>
+    {% if recent_results %}
+    <ul class="activity-mini">{% for r in recent_results %}<li><a href="{{ r.url }}">{{ r.title }}</a><span class="activity-meta">{{ r.tool }} · {{ r.date|date:"j M Y" }}{% if r.state %} · <strong>{{ r.state }}</strong>{% endif %}</span></li>{% endfor %}</ul>
+    <a class="activity-more" href="?tab=results">{% trans 'All my results' %} →</a>
+    {% else %}<p class="activity-help">{% trans 'Your literature reviews, bibliography checks, conference programs and searches of teams will be listed here.' %} <a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a></p>{% endif %}
+  </section>
+
+  {% if suggestions %}
+  <section class="activity-section" aria-labelledby="close-title">
+    <h2 id="close-title">{% trans 'Close to your recent reading' %}</h2>
+    <ul class="activity-mini">{% for s in suggestions %}<li><a href="{{ s.url }}">{{ s.title }}</a><span class="activity-meta">{% blocktrans with title=s.because %}Close to “{{ title }}”{% endblocktrans %}</span></li>{% endfor %}</ul>
+    <a class="activity-more" href="/{{ LANGUAGE_CODE }}/saved-searches/">{% trans 'Get the new papers on a topic: save a search' %} →</a>
+  </section>
+  {% endif %}
+
+  <section class="activity-section" aria-labelledby="watch-title">
+    <h2 id="watch-title">{% trans 'What you follow' %}</h2>
+    {% if watches %}
+    <ul class="activity-watches">{% for w in watches %}<li><a href="{{ w.url }}">{{ w.name }} <strong>{{ w.count }}</strong></a></li>{% endfor %}</ul>
+    {% else %}<p class="activity-help">{% trans 'You follow nothing yet.' %}</p>{% endif %}
+    {% if unused %}<p class="activity-help">{% trans 'Also available:' %} {% for w in unused %}<a href="{{ w.url }}">{{ w.name }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+  </section>
+
+  {% else %}
   <form method="get" class="activity-search" role="search">
     <input type="hidden" name="tab" value="{{ tab }}">
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+    {% if kind %}<input type="hidden" name="kind" value="{{ kind }}">{% endif %}
+    {% if tab != 'results' %}
     <label for="activity-query">{% if tab == 'readings' %}{% trans 'Search my readings' %}{% else %}{% trans 'Search my conversations' %}{% endif %}</label>
     <div class="activity-search-row"><div class="activity-search-field"><i class="fas fa-search" aria-hidden="true"></i><input id="activity-query" type="search" name="q" value="{{ query }}" maxlength="200" aria-describedby="activity-search-help" placeholder="{% trans 'Title, author, DOI or arXiv link…' %}"></div><button type="submit">{% trans 'Search' %}</button></div>
     <p id="activity-search-help" class="activity-help">{% if tab == 'conversations' %}{% trans 'Search questions, conversation names or the papers discussed.' %}{% else %}{% trans 'Paste a paper link or enter a few words, in any order.' %}{% endif %}</p>
     {% if query %}<a class="activity-clear" href="{{ clear_url }}">{% trans 'Clear search' %}</a>{% endif %}
+    {% endif %}
   </form>
-  {% if tab == 'readings' %}<p class="activity-help">{% trans 'Articles opened while signed in appear here automatically. Earlier summary requests are also kept, once per paper.' %}</p>{% endif %}
-  <p class="activity-count" role="status">{% with count=pagination.paginator.count %}{% if tab == 'readings' %}{% blocktrans count counter=count %}{{ counter }} paper found{% plural %}{{ counter }} papers found{% endblocktrans %}{% else %}{% blocktrans count counter=count %}{{ counter }} conversation found{% plural %}{{ counter }} conversations found{% endblocktrans %}{% endif %}{% endwith %}{% if query %} {% blocktrans %}for “{{ query }}”{% endblocktrans %}{% endif %}</p>
+
+  {% if tab == 'readings' %}
+  <nav class="activity-filters" aria-label="{% trans 'Reading status' %}">
+    <a href="?tab=readings{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if not status %}aria-current="true"{% endif %}>{% trans 'All' %}</a>
+    {% for key, label in reading_labels.items %}<a href="?tab=readings&amp;status={{ key }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == key %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+    <a href="?tab=readings&amp;status=unsorted{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == 'unsorted' %}aria-current="true"{% endif %}>{% trans 'No status' %}</a>
+    <a href="?tab=readings&amp;status=unsummarized{% if query %}&amp;q={{ query|urlencode }}{% endif %}" {% if status == 'unsummarized' %}aria-current="true"{% endif %}>{% trans 'Not summarized yet' %}</a>
+  </nav>
+  {% elif tab == 'results' %}
+  <nav class="activity-filters" aria-label="{% trans 'Tool' %}">
+    <a href="?tab=results" {% if not kind %}aria-current="true"{% endif %}>{% trans 'All' %}</a>
+    {% for key, label in result_kinds %}<a href="?tab=results&amp;kind={{ key }}" {% if kind == key %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  {% endif %}
+
+  <p class="activity-count" role="status">{% with count=pagination.paginator.count %}{% if tab == 'readings' %}{% blocktrans count counter=count %}{{ counter }} paper found{% plural %}{{ counter }} papers found{% endblocktrans %}{% elif tab == 'conversations' %}{% blocktrans count counter=count %}{{ counter }} conversation found{% plural %}{{ counter }} conversations found{% endblocktrans %}{% else %}{% blocktrans count counter=count %}{{ counter }} result{% plural %}{{ counter }} results{% endblocktrans %}{% endif %}{% endwith %}{% if query %} {% blocktrans %}for “{{ query }}”{% endblocktrans %}{% endif %}</p>
+
   {% if items %}
+  {% if tab == 'readings' %}
+  <form method="post" action="{% url 'history_selection' %}" class="activity-selection" id="activity-selection">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ here }}">
+    <fieldset class="activity-bulk">
+      <legend>{% trans 'With the ticked papers' %}</legend>
+      <label class="activity-check-all"><input type="checkbox" data-check-all> {% trans 'Tick all' %}</label>
+      <select name="action" aria-label="{% trans 'Action' %}" data-bulk-action>
+        <option value="collection">{% trans 'Add to a collection' %}</option>
+        <option value="chat">{% trans 'Chat with these papers' %}</option>
+        <option value="bib">{% trans 'Export to BibTeX' %}</option>
+        <option value="ris">{% trans 'Export to RIS (Zotero, Mendeley, EndNote)' %}</option>
+        {% for key, label in reading_labels.items %}<option value="{{ key }}">{% blocktrans %}Mark “{{ label }}”{% endblocktrans %}</option>{% endfor %}
+        <option value="clear">{% trans 'Remove the reading status' %}</option>
+        <option value="hide">{% trans 'Take out of my history' %}</option>
+      </select>
+      <span class="activity-bulk-collection" data-bulk-collection>
+        <select name="collection" aria-label="{% trans 'Collection' %}" data-collection-choice>
+          {% for c in collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}
+          <option value="new">{% trans 'New collection…' %}</option>
+        </select>
+        <input type="text" name="name" maxlength="120" placeholder="{% trans 'Name of the new collection' %}" aria-label="{% trans 'Name of the new collection' %}" data-collection-name>
+      </span>
+      <button type="submit">{% trans 'Apply' %}</button>
+    </fieldset>
+  {% endif %}
   <ul class="activity-list">
     {% for item in items %}
     {% ifchanged item.period %}<li class="activity-period"><h2>{{ item.period }}</h2></li>{% endifchanged %}
     <li class="card activity-item">
-      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
-      <p class="activity-meta">{% if tab == 'readings' %}{% if item.visited %}{% trans 'Last opened' %}{% else %}{% trans 'Summary requested' %}{% endif %}{% else %}{% trans 'Last exchange' %}{% endif %} · {{ item.date|date:"j F Y, H:i" }}{% if item.id %}<br><span>{{ item.id }}</span>{% endif %}</p>
-      {% if item.paper_title %}<p>{{ item.paper_title }}</p>{% endif %}
-      <div class="activity-actions">
-        {% if tab == 'readings' %}
-        <a href="{{ item.url }}">{% trans 'Read the paper' %}</a>
-        <a href="{{ item.chat }}">{% trans 'Chat about this paper' %}</a>
-        <a href="{{ item.collection }}">{% trans 'Add to a collection' %}</a>
-        {% else %}<a href="{{ item.url }}">{% trans 'Resume conversation' %} →</a>{% endif %}
+      {% if tab == 'readings' %}
+      <div class="activity-item-head">
+        <input type="checkbox" name="v" value="{{ item.pk }}" id="v{{ item.pk }}" aria-label="{% blocktrans with title=item.title %}Tick “{{ title }}”{% endblocktrans %}">
+        <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
       </div>
+      {% if item.authors or item.year or item.venue %}<p class="activity-byline">{% if item.authors %}{{ item.authors }}{% endif %}{% if item.year %}{% if item.authors %} · {% endif %}{{ item.year }}{% endif %}{% if item.venue %} · <em>{{ item.venue }}</em>{% endif %}</p>{% endif %}
+      <p class="activity-badges">
+        {% for n in item.notices %}<span class="activity-badge tone-{{ n.tone }}">{{ n.label }}</span>{% endfor %}
+        {% if item.status_label %}<span class="activity-badge tone-{{ item.status_tone }}">{{ item.status_label }}</span>{% endif %}
+        {% if item.newer %}<a class="activity-badge tone-medium" href="{{ item.changes }}">{% blocktrans with n=item.newer %}Version {{ n }} is on arXiv{% endblocktrans %}</a>{% endif %}
+        {% if not item.summarized %}<span class="activity-badge">{% trans 'Not summarized yet' %}</span>{% endif %}
+        {% if item.followed %}<span class="activity-badge">{% trans 'Followed' %}</span>{% endif %}
+        {% if item.citations %}<span class="activity-badge">{% blocktrans count n=item.citations %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}</span>{% endif %}
+        {% for c in item.collections %}<a class="activity-badge tone-collection" href="{{ c.url }}"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ c.name }}</a>{% endfor %}
+      </p>
+      <p class="activity-meta">{% if item.visited %}{% trans 'Last opened' %}{% else %}{% trans 'Summary requested' %}{% endif %} · {{ item.date|date:"j F Y, H:i" }} · <span>{{ item.id }}</span>{% if item.category %} · {{ item.category }}{% endif %}</p>
+      <div class="activity-actions">
+        <a href="{{ item.url }}">{% if item.summarized %}{% trans 'Read the paper' %}{% else %}{% trans 'Summarize it' %}{% endif %}</a>
+        <a href="{{ item.chat }}">{% trans 'Chat about this paper' %}</a>
+        <span class="activity-status" role="group" aria-label="{% trans 'Reading status' %}">
+          {% for key, label in reading_labels.items %}<button type="submit" name="one" value="{% if item.reading == key %}clear{% else %}{{ key }}{% endif %}:{{ item.pk }}" aria-pressed="{% if item.reading == key %}true{% else %}false{% endif %}">{{ label }}</button>{% endfor %}
+        </span>
+        <button type="submit" name="one" value="hide:{{ item.pk }}" class="activity-link-button">{% trans 'Take out of my history' %}</button>
+      </div>
+      {% elif tab == 'conversations' %}
+      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      {% if item.last %}<p class="activity-byline">{% trans 'Last question:' %} {{ item.last|truncatechars:200 }}</p>{% endif %}
+      {% if item.papers %}<p class="activity-papers">{% for p in item.papers %}<a href="{{ p.url }}">{{ p.title|truncatechars:90 }}</a>{% if not forloop.last %}<span aria-hidden="true"> · </span>{% endif %}{% endfor %}{% if item.more_papers %} {% blocktrans count n=item.more_papers %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}{% endif %}</p>{% endif %}
+      <p class="activity-meta">{% trans 'Last exchange' %} · {{ item.date|date:"j F Y, H:i" }}{% if item.shared %} · <span class="activity-badge">{% trans 'Shared by link' %}</span>{% endif %}</p>
+      <div class="activity-actions">
+        <a href="{{ item.url }}">{% trans 'Resume conversation' %} →</a>
+        <form method="post" action="{% url 'history_remove_conversation' room=item.room %}" class="activity-inline-form" data-confirm="{% trans 'Delete this conversation? Its shared link stops working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}"><button type="submit" class="activity-link-button">{% trans 'Delete' %}</button></form>
+      </div>
+      {% else %}
+      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      <p class="activity-meta">{{ item.tool }} · {{ item.date|date:"j F Y, H:i" }}{% if item.state %} · <strong>{{ item.state }}</strong>{% endif %}</p>
+      {% endif %}
     </li>
     {% endfor %}
   </ul>
+  {% if tab == 'readings' %}</form>{% endif %}
   {% if pagination.has_other_pages %}
   <nav class="activity-pagination" aria-label="{% trans 'Pagination' %}">
     {% if previous_url %}<a href="{{ previous_url }}">← {% trans 'Previous' %}</a>{% endif %}
@@ -50,11 +185,45 @@
   {% endif %}
   {% else %}
   <div class="card activity-empty">
-    {% if query %}<h2>{% trans 'No matching activity' %}</h2><p>{% trans 'Try a shorter search or another keyword.' %}</p>
+    {% if query or status or kind %}<h2>{% trans 'No matching activity' %}</h2><p>{% trans 'Try a shorter search or another keyword.' %}</p>
     {% elif tab == 'conversations' %}<h2>{% trans 'No conversations yet' %}</h2><p>{% trans 'Ask a question about a paper. You can return to the exchange here.' %}</p><a href="{% url 'chat' %}">{% trans 'Start a conversation' %} →</a>
+    {% elif tab == 'results' %}<h2>{% trans 'No results yet' %}</h2><p>{% trans 'Your literature reviews, bibliography checks, conference programs and searches of teams will be listed here.' %}</p><a href="/{{ LANGUAGE_CODE }}/tools/">{% trans 'See the tools' %} →</a>
     {% else %}<h2>{% trans 'No readings yet' %}</h2><p>{% trans 'Open a paper while signed in to find it here later.' %}</p><a href="/{{ LANGUAGE_CODE }}/getting-started/">{% trans 'Explore an example' %} →</a>{% endif %}
   </div>
   {% endif %}
-  <p class="activity-account muted" style="margin-top:40px;font-size:14px"><a href="{% url 'account_delete' %}">{% trans 'Delete my account' %}</a></p>
+  {% if tab == 'readings' and items %}
+  <form method="post" action="{% url 'history_clear' %}" class="activity-inline-form activity-clear-all" data-confirm="{% trans 'Take every paper out of your reading history? Your collections are not changed.' %}">{% csrf_token %}<input type="hidden" name="next" value="?tab=readings"><button type="submit" class="activity-link-button">{% trans 'Clear my reading history' %}</button></form>
+  {% endif %}
+  {% endif %}
+
+  <section class="activity-account" aria-labelledby="account-title">
+    <h2 id="account-title">{% trans 'Your data' %}</h2>
+    <p class="activity-help">{% trans 'Your history is private: only you see it. Readings are recorded when you open a paper while signed in.' %}</p>
+    <p><a href="{% url 'history_export' %}">{% trans 'Download my data (JSON)' %}</a> · <a href="{% url 'account_delete' %}">{% trans 'Delete my account' %}</a></p>
+  </section>
 </div>
+<script>
+(function () {
+  var form = document.getElementById('activity-selection');
+  if (form) {
+    var all = form.querySelector('[data-check-all]');
+    var boxes = form.querySelectorAll('input[name="v"]');
+    all.addEventListener('change', function () { boxes.forEach(function (b) { b.checked = all.checked; }); });
+    var action = form.querySelector('[data-bulk-action]');
+    var group = form.querySelector('[data-bulk-collection]');
+    var choice = form.querySelector('[data-collection-choice]');
+    var name = form.querySelector('[data-collection-name]');
+    function sync() {
+      group.hidden = action.value !== 'collection';
+      name.hidden = choice.value !== 'new';
+    }
+    action.addEventListener('change', sync);
+    choice.addEventListener('change', sync);
+    sync();
+  }
+  document.querySelectorAll('form[data-confirm]').forEach(function (f) {
+    f.addEventListener('submit', function (e) { if (!window.confirm(f.dataset.confirm)) e.preventDefault(); });
+  });
+})();
+</script>
 {% endblock %}
