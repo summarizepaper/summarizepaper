@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Conference companion' %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/file_upload_assets.html' %}
-  <meta name="description" content="{% trans 'Paste the program of a conference: we find the talks and posters that matter for your research among hundreds, say why, and list the people to meet.' %}" />
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/conference.css' %}"><script defer src="{% static_v 'summarizer/js/conference.js' %}"></script>
+  <meta name="description" content="{% trans 'Give the link of a conference program, its PDF or its text: we find the talks and posters that matter for your research among thousands, day by day with their clashes, say why and what to ask, find their preprints, and list the people to meet.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/conference/" />
 {% endblock %}
 
@@ -14,16 +15,17 @@
   <header class="page-header">
     <span class="eyebrow">Premium+</span>
     <h1>{% trans 'Conference companion' %}</h1>
-    <p class="lead">{% trans 'Paste the program of a conference, or give its PDF: among hundreds of talks and posters, we find the ones that matter for your research, say why, and list the people to meet.' %}</p>
+    <p class="lead">{% trans 'Give the link of a conference program, its PDF or its text: among hundreds or thousands of talks and posters, we find the ones that matter for your research, plan your days and list the people to meet.' %}</p>
   </header>
 
   {% if anonymous or not paid %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
-      <li>{% trans 'An AI lists the talks and posters of the program, with their speakers, session and time.' %}</li>
-      <li>{% trans 'They are ranked by closeness to your research: the research profile of your digest, a project of your scoop watch, or a few sentences.' %}</li>
-      <li>{% trans 'For the closest ones, the AI says why they matter to you and how much: do not miss it, worth it, or if you have time.' %}</li>
-      <li>{% trans 'You get your own program, and the list of the people to meet.' %}</li>
+      <li>{% trans 'The program is read with the day, time, room, presenter and abstract of each talk: whole from an Indico event or a calendar feed (.ics), by an AI from any other page, PDF or text.' %}</li>
+      <li>{% trans 'Its talks are ranked by closeness to your research: a few sentences, the research profile of your digest, a project of your scoop watch, or the papers of a collection. Your own talks are set apart.' %}</li>
+      <li>{% trans 'For the closest ones, the AI says why they matter to you and how much, and suggests a question to ask. A talk that overlaps a project of your scoop watch is flagged.' %}</li>
+      <li>{% trans 'You get your program day by day with its clashes, to add to your calendar, mark and annotate; the preprints of the talks; and the people to meet, those who cite your papers first.' %}</li>
+      <li>{% trans 'Share it with your team to see who goes where; after the conference, put the preprints in a collection, export your notes and draft a first email to the people you met.' %}</li>
     </ol>
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with plus_tool=True %}
@@ -31,22 +33,36 @@
       <div class="upsell"><p>{% trans 'Do not miss the talk that mattered.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p></div>
     {% endif %}
   {% else %}
-    {% if error == 'file' %}<p class="error">{% trans 'Send a PDF of 20 MB at most.' %}</p>
-    {% elif error == 'program' %}<p class="error">{% trans 'Paste the program, or send its PDF.' %}</p>
-    {% elif error == 'interests' %}<p class="error">{% trans 'Describe your research in a few words at least, or choose a project.' %}</p>
+    {% if error == 'file' %}<p class="error">{% trans 'Send a PDF or a calendar file (.ics) of 20 MB at most.' %}</p>
+    {% elif error == 'program' %}<p class="error">{% trans 'Give the link of the program, paste it, or send its PDF.' %}</p>
+    {% elif error == 'interests' %}<p class="error">{% trans 'Describe your research in a few words at least, or choose a project or a collection.' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can read {{ per_day }} programs a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
-    <form method="post" enctype="multipart/form-data" class="card section-card">
+    <form method="post" enctype="multipart/form-data" class="card section-card conf-form">
       {% csrf_token %}
       <p><label>{% trans 'Conference name (optional)' %}<br><input type="text" name="name" maxlength="200" value="{{ form.name }}"></label></p>
-      <p><label>{% trans 'The program: paste it from the conference website' %}<br><textarea name="program" style="min-height:160px">{{ form.program }}</textarea></label></p>
-      {% trans 'or its PDF' as upload_label %}
-      {% include 'summarizer/file_upload.html' with upload_name='program_pdf' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}
-      <p><label>{% trans 'Your research' %}<br><textarea name="interests" style="min-height:90px">{{ interests }}</textarea></label></p>
-      {% if projects %}
-      <p><label>{% trans 'and, if you want, a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.title }}</option>{% endfor %}</select></label></p>
+      <h2 class="conf-form-step">1. {% trans 'The program' %}</h2>
+      <p><label>{% trans 'Its link' %}<br><input type="url" name="url" maxlength="500" inputmode="url" placeholder="https://indico.cern.ch/event/…" value="{{ form.url }}"></label><br>
+        <small class="muted">{% trans 'An Indico event or a calendar feed (.ics, as Sched and Pretalx give) is read whole, with exact times and rooms. Any other page is read by an AI.' %}</small></p>
+      <details{% if form.program %} open{% endif %}><summary>{% trans 'or paste it, or send its PDF' %}</summary>
+        <p><label>{% trans 'The program: paste it from the conference website' %}<br><textarea name="program" style="min-height:160px">{{ form.program }}</textarea></label></p>
+        {% trans 'or its PDF, or its calendar file (.ics)' as upload_label %}
+        {% include 'summarizer/file_upload.html' with upload_name='program_pdf' upload_accept='application/pdf,.pdf,text/calendar,.ics' upload_formats='.pdf, .ics' %}
+        <p class="muted"><small>{% trans 'Of a page, a PDF or a pasted text, the first 400,000 characters are read (about 1,000 talks); we tell you where the reading stopped.' %}</small></p>
+      </details>
+      <h2 class="conf-form-step">2. {% trans 'Your research' %}</h2>
+      {% if digests|length > 1 %}
+      <p><label>{% trans 'Start from the profile of a digest' %}<br><select data-digest-profile>{% for pk, profile in digests %}<option value="{{ pk }}" data-profile="{{ profile }}">{{ profile|truncatechars:70 }}</option>{% endfor %}</select></label></p>
       {% endif %}
+      <p><label>{% trans 'In a few sentences; separate your topics by a blank line, each one is looked for apart' %}<br><textarea name="interests" style="min-height:110px" data-interests>{{ interests }}</textarea></label></p>
+      {% if projects %}
+      <p><label>{% trans 'and, if you want, a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}"{% if form.project == p.pk|stringformat:'s' %} selected{% endif %}>{{ p.title }}</option>{% endfor %}</select></label><br>
+        <small class="muted">{% trans 'Its question, method and data are each looked for, and a talk that overlaps it is flagged.' %}</small></p>
+      {% endif %}
+      {% if collections %}
+      <p><label>{% trans 'or a collection whose papers are close to your work' %}<br><select name="collection"><option value="">—</option>{% for c in collections %}<option value="{{ c.pk }}"{% if form.collection == c.pk|stringformat:'s' %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></label></p>
+      {% endif %}
+      <p><label>{% trans 'Your name and your co-authors’, one per line: your own talks are set apart, in your program' %}<br><textarea name="names" style="min-height:60px">{{ names }}</textarea></label></p>
       <p><button class="btn" type="submit">{% trans 'Make my program' %}</button></p>
-      <p class="muted"><small>{% trans 'The first 120,000 characters of the program are read, about 300 talks.' %}</small></p>
     </form>
 
     {% if searches %}
@@ -54,7 +70,7 @@
     <ul class="item-list">
       {% for s in searches %}
       <li class="card"><a href="/{{ LANGUAGE_CODE }}/conference/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.name|default:_('Conference') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ s.created|date:"j F Y H:i" }}</div></li>
+        <div class="meta">{{ s.created|date:"j F Y H:i" }}{% if s.status == 'done' and s.data.basis.project %} · {{ s.data.basis.project }}{% endif %}</div></li>
       {% endfor %}
     </ul>
     {% endif %}

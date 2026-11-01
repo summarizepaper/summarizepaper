@@ -28,7 +28,7 @@ _GROUPS = [
     ]),
     (_('Present and meet'), [
         ('journal-club/', 'chalkboard-teacher', _('Journal club'), 'plus', _('Slides for your audience and the length of your talk, each point with its passage of the paper, the earlier work, where the paper stands and the hard questions to prepare; edit, present, share or export. For one paper or the papers your team proposes.')),
-        ('conference/', 'calendar-alt', _('Conference companion'), 'plus', _('The talks of a conference program that matter for your research, and the people to meet.')),
+        ('conference/', 'calendar-alt', _('Conference companion'), 'plus', _('The talks of a conference program that matter for your research, day by day with their clashes and their preprints, read whole from Indico or a calendar feed; the people to meet, a calendar, a team that sees who goes where, and the follow-up after.')),
     ]),
 ]
 

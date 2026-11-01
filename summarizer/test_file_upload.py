@@ -7,7 +7,7 @@ class FileUploadTests(ToolsTestCase):
         client = self.client_for(self.user(paid=True))
         for lang in ('fr', 'en'):
             for tool, fields in [('refcheck', [('bib', 5, ''), ('source', 40, '')]), ('missed', [('draft', 20, '.pdf'), ('bib', 5, '.bib')]),
-                                 ('scoops', [('draft', 20, '.pdf')]), ('conference', [('program_pdf', 20, '.pdf')])]:
+                                 ('scoops', [('draft', 20, '.pdf')]), ('conference', [('program_pdf', 20, '')])]:
                 with self.subTest(lang=lang, tool=tool):
                     response = client.get('/%s/%s/' % (lang, tool))
                     self.assertEqual(response.status_code, 200)

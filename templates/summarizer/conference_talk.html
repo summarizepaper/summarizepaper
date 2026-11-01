@@ -1,0 +1,39 @@
+{% load i18n %}
+{# One talk of a program. Expects talk, and: role (must, should, maybe, yours, going), mark, going, clash, can_mark, owner, shared, compact. #}
+<li class="card conf-talk{% if mark.state == 'skip' %} conf-skipped{% endif %}"{% if talk.id %} id="talk-{{ talk.id }}"{% endif %}>
+  <div class="conf-talk-head">
+    {% if role == 'must' %}<span class="importance high">{% trans 'Do not miss it' %}</span>
+    {% elif role == 'should' %}<span class="importance medium">{% trans 'Worth it' %}</span>
+    {% elif role == 'maybe' %}<span class="importance low">{% trans 'If you have time' %}</span>
+    {% elif role == 'yours' %}<span class="importance info">{% trans 'Your talk' %}</span>
+    {% elif role == 'going' %}<span class="importance good">{% trans 'You chose it' %}</span>{% endif %}
+    {% if talk.kind == 'poster' %}<span class="conf-tag">{% trans 'Poster' %}</span>{% endif %}
+    {% if talk.scoop %}<span class="importance high conf-scoop">{% blocktrans with p=talk.scoop.project %}Close to your project “{{ p }}”{% endblocktrans %}</span>{% endif %}
+  </div>
+  <p class="conf-title"><strong>{% if talk.url %}<a href="{{ talk.url }}" rel="noopener" target="_blank">{{ talk.title }}</a>{% else %}{{ talk.title }}{% endif %}</strong></p>
+  <div class="meta">{% if compact %}{% if talk.day %}{{ talk.day }} · {% endif %}{% endif %}{% if talk.start %}<strong>{{ talk.start }}{% if talk.end %}–{{ talk.end }}{% endif %}</strong> · {% elif talk.time %}{{ talk.time }} · {% endif %}{{ talk.speakers|default:talk.presenter }}{% if talk.affiliation %} ({{ talk.affiliation }}){% endif %}{% if talk.session %} · {{ talk.session }}{% endif %}{% if talk.room %} · {{ talk.room }}{% endif %}</div>
+  {% if clash %}<p class="conf-clash">⚠ {% trans 'At the same time as' %} {{ clash|join:' · ' }}</p>{% endif %}
+  {% if talk.scoop.why %}<p class="conf-why">{{ talk.scoop.why }}</p>{% endif %}
+  {% if talk.why and not compact %}<p class="conf-why">{{ talk.why }}</p>{% endif %}
+  {% if talk.ask and not compact %}<p class="conf-ask"><span class="muted">{% trans 'To ask:' %}</span> {{ talk.ask }}</p>{% endif %}
+  {% if talk.paper and not shared %}
+  <p class="conf-paper">📄 <a href="/{{ LANGUAGE_CODE }}/paper/{{ talk.paper.key }}/">{{ talk.paper.title|truncatechars:110 }}</a>{% if talk.paper.year %} ({{ talk.paper.year }}){% endif %} · <a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ talk.paper.key|urlencode }}">{% trans 'Ask it questions' %}</a></p>
+  {% elif talk.paper and shared %}<p class="conf-paper">📄 <a href="{{ talk.paper.link }}" rel="noopener">{{ talk.paper.title|truncatechars:110 }}</a></p>{% endif %}
+  {% if going %}<p class="conf-team">👥 {% trans 'Also going:' %} {{ going|join:', ' }}</p>{% endif %}
+  {% if can_mark and talk.id %}
+  <form method="post" class="conf-mark" data-conf-mark>
+    {% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="talk" value="{{ talk.id }}"><input type="hidden" name="view" value="{{ view }}">
+    <button class="btn btn-sm btn-ghost" name="state" value="going" aria-pressed="{% if mark.state == 'going' %}true{% else %}false{% endif %}">{% trans 'Going' %}</button>
+    <button class="btn btn-sm btn-ghost" name="state" value="seen" aria-pressed="{% if mark.state == 'seen' %}true{% else %}false{% endif %}">{% trans 'Seen' %}</button>
+    <button class="btn btn-sm btn-ghost" name="state" value="skip" aria-pressed="{% if mark.state == 'skip' %}true{% else %}false{% endif %}">{% trans 'Not for me' %}</button>
+  </form>
+  <details class="conf-note"{% if mark.note %} open{% endif %}><summary>{% if mark.note %}{% trans 'My note' %}{% else %}{% trans 'Add a note' %}{% endif %}</summary>
+    <form method="post" data-conf-note>
+      {% csrf_token %}<input type="hidden" name="action" value="note"><input type="hidden" name="talk" value="{{ talk.id }}"><input type="hidden" name="view" value="{{ view }}">
+      <textarea name="note" rows="3" aria-label="{% trans 'My note' %}">{{ mark.note }}</textarea>
+      <button class="btn btn-sm" type="submit">{% trans 'Save' %}</button> <span class="muted" data-saved hidden>{% trans 'Saved' %}</span>
+    </form>
+  </details>
+  {% endif %}
+  {% if owner and role == 'must' and not compact %}<p class="conf-more"><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ talk.title|urlencode }}">{% trans 'Who else works on it?' %}</a></p>{% endif %}
+</li>

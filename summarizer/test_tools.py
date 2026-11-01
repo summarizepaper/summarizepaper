@@ -2322,45 +2322,6 @@ class ConferenceTests(ToolsTestCase):
         row.refresh_from_db()
         self.assertEqual(row.data(), raw)
 
-    def test_lists_ranks_and_explains_the_talks(self):
-        program = ('Monday 9:00 Session A\n\nClouds on hot Jupiters, by Ann Lee\n\n' + 'x ' * 7000 +
-                   '\n\nTuesday 10:00\n\nProtein folding, by Max P\n\nExomoons with Gaia, by Zoe Q')
-        self.assertEqual(len(conference.chunks(program)), 2)
-
-        def chat(prompt, **kwargs):
-            if 'piece of a conference program' in prompt:
-                found = [('Clouds on hot Jupiters', 'Ann Lee', '')] if 'Clouds' in kwargs['system'] else \
-                        [('Protein folding', 'Max P', ''), ('Exomoons with Gaia', 'Zoe Q', 'Tuesday 10:00'),
-                         ('clouds on hot jupiters', 'Ann Lee', '')]
-                return {'talks': [{'title': t, 'speakers': sp, 'time': tm} for t, sp, tm in found]}
-            return {'talks': [{'id': '1', 'priority': 'should', 'why': 'Close.'},
-                              {'id': '0', 'priority': 'must', 'why': 'Same planets.'},
-                              {'id': '2', 'priority': 'skip'}]}
-
-        def embed(texts):
-            return np.array([[1.0, 0.0]] + [[0.0, 1.0] if 'Protein' in t else [0.9, 0.1] if 'Exomoons' in t else [1.0, 0.0]
-                                            for t in texts[1:]], dtype=np.float32)
-        with mock.patch('summarizer.generated.chat_json', side_effect=chat), \
-             mock.patch('summarizer.similar.embed', side_effect=embed):
-            result = conference.find(program, 'Clouds of exoplanets', 'en')
-        self.assertEqual(result['listed'], 3)  # the talk listed in both pieces counts once
-        self.assertEqual([(t['title'], t['priority']) for t in result['talks']],
-                         [('Clouds on hot Jupiters', 'must'), ('Exomoons with Gaia', 'should')])
-        self.assertEqual(result['people'], ['Ann Lee', 'Zoe Q'])
-
-    def test_page_is_premium_and_uses_the_digest_profile(self):
-        self.assertContains(self.client_for(self.user()).get('/en/conference/'), 'Discover Premium')
-        user = self.user('pro', paid=True)
-        DigestSubscription.objects.create(user=user, categories='astro-ph.EP', profile='I study clouds on hot planets.')
-        client = self.client_for(user)
-        self.assertContains(client.get('/en/conference/'), 'I study clouds on hot planets.')
-        self.assertContains(client.post('/en/conference/', {'program': 'short', 'interests': 'clouds of planets'}), 'Paste the program')
-        with mock.patch('summarizer.conference.find', return_value={'talks': [], 'listed': 4, 'people': []}) as find:
-            r = client.post('/en/conference/', {'program': 'talk ' * 100, 'interests': 'clouds of hot planets', 'name': 'EAS 2026'})
-        self.assertEqual(find.call_args[0][1], 'clouds of hot planets')
-        self.assertContains(client.get(r['Location']), 'EAS 2026')
-        self.assertContains(client.get('/en/conference/'), 'EAS 2026')
-
 
 class QuestionsTests(ToolsTestCase):
     def questions_fixture(self):

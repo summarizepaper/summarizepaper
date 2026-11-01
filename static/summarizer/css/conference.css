@@ -1,0 +1,26 @@
+.conf-tabs{display:flex;gap:6px;margin:16px 0 18px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.conf-tabs a{flex:none;padding:6px 12px;border:1px solid var(--border);border-radius:999px;color:inherit;text-decoration:none;white-space:nowrap;font-size:.92rem}
+.conf-tabs a[aria-current=page]{background:var(--accent);border-color:var(--accent);color:#fff}
+.conf-tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.conf-day{margin:28px 0 10px;font-size:1.15rem;text-transform:capitalize}
+.conf-list{margin-top:0}
+.conf-talk .conf-talk-head{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.conf-title{margin:8px 0 4px}.conf-title a{overflow-wrap:anywhere}
+.conf-why,.conf-ask,.conf-paper,.conf-team,.conf-clash,.conf-more{margin:8px 0 0}
+.conf-ask{font-style:italic}.conf-clash{color:#92400e;font-size:.92rem}
+.conf-team{font-size:.92rem}.conf-paper a{overflow-wrap:anywhere}
+.conf-tag{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--bg-soft);font-size:12px;font-weight:600;color:var(--text-muted)}
+.conf-skipped{opacity:.55}
+.conf-mark{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.conf-mark button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.conf-note{margin:8px 0 0}.conf-note summary{font-size:.92rem;color:var(--text-muted)}
+.conf-note textarea,.conf-mail textarea{box-sizing:border-box;width:100%;margin:6px 0}
+.conf-filters{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:end;margin:0 0 12px}
+.conf-filters input[type=search]{max-width:100%}.conf-filters select{max-width:14em}
+.conf-pages{display:flex;justify-content:space-between;margin:16px 0}
+.conf-bar{position:relative;height:6px;margin:8px 0 0;border-radius:3px;background:var(--bg-soft);overflow:hidden}
+.conf-bar span{position:absolute;left:0;top:0;bottom:0;background:var(--border)}.conf-bar .conf-bar-mine{background:var(--accent)}
+.conf-actions{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.conf-form-step{font-size:1.05rem;margin:20px 0 8px}
+.conf-person p{margin:0 0 4px}.conf-person .importance{margin-left:6px}
+@media(max-width:600px){.conf-tabs{margin-left:-4px;margin-right:-4px}.conf-filters label{flex:1 1 100%}.conf-filters select,.conf-filters input[type=search]{width:100%;max-width:none}}

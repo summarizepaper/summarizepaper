@@ -21293,3 +21293,439 @@ msgstr ""
 "Votre manuscrit est rapproché des clés de citation de Better BibTeX. Les "
 "phrases signalées sont aussi vérifiées dans les PDF que vous gardez dans "
 "Zotero, lus pour votre vérification seulement et jamais stockés."
+
+msgid "Listing the talks and posters, with their day, time and room"
+msgstr ""
+"Liste des exposés et des posters, avec leur jour, leur heure et leur salle"
+
+msgid "Finding their preprints and the people to meet"
+msgstr "Recherche de leurs prépublications et des personnes à rencontrer"
+
+msgid ""
+"Give the link of a conference program, its PDF or its text: we find the "
+"talks and posters that matter for your research among thousands, day by day "
+"with their clashes, say why and what to ask, find their preprints, and list "
+"the people to meet."
+msgstr ""
+"Donnez le lien du programme d'une conférence, son PDF ou son texte : parmi "
+"des milliers d'exposés et de posters, nous trouvons ceux qui comptent pour "
+"votre recherche, jour par jour avec leurs chevauchements, disons pourquoi et"
+" quoi demander, trouvons leurs prépublications et listons les personnes à "
+"rencontrer."
+
+msgid ""
+"Give the link of a conference program, its PDF or its text: among hundreds "
+"or thousands of talks and posters, we find the ones that matter for your "
+"research, plan your days and list the people to meet."
+msgstr ""
+"Donnez le lien du programme d'une conférence, son PDF ou son texte : parmi "
+"des centaines ou des milliers d'exposés et de posters, nous trouvons ceux "
+"qui comptent pour votre recherche, organisons vos journées et listons les "
+"personnes à rencontrer."
+
+msgid ""
+"The program is read with the day, time, room, presenter and abstract of each"
+" talk: whole from an Indico event or a calendar feed (.ics), by an AI from "
+"any other page, PDF or text."
+msgstr ""
+"Le programme est lu avec le jour, l'heure, la salle, l'orateur et le résumé "
+"de chaque exposé : en entier depuis un événement Indico ou un flux de "
+"calendrier (.ics), par une IA depuis toute autre page, PDF ou texte."
+
+msgid ""
+"Its talks are ranked by closeness to your research: a few sentences, the "
+"research profile of your digest, a project of your scoop watch, or the "
+"papers of a collection. Your own talks are set apart."
+msgstr ""
+"Ses exposés sont classés par proximité avec votre recherche : quelques "
+"phrases, le profil de recherche de votre digest, un projet de votre veille "
+"anti-scoop ou les articles d'une collection. Vos propres exposés sont mis à "
+"part."
+
+msgid ""
+"For the closest ones, the AI says why they matter to you and how much, and "
+"suggests a question to ask. A talk that overlaps a project of your scoop "
+"watch is flagged."
+msgstr ""
+"Pour les plus proches, l'IA dit pourquoi ils comptent pour vous et à quel "
+"point, et propose une question à poser. Un exposé qui recoupe un projet de "
+"votre veille anti-scoop est signalé."
+
+msgid ""
+"You get your program day by day with its clashes, to add to your calendar, "
+"mark and annotate; the preprints of the talks; and the people to meet, those"
+" who cite your papers first."
+msgstr ""
+"Vous obtenez votre programme jour par jour avec ses chevauchements, à "
+"ajouter à votre agenda, marquer et annoter ; les prépublications des exposés"
+" ; et les personnes à rencontrer, celles qui citent vos articles d'abord."
+
+msgid ""
+"Share it with your team to see who goes where; after the conference, put the"
+" preprints in a collection, export your notes and draft a first email to the"
+" people you met."
+msgstr ""
+"Partagez-le avec votre équipe pour voir qui va où ; après la conférence, "
+"mettez les prépublications dans une collection, exportez vos notes et "
+"rédigez un premier email aux personnes rencontrées."
+
+msgid "Send a PDF or a calendar file (.ics) of 20 MB at most."
+msgstr "Envoyez un PDF ou un fichier de calendrier (.ics) de 20 Mo au plus."
+
+msgid "Give the link of the program, paste it, or send its PDF."
+msgstr "Donnez le lien du programme, collez-le ou envoyez son PDF."
+
+msgid ""
+"Describe your research in a few words at least, or choose a project or a "
+"collection."
+msgstr ""
+"Décrivez votre recherche en quelques mots au moins, ou choisissez un projet "
+"ou une collection."
+
+msgid "The program"
+msgstr "Le programme"
+
+msgid "Its link"
+msgstr "Son lien"
+
+msgid ""
+"An Indico event or a calendar feed (.ics, as Sched and Pretalx give) is read"
+" whole, with exact times and rooms. Any other page is read by an AI."
+msgstr ""
+"Un événement Indico ou un flux de calendrier (.ics, comme en donnent Sched "
+"et Pretalx) est lu en entier, avec les heures et les salles exactes. Toute "
+"autre page est lue par une IA."
+
+msgid "or paste it, or send its PDF"
+msgstr "ou collez-le, ou envoyez son PDF"
+
+msgid "or its PDF, or its calendar file (.ics)"
+msgstr "ou son PDF, ou son fichier de calendrier (.ics)"
+
+msgid ""
+"Of a page, a PDF or a pasted text, the first 400,000 characters are read "
+"(about 1,000 talks); we tell you where the reading stopped."
+msgstr ""
+"D'une page, d'un PDF ou d'un texte collé, les 400 000 premiers caractères "
+"sont lus (environ 1 000 exposés) ; nous vous disons où la lecture s'est "
+"arrêtée."
+
+msgid "Start from the profile of a digest"
+msgstr "Partir du profil d'un digest"
+
+msgid ""
+"In a few sentences; separate your topics by a blank line, each one is looked"
+" for apart"
+msgstr ""
+"En quelques phrases ; séparez vos thèmes par une ligne vide, chacun est "
+"cherché à part"
+
+msgid ""
+"Its question, method and data are each looked for, and a talk that overlaps "
+"it is flagged."
+msgstr ""
+"Sa question, sa méthode et ses données sont cherchées chacune, et un exposé "
+"qui le recoupe est signalé."
+
+msgid "or a collection whose papers are close to your work"
+msgstr "ou une collection dont les articles sont proches de vos travaux"
+
+msgid ""
+"Your name and your co-authors’, one per line: your own talks are set apart, "
+"in your program"
+msgstr ""
+"Votre nom et ceux de vos coauteurs, un par ligne : vos propres exposés sont "
+"mis à part, dans votre programme"
+
+msgid "The program of your team"
+msgstr "Le programme de votre équipe"
+
+#, python-format
+msgid ""
+"This program is longer than what we read: the reading stopped at “%(last)s”."
+" Send the rest as another program, or give its Indico or calendar link, read"
+" whole."
+msgstr ""
+"Ce programme est plus long que ce que nous lisons : la lecture s'est arrêtée"
+" à « %(last)s ». Envoyez la suite comme un autre programme, ou donnez son "
+"lien Indico ou de calendrier, lu en entier."
+
+#, python-format
+msgid "The AI read the %(judged)s closest to your research."
+msgstr "L'IA a lu les %(judged)s plus proches de votre recherche."
+
+msgid "Views of the program"
+msgstr "Vues du programme"
+
+msgid "Day by day"
+msgstr "Jour par jour"
+
+msgid "By priority"
+msgstr "Par priorité"
+
+msgid "Whole program"
+msgstr "Tout le programme"
+
+msgid "Themes"
+msgstr "Thèmes"
+
+msgid "Export, team and after"
+msgstr "Export, équipe et après"
+
+msgid "Add to my calendar"
+msgstr "Ajouter à mon agenda"
+
+#, python-format
+msgid "Times of the conference (%(zone)s)."
+msgstr "Heures de la conférence (%(zone)s)."
+
+msgid "Times as written in the program."
+msgstr "Heures telles qu’écrites dans le programme."
+
+msgid ""
+"Mark the talks you go to: the calendar then holds only them and your own."
+msgstr ""
+"Marquez les exposés où vous allez : l'agenda ne contient alors qu'eux et les"
+" vôtres."
+
+#, python-format
+msgid ""
+"%(n)s talk of your program is at the same time as another: choose, or ask a "
+"colleague to go."
+msgid_plural ""
+"%(n)s talks of your program are at the same time as others: choose, or ask a"
+" colleague to go."
+msgstr[0] ""
+"%(n)s exposé de votre programme est en même temps qu'un autre : choisissez, "
+"ou demandez à un collègue d'y aller."
+msgstr[1] ""
+"%(n)s exposés de votre programme sont en même temps que d'autres : "
+"choisissez, ou demandez à un collègue d'y aller."
+
+msgid "Day not given"
+msgstr "Jour non indiqué"
+
+msgid "title, speaker, session"
+msgstr "titre, orateur, session"
+
+msgid "Day"
+msgstr "Jour"
+
+msgid "Theme"
+msgstr "Thème"
+
+#, python-format
+msgid "%(n)s talk"
+msgid_plural "%(n)s talks"
+msgstr[0] "%(n)s exposé"
+msgstr[1] "%(n)s exposés"
+
+#, python-format
+msgid "page %(p)s of %(n)s"
+msgstr "page %(p)s sur %(n)s"
+
+msgid ""
+"The presenters of the talks that matter most for you; those who cite your "
+"papers (followed in your citation alerts) first."
+msgstr ""
+"Les orateurs des exposés qui comptent le plus pour vous ; d'abord ceux qui "
+"citent vos articles (suivis dans vos alertes de citation)."
+
+#, python-format
+msgid "Cites your paper “%(t)s”"
+msgstr "Cite votre article « %(t)s »"
+
+msgid "Their papers"
+msgstr "Ses articles"
+
+msgid "Follow-up email"
+msgstr "Email de suivi"
+
+msgid "Writing the email"
+msgstr "Rédaction de l'email"
+
+msgid "usually under a minute"
+msgstr "en général moins d'une minute"
+
+msgid "Draft a follow-up email"
+msgstr "Rédiger un email de suivi"
+
+msgid "from the notes you took on their talks"
+msgstr "à partir de vos notes sur ses exposés"
+
+msgid "No one yet: no talk mattered enough."
+msgstr "Personne pour l'instant : aucun exposé ne comptait assez."
+
+msgid "The themes of this conference"
+msgstr "Les thèmes de cette conférence"
+
+msgid ""
+"Its talks grouped by the closeness of their titles and abstracts, and how "
+"many of each are in your program."
+msgstr ""
+"Ses exposés regroupés par proximité de leurs titres et résumés, et combien "
+"de chacun sont dans votre programme."
+
+#, python-format
+msgid "%(n)s talk · %(mine)s for you"
+msgid_plural "%(n)s talks · %(mine)s for you"
+msgstr[0] "%(n)s exposé · %(mine)s pour vous"
+msgstr[1] "%(n)s exposés · %(mine)s pour vous"
+
+msgid "No preprint was found for these talks."
+msgstr "Aucune prépublication n'a été trouvée pour ces exposés."
+
+#, python-format
+msgid "%(added)s preprints added."
+msgstr "%(added)s prépublications ajoutées."
+
+msgid "Calendar (.ics)"
+msgstr "Agenda (.ics)"
+
+msgid "My program and notes (Markdown)"
+msgstr "Mon programme et mes notes (Markdown)"
+
+msgid ""
+"The calendar holds the talks you marked “Going” and your own, or, before you"
+" mark any, your program but the “if you have time”. The Markdown file opens "
+"in Obsidian or Notion."
+msgstr ""
+"L'agenda contient les exposés marqués « J'y vais » et les vôtres, ou, avant "
+"que vous n'en marquiez, votre programme sauf les « si vous avez le temps ». "
+"Le fichier Markdown s'ouvre dans Obsidian ou Notion."
+
+msgid "The preprints in a collection"
+msgstr "Les prépublications dans une collection"
+
+msgid ""
+"The preprints of the talks you marked going or seen, or else of your "
+"program, to read, compare and keep in sync with Zotero."
+msgstr ""
+"Les prépublications des exposés marqués « J’y vais » ou « Vu », sinon de "
+"votre programme, pour les lire, les comparer et les synchroniser avec "
+"Zotero."
+
+msgid "A new collection"
+msgstr "Une nouvelle collection"
+
+msgid "Add the preprints"
+msgstr "Ajouter les prépublications"
+
+msgid "Your team"
+msgstr "Votre équipe"
+
+msgid ""
+"Colleagues who join see this program and mark the talks they go to: each one"
+" sees who covers which session."
+msgstr ""
+"Les collègues qui rejoignent voient ce programme et marquent les exposés où "
+"ils vont : chacun voit qui couvre quelle session."
+
+msgid "Team link"
+msgstr "Lien d'équipe"
+
+msgid "In the team:"
+msgstr "Dans l'équipe :"
+
+msgid "Stop the link"
+msgstr "Arrêter le lien"
+
+msgid "Create a team link"
+msgstr "Créer un lien d'équipe"
+
+msgid "Rank it again"
+msgstr "Le classer à nouveau"
+
+msgid ""
+"With other interests, another project or for a colleague: the program is not"
+" read again, it takes about a minute."
+msgstr ""
+"Avec d'autres intérêts, un autre projet ou pour un collègue : le programme "
+"n'est pas relu, cela prend environ une minute."
+
+msgid "You ranked many programs today. Come back tomorrow."
+msgstr "Vous avez classé beaucoup de programmes aujourd'hui. Revenez demain."
+
+msgid ""
+"We could not read this link: it may be private, or not a program. Paste the "
+"program, or send its PDF."
+msgstr ""
+"Nous n'avons pas pu lire ce lien : il est peut-être privé, ou ce n'est pas "
+"un programme. Collez le programme ou envoyez son PDF."
+
+msgid "Your talk"
+msgstr "Votre exposé"
+
+msgid "You chose it"
+msgstr "Vous l’avez choisi"
+
+msgid "Poster"
+msgstr "Poster"
+
+#, python-format
+msgid "Close to your project “%(p)s”"
+msgstr "Proche de votre projet « %(p)s »"
+
+msgid "At the same time as"
+msgstr "En même temps que"
+
+msgid "To ask:"
+msgstr "À demander :"
+
+msgid "Ask it questions"
+msgstr "Lui poser des questions"
+
+msgid "Also going:"
+msgstr "Y vont aussi :"
+
+msgid "Going"
+msgstr "J'y vais"
+
+msgid "Seen"
+msgstr "Vu"
+
+msgid "Not for me"
+msgstr "Pas pour moi"
+
+msgid "Add a note"
+msgstr "Ajouter une note"
+
+msgid "Go to a conference as a team"
+msgstr "Aller à une conférence en équipe"
+
+#, python-format
+msgid "%(n)s talk in the program"
+msgid_plural "%(n)s talks in the program"
+msgstr[0] "%(n)s exposé au programme"
+msgstr[1] "%(n)s exposés au programme"
+
+#, python-format
+msgid ""
+"%(owner)s invites you to go to this conference as a team: you see the talks "
+"chosen for their research, mark those you go to and see who covers which "
+"session. Your notes stay yours."
+msgstr ""
+"%(owner)s vous invite à aller à cette conférence en équipe : vous voyez les "
+"exposés choisis pour sa recherche, marquez ceux où vous allez et voyez qui "
+"couvre quelle session. Vos notes restent les vôtres."
+
+msgid "Join the team"
+msgstr "Rejoindre l'équipe"
+
+msgid ""
+"The talks of a conference program that matter for your research, day by day "
+"with their clashes and their preprints, read whole from Indico or a calendar"
+" feed; the people to meet, a calendar, a team that sees who goes where, and "
+"the follow-up after."
+msgstr ""
+"Les exposés d'un programme de conférence qui comptent pour votre recherche, "
+"jour par jour avec leurs chevauchements et leurs prépublications, lu en "
+"entier depuis Indico ou un flux de calendrier ; les personnes à rencontrer, "
+"un agenda, une équipe qui voit qui va où, et le suivi après."
+
+msgid ""
+"the talks of a program that matter for your research, day by day, with their"
+" preprints and the people to meet"
+msgstr ""
+"les exposés d'un programme qui comptent pour votre recherche, jour par jour,"
+" avec leurs prépublications et les personnes à rencontrer"

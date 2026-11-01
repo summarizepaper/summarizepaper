@@ -750,6 +750,56 @@ class CollectionPaper(models.Model):
         return '%s in %s' % (self.arxiv_id, self.collection.name)
 
 
+class ConferenceProgram(models.Model):
+    """A conference program read once (conference.py): its talks, ranked then for one researcher or several
+    (Generated rows of kind 'conference' point to it), with each team member's plans and notes."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conference_programs')
+    name = models.CharField(max_length=200, blank=True, default='')
+    source = models.CharField(max_length=500, blank=True, default='')  # the link it was read from
+    timezone = models.CharField(max_length=60, blank=True, default='')  # IANA name of its times, when known
+    talks = models.TextField(default='[]')  # JSON list, see conference.clean_talk
+    vectors = models.BinaryField(blank=True, null=True)  # the talks' embeddings, in order (float32)
+    vector_key = models.CharField(max_length=64, blank=True, default='')
+    read = models.TextField(blank=True, default='')  # JSON {'chars', 'total', 'last'} when the program was cut
+    team_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # joins the team
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-created',)
+
+    def talk_list(self):
+        return json.loads(self.talks or '[]')
+
+    def __str__(self):
+        return self.name or 'Program %s' % self.pk
+
+
+class ConferenceMember(models.Model):
+    """Someone going to the conference with the program's owner: sees the program and who goes where."""
+    program = models.ForeignKey(ConferenceProgram, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conference_teams')
+    added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('program', 'user')
+        ordering = ('added',)
+
+
+class ConferenceMark(models.Model):
+    """What one person plans for a talk ('going', 'seen', 'skip' or '') and their private note on it."""
+    STATES = [('', ''), ('going', 'Going'), ('seen', 'Seen'), ('skip', 'Not for me')]
+    program = models.ForeignKey(ConferenceProgram, on_delete=models.CASCADE, related_name='marks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conference_marks')
+    talk = models.CharField(max_length=20)  # the talk's id in program.talks
+    state = models.CharField(max_length=10, blank=True, default='', choices=STATES)
+    note = models.TextField(blank=True, default='')
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('program', 'user', 'talk')
+
+
 class CollectionMember(models.Model):
     """Someone who edits a collection with its owner: papers, notes, tags, order, analyses (library.editable)."""
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='members')

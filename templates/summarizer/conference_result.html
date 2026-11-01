@@ -1,47 +1,182 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'Conference companion' %}{% endblock %}
+{% block title %}{% if result.name %}{{ result.name }} · {% endif %}{% trans 'Conference companion' %}{% endblock %}
 {% block extra_head_tags %}
-  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
+  {% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="{% static_v 'summarizer/css/conference.css' %}"><script defer src="{% static_v 'summarizer/js/conference.js' %}"></script>
+{% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="page conf-page">
   <header class="page-header">
     {% if shared %}<p class="muted">{% trans 'Shared conference program' %} · <a href="/{{ LANGUAGE_CODE }}/conference/">{% trans 'Make your own program' %}</a></p>
-    {% else %}<p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>{% endif %}
+    {% elif owner %}<p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
+    {% else %}<p class="muted">{% trans 'The program of your team' %}</p>{% endif %}
     <h1>{% if result.name %}{{ result.name }}{% else %}{% trans 'Your program' %}{% endif %}</h1>
   </header>
 
   {% if result %}
-    {% if not shared %}{% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
-    {% if result.talks %}
-    <p class="muted">{% blocktrans count n=result.listed with chosen=result.talks|length %}{{ chosen }} talks for you, out of {{ n }} in the program.{% plural %}{{ chosen }} talks for you, out of {{ n }} in the program.{% endblocktrans %}</p>
-    <ul class="item-list">
-      {% for t in result.talks %}
-      <li class="card">
-        <span class="importance {% if t.priority == 'must' %}high{% elif t.priority == 'should' %}medium{% else %}low{% endif %}">{% if t.priority == 'must' %}{% trans 'Do not miss it' %}{% elif t.priority == 'should' %}{% trans 'Worth it' %}{% else %}{% trans 'If you have time' %}{% endif %}</span>
-        <p style="margin:8px 0 4px"><strong>{{ t.title }}</strong></p>
-        <div class="meta">{{ t.speakers }}{% if t.session %} · {{ t.session }}{% endif %}{% if t.time %} · {{ t.time }}{% endif %}</div>
-        {% if t.why %}<p style="margin:8px 0 0">{{ t.why }}</p>{% endif %}
-        {% if not shared %}<p style="margin:6px 0 0"><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ t.title|urlencode }}">{% trans 'Who else works on it?' %}</a></p>{% endif %}
-      </li>
+    {% if read.total %}<p class="notice">{% blocktrans with last=read.last %}This program is longer than what we read: the reading stopped at “{{ last }}”. Send the rest as another program, or give its Indico or calendar link, read whole.{% endblocktrans %}</p>{% endif %}
+    {% if result.talks or result.yours %}
+    <p class="muted">{% blocktrans count n=result.listed with chosen=result.talks|length %}{{ chosen }} talks for you, out of {{ n }} in the program.{% plural %}{{ chosen }} talks for you, out of {{ n }} in the program.{% endblocktrans %}{% if result.judged %} {% blocktrans with judged=result.judged %}The AI read the {{ judged }} closest to your research.{% endblocktrans %}{% endif %}</p>
+    {% endif %}
+
+    {% if program and not shared %}
+    <nav class="conf-tabs" aria-label="{% trans 'Views of the program' %}">
+      <a href="?view=day"{% if view == 'day' %} aria-current="page"{% endif %}>{% trans 'Day by day' %}</a>
+      <a href="?view=priority"{% if view == 'priority' %} aria-current="page"{% endif %}>{% trans 'By priority' %}</a>
+      <a href="?view=all"{% if view == 'all' %} aria-current="page"{% endif %}>{% trans 'Whole program' %}</a>
+      <a href="?view=people"{% if view == 'people' %} aria-current="page"{% endif %}>{% trans 'People to meet' %}{% if result.people %} ({{ result.people|length }}){% endif %}</a>
+      {% if result.themes %}<a href="?view=themes"{% if view == 'themes' %} aria-current="page"{% endif %}>{% trans 'Themes' %}</a>{% endif %}
+      <a href="?view=after"{% if view == 'after' %} aria-current="page"{% endif %}>{% trans 'Export, team and after' %}</a>
+    </nav>
+    {% endif %}
+
+    {% if view == 'day' %}
+      {% if timed %}
+      <p class="conf-actions"><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Add to my calendar' %}</a>
+        <span class="muted">{% if zone %}{% blocktrans %}Times of the conference ({{ zone }}).{% endblocktrans %}{% else %}{% trans 'Times as written in the program.' %}{% endif %}
+        {% trans 'Mark the talks you go to: the calendar then holds only them and your own.' %}</span></p>
+      {% endif %}
+      {% if clash_count %}<p class="notice">{% blocktrans count n=clash_count %}{{ n }} talk of your program is at the same time as another: choose, or ask a colleague to go.{% plural %}{{ n }} talks of your program are at the same time as others: choose, or ask a colleague to go.{% endblocktrans %}</p>{% endif %}
+      {% for day, items in days %}
+        <h2 class="conf-day">{% if day %}{% if day.year %}{{ day|date:"l j F Y" }}{% else %}{{ day }}{% endif %}{% else %}{% trans 'Day not given' %}{% endif %}</h2>
+        <ul class="item-list conf-list">
+          {% for item in items %}{% include 'summarizer/conference_talk.html' with talk=item.talk role=item.role mark=item.mark going=item.going clash=item.clash can_mark=True compact=False %}{% endfor %}
+        </ul>
+      {% empty %}
+        <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
       {% endfor %}
-    </ul>
-    {% if result.people %}
-    <h2>{% trans 'People to meet' %}</h2>
-    <ul>{% for p in result.people %}<li>{{ p }}</li>{% endfor %}</ul>
+
+    {% elif view == 'priority' %}
+      {% if not shared and not program %}{% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+      {% if result.talks %}
+      <ul class="item-list conf-list">
+        {% for t in result.talks %}{% include 'summarizer/conference_talk.html' with talk=t role=t.priority mark=t.mark going=t.going clash=None can_mark=program compact=False %}{% endfor %}
+      </ul>
+      {% else %}
+      <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
+      {% endif %}
+      {% if shared and result.people %}
+      <h2>{% trans 'People to meet' %}</h2>
+      <ul>{% for p in result.people %}<li>{{ p.name }}{% if p.affiliation %}, {{ p.affiliation }}{% endif %}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if not program and not shared and result.people %}
+      <h2>{% trans 'People to meet' %}</h2>
+      <ul>{% for p in result.people %}<li>{{ p.name }}</li>{% endfor %}</ul>
+      {% endif %}
+
+    {% elif view == 'all' %}
+      <form method="get" class="conf-filters" role="search">
+        <input type="hidden" name="view" value="all">
+        <label>{% trans 'Search' %} <input type="search" name="q" value="{{ all_query }}" placeholder="{% trans 'title, speaker, session' %}"></label>
+        {% if all_days|length > 1 %}<label>{% trans 'Day' %} <select name="day"><option value="">{% trans 'All' %}</option>{% for d, label in all_days %}<option value="{{ d }}"{% if d == all_day %} selected{% endif %}>{% if label.year %}{{ label|date:"D j M" }}{% else %}{{ label }}{% endif %}</option>{% endfor %}</select></label>{% endif %}
+        {% if result.themes %}<label>{% trans 'Theme' %} <select name="theme"><option value="">{% trans 'All' %}</option>{% for th in result.themes %}<option value="{{ forloop.counter0 }}"{% if all_theme == forloop.counter0|stringformat:'s' %} selected{% endif %}>{{ th.name }}</option>{% endfor %}</select></label>{% endif %}
+        <button class="btn btn-sm" type="submit">{% trans 'Filter' %}</button>
+      </form>
+      <p class="muted">{% blocktrans count n=all_count %}{{ n }} talk{% plural %}{{ n }} talks{% endblocktrans %}{% if all_pages > 1 %} · {% blocktrans with p=all_page n=all_pages %}page {{ p }} of {{ n }}{% endblocktrans %}{% endif %}</p>
+      <ul class="item-list conf-list">
+        {% for t in all_talks %}{% include 'summarizer/conference_talk.html' with talk=t role=t.chosen.priority mark=t.mark going=None clash=None can_mark=True compact=True %}{% endfor %}
+      </ul>
+      {% if all_pages > 1 %}<nav class="conf-pages">{% if all_page > 1 %}<a href="?view=all&q={{ all_query|urlencode }}&day={{ all_day|urlencode }}&theme={{ all_theme }}&page={{ all_page|add:'-1' }}">← {% trans 'Previous' %}</a>{% endif %}
+        {% if all_page < all_pages %}<a href="?view=all&q={{ all_query|urlencode }}&day={{ all_day|urlencode }}&theme={{ all_theme }}&page={{ all_page|add:'1' }}">{% trans 'Next' %} →</a>{% endif %}</nav>{% endif %}
+
+    {% elif view == 'people' %}
+      <h2 id="people">{% trans 'People to meet' %}</h2>
+      <p class="muted">{% trans 'The presenters of the talks that matter most for you; those who cite your papers (followed in your citation alerts) first.' %}</p>
+      <ul class="item-list">
+        {% for p in result.people %}
+        <li class="card conf-person">
+          <p><strong>{{ p.name }}</strong>{% if p.affiliation %} · {{ p.affiliation }}{% endif %}
+            {% if p.cites %}<span class="importance good">{% blocktrans with t=p.cites|truncatechars:80 %}Cites your paper “{{ t }}”{% endblocktrans %}</span>{% endif %}</p>
+          {% for t in p.talk_list %}<div class="meta">{{ t.title }}{% if t.start %} · {{ t.day }} {{ t.start }}{% endif %}{% if t.room %} · {{ t.room }}{% endif %}</div>{% endfor %}
+          {% if p.openalex %}<p class="meta"><a href="https://openalex.org/{{ p.openalex }}" rel="noopener" target="_blank">{% trans 'Their papers' %}</a></p>{% endif %}
+          {% if owner and program %}
+            {% if p.mail.status == 'done' %}
+            <details class="conf-mail"><summary>{% trans 'Follow-up email' %}</summary>
+              <p><strong>{{ p.mail.data.subject }}</strong></p>
+              <textarea readonly rows="8" id="mail-{{ forloop.counter }}">{{ p.mail.data.body }}</textarea>
+              <form method="post" class="item-actions">{% csrf_token %}<input type="hidden" name="action" value="mail"><input type="hidden" name="person" value="{{ p.name }}"><input type="hidden" name="again" value="1">
+                <button type="button" class="btn btn-sm" data-copy="mail-{{ forloop.counter }}" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
+                <button class="btn btn-sm btn-ghost">{% trans 'Write it again' %}</button></form>
+            </details>
+            {% elif p.mail.status == 'pending' %}
+              {% trans 'Writing the email' as working_title %}{% trans 'usually under a minute' as working_time %}
+              {% include 'summarizer/working.html' with working_id='mail-working' working_steps=None working_visible=True working_started=p.mail.created %}
+              <script>window.addEventListener('DOMContentLoaded', function () { SP.track(document.getElementById('mail-working'), {{ p.mail.pk }}, function () { location.reload(); }); });</script>
+            {% else %}
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="mail"><input type="hidden" name="person" value="{{ p.name }}">
+              <button class="btn btn-sm btn-ghost">✉ {% trans 'Draft a follow-up email' %}</button>
+              <small class="muted">{% trans 'from the notes you took on their talks' %}</small></form>
+            {% endif %}
+          {% endif %}
+        </li>
+        {% empty %}<li class="muted">{% trans 'No one yet: no talk mattered enough.' %}</li>
+        {% endfor %}
+      </ul>
+
+    {% elif view == 'themes' %}
+      <h2>{% trans 'The themes of this conference' %}</h2>
+      <p class="muted">{% trans 'Its talks grouped by the closeness of their titles and abstracts, and how many of each are in your program.' %}</p>
+      <ul class="item-list conf-themes">
+        {% for th in result.themes %}
+        <li class="card"><a href="?view=all&theme={{ forloop.counter0 }}"><strong>{{ th.name }}</strong></a>
+          <div class="meta">{% blocktrans count n=th.count with mine=th.chosen %}{{ n }} talk · {{ mine }} for you{% plural %}{{ n }} talks · {{ mine }} for you{% endblocktrans %}</div>
+          <div class="conf-bar" aria-hidden="true"><span style="width:{% widthratio th.count result.listed 100 %}%"></span><span class="conf-bar-mine" style="width:{% widthratio th.chosen result.listed 100 %}%"></span></div></li>
+        {% endfor %}
+      </ul>
+
+    {% elif view == 'after' %}
+      {% if added %}<p class="notice">{% if added == 'full' %}{% trans 'You have as many collections as your plan allows: choose an existing one.' %}{% elif added == '0' %}{% trans 'No preprint was found for these talks.' %}{% else %}{% blocktrans %}{{ added }} preprints added.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ added_collection }}/">{% trans 'Open the collection' %}</a>{% endif %}</p>{% endif %}
+      <section class="card section-card">
+        <h2>{% trans 'Export' %}</h2>
+        <p><a class="btn btn-sm" href="calendar.ics">📅 {% trans 'Calendar (.ics)' %}</a> <a class="btn btn-sm btn-ghost" href="notes.md">{% trans 'My program and notes (Markdown)' %}</a></p>
+        <p class="muted"><small>{% trans 'The calendar holds the talks you marked “Going” and your own, or, before you mark any, your program but the “if you have time”. The Markdown file opens in Obsidian or Notion.' %}</small></p>
+      </section>
+      {% if owner %}
+      <section class="card section-card">
+        <h2>{% trans 'The preprints in a collection' %}</h2>
+        <p>{% trans 'The preprints of the talks you marked going or seen, or else of your program, to read, compare and keep in sync with Zotero.' %}</p>
+        <form method="post" class="tool-row">{% csrf_token %}<input type="hidden" name="action" value="collection">
+          <select name="collection" aria-label="{% trans 'Collection' %}"><option value="new">{% trans 'A new collection' %}</option>{% for c in collections %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select>
+          <button class="btn btn-sm">{% trans 'Add the preprints' %}</button></form>
+      </section>
+      <section class="card section-card">
+        <h2>{% trans 'Your team' %}</h2>
+        <p>{% trans 'Colleagues who join see this program and mark the talks they go to: each one sees who covers which session.' %}</p>
+        {% if team_url %}
+          <div class="tool-row link-row"><input type="text" readonly value="{{ team_url }}" id="team-url" aria-label="{% trans 'Team link' %}">
+            <button type="button" class="btn btn-sm" data-copy="team-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button></div>
+          {% if members %}<p class="muted">{% trans 'In the team:' %} {{ members|join:', ' }}</p>{% endif %}
+          <form method="post">{% csrf_token %}<button class="btn btn-sm btn-danger" name="action" value="unteam">{% trans 'Stop the link' %}</button></form>
+        {% else %}
+          <form method="post">{% csrf_token %}<button class="btn btn-sm" name="action" value="team">{% trans 'Create a team link' %}</button></form>
+        {% endif %}
+      </section>
+      {% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}
+      <section class="card section-card">
+        <h2>{% trans 'Rank it again' %}</h2>
+        <p class="muted">{% trans 'With other interests, another project or for a colleague: the program is not read again, it takes about a minute.' %}</p>
+        {% if form_error == 'interests' %}<p class="error">{% trans 'Describe your research in a few words at least, or choose a project or a collection.' %}</p>{% elif form_error == 'quota' %}<p class="error">{% trans 'You ranked many programs today. Come back tomorrow.' %}</p>{% endif %}
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="rank">
+          <p><label>{% trans 'Your research' %}<br><textarea name="interests" style="min-height:90px">{{ result.interests }}</textarea></label></p>
+          {% if projects %}<p><label>{% trans 'and, if you want, a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}"{% if p.title == result.basis.project %} selected{% endif %}>{{ p.title }}</option>{% endfor %}</select></label></p>{% endif %}
+          {% if collections %}<p><label>{% trans 'or a collection whose papers are close to your work' %}<br><select name="collection"><option value="">—</option>{% for c in collections %}<option value="{{ c.pk }}"{% if c.name == result.basis.collection %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></label></p>{% endif %}
+          <p><label>{% trans 'Your name and your co-authors’, one per line: your own talks are set apart, in your program' %}<br><textarea name="names" style="min-height:60px">{{ names }}</textarea></label></p>
+          <button class="btn btn-sm">{% trans 'Rank it again' %}</button></form>
+      </section>
+      {% endif %}
     {% endif %}
     <p class="muted"><small>{% trans 'Read from the program by an AI: check the times and rooms on the conference website.' %}</small></p>
-    {% else %}
-    <p class="notice">{% trans 'We found no talk close to your research in this program.' %}</p>
-    {% endif %}
   {% elif row.status == 'failed' %}
-    <p class="error">{% trans 'Reading the program failed. If you sent a PDF, check that it holds text, and try again.' %}</p>
+    {% if link_error %}<p class="error">{% trans 'We could not read this link: it may be private, or not a program. Paste the program, or send its PDF.' %}</p>
+    {% else %}<p class="error">{% trans 'Reading the program failed. If you sent a PDF, check that it holds text, and try again.' %}</p>{% endif %}
+    <p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
   {% else %}
     {% trans 'Making your program' as working_title %}
-    {% trans 'usually 1 to 3 minutes' as working_time %}
+    {% trans 'usually 1 to 5 minutes' as working_time %}
     {% include 'summarizer/working.html' with working_id='conference-working' working_steps=steps working_visible=True working_started=row.created %}
     <script>
     window.addEventListener('DOMContentLoaded', function () {

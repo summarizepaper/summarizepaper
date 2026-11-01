@@ -1,0 +1,51 @@
+(function () {
+  'use strict';
+  // Marks and notes of a conference program saved without leaving the page, and the digest profile chosen as
+  // interests. Without this script the forms post and the page comes back at the talk.
+  function send(form, submitter) {
+    var data = new FormData(form);
+    if (submitter && submitter.name) data.set(submitter.name, submitter.value);
+    return fetch(form.action || location.href, {method: 'POST', body: data, credentials: 'same-origin',
+      headers: {'X-Requested-With': 'fetch'}}).then(function (response) {
+      if (!response.ok) throw new Error(response.status);
+      return response.json();
+    });
+  }
+  function init() {
+    document.querySelectorAll('[data-conf-mark]').forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var button = event.submitter;
+        send(form, button).then(function (answer) {
+          form.querySelectorAll('button[name=state]').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b.value === answer.state));
+          });
+          var card = form.closest('.conf-talk');
+          if (card) card.classList.toggle('conf-skipped', answer.state === 'skip');
+        }).catch(function () {
+          var state = document.createElement('input');
+          state.type = 'hidden'; state.name = 'state'; state.value = button ? button.value : '';
+          form.appendChild(state);
+          form.submit();
+        });
+      });
+    });
+    document.querySelectorAll('[data-conf-note]').forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var saved = form.querySelector('[data-saved]');
+        send(form).then(function () {
+          if (saved) { saved.hidden = false; setTimeout(function () { saved.hidden = true; }, 2000); }
+        }).catch(function () { form.submit(); });
+      });
+    });
+    var picker = document.querySelector('[data-digest-profile]');
+    var interests = document.querySelector('[data-interests]');
+    if (picker && interests) {
+      picker.addEventListener('change', function () {
+        interests.value = picker.selectedOptions[0].dataset.profile || interests.value;
+      });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

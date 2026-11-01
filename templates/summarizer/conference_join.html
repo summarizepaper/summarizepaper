@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ program.name|default:_('Conference') }} | {% trans 'Go to a conference as a team' %}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{{ program.name|default:_('Conference') }}</h1>
+    <p class="lead">{% blocktrans count n=count %}{{ n }} talk in the program{% plural %}{{ n }} talks in the program{% endblocktrans %}</p>
+  </header>
+  <p>{% blocktrans %}{{ owner }} invites you to go to this conference as a team: you see the talks chosen for their research, mark those you go to and see who covers which session. Your notes stay yours.{% endblocktrans %}</p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn" type="submit">{% trans 'Join the team' %}</button>
+    <a class="btn btn-ghost" href="/{{ LANGUAGE_CODE }}/conference/">{% trans 'Not now' %}</a>
+  </form>
+</div>
+{% endblock %}

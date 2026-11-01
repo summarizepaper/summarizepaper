@@ -33,6 +33,7 @@ GENERATED_TOOLS = {
     'slides_edit': 'journal_club', 'slides_edit_v2': 'journal_club', 'slides_v3': 'journal_club', 'slides_coll': 'journal_club',
     'slides_edit_v3': 'journal_club', 'slides_edit_backup': 'journal_club', 'slides_share': 'journal_club',
     'compare': 'collections', 'questions': 'collections', 'collection_meta': 'collections', 'suggest': 'collections',
+    'conference_mail': 'conference',
     'zotero_import': 'zotero', 'zotero_sync': 'zotero', 'zotero_refcheck': 'zotero',
     **{k: k for k in ('missed', 'literature', 'zotero', 'refcheck', 'changes', 'teams', 'conference', 'students')},
 }
