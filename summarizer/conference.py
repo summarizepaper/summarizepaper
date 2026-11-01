@@ -40,9 +40,8 @@ from .models import (CitationCache, Collection, ConferenceMark, ConferenceMember
                      Generated, WatchedProject)
 
 MAX_PROGRAM = 400000  # characters of a page, PDF or pasted program read (an Indico event or a feed is read whole)
-CHUNK = 12000
-HEAD = 1500  # characters of the program's beginning read with each piece: its year and dates
-BEFORE = 1000  # characters before a piece read with it: the day and session it starts in
+CHUNK = 9000
+HEAD = 3000  # characters of the program's beginning where its year is looked for
 PARALLEL = 6
 EMBED_BATCH = 100
 SHORTLIST_MIN, SHORTLIST_MAX, SHORTLIST_SHARE = 45, 150, 0.15  # talks the model reads, by the program's size
@@ -182,21 +181,21 @@ def day_heading(text):
     return ''
 
 
-def list_talks(piece, head='', before='', heading=''):
+def list_talks(piece, year='', heading=''):
     answer = generated.chat_json(
-        'Above is a piece of a conference program. List every talk, poster or contributed presentation in it (not the '
-        'breaks, sessions headers alone, or social events), the talks that begin in <before> excepted. Keep the title '
-        'and names as written. A talk\'s day is the closest day heading above it in <program>, or else <last_day_heading>; '
-        'leave it empty when there is none (never take the first day of <program_start>, read only for the year). '
-        + UNTRUSTED + ' Answer with a JSON object {"talks": [{"title": "...", '
+        'Above is a piece of a conference program. List every talk, poster or contributed presentation in <program>, '
+        'and only there (not the breaks, sessions headers alone, or social events). Keep the title and names as '
+        'written. A talk\'s day is the closest day heading above it in <program>, or else <last_day_heading>; leave it '
+        'empty when there is none. <year> is the program\'s year. ' + UNTRUSTED +
+        ' Answer with a JSON object {"talks": [{"title": "...", '
         '"speakers": "names as written", "presenter": "the one who gives it, when the program marks them (underlined, '
         'starred, \'presented by\'), else the first name", "affiliation": "the presenter\'s institution if given, '
         'or empty", "session": "session name or empty", "kind": "talk or poster", "day": "YYYY-MM-DD when the date '
-        'can be told (<program_start> gives the year and dates), else the day as written, or empty", "start": '
+        'can be told, else the day as written, or empty", "start": '
         '"HH:MM in 24 hours, or empty", "end": "HH:MM in 24 hours, or empty", "room": "room or empty", "abstract": '
         '"its abstract if given, at most 600 characters, or empty"}]}.', paid=False, max_tokens=8000,
-        system='<program_start>\n%s\n</program_start>\n<last_day_heading>%s</last_day_heading>\n<before>\n%s\n'
-               '</before>\n<program>\n%s\n</program>' % (head, heading, before, piece))
+        system='<year>%s</year>\n<last_day_heading>%s</last_day_heading>\n<program>\n%s\n</program>' % (
+            year, heading, piece))
     return [clean_talk(t) for t in answer.get('talks', []) if isinstance(t, dict) and str(t.get('title', '')).strip()]
 
 
@@ -276,17 +275,15 @@ def read_text(text, step=lambda name: None):
     text = normalize_accents(text)
     total = len(text)
     text = text[:MAX_PROGRAM]
-    head = text[:HEAD]
+    year = re.search(r'\b(20\d{2}|19\d{2})\b', text[:HEAD])
     step('list')
     with ThreadPoolExecutor(PARALLEL) as pool:
-        jobs = [pool.submit(sources.closing(list_talks), piece, head if start else '', text[max(0, start - BEFORE):start],
-                            day_heading(text[:start]))
+        jobs = [pool.submit(sources.closing(list_talks), piece, year[1] if year else '', day_heading(text[:start]))
                 for start, piece in chunks(text)]
         listed = []
         for job in jobs:
             listed.extend(job.result())
             step('list')  # keeps the row alive while a long program is read
-    year = re.search(r'\b(20\d{2}|19\d{2})\b', head)
     talks = settle(listed, int(year[1]) if year else None)
     read = {}
     if total > MAX_PROGRAM and talks:
