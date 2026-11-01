@@ -590,17 +590,29 @@ def check(bib, tex, lang, step=lambda name: None, origin='bib'):
     }
 
 
+def without_commands(text, names):
+    """The text without these commands and their {...} argument, however deep its braces."""
+    while True:
+        found = re.search(r'\\(?:%s)\*?\s*(?:\[[^\]]*\])?\s*(?=\{)' % '|'.join(names), text)
+        if not found:
+            return text
+        _content, after = refcheck_sources.braced(text, found.end())
+        text = text[:found.start()] + ' ' + text[after:]
+
+
 def manuscript_authors(texts):
     """The family names of the manuscript's authors, from its \\author commands: in each author, only the first
     line (the next ones are affiliations and emails), and only a name of two to five words."""
     names = []
     for _name, tex in texts[:1]:
-        for found in re.findall(r'\\author\s*(?:\[[^\]]*\])?\s*\{((?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\}',
-                                refcheck_sources.strip_comments(tex)):
-            found = re.sub(r'\\(?:thanks|footnote|inst|affil|affiliation|email|orcid)\s*\{(?:[^{}]|\{[^{}]*\})*\}|\$[^$]*\$', ' ', found)
-            for part in re.split(r'\\(?:and|And|AND)\b|,|;|\band\b', found):
-                line = re.split(r'\\\\|\\newline', part)[0]
-                words = re.sub(r'\\[a-zA-Z]+\*?(?:\{[^}]*\})?|[{}~^*\d†‡]', ' ', line).split()
+        tex = refcheck_sources.strip_comments(tex)
+        for found in re.finditer(r'\\author\s*(?:\[[^\]]*\])?\s*(?=\{)', tex):
+            block = refcheck_sources.braced(tex, found.end())[0]
+            block = without_commands(block, ['thanks', 'footnote', 'inst', 'affil', 'affiliation', 'email', 'orcid'])
+            block = re.sub(r'\$[^$]*\$', ' ', block)
+            for part in re.split(r'\\(?:and|And|AND)\b|,|;|\band\b', block):
+                line = next((l for l in re.split(r'\\\\|\\newline', part) if l.strip()), '')
+                words = re.sub(r'\\[a-zA-Z]+\*?(?:\[[^\]]*\])?(?:\{[^}]*\})?|[{}\[\]~^*\d†‡]', ' ', line).split()
                 if '@' not in line and 2 <= len(words) <= 5:
                     names.append(bibliography.normalized(words[-1]))
     return [n for n in dict.fromkeys(names) if len(n) > 1]

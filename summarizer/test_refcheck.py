@@ -97,6 +97,8 @@ class ReadingTests(ToolsTestCase):
                'Google Brain \\AND Aidan N. Gomez$^\\dagger$\\\\ University of Toronto}')
         self.assertEqual(refcheck.manuscript_authors([('ms.tex', tex)]), ['vaswani', 'shazeer', 'gomez'])
         self.assertEqual(refcheck.manuscript_authors([('a.tex', '\\author{Ann Lee}\\affiliation{U}\\author{B. Ray}')]), ['lee', 'ray'])
+        nested = '\\author{\\AND Ann Lee\\thanks{Said {\\em it {twice}}.}\\\\ Lab \\And Bob Ray\\footnotemark[1]\\hspace{1mm}\\\\ Lab}'
+        self.assertEqual(refcheck.manuscript_authors([('n.tex', nested)]), ['lee', 'ray'])
 
     def test_passages_are_found_by_the_stems_of_the_words(self):
         claim = {'sentence': 'We used learned positional embeddings [k].', 'previous': ''}
