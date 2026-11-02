@@ -1247,6 +1247,10 @@ class HeadlessSummary(LoadingConsumer):
         self.channel_layer = get_channel_layer()
 
 
-def summarize_now(arxiv_id, language, paid=True):
-    """Summarize a paper from sync code (the digest), as if a visitor had opened its page."""
+def summarize_now(arxiv_id, language, paid=False):
+    """Summarize a paper from sync code (the digest and letters), as if a visitor had opened its page.
+
+    With the free model by default: these summaries are written ahead for about 130 papers a week, and with the
+    Premium model they cost $0.125 a paper (about $18 a week, 2026-11-02).
+    """
     async_to_sync(HeadlessSummary(arxiv_id, language).sendmessages)(arxiv_id, language, {}, paid)
