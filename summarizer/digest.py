@@ -1375,7 +1375,8 @@ def due_plans(now, only_user=None):
         subscriptions = list(subscriptions.filter(user__username=only_user))
     else:
         suppressed = mailcheck.suppressed()
-        subscriptions = [s for s in subscriptions if s.is_due(now) and s.user.email.strip().lower() not in suppressed]
+        stored = ArxivBatch.objects.filter(day=expected_batch(now)).values_list('fetched', flat=True).first()
+        subscriptions = [s for s in subscriptions if s.is_due(now, stored) and s.user.email.strip().lower() not in suppressed]
     paid, first = {}, {}
     for s in subscriptions:
         if s.user_id not in paid:

@@ -365,12 +365,18 @@ class DigestSubscription(models.Model):
     last_batch = models.DateField(blank=True, null=True)  # day of the latest arXiv announcement already sent
 
     CATCH_UP_HOURS = 3  # a missed hourly run is caught up, but never hours late at night
+    LATE_BATCH_HOURS = 9  # a digest waits this long for a late arXiv announcement (07:00 until 16:00)
 
     class Meta:
         ordering = ('created', 'pk')
 
-    def is_due(self, now):
-        """True during the hours after the chosen local time, if this slot was not sent yet."""
+    def is_due(self, now, batch_stored=False):
+        """True during the hours after the chosen local time, if this slot was not sent yet.
+
+        batch_stored is when the latest arXiv announcement was stored (None while it is not): one stored after
+        the catch-up hours keeps the slot open until LATE_BATCH_HOURS, so a late arXiv delays the digest
+        instead of skipping it (3 November 2026, stored at 09:03 UTC after the 07:00 Paris digests gave up).
+        """
         import datetime
         from zoneinfo import ZoneInfo
         try:
@@ -379,9 +385,12 @@ class DigestSubscription(models.Model):
             tz = ZoneInfo('UTC')
         local_now = now.astimezone(tz)
         delay = (local_now.hour - self.send_hour) % 24
-        if delay >= self.CATCH_UP_HOURS:
+        if delay >= self.LATE_BATCH_HOURS:
             return False
         slot_start = (local_now - datetime.timedelta(hours=delay)).replace(minute=0, second=0, microsecond=0)
+        if delay >= self.CATCH_UP_HOURS and (batch_stored is False or batch_stored is not None and
+                                             batch_stored < slot_start + datetime.timedelta(hours=self.CATCH_UP_HOURS)):
+            return False
         if slot_start.weekday() >= 5:  # arXiv announces nothing new for Saturday and Sunday
             return False
         if self.frequency == 'weekly' and slot_start.weekday() != self.weekday:

@@ -421,6 +421,25 @@ class DigestTests(TestCase):
         sub.timezone = 'Not/AZone'
         self.assertTrue(sub.is_due(at(20, 8)))    # unknown zone falls back to UTC
 
+    def test_a_late_announcement_keeps_the_slot_open(self):
+        utc = datetime.timezone.utc
+        at = lambda h, m=0: datetime.datetime(2026, 11, 3, h, m, tzinfo=utc)
+        sub = DigestSubscription(user=self.user, categories='astro-ph.EP', send_hour=7, timezone='Europe/Paris')
+        self.assertFalse(sub.is_due(at(9)))                # 10:00 in Paris: past the catch-up hours
+        self.assertTrue(sub.is_due(at(9), None))           # unless the announcement is still not stored
+        self.assertTrue(sub.is_due(at(10), at(9, 3)))      # or was stored after them (3 November 2026)
+        self.assertFalse(sub.is_due(at(10), at(5, 40)))    # stored in time: the digest had its chance
+        self.assertFalse(sub.is_due(at(15), None))         # 16:00 in Paris: wait for tomorrow
+        sub.last_sent = at(9, 5)
+        self.assertFalse(sub.is_due(at(10), at(9, 3)))     # once per day
+
+    def test_run_sends_a_digest_whose_announcement_came_late(self):
+        DigestSubscription.objects.create(user=self.user, categories='astro-ph.EP,hep-th', timezone='UTC', send_hour=7)
+        with announced(self.papers()), \
+             mock.patch('summarizer.digest.write_blurbs', side_effect=lambda batch, lang: {p['arxiv_id']: 'Blurb.' for p in batch}):
+            # 11:00 UTC, four hours after the slot: the run stores the announcement and sends the digest
+            self.assertEqual(digest.run(now=datetime.datetime(2026, 10, 19, 11, 0, tzinfo=datetime.timezone.utc)), 1)
+
     def test_no_digest_on_weekends(self):
         utc = datetime.timezone.utc
         at = lambda d, h: datetime.datetime(2026, 10, d, h, 0, tzinfo=utc)
