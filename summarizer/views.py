@@ -207,6 +207,7 @@ class RegisterView(View):
                 context['email_taken'] = email
                 form.add_error(None, _('We could not send your activation email. Please try requesting a login link.'))
                 return render(request, 'register.html', context)
+            request.session['activation_email'] = email  # shown on the next page, with what to do if it is in spam
             return redirect('account_activation_sent')
 
         return render(request, 'register.html', context)

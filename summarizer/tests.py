@@ -844,6 +844,17 @@ class AccountTests(TestCase):
         self.assertContains(client.get('/en/'), '(newbie)')  # still logged in on the next page
         self.assertEqual(Client().post('/' + path).status_code, 400)
 
+    def test_activation_page_names_the_address_and_the_mail_names_our_domain(self):
+        from django.core import mail
+        client = Client()
+        data = {'username': 'newbie', 'email': 'new@example.org', 'password1': 'Abcdef1!x',
+                'password2': 'Abcdef1!x', 'form_stamp': self.stamp()}
+        page = client.post('/en/register/', data, follow=True)
+        self.assertContains(page, 'Sent to <strong>new@example.org</strong>')
+        self.assertContains(page, 'mark it as not spam')
+        self.assertTrue(mail.outbox[0].message()['Message-ID'].endswith('@summarizepaper.com>'))
+        self.assertNotContains(Client().get('/en/account_activation_sent/'), 'Sent to')
+
     def test_signup_preserves_safe_premium_destination(self):
         from django.core import mail
         from urllib.parse import urlsplit
