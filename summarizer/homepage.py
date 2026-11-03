@@ -85,10 +85,13 @@ def _email_samples(lang):
     latest = letters.latest_letters(lang)
     letter = latest.get(SAMPLE_TOPIC) or max(latest.values(), key=lambda l: l.day, default=None)
     topic = letter.topic if letter else SAMPLE_TOPIC
+    field = email_updates.STARTERS[topic].split(',')
     query = Q()
-    for category in email_updates.STARTERS[topic].split(','):
+    for category in field:
         query |= Q(categories__contains=category)
-    items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors, 'category': i.categories.split(',')[0],
+    # a cross-listed paper is labelled with its category in the field, not its main one
+    items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors,
+              'category': next((c for c in i.categories.split(',') if c in field), i.categories.split(',')[0]),
               'blurb': i.blurb} for i in DigestItem.objects.filter(query, lang=lang).exclude(blurb='')
              .order_by('-published', '-created')[:SAMPLE_PAPERS]]
     sample = {'topic': topic, 'topic_name': str(letters.TOPICS[topic]['name']), 'digest': items, 'letter': None}

@@ -85,7 +85,7 @@ class HomepageTests(TestCase):
         DigestItem.objects.create(arxiv_id='2611.00001', lang='en', title='Old   AI paper', categories='cs.LG',
                                   blurb='An older blurb.', published=when - datetime.timedelta(days=1))
         DigestItem.objects.create(arxiv_id='2611.00002', lang='en', title='New AI paper', authors='A. Author',
-                                  categories='cs.CL,cs.LG', blurb='A short summary.', published=when)
+                                  categories='astro-ph.IM,cs.LG', blurb='A short summary.', published=when)
         DigestItem.objects.create(arxiv_id='2611.00003', lang='en', title='A galaxy', categories='astro-ph.GA',
                                   blurb='Another field.', published=when)
         DigestItem.objects.create(arxiv_id='2611.00004', lang='fr', title='Un article', categories='cs.LG',
@@ -100,6 +100,7 @@ class HomepageTests(TestCase):
         self.assertEqual([li.select_one('a').get_text() for li in papers], ['New AI paper', 'Old AI paper'])
         self.assertEqual(papers[0].select_one('a')['href'], '/en/paper/2611.00002/')
         self.assertEqual(papers[0].select_one('p').get_text(), 'A short summary.')
+        self.assertEqual(papers[0].select_one('span').get_text(), 'cs.LG')  # its category in the field
         letter = soup.select_one('#letter-sample')
         self.assertEqual(letter.select_one('strong').get_text(), 'AI this week')
         self.assertIn('3 papers put into perspective', letter.get_text())
