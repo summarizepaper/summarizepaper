@@ -86,13 +86,37 @@
     <div><p class="home-kicker">{% trans 'Your next reading habit' %}</p><h2 id="email-updates-title">{% trans 'Science worth reading, directly in your inbox' %}</h2><p>{% trans 'Get new papers with the digest, and take a step back with the weekly letters. One field, two complementary formats.' %}</p><span class="home-tag">{% trans 'Free with an account' %}</span>{% if home_readers %}<p class="home-readers">{% blocktrans with count=home_readers %}Already read by more than {{ count }} researchers.{% endblocktrans %}</p>{% endif %}<p class="home-fine">{% trans 'Start with a selection of categories in your field, then refine your digest whenever you want.' %}</p><div class="home-email-links"><a href="{% url 'digest' %}">{% trans 'Personalize my digest' %} →</a><a href="{% url 'letters' %}">{% trans 'Browse this week’s letters' %} →</a></div></div>
     {% include 'summarizer/email_updates_form.html' %}
   </div>
+  {% with s=email_samples %}{% if s.digest or s.letter %}
+  <div class="home-samples" aria-labelledby="samples-title">
+    <h3 id="samples-title">{% trans 'What lands in your inbox' %}</h3>
+    <p class="home-fine">{% blocktrans with field=s.topic_name %}Real, recent examples from the field “{{ field }}”.{% endblocktrans %}</p>
+    <div class="home-sample-grid">
+      {% if s.digest %}<article class="home-mail home-sample" id="digest-sample">
+        <div class="home-mail-top">{% trans 'Daily digest' %} <span>{{ s.topic_name }}</span></div>
+        <ol class="home-sample-papers">
+          {% for item in s.digest %}<li><span>{{ item.category|category_label }}</span><a href="{% url 'arxividpage' item.arxiv_id %}" data-funnel="home_example_click" data-placement="digest_sample">{{ item.title|oneline|truncatechars:110 }}</a><small>{{ item.authors|truncatechars:80 }}</small><p>{{ item.blurb|oneline|truncatewords:40 }}</p></li>{% endfor %}
+        </ol>
+        <p class="home-fine">{% trans 'Every weekday, the new papers in your categories, each with a short summary.' %}</p>
+      </article>{% endif %}
+      {% if s.letter %}{% with l=s.letter %}<article class="home-mail home-sample" id="letter-sample">
+        <div class="home-mail-top">{% trans 'Weekly letter' %} <span>{{ s.topic_name }} · {{ l.day|date:"j F Y" }} · {% blocktrans count n=l.minutes %}{{ n }} min read{% plural %}{{ n }} min read{% endblocktrans %}</span></div>
+        <strong>{{ l.title }}</strong>
+        <p>{{ l.dek|truncatewords:45 }}</p>
+        {% if l.sections %}<p class="home-sample-count">{% blocktrans count n=l.papers %}{{ n }} paper put into perspective{% plural %}{{ n }} papers put into perspective{% endblocktrans %}</p>
+        <ol class="home-sample-sections">{% for heading in l.sections|slice:":4" %}<li>{{ heading }}</li>{% endfor %}</ol>{% endif %}
+        <a href="{% url 'letter' l.topic l.day|date:'Y-m-d' %}" data-funnel="home_example_click" data-placement="letter_sample">{% trans 'Read the whole letter' %} →</a>
+      </article>{% endwith %}{% endif %}
+    </div>
+    <a class="home-sample-cta" href="#updates-topic" data-funnel="email_updates_entry" data-placement="samples">{% trans 'Receive them in my field' %} <span aria-hidden="true">↑</span></a>
+  </div>
+  {% endif %}{% endwith %}
 </section>
 
 <section class="home-examples home-section" aria-labelledby="examples-title">
   <div class="container">
     <p class="home-kicker">{% trans 'See what you can do' %}</p><h2 id="examples-title">{% trans 'A useful next step, made concrete' %}</h2>
     <p class="home-section-intro">{% trans 'Illustrative previews based on a published paper. Explore a live summary or set up your own digest to try the tools.' %}</p>
-    <div class="home-example-grid">
+    <div class="home-example-grid{% if email_samples.digest %} home-example-grid-two{% endif %}">
       <article class="home-example" id="paper-example">
         <p class="home-example-label">01 / {% trans 'Understand' %}</p><h3>Attention Is All You Need</h3><p class="home-fine">Vaswani et al. · 2017 · arXiv:1706.03762</p>
         <dl><dt>{% trans 'The question' %}</dt><dd>{% trans 'Can attention alone support a strong sequence-to-sequence model?' %}</dd><dt>{% trans 'The main idea' %}</dt><dd>{% trans 'The Transformer replaces recurrence and convolution with attention. The paper evaluates it on translation tasks.' %}</dd><dt>{% trans 'A point to check' %}</dt><dd>{% trans 'Results on these benchmarks do not establish performance on every language or task.' %}</dd></dl>
@@ -107,12 +131,12 @@
         <p class="home-fine">{% trans 'Illustrative check, verified against the proceedings.' %} <a href="https://papers.nips.cc/paper_files/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html">{% trans 'Publication record' %} ↗</a></p>
         <a class="home-example-cta" href="{% url 'refcheck' %}" data-funnel="home_tool_click" data-tool="refcheck" data-placement="examples">{% trans 'Explore Bibliography Check' %} → <span class="home-tag home-tag-paid">Premium</span></a>
       </article>
-      <article class="home-example" id="digest-example">
+      {% if not email_samples.digest %}<article class="home-example" id="digest-example">
         <p class="home-example-label">03 / {% trans 'Keep up' %}</p><h3>{% trans 'Your reading list, in your inbox' %}</h3>
         <div class="home-mail"><div class="home-mail-top">Daily Digest <span>cs.CL · cs.LG</span></div><strong>Attention Is All You Need</strong><p>{% trans 'A model built around attention for sequence-to-sequence learning. This paper introduces the Transformer and evaluates machine translation performance.' %}</p><a href="https://arxiv.org/abs/1706.03762">{% trans 'Source paper' %} ↗</a></div>
         <p class="home-fine">{% trans 'Example email layout using a 2017 paper. Your digest follows newly announced papers in your selected categories.' %}</p>
         <a class="home-example-cta" href="#email-updates" data-funnel="email_updates_entry" data-placement="examples">{% trans 'Set up my free digest' %} →</a>
-      </article>
+      </article>{% endif %}
     </div>
   </div>
 </section>

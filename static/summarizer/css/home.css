@@ -98,6 +98,27 @@
 .home-email-form .btn { width: 100%; white-space: normal; min-height: 48px; }
 .home-email-form :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .home-email-links { display: flex; flex-wrap: wrap; gap: 12px 22px; font-size: 14px; font-weight: 600; margin-top: 22px; }
+.home-example-grid-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.home-samples { margin-top: 28px; }
+.home-samples h3 { font-size: 22px; margin: 0 0 4px; }
+.home-sample-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 16px; align-items: start; }
+.home-sample { margin: 0; padding: 20px; background: white; min-width: 0; overflow-wrap: anywhere; }
+.home-sample strong { display: block; font-size: 17px; line-height: 1.35; margin-bottom: 8px; }
+.home-sample-papers, .home-sample-sections { margin: 0; padding: 0; list-style: none; }
+.home-sample-papers li { padding: 12px 0; border-bottom: 1px solid var(--home-line); }
+.home-sample-papers li:first-child { padding-top: 0; }
+.home-sample-papers span { display: block; color: #536677; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.home-sample-papers a { display: block; margin: 4px 0 2px; font-size: 15px; font-weight: 700; line-height: 1.35; }
+.home-sample-papers small { display: block; color: var(--text-muted); font-size: 12px; }
+.home-sample-papers p { margin: 6px 0 0; }
+.home-sample .home-fine { margin: 12px 0 0; }
+.home-sample-count { margin: 14px 0 6px; font-weight: 700; }
+.home-sample-sections { counter-reset: section; margin-bottom: 14px; }
+.home-sample-sections li { counter-increment: section; position: relative; padding: 6px 0 6px 28px; border-top: 1px solid var(--home-line); font-size: 14px; }
+.home-sample-sections li::before { content: counter(section); position: absolute; left: 0; color: #24664e; font-weight: 700; }
+.home-sample a[data-placement=letter_sample] { font-weight: 600; }
+.home-sample-cta { display: inline-block; margin-top: 18px; font-weight: 700; }
+@media (max-width: 760px) { .home-sample-grid, .home-example-grid-two { grid-template-columns: 1fr; } .home-sample { padding: 16px; } }
 @media (max-width: 760px) { .home-email-panel { grid-template-columns: 1fr; padding: 24px; gap: 20px; } .home-email-panel h2 { font-size: 28px; } }
 
 /* Free tools first, each card clickable as a whole, then a direct signup for visitors. */

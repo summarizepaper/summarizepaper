@@ -1,5 +1,8 @@
 from unittest import mock
 
+import datetime
+import json
+
 import stripe
 from bs4 import BeautifulSoup
 from django.conf import settings
@@ -8,7 +11,7 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 
 from . import billing
-from .models import ArxivPaper, DigestSubscription, SummaryPaper
+from .models import ArxivPaper, DigestItem, DigestSubscription, Letter, SummaryPaper
 
 
 class HomepageTests(TestCase):
@@ -72,6 +75,41 @@ class HomepageTests(TestCase):
         self.assertEqual(item.select_one('a').get_text(), 'Quantum magnets')
         self.assertEqual(item.select_one('p').get_text(), 'Des aimants minuscules.')
         self.assertEqual(len(soup.select('#premium-title')), 1)
+
+    def test_email_samples_show_a_real_digest_and_letter_of_one_field(self):
+        soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
+        self.assertIsNone(soup.select_one('.home-samples'))
+        self.assertIsNotNone(soup.select_one('#digest-example'))  # the illustrative email stays until there is a real one
+        cache.clear()
+        when = datetime.datetime(2026, 11, 2, tzinfo=datetime.timezone.utc)
+        DigestItem.objects.create(arxiv_id='2611.00001', lang='en', title='Old   AI paper', categories='cs.LG',
+                                  blurb='An older blurb.', published=when - datetime.timedelta(days=1))
+        DigestItem.objects.create(arxiv_id='2611.00002', lang='en', title='New AI paper', authors='A. Author',
+                                  categories='cs.CL,cs.LG', blurb='A short summary.', published=when)
+        DigestItem.objects.create(arxiv_id='2611.00003', lang='en', title='A galaxy', categories='astro-ph.GA',
+                                  blurb='Another field.', published=when)
+        DigestItem.objects.create(arxiv_id='2611.00004', lang='fr', title='Un article', categories='cs.LG',
+                                  blurb='Un résumé.', published=when)
+        content = {'sections': [{'heading': 'Models that plan', 'text': 'Text.', 'papers': ['2611.00002', '2611.00001']},
+                                {'heading': 'Robots', 'text': 'More text.', 'papers': ['2611.00005']}],
+                   'papers': {}, 'closing': ''}
+        Letter.objects.create(topic='ai', lang='en', day=datetime.date(2026, 11, 2), title='AI this week',
+                              dek='What changed.', content=json.dumps(content))
+        soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
+        papers = soup.select('#digest-sample .home-sample-papers li')
+        self.assertEqual([li.select_one('a').get_text() for li in papers], ['New AI paper', 'Old AI paper'])
+        self.assertEqual(papers[0].select_one('a')['href'], '/en/paper/2611.00002/')
+        self.assertEqual(papers[0].select_one('p').get_text(), 'A short summary.')
+        letter = soup.select_one('#letter-sample')
+        self.assertEqual(letter.select_one('strong').get_text(), 'AI this week')
+        self.assertIn('3 papers put into perspective', letter.get_text())
+        self.assertEqual([li.get_text() for li in letter.select('.home-sample-sections li')], ['Models that plan', 'Robots'])
+        self.assertEqual(letter.select('a')[-1]['href'], '/en/letters/ai/2026-11-02/')
+        self.assertIsNone(soup.select_one('#digest-example'))
+        # Each language shows its own: no French letter yet, only the French digest item.
+        soup = BeautifulSoup(self.client.get('/fr/').content, 'html.parser')
+        self.assertEqual([a.get_text() for a in soup.select('#digest-sample .home-sample-papers a')], ['Un article'])
+        self.assertIsNone(soup.select_one('#letter-sample'))
 
     def test_blank_search_never_calls_external_sources(self):
         with mock.patch('summarizer.views.sources.resolve') as resolve:

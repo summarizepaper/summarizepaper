@@ -22478,3 +22478,26 @@ msgid "and %(n)d more"
 msgid_plural "and %(n)d more"
 msgstr[0] "et %(n)d autre"
 msgstr[1] "et %(n)d autres"
+
+msgid "What lands in your inbox"
+msgstr "Ce que vous recevrez"
+
+msgid "Real, recent examples from the field “%(field)s”."
+msgstr "Exemples réels et récents du domaine « %(field)s »."
+
+msgid ""
+"Every weekday, the new papers in your categories, each with a short summary."
+msgstr ""
+"Chaque jour de semaine, les nouveaux articles de vos catégories, chacun avec"
+" un court résumé."
+
+msgid "%(n)s paper put into perspective"
+msgid_plural "%(n)s papers put into perspective"
+msgstr[0] "%(n)s article mis en perspective"
+msgstr[1] "%(n)s articles mis en perspective"
+
+msgid "Read the whole letter"
+msgstr "Lire toute la lettre"
+
+msgid "Receive them in my field"
+msgstr "Les recevoir dans mon domaine"

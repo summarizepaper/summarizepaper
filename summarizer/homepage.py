@@ -64,6 +64,42 @@ def monthly_price(currency='eur'):
     return '€%s / month' % amount
 
 
+SAMPLE_TOPIC = 'ai'  # the field of the email samples while it has a letter
+SAMPLE_PAPERS = 3
+
+
+def email_samples():
+    """A real recent digest and weekly letter of one field, to show visitors what an account sends them."""
+    lang = get_language()
+    key = 'home-samples:%s' % lang
+    samples = cache.get(key)
+    if samples is None:
+        samples = _email_samples(lang)
+        cache.set(key, samples, 3600)
+    return samples
+
+
+def _email_samples(lang):
+    from . import email_updates, letters
+    from .models import DigestItem
+    latest = letters.latest_letters(lang)
+    letter = latest.get(SAMPLE_TOPIC) or max(latest.values(), key=lambda l: l.day, default=None)
+    topic = letter.topic if letter else SAMPLE_TOPIC
+    query = Q()
+    for category in email_updates.STARTERS[topic].split(','):
+        query |= Q(categories__contains=category)
+    items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors, 'category': i.categories.split(',')[0],
+              'blurb': i.blurb} for i in DigestItem.objects.filter(query, lang=lang).exclude(blurb='')
+             .order_by('-published', '-created')[:SAMPLE_PAPERS]]
+    sample = {'topic': topic, 'topic_name': str(letters.TOPICS[topic]['name']), 'digest': items, 'letter': None}
+    if letter:
+        shown = letters.letter_context(letter)
+        sample['letter'] = {'topic': letter.topic, 'day': letter.day, 'title': letter.title, 'dek': letter.dek,
+                            'minutes': shown['minutes'], 'sections': [s['heading'] for s in shown['sections']],
+                            'papers': sum(len(s['papers']) for s in shown['sections'])}
+    return sample
+
+
 def context(request=None):
     from .email_updates import form_context
     currency = billing.selected_currency(request) if request is not None else 'eur'
@@ -73,4 +109,5 @@ def context(request=None):
                   .select_related('paper').order_by('-updated')[:7])
     papers = [p for p in papers if (p.summary or '').strip() or (p.lay_summary or '').strip()]
     return {**form_context(), 'free_tools': free_tools(), 'home_readers': readers(), 'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
+            'email_samples': email_samples(),
             'home_price': monthly_price(currency), 'billing_currency': currency, 'billing_currencies': billing.currencies()}
