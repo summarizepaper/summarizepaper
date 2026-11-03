@@ -209,7 +209,7 @@ class ArxivMetadataResilienceTests(TestCase):
             with self.assertRaises(utils.sources.SourceUnavailable):
                 async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
         self.assertEqual(session.get.call_count, 1)
-        self.assertIsNone(cache.get('arxiv-metadata-v2:2607.11677v1'))
+        self.assertIsNone(cache.get('arxiv-metadata-v3:2607.11677v1'))
 
     def test_known_license_can_be_reused_without_contacting_the_license_service(self):
         license = 'https://creativecommons.org/licenses/by/4.0/'

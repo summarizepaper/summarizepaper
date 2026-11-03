@@ -270,6 +270,35 @@ def _clean(text):
     return re.sub(r'\s+', ' ', text or '').strip()
 
 
+# accents written in LaTeX in arXiv titles, abstracts and names: R\'enyi -> Rényi, \"{u} -> ü, \c{c} -> ç
+_ACCENTS = {"'": '\u0301', '`': '\u0300', '^': '\u0302', '"': '\u0308', '~': '\u0303', '=': '\u0304', '.': '\u0307',
+            'u': '\u0306', 'v': '\u030c', 'H': '\u030b', 'c': '\u0327', 'k': '\u0328', 'r': '\u030a'}
+_SYMBOL_ACCENT = re.compile(r'\\([\'`^"~=.])\s*(?:\{\s*(\\i|[A-Za-z])\s*\}|(\\i|[A-Za-z]))')
+_LETTER_ACCENT = re.compile(r'\\([uvHckr])(?:\s*\{\s*(\\i|[A-Za-z])\s*\}|\s+([A-Za-z]))')
+_LETTERS = re.compile(r'\\(ss|aa|AA|ae|AE|oe|OE|o|O|l|L)(?![A-Za-z])(?:\{\}|\s+)?')  # a control word eats its spaces
+_LETTER_NAMES = {'ss': 'ß', 'aa': 'å', 'AA': 'Å', 'ae': 'æ', 'AE': 'Æ', 'oe': 'œ', 'OE': 'Œ', 'o': 'ø', 'O': 'Ø', 'l': 'ł', 'L': 'Ł'}
+
+
+def _accented(match):
+    import unicodedata
+    letter = match.group(2) or match.group(3)
+    letter = 'i' if letter == '\\i' else letter
+    return unicodedata.normalize('NFC', letter + _ACCENTS[match.group(1)])
+
+
+def latex_accents(text):
+    """Text accents and letters written in LaTeX turned into Unicode, outside $math$ (left for MathJax)."""
+    if not text or '\\' not in text:
+        return text
+    parts = re.split(r'(\$\$?[^$]*\$\$?)', text)
+    for i in range(0, len(parts), 2):
+        part = _SYMBOL_ACCENT.sub(_accented, parts[i])
+        part = _LETTER_ACCENT.sub(_accented, part)
+        part = _LETTERS.sub(lambda m: _LETTER_NAMES[m.group(1)], part)
+        parts[i] = re.sub(r'\{([^\W\d_])\}', r'\1', part)  # {é} -> é
+    return ''.join(parts)
+
+
 def _strip_tags(text):
     return _clean(re.sub(r'<[^>]+>', ' ', text or ''))
 

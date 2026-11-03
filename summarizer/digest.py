@@ -241,8 +241,8 @@ def parse_feed(xml_text):
             continue
         papers.append({
             'arxiv_id': site_id(abs_url.split('/abs/')[-1]),
-            'title': re.sub(r'\s+', ' ', entry.findtext(ATOM + 'title', '')).strip(),
-            'abstract': re.sub(r'\s+', ' ', entry.findtext(ATOM + 'summary', '')).strip(),
+            'title': sources.latex_accents(re.sub(r'\s+', ' ', entry.findtext(ATOM + 'title', '')).strip()),
+            'abstract': sources.latex_accents(re.sub(r'\s+', ' ', entry.findtext(ATOM + 'summary', '')).strip()),
             'authors': [a.findtext(ATOM + 'name', '') for a in entry.findall(ATOM + 'author')],
             'categories': [c.get('term') for c in entry.findall(ATOM + 'category')],
             'published': parse_datetime(entry.findtext(ATOM + 'published', '')),
@@ -288,7 +288,8 @@ def expected_batch(now):
 
 
 def latex_to_text(text):
-    """'Osnabr\\"uck' -> 'Osnabrück'-ish ascii: accents written in LaTeX are dropped, the letter kept."""
+    """'Osnabr\\"uck' -> 'Osnabrück': LaTeX accents become letters, other LaTeX accents are dropped."""
+    text = sources.latex_accents(text)
     text = re.sub(r'\\[\'"`^~=.uvHckrb]\{?([A-Za-z])\}?', r'\1', text)
     return text.replace('{', '').replace('}', '').replace('\\', '')
 
@@ -316,8 +317,8 @@ def parse_rss(xml_text):
         summary = entry.findtext(ATOM + 'summary', '')
         papers.append({
             'arxiv_id': site_id(entry.findtext(ATOM + 'id', '').split(':')[-1]),
-            'title': re.sub(r'\s+', ' ', entry.findtext(ATOM + 'title', '')).strip(),
-            'abstract': re.sub(r'\s+', ' ', summary.split('Abstract:', 1)[-1]).strip(),
+            'title': sources.latex_accents(re.sub(r'\s+', ' ', entry.findtext(ATOM + 'title', '')).strip()),
+            'abstract': sources.latex_accents(re.sub(r'\s+', ' ', summary.split('Abstract:', 1)[-1]).strip()),
             'authors': split_authors(entry.findtext(DC + 'creator', '')),
             'categories': [c.get('term') for c in entry.findall(ATOM + 'category')],
             'published': published,

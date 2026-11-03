@@ -1787,7 +1787,7 @@ async def get_arxiv_metadata(arxiv_id):
     if sources.is_external(arxiv_id):
         return await asyncio.to_thread(sources.in_thread, sources.metadata_list, arxiv_id)
     identifier = arxiv_id.replace('--', '/')
-    key = 'arxiv-metadata-v2:' + identifier
+    key = 'arxiv-metadata-v3:' + identifier
     cached = await asyncio.to_thread(cache.get, key)
     if cached is not None:
         return cached
@@ -1822,8 +1822,8 @@ async def get_arxiv_metadata(arxiv_id):
     affiliation = [a.findtext('arxiv:affiliation', '', ns) for a in entry.findall('a:author', ns)]
     doi = entry.findtext('arxiv:doi', '', ns)
     category = entry.find('arxiv:primary_category', ns)
-    result = [1, authors, affiliation, entry.findtext('a:id', '', ns), entry.findtext('a:title', '', ns),
-              'https://doi.org/' + doi if doi else '', entry.findtext('a:summary', '', ns),
+    result = [1, authors, affiliation, entry.findtext('a:id', '', ns), sources.latex_accents(entry.findtext('a:title', '', ns)),
+              'https://doi.org/' + doi if doi else '', sources.latex_accents(entry.findtext('a:summary', '', ns)),
               category.get('term', '') if category is not None else '', entry.findtext('a:updated', '', ns),
               entry.findtext('a:published', '', ns), entry.findtext('arxiv:journal_ref', '', ns),
               entry.findtext('arxiv:comment', '', ns), license_value, data]

@@ -1652,7 +1652,7 @@ class ArxivFetchTests(NoBioServers, TestCase):
         self.assertEqual([p['arxiv_id'] for p in papers], ['2610.22487v1', '2610.11111v1'])  # the replacement is left out
         new = papers[0]
         self.assertEqual(new['abstract'], 'Phenomena requiring close proximity.')
-        self.assertEqual(new['authors'], ['Oliver Busemann', 'Torben Toniges', 'Ann Lee'])
+        self.assertEqual(new['authors'], ['Oliver Busemann', 'Torben Töniges', 'Ann Lee'])  # LaTeX accents kept as letters
         self.assertEqual(new['categories'], ['astro-ph.EP', 'astro-ph.HE'])
 
     def feeds(self, day=datetime.date(2026, 10, 19), failing=(), entries=10):
@@ -2321,3 +2321,20 @@ class LoadShedderTests(TestCase):
         self.assertEqual((shedder.in_flight, shedder.anonymous), (1, 1))
         shedder.in_flight = 3
         self.assertEqual(self.call(shedder, '/fr/')['status'], 503)  # still held to the overall limit
+
+
+class LatexAccentTests(TestCase):
+    def test_accents_become_letters_outside_math(self):
+        from summarizer.sources import latex_accents
+        self.assertEqual(latex_accents("R\\'enyi-2 entanglement"), 'Rényi-2 entanglement')
+        self.assertEqual(latex_accents('Osnabr\\"uck, Erd\\H{o}s, Poincar\\\'{e} {\\\'e}t\\\'e \\c{c}a'),
+                         'Osnabrück, Erdős, Poincaré été ça')
+        self.assertEqual(latex_accents('\\v{S}ediv\\\'y, Gro\\ss e, Ma\\l{}ecki, Na\\"{\\i}ve'), 'Šedivý, Große, Małecki, Naïve')
+        math = "The $\\vec{v}\\'s$ and $\\hat{H}$, \\textbf{bold}"
+        self.assertEqual(latex_accents(math), math)
+
+    def test_feeds_convert_titles_and_abstracts_on_arrival(self):
+        xml = FEED.replace('LSST and Keck', "R\\'enyi and Keck")
+        paper = {p['arxiv_id']: p for p in digest.parse_feed(xml)}['2610.22354v1']
+        self.assertTrue(paper['title'].startswith('Rényi and Keck'))
+
