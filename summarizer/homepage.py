@@ -66,12 +66,13 @@ def monthly_price(currency='eur'):
 
 SAMPLE_TOPIC = 'ai'  # the field of the email samples while it has a letter
 SAMPLE_PAPERS = 3
+SAMPLE_SCANNED = 40  # recent papers read to find SAMPLE_PAPERS whose main category is in the field
 
 
 def email_samples():
     """A real recent digest and weekly letter of one field, to show visitors what an account sends them."""
     lang = get_language()
-    key = 'home-samples:%s' % lang
+    key = 'home-samples2:%s' % lang
     samples = cache.get(key)
     if samples is None:
         samples = _email_samples(lang)
@@ -89,11 +90,13 @@ def _email_samples(lang):
     query = Q()
     for category in field:
         query |= Q(categories__contains=category)
-    # a cross-listed paper is labelled with its category in the field, not its main one
+    recent = list(DigestItem.objects.filter(query, lang=lang).exclude(blurb='')
+                  .order_by('-published', '-created')[:SAMPLE_SCANNED])
+    # papers of the field first, then those only cross-listed in it, labelled with their category in the field
+    recent.sort(key=lambda i: i.categories.split(',')[0] not in field)
     items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors,
               'category': next((c for c in i.categories.split(',') if c in field), i.categories.split(',')[0]),
-              'blurb': i.blurb} for i in DigestItem.objects.filter(query, lang=lang).exclude(blurb='')
-             .order_by('-published', '-created')[:SAMPLE_PAPERS]]
+              'blurb': i.blurb} for i in recent[:SAMPLE_PAPERS]]
     sample = {'topic': topic, 'topic_name': str(letters.TOPICS[topic]['name']), 'digest': items, 'letter': None}
     if letter:
         shown = letters.letter_context(letter)

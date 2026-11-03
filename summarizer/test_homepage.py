@@ -97,10 +97,11 @@ class HomepageTests(TestCase):
                               dek='What changed.', content=json.dumps(content))
         soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
         papers = soup.select('#digest-sample .home-sample-papers li')
-        self.assertEqual([li.select_one('a').get_text() for li in papers], ['New AI paper', 'Old AI paper'])
-        self.assertEqual(papers[0].select_one('a')['href'], '/en/paper/2611.00002/')
-        self.assertEqual(papers[0].select_one('p').get_text(), 'A short summary.')
-        self.assertEqual(papers[0].select_one('span').get_text(), 'cs.LG')  # its category in the field
+        # A paper of the field comes before a newer one only cross-listed in it, labelled with its category in the field.
+        self.assertEqual([li.select_one('a').get_text() for li in papers], ['Old AI paper', 'New AI paper'])
+        self.assertEqual(papers[1].select_one('a')['href'], '/en/paper/2611.00002/')
+        self.assertEqual(papers[1].select_one('p').get_text(), 'A short summary.')
+        self.assertEqual(papers[1].select_one('span').get_text(), 'cs.LG')
         letter = soup.select_one('#letter-sample')
         self.assertEqual(letter.select_one('strong').get_text(), 'AI this week')
         self.assertIn('3 papers put into perspective', letter.get_text())
