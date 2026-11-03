@@ -48,7 +48,7 @@ from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
 
 from . import access, arxiv_taxonomy, audio, journal_taxonomy, mailcheck, similar, sources, usage
-from .models import (AnnouncedPaper, ArxivBatch, CategorySynthesis, DigestDelivery, DigestEdition, DigestFeedback,
+from .models import (AnnouncedPaper, ArxivBatch, ArxivFetch, CategorySynthesis, DigestDelivery, DigestEdition, DigestFeedback,
                      DigestItem, DigestSubscription, DigestVector, PaperAudio, SummaryPaper)
 from .utils import ai_models, chat_params
 
@@ -362,6 +362,7 @@ def fetch_batch(expected, now, categories=(), batch=None):
     """
     archives = batch.missing_list() if batch else ARCHIVES + BIO_ARCHIVES + [JOURNALS] * bool(followed_journals())
     found, bio_found, missing, on_time, stale = {}, {}, [], 0, 0
+    stale_names = []
     for archive in archives:
         if archive in OTHER_ARCHIVES:
             try:
@@ -390,11 +391,13 @@ def fetch_batch(expected, now, categories=(), batch=None):
             logger.info('arXiv RSS %s is still on %s, waiting for %s', archive, day or 'an empty feed', expected)
             missing.append(archive)
             stale += 1
+            stale_names.append(archive)
             continue
         on_time += 1
         for paper in papers:
             if paper['announced'] == expected:
                 found.setdefault(paper['arxiv_id'], paper)
+    stored = False
     if batch is not None or on_time or not stale:
         # on an arXiv holiday no batch is stored: the next one reads these days again
         found.update(bio_found)
@@ -416,6 +419,10 @@ def fetch_batch(expected, now, categories=(), batch=None):
             logger.warning('arXiv batch %s accepted without %s', expected, missing)
         ArxivBatch.objects.get_or_create(day=expected, defaults={
             'papers': AnnouncedPaper.objects.filter(announced=expected).count(), 'missing': ','.join(missing)})
+        stored = True
+    ArxivFetch.objects.create(day=expected, on_time=on_time, stale=','.join(stale_names)[:300],
+                              failed=','.join(m for m in missing if m not in stale_names)[:300],
+                              papers=AnnouncedPaper.objects.filter(announced=expected).count(), stored=stored)
 
 
 def bio_window(expected):
@@ -1617,6 +1624,7 @@ def cleanup(days=30):
     """Forget the papers and embeddings too old to appear in a digest or on its web page again."""
     AnnouncedPaper.objects.filter(announced__lt=timezone.now().date() - datetime.timedelta(days=PAGE_DAYS)).delete()
     DigestEdition.objects.filter(sent__lt=timezone.now() - datetime.timedelta(days=EDITION_DAYS)).delete()
+    ArxivFetch.objects.filter(at__lt=timezone.now() - datetime.timedelta(days=30)).delete()
     return DigestVector.objects.filter(created__lt=timezone.now() - timezone.timedelta(days=days)).delete()[0]
 
 

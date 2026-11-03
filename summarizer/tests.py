@@ -1664,11 +1664,16 @@ class ArxivFetchTests(NoBioServers, TestCase):
         with mock.patch('summarizer.digest.read_feed') as read:
             digest.ensure_batch(MONDAY + datetime.timedelta(hours=5))
         read.assert_not_called()  # arXiv is read once per announcement
+        # each reading is kept, to tell afterwards why a batch came late
+        from summarizer.models import ArxivFetch
+        self.assertEqual([(f.failed, f.stored) for f in ArxivFetch.objects.order_by('pk')], [('cs', False), ('', True)])
 
     def test_waits_while_the_feed_is_on_the_previous_announcement(self):
         with mock.patch('summarizer.digest.read_feed', side_effect=self.feeds(day=datetime.date(2026, 10, 16))):
             self.assertEqual(digest.ensure_batch(MONDAY), [])
         self.assertFalse(ArxivBatch.objects.exists())
+        from summarizer.models import ArxivFetch
+        self.assertEqual(ArxivFetch.objects.get().stale, ','.join(digest.ARCHIVES))
 
     def test_empty_feeds_are_not_an_announcement_without_papers(self):
         empty = lambda name: (None, [], 0)

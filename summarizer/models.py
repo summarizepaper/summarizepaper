@@ -473,6 +473,17 @@ class ArxivBatch(models.Model):
         return '%s (%d papers)' % (self.day, self.papers)
 
 
+class ArxivFetch(models.Model):
+    """One reading of the announcement feeds, kept 30 days: when a batch came late, which archives held it back."""
+    day = models.DateField()  # the announcement expected
+    at = models.DateTimeField(auto_now_add=True, db_index=True)
+    on_time = models.PositiveSmallIntegerField(default=0)  # arXiv archives already on that day
+    stale = models.CharField(max_length=300, blank=True, default='')  # archives still on an older day
+    failed = models.CharField(max_length=300, blank=True, default='')  # archives that could not be read
+    papers = models.PositiveIntegerField(default=0)  # papers of that day stored so far
+    stored = models.BooleanField(default=False)  # the batch was stored by this reading
+
+
 class AnnouncedPaper(models.Model):
     """A new or cross-listed paper of a daily arXiv announcement, from its RSS feeds."""
     arxiv_id = models.CharField(max_length=100, unique=True)
