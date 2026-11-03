@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, conference, digest, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, zotero
+from summarizer import audio, changes, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, zotero
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ class Command(BaseCommand):
         # each step is independent: one failing must not stop the others
         for name, step in (('letters', lambda: letters.update(now)),
                            ('letter summaries', lambda: letters.presummarize_due()),
+                           ('homepage samples', lambda: homepage.prepare_samples()),
                            ('scoop alerts', lambda: scoops.run(now, budget)),
                            ('citation alerts', lambda: citations.run(now, budget)),
                            ('version alerts', lambda: changes.run(now, budget)),

@@ -37,3 +37,17 @@
     window.addEventListener('pageshow', reset);
   });
 }());
+(function () {
+  // the email samples follow the field chosen in the signup form
+  var samples = document.querySelector('[data-email-samples]');
+  var select = document.getElementById('updates-topic');
+  if (!samples || !select) return;
+  function show() {
+    var panels = samples.querySelectorAll('.home-sample-field');
+    var wanted = samples.querySelector('.home-sample-field[data-topic="' + select.value + '"]');
+    if (!wanted) return;
+    panels.forEach(function (panel) { panel.hidden = panel !== wanted; });
+  }
+  select.addEventListener('change', show);
+  show();
+}());

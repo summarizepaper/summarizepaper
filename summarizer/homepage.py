@@ -64,14 +64,36 @@ def monthly_price(currency='eur'):
     return '€%s / month' % amount
 
 
-SAMPLE_TOPIC = 'ai'  # the field of the email samples once its own papers fill a digest
+SAMPLE_TOPIC = 'ai'  # the field the email samples open on, when the visitor has not chosen one
 SAMPLE_PAPERS = 3
+PREPARED_PAPERS = 6  # per field: the homepage shows SAMPLE_PAPERS of them, the example digest all (digest_web.EXAMPLE_PAPERS)
+PREPARED_KEY = 'home-samples-prepared:%s'
+
+
+def prepare_samples():
+    """Once per announcement, the digest summaries of PREPARED_PAPERS papers of each field, in each language, so
+    the homepage shows a digest of whichever field a visitor picks (14 calls of the free model). Hourly job."""
+    from . import digest, email_updates
+    from .models import ArxivBatch
+    day = ArxivBatch.objects.order_by('-day').values_list('day', flat=True).first()
+    if day is None or cache.get(PREPARED_KEY % day):
+        return 0
+    papers = sorted(digest.load_papers([day]).values(), key=lambda p: p['arxiv_id'])
+    chosen = []
+    for categories in email_updates.STARTERS.values():
+        field = categories.split(',')
+        chosen += [p for p in papers if p['categories'][0] in field and p['abstract'].strip()][:PREPARED_PAPERS]
+    chosen = list({p['arxiv_id']: p for p in chosen}.values())  # astro-ph.EP is in two fields
+    for lang in ('en', 'fr'):
+        digest.ensure_items(chosen, lang)  # only the missing ones are written
+    cache.set(PREPARED_KEY % day, True, 4 * 86400)
+    return len(chosen)
 
 
 def email_samples():
-    """A real recent digest and weekly letter of one field, to show visitors what an account sends them."""
+    """A real recent digest and weekly letter of each field, to show visitors what an account sends them."""
     lang = get_language()
-    key = 'home-samples4:%s' % lang
+    key = 'home-samples5:%s' % lang
     samples = cache.get(key)
     if samples is None:
         samples = _email_samples(lang)
@@ -88,32 +110,31 @@ def _main_in(field):
 
 
 def _email_samples(lang):
+    """{'fields': a sample per field with a digest or a letter, 'shown': the field shown first}."""
     from . import email_updates, letters
     from .models import DigestItem
     latest = letters.latest_letters(lang)
-    fields = {topic: email_updates.STARTERS[topic].split(',') for topic in latest or [SAMPLE_TOPIC]}
     recent = DigestItem.objects.filter(lang=lang).exclude(blurb='').order_by('-published', '-created')
-    # digest summaries are written only for papers sent to someone: show a field with a letter that has enough
-    # of them, SAMPLE_TOPIC first
-    counts = {topic: recent.filter(_main_in(field)).count() for topic, field in fields.items()}
-    topic = max(counts, key=lambda t: (min(counts[t], SAMPLE_PAPERS), t == SAMPLE_TOPIC, counts[t]))
-    letter, field = latest.get(topic), fields[topic]
-    listed = Q()
-    for category in field:
-        listed |= Q(categories__contains=category)
-    # papers of the field first, then those only cross-listed in it, labelled with their category in the field
-    chosen = list(recent.filter(_main_in(field))[:SAMPLE_PAPERS])
-    chosen += list(recent.filter(listed).exclude(pk__in=[i.pk for i in chosen])[:SAMPLE_PAPERS - len(chosen)])
-    items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors,
-              'category': next((c for c in i.categories.split(',') if c in field), i.categories.split(',')[0]),
-              'blurb': i.blurb} for i in chosen]
-    sample = {'topic': topic, 'topic_name': str(letters.TOPICS[topic]['name']), 'digest': items, 'letter': None}
-    if letter:
-        shown = letters.letter_context(letter)
-        sample['letter'] = {'topic': letter.topic, 'day': letter.day, 'title': letter.title, 'dek': letter.dek,
-                            'minutes': shown['minutes'], 'sections': [s['heading'] for s in shown['sections']],
-                            'papers': sum(len(s['papers']) for s in shown['sections'])}
-    return sample
+    fields = []
+    for topic, categories in email_updates.STARTERS.items():
+        field = categories.split(',')
+        items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors,
+                  'category': next((c for c in i.categories.split(',') if c in field), i.categories.split(',')[0]),
+                  'blurb': i.blurb} for i in recent.filter(_main_in(field))[:SAMPLE_PAPERS]]
+        letter = latest.get(topic)
+        if not items and not letter:
+            continue
+        sample = {'topic': topic, 'topic_name': str(letters.TOPICS[topic]['name']), 'digest': items, 'letter': None}
+        if letter:
+            shown = letters.letter_context(letter)
+            sample['letter'] = {'topic': letter.topic, 'day': letter.day, 'title': letter.title, 'dek': letter.dek,
+                                'minutes': shown['minutes'], 'sections': [s['heading'] for s in shown['sections']],
+                                'papers': sum(len(s['papers']) for s in shown['sections'])}
+        fields.append(sample)
+    # the preferred field once it has both, else the most complete one
+    complete = lambda f: (len(f['digest']) >= SAMPLE_PAPERS, bool(f['letter']), f['topic'] == SAMPLE_TOPIC, len(f['digest']))
+    shown = max(fields, key=complete)['topic'] if fields else None
+    return {'fields': fields, 'shown': shown, 'digest': any(f['digest'] for f in fields)}
 
 
 def context(request=None):

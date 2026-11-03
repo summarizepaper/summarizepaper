@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load i18n static_version %}
+{% block title %}{% blocktrans with field=topic_name %}Example of a daily digest: {{ field }}{% endblocktrans %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex">{% endblock %}
+{% block extrahead %}<link rel="stylesheet" href="{% static_v 'summarizer/css/home.css' %}">{% endblock %}
+{% block content %}
+<main class="page home digest-example" style="max-width:850px">
+  <header class="page-header">
+    <h1>{% blocktrans with field=topic_name %}Example of a daily digest: {{ field }}{% endblocktrans %}</h1>
+    <p class="lead">{% trans 'The email as a free account receives it, made of real papers from the latest arXiv announcement.' %}</p>
+  </header>
+  <nav class="digest-example-fields" aria-label="{% trans 'Choose your field' %}">
+    {% for slug, name in topics %}<a href="?field={{ slug }}"{% if slug == topic %} aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
+  </nav>
+  {% if empty %}
+  <p class="notice">{% trans 'No example is ready for this field yet. It will be after the next arXiv announcement.' %}</p>
+  {% else %}
+  <iframe class="digest-example-email" title="{% trans 'Example digest email' %}" srcdoc="{{ email|force_escape }}" sandbox="allow-same-origin allow-top-navigation-by-user-activation allow-popups" loading="lazy"></iframe>
+  {% endif %}
+  <p class="digest-example-cta"><a class="btn btn-lg" href="{{ signup }}" data-funnel="email_updates_entry" data-placement="digest_example">{% trans 'Receive it in my field' %} →</a></p>
+  <p class="home-fine">{% trans 'Free with an account. Change your categories or unsubscribe at any time.' %}</p>
+</main>
+{% endblock %}
+{% block scripts %}<script>
+document.querySelectorAll('.digest-example-email').forEach(function (frame) {
+  function fit() { try { frame.style.height = frame.contentDocument.body.scrollHeight + 'px'; } catch (e) {} }
+  frame.addEventListener('load', function () {
+    fit();
+    frame.contentDocument.querySelectorAll('a[href]').forEach(function (a) { a.target = '_top'; });
+  });
+  window.addEventListener('resize', fit);
+});
+</script>{% endblock %}

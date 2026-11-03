@@ -158,3 +158,8 @@
 .home-latest h3 a:hover { color: var(--accent); text-decoration: underline; }
 .home-latest p { font-size: 14px; color: var(--text-muted); margin: 0; }
 #research-tools .home-premium { margin-top: 20px; padding: 28px 36px; }
+.digest-example-fields { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.digest-example-fields a { padding: 6px 12px; border: 1px solid var(--home-line); border-radius: 999px; font-size: 14px; text-decoration: none; }
+.digest-example-fields a[aria-current] { background: #24664e; border-color: #24664e; color: white; }
+.digest-example-email { display: block; width: 100%; height: 900px; border: 1px solid var(--home-line); border-radius: 10px; background: #f4f4f4; }
+.digest-example-cta { margin: 24px 0 8px; }

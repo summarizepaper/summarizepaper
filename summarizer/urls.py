@@ -78,6 +78,7 @@ urlpatterns = [
     path("digest/l/<str:code>/", csrf_exempt(digest_web.link), name="digest_link"),
     path("digest/save/<str:token>/", digest_web.save_paper, name="digest_save"),
     path("digest/try/", digest_web.live_preview, name="digest_try"),
+    path("digest/example/", digest_web.example_page, name="digest_example"),
     path("digest/listen/<str:token_value>/", audio.listen_page, name="digest_listen"),
     path("digest/listen/<str:token_value>/episode.mp3", audio.episode_mp3, name="digest_episode"),
     path("ai/<int:pk>/", generated.status_view, name="generated_status"),

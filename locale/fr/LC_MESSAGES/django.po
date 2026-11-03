@@ -22501,3 +22501,38 @@ msgstr "Lire toute la lettre"
 
 msgid "Receive them in my field"
 msgstr "Les recevoir dans mon domaine"
+
+msgid "See a whole digest"
+msgstr "Voir un digest complet"
+
+msgid "Example of a daily digest: %(field)s"
+msgstr "Exemple de digest quotidien : %(field)s"
+
+msgid ""
+"The email as a free account receives it, made of real papers from the latest"
+" arXiv announcement."
+msgstr ""
+"L’email tel qu’un compte gratuit le reçoit, fait de vrais articles de la "
+"dernière annonce arXiv."
+
+msgid "Choose your field"
+msgstr "Choisissez votre domaine"
+
+msgid ""
+"No example is ready for this field yet. It will be after the next arXiv "
+"announcement."
+msgstr ""
+"Aucun exemple n’est encore prêt pour ce domaine. Il le sera après la "
+"prochaine annonce arXiv."
+
+msgid "Example digest email"
+msgstr "Exemple d’email du digest"
+
+msgid "Receive it in my field"
+msgstr "Le recevoir dans mon domaine"
+
+msgid ""
+"Free with an account. Change your categories or unsubscribe at any time."
+msgstr ""
+"Gratuit avec un compte. Changez vos catégories ou désabonnez-vous à tout "
+"moment."

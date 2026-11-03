@@ -86,19 +86,20 @@
     <div><p class="home-kicker">{% trans 'Your next reading habit' %}</p><h2 id="email-updates-title">{% trans 'Science worth reading, directly in your inbox' %}</h2><p>{% trans 'Get new papers with the digest, and take a step back with the weekly letters. One field, two complementary formats.' %}</p><span class="home-tag">{% trans 'Free with an account' %}</span>{% if home_readers %}<p class="home-readers">{% blocktrans with count=home_readers %}Already read by more than {{ count }} researchers.{% endblocktrans %}</p>{% endif %}<p class="home-fine">{% trans 'Start with a selection of categories in your field, then refine your digest whenever you want.' %}</p><div class="home-email-links"><a href="{% url 'digest' %}">{% trans 'Personalize my digest' %} →</a><a href="{% url 'letters' %}">{% trans 'Browse this week’s letters' %} →</a></div></div>
     {% include 'summarizer/email_updates_form.html' %}
   </div>
-  {% with s=email_samples %}{% if s.digest or s.letter %}
-  <div class="home-samples" aria-labelledby="samples-title">
+  {% if email_samples.fields %}
+  <div class="home-samples" aria-labelledby="samples-title" data-email-samples>
     <h3 id="samples-title">{% trans 'What lands in your inbox' %}</h3>
+    {% for s in email_samples.fields %}<div class="home-sample-field" data-topic="{{ s.topic }}"{% if s.topic != email_samples.shown %} hidden{% endif %}>
     <p class="home-fine">{% blocktrans with field=s.topic_name %}Real, recent examples from the field “{{ field }}”.{% endblocktrans %}</p>
     <div class="home-sample-grid">
-      {% if s.digest %}<article class="home-mail home-sample" id="digest-sample">
+      {% if s.digest %}<article class="home-mail home-sample">
         <div class="home-mail-top">{% trans 'Daily digest' %} <span>{{ s.topic_name }}</span></div>
         <ol class="home-sample-papers">
           {% for item in s.digest %}<li><span>{{ item.category|category_label }}</span><a href="{% url 'arxividpage' item.arxiv_id %}" data-funnel="home_example_click" data-placement="digest_sample">{{ item.title|oneline|truncatechars:110 }}</a><small>{{ item.authors|truncatechars:80 }}</small><p>{{ item.blurb|oneline|truncatewords:40 }}</p></li>{% endfor %}
         </ol>
-        <p class="home-fine">{% trans 'Every weekday, the new papers in your categories, each with a short summary.' %}</p>
+        <p class="home-fine">{% trans 'Every weekday, the new papers in your categories, each with a short summary.' %} <a href="{% url 'digest_example' %}?field={{ s.topic }}" data-funnel="home_example_click" data-placement="digest_example">{% trans 'See a whole digest' %} →</a></p>
       </article>{% endif %}
-      {% if s.letter %}{% with l=s.letter %}<article class="home-mail home-sample" id="letter-sample">
+      {% if s.letter %}{% with l=s.letter %}<article class="home-mail home-sample">
         <div class="home-mail-top">{% trans 'Weekly letter' %} <span>{{ s.topic_name }} · {{ l.day|date:"j F Y" }} · {% blocktrans count n=l.minutes %}{{ n }} min read{% plural %}{{ n }} min read{% endblocktrans %}</span></div>
         <strong>{{ l.title }}</strong>
         <p>{{ l.dek|truncatewords:45 }}</p>
@@ -107,9 +108,10 @@
         <a href="{% url 'letter' l.topic l.day|date:'Y-m-d' %}" data-funnel="home_example_click" data-placement="letter_sample">{% trans 'Read the whole letter' %} →</a>
       </article>{% endwith %}{% endif %}
     </div>
+    </div>{% endfor %}
     <a class="home-sample-cta" href="#updates-topic" data-funnel="email_updates_entry" data-placement="samples">{% trans 'Receive them in my field' %} <span aria-hidden="true">↑</span></a>
   </div>
-  {% endif %}{% endwith %}
+  {% endif %}
 </section>
 
 <section class="home-examples home-section" aria-labelledby="examples-title">

@@ -408,3 +408,44 @@ def apply_import(subscription, found, paid):
         subscription.reference_papers = ', '.join(list(dict.fromkeys(refs))[:digest.MAX_REFERENCES])
         subscription.authors = ', '.join(digest.clean_authors(', '.join(subscription.author_list() + found['coauthors'])))
     return subscription
+
+
+# --- a whole digest, as an example for visitors -----------------------------------------
+
+EXAMPLE_PAPERS = 6
+
+
+def example_page(request):
+    """The email of a free digest of one field (?field=), made of its latest prepared papers (see homepage)."""
+    from django.template.loader import render_to_string
+    from django.urls import reverse
+    from . import email_updates, homepage, letters
+    lang = get_language()
+    topic = request.GET.get('field')
+    if topic not in email_updates.STARTERS:
+        topic = homepage.SAMPLE_TOPIC
+    field = email_updates.STARTERS[topic].split(',')
+    items = list(DigestItem.objects.filter(homepage._main_in(field), lang=lang).exclude(blurb='')
+                 .order_by('-published', '-created')[:EXAMPLE_PAPERS])
+    signup = '%s?topic=%s' % (reverse('email_updates'), topic)
+    ready = digest.summarized([i.arxiv_id for i in items], lang)
+    labels = (('contribution', translation.gettext('Contribution')), ('method', translation.gettext('Method')),
+              ('result', translation.gettext('Result')))
+    for item in items:
+        item.url = '/%s/paper/%s/' % (lang, item.arxiv_id)
+        item.ident, item.abs_url, item.pdf_url = digest.source_links(item.arxiv_id)
+        item.source = 'DOI' if sources.is_external(item.arxiv_id) else 'arXiv'
+        item.category = next((c for c in item.categories.split(',') if c in field), item.categories.split(',')[0])
+        item.ready, item.via, item.reasons = item.arxiv_id in ready, '', []
+        points = json.loads(item.points or '{}')
+        item.point_list = [(label, points[key]) for key, label in labels if points.get(key)]
+        item.save_url = item.more_url = item.less_url = signup  # with an account, these steer the next digests
+    email = render_to_string('digest/email.html', {
+        'subscription': DigestSubscription(lang=lang), 'items': items, 'from_authors': [], 'count': len(items),
+        'categories_label': ', '.join(dict.fromkeys(digest.category_label(c) for c in field)), 'teaser': {},
+        'premium_url': reverse('premium'), 'manage_url': signup, 'unsubscribe_url': signup,
+        'date': items[0].published if items and items[0].published else timezone.now()})
+    topics = [(slug, letters.TOPICS[slug]['name']) for slug in email_updates.STARTERS]
+    return render(request, 'summarizer/digest_example.html', {
+        'email': email, 'topic': topic, 'topic_name': letters.TOPICS[topic]['name'], 'topics': topics,
+        'signup': signup, 'empty': not items})

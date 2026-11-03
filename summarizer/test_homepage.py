@@ -76,7 +76,7 @@ class HomepageTests(TestCase):
         self.assertEqual(item.select_one('p').get_text(), 'Des aimants minuscules.')
         self.assertEqual(len(soup.select('#premium-title')), 1)
 
-    def test_email_samples_show_a_real_digest_and_letter_of_one_field(self):
+    def test_email_samples_show_a_real_digest_and_letter_of_each_field(self):
         soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
         self.assertIsNone(soup.select_one('.home-samples'))
         self.assertIsNotNone(soup.select_one('#digest-example'))  # the illustrative email stays until there is a real one
@@ -85,8 +85,8 @@ class HomepageTests(TestCase):
         DigestItem.objects.create(arxiv_id='2611.00001', lang='en', title='Old   AI paper', categories='cs.LG',
                                   blurb='An older blurb.', published=when - datetime.timedelta(days=1))
         DigestItem.objects.create(arxiv_id='2611.00002', lang='en', title='New AI paper', authors='A. Author',
-                                  categories='astro-ph.IM,cs.LG', blurb='A short summary.', published=when)
-        DigestItem.objects.create(arxiv_id='2611.00003', lang='en', title='A galaxy', categories='astro-ph.GA',
+                                  categories='cs.CL,astro-ph.IM', blurb='A short summary.', published=when)
+        DigestItem.objects.create(arxiv_id='2611.00003', lang='en', title='Cross-listed', categories='astro-ph.GA,cs.LG',
                                   blurb='Another field.', published=when)
         DigestItem.objects.create(arxiv_id='2611.00004', lang='fr', title='Un article', categories='cs.LG',
                                   blurb='Un résumé.', published=when)
@@ -96,13 +96,18 @@ class HomepageTests(TestCase):
         Letter.objects.create(topic='ai', lang='en', day=datetime.date(2026, 11, 2), title='AI this week',
                               dek='What changed.', content=json.dumps(content))
         soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
-        papers = soup.select('#digest-sample .home-sample-papers li')
-        # A paper of the field comes before a newer one only cross-listed in it, labelled with its category in the field.
-        self.assertEqual([li.select_one('a').get_text() for li in papers], ['Old AI paper', 'New AI paper'])
-        self.assertEqual(papers[1].select_one('a')['href'], '/en/paper/2611.00002/')
-        self.assertEqual(papers[1].select_one('p').get_text(), 'A short summary.')
-        self.assertEqual(papers[1].select_one('span').get_text(), 'cs.LG')
-        letter = soup.select_one('#letter-sample')
+        panels = {p['data-topic']: p for p in soup.select('.home-sample-field')}
+        self.assertEqual(set(panels), {'ai', 'space'})
+        self.assertFalse(panels['ai'].has_attr('hidden'))
+        self.assertTrue(panels['space'].has_attr('hidden'))
+        papers = panels['ai'].select('.home-sample-papers li')
+        # only papers whose main category is in the field, newest first
+        self.assertEqual([li.select_one('a').get_text() for li in papers], ['New AI paper', 'Old AI paper'])
+        self.assertEqual(papers[0].select_one('a')['href'], '/en/paper/2611.00002/')
+        self.assertEqual(papers[0].select_one('span').get_text(), 'cs.CL')
+        self.assertEqual(papers[0].select_one('p').get_text(), 'A short summary.')
+        self.assertIn('/en/digest/example/?field=ai', str(panels['ai']))
+        letter = panels['ai'].select('.home-sample')[1]
         self.assertEqual(letter.select_one('strong').get_text(), 'AI this week')
         self.assertIn('3 papers put into perspective', letter.get_text())
         self.assertEqual([li.get_text() for li in letter.select('.home-sample-sections li')], ['Models that plan', 'Robots'])
@@ -110,19 +115,54 @@ class HomepageTests(TestCase):
         self.assertIsNone(soup.select_one('#digest-example'))
         # Each language shows its own: no French letter yet, only the French digest item.
         soup = BeautifulSoup(self.client.get('/fr/').content, 'html.parser')
-        self.assertEqual([a.get_text() for a in soup.select('#digest-sample .home-sample-papers a')], ['Un article'])
-        self.assertIsNone(soup.select_one('#letter-sample'))
-        # With only astronomy digests sent, the field with a letter and enough of its own papers is shown instead.
-        cache.clear()
+        self.assertEqual([a.get_text() for a in soup.select('.home-sample-field[data-topic=ai] .home-sample-papers a')], ['Un article'])
+        self.assertEqual(len(soup.select('.home-sample-field')), 1)
+
+    def test_a_field_with_a_whole_sample_is_shown_first(self):
+        when = datetime.datetime(2026, 11, 2, tzinfo=datetime.timezone.utc)
+        DigestItem.objects.create(arxiv_id='2611.00001', lang='en', title='AI', categories='cs.LG', blurb='B.', published=when)
         for i in range(3):
             DigestItem.objects.create(arxiv_id='2611.0010%d' % i, lang='en', title='Star %d' % i, categories='astro-ph.SR',
                                       blurb='About a star.', published=when)
+        content = {'sections': [{'heading': 'Stars', 'text': 'T.', 'papers': ['2611.00100']}], 'papers': {}, 'closing': ''}
         Letter.objects.create(topic='space', lang='en', day=datetime.date(2026, 11, 2), title='Space this week',
                               dek='Stars.', content=json.dumps(content))
         soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
-        self.assertIn('“Astronomy and space”', soup.select_one('.home-samples').get_text())
-        self.assertEqual(len(soup.select('#digest-sample li')), 3)
-        self.assertEqual(soup.select_one('#letter-sample strong').get_text(), 'Space this week')
+        shown = [p for p in soup.select('.home-sample-field') if not p.has_attr('hidden')]
+        self.assertEqual([p['data-topic'] for p in shown], ['space'])
+        self.assertIn('“Astronomy and space”', shown[0].get_text())
+
+    def test_samples_are_prepared_once_per_announcement_for_every_field(self):
+        from . import homepage
+        from .models import AnnouncedPaper, ArxivBatch
+        day = datetime.date(2026, 11, 3)
+        ArxivBatch.objects.create(day=day)
+        for aid, categories in [('2611.1', 'cs.LG'), ('2611.2', 'astro-ph.GA,cs.LG'), ('2611.3', 'quant-ph'),
+                                ('2611.4', 'cs.CV'), ('2611.5', 'stat.ML'), ('2611.6', 'cs.AI')]:
+            AnnouncedPaper.objects.create(arxiv_id=aid, announced=day, title=aid, abstract='An abstract.',
+                                          authors='["A"]', categories=categories)
+        with mock.patch('summarizer.digest.write_blurbs',
+                        side_effect=lambda batch, lang: {p['arxiv_id']: {'summary': 'S.', 'points': {}} for p in batch}) as blurbs:
+            self.assertEqual(homepage.prepare_samples(), 6)  # four AI papers, the astronomy one, the quantum one
+            self.assertEqual(homepage.prepare_samples(), 0)  # once per announcement
+        self.assertEqual(blurbs.call_count, 2)  # one call per language
+        self.assertEqual(set(DigestItem.objects.filter(lang='fr').values_list('arxiv_id', flat=True)),
+                         {'2611.1', '2611.4', '2611.5', '2611.6', '2611.2', '2611.3'})
+
+    def test_example_digest_page_shows_the_email_of_a_field(self):
+        when = datetime.datetime(2026, 11, 2, tzinfo=datetime.timezone.utc)
+        DigestItem.objects.create(arxiv_id='2611.00001', lang='en', title='Quantum paper', categories='quant-ph',
+                                  blurb='A blurb.', points=json.dumps({'result': 'It works.'}), published=when)
+        response = self.client.get('/en/digest/example/?field=quantum')
+        soup = BeautifulSoup(response.content, 'html.parser')
+        self.assertIn('Quantum physics', soup.select_one('h1').get_text())
+        email = BeautifulSoup(soup.select_one('iframe')['srcdoc'], 'html.parser')
+        self.assertEqual(email.select_one('.it .t').get_text(), 'Quantum paper')
+        self.assertIn('It works.', email.select_one('.it .p').get_text())
+        self.assertIn('/en/email-updates/?topic=quantum', [a['href'] for a in email.select('a')])
+        self.assertEqual(soup.select_one('.digest-example-cta a')['href'], '/en/email-updates/?topic=quantum')
+        empty = BeautifulSoup(self.client.get('/en/digest/example/?field=nope').content, 'html.parser')
+        self.assertIsNone(empty.select_one('iframe'))  # an unknown field falls back to AI, which has no paper yet
 
     def test_blank_search_never_calls_external_sources(self):
         with mock.patch('summarizer.views.sources.resolve') as resolve:
