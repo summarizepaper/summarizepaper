@@ -468,7 +468,7 @@ def collection_page(request, pk):
             return _page(collection, 'papers')
         if action in ('paper', 'note'):
             paper = update_paper(collection, request.POST)
-            if paper is not None and 'reading' in request.POST:  # one status per reader, in My activity and their collections
+            if paper is not None and 'reading' in request.POST:  # one status per reader, in the dashboard and their collections
                 from .personal_activity import mark
                 mark(request.user, paper.arxiv_id, paper.reading, paper.title)
             if fetch:

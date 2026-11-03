@@ -29,7 +29,7 @@ from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, 
                      PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, EmailEvent, OutreachContact, TdmCount, TdmDecision, UserPlan, PremiumGrant, Vote)
 
-admin.site.index_title = 'Tableau de bord'
+admin.site.index_title = 'Administration'
 
 
 def dashboard_callback(request, context):

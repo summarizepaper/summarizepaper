@@ -74,7 +74,7 @@ class ActivityTests(ToolsTestCase):
         self.assertEqual(self.client.get('/fr/history/').status_code, 302)
         self.client.force_login(self.reader)
         response = self.client.get('/fr/history/', {'tab': 'readings'})
-        self.assertContains(response, 'Mon activité')
+        self.assertContains(response, 'Tableau de bord')
         self.assertContains(response, 'Aucune lecture')
         self.assertContains(response, 'noindex, nofollow')
 

@@ -44,7 +44,7 @@
 
   <h3>{% trans 'What you do with your account' %}</h3>
   <p>{% trans 'The papers you read, your chat questions and their answers, your collections, saved searches, digests and alerts and their settings, the papers and authors you follow, the projects you describe for the scoop watch, your placement shortlists and the results you generate (press kits, literature reviews, slides...). They are kept so that you find them again in your activity and receive your alerts. If you connect Zotero, we keep your library ID and the API key you give us, only to send papers to your library.' %}</p>
-  <p>{% trans 'In My activity, each paper you open while signed in is recorded with the date, and its title when it is not summarized yet, together with the reading status (to read, read, key paper) and the private note you give it. Only you see them. The reading status is also written in your own collections. You can take a paper or your whole reading history out of the page; the records of summary requests used for the daily limits stay.' %}</p>
+  <p>{% trans 'In your dashboard, each paper you open while signed in is recorded with the date, and its title when it is not summarized yet, together with the reading status (to read, read, key paper) and the private note you give it. Only you see them. The reading status is also written in your own collections. You can take a paper or your whole reading history out of the page; the records of summary requests used for the daily limits stay.' %}</p>
 
   <h3>{% trans 'Without an account' %}</h3>
   <p>{% trans 'When you request a summary, ask a question or vote without an account, we keep the request with a hashed form of your IP address (never the address itself), to apply the daily limits and let you continue your conversation. Legal basis: our legitimate interest in keeping the free service available to everyone.' %}</p>
@@ -91,9 +91,9 @@
   <p>{% trans 'Account data and what you created with it are kept as long as your account exists, and deleted at once when you delete the account. Accounts that were never activated may be deleted. Billing records are kept by Stripe for the period required by French law (10 years), and addresses that bounced or asked us to stop writing stay on a list so that we never write to them again.' %}</p>
 
   <h2>{% trans "Your rights" %}</h2>
-  <p>{% trans 'Under the GDPR, you can access your data, correct it, have it deleted, receive it in a portable format, object to its use or restrict it. You can delete your account and its data yourself from the bottom of the My activity page; for the other requests, write to us through the contact form from the email address of your account; we answer within one month. If you think your rights are not respected, you can complain to the CNIL (cnil.fr).' %}</p>
+  <p>{% trans 'Under the GDPR, you can access your data, correct it, have it deleted, receive it in a portable format, object to its use or restrict it. You can delete your account and its data yourself from the bottom of your dashboard; for the other requests, write to us through the contact form from the email address of your account; we answer within one month. If you think your rights are not respected, you can complain to the CNIL (cnil.fr).' %}</p>
 
-  <p>{% trans 'You can download your data yourself, in JSON, from the bottom of the My activity page.' %}</p>
+  <p>{% trans 'You can download your data yourself, in JSON, from the bottom of your dashboard.' %}</p>
   {% if request.user.is_authenticated %}<p><a href="{% url 'history_export' %}">{% trans 'Download my data (JSON)' %}</a> · <a href="{% url 'account_delete' %}">{% trans 'Delete my account' %}</a></p>{% endif %}
 
   <h2>{% trans "Data Security" %}</h2>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static_version i18n %}
-{% block title %}{% trans 'My activity' %} — SummarizePaper{% endblock %}
+{% block title %}{% trans 'Dashboard' %} — SummarizePaper{% endblock %}
 {% block extra_head_tags %}
 {% include 'summarizer/mathjax.html' %}
 <meta name="robots" content="noindex, nofollow">
@@ -8,7 +8,7 @@
 {% endblock %}
 {% block content %}
 <div class="page activity">
-  <header class="page-header"><h1>{% trans 'My activity' %}</h1><p class="lead">{% trans 'What changed about your papers, your reading list, your conversations and the results of your tools, in one place.' %}</p></header>
+  <header class="page-header"><h1>{% trans 'Dashboard' %}</h1><p class="lead">{% trans 'What changed about your papers, your reading list, your conversations and the results of your tools, in one place.' %}</p></header>
   <nav class="activity-tabs" aria-label="{% trans 'Activity type' %}">
     <a href="?tab=overview" {% if tab == 'overview' %}aria-current="page"{% endif %}>{% trans 'Overview' %}</a>
     <a href="?tab=readings" {% if tab == 'readings' %}aria-current="page"{% endif %}>{% trans 'Readings' %}</a>

@@ -318,7 +318,7 @@ def owned_room(request, room):
 @require_POST
 def delete_conversation(request, room):
     """Delete a conversation of the visitor: its exchanges leave their history and its shared link stops. With an
-    account, it goes to the trash of My activity (removal.py)."""
+    account, it goes to the trash of the dashboard (removal.py)."""
     if request.user.is_authenticated:
         from .removal import remove_conversations
         owned_room(request, room)

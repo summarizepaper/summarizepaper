@@ -156,7 +156,7 @@ UNFOLD = {
         "show_all_applications": True,
         "navigation": [
             {"title": "Pilotage", "items": [
-                {"title": "Tableau de bord", "icon": "dashboard", "link": reverse_lazy("admin:index")},
+                {"title": "Administration", "icon": "dashboard", "link": reverse_lazy("admin:index")},
                 {"title": "Activité du jour", "icon": "timeline", "link": reverse_lazy("admin_activity")},
                 {"title": "Relances et retours", "icon": "outgoing_mail", "link": reverse_lazy("admin:summarizer_outreachcontact_changelist")},
                 {"title": "Événements d'envoi", "icon": "mark_email_read", "link": reverse_lazy("admin:summarizer_emailevent_changelist")},

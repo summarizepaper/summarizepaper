@@ -4,7 +4,7 @@
   {% if all_count %}<label data-delete-matching hidden><input type="checkbox" name="all" value="1"> {% blocktrans count n=all_count %}And the {{ n }} result of this filter{% plural %}All the {{ n }} results of this filter{% endblocktrans %}</label>{% endif %}
   <button type="submit" class="link-button delete-button" data-delete-ticked>{% trans 'Delete the ticked ones' %}</button>
   <span class="muted" data-delete-none hidden role="status">{% trans 'Tick at least one line first.' %}</span>
-  {% if more_kind and more >= 20 %}<a href="{% url 'history' %}?tab=results&amp;kind={{ more_kind }}">{% trans 'See them all in My activity' %} →</a>{% endif %}
+  {% if more_kind and more >= 20 %}<a href="{% url 'history' %}?tab=results&amp;kind={{ more_kind }}">{% trans 'See them all in your dashboard' %} →</a>{% endif %}
 </div>
 <script>
 (function () {

@@ -7,7 +7,7 @@ read by every user) is only taken out of the user's list. A result whose work is
 it would waste that work. Daily quotas are counted apart: deleting gives none back.
 
 Everything deleted at once, with what the database deleted with it, is kept serialized in a Trash row for
-TRASH_DAYS: the user restores it from the notice that follows, or from My activity, or empties it at once.
+TRASH_DAYS: the user restores it from the notice that follows, or from the dashboard, or empties it at once.
 """
 from datetime import timedelta
 
