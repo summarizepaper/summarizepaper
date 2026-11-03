@@ -1376,14 +1376,16 @@ class Plan:
         return set(new)
 
 
-def due_plans(now, only_user=None):
+def due_plans(now, only_user=None, late=False):
+    """The digests to send now; late=True: those whose catch-up hours passed today without them."""
     subscriptions = DigestSubscription.objects.filter(active=True).select_related('user').exclude(user__email='')
     if only_user:
         subscriptions = list(subscriptions.filter(user__username=only_user))
     else:
         suppressed = mailcheck.suppressed()
         stored = ArxivBatch.objects.filter(day=expected_batch(now)).values_list('fetched', flat=True).first()
-        subscriptions = [s for s in subscriptions if s.is_due(now, stored) and s.user.email.strip().lower() not in suppressed]
+        due = (lambda s: s.is_late(now)) if late else (lambda s: s.is_due(now, stored))
+        subscriptions = [s for s in subscriptions if due(s) and s.user.email.strip().lower() not in suppressed]
     paid, first = {}, {}
     for s in subscriptions:
         if s.user_id not in paid:
@@ -1391,7 +1393,7 @@ def due_plans(now, only_user=None):
             first[s.user_id] = DigestSubscription.objects.filter(user_id=s.user_id).values_list('pk', flat=True).first()
     # without Premium (or after it ended) only the first digest of an account is sent
     plans = [Plan(s, paid[s.user_id], now) for s in subscriptions if paid[s.user_id] or s.pk == first[s.user_id]]
-    if not only_user:
+    if not only_user and not late:
         # Premium first, then the ones about to miss their slot, then longest-waiting, and no more than the mail
         # provider allows per hour (a digest left out still has its web page, see DigestEdition)
         plans.sort(key=lambda p: (not p.paid, -p.subscription.hours_late(now), p.subscription.last_sent or p.subscription.created))
@@ -1466,6 +1468,11 @@ def check_health(now):
                                 models.Q(categories__contains=JOURNALS + '.')).exists():
         problems.append(('bio', '%s still missing from the announcement of %s at %s in New York'
                          % (' and '.join(bio_missing), expected, local.strftime('%H:%M'))))
+    late = due_plans(now, late=True)
+    if late:
+        stored = batch.fetched.strftime('stored %Y-%m-%d %H:%M UTC') if batch else 'not stored'
+        problems.append(('late', '%d digest(s) still not sent after their catch-up hours, e.g. %s; announcement of %s: %s'
+                         % (len(late), late[0].subscription.user.username, expected, stored)))
     for name, message in problems:
         if cache.add(HEALTH_KEY % (name, now.date()), True, 86400):
             logger.error('Digest health: %s', message)

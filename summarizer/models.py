@@ -397,6 +397,15 @@ class DigestSubscription(models.Model):
             return False
         return self.last_sent is None or self.last_sent < slot_start
 
+    def is_late(self, now):
+        """True once the catch-up hours of today's slot passed without it being sent (see digest.check_health)."""
+        import datetime
+        hours = self.hours_late(now)
+        if hours < self.CATCH_UP_HOURS:
+            return False
+        slot = (now - datetime.timedelta(hours=hours)).replace(minute=0, second=0, microsecond=0)
+        return self.created < slot and self.is_due(slot)
+
     def hours_late(self, now):
         """Hours since this digest's local send time today (0 to 23)."""
         from zoneinfo import ZoneInfo

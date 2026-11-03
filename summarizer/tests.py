@@ -2183,7 +2183,12 @@ class DigestHealthTests(TestCase):
         u = User.objects.create_user('h', email='h@example.com')
         sub = DigestSubscription.objects.create(user=u, categories='cs.LG', last_sent=at(19, 7))
         DigestSubscription.objects.filter(pk=sub.pk).update(created=at(10, 7))
-        self.assertEqual(digest.check_health(at(20, 15)), ['No digest was sent since 2026-10-19 07:00:00+00:00'])
+        ArxivBatch.objects.update(fetched=at(20, 9))
+        self.assertEqual(digest.check_health(at(20, 15)), [
+            'No digest was sent since 2026-10-19 07:00:00+00:00',
+            '1 digest(s) still not sent after their catch-up hours, e.g. h; announcement of 2026-10-20: stored 2026-10-20 09:00 UTC'])
+        cache.clear()
+        self.assertNotIn('catch-up', ' '.join(digest.check_health(at(20, 6))))  # 08:00 in Paris, within its catch-up hours
         sub.last_sent = at(20, 7)
         sub.save()
         self.assertEqual(digest.check_health(at(20, 15)), [])
