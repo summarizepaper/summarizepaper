@@ -22528,8 +22528,8 @@ msgstr ""
 msgid "Example digest email"
 msgstr "Exemple d’email du digest"
 
-msgid "Receive it in my field"
-msgstr "Le recevoir dans mon domaine"
+msgid "Receive it by email"
+msgstr "Le recevoir par email"
 
 msgid ""
 "Free with an account. Change your categories or unsubscribe at any time."

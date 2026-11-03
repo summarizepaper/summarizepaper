@@ -17,7 +17,7 @@
   {% else %}
   <iframe class="digest-example-email" title="{% trans 'Example digest email' %}" srcdoc="{{ email|force_escape }}" sandbox="allow-same-origin allow-top-navigation-by-user-activation allow-popups" loading="lazy"></iframe>
   {% endif %}
-  <p class="digest-example-cta"><a class="btn btn-lg" href="{{ signup }}" data-funnel="email_updates_entry" data-placement="digest_example">{% trans 'Receive it in my field' %} →</a></p>
+  <p class="digest-example-cta"><a class="btn btn-lg" href="{{ signup }}" data-funnel="email_updates_entry" data-placement="digest_example">{% trans 'Receive it by email' %} →</a></p>
   <p class="home-fine">{% trans 'Free with an account. Change your categories or unsubscribe at any time.' %}</p>
 </main>
 {% endblock %}
