@@ -2884,7 +2884,14 @@ class TrendTests(ToolsTestCase):
         subscription = DigestSubscription.objects.create(user=User.objects.get(username='ann'), categories='cs.LG')
         DigestSubscription.objects.filter(pk=subscription.pk).update(
             profile_vector=(np.ones((1, 4), dtype=np.float32) / 2).tobytes(), profile_labels='["me"]')
-        self.assertContains(paid.get('/en/trends/?view=foryou'), 'Looking inside AI models')
+        class Today(datetime.date):  # For you keeps the last three weeks: the day after WEEK was counted
+            @classmethod
+            def today(cls):
+                return TrendTests.WEEK + datetime.timedelta(days=9)
+        clock = mock.Mock(wraps=datetime, date=Today, timedelta=datetime.timedelta, datetime=datetime.datetime,
+                          time=datetime.time, timezone=datetime.timezone)
+        with mock.patch('summarizer.trends_web.datetime', clock):
+            self.assertContains(paid.get('/en/trends/?view=foryou'), 'Looking inside AI models')
         self.assertContains(Client().get('/en/trends/?view=foryou'), 'With Premium')
 
     def test_links_from_papers_and_projects(self):
