@@ -8,6 +8,11 @@ the next restart. Each log line groups the threads by where they wait and
 gives the pool's use. When the process stays stuck (too many threads, or a
 pool with requests waiting and no free connection) for STUCK_MINUTES, it
 alerts Sentry and stops itself: Heroku starts a fresh one in seconds.
+
+The process also grows and never gives memory back: from 237 MB at start to
+845 MB (351 MB of it swapped) after 8 hours of scrapers on 3 November, past
+the dyno's 512 MB quota, where every request slows down and Heroku logs R14.
+Past MEMORY_LIMIT_MB (memory plus swap) for STUCK_MINUTES, it restarts too.
 """
 import collections
 import logging
@@ -27,6 +32,7 @@ REPORT_EVERY = 5  # checks: a log line every 5 minutes
 ALERT = 150  # threads; about 20 normally
 STUCK_THREADS = 200
 STUCK_MINUTES = 3  # a stuck process serves only errors: restart it soon
+MEMORY_LIMIT_MB = 600  # memory plus swap; the quota is 512 MB, Heroku kills the dyno at 1024
 
 
 def where(frame):
@@ -51,14 +57,28 @@ def report(level=logging.WARNING, note=''):
     frames = sys._current_frames()
     counts = collections.Counter(where(frames[t.ident]) for t in threading.enumerate() if t.ident in frames)
     pool = pool_stats()
-    logger.log(level, 'threadwatch: %d threads; pool %s%s; %s', threading.active_count(),
+    logger.log(level, 'threadwatch: %d threads; %s MB; pool %s%s; %s', threading.active_count(), memory_mb(),
                '%d/%d in use (max %d), %d waiting' % pool if pool else 'none', note,
                '; '.join('%d x %s' % (n, place) for place, n in counts.most_common(8)))
 
 
+def memory_mb():
+    """Resident plus swapped memory of this process in MB (Heroku's memory_total), or None off Linux."""
+    try:
+        with open('/proc/self/status') as status:
+            fields = dict(line.split(':', 1) for line in status if ':' in line)
+    except OSError:
+        return None
+    return sum(int(fields.get(name, '0 kB').split()[0]) for name in ('VmRSS', 'VmSwap')) // 1024
+
+
 def stuck():
-    """True when the process cannot serve: too many threads, or requests waiting for a pool with no free connection."""
+    """True when the process cannot serve: too many threads, too much memory, or requests waiting for a pool with no
+    free connection."""
     if threading.active_count() >= STUCK_THREADS:
+        return True
+    memory = memory_mb()
+    if memory and memory >= MEMORY_LIMIT_MB:
         return True
     pool = pool_stats()
     return bool(pool) and pool[0] >= pool[2] and pool[3] > 0

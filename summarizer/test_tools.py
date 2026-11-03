@@ -2512,6 +2512,18 @@ class ThreadwatchTests(ToolsTestCase):
             self.assertEqual(list(pool.map(sources.closing(lambda x: x * 2), [1, 2, 3])), [2, 4, 6])
         self.assertEqual(close.call_count, 3)
 
+    def test_a_process_past_its_memory_limit_restarts_after_three_minutes(self):
+        from summarizer import threadwatch
+        state = {'checks': 0, 'stuck_for': 0}
+        with mock.patch('summarizer.threadwatch.pool_stats', return_value=(3, 6, 12, 0)), \
+             mock.patch('summarizer.threadwatch.memory_mb', return_value=845), \
+             mock.patch('summarizer.threadwatch.restart') as restart, \
+             self.assertLogs('summarizer.threadwatch', 'ERROR') as logs:
+            for _ in range(threadwatch.STUCK_MINUTES):
+                threadwatch.tick(state)
+        restart.assert_called_once()
+        self.assertIn('845 MB', logs.output[-1])
+
     def test_a_stuck_process_restarts_after_three_minutes(self):
         from summarizer import threadwatch
         state = {'checks': 0, 'stuck_for': 0}
@@ -2570,6 +2582,40 @@ class LoadShedTests(TestCase):
             with self.assertRaises(ValueError):
                 await call('/boom/')
             self.assertEqual(shedder.in_flight, 0)  # a failed request frees its place too
+        asyncio.run(run())
+
+
+class AnonymousShareTests(TestCase):
+    def test_requests_without_the_visitor_cookie_get_only_part_of_the_places(self):
+        import asyncio
+        from summarizer.loadshed import LoadShedder
+
+        async def run():
+            release = asyncio.Event()
+
+            async def app(scope, receive, send):
+                await release.wait()
+                await send({'type': 'http.response.start', 'status': 200, 'headers': []})
+            shedder = LoadShedder(app, limit=3, anonymous_limit=2)
+
+            async def call(cookie=None):
+                sent = []
+
+                async def send(message):
+                    sent.append(message)
+                headers = [(b'cookie', cookie)] if cookie else []
+                await shedder({'type': 'http', 'path': '/en/tree/2207.11466v1/', 'headers': headers}, None, send)
+                return sent[0]['status']
+            running = [asyncio.create_task(call()) for _ in range(2)]
+            await asyncio.sleep(0)
+            with self.assertLogs('summarizer.loadshed', 'ERROR'):
+                self.assertEqual(await call(), 503)  # the anonymous share is used up
+            known = asyncio.create_task(call(b'sp=1'))  # a person who has the cookie still gets in
+            await asyncio.sleep(0)
+            self.assertFalse(known.done())
+            release.set()
+            self.assertEqual([await t for t in running + [known]], [200, 200, 200])
+            self.assertEqual((shedder.in_flight, shedder.anonymous), (0, 0))
         asyncio.run(run())
 
 

@@ -140,6 +140,7 @@ class SummaryPresentationTests(TestCase):
 
     def test_source_error_is_translated_in_french(self):
         import asyncio
+        self.client.cookies['sp'] = '1'  # a visitor who has seen a page before (see loadshed.first_visit)
         with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError):
             r = self.client.get('/fr/paper/2607.99999v1/')
         self.assertContains(r, 'Le service arXiv est temporairement indisponible.', status_code=503)

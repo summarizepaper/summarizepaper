@@ -259,6 +259,13 @@ class MetadataTests(TestCase):
         self.assertEqual(paper['text'][1], ('pdf', 'https://www.biorxiv.org/content/10.1101/2024.09.26.615260v2.full.pdf'))
 
 
+def visitor():
+    """A client that has seen a page before (see loadshed.first_visit)."""
+    client = Client()
+    client.cookies['sp'] = '1'
+    return client
+
+
 class PaperPageTests(TestCase):
     def test_home_form_opens_a_doi(self):
         r = Client().post('/en/', {'arxiv_id': 'https://doi.org/10.1093/mnras/stad1234'})
@@ -270,7 +277,7 @@ class PaperPageTests(TestCase):
 
     def test_page_of_a_journal_paper(self):
         with mock.patch('summarizer.sources.fetch', return_value=journal_paper()):
-            r = Client().get('/en/paper/%s/' % MNRAS_KEY)
+            r = visitor().get('/en/paper/%s/' % MNRAS_KEY)
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'Galaxy quenching time-scales')
         self.assertContains(r, 'DOI: ' + MNRAS)
@@ -280,7 +287,7 @@ class PaperPageTests(TestCase):
 
     def test_a_closed_doi_with_an_arxiv_version_goes_to_the_arxiv_page(self):
         with mock.patch('summarizer.sources.fetch', return_value=journal_paper(license='', arxiv_id='2301.03702')):
-            r = Client().get('/en/paper/%s/' % MNRAS_KEY)
+            r = visitor().get('/en/paper/%s/' % MNRAS_KEY)
         self.assertRedirects(r, '/en/paper/2301.03702/', fetch_redirect_response=False)
 
     def test_upper_case_and_bad_keys(self):
@@ -290,9 +297,9 @@ class PaperPageTests(TestCase):
 
     def test_unknown_and_unavailable(self):
         with mock.patch('summarizer.sources.fetch', return_value=None):
-            self.assertContains(Client().get('/en/paper/doi_10.1--nothing/'), 'No paper was found with this identifier')
+            self.assertContains(visitor().get('/en/paper/doi_10.1--nothing/'), 'No paper was found with this identifier')
         with mock.patch('summarizer.sources.fetch', side_effect=sources.SourceUnavailable('down')):
-            self.assertEqual(Client().get('/en/paper/doi_10.1--other/').status_code, 503)
+            self.assertEqual(visitor().get('/en/paper/doi_10.1--other/').status_code, 503)
 
     def test_open_search(self):
         results = [{'key': MNRAS_KEY, 'title': 'Galaxy quenching', 'authors': ['Ann Lee'], 'more_authors': False,

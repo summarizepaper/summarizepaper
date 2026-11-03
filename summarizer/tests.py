@@ -1231,16 +1231,30 @@ class TreePageTests(TestCase):
 
 
 class ArxivTimeoutTests(TestCase):
+    def setUp(self):
+        self.client.cookies['sp'] = '1'  # a visitor who has seen a page before (see loadshed.first_visit)
+
     def test_slow_arxiv_gives_503_instead_of_hanging(self):
         import asyncio
         with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=asyncio.TimeoutError()):
-            self.assertEqual(Client().get('/en/paper/2401.99999v1/').status_code, 503)
-            self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
+            self.assertEqual(self.client.get('/en/paper/2401.99999v1/').status_code, 503)
+            self.assertEqual(self.client.get('/en/tree/2401.99999v1/').status_code, 503)
 
     def test_non_xml_arxiv_answer_gives_503(self):
         from xml.etree import ElementTree
         with mock.patch('summarizer.utils.get_arxiv_metadata', side_effect=ElementTree.ParseError('syntax error: line 1, column 0')):
-            self.assertEqual(Client().get('/en/tree/2401.99999v1/').status_code, 503)
+            self.assertEqual(self.client.get('/en/tree/2401.99999v1/').status_code, 503)
+
+    def test_a_first_visit_to_an_unknown_paper_gets_a_link_before_any_arxiv_call(self):
+        ArxivPaper.objects.create(arxiv_id='2401.00001v1', title='Known')
+        with mock.patch('summarizer.utils.get_arxiv_metadata') as arxiv:
+            for path in ('/en/paper/2401.99999v1/', '/fr/tree/2401.99999v1/'):
+                r = Client().get(path)
+                self.assertEqual(r.status_code, 200)
+                self.assertIn(('href="%s"' % path).encode(), r.content)
+                self.assertEqual(r['X-Robots-Tag'], 'noindex')
+            arxiv.assert_not_called()
+            self.assertEqual(Client().get('/en/tree/2401.00001v1/').status_code, 200)  # a known paper is served
 
 
 from summarizer.models import Vote

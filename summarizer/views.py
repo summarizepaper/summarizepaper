@@ -13,7 +13,7 @@ from .tool_list import TOOL_GROUPS
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, mailcheck, neighbours, publication_status, reading, sources, exports, insight, summary_text, tdm
+from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, loadshed, mailcheck, neighbours, publication_status, reading, sources, exports, insight, summary_text, tdm
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -576,6 +576,9 @@ def tree(request, arxiv_id):
 
     else:
         alpaper=False
+        gate = loadshed.first_visit(request)  # an arXiv call: scrapers first get a link to it (see loadshed.py)
+        if gate:
+            return gate
         arxiv_detailsf=arxiv_metadata_or_none(arxiv_id)
         if arxiv_detailsf is None:
             return arxiv_unavailable(request, arxiv_id)
@@ -904,6 +907,11 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
             'errormess':errormess,
         })
         return render(request, "summarizer/arxividpage.html", stuff_for_frontend)
+
+    if known_paper is None and not _fragment:
+        gate = loadshed.first_visit(request)  # an arXiv call: scrapers first get a link to it (see loadshed.py)
+        if gate:
+            return gate
 
     page_running = cache.get(utils.run_group(arxiv_id, lang))
     print('page_running',page_running)
