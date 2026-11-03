@@ -2269,3 +2269,34 @@ class AudioTests(TestCase):
         self.assertEqual(_audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=90-'), data).content, data[90:])
         self.assertEqual(_audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=-5'), data).content, data[95:])
         self.assertEqual(_audio.mp3_response(factory.get('/', HTTP_RANGE='bytes=200-'), data).status_code, 416)
+
+
+class LoadShedderTests(TestCase):
+    """New visitors reach the homepage, and a person turned away gets in on the second try."""
+    def call(self, shedder, path, cookie=False):
+        sent = []
+        scope = {'type': 'http', 'path': path, 'query_string': b'',
+                 'headers': [(b'cookie', b'sp=1')] if cookie else []}
+
+        async def send(message):
+            sent.append(message)
+        import asyncio
+        asyncio.run(shedder(scope, None, send))
+        return sent[0]
+
+    def test_homepage_is_not_held_to_the_anonymous_places_and_busy_sets_the_cookie(self):
+        from summarizer import loadshed
+
+        async def app(scope, receive, send):
+            await send({'type': 'http.response.start', 'status': 200, 'headers': [(b'content-type', b'text/html')]})
+        shedder = loadshed.LoadShedder(app, limit=3, anonymous_limit=1)
+        shedder.in_flight, shedder.anonymous = 1, 1  # a scraper holds the only anonymous place
+        refused = self.call(shedder, '/en/paper/2101.00001/')
+        self.assertEqual(refused['status'], 503)
+        self.assertIn((b'set-cookie', loadshed.SET_COOKIE), refused['headers'])
+        self.assertIn(b'http-equiv="refresh"', loadshed.BODY)
+        self.assertEqual(self.call(shedder, '/fr/')['status'], 200)
+        self.assertEqual(self.call(shedder, '/en/paper/2101.00001/', cookie=True)['status'], 200)  # the second try
+        self.assertEqual((shedder.in_flight, shedder.anonymous), (1, 1))
+        shedder.in_flight = 3
+        self.assertEqual(self.call(shedder, '/fr/')['status'], 503)  # still held to the overall limit

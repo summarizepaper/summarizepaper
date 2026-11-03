@@ -18,6 +18,10 @@ On 1-3 November they came back for paper and topic map pages of old arXiv ids (4
 addresses), and the web process grew past its 512 MB quota. Visitors without the cookie (scrapers, crawlers,
 a person's very first page) now share ANONYMOUS_LIMIT of the LIMIT places, so people who already have it still
 get in; and a paper not in the database, which costs an arXiv call, asks for the cookie first (first_visit).
+
+The homepage, cheap and where new visitors arrive, is not held to ANONYMOUS_LIMIT (only to LIMIT); and the
+busy page sets the cookie and reloads itself, so a person turned away gets in on the second try, in the
+places of known visitors, while a scraper that drops cookies is turned away again.
 """
 import html
 import logging
@@ -31,13 +35,14 @@ ANONYMOUS_LIMIT = 8  # of LIMIT, for requests without the visitor cookie
 RETRY_AFTER = 5  # seconds
 ALERT_EVERY = 600  # seconds between two Sentry alerts while requests are refused
 EXEMPT = ('/static/', '/favicon.ico', '/robots.txt')
+HOMEPAGES = ('/', '/en/', '/fr/')
 COOKIE = b'sp'
 SET_COOKIE = b'sp=1; Max-Age=31536000; Path=/; SameSite=Lax; Secure'
 CONTINUE = ('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>SummarizePaper</title>'
             '<p><a href="%s">See the results</a> · <a href="%s">Voir les résultats</a></p>')
 CONTINUE_PAGE = ('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>SummarizePaper</title>'
                  '<p><a href="%s">Open the paper</a> · <a href="%s">Ouvrir l\'article</a></p>')
-BODY = (b'<!doctype html><meta charset="utf-8"><title>Busy</title>'
+BODY = (b'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="%d"><title>Busy</title>' % RETRY_AFTER +
         b'<p>SummarizePaper is very busy right now. Please try again in a few seconds.</p>'
         b'<p>Le site est tr\xc3\xa8s sollicit\xc3\xa9. R\xc3\xa9essayez dans quelques secondes.</p>')
 
@@ -56,15 +61,16 @@ class LoadShedder:
         known = has_cookie(scope)
         if not known and scrolled_search(scope):
             return await self.ask_for_cookie(scope, send)
-        if self.in_flight >= self.limit or (not known and self.anonymous >= self.anonymous_limit):
+        counted = not known and scope.get('path', '') not in HOMEPAGES
+        if self.in_flight >= self.limit or (counted and self.anonymous >= self.anonymous_limit):
             return await self.refuse(scope, send)
         self.in_flight += 1  # one event loop: no lock needed
-        self.anonymous += not known
+        self.anonymous += counted
         try:
             return await self.app(scope, receive, send if known else with_cookie(send))
         finally:
             self.in_flight -= 1
-            self.anonymous -= not known
+            self.anonymous -= counted
 
     async def ask_for_cookie(self, scope, send):
         url = html.escape(scope.get('path', '') + '?' + scope.get('query_string', b'').decode('latin1'))
@@ -82,7 +88,7 @@ class LoadShedder:
                          self.in_flight, self.refused, scope.get('path', ''))  # Sentry
         await send({'type': 'http.response.start', 'status': 503, 'headers': [
             (b'content-type', b'text/html; charset=utf-8'), (b'retry-after', str(RETRY_AFTER).encode()),
-            (b'cache-control', b'no-store')]})
+            (b'cache-control', b'no-store'), (b'set-cookie', SET_COOKIE)]})
         await send({'type': 'http.response.body', 'body': BODY})
 
 
