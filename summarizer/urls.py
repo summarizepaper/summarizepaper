@@ -1,7 +1,7 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
 from . import (views, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
-               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, personal_activity, presskit, questions, reading, refcheck, scoops, slides, students, teams, trends_web, zotero)
+               synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, personal_activity, presskit, questions, reading, refcheck, removal, scoops, slides, students, teams, trends_web, zotero)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
 from django.views.generic import TemplateView
@@ -56,6 +56,9 @@ urlpatterns = [
     path("history/", views.history, name="history"),
     path("history/selection/", personal_activity.selection, name="history_selection"),
     path("history/conversation/<str:room>/remove/", personal_activity.remove_conversation, name="history_remove_conversation"),
+    path("delete/<slug:what>/", removal.delete_view, name="delete"),
+    path("trash/<int:pk>/restore/", removal.restore_view, name="trash_restore"),
+    path("trash/empty/", removal.empty_view, name="trash_empty"),
     path("history/clear/", personal_activity.clear_readings, name="history_clear"),
     path("history/export/", personal_activity.export_data, name="history_export"),
     path("history/mark/", personal_activity.mark_view, name="history_mark"),

@@ -78,7 +78,7 @@
       {% endfor %}
 
     {% elif view == 'priority' %}
-      {% if not shared and not program %}{% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+      {% if not shared and not program %}{% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}{% include 'summarizer/result_delete.html' with tool='conference' %}{% endif %}
       {% if scoops %}
       <h2>{% trans 'Close to your projects in progress' %}</h2>
       <p class="muted">{% trans 'Talks that may overlap a project of your scoop watch, whatever your interests for this ranking.' %}</p>
@@ -230,6 +230,7 @@
         {% endif %}
       </section>
       {% trans 'Anyone with this link sees these talks, why they were chosen and the people to meet, never who made the program. The interests you wrote are not shown.' as what %}{% include 'summarizer/result_share.html' %}
+      {% include 'summarizer/result_delete.html' with tool='conference' %}
       {% endif %}
       {% if can_rank %}
       <section class="card section-card">

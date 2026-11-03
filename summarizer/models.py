@@ -728,6 +728,11 @@ class Generated(models.Model):
         import json
         return json.loads(self.content) if self.content else {}
 
+    def running(self):
+        """Its background work is still going on (generated.STALE): deleting it now would waste that work."""
+        from .generated import STALE
+        return self.status == 'pending' and self.updated > timezone.now() - STALE
+
     def __str__(self):
         return '%s %s (%s, %s)' % (self.kind, self.key, self.lang, self.status)
 
@@ -1530,3 +1535,16 @@ class TdmCount(models.Model):
 
     def __str__(self):
         return '%s %s : %d' % (self.day, self.status, self.count)
+
+
+class Trash(models.Model):
+    """What a user deleted at once (removal.py): kept removal.TRASH_DAYS to be restored, then purged."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='trash')
+    label = models.CharField(max_length=300, blank=True, default='')  # what it was, for the list in My activity
+    count = models.PositiveIntegerField(default=0)
+    rows = models.TextField(default='[]')  # the deleted objects and what went with them, serialized (django.core.serializers)
+    revive = models.JSONField(default=dict)  # rows deactivated, not deleted: {'assistant': [pk...], 'share': [pk...]}
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created', '-pk')

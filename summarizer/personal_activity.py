@@ -29,12 +29,12 @@ from django.utils import timezone
 from django.utils.translation import get_language, gettext as _, gettext_lazy, ngettext
 from django.views.decorators.http import require_POST
 
-from . import sources
+from . import removal, sources
 
 from .models import (ActivityState, AIassistant, ArxivPaper, ChatConversation, ChatShare, Collection, CollectionPaper,
                      DigestSubscription, FollowedPaper, Generated, LetterSubscription, PaperAuthor, PaperHistory,
                      PaperScore, PaperVisit, PublicationAlert, ReferenceWatch, SavedSearch, TopicMapWatch,
-                     ToolUse, VersionAlert, WatchedProject)
+                     ToolUse, Trash, VersionAlert, WatchedProject)
 
 PER_PAGE = 20
 NEWS_DAYS = 90  # alerts of followed papers older than this are no longer news
@@ -430,7 +430,7 @@ def describe_results(rows, grouped=False):
             data = row.data() if row.status == 'done' and row.content else {}
             text, url = title(data) if data else '', '/%s/%s/%s/' % (lang, path, row.key)
         item = {'tool': name, 'title': text or name, 'state': state, 'times': 1, 'url': url, 'date': row.date,
-                'status': status}
+                'status': status, 'pk': row.pk, 'shared': row.kind in SHARED_KINDS}
         key = (row.kind, item['title'])
         if grouped and status == 'done' and key in same:
             same[key]['times'] += 1
@@ -601,7 +601,8 @@ def page(request):
     kind = request.GET.get('kind', '')
     context = {'tab': tab, 'query': query, 'status': status, 'kind': kind, 'items': [],
                'reading_labels': reading_labels(), 'result_kinds': FILTERS,
-               'notice': request.GET.get('done', '')}
+               'notice': request.GET.get('done', ''), 'trash_days': removal.TRASH_DAYS,
+               'trash': list(Trash.objects.filter(user=request.user).defer('rows')[:30]), 'here': request.get_full_path()}
     if tab == 'overview':
         context.update(overview(request))
         return render(request, 'summarizer/history.html', context)
@@ -632,6 +633,7 @@ def page(request):
     context.update({
         'items': items, 'pagination': result, 'status': status, 'kind': kind, 'sort': sort,
         'all_max': min(result.paginator.count, ALL_MAX),
+        'all_more': min(result.paginator.count, ALL_MAX) if tab == 'results' and result.paginator.count > len(items) else 0,
         'clear_url': '?' + urlencode({'tab': tab}),
         'previous_url': page_url(result.previous_page_number()) if result.has_previous() else '',
         'next_url': page_url(result.next_page_number()) if result.has_next() else '',
@@ -640,16 +642,17 @@ def page(request):
     return render(request, 'summarizer/history.html', context)
 
 
-def back(request, done=''):
-    """To the page the form was sent from (only this page), with what was done."""
+def back(request, done='', **params):
+    """To the page the form was sent from (only this page), with what was done (and its params)."""
     here = request.POST.get('next', '')
     path = reverse('history')
     if not here.startswith(path) or '//' in here:
         here = path + '?tab=readings'
-    here = re.sub(r'([?&])done=[^&]*&?', r'\1', here).rstrip('?&')
+    base, _sep, query = here.partition('?')
+    kept = [p for p in query.split('&') if p and p.split('=')[0] not in ('done', 'deleted', 'trash')]
     if done:
-        here += ('&' if '?' in here else '?') + urlencode({'done': done})
-    return redirect(here)
+        kept.append(urlencode({'done': done, **params}))
+    return redirect(base + ('?' + '&'.join(kept) if kept else ''))
 
 
 def fetched(request):
@@ -687,6 +690,10 @@ def selection(request):
         note = request.POST.get('note_%s' % visits[0].pk, request.POST.get('note', '')).strip()[:5000]
         PaperVisit.objects.filter(pk=visits[0].pk).update(note=note)
         return JsonResponse({'status': 'done', 'note': note}) if fetched(request) else back(request, 'note')
+    if action == 'delete':
+        from .removal import delete_readings
+        trash = delete_readings(request.user, [v.pk for v in visits])
+        return back(request, 'deleted', deleted=trash.count if trash else 0, **({'trash': trash.pk} if trash else {}))
     if action == 'hide':
         PaperVisit.objects.filter(pk__in=[v.pk for v in visits]).update(hidden=True)
         return JsonResponse({'status': 'done'}) if fetched(request) else back(request, 'hidden')
@@ -810,21 +817,20 @@ def check_readings(now):
 @require_POST
 def remove_conversation(request, room):
     """Take a conversation out of the history, as the chat page's delete does: its shared link stops."""
-    rows = AIassistant.objects.filter(user=request.user, arxiv_id=room, active=True)
-    if not rows.exists():
+    from .removal import remove_conversations
+    if not remove_conversations(request.user, [room]):
         raise Http404
-    rows.update(active=False)
-    ChatShare.objects.filter(user=request.user, room=room, active=True).update(active=False)
-    ChatConversation.objects.filter(user=request.user, room=room).delete()
     return back(request, 'removed')
 
 
 @login_required(login_url='login')
 @require_POST
 def clear_readings(request):
-    """Take every reading out of the history (the summary quota records stay: they are not shown)."""
-    PaperVisit.objects.filter(user=request.user).update(hidden=True)
-    return back(request, 'cleared')
+    """Delete every reading of the history, with its note and status, into the trash (removal.py); the summary
+    quota records stay: they are not shown."""
+    from .removal import delete_readings
+    trash = delete_readings(request.user)
+    return back(request, 'deleted', deleted=trash.count if trash else 0, **({'trash': trash.pk} if trash else {}))
 
 
 @login_required(login_url='login')

@@ -893,7 +893,8 @@ def act(request, projects, action):
         return '/%s/scoops/' % lang, '', ''
     back = '/%s/scoops/#project-%d' % (lang, project.pk)
     if action == 'delete':
-        project.delete()
+        from .removal import REMOVERS
+        REMOVERS['scoops'][0](request.user, [project.pk])
         return '/%s/scoops/' % lang, '', ''
     if action == 'edit':
         fields = form_fields(request)

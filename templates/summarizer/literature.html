@@ -61,14 +61,18 @@
     </form>
     {% endif %}
 
+    {% include 'summarizer/delete_notice.html' %}
     {% if reviews %}
     <h2>{% trans 'Your reviews' %}</h2>
+    <form method="post" action="{% url 'delete' 'results' %}" data-delete-form data-confirm-one="{% trans 'Delete this result? Its shared link stops working.' %}" data-confirm-many="{% trans 'Delete the {n} ticked results? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
     <ul class="item-list">
       {% for r in reviews %}
-      {% with d=r.data %}<li class="card"><a href="/{{ LANGUAGE_CODE }}/literature-review/{{ r.key }}/">{% if r.status == 'done' %}{{ d.question|default:_('Review') }}{% elif r.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ r.created|date:"j F Y H:i" }}{% if r.status == 'done' %} · {% blocktrans count n=d.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}{% if d.coverage.mode == 'collection' %} · {% blocktrans with name=d.coverage.collection %}collection “{{ name }}”{% endblocktrans %}{% elif d.coverage.mode == 'revision' or d.revision_of %} · {% trans 'revised' %}{% elif d.previous %} · {% trans 'searched again' %}{% endif %}{% endif %}</div></li>{% endwith %}
+      {% with d=r.data %}<li class="card item-check">{% if not r.running %}<input type="checkbox" name="r" value="{{ r.pk }}" data-delete-item aria-label="{% blocktrans with title=d.question|default:_('Review') %}Tick “{{ title }}”{% endblocktrans %}">{% endif %}<div><a href="/{{ LANGUAGE_CODE }}/literature-review/{{ r.key }}/">{% if r.status == 'done' %}{{ d.question|default:_('Review') }}{% elif r.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ r.created|date:"j F Y H:i" }}{% if r.status == 'done' %} · {% blocktrans count n=d.papers|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}{% if d.coverage.mode == 'collection' %} · {% blocktrans with name=d.coverage.collection %}collection “{{ name }}”{% endblocktrans %}{% elif d.coverage.mode == 'revision' or d.revision_of %} · {% trans 'revised' %}{% elif d.previous %} · {% trans 'searched again' %}{% endif %}{% endif %}{% if not r.running %} · <button type="submit" name="one" value="{{ r.pk }}" class="link-button delete-button">{% trans 'Delete' %}</button>{% endif %}</div></div></li>{% endwith %}
       {% endfor %}
     </ul>
+    {% include 'summarizer/delete_bar.html' with more_kind='literature' more=reviews|length %}
+    </form>
     {% endif %}
   {% endif %}
 </div>

@@ -10,11 +10,15 @@
 <p>{% trans 'Reopen a search with its filters, and follow its new papers by email, in your digest, on its page or by RSS.' %}</p>
 <p class="search-filter-note">{% blocktrans count count=watch_limit %}Up to 50 saved searches and {{ count }} active watch with your plan.{% plural %}Up to 50 saved searches and {{ count }} active watches with your plan.{% endblocktrans %} <a href="{% url 'premium' %}">Premium</a></p>
 <p class="search-filter-note">{% trans 'A watch reads every paper announced each day on arXiv, bioRxiv and medRxiv, and keeps those whose title or abstract has all the words of the search; journal papers are read from OpenAlex. What exists when a watch starts is recorded, never sent.' %}</p>
+{% include 'summarizer/delete_notice.html' %}
 {% for search in searches %}<article class="card saved-search">
-<h2><a href="{% url 'saved_search' search.pk %}">{{ search.name }}</a>{% if search.new_count %} <span class="saved-search-new">{% blocktrans count n=search.new_count %}{{ n }} new{% plural %}{{ n }} new{% endblocktrans %}</span>{% endif %}</h2>
+<h2><input type="checkbox" name="pk" value="{{ search.pk }}" form="delete-searches" data-delete-item class="delete-check" aria-label="{% blocktrans with name=search.name %}Tick “{{ name }}”{% endblocktrans %}"> <a href="{% url 'saved_search' search.pk %}">{{ search.name }}</a>{% if search.new_count %} <span class="saved-search-new">{% blocktrans count n=search.new_count %}{{ n }} new{% plural %}{{ n }} new{% endblocktrans %}</span>{% endif %}</h2>
 {% if search.labels %}<ul class="saved-search-chips">{% for label in search.labels %}<li>{{ label }}</li>{% endfor %}</ul>{% endif %}
 <p class="saved-search-status">{% include 'summarizer/saved_search_status.html' %}</p>
 {% if search.found_total %}<p class="search-filter-note">{% blocktrans count n=search.found_total %}{{ n }} new paper found since the watch started.{% plural %}{{ n }} new papers found since the watch started.{% endblocktrans %}</p>{% endif %}
 <div class="saved-search-actions"><a href="{% url 'saved_search' search.pk %}">{% if search.watch_enabled %}{% trans 'Papers found and watch settings' %}{% else %}{% trans 'What it would find, and its watch' %}{% endif %} →</a><a href="{{ search.get_absolute_url }}">{% trans 'Open the search' %} →</a></div>
 </article>{% empty %}<p>{% trans 'No saved searches yet. Save a search from its results page.' %}</p><a class="btn" href="{% url 'summarize' %}">{% trans 'Search' %}</a>{% endfor %}
+{% if searches %}<form method="post" action="{% url 'delete' 'saved-searches' %}" id="delete-searches" data-delete-form data-confirm-one="{% trans 'Delete this saved search? Its watch stops.' %}" data-confirm-many="{% trans 'Delete the {n} ticked saved searches? Their watches stop.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+{% include 'summarizer/delete_bar.html' %}
+</form>{% endif %}
 </main>{% endblock %}

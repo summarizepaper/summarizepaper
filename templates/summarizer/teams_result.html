@@ -169,7 +169,7 @@
 
     <p class="muted"><small>{% trans 'From the paper metadata of OpenAlex, which can be incomplete (affiliations, homonyms). Check before contacting anyone.' %}</small></p>
     {% endif %}
-    {% if not shared %}{% trans 'Anyone with this link sees these people, institutions and papers, never who searched nor whom your ORCID iD left out.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if not shared %}{% trans 'Anyone with this link sees these people, institutions and papers, never who searched nor whom your ORCID iD left out.' as what %}{% include 'summarizer/result_share.html' %}{% include 'summarizer/result_delete.html' with tool='teams' %}{% endif %}
   {% elif row.status == 'failed' %}
     <p class="error">{% trans 'The search failed. Please try again.' %}</p>
   {% else %}

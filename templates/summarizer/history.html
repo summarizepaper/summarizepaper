@@ -16,7 +16,8 @@
     <a href="?tab=results" {% if tab == 'results' %}aria-current="page"{% endif %}>{% trans 'Results' %}</a>
     <a href="{% url 'collections' %}">{% trans 'My collections' %} →</a>
   </nav>
-  {% if notice %}<p class="activity-notice" role="status">{% if notice == 'status' %}{% trans 'Reading status saved.' %}{% elif notice == 'hidden' %}{% trans 'Taken out of your history. Opening the paper again brings it back.' %}{% elif notice == 'cleared' %}{% trans 'Your reading history is cleared.' %}{% elif notice == 'removed' %}{% trans 'Conversation deleted.' %}{% elif notice == 'too_many' %}{% trans 'You have reached the number of collections of your plan: choose an existing collection.' %}{% elif notice == 'none' %}{% trans 'Tick at least one paper first.' %}{% elif notice == 'note' %}{% trans 'Note saved.' %}{% endif %}</p>{% endif %}
+  {% if notice == 'deleted' or notice == 'restored' or notice == 'unrestorable' or notice == 'emptied' %}{% include 'summarizer/delete_notice.html' %}
+  {% elif notice %}<p class="activity-notice" role="status">{% if notice == 'status' %}{% trans 'Reading status saved.' %}{% elif notice == 'hidden' %}{% trans 'Taken out of your history. Opening the paper again brings it back.' %}{% elif notice == 'cleared' %}{% trans 'Your reading history is cleared.' %}{% elif notice == 'removed' %}{% trans 'Conversation deleted.' %}{% elif notice == 'too_many' %}{% trans 'You have reached the number of collections of your plan: choose an existing collection.' %}{% elif notice == 'none' %}{% trans 'Tick at least one paper first.' %}{% elif notice == 'note' %}{% trans 'Note saved.' %}{% endif %}</p>{% endif %}
 
   {% if tab == 'overview' %}
   <section class="activity-section" aria-labelledby="news-title">
@@ -146,6 +147,7 @@
         {% for key, label in reading_labels.items %}<option value="{{ key }}">{% blocktrans %}Mark “{{ label }}”{% endblocktrans %}</option>{% endfor %}
         <option value="clear">{% trans 'Remove the reading status' %}</option>
         <option value="hide">{% trans 'Take out of my history' %}</option>
+        <option value="delete">{% trans 'Delete, with my notes and statuses' %}</option>
       </select>
       <span class="activity-bulk-collection" data-bulk-collection>
         <select name="collection" aria-label="{% trans 'Collection' %}" data-collection-choice>
@@ -156,6 +158,10 @@
       </span>
       <button type="submit">{% trans 'Apply' %}</button>
     </fieldset>
+  {% elif tab == 'conversations' %}
+  <form method="post" action="{% url 'delete' 'conversations' %}" data-delete-form data-confirm-one="{% trans 'Delete this conversation? Its shared link stops working.' %}" data-confirm-many="{% trans 'Delete the {n} ticked conversations? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}">
+  {% else %}
+  <form method="post" action="{% url 'delete' 'results' %}" data-delete-form data-confirm-one="{% trans 'Delete this result? Its shared link stops working. A press kit or a journal club deck is only taken out of your list.' %}" data-confirm-many="{% trans 'Delete the {n} ticked results? Their shared links stop working. Press kits and journal club decks are only taken out of your list.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}"><input type="hidden" name="kind" value="{{ kind }}">
   {% endif %}
   <ul class="activity-list">
     {% for item in items %}
@@ -191,22 +197,31 @@
         <button type="submit" name="one" value="hide:{{ item.pk }}" class="activity-link-button">{% trans 'Take out of my history' %}</button>
       </div>
       {% elif tab == 'conversations' %}
-      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      <div class="activity-item-head">
+        <input type="checkbox" name="room" value="{{ item.room }}" data-delete-item aria-label="{% blocktrans with title=item.title %}Tick “{{ title }}”{% endblocktrans %}">
+        <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      </div>
       {% if item.last %}<p class="activity-byline">{% trans 'Last question:' %} {{ item.last|truncatechars:200 }}</p>{% endif %}
       {% if item.papers %}<p class="activity-papers">{% for p in item.papers %}<a href="{{ p.url }}">{{ p.title|truncatechars:90 }}</a>{% if not forloop.last %}<span aria-hidden="true"> · </span>{% endif %}{% endfor %}{% if item.more_papers %} {% blocktrans count n=item.more_papers %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}{% endif %}</p>{% endif %}
       <p class="activity-meta">{% trans 'Last exchange' %} · {{ item.date|date:"j F Y, H:i" }}{% if item.shared %} · <span class="activity-badge">{% trans 'Shared by link' %}</span>{% endif %}</p>
       <div class="activity-actions">
         <a href="{{ item.url }}">{% trans 'Resume conversation' %} →</a>
-        <form method="post" action="{% url 'history_remove_conversation' room=item.room %}" class="activity-inline-form" data-confirm="{% trans 'Delete this conversation? Its shared link stops working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}"><button type="submit" class="activity-link-button">{% trans 'Delete' %}</button></form>
+        <button type="submit" name="one" value="{{ item.room }}" class="activity-link-button">{% trans 'Delete' %}</button>
       </div>
       {% else %}
-      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      <div class="activity-item-head">
+        {% if item.status != 'pending' %}<input type="checkbox" name="r" value="{{ item.pk }}" data-delete-item aria-label="{% blocktrans with title=item.title %}Tick “{{ title }}”{% endblocktrans %}">{% endif %}
+        <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+      </div>
       <p class="activity-meta">{{ item.tool }} · {{ item.date|date:"j F Y, H:i" }}{% if item.state %} · <strong>{{ item.state }}</strong>{% endif %}</p>
+      {% if item.status != 'pending' %}<div class="activity-actions"><button type="submit" name="one" value="{{ item.pk }}" class="activity-link-button">{% if item.shared %}{% trans 'Take out of my list' %}{% else %}{% trans 'Delete' %}{% endif %}</button></div>{% endif %}
       {% endif %}
     </li>
     {% endfor %}
   </ul>
-  {% if tab == 'readings' %}</form>{% endif %}
+  {% if tab == 'readings' %}</form>
+  {% elif tab == 'conversations' %}{% include 'summarizer/delete_bar.html' %}</form>
+  {% else %}{% include 'summarizer/delete_bar.html' with all_count=all_more %}</form>{% endif %}
   {% if pagination.has_other_pages %}
   <nav class="activity-pagination" aria-label="{% trans 'Pagination' %}">
     {% if previous_url %}<a href="{{ previous_url }}">← {% trans 'Previous' %}</a>{% endif %}
@@ -223,7 +238,7 @@
   </div>
   {% endif %}
   {% if tab == 'readings' and items %}
-  <form method="post" action="{% url 'history_clear' %}" class="activity-inline-form activity-clear-all" data-confirm="{% trans 'Take every paper out of your reading history? Your collections are not changed.' %}">{% csrf_token %}<input type="hidden" name="next" value="?tab=readings"><button type="submit" class="activity-link-button">{% trans 'Clear my reading history' %}</button></form>
+  <form method="post" action="{% url 'history_clear' %}" class="activity-inline-form activity-clear-all" data-confirm="{% trans 'Delete your whole reading history, with your notes and reading statuses? Your collections are not changed. You can restore it from the trash for 30 days.' %}">{% csrf_token %}<input type="hidden" name="next" value="?tab=readings"><button type="submit" class="activity-link-button">{% trans 'Clear my reading history' %}</button></form>
   {% endif %}
   {% endif %}
 
@@ -231,6 +246,16 @@
     <h2 id="account-title">{% trans 'Your data' %}</h2>
     <p class="activity-help">{% trans 'Your history is private: only you see it. Readings are recorded when you open a paper while signed in.' %}</p>
     <p><a href="{% url 'history_export' %}">{% trans 'Download my data (JSON)' %}</a> · <a href="{% url 'account_delete' %}">{% trans 'Delete my account' %}</a></p>
+    {% if trash %}
+    <h3 id="trash">{% trans 'Recently deleted' %}</h3>
+    <p class="activity-help">{% blocktrans count n=trash_days %}What you deleted stays here {{ n }} day, then is deleted for good.{% plural %}What you deleted stays here {{ n }} days, then is deleted for good.{% endblocktrans %}</p>
+    <ul class="activity-trash">
+      {% for t in trash %}<li><span>{{ t.label }}</span> <span class="activity-help">· {{ t.created|date:"j F Y, H:i" }}</span>
+        <form method="post" action="{% url 'trash_restore' pk=t.pk %}" class="activity-inline-form">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}"><button type="submit" class="link-button">{% trans 'Restore' %}</button></form>
+        · <form method="post" action="{% url 'trash_empty' %}" class="activity-inline-form" data-confirm="{% trans 'Delete this for good? It cannot be restored afterwards.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}"><button type="submit" name="one" value="{{ t.pk }}" class="activity-link-button">{% trans 'Delete for good' %}</button></form></li>{% endfor %}
+    </ul>
+    <form method="post" action="{% url 'trash_empty' %}" class="activity-inline-form" data-confirm="{% trans 'Empty the trash? What it holds cannot be restored afterwards.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ here }}"><button type="submit" class="activity-link-button">{% trans 'Empty the trash' %}</button></form>
+    {% endif %}
   </section>
 </div>
 <script>

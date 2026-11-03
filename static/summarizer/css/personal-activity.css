@@ -115,3 +115,5 @@
 .activity-note button { font:inherit; font-size:13px; padding:4px 12px; border:1px solid var(--border,#ccc); border-radius:6px; background:var(--surface,#fff); color:var(--text); cursor:pointer; }
 .activity-note-status { font-size:13px; color:var(--success,#16a34a); }
 .visually-hidden { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.activity-trash { list-style:none; padding:0; margin:0 0 8px; display:grid; gap:6px; }
+.activity-trash li { overflow-wrap:anywhere; }

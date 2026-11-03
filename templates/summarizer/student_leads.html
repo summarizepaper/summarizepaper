@@ -9,6 +9,7 @@
     {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/find-research-placement-contacts/">Comment organiser mes pistes et mon premier message ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/find-research-placement-contacts/">How to organise leads and prepare a first message? Illustrated guide</a></p>{% endif %}
   </header>
   {% if message %}<p class="notice" role="status">{{ message }}</p>{% endif %}
+  {% include 'summarizer/delete_notice.html' %}
   <section id="leads" style="scroll-margin-top:90px">
   {% if total %}
     <nav class="student-pipeline" aria-label="{% trans 'Progress' %}"><a href="?#leads"{% if not status_filter %} aria-current="true"{% endif %}>{% trans 'All' %} <strong>{{ total }}</strong></a>{% for key, label, n in pipeline %}{% if n %}<a href="?status={{ key }}#leads"{% if status_filter == key %} aria-current="true"{% endif %}>{{ label }} <strong>{{ n }}</strong></a>{% endif %}{% endfor %}</nav>
@@ -19,7 +20,8 @@
   {% for item in shortlist %}
     <details class="card section-card student-lead" id="lead-{{ item.pk }}" style="scroll-margin-top:90px" data-student-lead{% if shortlist|length <= 2 or saved_pk == item.pk or message_pk == item.pk %} open{% endif %}>
       <summary><strong>{{ item.snapshot.name }}</strong> · {{ item.snapshot.institution }}{% if item.snapshot.city %} · {{ item.snapshot.city }}{% endif %} · <span class="student-badge">{% trans item.get_status_display %}</span>{% if item.due %} · <strong>{% trans 'Reminder due' %} : {{ item.remind_on|date:'j F Y' }}</strong>{% endif %}</summary>
-      <p><label><input type="checkbox" name="lead" value="{{ item.pk }}" form="student-compare"> {% blocktrans with name=item.snapshot.name %}Compare {{ name }}{% endblocktrans %}</label></p>
+      <p><label><input type="checkbox" name="lead" value="{{ item.pk }}" form="student-compare"> {% blocktrans with name=item.snapshot.name %}Compare {{ name }}{% endblocktrans %}</label>
+        <label class="delete-check-label"><input type="checkbox" name="pk" value="{{ item.pk }}" form="delete-leads" data-delete-item> {% blocktrans with name=item.snapshot.name %}Select {{ name }} to delete{% endblocktrans %}</label></p>
       <form id="progress-{{ item.pk }}" class="student-progress" method="post" action="{% url 'student_shortlist_update' pk=item.pk %}" data-student-shortlist data-unsaved="{% trans 'Changes waiting to be saved…' %}" data-saved="{% trans 'Progress, notes and reminder saved.' %}" data-error="{% trans 'Save failed. Your changes are still here; retry before leaving.' %}" data-conflict="{% trans 'This lead changed in another tab. Copy your notes, then reload before editing again.' %}" data-saving="{% trans 'Saving…' %}" data-reminder-set="{% trans 'Reminder set in 10 days to follow up. Change the date if needed.' %}">{% csrf_token %}
         <h3>{% blocktrans with name=item.snapshot.name %}Progress for {{ name }}{% endblocktrans %}</h3><input type="hidden" name="revision" value="{{ item.revision }}">
         <div class="student-progress-grid"><p>{{ item.form.status.label_tag }} {{ item.form.status }}</p><p>{{ item.form.remind_on.label_tag }} {{ item.form.remind_on }}</p>
@@ -39,6 +41,9 @@
       {% if paid %}{% include 'summarizer/student_source_form.html' %}{% endif %}
       {% include 'summarizer/student_card.html' with person=item.snapshot saved_item=True %}
     </details>
+  {% if forloop.last %}<form method="post" action="{% url 'delete' 'leads' %}" id="delete-leads" data-delete-form data-confirm-one="{% trans 'Remove this lead from your shortlist, with your notes and drafts?' %}" data-confirm-many="{% trans 'Remove the {n} ticked leads from your shortlist, with your notes and drafts?' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+{% include 'summarizer/delete_bar.html' %}
+</form>{% endif %}
   {% empty %}<p class="muted">{% if status_filter or due_filter %}{% trans 'No saved lead matches this filter.' %} <a href="?#leads">{% trans 'Show all' %}</a>{% else %}{% trans 'Save a lead from a search to keep its sources, reading suggestions and your private notes here.' %}{% endif %}</p>{% endfor %}
   </section>
   {% if total %}<section id="share" class="card section-card" style="scroll-margin-top:90px"><h2>{% trans 'Show my leads to a supervisor' %}</h2>

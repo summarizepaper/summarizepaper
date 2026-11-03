@@ -25,7 +25,7 @@
   {% elif message == 'unreadable' %}<p class="error">{% trans 'The kept text of your draft could not be read. Run a new search from your draft.' %}</p>{% endif %}
 
   {% if result %}
-    {% if not shared %}{% trans 'Anyone with this link sees these papers and how they relate to your draft, never who sent it. The page shows the title found for your draft; neither the draft nor its sentences are shown.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if not shared %}{% trans 'Anyone with this link sees these papers and how they relate to your draft, never who sent it. The page shows the title found for your draft; neither the draft nor its sentences are shown.' as what %}{% include 'summarizer/result_share.html' %}{% include 'summarizer/result_delete.html' with tool='missed' %}{% endif %}
 
     <section class="card section-card" aria-labelledby="coverage-title">
       <h2 id="coverage-title">{% trans 'What we searched' %}</h2>

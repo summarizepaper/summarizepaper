@@ -30,7 +30,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, citations, digest, exports, sources, zotero
+from . import access, citations, digest, exports, removal, sources, zotero
 from django.db.models import Max
 
 from .models import (AnnouncedPaper, ArxivPaper, Collection, CollectionMember, CollectionPaper, ExternalPaper,
@@ -453,7 +453,7 @@ def collection_page(request, pk):
             collection.members.filter(user_id=request.POST.get('user')).delete()
             return _page(collection, 'settings')
         if action == 'delete':
-            collection.delete()
+            removal.delete_collections(request.user, [collection.pk])
             return redirect('/%s/collections/' % get_language())
         if action == 'rename':
             collection.name = request.POST.get('name', '').strip()[:120] or collection.name

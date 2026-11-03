@@ -72,10 +72,11 @@
       <p class="muted"><small>{% trans 'Citations come from NASA ADS, or Semantic Scholar for the papers ADS does not know, and are checked once a day. The citations a paper already has when you follow it are not reported.' %}</small></p>
     </form>
 
+    {% include 'summarizer/delete_notice.html' %}
     <h2>{% blocktrans count n=followed|length %}{{ n }} paper followed{% plural %}{{ n }} papers followed{% endblocktrans %}</h2>
     <ul class="item-list">
       {% for f in followed %}
-      <li class="card">
+      <li class="card item-check"><input type="checkbox" name="pk" value="{{ f.pk }}" form="delete-followed" data-delete-item aria-label="{% blocktrans with name=f.title|default:f.arxiv_id %}Tick “{{ name }}”{% endblocktrans %}"><div>
         {% if f.mine %}<span class="importance info">{% trans 'My paper' %}</span> {% endif %}<a href="/{{ LANGUAGE_CODE }}/citations/{{ f.pk }}/"><strong>{{ f.title|default:f.arxiv_id }}</strong></a>
         <div class="meta"><a href="{{ f.arxiv_id|paper_url }}" target="_blank" rel="noopener">{{ f.arxiv_id|paper_ref }}</a> ·
           {% if f.total is None %}{% trans 'first check in progress' %}{% else %}{% blocktrans count n=f.total %}{{ n }} citation{% plural %}{{ n }} citations{% endblocktrans %}{% endif %}
@@ -85,11 +86,14 @@
           <input type="hidden" name="mine" value="{% if f.mine %}0{% else %}1{% endif %}">
           <button class="link-button" name="action" value="mine">{% if f.mine %}{% trans 'Not my paper' %}{% else %}{% trans 'This is my paper' %}{% endif %}</button>
           <button class="link-button" name="action" value="unfollow">{% trans 'Stop following' %}</button></form>
-      </li>
+      </div></li>
       {% empty %}
       <li class="muted">{% trans 'You follow no paper yet.' %}</li>
       {% endfor %}
     </ul>
+    {% if followed %}<form method="post" action="{% url 'delete' 'followed' %}" id="delete-followed" data-delete-form data-confirm-one="{% trans 'Stop following this paper?' %}" data-confirm-many="{% trans 'Stop following the {n} ticked papers?' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+{% include 'summarizer/delete_bar.html' %}
+</form>{% endif %}
 
     <section id="citation-settings" class="card section-card" style="scroll-margin-top:90px;margin-top:24px">
       <h2>{% trans 'Email settings' %}</h2>

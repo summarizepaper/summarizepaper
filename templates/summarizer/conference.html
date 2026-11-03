@@ -65,14 +65,18 @@
       <p><button class="btn" type="submit">{% trans 'Make my program' %}</button></p>
     </form>
 
+    {% include 'summarizer/delete_notice.html' %}
     {% if searches %}
     <h2>{% trans 'Your programs' %}</h2>
+    <form method="post" action="{% url 'delete' 'results' %}" data-delete-form data-confirm-one="{% trans 'Delete this result? Its shared link stops working.' %}" data-confirm-many="{% trans 'Delete the {n} ticked results? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
     <ul class="item-list">
       {% for s in searches %}
-      <li class="card"><a href="/{{ LANGUAGE_CODE }}/conference/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.name|default:_('Conference') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ s.created|date:"j F Y H:i" }}{% if s.status == 'done' and s.data.basis.project %} · {{ s.data.basis.project }}{% endif %}</div></li>
+      <li class="card item-check">{% if not s.running %}<input type="checkbox" name="r" value="{{ s.pk }}" data-delete-item aria-label="{% blocktrans with title=s.data.name|default:_('Conference') %}Tick “{{ title }}”{% endblocktrans %}">{% endif %}<div><a href="/{{ LANGUAGE_CODE }}/conference/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.name|default:_('Conference') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ s.created|date:"j F Y H:i" }}{% if s.status == 'done' and s.data.basis.project %} · {{ s.data.basis.project }}{% endif %}{% if not s.running %} · <button type="submit" name="one" value="{{ s.pk }}" class="link-button delete-button">{% trans 'Delete' %}</button>{% endif %}</div></div></li>
       {% endfor %}
     </ul>
+    {% include 'summarizer/delete_bar.html' with more_kind='conference' more=searches|length %}
+    </form>
     {% endif %}
   {% endif %}
 </div>

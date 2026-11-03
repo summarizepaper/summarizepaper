@@ -41,7 +41,12 @@
       {% if not request.user.is_authenticated %}{% include 'summarizer/tool_signup.html' with plus_tool=True %}{% else %}<a href="{% url 'premium' %}#plus" class="btn">{% trans 'Discover Premium+' %}</a>{% endif %}
     </section>
   {% endif %}
-  {% if searches %}<section class="section-card"><h2>{% trans 'Your searches' %}</h2><ul>{% for search in searches %}<li><a href="{% url 'student_result' key=search.key %}">{{ search.data.title|default:_('Research placement search') }}</a> · {{ search.created|date:'j F Y H:i' }} · {{ search.get_status_display }}</li>{% endfor %}</ul></section>{% endif %}
+  {% include 'summarizer/delete_notice.html' %}
+  {% if searches %}<section class="section-card"><h2>{% trans 'Your searches' %}</h2>
+    <form method="post" action="{% url 'delete' 'results' %}" data-delete-form data-confirm-one="{% trans 'Delete this result? Its shared link stops working.' %}" data-confirm-many="{% trans 'Delete the {n} ticked results? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <ul class="delete-list">{% for search in searches %}<li class="item-check">{% if not search.running %}<input type="checkbox" name="r" value="{{ search.pk }}" data-delete-item aria-label="{% blocktrans with title=search.data.title|default:_('Research placement search') %}Tick “{{ title }}”{% endblocktrans %}">{% endif %}<div><a href="{% url 'student_result' key=search.key %}">{{ search.data.title|default:_('Research placement search') }}</a> · {{ search.created|date:'j F Y H:i' }} · {{ search.get_status_display }}{% if not search.running %} · <button type="submit" name="one" value="{{ search.pk }}" class="link-button delete-button">{% trans 'Delete' %}</button>{% endif %}</div></li>{% endfor %}</ul>
+    {% include 'summarizer/delete_bar.html' with more_kind='students' more=searches|length %}
+    </form></section>{% endif %}
   {% if request.user.is_authenticated and not leads %}<p class="muted">{% trans 'Save a lead from a search to keep its sources, reading suggestions and your private notes in My leads.' %}</p>{% endif %}
 </div>
 {% endblock %}

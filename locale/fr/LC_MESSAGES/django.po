@@ -22288,3 +22288,192 @@ msgstr[0] ""
 msgstr[1] ""
 "L'IA n'a pas pu lire %(n)s présentations proches : classez de nouveau le "
 "programme ci-dessous pour qu'elles soient lues."
+
+msgid "Delete the ticked ones"
+msgstr "Supprimer la sélection"
+
+msgid "Tick at least one line first."
+msgstr "Cochez d'abord au moins une ligne."
+
+msgid "See them all in My activity"
+msgstr "Tout voir dans Mon activité"
+
+msgid "Nothing was deleted."
+msgstr "Rien n'a été supprimé."
+
+msgid "Delete the {n} ticked conversations? Their shared links stop working."
+msgstr ""
+"Supprimer les {n} conversations cochées ? Leurs liens de partage cesseront "
+"de fonctionner."
+
+msgid ""
+"Delete this result? Its shared link stops working. A press kit or a journal "
+"club deck is only taken out of your list."
+msgstr ""
+"Supprimer ce résultat ? Son lien de partage cessera de fonctionner. Un "
+"dossier de presse ou une présentation de journal club est seulement retiré "
+"de votre liste."
+
+msgid ""
+"Delete the {n} ticked results? Their shared links stop working. Press kits "
+"and journal club decks are only taken out of your list."
+msgstr ""
+"Supprimer les {n} résultats cochés ? Leurs liens de partage cesseront de "
+"fonctionner. Les dossiers de presse et les présentations de journal club "
+"sont seulement retirés de votre liste."
+
+msgid "Take out of my list"
+msgstr "Retirer de ma liste"
+
+msgid ""
+"Delete this collection, its notes and its analyses? Its shared link stops "
+"working. The papers themselves stay on the site."
+msgstr ""
+"Supprimer cette collection, ses notes et ses analyses ? Son lien de partage "
+"cessera de fonctionner. Les articles eux-mêmes restent sur le site."
+
+msgid ""
+"Delete the {n} ticked collections, their notes and their analyses? Their "
+"shared links stop working."
+msgstr ""
+"Supprimer les {n} collections cochées, leurs notes et leurs analyses ? Leurs"
+" liens de partage cesseront de fonctionner."
+
+#, python-format
+msgid "Tick “%(name)s”"
+msgstr "Cocher « %(name)s »"
+
+msgid "Delete this result? Its shared link stops working."
+msgstr "Supprimer ce résultat ? Son lien de partage cessera de fonctionner."
+
+msgid "Delete the {n} ticked results? Their shared links stop working."
+msgstr ""
+"Supprimer les {n} résultats cochés ? Leurs liens de partage cesseront de "
+"fonctionner."
+
+msgid "Tick this result"
+msgstr "Cocher ce résultat"
+
+#, python-format
+msgid "And the %(n)s result of this filter"
+msgid_plural "All the %(n)s results of this filter"
+msgstr[0] "Et le résultat de ce filtre"
+msgstr[1] "Tous les %(n)s résultats de ce filtre"
+
+#, python-format
+msgid "%(n)s item deleted."
+msgid_plural "%(n)s items deleted."
+msgstr[0] "%(n)s élément supprimé."
+msgstr[1] "%(n)s éléments supprimés."
+
+msgid "Stop following this paper?"
+msgstr "Ne plus suivre cet article ?"
+
+msgid "Stop following the {n} ticked papers?"
+msgstr "Ne plus suivre les {n} articles cochés ?"
+
+msgid "Delete, with my notes and statuses"
+msgstr "Supprimer, avec mes notes et statuts"
+
+msgid ""
+"Delete your whole reading history, with your notes and reading statuses? "
+"Your collections are not changed. You can restore it from the trash for 30 "
+"days."
+msgstr ""
+"Supprimer tout votre historique de lectures, avec vos notes et statuts de "
+"lecture ? Vos collections ne changent pas. Vous pourrez le restaurer depuis "
+"la corbeille pendant 30 jours."
+
+msgid "Recently deleted"
+msgstr "Supprimé récemment"
+
+msgid "Restore"
+msgstr "Restaurer"
+
+msgid "Delete this for good? It cannot be restored afterwards."
+msgstr "Supprimer définitivement ? Impossible de le restaurer ensuite."
+
+msgid "Delete for good"
+msgstr "Supprimer définitivement"
+
+msgid "Empty the trash? What it holds cannot be restored afterwards."
+msgstr "Vider la corbeille ? Son contenu ne pourra plus être restauré."
+
+msgid "Empty the trash"
+msgstr "Vider la corbeille"
+
+msgid "Delete this saved search? Its watch stops."
+msgstr "Supprimer cette recherche enregistrée ? Sa veille s'arrête."
+
+msgid "Delete the {n} ticked saved searches? Their watches stop."
+msgstr ""
+"Supprimer les {n} recherches enregistrées cochées ? Leurs veilles "
+"s'arrêtent."
+
+msgid "Stop watching the {n} ticked projects and delete what was found?"
+msgstr ""
+"Arrêter la veille des {n} projets cochés et supprimer ce qui a été trouvé ?"
+
+#, python-format
+msgid "Select %(name)s to delete"
+msgstr "Sélectionner %(name)s pour le supprimer"
+
+msgid "Remove this lead from your shortlist, with your notes and drafts?"
+msgstr ""
+"Retirer cette piste de votre sélection, avec vos notes et brouillons ?"
+
+msgid ""
+"Remove the {n} ticked leads from your shortlist, with your notes and drafts?"
+msgstr ""
+"Retirer les {n} pistes cochées de votre sélection, avec vos notes et "
+"brouillons ?"
+
+msgid "Restored."
+msgstr "Restauré."
+
+msgid ""
+"This could not be restored: something it needs was deleted meanwhile, or it "
+"was made again."
+msgstr ""
+"Impossible de restaurer : un élément dont il dépend a été supprimé entre-"
+"temps, ou il a été recréé."
+
+msgid "The trash is emptied: what it held is deleted for good."
+msgstr "La corbeille est vidée : son contenu est supprimé définitivement."
+
+msgid ""
+"Delete this result? Its shared link stops working. You can restore it from "
+"the trash of My activity for 30 days."
+msgstr ""
+"Supprimer ce résultat ? Son lien de partage cessera de fonctionner. Vous "
+"pourrez le restaurer depuis la corbeille de Mon activité pendant 30 jours."
+
+msgid "Delete this result"
+msgstr "Supprimer ce résultat"
+
+msgid "Placement leads"
+msgstr "Pistes de stage"
+
+msgid ""
+"Saved search removed. Its watch is stopped. You can restore it from the "
+"trash of My activity for 30 days."
+msgstr ""
+"Recherche enregistrée supprimée. Sa veille est arrêtée. Vous pouvez la "
+"restaurer depuis la corbeille de Mon activité pendant 30 jours."
+
+#, python-format
+msgid "What you deleted stays here %(n)s day, then is deleted for good."
+msgid_plural ""
+"What you deleted stays here %(n)s days, then is deleted for good."
+msgstr[0] ""
+"Ce que vous supprimez reste ici %(n)s jour, puis est supprimé "
+"définitivement."
+msgstr[1] ""
+"Ce que vous supprimez reste ici %(n)s jours, puis est supprimé "
+"définitivement."
+
+#, python-format
+msgid "and %(n)d more"
+msgid_plural "and %(n)d more"
+msgstr[0] "et %(n)d autre"
+msgstr[1] "et %(n)d autres"

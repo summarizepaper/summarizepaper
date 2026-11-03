@@ -28,7 +28,7 @@
   </header>
 
   {% if result %}
-    {% if not shared %}{% if result.with_tex %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check. The report quotes the sentences of your manuscript whose citations are flagged.' as what %}{% else %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check.' as what %}{% endif %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if not shared %}{% if result.with_tex %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check. The report quotes the sentences of your manuscript whose citations are flagged.' as what %}{% else %}{% trans 'Anyone with this link reads this report and downloads the corrected .bib, never who ran the check.' as what %}{% endif %}{% include 'summarizer/result_share.html' %}{% include 'summarizer/result_delete.html' with tool='refcheck' %}{% endif %}
     {% if message == 'too_many' %}<p class="error">{% trans 'You have reached the number of collections of your plan. Delete one to save these references.' %}</p>
     {% elif message == 'no_ids' %}<p class="error">{% trans 'None of these references has a DOI or an arXiv identifier: they cannot be kept in a collection.' %}</p>
     {% elif message == 'watching' %}<p class="notice" role="status">{% trans 'Your references are watched: we email you when one of them is published, retracted or corrected.' %}</p>{% endif %}

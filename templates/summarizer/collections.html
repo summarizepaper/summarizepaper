@@ -32,16 +32,21 @@
   <p class="muted">{% blocktrans with n=limits.collections p=limits.papers pn=premium.collections pp=premium.papers %}Free: {{ n }} collections of {{ p }} papers. Premium: {{ pn }} collections of {{ pp }} papers.{% endblocktrans %}</p>
   {% include 'summarizer/tool_signup.html' %}
   {% else %}
+  {% include 'summarizer/delete_notice.html' %}
   {% if collections %}
+  <form method="post" action="{% url 'delete' 'collections' %}" data-delete-form data-confirm-one="{% trans 'Delete this collection, its notes and its analyses? Its shared link stops working. The papers themselves stay on the site.' %}" data-confirm-many="{% trans 'Delete the {n} ticked collections, their notes and their analyses? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
   <ul class="item-list">
     {% for c in collections %}
-    <li class="card">
+    <li class="card item-check"><input type="checkbox" name="c" value="{{ c.pk }}" data-delete-item aria-label="{% blocktrans with name=c.name %}Tick “{{ name }}”{% endblocktrans %}"><div>
       <a href="/{{ LANGUAGE_CODE }}/collections/{{ c.pk }}/"><strong>{{ c.name }}</strong></a>
       <div class="meta">{% blocktrans count n=c.papers.all|length %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %} · {% trans 'updated' %} {{ c.updated|date:"j F Y" }}
-        {% if c.watch %} <span class="importance info">{% trans 'Watched' %}</span>{% endif %}{% if c.shared %} <span class="importance info">{% trans 'Shared' %}</span>{% endif %}{% if c.editors %} <span class="importance info">{% blocktrans count n=c.editors %}{{ n }} editor{% plural %}{{ n }} editors{% endblocktrans %}</span>{% endif %}</div>
-    </li>
+        {% if c.watch %} <span class="importance info">{% trans 'Watched' %}</span>{% endif %}{% if c.shared %} <span class="importance info">{% trans 'Shared' %}</span>{% endif %}{% if c.editors %} <span class="importance info">{% blocktrans count n=c.editors %}{{ n }} editor{% plural %}{{ n }} editors{% endblocktrans %}</span>{% endif %}
+        · <button type="submit" name="one" value="{{ c.pk }}" class="link-button delete-button">{% trans 'Delete' %}</button></div>
+    </div></li>
     {% endfor %}
   </ul>
+  {% include 'summarizer/delete_bar.html' %}
+  </form>
   {% else %}
   <p class="muted">{% trans 'No collection yet. Create one here, or from any paper page with "Save to a collection".' %}</p>
   {% endif %}

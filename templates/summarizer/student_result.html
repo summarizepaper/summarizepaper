@@ -44,6 +44,7 @@
     <li><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ result.profile.topic|urlencode }}">{% trans 'Who works on it?' %}</a>: {% trans 'every institution publishing on the topic, beyond the ten people shown here.' %}</li>
   </ul></section>
   {% trans 'Anyone with this link sees these leads, their papers and your criteria, never your drafts, your notes or who searched. To show a supervisor or a programme coordinator.' as what %}{% include 'summarizer/result_share.html' %}
+  {% include 'summarizer/result_delete.html' with tool='students' %}
   {% endif %}
 {% elif row.status == 'failed' %}<p class="error">{% trans 'The search failed. Your saved leads are unchanged. Please start a new search.' %}</p><a class="btn" href="{% url 'students' %}">{% trans 'Try a new search' %}</a>
 {% else %}

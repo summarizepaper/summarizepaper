@@ -73,14 +73,18 @@
       <p class="muted"><small>{% trans 'Your files are read once and are not stored. Only the report is kept, in your account: your corrected .bib, and the sentences whose citations are flagged.' %}</small></p>
     </form>
 
+    {% include 'summarizer/delete_notice.html' %}
     {% if checks %}
     <h2>{% trans 'Your checks' %}</h2>
+    <form method="post" action="{% url 'delete' 'results' %}" data-delete-form data-confirm-one="{% trans 'Delete this result? Its shared link stops working.' %}" data-confirm-many="{% trans 'Delete the {n} ticked results? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
     <ul class="item-list">
       {% for c in checks %}
-      <li class="card"><a href="/{{ LANGUAGE_CODE }}/refcheck/{{ c.key }}/">{% if c.status == 'done' %}{% blocktrans count n=c.data.entries %}{{ n }} reference{% plural %}{{ n }} references{% endblocktrans %}{% elif c.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ c.created|date:"j F Y H:i" }}{% if c.status == 'done' %} · <a href="/{{ LANGUAGE_CODE }}/refcheck/?previous={{ c.key }}">{% trans 'Check again after corrections' %}</a>{% endif %}</div></li>
+      <li class="card item-check">{% if not c.running %}<input type="checkbox" name="r" value="{{ c.pk }}" data-delete-item aria-label="{% blocktrans with title=c.created|date:'j F Y H:i' %}Tick “{{ title }}”{% endblocktrans %}">{% endif %}<div><a href="/{{ LANGUAGE_CODE }}/refcheck/{{ c.key }}/">{% if c.status == 'done' %}{% blocktrans count n=c.data.entries %}{{ n }} reference{% plural %}{{ n }} references{% endblocktrans %}{% elif c.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ c.created|date:"j F Y H:i" }}{% if c.status == 'done' %} · <a href="/{{ LANGUAGE_CODE }}/refcheck/?previous={{ c.key }}">{% trans 'Check again after corrections' %}</a>{% endif %}{% if not c.running %} · <button type="submit" name="one" value="{{ c.pk }}" class="link-button delete-button">{% trans 'Delete' %}</button>{% endif %}</div></div></li>
       {% endfor %}
     </ul>
+    {% include 'summarizer/delete_bar.html' with more_kind='refcheck' more=checks|length %}
+    </form>
     {% endif %}
   {% endif %}
 </div>

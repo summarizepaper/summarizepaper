@@ -1025,7 +1025,8 @@ def citations_page(request):
     if request.method == 'POST' and paid:
         action = request.POST.get('action')
         if action == 'unfollow':
-            FollowedPaper.objects.filter(user=request.user, pk=request.POST.get('pk')).delete()
+            from .removal import REMOVERS
+            REMOVERS['followed'][0](request.user, [request.POST.get('pk', '')])
             return redirect('/%s/citations/' % lang)
         if action == 'mine':
             FollowedPaper.objects.filter(user=request.user, pk=request.POST.get('pk')).update(

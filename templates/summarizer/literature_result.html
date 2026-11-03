@@ -30,7 +30,7 @@
   {% elif message == 'revisions' %}<p class="error">{% trans 'You have revised enough reviews for today. Come back tomorrow.' %}</p>{% endif %}
 
   {% if result %}
-    {% if not shared %}{% trans 'Anyone with this link reads the review as it is now, with its papers and its references, never who asked it.' as what %}{% include 'summarizer/result_share.html' %}{% endif %}
+    {% if not shared %}{% trans 'Anyone with this link reads the review as it is now, with its papers and its references, never who asked it.' as what %}{% include 'summarizer/result_share.html' %}{% include 'summarizer/result_delete.html' with tool='literature-review' %}{% endif %}
 
     {% if result.papers %}
     <div class="item-actions lit-actions">

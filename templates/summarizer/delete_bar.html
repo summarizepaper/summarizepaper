@@ -1,0 +1,38 @@
+{% load i18n %}{# The end of a list whose lines are deleted one by one (a button named "one") or ticked together: inside its form, which carries data-delete-form and the confirmations (data-confirm-one, data-confirm-many, where {n} is the number). The ticked boxes carry data-delete-item; on a list whose lines have forms of their own, the form follows the list and its boxes name it (form="its id"). more_kind, more: a link to every result of the tool when the list shows the first 20. #}
+<div class="delete-bar">
+  <label><input type="checkbox" data-delete-all> {% trans 'Tick all' %}</label>
+  {% if all_count %}<label data-delete-matching hidden><input type="checkbox" name="all" value="1"> {% blocktrans count n=all_count %}And the {{ n }} result of this filter{% plural %}All the {{ n }} results of this filter{% endblocktrans %}</label>{% endif %}
+  <button type="submit" class="link-button delete-button" data-delete-ticked>{% trans 'Delete the ticked ones' %}</button>
+  <span class="muted" data-delete-none hidden role="status">{% trans 'Tick at least one line first.' %}</span>
+  {% if more_kind and more >= 20 %}<a href="{% url 'history' %}?tab=results&amp;kind={{ more_kind }}">{% trans 'See them all in My activity' %} →</a>{% endif %}
+</div>
+<script>
+(function () {
+  var form = document.currentScript.closest('form[data-delete-form]');
+  if (!form) return;
+  var all = form.querySelector('[data-delete-all]'), matching = form.querySelector('[data-delete-matching]');
+  // form.elements also holds the boxes outside the form (form="..."), as on lists whose lines have their own forms
+  function boxes() { return Array.prototype.filter.call(form.elements, function (e) { return e.hasAttribute('data-delete-item'); }); }
+  all.addEventListener('change', function () {
+    boxes().forEach(function (b) { b.checked = all.checked; });
+    if (matching) { matching.hidden = !all.checked; if (!all.checked) matching.querySelector('input').checked = false; }
+  });
+  var clicked = null;  // the button that sent the form: event.submitter is missing before Safari 15.4
+  form.addEventListener('click', function (event) {
+    var button = event.target.closest('button');
+    if (button) clicked = button;
+  });
+  form.addEventListener('submit', function (event) {
+    var button = event.submitter || clicked;
+    clicked = null;
+    if (button && button.name === 'one') {
+      if (!window.confirm(form.dataset.confirmOne)) event.preventDefault();
+      return;
+    }
+    var n = boxes().filter(function (b) { return b.checked; }).length;
+    var wide = matching && matching.querySelector('input').checked;
+    if (!n && !wide) { event.preventDefault(); form.querySelector('[data-delete-none]').hidden = false; return; }
+    if (!window.confirm(form.dataset.confirmMany.replace('{n}', wide ? '{{ all_count|default:0 }}' : n))) event.preventDefault();
+  });
+})();
+</script>

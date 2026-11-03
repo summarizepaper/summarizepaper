@@ -317,7 +317,13 @@ def owned_room(request, room):
 
 @require_POST
 def delete_conversation(request, room):
-    """Delete a conversation of the visitor: its exchanges leave their history and its shared link stops."""
+    """Delete a conversation of the visitor: its exchanges leave their history and its shared link stops. With an
+    account, it goes to the trash of My activity (removal.py)."""
+    if request.user.is_authenticated:
+        from .removal import remove_conversations
+        owned_room(request, room)
+        remove_conversations(request.user, [room])
+        return JsonResponse({'status': 'done'})
     owned_room(request, room).update(active=False)
     owned(ChatShare.objects.filter(room=room, active=True), request).update(active=False)
     owned(ChatConversation.objects.filter(room=room), request).delete()

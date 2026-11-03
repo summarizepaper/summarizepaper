@@ -57,14 +57,18 @@
       <p class="muted"><small>{% trans 'To check the references you already have (retracted papers, preprints published since, citations their abstract does not support):' %} <a href="/{{ LANGUAGE_CODE }}/refcheck/">{% trans 'Bibliography check' %}</a></small></p>
     </form>
 
+    {% include 'summarizer/delete_notice.html' %}
     {% if searches %}
     <h2>{% trans 'Your searches' %}</h2>
+    <form method="post" action="{% url 'delete' 'results' %}" data-delete-form data-confirm-one="{% trans 'Delete this result? Its shared link stops working.' %}" data-confirm-many="{% trans 'Delete the {n} ticked results? Their shared links stop working.' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
     <ul class="item-list">
       {% for s in searches %}
-      <li class="card"><a href="/{{ LANGUAGE_CODE }}/missed/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.title|default:_('Draft') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
-        <div class="meta">{{ s.created|date:"j F Y H:i" }}</div></li>
+      <li class="card item-check">{% if not s.running %}<input type="checkbox" name="r" value="{{ s.pk }}" data-delete-item aria-label="{% blocktrans with title=s.data.title|default:_('Draft') %}Tick “{{ title }}”{% endblocktrans %}">{% endif %}<div><a href="/{{ LANGUAGE_CODE }}/missed/{{ s.key }}/">{% if s.status == 'done' %}{{ s.data.title|default:_('Draft') }}{% elif s.status == 'pending' %}{% trans 'In progress…' %}{% else %}{% trans 'Failed' %}{% endif %}</a>
+        <div class="meta">{{ s.created|date:"j F Y H:i" }}{% if not s.running %} · <button type="submit" name="one" value="{{ s.pk }}" class="link-button delete-button">{% trans 'Delete' %}</button>{% endif %}</div></div></li>
       {% endfor %}
     </ul>
+    {% include 'summarizer/delete_bar.html' with more_kind='missed' more=searches|length %}
+    </form>
     {% endif %}
   {% endif %}
 </div>

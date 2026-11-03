@@ -1,0 +1,6 @@
+{% load i18n %}{# Said once lines were deleted, restored or the trash emptied (removal.back_to), with a button to undo a deletion. #}
+{% with done=request.GET.done %}{% if done == 'deleted' or done == 'restored' or done == 'unrestorable' or done == 'emptied' %}
+<div class="notice delete-notice" role="status">{% if done == 'deleted' %}{% with n=request.GET.deleted|add:0 %}{% if n %}{% blocktrans count n=n %}{{ n }} item deleted.{% plural %}{{ n }} items deleted.{% endblocktrans %}{% else %}{% trans 'Nothing was deleted.' %}{% endif %}{% endwith %}
+  {% if request.GET.trash %}<form method="post" action="{% url 'trash_restore' pk=request.GET.trash|add:0 %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button type="submit" class="link-button">{% trans 'Undo' %}</button></form>{% endif %}
+{% elif done == 'restored' %}{% trans 'Restored.' %}{% elif done == 'unrestorable' %}{% trans 'This could not be restored: something it needs was deleted meanwhile, or it was made again.' %}{% else %}{% trans 'The trash is emptied: what it held is deleted for good.' %}{% endif %}</div>
+{% endif %}{% endwith %}

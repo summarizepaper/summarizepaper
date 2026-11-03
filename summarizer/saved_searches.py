@@ -807,8 +807,9 @@ def manage(request):
         saved = get_object_or_404(SavedSearch, user=request.user, pk=pk)
         action = request.POST.get('action')
         if action == 'delete':
-            saved.delete()
-            messages.success(request, _('Saved search removed. Its watch is stopped.'))
+            from .removal import REMOVERS
+            REMOVERS['saved-searches'][0](request.user, [saved.pk])
+            messages.success(request, _('Saved search removed. Its watch is stopped. You can restore it from the trash of My activity for 30 days.'))
             return redirect('saved_searches')
         elif action == 'pause':
             SavedSearch.objects.filter(pk=saved.pk, user=request.user).update(watch_enabled=False)

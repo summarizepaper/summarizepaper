@@ -829,7 +829,8 @@ def back_to(item):
 def shortlist_update(request, pk):
     item = get_object_or_404(StudentShortlist, pk=pk, user=request.user)
     if request.POST.get('action') == 'remove':
-        item.delete()
+        from .removal import REMOVERS
+        REMOVERS['leads'][0](request.user, [item.pk])
         return redirect('student_leads')
     form = ShortlistForm(request.POST, instance=item, auto_id='shortlist_%d_%%s' % item.pk)
     if not form.is_valid():

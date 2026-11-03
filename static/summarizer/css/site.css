@@ -1292,3 +1292,19 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .lit-collection { margin: 10px 0; }
 .lit-collection summary { cursor: pointer; font-weight: 600; }
 .lit-collection textarea { width: 100%; max-width: 640px; }
+
+/* Lists whose lines can be deleted one by one or ticked together (delete_bar.html) */
+.delete-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 10px 0 0; font-size: 14px; }
+.delete-bar label { display: inline-flex; align-items: center; gap: 6px; }
+.delete-bar [hidden] { display: none; }
+.delete-button { color: var(--text-muted); font-size: 14px; }
+.delete-button:hover, .delete-button:focus-visible { color: var(--danger); }
+.item-check { display: flex; align-items: flex-start; gap: 10px; }
+.item-check > input[type=checkbox] { margin-top: 4px; width: 18px; height: 18px; flex: none; }
+.item-check > div { min-width: 0; flex: 1; }
+.delete-notice { padding: 10px 14px; border-radius: 8px; background: var(--accent-soft, #eef0ff); font-size: 14px; }
+.delete-notice form { display: inline; margin-left: 6px; }
+.delete-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.result-delete { margin: 16px 0; text-align: right; }
+.delete-check { width: 18px; height: 18px; vertical-align: -2px; margin-right: 6px; }
+.delete-check-label { margin-left: 16px; font-size: 14px; color: var(--text-muted); }
