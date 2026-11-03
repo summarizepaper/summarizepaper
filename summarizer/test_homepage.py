@@ -112,6 +112,17 @@ class HomepageTests(TestCase):
         soup = BeautifulSoup(self.client.get('/fr/').content, 'html.parser')
         self.assertEqual([a.get_text() for a in soup.select('#digest-sample .home-sample-papers a')], ['Un article'])
         self.assertIsNone(soup.select_one('#letter-sample'))
+        # With only astronomy digests sent, the field with a letter and enough of its own papers is shown instead.
+        cache.clear()
+        for i in range(3):
+            DigestItem.objects.create(arxiv_id='2611.0010%d' % i, lang='en', title='Star %d' % i, categories='astro-ph.SR',
+                                      blurb='About a star.', published=when)
+        Letter.objects.create(topic='space', lang='en', day=datetime.date(2026, 11, 2), title='Space this week',
+                              dek='Stars.', content=json.dumps(content))
+        soup = BeautifulSoup(self.client.get('/en/').content, 'html.parser')
+        self.assertIn('“Astronomy and space”', soup.select_one('.home-samples').get_text())
+        self.assertEqual(len(soup.select('#digest-sample li')), 3)
+        self.assertEqual(soup.select_one('#letter-sample strong').get_text(), 'Space this week')
 
     def test_blank_search_never_calls_external_sources(self):
         with mock.patch('summarizer.views.sources.resolve') as resolve:

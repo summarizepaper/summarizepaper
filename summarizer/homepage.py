@@ -64,14 +64,14 @@ def monthly_price(currency='eur'):
     return '€%s / month' % amount
 
 
-SAMPLE_TOPIC = 'ai'  # the field of the email samples while it has a letter
+SAMPLE_TOPIC = 'ai'  # the field of the email samples once its own papers fill a digest
 SAMPLE_PAPERS = 3
 
 
 def email_samples():
     """A real recent digest and weekly letter of one field, to show visitors what an account sends them."""
     lang = get_language()
-    key = 'home-samples3:%s' % lang
+    key = 'home-samples4:%s' % lang
     samples = cache.get(key)
     if samples is None:
         samples = _email_samples(lang)
@@ -79,20 +79,30 @@ def email_samples():
     return samples
 
 
+def _main_in(field):
+    """Digest summaries whose main category is one of these."""
+    query = Q()
+    for category in field:
+        query |= Q(categories=category) | Q(categories__startswith=category + ',')
+    return query
+
+
 def _email_samples(lang):
     from . import email_updates, letters
     from .models import DigestItem
     latest = letters.latest_letters(lang)
-    letter = latest.get(SAMPLE_TOPIC) or max(latest.values(), key=lambda l: l.day, default=None)
-    topic = letter.topic if letter else SAMPLE_TOPIC
-    field = email_updates.STARTERS[topic].split(',')
-    main, listed = Q(), Q()
+    fields = {topic: email_updates.STARTERS[topic].split(',') for topic in latest or [SAMPLE_TOPIC]}
+    recent = DigestItem.objects.filter(lang=lang).exclude(blurb='').order_by('-published', '-created')
+    # digest summaries are written only for papers sent to someone: show a field with a letter that has enough
+    # of them, SAMPLE_TOPIC first
+    counts = {topic: recent.filter(_main_in(field)).count() for topic, field in fields.items()}
+    topic = max(counts, key=lambda t: (min(counts[t], SAMPLE_PAPERS), t == SAMPLE_TOPIC, counts[t]))
+    letter, field = latest.get(topic), fields[topic]
+    listed = Q()
     for category in field:
-        main |= Q(categories=category) | Q(categories__startswith=category + ',')
         listed |= Q(categories__contains=category)
     # papers of the field first, then those only cross-listed in it, labelled with their category in the field
-    recent = DigestItem.objects.filter(lang=lang).exclude(blurb='').order_by('-published', '-created')
-    chosen = list(recent.filter(main)[:SAMPLE_PAPERS])
+    chosen = list(recent.filter(_main_in(field))[:SAMPLE_PAPERS])
     chosen += list(recent.filter(listed).exclude(pk__in=[i.pk for i in chosen])[:SAMPLE_PAPERS - len(chosen)])
     items = [{'arxiv_id': i.arxiv_id, 'title': i.title, 'authors': i.authors,
               'category': next((c for c in i.categories.split(',') if c in field), i.categories.split(',')[0]),
