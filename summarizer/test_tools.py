@@ -3276,7 +3276,7 @@ class LetterTests(ToolsTestCase):
         self.assertContains(page, 'Was this letter useful to you?')
         self.assertContains(page, 'data-paper="2610.00003"')
         staff = User.objects.create_superuser('boss', 'boss@example.com', 'x')
-        self.assertContains(self.client_for(staff).get('/admin/activite/'), 'Lettres hebdomadaires')
+        self.assertContains(self.client_for(staff).get('/admin/activite/?partie=fiabilite'), 'Lettres hebdomadaires')
 
     def test_weekly_update_writes_a_few_per_run(self):
         with mock.patch('summarizer.letters.write', return_value=None) as write:

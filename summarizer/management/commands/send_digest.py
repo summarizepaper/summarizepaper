@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, zotero
+from summarizer import audio, changes, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, visits, zotero
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ class Command(BaseCommand):
                            ('text and data mining', lambda: tdm.run(now)),
                            ('zotero sync', lambda: zotero.run(now)),
                            ('trash', lambda: removal.purge(now)),
+                           ('page views', lambda: visits.purge(now)),
                            # last: once a week it reads two weeks of arXiv and writes topics for a few minutes
                            ('trends', lambda: trends.update(now))):
             try:

@@ -142,6 +142,22 @@ class ToolUse(models.Model):
         unique_together = ('user', 'row')
 
 
+class PageView(models.Model):
+    """A page of the site opened in a browser (visits.py), for the staff activity page: which pages and tools people
+    open, from where. Kept VISIT_DAYS days. `visitor` is a hash of the IP address and the browser that changes every
+    day, so a visit can be followed through the day but not from one day to the next, and the address is not kept."""
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    visitor = models.CharField(max_length=16)
+    view = models.CharField(max_length=60)  # the url name
+    path = models.CharField(max_length=300, blank=True, default='')  # empty for the pages of tokens (visits.PRIVATE)
+    query = models.CharField(max_length=200, blank=True, default='')  # the search, on the search results
+    referrer = models.CharField(max_length=100, blank=True, default='')  # another site's domain
+    source = models.CharField(max_length=40, blank=True, default='')  # utm_source
+    lang = models.CharField(max_length=5, blank=True, default='')
+    first = models.BooleanField(default=False)  # without the visitor cookie: the first page of this browser
+
+
 class ActivityState(models.Model):
     """What a user has seen of the news of the dashboard: what is new since their last visit, what they set aside."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='activity_state')

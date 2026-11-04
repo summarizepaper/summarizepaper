@@ -1,5 +1,5 @@
 {% extends 'admin/base.html' %}
-{% load i18n unfold %}
+{% load i18n static unfold %}
 
 {% block title %}{{ title }} | {{ site_title }}{% endblock %}
 
@@ -8,25 +8,33 @@
 {% endblock %}
 
 {% block content %}
+<div id="activity-root" data-day="{{ day|date:'Y-m-d' }}" data-title="{{ title }}">
     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 class="font-semibold text-2xl text-important">{% if is_today %}Aujourd’hui, {% endif %}{% language "fr" %}{{ day|date:"l j F Y" }}{% endlanguage %}</h1>
-        <form method="get" class="flex flex-wrap items-center gap-2">
-            <a class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" href="?jour={{ previous|date:'Y-m-d' }}&type={{ kind }}{% if members %}&membres=1{% endif %}">← {{ previous|date:"d/m" }}</a>
-            <input type="date" name="jour" value="{{ day|date:'Y-m-d' }}" onchange="this.form.submit()"
+        <form method="get" class="flex flex-wrap items-center gap-2" data-day-form>
+            <a data-nav class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" href="?jour={{ previous|date:'Y-m-d' }}{% if staff %}&equipe=1{% endif %}">← {{ previous|date:"d/m" }}</a>
+            <input type="date" name="jour" value="{{ day|date:'Y-m-d' }}"
                    class="border border-base-200 rounded-default px-3 py-2 bg-white dark:bg-base-900 dark:border-base-700">
-            {% if next %}<a class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" href="?jour={{ next|date:'Y-m-d' }}&type={{ kind }}{% if members %}&membres=1{% endif %}">{{ next|date:"d/m" }} →</a>{% endif %}
-            {% if not is_today %}<a class="text-primary-600 dark:text-primary-500 px-2" href="?type={{ kind }}{% if members %}&membres=1{% endif %}">Aujourd’hui</a>{% endif %}
-            <input type="hidden" name="type" value="{{ kind }}">
-            {% if members %}<input type="hidden" name="membres" value="1">{% endif %}
+            {% if next %}<a data-nav class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" href="?jour={{ next|date:'Y-m-d' }}{% if staff %}&equipe=1{% endif %}">{{ next|date:"d/m" }} →</a>{% endif %}
+            {% if not is_today %}<a data-nav class="text-primary-600 dark:text-primary-500 px-2" href="?{% if staff %}equipe=1{% endif %}">Aujourd’hui</a>{% endif %}
+            {% if staff %}<input type="hidden" name="equipe" value="1">{% endif %}
+            <a data-nav class="text-primary-600 dark:text-primary-500 px-2" href="?jour={{ day|date:'Y-m-d' }}{% if not staff %}&equipe=1{% endif %}"
+               title="Les actions des comptes de l’équipe (is_staff), et les pages vues du même navigateur le même jour">{% if staff %}☑{% else %}☐{% endif %} Inclure l’équipe</a>
         </form>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="mb-6" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem">
         {% for n in numbers %}
             {% component "unfold/components/card.html" %}
                 <p class="text-subtle flex items-center gap-2"><span class="material-symbols-outlined" style="font-size:18px">{{ n.icon }}</span>{{ n.label }}</p>
                 <p class="font-semibold text-3xl text-important mt-1">{{ n.value }}</p>
                 <p class="text-subtle mt-1">veille {{ n.yesterday }} · moy. 7 j {{ n.week }}</p>
+                {% if n.series %}
+                    <div class="text-primary-600 dark:text-primary-500 mt-2" style="display:flex;align-items:flex-end;gap:2px;height:28px" role="img"
+                         aria-label="{{ n.label }} sur 14 jours : {% for p in n.series %}{{ p.value }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                        {% for p in n.series %}<span title="{{ p.day|date:'d/m' }} : {{ p.value }}" style="flex:1;height:{% if p.value %}max(2px,{{ p.height }}%){% else %}1px{% endif %};background:currentColor;border-radius:2px 2px 0 0;opacity:{% if forloop.last %}1{% else %}.4{% endif %}"></span>{% endfor %}
+                    </div>
+                {% endif %}
                 {% if n.note %}<p class="mt-1" {% if 'échec' in n.note %}style="color:#dc2626"{% endif %}>{{ n.note }}</p>{% endif %}
             {% endcomponent %}
         {% endfor %}
@@ -63,79 +71,73 @@
         </div>
     {% endif %}
 
-    {% if quality.total.answers %}
-        <div class="mb-6">
-            {% component "unfold/components/card.html" with title="Fiabilité de l’assistant" %}
-                <p class="text-subtle mb-3">Sur {{ quality.total.label }} jusqu’au {{ day|date:"d/m" }}. Chaque affirmation d’une réponse est cherchée mot pour mot dans l’article (evidence.py) ; « chiffres absents » : affirmations qui donnent un nombre qu’aucun article ne contient ; « tags » : réponses sur plusieurs articles qui les nomment par [Auteur année].</p>
-                <div style="overflow-x:auto">
-                <table class="w-full text-sm">
-                    <tr class="text-left text-subtle">
-                        <th class="py-2 pr-3"></th><th class="py-2 pr-3">Réponses</th><th class="py-2 pr-3">Vérifiées</th><th class="py-2 pr-3">Affirmations</th>
-                        <th class="py-2 pr-3">Trouvées</th><th class="py-2 pr-3">Introuvables</th><th class="py-2 pr-3">Non étayées</th>
-                        <th class="py-2 pr-3">Connaissance générale</th><th class="py-2 pr-3">Chiffres absents</th><th class="py-2 pr-3">Multi-articles</th><th class="py-2">Tags</th>
-                    </tr>
-                    {% for r in quality.models %}{% include "admin/summarizer/quality_row.html" with r=r kind="model" %}{% endfor %}
-                    {% include "admin/summarizer/quality_row.html" with r=quality.total kind="total" %}
-                    {% for r in quality.days %}{% include "admin/summarizer/quality_row.html" with r=r kind="day" %}{% endfor %}
-                </table>
+    <div class="mb-6">
+        {% component "unfold/components/card.html" with title="Usage des outils" %}
+            <div class="flex flex-wrap items-center gap-2 mb-3" data-period>
+                <button type="button" data-period-button="day" class="rounded-default px-3 py-1 border border-primary-600 text-primary-600 dark:text-primary-500">Ce jour</button>
+                <button type="button" data-period-button="week" class="rounded-default px-3 py-1 border border-base-200 dark:border-base-700">7 jours</button>
+                <span class="text-subtle">Pages vues et visiteurs : pages ouvertes dans un navigateur. Utilisations : résultats lancés, questions, recherches, résumés demandés. Rouverts : résultats déjà faits, rouverts par un membre.</span>
+            </div>
+            {% for period, rows in tools.items %}
+                <div data-period-table="{{ period }}" style="overflow-x:auto{% if period != 'day' %};display:none{% endif %}">
+                    {% if rows %}
+                    <table class="w-full text-sm">
+                        <tr class="text-left text-subtle">
+                            <th class="py-2 pr-3">Outil ou page</th><th class="py-2 pr-3">Pages vues</th><th class="py-2 pr-3">Visiteurs</th>
+                            <th class="py-2 pr-3">Utilisations</th><th class="py-2 pr-3">Échecs</th><th class="py-2 pr-3">Rouverts</th><th class="py-2">Membres</th>
+                        </tr>
+                        {% for r in rows %}
+                            <tr class="border-t border-base-200 dark:border-base-800">
+                                <td class="py-1 pr-3">{{ r.tool }}</td><td class="py-1 pr-3">{{ r.views }}</td><td class="py-1 pr-3">{{ r.visitors }}</td>
+                                <td class="py-1 pr-3 font-semibold">{{ r.uses }}</td>
+                                <td class="py-1 pr-3"{% if r.failed %} style="color:#dc2626"{% endif %}>{{ r.failed }}</td>
+                                <td class="py-1 pr-3">{{ r.reopened }}</td><td class="py-1">{{ r.members }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    {% else %}<p class="text-subtle">Rien sur cette période.</p>{% endif %}
                 </div>
-            {% endcomponent %}
-        </div>
-    {% endif %}
+            {% endfor %}
+        {% endcomponent %}
+    </div>
 
-    {% if letters %}
+    {% if sources.entries %}
         <div class="mb-6">
-            {% component "unfold/components/card.html" with title="Lettres hebdomadaires" %}
-                <p class="text-subtle mb-3">Les lettres des deux dernières semaines. « Lus » : articles du domaine lus au tri ; « Affirmations » : cherchées mot pour mot dans les résumés ; « Non vérifiées » : passage introuvable, section gardée ; « Retirées » : sections avec un chiffre absent des résumés ou une affirmation non étayée. Votes : lettre, puis articles. Ligne en gras : à relire.</p>
-                <div style="overflow-x:auto">
-                <table class="w-full text-sm">
-                    <tr class="text-left text-subtle">
-                        <th class="py-2 pr-3">Semaine</th><th class="py-2 pr-3">Lettre</th><th class="py-2 pr-3">Lus</th><th class="py-2 pr-3">Retenus</th>
-                        <th class="py-2 pr-3">Chiffres</th><th class="py-2 pr-3">Affirmations</th><th class="py-2 pr-3">Réécrites</th>
-                        <th class="py-2 pr-3">Non vérifiées</th><th class="py-2 pr-3">Retirées</th><th class="py-2 pr-3">Lettre 👍/👎</th><th class="py-2">Articles 👍/👎</th>
-                    </tr>
-                    {% for r in letters %}
-                    <tr class="{% if r.flag %}font-semibold{% endif %}">
-                        <td class="py-1 pr-3">{{ r.letter.day|date:"d/m" }}</td>
-                        <td class="py-1 pr-3"><a class="text-primary-600 dark:text-primary-500" href="{{ r.url }}">{{ r.letter.topic }} {{ r.letter.lang }}</a> · {{ r.letter.title|truncatechars:60 }}</td>
-                        <td class="py-1 pr-3">{{ r.selection.screened|default:"–" }}</td><td class="py-1 pr-3">{{ r.selection.kept|default:"–" }}</td>
-                        <td class="py-1 pr-3">{{ r.selection.numbers|default:"–" }}</td><td class="py-1 pr-3">{{ r.selection.claims|default:"–" }}</td>
-                        <td class="py-1 pr-3">{{ r.selection.rewritten|default:"0" }}</td><td class="py-1 pr-3">{{ r.selection.unverified|default:"0" }}</td>
-                        <td class="py-1 pr-3">{{ r.selection.dropped|default:"0" }}</td>
-                        <td class="py-1 pr-3">{{ r.up }}/{{ r.down }}</td><td class="py-1">{{ r.paper_up }}/{{ r.paper_down }}</td>
-                    </tr>
-                    {% endfor %}
-                </table>
+            {% component "unfold/components/card.html" with title="D’où viennent les visiteurs" %}
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem">
+                    <div><p class="font-semibold mb-2">Sites d’origine <span class="text-subtle font-normal">(pages)</span></p>
+                        <ul class="flex flex-col gap-1">{% for name, n in sources.referrers %}<li class="flex justify-between gap-2"><span style="word-break:break-word">{{ name }}</span><span class="text-subtle">{{ n }}</span></li>{% endfor %}</ul></div>
+                    <div><p class="font-semibold mb-2">Campagnes utm <span class="text-subtle font-normal">(pages)</span></p>
+                        {% if sources.utm %}<ul class="flex flex-col gap-1">{% for name, n in sources.utm %}<li class="flex justify-between gap-2"><span>{{ name }}</span><span class="text-subtle">{{ n }}</span></li>{% endfor %}</ul>{% else %}<p class="text-subtle">Aucune.</p>{% endif %}</div>
+                    <div><p class="font-semibold mb-2">Première page <span class="text-subtle font-normal">(visiteurs)</span></p>
+                        <ul class="flex flex-col gap-1">{% for name, n in sources.entries %}<li class="flex justify-between gap-2"><span>{{ name }}</span><span class="text-subtle">{{ n }}</span></li>{% endfor %}</ul></div>
                 </div>
             {% endcomponent %}
         </div>
     {% endif %}
 
     {% component "unfold/components/card.html" with title="Fil d’activité" %}
-        <div class="flex flex-wrap items-center gap-2 mb-4">
-            <a href="?jour={{ day|date:'Y-m-d' }}{% if members %}&membres=1{% endif %}" class="rounded-default px-3 py-1 border {% if not kind %}border-primary-600 text-primary-600 dark:text-primary-500{% else %}border-base-200 dark:border-base-700{% endif %}">Tout</a>
-            {% for key, label in kinds %}
-                <a href="?jour={{ day|date:'Y-m-d' }}&type={{ key }}{% if members %}&membres=1{% endif %}" class="rounded-default px-3 py-1 border {% if kind == key %}border-primary-600 text-primary-600 dark:text-primary-500{% else %}border-base-200 dark:border-base-700{% endif %}">{{ label }}</a>
-            {% endfor %}
-            <a href="?jour={{ day|date:'Y-m-d' }}&type={{ kind }}{% if not members %}&membres=1{% endif %}" class="ml-auto text-primary-600 dark:text-primary-500">{% if members %}☑{% else %}☐{% endif %} Membres connectés seulement</a>
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+            <button type="button" data-view="time" class="rounded-default px-3 py-1 border">Chronologique</button>
+            <button type="button" data-view="person" class="rounded-default px-3 py-1 border">Par personne</button>
+            <input type="search" data-search placeholder="Chercher (texte, e-mail, article…)"
+                   class="border border-base-200 rounded-default px-3 py-1 bg-white dark:bg-base-900 dark:border-base-700" style="min-width:16rem">
+            <label class="ml-auto flex items-center gap-1 text-primary-600 dark:text-primary-500"><input type="checkbox" data-members> Membres connectés seulement</label>
         </div>
-        {% if events %}
-            <table class="w-full text-sm">
-                {% for e in events %}
-                    <tr class="border-t border-base-200 dark:border-base-800 align-top">
-                        <td class="py-2 pr-3 text-subtle whitespace-nowrap">{{ e.time|date:"H:i" }}</td>
-                        <td class="py-2 pr-3 whitespace-nowrap"><span class="flex items-center gap-1"{% if e.alert %} style="color:#dc2626"{% endif %}><span class="material-symbols-outlined" style="font-size:16px">{{ e.icon }}</span>{{ e.label }}</span></td>
-                        <td class="py-2 pr-3" style="word-break:break-word">
-                            {% if e.href %}<a class="text-primary-600 dark:text-primary-500" href="{{ e.href }}" target="_blank" rel="noopener">{{ e.text|truncatechars:160 }}</a>{% else %}{{ e.text|truncatechars:160 }}{% endif %}
-                            {% if e.detail %}<span class="text-subtle"{% if e.alert %} style="color:#dc2626"{% endif %}> · {{ e.detail }}</span>{% endif %}
-                        </td>
-                        <td class="py-2 text-right whitespace-nowrap">{% if e.who %}<a class="text-primary-600 dark:text-primary-500" href="{{ e.who_url }}">{{ e.who|truncatechars:32 }}</a>{% elif e.anonymous %}<span class="text-subtle">anonyme</span>{% endif %}</td>
-                    </tr>
-                {% endfor %}
-            </table>
-            {% if events|length >= feed_limit %}<p class="text-subtle mt-3">Les {{ feed_limit }} dernières actions seulement : filtrez par type pour voir le reste.</p>{% endif %}
-        {% else %}
-            <p class="text-subtle">Rien ce jour-là.</p>
-        {% endif %}
+        <div class="flex flex-wrap items-center gap-2 mb-4" data-kinds>
+            <button type="button" data-kind="" class="rounded-default px-3 py-1 border">Tout</button>
+            {% for key, label in kinds %}
+                <button type="button" data-kind="{{ key }}" class="rounded-default px-3 py-1 border">{{ label }}{% for k, n in per_kind.items %}{% if k == key %} <span class="text-subtle">{{ n }}</span>{% endif %}{% endfor %}</button>
+            {% endfor %}
+        </div>
+        <p class="text-subtle mb-3" data-summary></p>
+        <div data-feed><p class="text-subtle">Chargement…</p></div>
+        {% if truncated %}<p class="text-subtle mt-3">Les dernières actions seulement pour : {{ truncated|join:", " }}.</p>{% endif %}
+        {{ feed|json_script:"activity-feed" }}
+        {{ feed_kinds|json_script:"activity-kinds" }}
     {% endcomponent %}
+
+    <div class="mt-6" data-lazy="?jour={{ day|date:'Y-m-d' }}&partie=fiabilite"><p class="text-subtle">Fiabilité de l’assistant et lettres : chargement…</p></div>
+</div>
+<script src="{% static 'summarizer/js/admin-activity.js' %}"></script>
 {% endblock %}

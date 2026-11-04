@@ -1,21 +1,27 @@
 """What happened on the site on a given day, for the staff page /admin/activite/: the day's numbers
-against the day before and the week, every action in time order, what needs a look, and how far the
-assistant's answers hold against the papers."""
+against the day before and the week, every action in time order and per person, the pages they opened
+(visits.py) and the tools they used, what needs a look, and how far the assistant's answers hold against
+the papers. The team's own actions are left out unless asked."""
 import collections
 import datetime
 import re
 from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import User
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone, translation
 
-from .models import (AIPrice, AIUsage, AIassistant, Collection, DigestSubscription, FollowedPaper, Generated,
-                     LetterSubscription, PaperHistory, PremiumGrant, SavedSearch, Search, SummaryPaper, UserPlan,
-                     Vote, WatchedProject)
+from . import visits
+from .models import (AIPrice, AIUsage, AIassistant, Collection, DigestClick, DigestSubscription, FollowedPaper, Generated,
+                     LetterSubscription, PageView, PaperHistory, PaperVisit, PremiumGrant, SavedSearch, Search, SummaryPaper,
+                     ToolUse, UserPlan, Vote, WatchedProject)
 
 PARIS = ZoneInfo('Europe/Paris')
-FEED_LIMIT = 300
+FEED_LIMIT = 300  # of each kind
+VISIT_LIMIT = 2000
+SERIES_DAYS = 14
 STUCK = datetime.timedelta(minutes=15)
 ARXIV_ID = re.compile(r'^(\d{4}\.\d{4,5}|[a-z\-]+(\.[A-Z]{2})?(/|--)\d{7})(v\d+)?$')  # old ids are stored with '--'
 
@@ -44,6 +50,10 @@ KINDS = {
     'vote': ('Vote', 'thumbs_up_down'),
     'follow': ('Abonnement', 'notifications'),
     'collection': ('Collection', 'folder'),
+    'tool_open': ('Résultat rouvert', 'history'),
+    'paper_open': ('Article ouvert', 'article'),
+    'digest_click': ('Clic digest', 'ads_click'),
+    'visit': ('Page vue', 'visibility'),
 }
 
 
@@ -80,18 +90,46 @@ def _tool_url(row):
     return _paper(row.key.split(':')[0])
 
 
-def _counted(start, end):
-    """Number of actions of each kind between start and end."""
-    paid = UserPlan.objects.filter(paid=True, created__gte=start, created__lt=end).count()
+STAFF_FIELDS = {User: 'is_staff', AIassistant: 'user__is_staff', DigestClick: 'subscription__user__is_staff'}
+
+
+def _without_staff(query, staff=False):
+    """The query without the team's own actions, unless staff (anonymous actions stay)."""
+    if staff:
+        return query
+    field = STAFF_FIELDS.get(query.model, 'user__is_staff' if 'user' in {f.name for f in query.model._meta.fields} else None)
+    return query.exclude(**{field: True}) if field else query
+
+
+def _daily(query, field='created', distinct=None):
+    """{Paris date: number of rows}, or of distinct values of `distinct`."""
+    count = Count(distinct, distinct=True) if distinct else Count('pk')
+    return {row['d']: row['n'] for row in query.annotate(d=TruncDate(field, tzinfo=PARIS)).values('d').annotate(n=count).order_by()}
+
+
+def _series(start, end, staff=False):
+    """{key: {Paris date: number}} of the actions of each kind between start and end."""
+    span = {'created__gte': start, 'created__lt': end}
+    rows = lambda model, **extra: _without_staff(model.objects.filter(**span, **extra), staff)
+    views = rows(PageView).exclude(visitor__in=_staff_visitors(start, end)) if not staff else rows(PageView)
+    premium = collections.Counter(_daily(rows(UserPlan, paid=True)))
+    premium.update(_daily(rows(PremiumGrant)))
     return {
-        'signup': User.objects.filter(date_joined__gte=start, date_joined__lt=end).count(),
-        'summary': PaperHistory.objects.filter(created__gte=start, created__lt=end).count(),
-        'new_summary': SummaryPaper.objects.filter(created__gte=start, created__lt=end).count(),
-        'question': AIassistant.objects.filter(created__gte=start, created__lt=end).count(),
-        'search': Search.objects.filter(created__gte=start, created__lt=end).count(),
-        'tool': Generated.objects.filter(created__gte=start, created__lt=end).count(),
-        'premium': paid + PremiumGrant.objects.filter(created__gte=start, created__lt=end).count(),
+        'visitors': _daily(views, distinct='visitor'),
+        'views': _daily(views),
+        'signup': _daily(_without_staff(User.objects.filter(date_joined__gte=start, date_joined__lt=end), staff), 'date_joined'),
+        'summary': _daily(rows(PaperHistory)),
+        'new_summary': _daily(SummaryPaper.objects.filter(**span)),
+        'question': _daily(rows(AIassistant)),
+        'search': _daily(rows(Search)),
+        'tool': _daily(rows(Generated)),
+        'premium': dict(premium),
     }
+
+
+def _staff_visitors(start, end):
+    """The visitors of the team: their pages while signed out, in the same browser and day, are theirs too."""
+    return set(PageView.objects.filter(created__gte=start, created__lt=end, user__is_staff=True).values_list('visitor', flat=True))
 
 
 def _cost(first, last):
@@ -99,18 +137,28 @@ def _cost(first, last):
     return sum(row.cost(prices) or 0 for row in AIUsage.objects.filter(day__gte=first, day__lte=last))
 
 
-def numbers(day):
-    """[{key, label, icon, value, yesterday, week}] for the day, the day before and the mean of the 7 days before."""
+NUMBER_KEYS = ('visitors', 'views', 'signup', 'summary', 'new_summary', 'question', 'search', 'tool', 'premium')
+NUMBER_LABELS = {'visitors': ('Visiteurs', 'group'), 'views': ('Pages vues', 'visibility')}
+
+
+def numbers(day, staff=False):
+    """[{key, label, icon, value, yesterday, week, series}] for the day, the day before, the mean of the 7 days
+    before, and the SERIES_DAYS days up to the day ([{day, value}], for the small bar chart of each card)."""
     start, end = day_bounds(day)
-    week_start = start - datetime.timedelta(days=7)
-    now, before, week = _counted(start, end), _counted(start - datetime.timedelta(days=1), start), _counted(week_start, start)
+    first = day - datetime.timedelta(days=SERIES_DAYS - 1)
+    series = _series(day_bounds(min(first, day - datetime.timedelta(days=7)))[0], end, staff)
     rows = []
-    for key in ('signup', 'summary', 'new_summary', 'question', 'search', 'tool', 'premium'):
-        label, icon = KINDS[key]
-        rows.append({'key': key, 'label': label, 'icon': icon, 'value': now[key], 'yesterday': before[key],
-                     'week': round(week[key] / 7, 1)})
+    for key in NUMBER_KEYS:
+        label, icon = NUMBER_LABELS.get(key) or KINDS[key]
+        per_day = series[key]
+        week = sum(per_day.get(day - datetime.timedelta(days=n), 0) for n in range(1, 8))
+        days = [first + datetime.timedelta(days=n) for n in range(SERIES_DAYS)]
+        top = max([per_day.get(d, 0) for d in days] + [1])
+        rows.append({'key': key, 'label': label, 'icon': icon, 'value': per_day.get(day, 0),
+                     'yesterday': per_day.get(day - datetime.timedelta(days=1), 0), 'week': round(week / 7, 1),
+                     'series': [{'day': d, 'value': per_day.get(d, 0), 'height': round(100 * per_day.get(d, 0) / top)} for d in days]})
     failed = Generated.objects.filter(created__gte=start, created__lt=end, status='failed').count()
-    rows[5]['note'] = '%d en échec' % failed if failed else ''
+    next(r for r in rows if r['key'] == 'tool')['note'] = '%d en échec' % failed if failed else ''
     rows.append({'key': 'cost', 'label': 'Coût IA', 'icon': 'payments', 'value': '$%.2f' % _cost(day, day),
                  'yesterday': '$%.2f' % _cost(day - datetime.timedelta(days=1), day - datetime.timedelta(days=1)),
                  'week': '$%.2f' % (_cost(day - datetime.timedelta(days=7), day - datetime.timedelta(days=1)) / 7),
@@ -118,27 +166,38 @@ def numbers(day):
     return rows
 
 
-def feed(day, kind=None, members_only=False):
-    """The day's actions, latest first: [{time, kind, label, icon, text, detail, href, who, who_url, alert, anonymous}]."""
+def _tool(kind):
+    """The tool of a Generated kind, as visits.SECTIONS names it: Journal club (édition) -> Journal club."""
+    return TOOL_NAMES.get(kind, kind).split(' (')[0]
+
+
+def feed(day, kind=None, members_only=False, staff=False):
+    """The day's actions, latest first: [{time, kind, label, icon, text, detail, href, who, who_url, person, alert,
+    anonymous}], at most FEED_LIMIT of each kind (VISIT_LIMIT page views). `person` groups the actions of one
+    member, or of one browser for the visitors without an account (u12, v<visitor hash>, '' when unknown)."""
     start, end = day_bounds(day)
     span = {'created__gte': start, 'created__lt': end}
     events = []
+    staff_visitors = set() if staff else _staff_visitors(start, end)
+    # a browser that signs in during the day: its pages before belong to the member
+    members = dict(PageView.objects.filter(**span, user__isnull=False).values_list('visitor', 'user_id'))
 
-    def add(kind_key, when, text, href='', user=None, detail='', alert=False):
+    def add(kind_key, when, text, href='', user=None, detail='', alert=False, person=None):
         label, icon = KINDS[kind_key]
         events.append({'time': when.astimezone(PARIS), 'kind': kind_key, 'label': label, 'icon': icon, 'text': text,
                        'detail': detail, 'href': href, 'who': _who(user), 'who_url': _user_url(user), 'alert': alert,
+                       'person': person if person is not None else ('u%d' % user.pk if user else ''),
                        'anonymous': user is None and kind_key != 'new_summary'})
 
-    def rows(model, **extra):
-        query = model.objects.filter(**span, **extra)
+    def rows(model, limit=FEED_LIMIT, exclude=None, **extra):
+        query = _without_staff(model.objects.filter(**span, **extra), staff).exclude(**exclude or {})
         if members_only and 'user' in {f.name for f in model._meta.fields}:
             query = query.filter(user__isnull=False)
-        return query.order_by('-created')[:FEED_LIMIT]
+        return query.order_by('-created')[:limit]
 
     wanted = lambda k: kind in (None, '', k)
     if wanted('signup'):
-        for u in User.objects.filter(date_joined__gte=start, date_joined__lt=end).order_by('-date_joined')[:FEED_LIMIT]:
+        for u in _without_staff(User.objects.filter(date_joined__gte=start, date_joined__lt=end), staff).order_by('-date_joined')[:FEED_LIMIT]:
             add('signup', u.date_joined, _who(u), _user_url(u), u, '' if u.is_active else 'non activé')
     if wanted('premium'):
         for p in rows(UserPlan, paid=True).select_related('user'):
@@ -164,8 +223,29 @@ def feed(day, kind=None, members_only=False):
             state = {'failed': 'échec : %s' % g.error[:120], 'pending': 'en cours %s' % g.step, 'no_source': 'source indisponible'}.get(g.status, '')
             add('tool', g.created, '%s · %s' % (TOOL_NAMES.get(g.kind, g.kind), g.key[:60]), _tool_url(g), g.user,
                 state, g.status == 'failed')
+    if wanted('tool_open'):
+        # the results someone opened again: those they started today are already a 'tool' action
+        uses = _without_staff(ToolUse.objects.filter(updated__gte=start, updated__lt=end), staff) \
+            .select_related('user', 'row').defer('row__content').order_by('-updated')[:FEED_LIMIT]
+        for use in uses:
+            if use.row.user_id == use.user_id and use.row.created >= start:
+                continue
+            add('tool_open', use.updated, '%s · %s' % (TOOL_NAMES.get(use.row.kind, use.row.kind), use.title[:80] or use.row.key[:60]),
+                use.url if use.url.startswith('/') else _tool_url(use.row), use.user, 'fait le %s' % use.row.created.astimezone(PARIS).strftime('%d/%m'))
+    if wanted('paper_open'):
+        opened = _without_staff(PaperVisit.objects.filter(visited__gte=start, visited__lt=end), staff) \
+            .select_related('user', 'paper').order_by('-visited')[:FEED_LIMIT]
+        for v in opened:
+            title = (v.paper.title if v.paper else '') or v.title or v.arxiv_id
+            add('paper_open', v.visited, title, _paper(v.arxiv_id), v.user, v.arxiv_id)
+    if wanted('digest_click'):
+        clicks = _without_staff(DigestClick.objects.filter(**span, burst=False), staff) \
+            .select_related('subscription__user').order_by('-created')[:FEED_LIMIT]
+        for c in clicks:
+            add('digest_click', c.created, c.arxiv_id, _paper(c.arxiv_id), c.subscription.user,
+                '%s · rang %s' % (c.target, c.rank or 'hors liste'))
     if wanted('vote'):
-        for v in Vote.objects.filter(created_at__gte=start, created_at__lt=end).select_related('paper', 'user') \
+        for v in _without_staff(Vote.objects.filter(created_at__gte=start, created_at__lt=end), staff).select_related('paper', 'user') \
                 .order_by('-created_at')[:FEED_LIMIT]:
             if members_only and not v.user_id:
                 continue
@@ -184,8 +264,78 @@ def feed(day, kind=None, members_only=False):
     if wanted('collection'):
         for c in rows(Collection).select_related('user'):
             add('collection', c.created, c.name, '', c.user)
+    if wanted('visit'):
+        for v in rows(PageView, limit=VISIT_LIMIT, exclude={'visitor__in': staff_visitors}).select_related('user'):
+            where = ' · '.join(filter(None, [v.referrer and 'depuis %s' % v.referrer, v.source and 'utm %s' % v.source,
+                                             v.first and 'première page']))
+            text = visits.section(v.view) + (' · « %s »' % v.query if v.query else '')
+            href = v.path if v.path.startswith('/') and not v.path.startswith('//') else ''
+            person = 'u%d' % v.user_id if v.user_id else ('u%d' % members[v.visitor] if v.visitor in members else 'v' + v.visitor)
+            add('visit', v.created, text, href, v.user, where, person=person)
     events.sort(key=lambda e: e['time'], reverse=True)
-    return events[:FEED_LIMIT]
+    return events
+
+
+def sources(day, staff=False):
+    """Where the day's visitors came from: [(label, visitors)] for the other sites, the utm sources and the
+    section of their first page."""
+    start, end = day_bounds(day)
+    views = _without_staff(PageView.objects.filter(created__gte=start, created__lt=end), staff)
+    if not staff:
+        views = views.exclude(visitor__in=_staff_visitors(start, end))
+    referrers, utm, entries, seen = collections.Counter(), collections.Counter(), collections.Counter(), set()
+    for visitor, view, referrer, source in views.order_by('created').values_list('visitor', 'view', 'referrer', 'source'):
+        if referrer:
+            referrers[referrer] += 1
+        if source:
+            utm[source] += 1
+        if visitor not in seen:
+            seen.add(visitor)
+            entries[visits.section(view)] += 1
+            if not referrer and not source:
+                referrers['(direct ou inconnu)'] += 1
+    top = lambda counter: counter.most_common(12)
+    return {'referrers': top(referrers), 'utm': top(utm), 'entries': top(entries)}
+
+
+def tools(day, staff=False):
+    """The use of each tool on the day and over the 7 days up to it: {'day': rows, 'week': rows}, rows
+    [{tool, views, visitors, uses, failed, reopened, members}] with the most used first. A use is a result
+    made (Generated), a question, a search or a summary request; reopened, a result opened again (ToolUse)."""
+    def table(start, end):
+        span = {'created__gte': start, 'created__lt': end}
+        rows = collections.defaultdict(lambda: {'views': 0, 'visitors': set(), 'uses': 0, 'failed': 0, 'reopened': 0, 'members': set()})
+        views = _without_staff(PageView.objects.filter(**span), staff)
+        if not staff:
+            views = views.exclude(visitor__in=_staff_visitors(start, end))
+        for view, visitor, user in views.values_list('view', 'visitor', 'user_id').iterator():
+            row = rows[visits.section(view)]
+            row['views'] += 1
+            row['visitors'].add(visitor)
+            if user:
+                row['members'].add(user)
+        for kind, status, user in _without_staff(Generated.objects.filter(**span), staff).values_list('kind', 'status', 'user_id'):
+            row = rows[_tool(kind)]
+            row['uses'] += 1
+            row['failed'] += status == 'failed'
+            if user:
+                row['members'].add(user)
+        uses = _without_staff(ToolUse.objects.filter(updated__gte=start, updated__lt=end), staff)
+        for kind, user, maker, made in uses.values_list('row__kind', 'user_id', 'row__user_id', 'row__created'):
+            if maker == user and made >= start:
+                continue
+            rows[_tool(kind)]['reopened'] += 1
+            rows[_tool(kind)]['members'].add(user)
+        for model, tool in ((AIassistant, 'Assistant'), (Search, 'Recherche'), (PaperHistory, 'Article')):
+            for user in _without_staff(model.objects.filter(**span), staff).values_list('user_id', flat=True).iterator():
+                rows[tool]['uses'] += 1
+                if user:
+                    rows[tool]['members'].add(user)
+        out = [dict(r, tool=tool, visitors=len(r['visitors']), members=len(r['members'])) for tool, r in rows.items()]
+        return sorted(out, key=lambda r: (-(r['uses'] + r['reopened']), -r['views'], r['tool']))
+
+    end = day_bounds(day)[1]
+    return {'day': table(day_bounds(day)[0], end), 'week': table(day_bounds(day - datetime.timedelta(days=6))[0], end)}
 
 
 def watch():

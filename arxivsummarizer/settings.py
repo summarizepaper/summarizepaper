@@ -197,6 +197,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
+    'summarizer.visits.PageViewMiddleware',  # the pages people open, for /admin/activite/
 ]
 
 AUTHENTICATION_BACKENDS = [

@@ -1,3 +1,4 @@
+import collections
 import csv
 import datetime
 
@@ -59,21 +60,31 @@ def dashboard_callback(request, context):
 
 
 def activity_view(request):
-    """/admin/activite/: what happened on a given day (activity.py)."""
+    """/admin/activite/: what happened on a given day (activity.py). The whole day is sent at once and the page
+    filters it in the browser (admin-activity.js); the reliability of the assistant and the letters, slower to
+    count, come after (?partie=fiabilite)."""
     try:
         day = datetime.date.fromisoformat(request.GET.get('jour', ''))
     except ValueError:
         day = activity.today()
-    kind = request.GET.get('type', '')
-    members = request.GET.get('membres') == '1'
+    staff = request.GET.get('equipe') == '1'
+    if request.GET.get('partie') == 'fiabilite':
+        return render(request, 'admin/summarizer/activity_reliability.html',
+                      {'day': day, 'quality': activity.answer_quality(day), 'letters': letters.review()})
+    events = activity.feed(day, staff=staff)
+    per_kind = collections.Counter(e['kind'] for e in events)
+    feed = [{'t': e['time'].strftime('%H:%M'), 'k': e['kind'], 'x': e['text'][:300], 'd': e['detail'], 'h': e['href'],
+             'w': e['who'], 'wu': e['who_url'], 'p': e['person'], 'a': e['alert'], 'n': e['anonymous']} for e in events]
+    kinds = [(k, label) for k, (label, _) in activity.KINDS.items()]
     context = dict(admin.site.each_context(request), title='Activité du %s' % day.strftime('%d/%m/%Y'),
                    day=day, previous=day - datetime.timedelta(days=1),
                    next=day + datetime.timedelta(days=1) if day < activity.today() else None,
-                   is_today=day == activity.today(), kind=kind, members=members,
-                   kinds=[(k, label) for k, (label, _) in activity.KINDS.items()],
-                   numbers=activity.numbers(day), events=activity.feed(day, kind, members),
-                   watch=activity.watch(), feed_limit=activity.FEED_LIMIT, quality=activity.answer_quality(day),
-                   letters=letters.review())
+                   is_today=day == activity.today(), staff=staff, kinds=kinds, per_kind=dict(per_kind),
+                   numbers=activity.numbers(day, staff), feed=feed, watch=activity.watch(),
+                   feed_kinds={k: {'label': label, 'icon': icon} for k, (label, icon) in activity.KINDS.items()},
+                   truncated=[activity.KINDS[k][0] for k, n in per_kind.items()
+                              if n >= (activity.VISIT_LIMIT if k == 'visit' else activity.FEED_LIMIT)],
+                   tools=activity.tools(day, staff), sources=activity.sources(day, staff))
     return render(request, 'admin/summarizer/activity.html', context)
 
 

@@ -32,7 +32,7 @@ from django.views.decorators.http import require_POST
 from . import removal, sources
 
 from .models import (ActivityState, AIassistant, ArxivPaper, ChatConversation, ChatShare, Collection, CollectionPaper,
-                     DigestSubscription, FollowedPaper, Generated, LetterSubscription, PaperAuthor, PaperHistory,
+                     DigestSubscription, FollowedPaper, Generated, LetterSubscription, PageView, PaperAuthor, PaperHistory,
                      PaperScore, PaperVisit, PublicationAlert, ReferenceWatch, SavedSearch, TopicMapWatch,
                      ToolUse, Trash, VersionAlert, WatchedProject)
 
@@ -870,6 +870,8 @@ def export_data(request):
         'press_kits_and_journal_clubs': [{'tool': k, 'title': t, 'link': u, 'last_used': when(d)} for k, t, u, d in
                                          ToolUse.objects.filter(user=user).order_by('pk')
                                          .values_list('row__kind', 'title', 'url', 'updated')],
+        'pages_opened': [{'page': v, 'address': a, 'from': r, 'date': when(d)} for v, a, r, d in
+                         PageView.objects.filter(user=user).order_by('pk').values_list('view', 'path', 'referrer', 'created')],
     }
     response = HttpResponse(json.dumps(data, ensure_ascii=False, indent=1), content_type='application/json; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="summarizepaper-%s.json"' % timezone.localdate().isoformat()
