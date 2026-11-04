@@ -135,3 +135,16 @@ class PageViewTests(TestCase):
         PageView.objects.create(visitor='b' * 16, view='faq')
         self.assertEqual(visits.purge(), 1)
         self.assertEqual(PageView.objects.count(), 1)
+
+    def test_only_pages_a_person_moved_on_count(self):
+        self.client.get('/fr/faq', follow=True, **self.BROWSER)
+        PageView.objects.create(visitor='r' * 16, view='register', path='/fr/register/', referrer='yandex.com')
+        numbers = {n['key']: n['value'] for n in activity.numbers(activity.today())}
+        self.assertEqual((numbers['visitors'], numbers['robots']), (0, 2))
+        path = PageView.objects.exclude(visitor='r' * 16).get().path
+        self.assertEqual(self.client.post('/visit/', {'path': path}, HTTP_USER_AGENT=self.BROWSER['HTTP_USER_AGENT']).status_code, 204)
+        self.assertTrue(PageView.objects.exclude(visitor='r' * 16).get().human)
+        numbers = {n['key']: n['value'] for n in activity.numbers(activity.today())}
+        self.assertEqual((numbers['visitors'], numbers['views'], numbers['robots']), (1, 1, 1))
+        self.assertEqual(activity.sources(activity.today())['referrers'], [('(direct ou inconnu)', 1)])
+        self.assertEqual(self.client.get('/visit/').status_code, 405)

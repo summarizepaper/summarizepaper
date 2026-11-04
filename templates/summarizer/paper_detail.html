@@ -100,6 +100,21 @@
   </section>
   {% endif %}
 
+  {% if not request.user.is_authenticated %}
+  <aside class="signup-offer" aria-label="{% trans 'Free account' %}">
+    <div>
+      <p class="signup-offer-title">{% if paper.category %}{% blocktrans with field=paper.category|category_label %}Every morning, the new papers of {{ field }} with a short summary{% endblocktrans %}{% else %}{% trans 'Every morning, the new papers of your fields with a short summary' %}{% endif %}</p>
+      <p>{% trans 'Free with an account, like your reading list and the history of your questions.' %} <a href="/{{ LANGUAGE_CODE }}/digest/example/{% if paper.category|starter_topic %}?field={{ paper.category|starter_topic }}{% endif %}" rel="nofollow">{% trans 'See an example' %}</a></p>
+    </div>
+    <div class="signup-offer-actions">
+      {% with digest_next='/'|add:LANGUAGE_CODE|add:'/digest/' %}
+      {% include 'accounts/_google_button.html' with next=digest_next inline=True funnel='paper_signup_digest_google' %}
+      <a href="/{{ LANGUAGE_CODE }}/register/?next={{ digest_next|urlencode }}" rel="nofollow" {% if google_login %}data-funnel="paper_signup_digest">{% trans 'Or with an email address' %}{% else %}class="btn btn-sm" data-funnel="paper_signup_digest">{% trans 'Create a free account' %}{% endif %}</a>
+      {% endwith %}
+    </div>
+  </aside>
+  {% endif %}
+
   <div class="message-box" id="results">
     <h2 class="message-header">{% trans 'Read further' %}</h2>
 
@@ -206,7 +221,8 @@
     {% if not request.user.is_authenticated %}
     <div class="account-nudge" id="account-nudge" hidden>
       <p><strong>{% trans 'Keep this conversation' %}</strong> — {% trans 'a free account saves your questions and answers, your collections of papers and your alerts.' %}</p>
-      <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="paper_signup_chat">{% trans 'Create a free account' %}</a>
+      <span class="signup-offer-actions">{% include 'accounts/_google_button.html' with next=request.path inline=True funnel='paper_signup_chat_google' %}
+      <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="paper_signup_chat">{% trans 'Create a free account' %}</a></span>
     </div>
     {% endif %}
   </div>

@@ -22572,3 +22572,27 @@ msgstr ""
 "même n’est pas conservée. Seule notre équipe les voit, pour comprendre quels"
 " outils sont utilisés et les améliorer ; elles sont supprimées au bout de 60"
 " jours. Base légale : notre intérêt légitime à améliorer le service."
+
+msgid "Free account"
+msgstr "Compte gratuit"
+
+#, python-format
+msgid "Every morning, the new papers of %(field)s with a short summary"
+msgstr "Chaque matin, les nouveaux articles de %(field)s avec un court résumé"
+
+msgid "Every morning, the new papers of your fields with a short summary"
+msgstr ""
+"Chaque matin, les nouveaux articles de vos domaines avec un court résumé"
+
+msgid ""
+"Free with an account, like your reading list and the history of your "
+"questions."
+msgstr ""
+"Gratuit avec un compte, comme votre liste de lecture et l’historique de vos "
+"questions."
+
+msgid "See an example"
+msgstr "Voir un exemple"
+
+msgid "Or with an email address"
+msgstr "Ou avec une adresse email"

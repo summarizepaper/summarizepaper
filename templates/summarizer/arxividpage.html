@@ -11,7 +11,8 @@
 {% block title %}{% firstof paper.title details.title as paper_title %}{% if paper_title %}{{ paper_title|oneline|truncatechars:90 }} | {% trans 'AI summary' %}{% elif arxiv_id|is_external %}{% trans 'AI-Powered Paper Summarization about the paper' %} {{ arxiv_id|paper_ref }}{% else %}{% trans 'AI-Powered Paper Summarization about the arXiv paper' %} {{ arxiv_id|dash_slash }}{% endif %}{% endblock %}
 {% block extra_head_tags %}
   {% firstof paper.title details.title as paper_title %}
-  {% firstof sumpaper.lay_summary sumpaper.summary paper.abstract details.abstract as page_excerpt %}
+  {# in the results of search engines: the one sentence of the essentials first, not the numbered lay summary #}
+  {% firstof insight.tldr sumpaper.summary sumpaper.lay_summary paper.abstract details.abstract as page_excerpt %}
   {% if page_excerpt %}
   <meta name="description" content="{{ page_excerpt|plaintext|truncatechars:158 }}" />
   {% else %}
@@ -402,6 +403,13 @@
 .account-nudge { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border); background: var(--accent-soft); font-size: 14px; }
 .account-nudge[hidden] { display: none; }
 .account-nudge p { margin: 0; }
+.signup-offer {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px;
+  margin: 0 0 24px; padding: 16px 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--accent-soft); font-size: 14px;
+}
+.signup-offer p { margin: 0; }
+.signup-offer-title { font-weight: 600; font-size: 15px; margin-bottom: 2px !important; }
+.signup-offer-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 
 /* ---------- Tools ---------- */
 .tools-advanced { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
@@ -428,6 +436,7 @@
   body:has(:is(input, textarea, select):focus) .paper-actions { display: none; }
   .chat-suggestions { padding: 0 16px 12px; }
   .account-nudge { padding: 14px 16px; }
+  .signup-offer { padding: 14px 16px; }
 }
 
 @media (max-width: 600px) {

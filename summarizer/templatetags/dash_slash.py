@@ -28,6 +28,13 @@ def paper_url(value):
 
 
 @register.filter
+def starter_topic(value):
+    """The topic of the example digest (digest_web.example_page) for a paper's category."""
+    from summarizer.email_updates import starter_for
+    return starter_for(value)
+
+
+@register.filter
 def category_label(value):
     """'biorxiv.cell-biology' -> 'bioRxiv: Cell Biology', 'osf.psyarxiv' -> 'PsyArXiv'; arXiv codes unchanged."""
     from summarizer import digest, sources

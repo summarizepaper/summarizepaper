@@ -26,6 +26,18 @@ STARTERS = {
     'computing': 'cs.DS,cs.SE,cs.CR,cs.DC,eess.SP',
     'economy': 'econ.EM,econ.GN,q-fin.EC,q-fin.ST,q-fin.PM',
 }
+
+
+def starter_for(category):
+    """The starter topic of an arXiv or bioRxiv category: the one that lists it, else one of its archive; '' if none."""
+    archive = (category or '').split('.')[0]
+    for exact in (True, False):
+        for topic, codes in STARTERS.items():
+            if any(code == category if exact else code.split('.')[0] == archive for code in codes.split(',')):
+                return topic
+    return ''
+
+
 PENDING = 'email_updates_pending'
 PENDING_MAX_AGE = 24 * 3600
 

@@ -3,7 +3,11 @@ tools, from which site, and the path of a visit through the day.
 
 Only pages opened in a browser are kept: HTML answers to GET, not the fragments a page fetches (Sec-Fetch-Dest),
 not the crawlers (access.crawler) nor the scrapers, which never keep the visitor cookie of loadshed.py and send no
-Sec-Fetch headers. A visitor is a hash of the IP address and the browser with the day, so the address is not kept
+Sec-Fetch headers. Some robots pass all that: they drive real browsers, keep the cookie and make up where they
+come from (on 4 November, one browser opened sign-in and sign-up pages "from" Google, Bing, Yahoo, Yandex and
+Baidu in turn, a few seconds apart). So a page only counts once a person has moved on it: visit.js tells seen()
+at the first scroll, touch, key or mouse move, and the activity page only counts the visitors with such a page
+or signed in (activity.py). A visitor is a hash of the IP address and the browser with the day, so the address is not kept
 and a visit cannot be followed from one day to the next. The rows are deleted after VISIT_DAYS days (purge, from
 the hourly send_digest)."""
 import datetime
@@ -12,7 +16,10 @@ import logging
 from urllib.parse import urlsplit
 
 from django.conf import settings
+from django.http import HttpResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from . import access
 from .loadshed import COOKIE
@@ -21,6 +28,7 @@ from .models import PageView
 logger = logging.getLogger(__name__)
 
 VISIT_DAYS = 60
+SEEN_WITHIN = datetime.timedelta(minutes=30)  # how late visit.js may confirm a page
 SKIPPED_PREFIXES = ('/admin/', '/rosetta/', '/static/')
 SKIPPED_SUFFIXES = ('_fragment', '_state', '_status', '_feed', '_quota', '_cell', '_why', '_sw')
 # pages whose address holds a sign-in or unsubscribe token: only their name is kept
@@ -130,3 +138,14 @@ class PageViewMiddleware:
 def purge(now=None):
     now = now or timezone.now()
     return PageView.objects.filter(created__lt=now - datetime.timedelta(days=VISIT_DAYS)).delete()[0]
+
+
+@csrf_exempt
+@require_POST
+def seen(request):
+    """visit.js: a person moved on this page (its path), so the page is theirs, not a robot's."""
+    path = (request.POST.get('path') or '')[:300]
+    if path.startswith('/') and not access.crawler(request):
+        PageView.objects.filter(visitor=visitor(request), path=path, human=False,
+                                created__gte=timezone.now() - SEEN_WITHIN).update(human=True)
+    return HttpResponse(status=204)

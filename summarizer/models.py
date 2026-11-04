@@ -156,6 +156,7 @@ class PageView(models.Model):
     source = models.CharField(max_length=40, blank=True, default='')  # utm_source
     lang = models.CharField(max_length=5, blank=True, default='')
     first = models.BooleanField(default=False)  # without the visitor cookie: the first page of this browser
+    human = models.BooleanField(default=False)  # the page was scrolled, touched or the mouse moved on it (visits.seen)
 
 
 class ActivityState(models.Model):

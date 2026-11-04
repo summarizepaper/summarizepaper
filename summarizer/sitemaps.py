@@ -19,7 +19,8 @@ class StaticViewSitemap(Sitemap):
         return items
 
     def location(self, item):
-        return reverse(item)
+        # the English homepage is / for Google (home.html's canonical)
+        return '/' if item == 'summarize' else reverse(item)
 
 
 class SummarizedPaperSitemap(Sitemap):

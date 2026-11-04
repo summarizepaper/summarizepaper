@@ -8,7 +8,7 @@ import re
 from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.db.models.functions import TruncDate
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone, translation
@@ -111,11 +111,12 @@ def _series(start, end, staff=False):
     """{key: {Paris date: number}} of the actions of each kind between start and end."""
     span = {'created__gte': start, 'created__lt': end}
     rows = lambda model, **extra: _without_staff(model.objects.filter(**span, **extra), staff)
-    views = rows(PageView).exclude(visitor__in=_staff_visitors(start, end)) if not staff else rows(PageView)
+    views = _visits(start, end, staff)
     premium = collections.Counter(_daily(rows(UserPlan, paid=True)))
     premium.update(_daily(rows(PremiumGrant)))
     return {
         'visitors': _daily(views, distinct='visitor'),
+        'robots': _daily(PageView.objects.filter(**span).exclude(visitor__in=_people(start, end)), distinct='visitor'),
         'views': _daily(views),
         'signup': _daily(_without_staff(User.objects.filter(date_joined__gte=start, date_joined__lt=end), staff), 'date_joined'),
         'summary': _daily(rows(PaperHistory)),
@@ -125,6 +126,17 @@ def _series(start, end, staff=False):
         'tool': _daily(rows(Generated)),
         'premium': dict(premium),
     }
+
+
+def _people(start, end):
+    """The visitors who are people: they moved on a page (visits.seen) or were signed in."""
+    return PageView.objects.filter(Q(human=True) | Q(user__isnull=False), created__gte=start, created__lt=end).values('visitor')
+
+
+def _visits(start, end, staff=False):
+    """The pages people opened between start and end, without the team's unless staff."""
+    views = _without_staff(PageView.objects.filter(created__gte=start, created__lt=end), staff).filter(visitor__in=_people(start, end))
+    return views if staff else views.exclude(visitor__in=_staff_visitors(start, end))
 
 
 def _staff_visitors(start, end):
@@ -137,8 +149,8 @@ def _cost(first, last):
     return sum(row.cost(prices) or 0 for row in AIUsage.objects.filter(day__gte=first, day__lte=last))
 
 
-NUMBER_KEYS = ('visitors', 'views', 'signup', 'summary', 'new_summary', 'question', 'search', 'tool', 'premium')
-NUMBER_LABELS = {'visitors': ('Visiteurs', 'group'), 'views': ('Pages vues', 'visibility')}
+NUMBER_KEYS = ('visitors', 'views', 'robots', 'signup', 'summary', 'new_summary', 'question', 'search', 'tool', 'premium')
+NUMBER_LABELS = {'visitors': ('Visiteurs', 'group'), 'views': ('Pages vues', 'visibility'), 'robots': ('Robots probables', 'smart_toy')}
 
 
 def numbers(day, staff=False):
@@ -178,7 +190,6 @@ def feed(day, kind=None, members_only=False, staff=False):
     start, end = day_bounds(day)
     span = {'created__gte': start, 'created__lt': end}
     events = []
-    staff_visitors = set() if staff else _staff_visitors(start, end)
     # a browser that signs in during the day: its pages before belong to the member
     members = dict(PageView.objects.filter(**span, user__isnull=False).values_list('visitor', 'user_id'))
 
@@ -265,7 +276,8 @@ def feed(day, kind=None, members_only=False, staff=False):
         for c in rows(Collection).select_related('user'):
             add('collection', c.created, c.name, '', c.user)
     if wanted('visit'):
-        for v in rows(PageView, limit=VISIT_LIMIT, exclude={'visitor__in': staff_visitors}).select_related('user'):
+        for v in _visits(start, end, staff).filter(**({'user__isnull': False} if members_only else {})) \
+                .select_related('user').order_by('-created')[:VISIT_LIMIT]:
             where = ' · '.join(filter(None, [v.referrer and 'depuis %s' % v.referrer, v.source and 'utm %s' % v.source,
                                              v.first and 'première page']))
             text = visits.section(v.view) + (' · « %s »' % v.query if v.query else '')
@@ -280,9 +292,7 @@ def sources(day, staff=False):
     """Where the day's visitors came from: [(label, visitors)] for the other sites, the utm sources and the
     section of their first page."""
     start, end = day_bounds(day)
-    views = _without_staff(PageView.objects.filter(created__gte=start, created__lt=end), staff)
-    if not staff:
-        views = views.exclude(visitor__in=_staff_visitors(start, end))
+    views = _visits(start, end, staff)
     referrers, utm, entries, seen = collections.Counter(), collections.Counter(), collections.Counter(), set()
     for visitor, view, referrer, source in views.order_by('created').values_list('visitor', 'view', 'referrer', 'source'):
         if referrer:
@@ -305,9 +315,7 @@ def tools(day, staff=False):
     def table(start, end):
         span = {'created__gte': start, 'created__lt': end}
         rows = collections.defaultdict(lambda: {'views': 0, 'visitors': set(), 'uses': 0, 'failed': 0, 'reopened': 0, 'members': set()})
-        views = _without_staff(PageView.objects.filter(**span), staff)
-        if not staff:
-            views = views.exclude(visitor__in=_staff_visitors(start, end))
+        views = _visits(start, end, staff)
         for view, visitor, user in views.values_list('view', 'visitor', 'user_id').iterator():
             row = rows[visits.section(view)]
             row['views'] += 1

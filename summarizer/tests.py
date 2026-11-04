@@ -728,6 +728,19 @@ class AutorunTests(TestCase):
         # a summary in another language does not count
         self.assertContains(Client().get('/fr/paper/2101.00005v1/?autorun=1'), marker)
 
+    @override_settings(GOOGLE_CLIENT_ID='cid', GOOGLE_CLIENT_SECRET='secret')
+    def test_a_visitor_is_offered_the_digest_of_the_field_in_one_click(self):
+        ArxivPaper.objects.filter(pk=self.paper.pk).update(category='cs.CL')
+        SummaryPaper.objects.create(paper=self.paper, lang='en', summary='Done.')
+        page = Client().get('/en/paper/2101.00005v1/')
+        self.assertContains(page, 'Every morning, the new papers of cs.CL with a short summary')
+        self.assertContains(page, 'href="/en/login/google/?next=/en/digest/"')
+        self.assertContains(page, 'data-funnel="paper_signup_digest_google"')
+        self.assertContains(page, '/en/digest/example/?field=ai')
+        user = User.objects.create_user('reader', password='x')
+        client = Client(); client.force_login(user)
+        self.assertNotContains(client.get('/en/paper/2101.00005v1/'), 'paper_signup_digest_google')
+
 
 class DigestSharedWorkTests(TestCase):
     def test_ten_identical_subscribers_share_one_fetch_and_one_model_call(self):

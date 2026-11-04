@@ -23,6 +23,7 @@
       <span class="tool-status" id="collection-status"></span>
     {% else %}
       <span>{% trans 'Group papers in collections to compare them, chat with them and export them.' %}</span>
+      {% include 'accounts/_google_button.html' with next=request.path inline=True funnel='paper_signup_save_google' %}
       <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="paper_signup_save">{% trans 'Create a free account' %}</a>
       <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
     {% endif %}

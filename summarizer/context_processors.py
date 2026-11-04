@@ -25,6 +25,11 @@ def untracked(ip):
     return any(addr in net for net in UNTRACKED_NETWORKS)
 
 
+def google_login(request):
+    """Whether the "Continue with Google" button can be shown (accounts.google_start)."""
+    return {'google_login': bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET)}
+
+
 def analytics(request):
     if untracked(access.client_ip(request)):
         return {'UMAMI_WEBSITE_ID': ''}

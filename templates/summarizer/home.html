@@ -5,9 +5,11 @@
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
 <meta name="description" content="{% trans 'Understand research papers, follow new discoveries and check references with SummarizePaper. Free AI summaries and daily digests; specialist research tools with Premium.' %}">
-<link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/">
-<link rel="alternate" hreflang="en" href="https://www.summarizepaper.com/en/">
+{# Google keeps / as the English homepage, where the links of other sites point: /en/ says the same #}
+<link rel="canonical" href="https://www.summarizepaper.com/{% if LANGUAGE_CODE != 'en' %}{{ LANGUAGE_CODE }}/{% endif %}">
+<link rel="alternate" hreflang="en" href="https://www.summarizepaper.com/">
 <link rel="alternate" hreflang="fr" href="https://www.summarizepaper.com/fr/">
+<link rel="alternate" hreflang="x-default" href="https://www.summarizepaper.com/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="{% trans 'Your AI research companion' %} | SummarizePaper">
 <meta property="og:description" content="{% trans 'Understand papers. Keep up with your field. Check before submitting.' %}">

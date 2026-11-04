@@ -439,6 +439,7 @@ img { max-width: 100%; }
   transition: background-color .15s;
 }
 .btn-google:hover { background: #f8f9fa; }
+.btn-google-inline { display: inline-flex; width: auto; padding: 8px 14px; font-size: 14px; }
 .or-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-muted); font-size: 13px; }
 .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 @media (max-width: 520px) {

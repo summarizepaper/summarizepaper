@@ -23,9 +23,10 @@ class HomepageTests(TestCase):
             response = self.client.get('/%s/' % lang)
             soup = BeautifulSoup(response.content, 'html.parser')
             self.assertEqual([h.get_text() for h in soup.select('h1')], [title])
-            self.assertEqual(soup.select_one('link[rel=canonical]')['href'], 'https://www.summarizepaper.com/%s/' % lang)
+            self.assertEqual(soup.select_one('link[rel=canonical]')['href'], 'https://www.summarizepaper.com/%s' % ('' if lang == 'en' else 'fr/'))
             self.assertEqual({a['hreflang']: a['href'] for a in soup.select('link[hreflang]')},
-                             {'en': 'https://www.summarizepaper.com/en/', 'fr': 'https://www.summarizepaper.com/fr/'})
+                             {'en': 'https://www.summarizepaper.com/', 'fr': 'https://www.summarizepaper.com/fr/',
+                              'x-default': 'https://www.summarizepaper.com/'})
             self.assertEqual(soup.select_one('input[name=arxiv_id]')['id'], 'arxiv-id')
             self.assertIsNotNone(soup.select_one('a[href="/%s/digest/"]' % lang))
             self.assertIsNotNone(soup.select_one('a[href="/%s/missed/"]' % lang))
