@@ -1,5 +1,6 @@
-"""Small, explicit feedback batches. No scheduled sending, SMTP mailbox probing or account deletion."""
+"""Small feedback batches, at most 6 messages a day (run daily by Heroku Scheduler). No SMTP mailbox probing or account deletion."""
 import datetime
+import zoneinfo
 import smtplib
 from contextlib import contextmanager
 from email.utils import parseaddr
@@ -24,7 +25,8 @@ from .models import AIassistant, AnnouncementSent, OutreachContact, PaperHistory
 BASE = 'https://www.summarizepaper.com'
 SALT = 'summarizer.feedback-optout.v1'
 MAX_BATCH = 6
-COOLDOWN = datetime.timedelta(hours=24)
+# The daily quota follows the Paris calendar day, so a scheduler run a few minutes early is not refused.
+DAY_ZONE = zoneinfo.ZoneInfo('Europe/Paris')
 
 
 class BatchStopped(Exception):
@@ -114,16 +116,28 @@ def batch_lock():
         finally: cache.delete('outreach-batch-lock')
 
 
-def send_batch(limit=MAX_BATCH, segment='recent'):
+def sent_today(now=None):
+    start = timezone.localtime(now or timezone.now(), DAY_ZONE).replace(hour=0, minute=0, second=0, microsecond=0)
+    return OutreachContact.objects.filter(created__gte=start).count()
+
+
+def send_batch(limit=MAX_BATCH, segment='auto'):
     if not 1 <= limit <= MAX_BATCH: raise BatchStopped('Un lot contient de 1 à 6 messages.')
+    if segment not in ('auto', 'recent', 'older'): raise BatchStopped('Segment inconnu.')
     with batch_lock():
-        latest = OutreachContact.objects.order_by('-created').first()
-        if latest and latest.created > timezone.now()-COOLDOWN:
-            raise BatchStopped('Attendre au moins 24 heures et vérifier les retours du prestataire avant le lot suivant.')
-        if segment == 'older' and latest is None:
+        started = OutreachContact.objects.exists()
+        if segment == 'older' and not started:
             raise BatchStopped('Commencer par un lot récent avant de contacter les anciens comptes.')
+        limit = min(limit, MAX_BATCH - sent_today())
+        if limit <= 0:
+            raise BatchStopped('Déjà 6 messages aujourd’hui ; le prochain lot partira demain.')
+        if segment == 'auto':
+            # Recent accounts first, then older ones once the pilot batches exist.
+            users = candidates('recent') + (candidates('older') if started else [])
+        else:
+            users = candidates(segment)
         sent = []
-        for user in candidates(segment)[:limit]:
+        for user in users[:limit]:
             email = user.email.strip().lower()
             reason = mailcheck.undeliverable_reason(email)
             if reason: continue

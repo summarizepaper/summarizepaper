@@ -58,17 +58,39 @@ class OutreachTests(TestCase):
         self.assertTrue(OutreachContact.objects.filter(body=message.body).exists())
         with self.assertRaises(outreach.BatchStopped): outreach.send_batch()
         OutreachContact.objects.update(created=timezone.now()-datetime.timedelta(days=3))
-        self.assertEqual(len(outreach.send_batch()), 2)
+        self.assertEqual(len(outreach.send_batch(segment='recent')), 2)
         self.assertEqual(len(mail.outbox), 8)
 
-    def test_next_batch_is_blocked_before_24_hours_and_allowed_after(self):
-        self.user()
-        row = OutreachContact.objects.create(email='previous@example.com', status='sent')
-        OutreachContact.objects.filter(pk=row.pk).update(created=timezone.now()-datetime.timedelta(hours=23))
-        with self.assertRaises(outreach.BatchStopped): outreach.send_batch()
-        self.assertFalse(getattr(mail, 'outbox', []))
-        OutreachContact.objects.filter(pk=row.pk).update(created=timezone.now()-datetime.timedelta(hours=25))
-        self.assertEqual(len(outreach.send_batch()), 1)
+    def test_quota_is_six_per_paris_day_not_24_hours(self):
+        for i in range(3): self.user('reader%s' % i, 'reader%s@example.com' % i)
+        now = datetime.datetime(2026, 11, 5, 9, 0, tzinfo=outreach.DAY_ZONE)
+        earlier = OutreachContact.objects.create(email='previous@example.com', status='sent')
+        # Four messages this morning leave room for two more today.
+        for i in range(3): OutreachContact.objects.create(email='today%s@example.com' % i, status='sent')
+        OutreachContact.objects.update(created=now-datetime.timedelta(hours=2))
+        with patch.object(timezone, 'now', return_value=now):
+            self.assertEqual(len(outreach.send_batch()), 2)
+            with self.assertRaises(outreach.BatchStopped): outreach.send_batch()
+        self.assertEqual(len(mail.outbox), 2)
+        # Yesterday's batch, less than 24 hours ago, does not hold back today's.
+        OutreachContact.objects.update(created=now-datetime.timedelta(hours=23, minutes=55))
+        OutreachContact.objects.filter(pk=earlier.pk).delete()
+        with patch.object(timezone, 'now', return_value=now+datetime.timedelta(days=1, minutes=-10)):
+            self.assertEqual(len(outreach.send_batch()), 1)
+
+    def test_auto_segment_fills_with_older_accounts(self):
+        self.user('recent', 'recent@example.com')
+        old = self.user('old', 'old@example.com')
+        User.objects.filter(pk=old.pk).update(last_login=timezone.now()-datetime.timedelta(days=400))
+        OutreachContact.objects.create(email='pilot@example.com', status='sent')
+        OutreachContact.objects.update(created=timezone.now()-datetime.timedelta(days=2))
+        sent = outreach.send_batch()
+        self.assertEqual([row.email for row in sent], ['recent@example.com', 'old@example.com'])
+
+    def test_auto_segment_without_pilot_stays_recent(self):
+        old = self.user('old', 'old@example.com')
+        User.objects.filter(pk=old.pk).update(last_login=timezone.now()-datetime.timedelta(days=400))
+        self.assertEqual(outreach.send_batch(), [])
 
     def test_older_segment_requires_recent_pilot(self):
         with self.assertRaises(outreach.BatchStopped): outreach.send_batch(segment='older')
