@@ -148,3 +148,10 @@ class PageViewTests(TestCase):
         self.assertEqual((numbers['visitors'], numbers['views'], numbers['robots']), (1, 1, 1))
         self.assertEqual(activity.sources(activity.today())['referrers'], [('(direct ou inconnu)', 1)])
         self.assertEqual(self.client.get('/visit/').status_code, 405)
+
+    def test_a_search_engine_never_sends_anyone_to_the_sign_in_page(self):
+        PageView.objects.create(visitor='f' * 16, view='login', path='/fr/login/', referrer='google.com', human=True)
+        PageView.objects.create(visitor='g' * 16, view='arxividpage', path='/fr/paper/1/', referrer='google.com', human=True)
+        PageView.objects.create(visitor='h' * 16, view='login', path='/fr/login/', referrer='google.com', user=self.reader)
+        numbers = {n['key']: n['value'] for n in activity.numbers(activity.today())}
+        self.assertEqual((numbers['visitors'], numbers['robots']), (2, 1))

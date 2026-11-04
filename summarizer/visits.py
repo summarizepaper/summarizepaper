@@ -28,6 +28,10 @@ from .models import PageView
 logger = logging.getLogger(__name__)
 
 VISIT_DAYS = 60
+# Robots that fake mouse moves too came "from" Google to the sign-in page (12 of the 17 confirmed visitors of
+# 4 November, 14:30): search engines never send anyone to the pages robots.txt keeps from them
+ENGINES = ('google.com', 'bing.com', 'yahoo.com', 'yandex.com', 'yandex.ru', 'baidu.com', 'duckduckgo.com', 'ecosia.org', 'qwant.com')
+UNLISTED = ('login', 'email_login', 'register', 'logout')  # /*/login/, /*/register/, /*/logout/ in robots.txt
 SEEN_WITHIN = datetime.timedelta(minutes=30)  # how late visit.js may confirm a page
 SKIPPED_PREFIXES = ('/admin/', '/rosetta/', '/static/')
 SKIPPED_SUFFIXES = ('_fragment', '_state', '_status', '_feed', '_quota', '_cell', '_why', '_sw')
