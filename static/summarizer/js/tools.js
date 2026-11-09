@@ -24,12 +24,19 @@
     });
   }
 
+  // A busy (503, see loadshed.py) or failing server is not a failed result: ask again later.
+  function answer(r) {
+    if (r.ok) return r.json();
+    if (r.status >= 500 || r.status === 429) throw new Error('busy');
+    return {status: 'failed'};
+  }
+
   // Calls done(data) once the result is ready, failed() if it fails or takes more than 10 minutes.
   function wait(id, done, failed) {
     var started = Date.now();
     function tick() {
       fetch('/' + lang + '/ai/' + id + '/', {credentials: 'same-origin'})
-        .then(function (r) { return r.ok ? r.json() : {status: 'failed'}; })
+        .then(answer)
         .then(function (json) {
           if (json.status === 'done') return done(json.data);
           if (json.status === 'failed' || Date.now() - started > 600000) return failed && failed();
@@ -72,7 +79,7 @@
     if (steps.length) mark(steps[0].dataset.step);
     function tick() {
       fetch('/' + lang + '/ai/' + id + '/', {credentials: 'same-origin'})
-        .then(function (r) { return r.ok ? r.json() : {status: 'failed'}; })
+        .then(answer)
         .then(function (json) {
           if (json.step) mark(json.step);
           if (json.status === 'done') {
