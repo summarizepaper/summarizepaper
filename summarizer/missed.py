@@ -302,9 +302,10 @@ def search(pool, queries, limited):
     """arXiv and OpenAlex (journals, preprints, conference papers) for each query."""
     for query in queries:
         terms = ' AND '.join('all:%s' % w for w in re.findall(r'[\w\-]+', query)[:6])
-        if terms:
+        if terms and 'arxiv' not in limited:
             try:
-                for paper in digest.arxiv_get({'search_query': terms, 'max_results': ARXIV_PER_QUERY, 'sortBy': 'relevance'}):
+                for paper in digest.arxiv_get({'search_query': terms, 'max_results': ARXIV_PER_QUERY, 'sortBy': 'relevance'},
+                                              timeout=literature.ARXIV_TIMEOUT, retry=False):
                     pool.add(literature.from_arxiv(paper), 'search')
             except digest.ArxivUnavailable:
                 logger.warning('arXiv search failed for %s', query)

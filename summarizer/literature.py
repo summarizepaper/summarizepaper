@@ -65,6 +65,7 @@ QUERY_CHARS = 120
 PER_QUERY = 25
 RECENT_PER_QUERY = 15
 ARXIV_PER_QUERY = 15
+ARXIV_TIMEOUT = 20  # seconds; no retry, and no more arXiv once it failed: retries could hold a review for half an hour
 REVIEWS = 15
 MOST_CITED = 25
 RECENT_YEARS = 3
@@ -238,9 +239,12 @@ def gather(plan, limited, since):
         for work in works({'search': query, 'filter': 'has_abstract:true,from_publication_date:%s' % since,
                            'per_page': RECENT_PER_QUERY}, limited):
             pool.add(from_openalex(work), 'recent')
+        if 'arxiv' in limited:
+            continue
         terms = ' AND '.join('all:%s' % w for w in re.findall(r'[\w\-]+', query)[:6])
         try:
-            for paper in digest.arxiv_get({'search_query': terms, 'max_results': ARXIV_PER_QUERY, 'sortBy': 'relevance'}):
+            for paper in digest.arxiv_get({'search_query': terms, 'max_results': ARXIV_PER_QUERY, 'sortBy': 'relevance'},
+                                          timeout=ARXIV_TIMEOUT, retry=False):
                 pool.add(from_arxiv(paper), 'arxiv')
         except digest.ArxivUnavailable:
             logger.warning('arXiv search failed for %s', query)
@@ -333,9 +337,10 @@ def recover(pool, limited):
         arxiv_id = ((row.get('externalIds') or {}).get('ArXiv') or '').strip()
         if arxiv_id and not paper['abstract']:
             on_arxiv[arxiv_id] = paper
-    if on_arxiv:
+    if on_arxiv and 'arxiv' not in limited:
         try:
-            for entry in digest.arxiv_get({'id_list': ','.join(on_arxiv), 'max_results': len(on_arxiv)}):
+            for entry in digest.arxiv_get({'id_list': ','.join(on_arxiv), 'max_results': len(on_arxiv)},
+                                          timeout=ARXIV_TIMEOUT, retry=False):
                 paper = on_arxiv.get(re.sub(r'v\d+$', '', entry['arxiv_id']).replace('--', '/'))
                 if paper is not None and entry['abstract']:
                     paper['abstract'] = entry['abstract']
