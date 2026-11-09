@@ -158,7 +158,8 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
   data-references-filter="{% trans 'Filter the references' %}" data-add="{% trans 'Add' %}" data-added="{% trans 'Added' %}"
   data-remove="{% trans 'Remove this paper' %}"
   data-not-found="{% trans 'This ID does not exist' %}" data-already="{% trans 'Paper already added!' %}"
-  data-added-ok="{% trans 'Paper added!' %}" data-full-selection="{% blocktrans with n=max_nb_paper %}You can chat with at most {{ n }} papers at once.{% endblocktrans %}"
+  data-added-ok="{% trans 'Paper added!' %}" data-added-several="{% trans '{n} of {total} papers added.' %}"
+  data-not-found-several="{% trans 'Not found: {ids}' %}" data-full-selection="{% blocktrans with n=max_nb_paper %}You can chat with at most {{ n }} papers at once.{% endblocktrans %}"
   data-none-found="{% trans 'No papers found' %}" data-at-least="{% trans 'Enter at least 3 letters for the search to start' %}"
   data-unreachable="{% trans 'The search is not reachable right now. Try again in a moment.' %}"
   data-wait="{% trans 'Wait until every paper has been read.' %}"
@@ -234,7 +235,7 @@ button.paper-item:hover { border-color: #c7cbff; background: #fafaff; }
       <form class="add-paper-container" id="add-paper-form">
         <label for="paper-id">{% trans 'Add a paper directly' %}</label>
         <div class="add-paper-row">
-          <input type="text" id="paper-id" placeholder="{% trans 'arXiv ID, DOI or link' %}" aria-describedby="paper-id-help">
+          <input type="text" id="paper-id" placeholder="{% trans 'One or more arXiv IDs, DOIs or links' %}" aria-describedby="paper-id-help">
           <button type="submit" id="add-paper">{% trans 'Add' %}</button>
         </div>
         <p class="search-help" id="paper-id-help">{% trans 'For example:' %}

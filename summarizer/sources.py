@@ -924,6 +924,7 @@ NATURE_RE = re.compile(r'nature\.com/articles/([a-z0-9.\-]+)', re.I)  # the DOI 
 SSRN_RE = re.compile(r'ssrn\.com/\S*abstract(?:_id)?=(\d+)', re.I)
 SCIENCEDIRECT_RE = re.compile(r'sciencedirect\.com/science/article/(?:abs/)?pii/(S[0-9X]{16})\b', re.I)
 INSPIRE_RE = re.compile(r'inspirehep\.net/(?:api/)?literature/(\d+)', re.I)
+MDPI_RE = re.compile(r'mdpi\.com/(\d{4}-\d{3}[\dX])/(\d+)/(\d+)/(\d+)', re.I)  # /<ISSN>/<volume>/<issue>/<article>
 PAGE_BYTES = 2 * 1024 * 1024  # the citation tags are in the head
 PAGE_SECONDS = 7 * 86400
 
@@ -932,8 +933,8 @@ def _public(url):
     """Whether an address is a public web server: a pasted link must not make us read our own network."""
     import ipaddress
     import socket
-    parts = urllib.parse.urlsplit(url)
     try:
+        parts = urllib.parse.urlsplit(url)
         if parts.scheme not in ('http', 'https') or not parts.hostname or parts.port not in (None, 80, 443):
             return False
         addresses = socket.getaddrinfo(parts.hostname, parts.port or 443, proto=socket.IPPROTO_TCP)
@@ -1032,12 +1033,31 @@ def _pii_doi(pii):
     return clean_doi(items[0].get('DOI', '')) if items else None
 
 
+def _mdpi_doi(issn, volume, issue, article):
+    """An MDPI DOI is the journal's short name, the volume, issue and article ('10.3390/rs12010100' for
+    mdpi.com/2072-4292/12/1/100): the short name comes from another DOI of the journal, the DOI is checked."""
+    from django.core.cache import cache
+    key = 'mdpi-journal:' + issn.upper()
+    name = cache.get(key)
+    if name is None:
+        body = _json('https://api.crossref.org/journals/%s/works' % issn,
+                     {'rows': 1, 'select': 'DOI', 'mailto': 'contact@summarizepaper.com'})
+        items = ((body or {}).get('message') or {}).get('items') or []
+        match = re.match(r'^10\.3390/([a-z]+)\d', items[0].get('DOI', '').lower()) if items else None
+        name = match.group(1) if match else ''
+        cache.set(key, name, PAGE_SECONDS * 4)
+    if not name:
+        return None
+    doi = '10.3390/%s%02d%02d%04d' % (name, int(volume), int(issue), int(article))
+    return doi if _json(CROSSREF % doi, {'mailto': 'contact@summarizepaper.com'}) else None
+
+
 def resolve(text):
     """What a visitor typed or pasted -> ('arxiv', arxiv id) or ('key', key); None when nothing is recognized.
 
     A DOI of arXiv's own (10.48550/arXiv.*) goes to the arXiv page. A link to a publisher's page without the
     DOI in its address is read for its citation tags. Raises SourceUnavailable when the identifier needs a lookup
-    (HAL, PMC, PMID, OSF, INSPIRE, ScienceDirect link) and the source does not answer.
+    (HAL, PMC, PMID, OSF, INSPIRE, ScienceDirect, MDPI link) and the source does not answer.
     """
     text = (text or '').strip()
     match = OUR_PAGE_RE.search(text)
@@ -1058,6 +1078,9 @@ def resolve(text):
         text = _pii_doi(match.group(1).upper()) or ''
         if not text:
             return None
+    match = MDPI_RE.search(text)
+    if match:
+        text = _mdpi_doi(*match.groups()) or text
     doi = clean_doi(text)
     if doi:
         match = ARXIV_DOI_RE.match(doi)

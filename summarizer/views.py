@@ -1,7 +1,7 @@
 # Create your views here.
 from django.shortcuts import render, redirect, HttpResponseRedirect, get_object_or_404
 from django.urls import reverse
-from django.http import HttpResponse, HttpResponsePermanentRedirect
+from django.http import Http404, HttpResponse, HttpResponsePermanentRedirect
 import requests
 import time
 import re
@@ -229,6 +229,7 @@ def search_results(request):
         response['Retry-After'] = '60'
         return response
     query = (request.GET.get('q') or '').strip()
+    unfound_link = ''
     if query:
         identifier = unified_search.arxiv_identifier(query)
         if identifier:
@@ -241,7 +242,8 @@ def search_results(request):
             source_kind, value = found
             return redirect('arxividpage', arxiv_id=digest.site_id(value) if source_kind == 'arxiv' else value)
         # a link without an identifier we can read: its title, else the words of its address, are searched
-        query = sources.link_query(query) or query
+        if sources.LINK_RE.match(query):
+            unfound_link, query = query, sources.link_query(query) or query
     field = request.GET.get('field') if request.GET.get('field') in ('author', 'title', 'abstract') else 'all'
     page_num = request.GET.get('page', 1)
     try:
@@ -307,8 +309,8 @@ def search_results(request):
         filter_context['more_results_url'] = '?' + more.urlencode()
     filter_context['results_limit'] = window['at_limit']
     if page_num == 1 and not request.GET.get('window'):
-        Search.objects.create(query=query[:2000], user=request.user if request.user.is_authenticated else None,
-                              lang=get_language())
+        Search.objects.create(query=(unfound_link or query)[:2000], link_unfound=bool(unfound_link),
+                              user=request.user if request.user.is_authenticated else None, lang=get_language())
     return render(request, 'summarizer/search_results.html', {
         **filter_context, 'query': query, 'search': window['rows'],
         'page_obj': Paginator(window['rows'], 10).get_page(page_num) if window['rows'] else None,
@@ -702,7 +704,9 @@ def _arxiv_api(request):
         found = unified_search.identified(search_query)
         if found:
             search_query, id_list = '', found[1]
-        else:
+        elif sources.LINK_RE.match(search_query):
+            Search.objects.create(query=search_query, link_unfound=True, lang=get_language(),
+                                  user=request.user if request.user.is_authenticated else None)
             search_query = sources.link_query(search_query) or search_query
     if search_query and request.GET.get('src') == 'all':
         # arXiv and the journals and preprints at once, as the search of the site does (the chat page)
@@ -816,6 +820,15 @@ def waiting_details(arxiv_id):
     if paper and paper.title:
         return {'title': paper.title, 'abstract': paper.abstract or '', 'authors': ''}
     return None
+
+
+@require_GET
+def arxiv_address(request, reference):
+    """summarizepaper.com/abs/2401.12345: an arXiv address with our domain in place of arxiv.org opens the paper."""
+    arxiv_id = unified_search.arxiv_identifier(reference)
+    if not arxiv_id:
+        raise Http404
+    return redirect('arxividpage', arxiv_id=arxiv_id)
 
 
 def legacy_paper_url(request, arxiv_id, error_message=None, cat=None):

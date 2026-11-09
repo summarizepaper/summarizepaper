@@ -40,7 +40,7 @@
         {% endfor %}
     </div>
 
-    {% if watch.failed or watch.stuck or watch.unavailable %}
+    {% if watch.failed or watch.stuck or watch.unavailable or watch.links %}
         <div class="mb-6">
             {% component "unfold/components/card.html" with title="À surveiller" %}
                 {% if watch.failed %}
@@ -56,6 +56,14 @@
                     <ul class="flex flex-col gap-2 mb-4">
                         {% for w in watch.unavailable %}
                             <li><span class="text-subtle">{{ w.time|date:"d/m H:i" }}</span> · <a class="text-primary-600 dark:text-primary-500" href="{{ w.href }}">{{ w.tool }} · {{ w.key }}</a><br><span class="text-subtle">{{ w.detail }}</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if watch.links %}
+                    <p class="font-semibold mb-2">Liens d’articles non reconnus (30 j)</p>
+                    <ul class="flex flex-col gap-2 mb-4">
+                        {% for l in watch.links %}
+                            <li>{{ l.site }} · {{ l.count }} <span class="text-subtle">(ex. {{ l.example|truncatechars:120 }})</span></li>
                         {% endfor %}
                     </ul>
                 {% endif %}

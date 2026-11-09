@@ -5,6 +5,7 @@ the papers. The team's own actions are left out unless asked."""
 import collections
 import datetime
 import re
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import User
@@ -231,7 +232,8 @@ def feed(day, kind=None, members_only=False, staff=False):
             add('question', q.created, q.query or '', _paper(q.arxiv_id), q.user, q.arxiv_id)
     if wanted('search'):
         for s in rows(Search).select_related('user'):
-            add('search', s.created, s.query or '', '/%s/search-results/' % s.lang, s.user)
+            add('search', s.created, s.query or '', '/%s/search-results/' % s.lang, s.user,
+                'lien non reconnu' if s.link_unfound else '', s.link_unfound)
     if wanted('tool'):
         for g in rows(Generated).select_related('user').defer('content'):
             state = {'failed': 'échec : %s' % g.error[:120], 'pending': 'en cours %s' % g.step, 'no_source': 'source indisponible'}.get(g.status, '')
@@ -364,7 +366,22 @@ def watch():
     no_source = as_rows(unavailable)
     for row in no_source:
         row['detail'] = 'Aucun abstract ni texte intégral autorisé disponible ; aucune génération effectuée.'
-    return {'failed': as_rows(failed), 'stuck': as_rows(stuck), 'unavailable': no_source}
+    return {'failed': as_rows(failed), 'stuck': as_rows(stuck), 'unavailable': no_source, 'links': unfound_links(now)}
+
+
+def unfound_links(now):
+    """The sites of the pasted links whose paper was not recognized in 30 days, most frequent first: the next to handle."""
+    sites, examples = collections.Counter(), {}
+    pasted = Search.objects.filter(link_unfound=True, created__gte=now - datetime.timedelta(days=30)) \
+        .order_by('-created').values_list('query', flat=True)[:2000]
+    for link in pasted:
+        try:
+            site = (urlsplit(link if '://' in link else '//' + link).hostname or '?').removeprefix('www.')
+        except ValueError:
+            site = '?'
+        sites[site] += 1
+        examples.setdefault(site, link)
+    return [{'site': site, 'count': n, 'example': examples[site]} for site, n in sites.most_common(15)]
 
 
 # an answer about several papers names each by its tag, such as [Smith et al. 2021] (assistant.MULTI_INSTRUCTIONS)

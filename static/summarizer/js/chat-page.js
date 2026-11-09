@@ -135,7 +135,12 @@
       if (seq === searchSeq) spinner.hidden = true;
     });
   }
-  search.addEventListener('input', function () {clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 400);});
+  search.addEventListener('input', function (event) {
+    clearTimeout(searchTimer);
+    // a link typed by hand is looked up once it is whole: each lookup may read the page it points to
+    var typedLink = /^\S+\.\S+\/\S*$/.test(search.value.trim()) && event.inputType !== 'insertFromPaste';
+    searchTimer = setTimeout(runSearch, typedLink ? 1500 : 400);
+  });
   $('#search-help').querySelectorAll('[data-example]').forEach(function (example) {
     example.addEventListener('click', function () {search.value = example.dataset.example; runSearch();});
   });
@@ -195,9 +200,40 @@
       return 'unknown';
     });
   }
+  // several identifiers or links pasted at once (a list of references): each is added in turn
+  function references(value) {
+    return String(value || '').replace(/(\S)(https?:\/\/)/gi, '$1 $2').split(/[\s,;]+/).filter(Boolean);
+  }
+  paperId.addEventListener('paste', function (event) {
+    // a text field drops the line breaks of a pasted list, which would glue its links together
+    var text = event.clipboardData ? event.clipboardData.getData('text') : '';
+    if (!/[\r\n]/.test(text)) return;
+    event.preventDefault();
+    paperId.setRangeText(text.trim().replace(/\s+/g, ' '), paperId.selectionStart, paperId.selectionEnd, 'end');
+  });
   addForm.addEventListener('submit', function (event) {
     event.preventDefault();
-    addById(paperId.value).then(function (result) {if (result === 'added') paperId.value = '';});
+    var ids = references(paperId.value);
+    if (ids.length < 2) {
+      addById(paperId.value).then(function (result) {if (result === 'added') paperId.value = '';});
+      return;
+    }
+    var added = 0, missing = [];
+    ids.reduce(function (done, id) {
+      return done.then(function (full) {
+        if (full) return true;
+        return addById(id, true).then(function (result) {
+          if (result === 'added') added += 1;
+          if (result === 'unknown') missing.push(id);
+          return result === 'full';
+        });
+      });
+    }, Promise.resolve(false)).then(function (full) {
+      if (full) return;  // addById said the selection is full
+      note(addNote, fmt(T.addedSeveral, {n: added, total: ids.length}) + (missing.length ? ' ' + fmt(T.notFoundSeveral, {ids: missing.join(', ')}) : ''),
+           missing.length ? 'error' : 'ok');
+      paperId.value = missing.join(' ');
+    });
   });
 
   // --- the selection ----------------------------------------------------------

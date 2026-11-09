@@ -22599,3 +22599,12 @@ msgstr "Ou avec une adresse email"
 
 msgid "Title, topic, author or paper link"
 msgstr "Titre, sujet, auteur ou lien d’article"
+
+msgid "One or more arXiv IDs, DOIs or links"
+msgstr "Un ou plusieurs identifiants arXiv, DOI ou liens"
+
+msgid "{n} of {total} papers added."
+msgstr "{n} articles ajoutés sur {total}."
+
+msgid "Not found: {ids}"
+msgstr "Introuvables : {ids}"

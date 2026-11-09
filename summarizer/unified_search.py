@@ -33,8 +33,11 @@ def arxiv_reference(text):
         return '%s.%s' % ads.groups()
     value = re.sub(r'^arxiv:\s*', '', value, flags=re.I)
     if '/' in value and not digest.ARXIV_ID_RE.fullmatch(value):  # a link ('hep-th/9901001' alone is an id)
-        parts = urllib.parse.urlsplit(value if re.match(r'^[a-z]+://', value, re.I) else '//' + value)
-        if not ARXIV_SITES.match(parts.hostname or ''):
+        try:
+            parts = urllib.parse.urlsplit(value if re.match(r'^[a-z]+://', value, re.I) else '//' + value)
+            if not ARXIV_SITES.match(parts.hostname or ''):
+                return None
+        except ValueError:  # 'https://[arxiv.org': an ordinary search
             return None
         value = re.sub(r'^/(?:abs|pdf|html|papers?|arxiv|format|ps)/', '', parts.path, flags=re.I).strip('/')
     value = re.sub(r'\.pdf$', '', re.split(r'[?#]', value)[0], flags=re.I)

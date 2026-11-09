@@ -203,7 +203,11 @@ def paper_matches(query):
 
 
 def arxiv_identifier(text):
-    """'2101.00001' / 'hep-th--9901001' (no version) for an arXiv id or link, else None."""
+    """'2101.00001' / 'hep-th--9901001' (no version) for an arXiv id or link (alphaxiv, Hugging Face... too), else None."""
+    from .unified_search import arxiv_reference
+    reference = arxiv_reference(text)
+    if reference:
+        return re.sub(r'v\d+$', '', reference).replace('/', '--')
     arxiv = re.search(r'(?:^|arxiv:|/abs/|/pdf/|arxiv\.)(\d{4}\.\d{4,5}(?:v\d+)?|[a-z-]+(?:/|--)\d{7}(?:v\d+)?)(?:\.pdf)?/?$',
                       search_path(text), re.I)
     return re.sub(r'v\d+$', '', arxiv.group(1), flags=re.I).replace('/', '--') if arxiv else None

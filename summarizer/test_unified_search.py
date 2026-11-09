@@ -192,6 +192,7 @@ class PastedLinkTests(TestCase):
             ('https://ui.adsabs.harvard.edu/abs/2024arXiv240112345X/abstract', '2401.12345'),
             ('https://ui.adsabs.harvard.edu/abs/2013arXiv1301.1234S', '1301.1234'),
             ('https://arxiv.org/list/hep-th/new', None), ('https://example.org/abs/2401.12345', None),
+            ('https://[arxiv.org/abs/2401.12345', None),
         ]:
             with self.subTest(value=value):
                 self.assertEqual(unified_search.arxiv_reference(value), expected)
@@ -254,3 +255,40 @@ class PastedLinkTests(TestCase):
             self.client.get('/en/arxiv-api/', {'search_query': 'huggingface.co/papers/1706.03762', 'src': 'all'})
         search.assert_not_called()
         self.assertEqual(get.call_args.kwargs['params'], {'id_list': '1706.03762'})
+
+
+class LinkFollowUpTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_our_domain_in_place_of_arxiv_org_opens_the_paper(self):
+        for address, paper in (('/abs/1706.03762', '/en/paper/1706.03762v1/'), ('/pdf/1706.03762v2.pdf', '/en/paper/1706.03762v2/'),
+                               ('/abs/hep-th/9901001', '/en/paper/hep-th--9901001v1/'), ('/fr/abs/1706.03762', '/fr/paper/1706.03762v1/')):
+            with self.subTest(address=address):
+                self.assertEqual(self.client.get(address, follow=False)['Location'], paper)
+        self.assertEqual(self.client.get('/en/abs/not-a-paper').status_code, 404)
+
+    def test_the_history_search_reads_links_of_the_sites_that_show_arxiv_papers(self):
+        from . import personal_activity
+        self.assertEqual(personal_activity.arxiv_identifier('https://alphaxiv.org/abs/2401.12345v2'), '2401.12345')
+        self.assertEqual(personal_activity.arxiv_identifier('https://arxiv.org/abs/hep-th/9901001'), 'hep-th--9901001')
+
+    def test_mdpi_links_are_found_by_their_doi(self):
+        answers = [{'message': {'items': [{'DOI': '10.3390/rs11020150'}]}}, {'message': {'DOI': '10.3390/rs12010100'}}]
+        with mock.patch.object(sources, '_json', side_effect=answers) as crossref:
+            self.assertEqual(sources.resolve('https://www.mdpi.com/2072-4292/12/1/100'), ('key', 'doi_10.3390--rs12010100'))
+        self.assertIn('/journals/2072-4292/works', crossref.call_args_list[0].args[0])
+
+    def test_links_not_recognized_are_counted_by_site_for_the_admin(self):
+        from . import activity
+        from .models import Search
+        with mock.patch.object(sources, '_page', return_value=''), \
+             mock.patch.object(unified_search, 'search', return_value=([], False)):
+            self.client.get('/en/search-results/', {'q': 'https://www.example-journal.org/article/123'})
+            self.client.get('/en/search-results/', {'q': 'dark matter'})
+            self.client.get('/en/arxiv-api/', {'search_query': 'https://example-journal.org/x/9', 'src': 'all'})
+        self.assertEqual(list(Search.objects.order_by('pk').values_list('query', 'link_unfound')),
+                         [('https://www.example-journal.org/article/123', True), ('dark matter', False),
+                          ('https://example-journal.org/x/9', True)])
+        self.assertEqual(activity.watch()['links'], [{'site': 'example-journal.org', 'count': 2,
+                                                      'example': 'https://example-journal.org/x/9'}])

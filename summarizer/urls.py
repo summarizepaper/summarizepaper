@@ -16,6 +16,8 @@ urlpatterns = [
     path('robots.txt/', views.robots_txt),
     path("paper/<str:arxiv_id>/", views.arxividpage, name="arxividpage"),
     path("paper/<str:arxiv_id>/<str:error_message>/", views.arxividpage, name="arxividpage"),
+    # arXiv's own addresses on our domain: replacing arxiv.org by summarizepaper.com opens the paper
+    re_path(r'^(?:abs|pdf|html)/(?P<reference>.+)$', views.arxiv_address, name='arxiv_address'),
     # Old public links remain valid, including historical slash-style arXiv IDs.
     path("arxiv-id/<str:arxiv_id>/", views.legacy_paper_url),
     re_path(r"^arxiv-id/(?P<cat>[^\d]+)/(?P<arxiv_id>[a-zA-Z0-9]+)/$", views.legacy_paper_url),

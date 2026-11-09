@@ -230,6 +230,8 @@ class Search(models.Model):
     lang = models.CharField(max_length=10,default='en')
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    # a pasted link whose paper was not recognized (its title or words were searched instead): the sites to handle next
+    link_unfound = models.BooleanField(default=False)
 
     def __str__(self):
         return self.query
