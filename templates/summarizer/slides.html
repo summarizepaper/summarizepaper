@@ -80,7 +80,7 @@
       {% if not shared %}
       <p class="muted">{% trans 'Edit the text below each slide, move, duplicate, remove or add slides, pick another figure of the paper, or ask for a slide to be rewritten. Your saved version is private until you share it.' %}</p>
       <p class="muted">{% trans 'PowerPoint includes your current edits and speaker notes, with the passages of the paper in the notes, editable text and movable figures.' %}</p>
-      {% if beamer %}<p class="muted">{% trans 'LaTeX Beamer: the same slides and figures, with the notes and the passages of the paper in \note, as a new Overleaf project or a .zip to compile with XeLaTeX.' %}</p>{% endif %}
+      {% if beamer %}<p class="muted">{% trans 'LaTeX Beamer: the same slides and figures, with the notes and the passages of the paper in \note, as a new Overleaf project or a .zip to compile with XeLaTeX.' %} {% trans 'LaTeX sets text with other fonts than this page: a slide too long for the page is scaled down, and the log of Overleaf names those reduced by more than a tenth.' %}</p>{% endif %}
       {% endif %}
       <p class="muted">{% trans 'Presenter view: a second window with the notes, the next slide and a timer. Present full screen on the projector and keep it on your screen; the arrow keys work in both.' %}</p>
       <p class="muted">{% trans 'Under each slide, its sources: each point with the passage of the paper that supports it. A point marked as not found in the paper, or with a number the paper does not state, is to be checked before presenting.' %}</p>

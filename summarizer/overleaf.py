@@ -58,11 +58,13 @@ def tex(text):
 
 
 def bib_project(bib, title, intro, bib_name='references'):
-    """A project that prints every entry of a .bib (\\nocite{*}): to see it compile, and to copy the .bib."""
+    """A project that prints every entry of a .bib (\\nocite{*}): to see it compile, and to copy the .bib. biblatex
+    prints titles as they are written, where BibTeX styles (plainnat) lowercase those whose capitals are not braced."""
     main = '\n'.join([
-        '%% ' + _('Written by SummarizePaper: every entry of %(file)s.bib is printed below.') % {'file': bib_name},
+        '% ' + _('Written by SummarizePaper: every entry of %(file)s.bib is printed below.') % {'file': bib_name},
         '\\documentclass{article}', '\\usepackage[T1]{fontenc}', '\\usepackage[utf8]{inputenc}',
-        '\\usepackage[numbers]{natbib}', '\\usepackage[hidelinks]{hyperref}', '',
+        '\\usepackage[backend=biber,style=numeric,sorting=nyt,maxbibnames=99]{biblatex}', '\\addbibresource{%s.bib}' % bib_name,
+        '\\usepackage[hidelinks]{hyperref}', '',
         '\\title{%s}' % tex(title), '\\date{}', '\\begin{document}', '\\maketitle', '', tex(intro), '',
-        '\\nocite{*}', '\\bibliographystyle{plainnat}', '\\bibliography{%s}' % bib_name, '\\end{document}', ''])
+        '\\nocite{*}', '\\printbibliography', '\\end{document}', ''])
     return {'main.tex': main, bib_name + '.bib': bib}

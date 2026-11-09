@@ -366,7 +366,15 @@ def watch():
     no_source = as_rows(unavailable)
     for row in no_source:
         row['detail'] = 'Aucun abstract ni texte intégral autorisé disponible ; aucune génération effectuée.'
-    return {'failed': as_rows(failed), 'stuck': as_rows(stuck), 'unavailable': no_source, 'links': unfound_links(now)}
+    return {'failed': as_rows(failed), 'stuck': as_rows(stuck), 'unavailable': no_source, 'links': unfound_links(now),
+            'overleaf': overleaf_bibs(now)}
+
+
+def overleaf_bibs(now):
+    """The collections whose .bib has an address for Overleaf, and those Overleaf read in the last 7 days."""
+    from .models import Collection
+    linked = Collection.objects.exclude(bib_token='')
+    return {'linked': linked.count(), 'read': linked.filter(bib_read__gte=now - datetime.timedelta(days=7)).count()}
 
 
 def unfound_links(now):

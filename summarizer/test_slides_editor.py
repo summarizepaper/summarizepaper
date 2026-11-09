@@ -86,13 +86,26 @@ class SlidesEditorTests(ToolsTestCase):
         self.assertIn('figures/figure-1.png', archive.namelist())
         tex = archive.read('main.tex').decode()
         self.assertIn('\\begin{frame}[t]{Spin \\& 50\\% of\\_it}', tex)
-        self.assertIn('\\includegraphics[width=\\linewidth,height=0.78\\textheight,keepaspectratio]{figures/figure-1.png}', tex)
+        self.assertIn('\\includegraphics[width=\\linewidth,height=0.68\\textheight,keepaspectratio]{figures/figure-1.png}', tex)
+        self.assertIn('\\slidebody{', tex)
         self.assertIn('\\note{Say it\\\\ slowly', tex)
         self.assertEqual(tex.count('\\begin{frame}'), len(payload['pages']))
         self.assertContains(self.client.get(self.url), 'id="deck-overleaf"')
         self.assertNotContains(self.client.get(self.url + '?deck_lang=ko'), 'id="deck-overleaf"')
         free = self.client_for(self.user('free'))
         self.assertEqual(free.post(self.url + 'beamer/', json.dumps(payload), content_type='application/json').status_code, 403)
+
+    def test_a_large_figure_goes_to_beamer_as_a_jpeg(self):
+        import random
+        from . import slides_beamer
+        noise = Image.new('RGBA', (900, 600))
+        noise.putdata([(random.randrange(256), random.randrange(256), random.randrange(256), 255) for _ in range(900 * 600)])
+        output = io.BytesIO()
+        noise.save(output, 'PNG')
+        extension, data = slides_beamer.figure_file(output.getvalue())
+        self.assertEqual(extension, 'jpg')
+        self.assertTrue(data.startswith(b'\xff\xd8'))
+        self.assertEqual(slides_beamer.figure_file(self.image()), ('png', self.image()))
 
     def test_powerpoint_is_private_and_requires_premium_csrf_and_post(self):
         payload = self.payload()

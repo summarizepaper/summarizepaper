@@ -144,7 +144,8 @@ class ExportTests(ToolsTestCase):
         for aid in ('2101.00001v1', '2101.00002v1'):
             CollectionPaper.objects.create(collection=collection, arxiv_id=aid, title='t', authors='Ann Lee')
         bib = self.client_for(user).get('/en/collections/%d/export/bib/' % collection.pk).content.decode()
-        self.assertEqual(re.findall(r'@misc\{([^,]+),', bib), ['lee2021cloudsa', 'lee2021cloudsb'])
+        # the first paper got its key before the second shared it: keys never change once given
+        self.assertEqual(re.findall(r'@misc\{([^,]+),', bib), ['lee2021clouds', 'lee2021cloudsb'])
         self.assertIn('title={Clouds: {GPT} \\& {JWST} see 50\\% of clouds on $T_{eq}$ planets}', bib)
 
     def test_a_published_preprint_is_cited_as_published(self):
@@ -154,7 +155,7 @@ class ExportTests(ToolsTestCase):
                                                                         'journal': 'The Astrophysical Journal', 'date': '2022-03-01'}))
         meta = exports.paper_meta(paper.arxiv_id)
         bib = exports.bibtex_entry(meta)
-        self.assertTrue(bib.startswith('@article{lee2021clouds,'))
+        self.assertTrue(bib.startswith('@article{lee2022clouds,'))  # the year of its year field
         for field in ('journal={The Astrophysical Journal}', 'year={2022}', 'eprint={2101.00001}', 'doi={10.3847/1538-4357/ab1234}'):
             self.assertIn(field, bib)
         ris = exports.ris_entry(meta)

@@ -635,7 +635,7 @@ class MissedTests(ToolsTestCase):
         self.assertIn('Missing paper on cloudy planets', project['missed.bib'])
         self.assertNotIn('Coupled paper', project['missed.bib'])
         self.assertIn('\\nocite{*}', project['main.tex'])
-        self.assertIn('\\bibliography{missed}', project['main.tex'])
+        self.assertIn('\\addbibresource{missed.bib}', project['main.tex'])
         titles = [m['title'] for m in missed.zotero_metas(user, row.key)]
         self.assertIn('Missing paper on cloudy planets', titles)
         self.assertNotIn('Coupled paper on cloud spectra', titles)

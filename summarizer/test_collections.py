@@ -14,6 +14,7 @@ from . import changes, collection_tools, comparison, library, publication_status
 from .models import (ArxivPaper, CitationCache, Collection, CollectionPaper, FollowedPaper, Generated, PaperEmbedding,
                      PaperVersion, ZoteroAccount)
 from .test_tools import ToolsTestCase, overleaf_files
+from . import activity
 
 OPEN_TEXT = ('## Abstract\n\nWe observe clouds.\n\n## 1 Introduction\n\n' + 'Context. ' * 300 +
              '\n\n## 2 Methods\n\nWe used the JWST NIRSpec instrument on 12 nights. The spectra were fitted with a '
@@ -184,8 +185,20 @@ class NotesAndExportTests(CollectionsTestCase):
         again = re.findall(r'@misc\{([^,]+),', Client().get(address).content.decode())
         self.assertEqual(again[:2], keys)
         self.assertEqual(len(again), 3)
+        self.assertEqual(len(set(again)), 3)
+        collection.refresh_from_db()
+        self.assertIsNotNone(collection.bib_read)
+        self.assertEqual(activity.watch()['overleaf'], {'linked': 1, 'read': 1})
+        self.assertContains(client.get(url), 'Last read by Overleaf on')
+        # removed papers and corrected titles leave the other keys as they were, in the download too
+        client.post(url, {'action': 'remove', 'arxiv_id': '2101.00001v1'})
+        ArxivPaper.objects.filter(arxiv_id='2101.00002v1').update(title='Renamed study of clouds')
+        after = re.findall(r'@misc\{([^,]+),', Client().get(address).content.decode())
+        self.assertEqual(after, again[1:])
+        download = client.get(url + 'export/bib/').content.decode()
+        self.assertEqual(sorted(re.findall(r'@misc\{([^,]+),', download)), sorted(after))
         project = overleaf_files(client.get(url + 'export/overleaf/'))
-        self.assertEqual(project['references.bib'].count('@misc{'), 3)
+        self.assertEqual(project['references.bib'].count('@misc{'), 2)
         self.assertNotIn('Private', project['references.bib'])
         other = self.user('other')
         self.assertEqual(self.client_for(other).post(url, {'action': 'bib_stop'}).status_code, 404)

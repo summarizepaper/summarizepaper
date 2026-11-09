@@ -211,6 +211,7 @@
     if (button.disabled || !fitAll()) return;
     // Opened now, while the click allows it; the form posts the project to it once the server has written it.
     var tab = toOverleaf ? window.open('', 'overleaf-export') : null;
+    if (tab) try { tab.document.title = 'Overleaf'; tab.document.body.textContent = deck.dataset.beamerExporting; } catch (_) { /* another origin already */ }
     button.disabled = true; status.textContent = deck.dataset.beamerExporting;
     send(deck.dataset.beamerUrl, {revision: deck.dataset.revision, pages: collect()}).then(function (r) {
       if (r.status === 409) throw new Error(deck.dataset.conflict);

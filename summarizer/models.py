@@ -797,6 +797,7 @@ class Collection(models.Model):
     share_notes = models.BooleanField(default=False)  # the shared page shows the owner's notes
     invite_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # joins as an editor
     bib_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # its .bib for Overleaf (library.bib_feed)
+    bib_read = models.DateTimeField(blank=True, null=True)  # when that .bib was last fetched (by Overleaf's Refresh)
     # the Zotero collection it is synced with (zotero.py): its key, and the library ('users/1', 'groups/2') it is in
     zotero_key = models.CharField(max_length=20, blank=True, default='')
     zotero_library = models.CharField(max_length=40, blank=True, default='')
@@ -826,6 +827,7 @@ class CollectionPaper(models.Model):
     selected = models.BooleanField(default=True)  # read by the comparison table, the open questions and the chat
     position = models.PositiveIntegerField(default=0)  # the order its owner gave; papers never moved keep 0
     zotero_key = models.CharField(max_length=20, blank=True, default='')  # its item in the synced Zotero collection
+    cite_key = models.CharField(max_length=100, blank=True, default='')  # its BibTeX key, kept once given (library.collection_bib)
     changed = models.DateTimeField(blank=True, null=True)  # its note, tags or reading status last changed here
     added = models.DateTimeField(auto_now_add=True)
 

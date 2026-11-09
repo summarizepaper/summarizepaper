@@ -6,7 +6,10 @@ Overleaf ship, sets Greek, Cyrillic and the symbols of scientific text (μ, ±, 
 use Fandol (ctex) and Harano Aji (xeCJK). Arabic, Hindi and Korean would need other fonts and shaping: those decks have no
 Beamer export (LANGUAGES).
 """
+import io
 from concurrent.futures import ThreadPoolExecutor
+
+from PIL import Image
 
 from django.utils.translation import gettext as _
 
@@ -15,8 +18,19 @@ from .slides_pptx import EXPORT_WORKERS, ExportError, notes_text
 
 LANGUAGES = ('en', 'fr', 'es', 'de', 'it', 'pt', 'nl', 'pl', 'tr', 'ru', 'uk', 'zh-hans', 'ja')
 SIZES = {36: '\\normalsize', 30: '\\small', 24: '\\footnotesize'}
-# A slide whose text is longer than the page is scaled down to fit (adjustbox), as the PowerPoint export refuses it
-FIT = '\\begin{adjustbox}{max totalheight=0.8\\textheight}\\begin{minipage}[t]{\\textwidth}\n%s\n\\end{minipage}\\end{adjustbox}'
+# The fonts of LaTeX are not those of the page, where the PowerPoint export checks that the text fits: a slide longer
+# than the page is scaled down to fit, and LaTeX names it in a warning of the log (Overleaf's Logs and outputs) when it
+# loses more than a tenth of its size.
+FIT = '\\slidebody{\n%s\n}'
+FIT_MACRO = r"""\newsavebox{\spbody}
+\newcommand{\slidebody}[1]{%
+  \sbox{\spbody}{\begin{minipage}[t]{\textwidth}#1\end{minipage}}%
+  \ifdim\dimexpr\ht\spbody+\dp\spbody\relax>0.89\textheight
+    \PackageWarningNoLine{SummarizePaper}{Slide \insertframenumber\space is scaled down by more than a tenth to fit the page: shorten it for a larger text}%
+  \fi
+  \adjustbox{max totalheight=0.8\textheight}{\usebox{\spbody}}}
+"""
+LARGE_FIGURE = 200 * 1024  # bytes: a larger PNG goes as a JPEG, so that the project stays light for Overleaf
 
 PREAMBLE = r"""% {comment}
 \documentclass[aspectratio=169,11pt]{{beamer}}
@@ -52,6 +66,19 @@ def itemize(lines):
     return '\\begin{itemize}\n%s\n\\end{itemize}' % '\n'.join('  \\item %s' % overleaf.tex(line) for line in lines)
 
 
+def figure_file(data):
+    """(extension, bytes) of a figure: as it is, or a large one as a JPEG on white."""
+    if len(data) <= LARGE_FIGURE:
+        return 'png', data
+    with Image.open(io.BytesIO(data)) as image:
+        image = image.convert('RGBA')
+        flat = Image.new('RGB', image.size, 'white')
+        flat.paste(image, mask=image.getchannel('A'))
+        out = io.BytesIO()
+        flat.save(out, format='JPEG', quality=88, optimize=True)
+    return ('jpg', out.getvalue()) if out.tell() < len(data) else ('png', data)
+
+
 def figure(page, name, height):
     caption = page['figure'].get('credit') or page['figure'].get('label') or ''
     return ('{\\centering\\includegraphics[width=\\linewidth,height=%s\\textheight,keepaspectratio]{%s}\\\\[2pt]\n'
@@ -79,7 +106,7 @@ def frame(page, name):
         share = page['figure_size'] / 100
         if page['layout'] in ('left', 'right'):
             text = '\\begin{column}{%.2f\\textwidth}\n%s\n\\end{column}' % (0.96 - share, itemize(page['bullets']))
-            picture = '\\begin{column}{%.2f\\textwidth}\n%s\n\\end{column}' % (share, figure(page, name, 0.78))
+            picture = '\\begin{column}{%.2f\\textwidth}\n%s\n\\end{column}' % (share, figure(page, name, 0.68))
             body.append('\\begin{columns}[c]\n%s\n%s\n\\end{columns}' % ((picture, text) if page['layout'] == 'left' else (text, picture)))
         else:
             picture = figure(page, name, '%.2f' % (share * 0.8))
@@ -100,12 +127,15 @@ def render_project(pages, footer, title, lang):
             images = dict(zip(urls, pool.map(sources.closing(slides_pptx.figure_bytes), urls)))
     except ExportError:
         raise ExportError(_('A figure could not be included. Please try the export again later.'))
-    names = {url: 'figures/figure-%d.png' % i for i, url in enumerate(urls, 1)}
-    files = {names[url]: data for url, data in images.items()}
+    names, files = {}, {}
+    for i, url in enumerate(urls, 1):
+        extension, data = figure_file(images[url])
+        names[url] = 'figures/figure-%d.%s' % (i, extension)
+        files[names[url]] = data
     tex = PREAMBLE.format(comment=_('Journal club slides written with SummarizePaper; check each point in the paper.'),
                           fonts=CJK_FONTS.get(lang, SANS), footer=overleaf.tex(footer),
                           notes=_('uncomment to show the speaker notes and the passages of the paper'))
-    tex += '\\title{%s}\n\\date{}\n\n\\begin{document}\n\n' % overleaf.tex(title)
+    tex += FIT_MACRO + '\\title{%s}\n\\date{}\n\n\\begin{document}\n\n' % overleaf.tex(title)
     tex += '\n'.join(frame(page, names.get((page.get('figure') or {}).get('url'))) for page in pages)
     tex += '\n\\end{document}\n'
     files['main.tex'] = tex

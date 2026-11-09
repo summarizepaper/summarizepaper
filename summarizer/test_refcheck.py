@@ -380,7 +380,7 @@ class PageTests(ToolsTestCase):
         self.assertTrue(only.startswith('@article{pre,') and '@book' not in only and 'again' not in only)
         project = overleaf_files(client.get('/en/refcheck/k1/bib/', {'sel': '1', 'k': ['again'], 'overleaf': '1'}))
         self.assertEqual(project['references.bib'], whole)
-        self.assertIn('\\bibliography{references}', project['main.tex'])
+        self.assertIn('\\addbibresource{references.bib}', project['main.tex'])
         self.assertContains(page, 'Open in Overleaf')
 
     def test_references_are_kept_in_a_collection_and_watched_until_publication(self):

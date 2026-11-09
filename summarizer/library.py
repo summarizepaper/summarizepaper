@@ -631,8 +631,10 @@ def collection_export(request, pk, fmt):
         rows = [r for r in rows if tag in [t.strip().lower() for t in r.tags.split(',')]]
     if fmt == 'list':
         return list_csv(rows, filename)
+    if fmt == 'bib':
+        return exports._download(collection_bib(collection, rows, notes=True), filename + '.bib', 'application/x-bibtex; charset=utf-8')
     if fmt == 'overleaf':
-        return overleaf.open_response(request, overleaf.bib_project(collection_bib(rows), collection.name, _(
+        return overleaf.open_response(request, overleaf.bib_project(collection_bib(collection, rows), collection.name, _(
             'The papers of the collection, from SummarizePaper. Copy their entries into the .bib of your manuscript, '
             'or link it to the collection to keep it up to date (Settings tab of the collection).')), collection.name)
     metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in rows) if m]
@@ -641,10 +643,35 @@ def collection_export(request, pk, fmt):
     return exports.export_many(metas, fmt, filename, lang, notes=notes, status=status)
 
 
-def collection_bib(papers):
-    """The .bib of these papers, without the notes and tags, which a shared Overleaf project would show."""
-    metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in papers) if m]
-    return '\n'.join(exports.cite_keys([exports.bibtex_entry(m) for m in metas])[0])
+def free_key(key, taken):
+    """key, else key with the first letter (b, c...) no other paper of the collection has."""
+    for suffix in [''] + list('bcdefghijklmnopqrstuvwxyz'):
+        if key + suffix not in taken:
+            return key + suffix
+    n = 2
+    while '%s%d' % (key, n) in taken:
+        n += 1
+    return '%s%d' % (key, n)
+
+
+def collection_bib(collection, papers, notes=False):
+    """The .bib of these papers of the collection. Each paper keeps the key it was first given, whatever is added,
+    removed or corrected since: a manuscript that cites it, or Overleaf's copy of the .bib, never loses it.
+    notes: with the notes and tags (annote, keywords), for a download; never for Overleaf, whose projects are shared."""
+    taken = set(collection.papers.exclude(cite_key='').values_list('cite_key', flat=True))
+    entries = []
+    for paper in papers:
+        meta = exports.paper_meta(paper.arxiv_id, paper)
+        if not meta:
+            continue
+        if not paper.cite_key:
+            paper.cite_key = free_key(exports.cite_key(meta), taken)
+            taken.add(paper.cite_key)
+            CollectionPaper.objects.filter(pk=paper.pk).update(cite_key=paper.cite_key)
+        head, rest = exports.bibtex_entry(meta).split(',', 1)
+        entry = '%s{%s,%s' % (head.split('{', 1)[0], paper.cite_key, rest)
+        entries.append(exports.with_note(entry, 'bib', paper.note, paper.tags) if notes else entry)
+    return '\n'.join(entries)
 
 
 def bib_url(request, collection):
@@ -654,12 +681,13 @@ def bib_url(request, collection):
 
 
 def bib_feed(request, token):
-    """The .bib of a collection at an address only its owner knows, for Overleaf to fetch again on Refresh. The papers
-    in the order they were added, so that adding one never changes the keys of the others (smith2020a, b...)."""
+    """The .bib of a collection at an address only its owner knows, for Overleaf to fetch again on Refresh, in the
+    order the papers were added."""
     if not re.fullmatch(r'[0-9a-f]{32}', token):
         raise Http404
     collection = get_object_or_404(Collection, bib_token=token)
-    response = HttpResponse(collection_bib(collection.papers.order_by('pk')), content_type='text/plain; charset=utf-8')
+    Collection.objects.filter(pk=collection.pk).update(bib_read=timezone.now())  # not save(): its updated date stays
+    response = HttpResponse(collection_bib(collection, collection.papers.order_by('pk')), content_type='text/plain; charset=utf-8')
     response['Cache-Control'] = 'no-store'
     response['X-Robots-Tag'] = 'noindex'
     return response

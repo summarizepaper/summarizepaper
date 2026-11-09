@@ -2,16 +2,16 @@
 {% load i18n static_version %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'Zotero, Notion, Obsidian' %}{% endblock %}
+{% block title %}{% trans 'Zotero, Overleaf, Notion, Obsidian' %}{% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Save arXiv papers and their AI summaries to Zotero, Mendeley, Notion or Obsidian, or cite them with BibTeX.' %}" />
+  <meta name="description" content="{% trans 'Save arXiv papers and their AI summaries to Zotero, Mendeley, Notion or Obsidian, cite them with BibTeX, and keep the .bib of your Overleaf project up to date.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/integrations/" />
 {% endblock %}
 
 {% block content %}
 <div class="page">
   <header class="page-header">
-    <h1>{% trans 'Zotero, Notion, Obsidian' %}</h1>
+    <h1>{% trans 'Zotero, Overleaf, Notion, Obsidian' %}</h1>
     <p class="lead">{% trans 'Send the papers you read here, with their summaries, to the tools where you keep your references and notes.' %}</p>
   </header>
 
@@ -24,6 +24,14 @@
   </ul>
   <p class="notice">{% trans 'A paper published since its preprint is exported as its published version: journal and DOI, with its arXiv identifier kept. Each summary says it was written by an AI model, from which version of the paper and when.' %}</p>
   <p class="notice">{% trans 'No API key is needed to import a RIS file into Zotero. It contains the reference and the original abstract, when available. The direct connection below adds a separate note with the AI summary and key points.' %}</p>
+
+  <h2 id="overleaf">Overleaf</h2>
+  <ul>
+    <li><strong>{% trans 'A .bib kept up to date, free' %}</strong>: {% trans 'each collection can give its .bib an address to link in an Overleaf project (New file, From external URL). After adding papers here, one click on Refresh in Overleaf brings them to your manuscript, without Overleaf’s paid Zotero or Mendeley sync. Each paper keeps its citation key, whatever you add or remove.' %}</li>
+    <li><strong>{% trans 'Open in Overleaf' %}</strong>: {% trans 'a collection, the corrected .bib of a bibliography check, a literature review with its citations, the papers your draft does not cite, or your journal club slides as LaTeX Beamer, each as a new Overleaf project.' %}</li>
+    <li><strong>{% trans 'Your Overleaf project checked' %}</strong>: {% trans 'download its source as a .zip and give it to the bibliography check, which reads its LaTeX and its .bib together.' %}</li>
+  </ul>
+  {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}<p><a href="/{{ LANGUAGE_CODE }}/guides/overleaf-bibliography-check/" data-funnel="integrations_overleaf_guide">{% if LANGUAGE_CODE == 'fr' %}Le guide pas à pas, avec captures{% else %}The step-by-step guide, with screenshots{% endif %}</a></p>{% endif %}
 
   <h2>{% trans 'Your Zotero library' %} <span class="badge-premium">Premium</span></h2>
   <ul>

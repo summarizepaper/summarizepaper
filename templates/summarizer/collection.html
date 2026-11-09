@@ -410,7 +410,7 @@
         <input type="text" readonly value="{{ bib_url }}" id="bib-url" aria-label="{% trans 'Address of the .bib' %}">
         <button type="button" class="btn btn-sm" data-copy="bib-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
       </div>
-      <p class="muted"><small>{% trans 'Anyone with this address reads the references of the collection (not your notes or tags). The keys of the papers already there do not change when you add others.' %}</small></p>
+      <p class="muted"><small>{% trans 'Anyone with this address reads the references of the collection (not your notes or tags). Each paper keeps its key, whatever you add or remove: your \cite commands keep working.' %}{% if collection.bib_read %} {% blocktrans with date=collection.bib_read|date:"j F Y H:i" %}Last read by Overleaf on {{ date }}.{% endblocktrans %}{% endif %}</small></p>
       <form method="post" class="item-actions">{% csrf_token %}<button class="btn btn-sm btn-danger" name="action" value="bib_stop">{% trans 'Stop this address' %}</button></form>
     {% else %}
       <p>{% trans 'Get an address for the .bib of this collection, to link in an Overleaf project: the papers you add here reach your manuscript with one click on Refresh, without Overleaf’s paid Zotero sync.' %}</p>

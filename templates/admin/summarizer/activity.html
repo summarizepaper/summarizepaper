@@ -40,7 +40,7 @@
         {% endfor %}
     </div>
 
-    {% if watch.failed or watch.stuck or watch.unavailable or watch.links %}
+    {% if watch.failed or watch.stuck or watch.unavailable or watch.links or watch.overleaf.linked %}
         <div class="mb-6">
             {% component "unfold/components/card.html" with title="À surveiller" %}
                 {% if watch.failed %}
@@ -58,6 +58,9 @@
                             <li><span class="text-subtle">{{ w.time|date:"d/m H:i" }}</span> · <a class="text-primary-600 dark:text-primary-500" href="{{ w.href }}">{{ w.tool }} · {{ w.key }}</a><br><span class="text-subtle">{{ w.detail }}</span></li>
                         {% endfor %}
                     </ul>
+                {% endif %}
+                {% if watch.overleaf.linked %}
+                    <p class="mb-4">.bib reliés à Overleaf : {{ watch.overleaf.linked }} collection{{ watch.overleaf.linked|pluralize }} · lu{{ watch.overleaf.read|pluralize }} par Overleaf ces 7 jours : {{ watch.overleaf.read }}</p>
                 {% endif %}
                 {% if watch.links %}
                     <p class="font-semibold mb-2">Liens d’articles non reconnus (30 j)</p>

@@ -106,12 +106,13 @@ def paper_url(meta):
 # --- BibTeX -------------------------------------------------------------------------------------------------
 
 def cite_key(meta):
-    """lee2021clouds: the first author's family name (Beránek: beranek), the year it appeared, the first word of more
-    than 3 letters."""
+    """lee2021clouds: the first author's family name (Beránek: beranek), the year of the version cited (that of the
+    journal for a preprint published since, as in its year field), the first word of more than 3 letters."""
     first_word = next((w for w in re.findall(r'[A-Za-z]+', meta['title']) if len(w) > 3), 'paper')
     family = split_name(meta['authors'][0])[1] if meta['authors'] else ''
     last_name = re.sub(r'[^A-Za-z]', '', unicodedata.normalize('NFKD', family).encode('ascii', 'ignore').decode())
-    return '%s%s%s' % ((last_name or 'paper').lower(), meta['year'], first_word.lower())
+    year = (meta.get('published') or {}).get('year') or meta['year']
+    return '%s%s%s' % ((last_name or 'paper').lower(), year, first_word.lower())
 
 
 def unique_keys(keys):
