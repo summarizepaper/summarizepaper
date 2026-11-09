@@ -917,19 +917,156 @@ def full_text(key):
 
 # --- finding papers --------------------------------------------------------------
 
+# one web address, https:// optional ('10.1038/nature14539' is a DOI, not an address)
+LINK_RE = re.compile(r'^(?:https?://)?(?:[\w-]+\.)+[a-z]{2,}(?::\d+)?/\S*$', re.I)
+OUR_PAGE_RE = re.compile(r'summarizepaper\.com/(?:[a-z]{2}/)?paper/([^/?#]+)', re.I)
+NATURE_RE = re.compile(r'nature\.com/articles/([a-z0-9.\-]+)', re.I)  # the DOI of a Nature article is 10.1038/<its name>
+SSRN_RE = re.compile(r'ssrn\.com/\S*abstract(?:_id)?=(\d+)', re.I)
+SCIENCEDIRECT_RE = re.compile(r'sciencedirect\.com/science/article/(?:abs/)?pii/(S[0-9X]{16})\b', re.I)
+INSPIRE_RE = re.compile(r'inspirehep\.net/(?:api/)?literature/(\d+)', re.I)
+PAGE_BYTES = 2 * 1024 * 1024  # the citation tags are in the head
+PAGE_SECONDS = 7 * 86400
+
+
+def _public(url):
+    """Whether an address is a public web server: a pasted link must not make us read our own network."""
+    import ipaddress
+    import socket
+    parts = urllib.parse.urlsplit(url)
+    try:
+        if parts.scheme not in ('http', 'https') or not parts.hostname or parts.port not in (None, 80, 443):
+            return False
+        addresses = socket.getaddrinfo(parts.hostname, parts.port or 443, proto=socket.IPPROTO_TCP)
+    except (socket.gaierror, UnicodeError, ValueError):
+        return False
+    return bool(addresses) and all(ipaddress.ip_address(a[4][0]).is_global for a in addresses)
+
+
+def _page(url):
+    """The HTML of a public page ('' when it is not one or does not answer), each redirection checked again."""
+    for _ in range(5):
+        if not _public(url):
+            return ''
+        with _session.get(url, timeout=8, stream=True, allow_redirects=False,
+                          headers={'Accept': 'text/html,application/xhtml+xml'}) as response:
+            if response.is_redirect and response.headers.get('location'):
+                url = urllib.parse.urljoin(url, response.headers['location'])
+                continue
+            kind = response.headers.get('content-type', '')
+            if response.status_code != 200 or 'html' not in kind:
+                return ''
+            body = bytearray()
+            for chunk in response.iter_content(65536):
+                body += chunk
+                if len(body) >= PAGE_BYTES:
+                    break
+            return body.decode(response.encoding if 'charset' in kind else 'utf-8', errors='replace')
+    return ''
+
+
+def page_meta(url):
+    """{'doi', 'arxiv', 'title'} of the paper a publisher's page shows, from the citation tags it gives Zotero and
+    Google Scholar; empty strings when the page cannot be read (many publishers turn robots away) or says nothing."""
+    from bs4 import BeautifulSoup
+    from django.core.cache import cache
+    url = url if re.match(r'^https?://', url, re.I) else 'https://' + url
+    key = 'page-meta:' + hashlib.sha256(url.encode()).hexdigest()
+    found = cache.get(key)
+    if found is not None:
+        return found
+    found = {'doi': '', 'arxiv': '', 'title': ''}
+    try:
+        html = _page(url)
+    except (requests.RequestException, UnicodeError, ValueError):
+        html = ''
+    tags = {}
+    for tag in BeautifulSoup(html, 'lxml').find_all('meta') if html else []:
+        name = (tag.get('name') or '').lower()
+        if name and tag.get('content') and name not in tags:
+            tags[name] = tag['content'].strip()
+    for name in ('citation_doi', 'prism.doi', 'bepress_citation_doi', 'dc.identifier', 'dc.identifier.doi'):
+        doi = clean_doi(tags.get(name, ''))
+        if doi:
+            found['doi'] = doi
+            break
+    arxiv = re.search(r'\d{4}\.\d{4,5}(?:v\d+)?|[a-z\-]+(?:\.[A-Z]{2})?/\d{7}(?:v\d+)?', tags.get('citation_arxiv_id', ''))
+    found['arxiv'] = arxiv.group(0) if arxiv else ''
+    found['title'] = _clean(tags.get('citation_title') or tags.get('dc.title') or '')[:300]
+    cache.set(key, found, PAGE_SECONDS if html else 3600)
+    return found
+
+
+def link_query(text):
+    """Words to search for a link to a paper that gives no identifier: the title its page gives, else the words of
+    its address ('researchgate.net/publication/335_Deep_Residual_Learning' -> 'Deep Residual Learning'); '' when
+    the text is not a link or neither says anything."""
+    text = (text or '').strip()
+    if not LINK_RE.match(text):
+        return ''
+    title = page_meta(text)['title']
+    if title:
+        return title
+    path = urllib.parse.urlsplit(text if '://' in text else '//' + text).path
+    for part in reversed(urllib.parse.unquote(path).split('/')):
+        tokens = re.split(r'[-_+\s]+', re.sub(r'\.(?:html?|pdf|php|aspx?)$', '', part, flags=re.I))
+        words = [t for t in tokens if re.fullmatch(r'[^\W\d_]{2,}', t)]
+        if len(words) >= 3 and len(words) >= len(tokens) - 1:  # a title, not an id or a hash with a word
+            return ' '.join(words)
+    return ''
+
+
+def _inspire(record):
+    """('arxiv', id) or ('key', key) of an INSPIRE record, None when it has neither."""
+    data = (_json('https://inspirehep.net/api/literature/%s' % record, {'fields': 'dois,arxiv_eprints'}) or {}).get('metadata') or {}
+    if data.get('arxiv_eprints'):
+        return 'arxiv', data['arxiv_eprints'][0]['value']
+    doi = clean_doi((data.get('dois') or [{}])[0].get('value', ''))
+    return ('key', doi_key(doi)) if doi else None
+
+
+def _pii_doi(pii):
+    """The DOI of a ScienceDirect article from its PII, which Elsevier gives Crossref."""
+    body = _json('https://api.crossref.org/works', {'filter': 'alternative-id:%s' % pii, 'rows': 1, 'select': 'DOI',
+                                                    'mailto': 'contact@summarizepaper.com'})
+    items = ((body or {}).get('message') or {}).get('items') or []
+    return clean_doi(items[0].get('DOI', '')) if items else None
+
+
 def resolve(text):
     """What a visitor typed or pasted -> ('arxiv', arxiv id) or ('key', key); None when nothing is recognized.
 
-    A DOI of arXiv's own (10.48550/arXiv.*) goes to the arXiv page. Raises SourceUnavailable when the
-    identifier needs a lookup (HAL, PMC, PMID, OSF link) and the source does not answer.
+    A DOI of arXiv's own (10.48550/arXiv.*) goes to the arXiv page. A link to a publisher's page without the
+    DOI in its address is read for its citation tags. Raises SourceUnavailable when the identifier needs a lookup
+    (HAL, PMC, PMID, OSF, INSPIRE, ScienceDirect link) and the source does not answer.
     """
     text = (text or '').strip()
+    match = OUR_PAGE_RE.search(text)
+    if match:
+        key = urllib.parse.unquote(match.group(1)).lower()
+        if valid_key(key):
+            return 'key', key
+        if re.fullmatch(r'\d{4}\.\d{4,5}(?:v\d+)?|[a-z\-]+(?:\.[a-z]{2})?--\d{7}(?:v\d+)?', key):
+            return 'arxiv', key.replace('--', '/')
+    match = NATURE_RE.search(text)
+    if match:
+        text = '10.1038/' + match.group(1)
+    match = SSRN_RE.search(text)
+    if match:
+        text = '10.2139/ssrn.' + match.group(1)
+    match = SCIENCEDIRECT_RE.search(text)
+    if match:
+        text = _pii_doi(match.group(1).upper()) or ''
+        if not text:
+            return None
     doi = clean_doi(text)
     if doi:
         match = ARXIV_DOI_RE.match(doi)
         if match:
             return 'arxiv', match.group(1)
         return 'key', doi_key(doi)
+    match = INSPIRE_RE.search(text)
+    if match:
+        return _inspire(match.group(1))
     match = HAL_ID_RE.search(text)
     if match and ('hal' in text.lower() or match.group(1).lower().startswith('hal')):
         paper = fetch_hal(match.group(1))
@@ -959,6 +1096,12 @@ def resolve(text):
         if paper and paper['key']:
             remember(paper)
             return 'key', paper['key']
+    if LINK_RE.match(text) and not match:
+        found = page_meta(text)
+        if found['arxiv']:
+            return 'arxiv', found['arxiv']
+        if found['doi']:
+            return resolve(found['doi'])
     return None
 
 

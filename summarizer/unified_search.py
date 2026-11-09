@@ -3,6 +3,7 @@ import contextvars
 import hashlib
 import json
 import re
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from itertools import zip_longest
@@ -15,15 +16,47 @@ from django.db import close_old_connections
 from . import digest, sources
 
 
-def arxiv_identifier(text):
+# arXiv and the sites that show its papers under their arXiv id (alphaxiv.org/abs/2401.12345,
+# huggingface.co/papers/2401.12345, semanticscholar.org/arxiv/2401.12345...)
+ARXIV_SITES = re.compile(r'^(?:[\w-]+\.)*(?:arxiv\.org|ar5iv\.org|alphaxiv\.org|huggingface\.co|hf\.co|scirate\.com|'
+                         r'semanticscholar\.org|arxiv-sanity-lite\.com)$', re.I)
+# an ADS record of an arXiv preprint: ui.adsabs.harvard.edu/abs/2024arXiv240112345X
+ADS_ARXIV = re.compile(r'adsabs\.harvard\.edu/abs/\d{4}arXiv(\d{4})\.?(\d{4,5})', re.I)
+
+
+def arxiv_reference(text):
+    """'2401.12345v2' / 'hep-th/9901001' (a version only when given) for an arXiv id, 'arXiv:' id or a link to
+    arXiv or a site that shows its papers, with or without https://; None otherwise."""
     value = text.strip()
-    value = re.sub(r'^https?://(?:www\.|export\.)?arxiv\.org/(?:abs|pdf|html)/', '', value, flags=re.I)
+    ads = ADS_ARXIV.search(value)
+    if ads:
+        return '%s.%s' % ads.groups()
     value = re.sub(r'^arxiv:\s*', '', value, flags=re.I)
-    value = re.sub(r'\.pdf(?:[?#].*)?$', '', value, flags=re.I)
-    value = re.split(r'[?#]', value)[0]
-    if digest.ARXIV_ID_RE.fullmatch(value):
+    if '/' in value and not digest.ARXIV_ID_RE.fullmatch(value):  # a link ('hep-th/9901001' alone is an id)
+        parts = urllib.parse.urlsplit(value if re.match(r'^[a-z]+://', value, re.I) else '//' + value)
+        if not ARXIV_SITES.match(parts.hostname or ''):
+            return None
+        value = re.sub(r'^/(?:abs|pdf|html|papers?|arxiv|format|ps)/', '', parts.path, flags=re.I).strip('/')
+    value = re.sub(r'\.pdf$', '', re.split(r'[?#]', value)[0], flags=re.I)
+    return value if digest.ARXIV_ID_RE.fullmatch(value) else None
+
+
+def arxiv_identifier(text):
+    value = arxiv_reference(text)
+    if value:
         return digest.site_id(value if re.search(r'v\d+$', value) else value + 'v1')
     return None
+
+
+def identified(query):
+    """('arxiv', id) or ('key', key) when the query is a paper's identifier or link, else None."""
+    reference = arxiv_reference(query)
+    if reference:
+        return 'arxiv', reference
+    try:
+        return sources.resolve(query)
+    except sources.SourceUnavailable:
+        return None
 
 
 def arxiv_results(query, field='all', filters=None, page=1):

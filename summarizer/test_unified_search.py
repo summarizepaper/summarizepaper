@@ -173,3 +173,84 @@ class ScopedSearchPageTests(TestCase):
                             parse_qs(urlsplit(a['href']).query).get('page') == ['2'] for a in
                             BeautifulSoup(response.content, 'html.parser').select('.pagination a')))
         self.assertContains(response, 'data-loading="Searching…"')
+
+
+PUBLISHER_PAGE = ('<html><head><meta name="citation_title" content="Array programming with  NumPy">'
+                  '<meta name="citation_doi" content="doi:10.1038/s41586-020-2649-2"></head></html>')
+
+
+class PastedLinkTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_links_to_arxiv_and_the_sites_that_show_its_papers_are_arxiv_ids(self):
+        for value, expected in [
+            ('arxiv.org/abs/2401.12345', '2401.12345'), ('https://www.arxiv.org/abs/2401.12345v2/', '2401.12345v2'),
+            ('https://alphaxiv.org/abs/2401.12345', '2401.12345'), ('https://huggingface.co/papers/2401.12345', '2401.12345'),
+            ('https://www.semanticscholar.org/arxiv/2401.12345', '2401.12345'),
+            ('https://ar5iv.labs.arxiv.org/html/hep-th/9901001', 'hep-th/9901001'),
+            ('https://ui.adsabs.harvard.edu/abs/2024arXiv240112345X/abstract', '2401.12345'),
+            ('https://ui.adsabs.harvard.edu/abs/2013arXiv1301.1234S', '1301.1234'),
+            ('https://arxiv.org/list/hep-th/new', None), ('https://example.org/abs/2401.12345', None),
+        ]:
+            with self.subTest(value=value):
+                self.assertEqual(unified_search.arxiv_reference(value), expected)
+
+    def test_publisher_links_without_a_doi_in_their_address_are_found(self):
+        with mock.patch.object(sources, '_page', return_value=PUBLISHER_PAGE) as page:
+            found = sources.resolve('https://www.example-journal.org/article/123')
+            self.assertEqual(found, ('key', 'doi_10.1038--s41586-020-2649-2'))
+            sources.resolve('https://www.example-journal.org/article/123')
+        page.assert_called_once()  # the page is read once
+        self.assertEqual(sources.resolve('https://www.nature.com/articles/nature14539'), ('key', 'doi_10.1038--nature14539'))
+        self.assertEqual(sources.resolve('https://papers.ssrn.com/sol3/papers.cfm?abstract_id=1234567'),
+                         ('key', 'doi_10.2139--ssrn.1234567'))
+        self.assertEqual(sources.resolve('https://www.summarizepaper.com/fr/paper/hep-th--9901001v1/'),
+                         ('arxiv', 'hep-th/9901001v1'))
+        with mock.patch.object(sources, '_json', return_value={'message': {'items': [{'DOI': '10.1016/j.physletb.2012.08.021'}]}}) as crossref:
+            self.assertEqual(sources.resolve('https://www.sciencedirect.com/science/article/pii/S0370269312008581'),
+                             ('key', 'doi_10.1016--j.physletb.2012.08.021'))
+        self.assertEqual(crossref.call_args.args[1]['filter'], 'alternative-id:S0370269312008581')
+        with mock.patch.object(sources, '_json', return_value={'metadata': {'arxiv_eprints': [{'value': '1207.7214'}]}}):
+            self.assertEqual(sources.resolve('https://inspirehep.net/literature/1124337'), ('arxiv', '1207.7214'))
+        with mock.patch.object(sources, '_page') as page:
+            self.assertIsNone(sources.resolve('dark matter halos'))
+            self.assertIsNone(sources.resolve('10.1234'))
+        page.assert_not_called()
+
+    def test_a_pasted_link_cannot_make_the_site_read_its_own_network(self):
+        for url in ('http://127.0.0.1/admin/', 'http://localhost:8000/', 'http://169.254.169.254/latest/meta-data/',
+                    'http://10.0.0.1/', 'file:///etc/passwd', 'https://example.org:22/'):
+            with self.subTest(url=url):
+                self.assertFalse(sources._public(url))
+        with mock.patch.object(sources, '_public', side_effect=[True, False]), \
+             mock.patch.object(sources._session, 'get') as get:
+            get.return_value.__enter__.return_value = mock.Mock(is_redirect=True, headers={'location': 'http://127.0.0.1/'})
+            self.assertEqual(sources._page('https://redirector.example/'), '')
+        get.assert_called_once()  # the redirection to our network is not followed
+
+    def test_a_link_without_identifier_searches_its_title_or_the_words_of_its_address(self):
+        with mock.patch.object(sources, '_page', return_value=PUBLISHER_PAGE):
+            self.assertEqual(sources.link_query('https://www.example-journal.org/article/9'), 'Array programming with NumPy')
+        with mock.patch.object(sources, '_page', return_value=''):
+            self.assertEqual(sources.link_query(
+                'https://www.researchgate.net/publication/286512696_Deep_Residual_Learning_for_Image_Recognition'),
+                'Deep Residual Learning for Image Recognition')
+            self.assertEqual(sources.link_query(
+                'https://proceedings.neurips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html'), '')
+        self.assertEqual(sources.link_query('Deep residual learning'), '')
+
+    def test_the_search_page_and_the_chat_search_open_a_pasted_link(self):
+        response = self.client.get('/en/search-results/', {'q': 'https://alphaxiv.org/abs/1706.03762'})
+        self.assertEqual(response['Location'], '/en/paper/1706.03762v1/')
+        with mock.patch.object(sources, '_page', return_value=''), \
+             mock.patch.object(unified_search, 'search', return_value=([], False)) as search:
+            self.client.get('/en/search-results/', {'q': 'https://www.researchgate.net/publication/1_Deep_Residual_Learning'})
+        self.assertEqual(search.call_args.args[0], 'Deep Residual Learning')
+        feed = '<feed xmlns="http://www.w3.org/2005/Atom"></feed>'
+        with mock.patch('summarizer.views.requests.get') as get, \
+             mock.patch.object(unified_search, 'search') as search:
+            get.return_value = mock.Mock(content=feed.encode(), status_code=200)
+            self.client.get('/en/arxiv-api/', {'search_query': 'huggingface.co/papers/1706.03762', 'src': 'all'})
+        search.assert_not_called()
+        self.assertEqual(get.call_args.kwargs['params'], {'id_list': '1706.03762'})

@@ -240,6 +240,8 @@ def search_results(request):
         if found:
             source_kind, value = found
             return redirect('arxividpage', arxiv_id=digest.site_id(value) if source_kind == 'arxiv' else value)
+        # a link without an identifier we can read: its title, else the words of its address, are searched
+        query = sources.link_query(query) or query
     field = request.GET.get('field') if request.GET.get('field') in ('author', 'title', 'abstract') else 'all'
     page_num = request.GET.get('page', 1)
     try:
@@ -675,14 +677,9 @@ def open_feed(request, search_query, id_list):
 
 
 def arxiv_reference(text):
-    """'https://arxiv.org/abs/2310.06825v2', 'arXiv:2310.06825', '2310.06825.pdf'... -> '2310.06825v2' / '2310.06825';
-    anything else unchanged (a DOI, a link to another source)."""
-    value = text.strip()
-    value = re.sub(r'^https?://(?:www\.|export\.)?arxiv\.org/(?:abs|pdf|html)/', '', value, flags=re.I)
-    value = re.sub(r'^arxiv:\s*', '', value, flags=re.I)
-    value = re.sub(r'\.pdf(?:[?#].*)?$', '', value, flags=re.I).split('?')[0].split('#')[0].rstrip('/')
-    value = value.replace('--', '/')
-    return value if ARXIV_ID_FULL.match(value) else text.strip()
+    """'https://arxiv.org/abs/2310.06825v2', 'arXiv:2310.06825', '2310.06825.pdf', an alphaxiv or Hugging Face
+    link... -> '2310.06825v2' / '2310.06825'; anything else unchanged (a DOI, a link to another source)."""
+    return unified_search.arxiv_reference(text.strip().replace('--', '/')) or text.strip()
 
 
 def arxiv_api(request):
@@ -700,6 +697,13 @@ def _arxiv_api(request):
     id_list = request.GET.get('id_list', '').strip()[:300]
     if bool(search_query) == bool(id_list):
         return HttpResponse('Give either search_query or id_list.', status=400, content_type='text/plain')
+    if search_query and request.GET.get('src') == 'all':
+        # a pasted link or identifier: that paper, as the "Add" field finds it
+        found = unified_search.identified(search_query)
+        if found:
+            search_query, id_list = '', found[1]
+        else:
+            search_query = sources.link_query(search_query) or search_query
     if search_query and request.GET.get('src') == 'all':
         # arXiv and the journals and preprints at once, as the search of the site does (the chat page)
         try:

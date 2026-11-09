@@ -62,7 +62,7 @@
     {% include "summarizer/search_scope.html" %}
     <div class="results-search">
     <i class="fas fa-search"></i>
-    <input type="text" name="q" value="{{ query }}" placeholder="{% trans 'Search for an article' %}" aria-label="{% trans 'Search for an article' %}">
+    <input type="text" name="q" value="{{ query }}" placeholder="{% trans 'Title, topic, author or paper link' %}" aria-label="{% trans 'Search for an article' %}">
 
     <button type="submit" class="btn" data-loading="{% trans 'Searching…' %}">{% trans 'Search' %}</button>
     </div>
