@@ -25,6 +25,7 @@
     <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/chat/?ids={{ chat_ids }}">{% trans 'Chat with the selected papers' %}</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/bib/">BibTeX</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/ris/">RIS</a>
+    <a class="btn btn-sm btn-ghost" data-export target="_blank" data-funnel="collection_overleaf" href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/overleaf/" title="{% trans 'A new Overleaf project with the .bib of these papers. To keep the .bib of your own project up to date, link it in the Settings tab.' %}">{% trans 'Open in Overleaf' %}</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/obsidian/" title="{% trans 'A note per paper with its properties, in a folder to drop in your vault' %}">Obsidian (.zip)</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/md/">Markdown</a>
     <a class="btn btn-sm btn-ghost" data-export href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/export/list/" title="{% trans 'To import in Notion as a database, or in a spreadsheet' %}">{% trans 'Spreadsheet or Notion (CSV)' %}</a>
@@ -400,6 +401,20 @@
         <label><input type="checkbox" name="notes"> {% trans 'Show my notes' %}</label>
         <button class="btn btn-sm" name="action" value="share">{% trans 'Create a link' %}</button>
       </form>
+    {% endif %}
+
+    <h3 id="overleaf">{% trans 'Keep a .bib in Overleaf up to date' %}</h3>
+    {% if bib_url %}
+      <p>{% trans 'In your Overleaf project: New file, From external URL, paste this address and name the file, for example collection.bib. Click Refresh on that file in Overleaf after adding papers here; then cite them with \bibliography{collection}.' %}</p>
+      <div class="tool-row link-row">
+        <input type="text" readonly value="{{ bib_url }}" id="bib-url" aria-label="{% trans 'Address of the .bib' %}">
+        <button type="button" class="btn btn-sm" data-copy="bib-url" data-copied="{% trans 'Copied' %}">{% trans 'Copy' %}</button>
+      </div>
+      <p class="muted"><small>{% trans 'Anyone with this address reads the references of the collection (not your notes or tags). The keys of the papers already there do not change when you add others.' %}</small></p>
+      <form method="post" class="item-actions">{% csrf_token %}<button class="btn btn-sm btn-danger" name="action" value="bib_stop">{% trans 'Stop this address' %}</button></form>
+    {% else %}
+      <p>{% trans 'Get an address for the .bib of this collection, to link in an Overleaf project: the papers you add here reach your manuscript with one click on Refresh, without Overleaf’s paid Zotero sync.' %}</p>
+      <form method="post" class="item-actions">{% csrf_token %}<button class="btn btn-sm" name="action" value="bib_link" data-funnel="collection_bib_link">{% trans 'Create the address of the .bib' %}</button></form>
     {% endif %}
 
     <h3>{% trans 'Watch the collection' %} <span class="badge-premium">Premium</span></h3>

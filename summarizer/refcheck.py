@@ -763,7 +763,7 @@ def borrowed(request, value):
             row = Generated.objects.filter(kind='literature', key=key, user=request.user, status='done').first()
             if row is not None:
                 result = row.data()
-                return result.get('title') or _('Literature review'), literature.export_result(row, 'bib').content.decode('utf-8')
+                return result.get('title') or _('Literature review'), literature.export_result(request, row, 'bib').content.decode('utf-8')
     except Http404:
         return None
     return None
@@ -1006,6 +1006,11 @@ def _bib(request, row):
         raise Http404
     selected = request.GET.getlist('k') if request.GET.get('sel') else None
     only = bool(request.GET.get('only'))
+    if request.GET.get('overleaf'):
+        from . import overleaf
+        title = _('My bibliography, corrected')
+        return overleaf.open_response(request, overleaf.bib_project(bib_file(data, selected, only), title, _(
+            'Corrected by SummarizePaper. If this project compiles, replace the .bib of your manuscript with references.bib.')), title)
     response = HttpResponse(bib_file(data, selected, only), content_type='application/x-bibtex; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="%s"' % ('corrected-entries.bib' if only else 'references-corrected.bib')
     return response

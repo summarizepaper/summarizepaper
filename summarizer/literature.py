@@ -51,7 +51,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import (access, assistant, citations, digest, evidence, exports, generated, library, mailcheck, result_share, similar,
+from . import (access, assistant, citations, digest, evidence, exports, generated, library, mailcheck, overleaf, result_share, similar,
                sources, tdm)
 from .models import ArxivPaper, Collection, Generated, PaperText
 
@@ -1107,15 +1107,16 @@ def as_text(result, cite, para=lambda text: text, heading=lambda level, text: '#
     return out
 
 
-def export_text(result, fmt, lang):
+def export_text(result, fmt, lang, bib_file=False):
+    """bib_file: for 'tex', the references in review.bib next to the text (Overleaf) rather than inside it."""
     entries, keys = cite_keys([exports.bibtex_entry(m) for m in metas(result)])
     if fmt == 'tex':
         body = as_text(result, lambda ns: ('~\\cite{%s}' % ','.join(keys[n - 1] for n in ns)) if ns else '',
                        para=latex, heading=lambda level, text: ('\\section{%s}' if level == 1 else '\\subsection*{%s}') % latex(text))
         body = [b if not b.startswith('- ') else '\\begin{itemize}\\item %s\\end{itemize}' % b[2:] for b in body]
-        return '\n'.join(['% ' + str(_('Exploratory literature review written with SummarizePaper; check each statement in the papers.')),
-                          '\\begin{filecontents*}[overwrite]{review.bib}'] + entries + ['\\end{filecontents*}', '',
-                          '\\documentclass{article}', '\\usepackage[utf8]{inputenc}', '\\begin{document}'] + body +
+        inline = [] if bib_file else ['\\begin{filecontents*}[overwrite]{review.bib}'] + entries + ['\\end{filecontents*}', '']
+        return '\n'.join(['% ' + str(_('Exploratory literature review written with SummarizePaper; check each statement in the papers.'))] +
+                         inline + ['\\documentclass{article}', '\\usepackage[utf8]{inputenc}', '\\begin{document}'] + body +
                          ['\\bibliographystyle{plain}', '\\bibliography{review}', '\\end{document}', ''])
     lines = as_text(result, lambda ns: (' ' + ''.join('[%d]' % n for n in ns)) if ns else '')
     lines += ['## %s' % _('References'), '']
@@ -1129,11 +1130,16 @@ def export_text(result, fmt, lang):
     return '\n'.join(lines) + '\n'
 
 
-def export_result(row, fmt):
+def export_result(request, row, fmt):
     result = row.data()
-    if fmt not in EXPORTS or not result.get('papers'):
+    if fmt not in EXPORTS + ('overleaf',) or not result.get('papers'):
         raise Http404
     name = re.sub(r'[^A-Za-z0-9]+', '-', (result.get('english') or result.get('title') or 'review'))[:60].strip('-') or 'review'
+    if fmt == 'overleaf':
+        with translation.override(row.lang):
+            files = {'main.tex': export_text(result, 'tex', row.lang, bib_file=True),
+                     'review.bib': '\n'.join(cite_keys([exports.bibtex_entry(m) for m in metas(result)])[0])}
+        return overleaf.open_response(request, files, result.get('title') or name)
     if fmt in ('bib', 'ris'):
         if fmt == 'bib':
             entries, _keys = cite_keys([exports.bibtex_entry(m) for m in metas(result)])
@@ -1149,11 +1155,11 @@ def literature_export(request, key, fmt):
     row = _row(request, key)
     if row.status != 'done':
         raise Http404
-    return export_result(row, fmt)
+    return export_result(request, row, fmt)
 
 
 def literature_shared_export(request, token, fmt):
-    return export_result(result_share.shared_row('literature', token), fmt)
+    return export_result(request, result_share.shared_row('literature', token), fmt)
 
 
 def zotero_metas(user, key):

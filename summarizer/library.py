@@ -30,7 +30,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from . import access, citations, digest, exports, removal, sources, zotero
+from . import access, citations, digest, exports, overleaf, removal, sources, zotero
 from django.db.models import Max
 
 from .models import (AnnouncedPaper, ArxivPaper, Collection, CollectionMember, CollectionPaper, ExternalPaper,
@@ -439,8 +439,12 @@ def collection_page(request, pk):
         if action == 'leave' and not owner:
             CollectionMember.objects.filter(collection=collection, user=request.user).delete()
             return redirect('/%s/collections/' % get_language())
-        if action in ('delete', 'rename', 'watch', 'share', 'unshare', 'invite', 'uninvite', 'drop') and not owner:
+        if action in ('delete', 'rename', 'watch', 'share', 'unshare', 'invite', 'uninvite', 'drop', 'bib_link', 'bib_stop') and not owner:
             raise Http404
+        if action in ('bib_link', 'bib_stop'):
+            collection.bib_token = secrets.token_hex(16) if action == 'bib_link' else ''
+            collection.save(update_fields=['bib_token', 'updated'])
+            return _page(collection, 'settings')
         if action == 'invite':
             collection.invite_token = secrets.token_urlsafe(16)
             collection.save(update_fields=['invite_token', 'updated'])
@@ -555,6 +559,7 @@ def collection_page(request, pk):
         'can_zotero': access.has_tool(request.user, 'zotero'),
         'can_review': access.has_tool(request.user, 'literature'), 'review_error': request.GET.get('review', ''),
         'share_url': shared_url(request, collection) if owner else '',
+        'bib_url': bib_url(request, collection) if owner else '',
         'templates': comparison.TEMPLATE_CHOICES,
         'template_columns': [(code, [label for _c, label, _h in cols]) for code, cols in comparison.TEMPLATES.items()],
         'custom_text': '\n'.join('%s: %s' % (c['label'], c['hint']) if c['hint'] else c['label']
@@ -626,10 +631,38 @@ def collection_export(request, pk, fmt):
         rows = [r for r in rows if tag in [t.strip().lower() for t in r.tags.split(',')]]
     if fmt == 'list':
         return list_csv(rows, filename)
+    if fmt == 'overleaf':
+        return overleaf.open_response(request, overleaf.bib_project(collection_bib(rows), collection.name, _(
+            'The papers of the collection, from SummarizePaper. Copy their entries into the .bib of your manuscript, '
+            'or link it to the collection to keep it up to date (Settings tab of the collection).')), collection.name)
     metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in rows) if m]
     notes = {p.arxiv_id: (p.note, p.tags) for p in rows}
     status = {p.arxiv_id: str(dict(READING).get(p.reading, '')) for p in rows if p.reading}
     return exports.export_many(metas, fmt, filename, lang, notes=notes, status=status)
+
+
+def collection_bib(papers):
+    """The .bib of these papers, without the notes and tags, which a shared Overleaf project would show."""
+    metas = [m for m in (exports.paper_meta(p.arxiv_id, p) for p in papers) if m]
+    return '\n'.join(exports.cite_keys([exports.bibtex_entry(m) for m in metas])[0])
+
+
+def bib_url(request, collection):
+    if not collection.bib_token:
+        return ''
+    return request.build_absolute_uri('/en/collections/bib/%s.bib' % collection.bib_token)
+
+
+def bib_feed(request, token):
+    """The .bib of a collection at an address only its owner knows, for Overleaf to fetch again on Refresh. The papers
+    in the order they were added, so that adding one never changes the keys of the others (smith2020a, b...)."""
+    if not re.fullmatch(r'[0-9a-f]{32}', token):
+        raise Http404
+    collection = get_object_or_404(Collection, bib_token=token)
+    response = HttpResponse(collection_bib(collection.papers.order_by('pk')), content_type='text/plain; charset=utf-8')
+    response['Cache-Control'] = 'no-store'
+    response['X-Robots-Tag'] = 'noindex'
+    return response
 
 
 def list_csv(papers, filename):

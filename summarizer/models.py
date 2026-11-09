@@ -796,6 +796,7 @@ class Collection(models.Model):
     share_expires = models.DateTimeField(blank=True, null=True)
     share_notes = models.BooleanField(default=False)  # the shared page shows the owner's notes
     invite_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # joins as an editor
+    bib_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # its .bib for Overleaf (library.bib_feed)
     # the Zotero collection it is synced with (zotero.py): its key, and the library ('users/1', 'groups/2') it is in
     zotero_key = models.CharField(max_length=20, blank=True, default='')
     zotero_library = models.CharField(max_length=40, blank=True, default='')

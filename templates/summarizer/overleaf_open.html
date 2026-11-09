@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Open in Overleaf' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1>{% trans 'Open in Overleaf' %}</h1>
+    <p class="lead">{{ name }}</p>
+  </header>
+  <form method="post" action="{{ docs_url }}" id="overleaf-form" class="card section-card">
+    <input type="hidden" name="snip_uri" value="{{ snip_uri }}">
+    <input type="hidden" name="main_document" value="{{ main }}">
+    <input type="hidden" name="engine" value="{{ engine }}">
+    <p id="overleaf-status" role="status">{% trans 'Overleaf creates a new project with these files. Sign in to Overleaf if it asks you to.' %}</p>
+    <p><button class="btn" type="submit">{% trans 'Open in Overleaf' %}</button></p>
+    <p class="muted"><small>{% trans 'Overleaf receives the files of this project only, never your account here.' %}</small></p>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}{{ block.super }}
+<script>
+  document.getElementById('overleaf-form').submit();
+</script>
+{% endblock %}

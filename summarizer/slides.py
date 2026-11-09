@@ -835,6 +835,7 @@ def deck_of(subject, opts, version):
 
 
 def render_deck(request, subject, template_context):
+    from . import slides_beamer
     try:
         opts = options(request.GET, request.LANGUAGE_CODE)
         version = request.GET.get('deck_version')
@@ -858,7 +859,8 @@ def render_deck(request, subject, template_context):
         'deck_lang': opts['lang'], 'deck_languages': DECK_LANGUAGES, 'audience': opts['audience'], 'audiences': AUDIENCES,
         'duration': opts['duration'], 'durations': DURATIONS, 'legacy_deck': legacy, 'previous_deck_url': previous,
         'deck_return_url': subject.url('slides', opts, version), 'save_url': subject.url('slides_save', opts, version),
-        'powerpoint_url': subject.url('slides_powerpoint', opts, version), 'rewrite_url': subject.url('slides_rewrite', opts, version),
+        'powerpoint_url': subject.url('slides_powerpoint', opts, version), 'beamer_url': subject.url('slides_beamer', opts, version),
+        'beamer': opts['lang'] in slides_beamer.LANGUAGES, 'rewrite_url': subject.url('slides_rewrite', opts, version),
         'share_action_url': subject.url('slides_share', opts, version), 'start_url': subject.url('slides_start', opts),
         'share_url': result_share.shared_url(request, share, 'journal-club') if share else '',
         'share_timing': result_share.timing(share.share_expires) if share and share.share_token else '',
@@ -970,8 +972,9 @@ def collection_slides_save(request, pk):
     return save_deck(request, CollectionSubject(request, pk))
 
 
-def export_deck(request, subject, name):
-    from . import slides_pptx
+def export_deck(request, subject, name, fmt='pptx'):
+    """fmt: pptx, or beamer (a zip of the LaTeX project, which the page downloads or opens in Overleaf)."""
+    from . import overleaf, slides_beamer, slides_pptx
     if not paid(request):
         return JsonResponse({'status': 'premium'}, status=403)
     try:
@@ -984,12 +987,16 @@ def export_deck(request, subject, name):
         return JsonResponse({'status': 'invalid'}, status=400)
     try:
         with translation.override(row.lang):
-            data = slides_pptx.render_pptx(shown_pages(pages, deck['figures']), subject.footer(deck), pages[0]['title'])
+            if fmt == 'beamer':
+                data = overleaf.project_zip(slides_beamer.render_project(
+                    shown_pages(pages, deck['figures']), subject.footer(deck), pages[0]['title'], row.lang))
+            else:
+                data = slides_pptx.render_pptx(shown_pages(pages, deck['figures']), subject.footer(deck), pages[0]['title'])
     except slides_pptx.ExportError as error:
         return JsonResponse({'status': 'unavailable', 'message': str(error)}, status=503)
-    response = HttpResponse(data, content_type=slides_pptx.MIME)
-    response['Content-Disposition'] = 'attachment; filename="SummarizePaper-JournalClub-%s.pptx"' % (
-        re.sub(r'[^a-zA-Z0-9._-]', '-', name)[:80] + '-' + row.lang)
+    response = HttpResponse(data, content_type='application/zip' if fmt == 'beamer' else slides_pptx.MIME)
+    response['Content-Disposition'] = 'attachment; filename="SummarizePaper-JournalClub-%s.%s"' % (
+        re.sub(r'[^a-zA-Z0-9._-]', '-', name)[:80] + '-' + row.lang, 'zip' if fmt == 'beamer' else 'pptx')
     return response
 
 
@@ -1006,6 +1013,21 @@ def slides_powerpoint(request, arxiv_id):
 @login_required
 def collection_slides_powerpoint(request, pk):
     return export_deck(request, CollectionSubject(request, pk), 'collection-%s' % pk)
+
+
+@never_cache
+@require_POST
+def slides_beamer(request, arxiv_id):
+    if not paid(request):
+        return JsonResponse({'status': 'premium'}, status=403)
+    return export_deck(request, PaperSubject(request, arxiv_id), arxiv_id, 'beamer')
+
+
+@never_cache
+@require_POST
+@login_required
+def collection_slides_beamer(request, pk):
+    return export_deck(request, CollectionSubject(request, pk), 'collection-%s' % pk, 'beamer')
 
 
 # --- rewriting one slide ------------------------------------------------------------------

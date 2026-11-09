@@ -61,6 +61,7 @@
       <h2>{% trans '2. Your manuscript (optional)' %}</h2>
       <p class="muted">{% trans 'With the LaTeX, we also check what each citation is used for, the keys missing from your .bib and the entries never cited. A PDF only gives its reference list.' %}</p>
       {% trans 'Your .tex, your LaTeX project (.zip or .tar.gz exported from Overleaf, with its .bib: no need to send it above), or your PDF' as upload_label %}
+      {% if LANGUAGE_CODE == 'fr' or LANGUAGE_CODE == 'en' %}<p class="muted"><small><a href="/{{ LANGUAGE_CODE }}/guides/overleaf-bibliography-check/" data-funnel="refcheck_overleaf_guide">{% if LANGUAGE_CODE == 'fr' %}Votre article est sur Overleaf ? Le guide pas à pas{% else %}Your paper is on Overleaf? The step-by-step guide{% endif %}</a></small></p>{% endif %}
       {% include 'summarizer/file_upload.html' with upload_name='source' upload_accept='.tex,.zip,.gz,.tgz,.tar,.pdf,text/plain,application/pdf,application/zip' upload_formats='.tex / .zip / .tar.gz / .pdf' upload_required_extension='' upload_max_bytes=archive_max_bytes upload_max_mb=archive_max_mb %}
       <p><label for="refcheck-arxiv">{% trans 'or the arXiv identifier of your paper, if it is already on arXiv (we read its LaTeX source):' %}</label>
         <input type="text" name="arxiv" id="refcheck-arxiv" placeholder="2401.01234" autocomplete="off" style="max-width:16em"></p>

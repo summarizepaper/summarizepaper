@@ -65,11 +65,14 @@
         <input type="hidden" name="sel" value="1">
         <p>{% blocktrans count n=result.corrected %}{{ n }} entry can be corrected. Untick below the corrections you do not want, then download.{% plural %}{{ n }} entries can be corrected. Untick below the corrections you do not want, then download.{% endblocktrans %}</p>
         <p class="item-actions"><button class="btn" type="submit">{% trans 'Download the .bib with the chosen corrections' %}</button>
-          <button class="btn btn-ghost" type="submit" name="only" value="1">{% trans 'Only the corrected entries' %}</button></p>
+          <button class="btn btn-ghost" type="submit" name="only" value="1">{% trans 'Only the corrected entries' %}</button>
+          <button class="btn btn-ghost" type="submit" name="overleaf" value="1" formtarget="_blank" data-funnel="refcheck_overleaf">{% trans 'Open in Overleaf' %}</button></p>
       </form>
       {% else %}
-      <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a></p>
+      <p><a class="btn" href="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/">{% blocktrans count n=result.corrected %}Download the .bib with {{ n }} entry corrected{% plural %}Download the .bib with {{ n }} entries corrected{% endblocktrans %}</a>
+        <a class="btn btn-ghost" target="_blank" data-funnel="refcheck_overleaf" href="/{{ LANGUAGE_CODE }}/refcheck/{% if shared %}shared/{{ row.share_token }}{% else %}{{ row.key }}{% endif %}/bib/?overleaf=1">{% trans 'Open in Overleaf' %}</a></p>
       {% endif %}
+      <p class="muted"><small>{% trans 'Open in Overleaf: a new project prints every entry of the corrected .bib, to check that it compiles before replacing the .bib of your manuscript.' %}</small></p>
     </section>
     {% endif %}
 

@@ -20,6 +20,15 @@ from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, C
                                SummaryPaper, TermWeek, UserPlan, WatchedProject, ZoteroAccount)
 
 
+def overleaf_files(response):
+    """The files of the project a page posts to Overleaf (overleaf.open_response)."""
+    import base64, html, io, zipfile
+    assert 'https://www.overleaf.com/docs' in response.content.decode()
+    uri = html.unescape(re.search(r'name="snip_uri" value="([^"]+)"', response.content.decode()).group(1))
+    archive = zipfile.ZipFile(io.BytesIO(base64.b64decode(uri.split(',', 1)[1])))
+    return {name: archive.read(name).decode('utf-8') for name in archive.namelist()}
+
+
 class ToolsTestCase(TestCase):
     """Background work runs inline, and keeps the test transaction's connection."""
 
@@ -622,6 +631,11 @@ class MissedTests(ToolsTestCase):
         exported = client.get(page + 'export/bib/').content.decode()
         self.assertIn('Missing paper on cloudy planets', exported)
         self.assertNotIn('Coupled paper', exported)
+        project = overleaf_files(client.get(page + 'export/overleaf/'))
+        self.assertIn('Missing paper on cloudy planets', project['missed.bib'])
+        self.assertNotIn('Coupled paper', project['missed.bib'])
+        self.assertIn('\\nocite{*}', project['main.tex'])
+        self.assertIn('\\bibliography{missed}', project['main.tex'])
         titles = [m['title'] for m in missed.zotero_metas(user, row.key)]
         self.assertIn('Missing paper on cloudy planets', titles)
         self.assertNotIn('Coupled paper on cloud spectra', titles)
@@ -866,6 +880,11 @@ class LiteratureTests(ToolsTestCase):
         tex = client.get('/en/literature-review/k1/export/tex/').content.decode()
         self.assertIn('It stays\\_down.~\\cite{lee2012sinksa}', tex)
         self.assertIn('\\begin{filecontents*}[overwrite]{review.bib}', tex)
+        project = overleaf_files(client.get('/en/literature-review/k1/export/overleaf/'))
+        self.assertIn('It stays\\_down.~\\cite{lee2012sinksa}', project['main.tex'])
+        self.assertNotIn('filecontents', project['main.tex'])
+        self.assertIn('\\bibliography{review}', project['main.tex'])
+        self.assertIn('@misc{lee2012sinksb,', project['review.bib'])
         self.assertEqual(client.get('/en/literature-review/k1/export/pdf/').status_code, 404)
         self.assertEqual(self.client_for(self.user('other', paid=True)).get('/en/literature-review/k1/export/bib/').status_code, 404)
         self.assertEqual(client.post('/en/zotero/send/', {'literature': 'k1'}).json()['status'], 'setup')

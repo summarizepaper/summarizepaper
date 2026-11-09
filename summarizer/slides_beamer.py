@@ -1,0 +1,111 @@
+"""The journal club deck as a LaTeX Beamer project (a zip: main.tex and the figures), to open in Overleaf.
+
+The same validated pages as the PowerPoint export (slides.shown_pages), with the same figures (slides_pptx.figure_bytes),
+the speaker notes and the passages of the paper in \\note. XeLaTeX with DejaVu Sans, which TeX Live and Overleaf
+ship, sets Greek, Cyrillic and the symbols of scientific text (μ, ±, ≈, →) without math mode; Chinese and Japanese
+use Fandol (ctex) and Harano Aji (xeCJK). Arabic, Hindi and Korean would need other fonts and shaping: those decks have no
+Beamer export (LANGUAGES).
+"""
+from concurrent.futures import ThreadPoolExecutor
+
+from django.utils.translation import gettext as _
+
+from . import overleaf, slides_pptx, sources
+from .slides_pptx import EXPORT_WORKERS, ExportError, notes_text
+
+LANGUAGES = ('en', 'fr', 'es', 'de', 'it', 'pt', 'nl', 'pl', 'tr', 'ru', 'uk', 'zh-hans', 'ja')
+SIZES = {36: '\\large', 30: '\\normalsize', 24: '\\small'}
+
+PREAMBLE = r"""% {comment}
+\documentclass[aspectratio=169,11pt]{{beamer}}
+\usepackage{{fontspec}}
+{fonts}
+\usepackage{{graphicx}}
+\usetheme{{default}}
+\setbeamertemplate{{navigation symbols}}{{}}
+\setbeamercolor{{frametitle}}{{fg=black!85}}
+\setbeamercolor{{title}}{{fg=black!85}}
+\setbeamercolor{{itemize item}}{{fg=black!60}}
+\setbeamertemplate{{itemize item}}{{\textbullet}}
+\setbeamertemplate{{footline}}{{\hspace{{1em}}\tiny\color{{black!55}}SummarizePaper · {footer}\hfill\insertframenumber\,/\,\inserttotalframenumber\hspace{{1em}}\vspace{{0.6em}}}}
+% \setbeameroption{{show notes on second screen=right}} % {notes}
+"""
+LATIN_FONTS = r"""\setsansfont{DejaVuSans}[Extension=.ttf, BoldFont=DejaVuSans-Bold, ItalicFont=DejaVuSans-Oblique, BoldItalicFont=DejaVuSans-BoldOblique, Scale=0.92]"""
+CJK_FONTS = {
+    'zh-hans': r"""\usepackage[fontset=fandol]{ctex}
+\setsansfont{DejaVuSans}[Extension=.ttf, BoldFont=DejaVuSans-Bold, Scale=0.92]
+\renewcommand{\familydefault}{\sfdefault}""",
+    # Fandol lacks Japanese kanji forms (強, 証, ー): Harano Aji, TeX Live's Japanese fonts
+    'ja': r"""\usepackage{xeCJK}
+\setCJKmainfont{HaranoAjiGothic-Regular.otf}[BoldFont=HaranoAjiGothic-Bold.otf]
+\setCJKsansfont{HaranoAjiGothic-Regular.otf}[BoldFont=HaranoAjiGothic-Bold.otf]
+\setsansfont{DejaVuSans}[Extension=.ttf, BoldFont=DejaVuSans-Bold, Scale=0.92]""",
+}
+
+
+def itemize(lines):
+    if not lines:
+        return ''
+    return '\\begin{itemize}\n%s\n\\end{itemize}' % '\n'.join('  \\item %s' % overleaf.tex(line) for line in lines)
+
+
+def figure(page, name, height):
+    caption = page['figure'].get('credit') or page['figure'].get('label') or ''
+    return ('{\\centering\\includegraphics[width=\\linewidth,height=%s\\textheight,keepaspectratio]{%s}\\\\[2pt]\n'
+            '{\\tiny\\color{black!55}%s}\\par}' % (height, name, overleaf.tex(caption)))
+
+
+def frame(page, name):
+    """One slide; name: the file of its figure in the project, if it has one."""
+    size = SIZES.get(page.get('text_size'), '\\normalsize')
+    notes = notes_text(page)
+    note = '\n\\note{%s}' % '\\\\ '.join(overleaf.tex(part) for part in notes.split('\n') if part.strip()) if notes else ''
+    if page['kind'] == 'title':
+        lines = '\\\\[0.6em]\n'.join(overleaf.tex(line) for line in page['bullets'])
+        return ('\\begin{frame}\n\\centering\\vfill\n{\\Large\\bfseries %s\\par}\\vspace{1.4em}\n{\\normalsize %s\\par}\\vfill\n'
+                '\\end{frame}%s\n' % (overleaf.tex(page['title']), lines, note))
+    body = []
+    if page['kind'] == 'columns':
+        headings = (page.get('headings') or [])[:2]
+        headings = headings if len(headings) == 2 else [_('Strengths'), _('Limits')]
+        body.append('\\begin{columns}[T]')
+        for heading, lines in ((headings[0], page['bullets']), (headings[1], page.get('secondary') or [])):
+            body.append('\\begin{column}{0.48\\textwidth}\n\\textbf{%s}\n%s\n\\end{column}' % (overleaf.tex(heading), itemize(lines)))
+        body.append('\\end{columns}')
+    elif name:
+        share = page['figure_size'] / 100
+        if page['layout'] in ('left', 'right'):
+            text = '\\begin{column}{%.2f\\textwidth}\n%s\n\\end{column}' % (0.96 - share, itemize(page['bullets']))
+            picture = '\\begin{column}{%.2f\\textwidth}\n%s\n\\end{column}' % (share, figure(page, name, 0.78))
+            body.append('\\begin{columns}[c]\n%s\n%s\n\\end{columns}' % ((picture, text) if page['layout'] == 'left' else (text, picture)))
+        else:
+            picture = figure(page, name, '%.2f' % (share * 0.8))
+            text = itemize(page['bullets'])
+            body.append('%s\n\\par\\vspace{0.5em}\n%s' % ((picture, text) if page['layout'] == 'top' else (text, picture)))
+    else:
+        body.append(itemize(page['bullets']))
+    return '\\begin{frame}[t]{%s}\n%s\n%s\n\\end{frame}%s\n' % (overleaf.tex(page['title']), size, '\n'.join(body), note)
+
+
+def render_project(pages, footer, title, lang):
+    """{name: content} of the project; pages: as slides.shown_pages gives them."""
+    if lang not in LANGUAGES:
+        raise ExportError(_('The LaTeX export is not available for this language yet.'))
+    urls = list(dict.fromkeys(p['figure']['url'] for p in pages if p.get('figure')))
+    try:
+        with ThreadPoolExecutor(max_workers=EXPORT_WORKERS) as pool:
+            images = dict(zip(urls, pool.map(sources.closing(slides_pptx.figure_bytes), urls)))
+    except ExportError:
+        raise ExportError(_('A figure could not be included. Please try the export again later.'))
+    names = {url: 'figures/figure-%d.png' % i for i, url in enumerate(urls, 1)}
+    files = {names[url]: data for url, data in images.items()}
+    tex = PREAMBLE.format(comment=_('Journal club slides written with SummarizePaper; check each point in the paper.'),
+                          fonts=CJK_FONTS.get(lang, LATIN_FONTS), footer=overleaf.tex(footer),
+                          notes=_('uncomment to show the speaker notes and the passages of the paper'))
+    tex += '\\title{%s}\n\\date{}\n\n\\begin{document}\n\n' % overleaf.tex(title)
+    tex += '\n'.join(frame(page, names.get((page.get('figure') or {}).get('url'))) for page in pages)
+    tex += '\n\\end{document}\n'
+    files['main.tex'] = tex
+    if sum(len(c) for c in files.values()) > overleaf.MAX_ZIP:
+        raise ExportError(_('The figures are too large for Overleaf. Remove one or two, then export again.'))
+    return files

@@ -2,6 +2,7 @@
 checked sources and its updates, columns, checks of the papers, suggestions, sharing and watching."""
 import datetime
 import json
+import re
 from unittest import mock
 
 import numpy as np
@@ -12,7 +13,7 @@ from django.utils import timezone
 from . import changes, collection_tools, comparison, library, publication_status
 from .models import (ArxivPaper, CitationCache, Collection, CollectionPaper, FollowedPaper, Generated, PaperEmbedding,
                      PaperVersion, ZoteroAccount)
-from .test_tools import ToolsTestCase
+from .test_tools import ToolsTestCase, overleaf_files
 
 OPEN_TEXT = ('## Abstract\n\nWe observe clouds.\n\n## 1 Introduction\n\n' + 'Context. ' * 300 +
              '\n\n## 2 Methods\n\nWe used the JWST NIRSpec instrument on 12 nights. The spectra were fitted with a '
@@ -156,6 +157,42 @@ class ImportTests(CollectionsTestCase):
 
 
 class NotesAndExportTests(CollectionsTestCase):
+    def test_a_bib_for_overleaf_keeps_its_keys_and_leaves_out_the_notes(self):
+        user = self.user()
+        collection = self.make_collection(user)
+        client = self.client_for(user)
+        url = '/en/collections/%d/' % collection.pk
+        client.post(url, {'action': 'paper', 'arxiv_id': '2101.00001v1', 'tags': 'core', 'note': 'Private'}, HTTP_X_REQUESTED_WITH='fetch')
+        client.post(url, {'action': 'bib_link'})
+        collection.refresh_from_db()
+        address = '/en/collections/bib/%s.bib' % collection.bib_token
+        self.assertContains(client.get(url), 'http://testserver' + address)
+        french = client.get(url.replace('/en/', '/fr/'))
+        self.assertContains(french, 'Depuis une URL externe')
+        self.assertContains(french, '\\bibliography{collection}')
+        self.assertContains(french, 'Ouvrir dans Overleaf')
+        first = Client().get(address)
+        self.assertEqual(first['Cache-Control'], 'no-store')
+        bib = first.content.decode()
+        self.assertEqual(bib.count('@misc{'), 2)
+        self.assertNotIn('Private', bib)
+        self.assertNotIn('keywords', bib)
+        keys = re.findall(r'@misc\{([^,]+),', bib)
+        self.paper('2101.00003v1', title='Paper 2101.00003v1')
+        library.add_paper(collection, '2101.00003v1', True)
+        library.move(collection, '2101.00003v1', -2)  # first in the collection, last in the .bib
+        again = re.findall(r'@misc\{([^,]+),', Client().get(address).content.decode())
+        self.assertEqual(again[:2], keys)
+        self.assertEqual(len(again), 3)
+        project = overleaf_files(client.get(url + 'export/overleaf/'))
+        self.assertEqual(project['references.bib'].count('@misc{'), 3)
+        self.assertNotIn('Private', project['references.bib'])
+        other = self.user('other')
+        self.assertEqual(self.client_for(other).post(url, {'action': 'bib_stop'}).status_code, 404)
+        client.post(url, {'action': 'bib_stop'})
+        self.assertEqual(Client().get(address).status_code, 404)
+        self.assertEqual(Client().get('/en/collections/bib/not-a-token.bib').status_code, 404)
+
     def test_notes_tags_and_status_are_saved_and_exported(self):
         user = self.user()
         collection = self.make_collection(user)

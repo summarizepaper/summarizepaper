@@ -207,6 +207,50 @@
       .finally(function () { powerpointButton.disabled = false; });
   });
 
+  function exportBeamer(button, toOverleaf) {
+    if (button.disabled || !fitAll()) return;
+    // Opened now, while the click allows it; the form posts the project to it once the server has written it.
+    var tab = toOverleaf ? window.open('', 'overleaf-export') : null;
+    button.disabled = true; status.textContent = deck.dataset.beamerExporting;
+    send(deck.dataset.beamerUrl, {revision: deck.dataset.revision, pages: collect()}).then(function (r) {
+      if (r.status === 409) throw new Error(deck.dataset.conflict);
+      if (!r.ok) return r.json().then(function (data) { throw new Error(data.message || deck.dataset.beamerError); });
+      return r.blob();
+    }).then(function (blob) {
+      if (!toOverleaf) {
+        var url = URL.createObjectURL(blob), link = document.createElement('a');
+        link.href = url; link.download = (deck.dataset.exportName || 'SummarizePaper-JournalClub.pptx').replace(/\.pptx$/, '-beamer.zip');
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+        status.textContent = deck.dataset.beamerExported;
+        return;
+      }
+      return new Promise(function (resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function () { resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(new Blob([blob], {type: 'application/zip'}));
+      }).then(function (dataUrl) {
+        var form = document.createElement('form');
+        form.method = 'post'; form.action = deck.dataset.overleafDocs; form.target = tab ? 'overleaf-export' : '_blank';
+        [['snip_uri', dataUrl], ['main_document', 'main.tex'], ['engine', 'xelatex']].forEach(function (pair) {
+          var input = document.createElement('input');
+          input.type = 'hidden'; input.name = pair[0]; input.value = pair[1];
+          form.appendChild(input);
+        });
+        document.body.appendChild(form); form.submit(); form.remove();
+        status.textContent = deck.dataset.overleafOpened;
+      });
+    }).catch(function (error) {
+      if (tab) tab.close();
+      status.textContent = error.message || deck.dataset.beamerError;
+    }).finally(function () { button.disabled = false; });
+  }
+  var overleafButton = document.getElementById('deck-overleaf');
+  if (overleafButton) overleafButton.addEventListener('click', function () { exportBeamer(overleafButton, true); });
+  var beamerButton = document.getElementById('deck-beamer');
+  if (beamerButton) beamerButton.addEventListener('click', function () { exportBeamer(beamerButton, false); });
+
   var share = document.getElementById('deck-share');
   if (share) share.addEventListener('click', function (e) {
     var button = e.target.closest('[data-share]');

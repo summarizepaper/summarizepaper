@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from summarizer import refcheck, refcheck_claims, refcheck_sources, refcheck_watch
 from summarizer.models import Collection, Generated, PublicationAlert, ReferenceWatch
-from summarizer.test_tools import ToolsTestCase
+from summarizer.test_tools import ToolsTestCase, overleaf_files
 
 BIB = """@article{retracted, author = {Roe, Al}, title = {A retracted result}, journal = {J}, year = {2019}, doi = {10.1000/RETRACTED}}
 @misc{pre, author = {Lee, Ann}, title = {{Clouds} on a "hot" planet}, eprint = {2101.00001v1}, archivePrefix = {arXiv}}
@@ -378,6 +378,10 @@ class PageTests(ToolsTestCase):
         self.assertIn('@article{again,', whole)
         only = client.get('/en/refcheck/k1/bib/', {'sel': '1', 'k': ['pre'], 'only': '1'}).content.decode()
         self.assertTrue(only.startswith('@article{pre,') and '@book' not in only and 'again' not in only)
+        project = overleaf_files(client.get('/en/refcheck/k1/bib/', {'sel': '1', 'k': ['again'], 'overleaf': '1'}))
+        self.assertEqual(project['references.bib'], whole)
+        self.assertIn('\\bibliography{references}', project['main.tex'])
+        self.assertContains(page, 'Open in Overleaf')
 
     def test_references_are_kept_in_a_collection_and_watched_until_publication(self):
         user = self.user('pro', paid=True)

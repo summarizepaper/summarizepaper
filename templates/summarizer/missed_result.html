@@ -45,9 +45,11 @@
       {% if shared %}
       <a class="btn btn-sm btn-ghost" href="{% url 'missed_shared_export' token 'bib' %}">BibTeX</a>
       <a class="btn btn-sm btn-ghost" href="{% url 'missed_shared_export' token 'ris' %}">RIS</a>
+      <a class="btn btn-sm btn-ghost" target="_blank" href="{% url 'missed_shared_export' token 'overleaf' %}">{% trans 'Open in Overleaf' %}</a>
       {% else %}
       <a class="btn btn-sm btn-ghost" href="{% url 'missed_export' row.key 'bib' %}">BibTeX</a>
       <a class="btn btn-sm btn-ghost" href="{% url 'missed_export' row.key 'ris' %}">RIS</a>
+      <a class="btn btn-sm btn-ghost" target="_blank" data-funnel="missed_overleaf" href="{% url 'missed_export' row.key 'overleaf' %}" title="{% trans 'A new Overleaf project that prints these papers, to copy their entries into your .bib' %}">{% trans 'Open in Overleaf' %}</a>
       <button type="button" class="btn btn-sm btn-ghost" id="missed-zotero" data-funnel="zotero_send_missed" data-key="{{ row.key }}" data-sending="{% trans 'Sending…' %}" data-premium="{% trans 'Sending to Zotero is a Premium feature.' %}" data-setup="{% trans 'Connect your Zotero library first:' %}" data-failed="{% trans 'Sending failed. Try again later.' %}" data-sent="{% trans 'Sent to your Zotero library.' %}" data-open="{% trans 'Open in Zotero' %}">{% trans 'Send to Zotero' %}</button>
       <span class="tool-status" id="missed-zotero-status" aria-live="polite"></span>
       {% endif %}

@@ -50,7 +50,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
 from . import (access, assistant, bibliography, digest, evidence, exports, generated, library, literature, mailcheck,
-               neighbours, result_share, similar, sources)
+               neighbours, overleaf, result_share, similar, sources)
 from .models import Collection, Generated
 
 logger = logging.getLogger(__name__)
@@ -794,11 +794,19 @@ def metas(result):
             for i in result['active']]
 
 
-def export_result(row, fmt):
+def export_result(request, row, fmt):
     result = shown(row)
-    if fmt not in EXPORTS or not result or not result['active']:
+    if fmt not in EXPORTS + ('overleaf',) or not result or not result['active']:
         raise Http404
     name = 'missed-' + (re.sub(r'[^A-Za-z0-9]+', '-', result.get('english') or result.get('title') or '')[:50].strip('-') or 'papers')
+    if fmt == 'overleaf':
+        entries, _keys = literature.cite_keys([exports.bibtex_entry(m) for m in metas(result)])
+        with translation.override(row.lang):
+            title = _('Papers close to my draft that it does not cite')
+            files = overleaf.bib_project('\n'.join(entries), title, _(
+                'Found by SummarizePaper (What did I miss?): copy the entries you want to cite into the .bib of your manuscript.'),
+                bib_name='missed')
+        return overleaf.open_response(request, files, result.get('title') or title)
     if fmt == 'bib':
         entries, _keys = literature.cite_keys([exports.bibtex_entry(m) for m in metas(result)])
         return exports._download('\n'.join(entries), name + '.bib', 'application/x-bibtex; charset=utf-8')
@@ -811,11 +819,11 @@ def missed_export(request, key, fmt):
     row = _row(request, key)
     if row.status != 'done':
         raise Http404
-    return export_result(row, fmt)
+    return export_result(request, row, fmt)
 
 
 def missed_shared_export(request, token, fmt):
-    return export_result(result_share.shared_row('missed', token), fmt)
+    return export_result(request, result_share.shared_row('missed', token), fmt)
 
 
 def zotero_metas(user, key):

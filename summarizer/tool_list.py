@@ -45,6 +45,7 @@ _GUIDE_SLUGS = {
     'letters/': 'weekly-science-letters',
     'saved-searches/': 'saved-searches-research-alerts',
     'press-kit/': 'research-paper-press-kit',
+    'refcheck/': 'overleaf-bibliography-check',
 }
 
 TOOL_GROUPS = [

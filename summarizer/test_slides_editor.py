@@ -74,6 +74,26 @@ class SlidesEditorTests(ToolsTestCase):
         self.original.refresh_from_db()
         self.assertEqual(self.original.data(), self.data)
 
+    def test_beamer_project_has_the_edited_slides_figures_and_notes(self):
+        import zipfile
+        payload = self.payload()
+        payload['pages'][1].update(title='Spin & 50% of_it', notes='Say it\nslowly')
+        with mock.patch.object(slides_pptx, 'figure_bytes', return_value=self.image()):
+            response = self.client.post(self.url + 'beamer/', json.dumps(payload), content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+        archive = zipfile.ZipFile(io.BytesIO(response.content))
+        self.assertIn('figures/figure-1.png', archive.namelist())
+        tex = archive.read('main.tex').decode()
+        self.assertIn('\\begin{frame}[t]{Spin \\& 50\\% of\\_it}', tex)
+        self.assertIn('\\includegraphics[width=\\linewidth,height=0.78\\textheight,keepaspectratio]{figures/figure-1.png}', tex)
+        self.assertIn('\\note{Say it\\\\ slowly', tex)
+        self.assertEqual(tex.count('\\begin{frame}'), len(payload['pages']))
+        self.assertContains(self.client.get(self.url), 'id="deck-overleaf"')
+        self.assertNotContains(self.client.get(self.url + '?deck_lang=ko'), 'id="deck-overleaf"')
+        free = self.client_for(self.user('free'))
+        self.assertEqual(free.post(self.url + 'beamer/', json.dumps(payload), content_type='application/json').status_code, 403)
+
     def test_powerpoint_is_private_and_requires_premium_csrf_and_post(self):
         payload = self.payload()
         with mock.patch.object(slides_pptx, 'render_pptx') as render:
