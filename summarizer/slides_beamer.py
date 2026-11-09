@@ -1,8 +1,8 @@
 """The journal club deck as a LaTeX Beamer project (a zip: main.tex and the figures), to open in Overleaf.
 
 The same validated pages as the PowerPoint export (slides.shown_pages), with the same figures (slides_pptx.figure_bytes),
-the speaker notes and the passages of the paper in \\note. XeLaTeX with DejaVu Sans, which TeX Live and Overleaf
-ship, sets Greek, Cyrillic and the symbols of scientific text (μ, ±, ≈, →) without math mode; Chinese and Japanese
+the speaker notes and the passages of the paper in \\note. XeLaTeX with DejaVu Sans Condensed, which TeX Live and
+Overleaf ship, sets Greek, Cyrillic and the symbols of scientific text (μ, ±, ≈, →) without math mode; Chinese and Japanese
 use Fandol (ctex) and Harano Aji (xeCJK). Arabic, Hindi and Korean would need other fonts and shaping: those decks have no
 Beamer export (LANGUAGES).
 """
@@ -14,32 +14,35 @@ from . import overleaf, slides_pptx, sources
 from .slides_pptx import EXPORT_WORKERS, ExportError, notes_text
 
 LANGUAGES = ('en', 'fr', 'es', 'de', 'it', 'pt', 'nl', 'pl', 'tr', 'ru', 'uk', 'zh-hans', 'ja')
-SIZES = {36: '\\large', 30: '\\normalsize', 24: '\\small'}
+SIZES = {36: '\\normalsize', 30: '\\small', 24: '\\footnotesize'}
+# A slide whose text is longer than the page is scaled down to fit (adjustbox), as the PowerPoint export refuses it
+FIT = '\\begin{adjustbox}{max totalheight=0.8\\textheight}\\begin{minipage}[t]{\\textwidth}\n%s\n\\end{minipage}\\end{adjustbox}'
 
 PREAMBLE = r"""% {comment}
 \documentclass[aspectratio=169,11pt]{{beamer}}
 \usepackage{{fontspec}}
 {fonts}
 \usepackage{{graphicx}}
+\usepackage{{adjustbox}}
 \usetheme{{default}}
 \setbeamertemplate{{navigation symbols}}{{}}
 \setbeamercolor{{frametitle}}{{fg=black!85}}
 \setbeamercolor{{title}}{{fg=black!85}}
 \setbeamercolor{{itemize item}}{{fg=black!60}}
 \setbeamertemplate{{itemize item}}{{\textbullet}}
-\setbeamertemplate{{footline}}{{\hspace{{1em}}\tiny\color{{black!55}}SummarizePaper · {footer}\hfill\insertframenumber\,/\,\inserttotalframenumber\hspace{{1em}}\vspace{{0.6em}}}}
+\setbeamertemplate{{footline}}{{\begin{{beamercolorbox}}[wd=\paperwidth,ht=2.6ex,dp=1.4ex,leftskip=1em,rightskip=1em]{{footline}}\tiny\color{{black!55}}SummarizePaper · {footer}\hfill\insertframenumber\,/\,\inserttotalframenumber\end{{beamercolorbox}}}}
 % \setbeameroption{{show notes on second screen=right}} % {notes}
 """
-LATIN_FONTS = r"""\setsansfont{DejaVuSans}[Extension=.ttf, BoldFont=DejaVuSans-Bold, ItalicFont=DejaVuSans-Oblique, BoldItalicFont=DejaVuSans-BoldOblique, Scale=0.92]"""
+SANS = r"""\setsansfont{DejaVuSansCondensed}[Extension=.ttf, BoldFont=DejaVuSansCondensed-Bold, ItalicFont=DejaVuSansCondensed-Oblique, BoldItalicFont=DejaVuSansCondensed-BoldOblique, Scale=0.95]"""
 CJK_FONTS = {
     'zh-hans': r"""\usepackage[fontset=fandol]{ctex}
-\setsansfont{DejaVuSans}[Extension=.ttf, BoldFont=DejaVuSans-Bold, Scale=0.92]
-\renewcommand{\familydefault}{\sfdefault}""",
+\renewcommand{\familydefault}{\sfdefault}
+""" + SANS,
     # Fandol lacks Japanese kanji forms (強, 証, ー): Harano Aji, TeX Live's Japanese fonts
     'ja': r"""\usepackage{xeCJK}
 \setCJKmainfont{HaranoAjiGothic-Regular.otf}[BoldFont=HaranoAjiGothic-Bold.otf]
 \setCJKsansfont{HaranoAjiGothic-Regular.otf}[BoldFont=HaranoAjiGothic-Bold.otf]
-\setsansfont{DejaVuSans}[Extension=.ttf, BoldFont=DejaVuSans-Bold, Scale=0.92]""",
+""" + SANS,
 }
 
 
@@ -57,7 +60,7 @@ def figure(page, name, height):
 
 def frame(page, name):
     """One slide; name: the file of its figure in the project, if it has one."""
-    size = SIZES.get(page.get('text_size'), '\\normalsize')
+    size = SIZES.get(page.get('text_size'), '\\small')
     notes = notes_text(page)
     note = '\n\\note{%s}' % '\\\\ '.join(overleaf.tex(part) for part in notes.split('\n') if part.strip()) if notes else ''
     if page['kind'] == 'title':
@@ -84,7 +87,7 @@ def frame(page, name):
             body.append('%s\n\\par\\vspace{0.5em}\n%s' % ((picture, text) if page['layout'] == 'top' else (text, picture)))
     else:
         body.append(itemize(page['bullets']))
-    return '\\begin{frame}[t]{%s}\n%s\n%s\n\\end{frame}%s\n' % (overleaf.tex(page['title']), size, '\n'.join(body), note)
+    return '\\begin{frame}[t]{%s}\n%s\n\\end{frame}%s\n' % (overleaf.tex(page['title']), FIT % (size + '\n' + '\n'.join(body)), note)
 
 
 def render_project(pages, footer, title, lang):
@@ -100,7 +103,7 @@ def render_project(pages, footer, title, lang):
     names = {url: 'figures/figure-%d.png' % i for i, url in enumerate(urls, 1)}
     files = {names[url]: data for url, data in images.items()}
     tex = PREAMBLE.format(comment=_('Journal club slides written with SummarizePaper; check each point in the paper.'),
-                          fonts=CJK_FONTS.get(lang, LATIN_FONTS), footer=overleaf.tex(footer),
+                          fonts=CJK_FONTS.get(lang, SANS), footer=overleaf.tex(footer),
                           notes=_('uncomment to show the speaker notes and the passages of the paper'))
     tex += '\\title{%s}\n\\date{}\n\n\\begin{document}\n\n' % overleaf.tex(title)
     tex += '\n'.join(frame(page, names.get((page.get('figure') or {}).get('url'))) for page in pages)
