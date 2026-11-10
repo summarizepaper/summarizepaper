@@ -289,7 +289,14 @@ def live_preview(request):
     subscription = request.user.digests.filter(pk=wanted).first() if wanted and wanted.isdigit() else None
     preview = preview_subscription(request, subscription, paid)
     categories = preview.category_list()
-    days = list(ArxivBatch.objects.order_by('-day').values_list('day', flat=True)[:5 if preview.frequency == 'weekly' else 1])
+    batches = ArxivBatch.objects.order_by('-day')
+    if request.user.is_staff and request.POST.get('day'):
+        # staff can preview a past announcement, to take the screenshots of a guide again
+        try:
+            batches = batches.filter(day__lte=datetime.date.fromisoformat(request.POST['day']))
+        except ValueError:
+            pass
+    days = list(batches.values_list('day', flat=True)[:5 if preview.frequency == 'weekly' else 1])
     if not categories or not days:
         return render(request, 'summarizer/digest_try.html', {'empty': not categories, 'no_batch': not days})
     papers = papers_of(days, categories)

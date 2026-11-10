@@ -306,6 +306,21 @@ class SettingsTests(ResearchDigestCase):
         self.assertFalse(DigestSubscription.objects.exists())  # nothing saved
         self.assertEqual(Client().post('/en/digest/try/', {'categories': ['astro-ph.EP']}).status_code, 403)
 
+    def test_staff_can_preview_a_past_announcement(self):
+        for day, aid, title in ((MONDAY.date(), '2610.00001v1', 'Planet clouds'),
+                                (MONDAY.date() + datetime.timedelta(days=1), '2610.00002v1', 'Comet dust')):
+            ArxivBatch.objects.create(day=day, papers=1)
+            AnnouncedPaper.objects.create(arxiv_id=aid, announced=day, title=title, abstract=title,
+                                          authors='["A B"]', categories='astro-ph.EP')
+        past = {'categories': ['astro-ph.EP'], 'day': MONDAY.date().isoformat()}
+        self.assertContains(self.c.post('/en/digest/try/', past), 'Comet dust')  # not staff: the latest one
+        self.u.is_staff = True
+        self.u.save()
+        page = self.c.post('/en/digest/try/', past)
+        self.assertContains(page, 'Planet clouds')
+        self.assertNotContains(page, 'Comet dust')
+        self.assertContains(self.c.post('/en/digest/try/', dict(past, day='soon')), 'Comet dust')
+
     def test_import_from_arxiv_author_page_fills_the_form(self):
         feed = digest_web_feed([('2601.00001v1', 'astro-ph.EP', ['Jane Roe', 'Al Co', 'Bo Other']),
                                 ('2602.00002v1', 'astro-ph.EP', ['J. Roe', 'Al Co']),
