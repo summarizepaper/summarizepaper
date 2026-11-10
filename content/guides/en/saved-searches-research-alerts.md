@@ -71,7 +71,7 @@ Year filters shape the search page, rather than limiting the watch’s new paper
 
 ## 5. Choose a schedule and a channel
 
-Under **Watch**, choose **Daily** or **Weekly**, then a channel under **New papers**. Our example uses **Only on this page and by RSS**. Choose **By email** for delivery to your inbox; if alerts are bundled, the interface may offer **In my digest** instead. The language has its own setting.
+Under **Watch**, choose **Daily** or **Weekly**, then a channel under **New papers**. Our example uses **Only on this page and by RSS**. Choose **By email** for delivery to your inbox; if alerts are bundled, the interface may offer **In my paper alert** instead. The language has its own setting.
 
 **Only these categories** is optional: `astro-ph.HE`, for example, restricts announcements to high-energy astrophysics. We leave it empty to retain neighbouring categories. The option to set aside papers close to those marked not relevant is also optional; the papers remain accessible on the page.
 
@@ -136,7 +136,7 @@ Choose **Pause this watch** when the topic becomes less urgent. The search stays
 <figcaption>Pause the watch while retaining the saved query and its settings.</figcaption>
 </figure>
 
-For selection guided by your profile, try the [daily digest](../daily-digest-research-papers/). For papers close in meaning to a project despite different wording, use [Scoop watch](../scoop-watch-research-project/). Organise your retained readings in [collections](../organize-research-paper-collections/).
+For selection guided by your profile, try the [daily paper alert](../daily-digest-research-papers/). For papers close in meaning to a project despite different wording, use [Scoop watch](../scoop-watch-research-project/). Organise your retained readings in [collections](../organize-research-paper-collections/).
 
 <div class="cta-box">
 <p>Build a watch whose matches you understand</p>

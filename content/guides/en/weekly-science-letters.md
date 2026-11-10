@@ -141,7 +141,7 @@ Filter the folder with **Bloch**, set **To read** and add a note. Here the note 
 
 That keeps the reason for your interest alongside the reference. [Collections](../organize-research-paper-collections/) organize the readings, while [paper chat](../how-to-chat-with-research-papers/) helps formulate and verify precise questions.
 
-For a regular queue close to your research, use the [digest](../daily-digest-research-papers/). For activity around specific vocabulary, open [Rising topics](../rising-research-topics/). A letter provides a recurring reading route into what is happening beyond your field.
+For a regular queue close to your research, use the [paper alert](../daily-digest-research-papers/). For activity around specific vocabulary, open [Rising topics](../rising-research-topics/). A letter provides a recurring reading route into what is happening beyond your field.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/weekly/note-en.jpg"><img src="/static/summarizer/img/guides/weekly/note-en.jpg" alt="Bloch-point paper filtered in the English collection with To read status and a saved note" width="1280" height="720" loading="lazy" /></a>

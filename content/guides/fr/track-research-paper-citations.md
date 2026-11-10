@@ -37,7 +37,7 @@ Pour suivre votre production, utilisez plutôt **Suivre mes articles** : saisiss
 
 Cliquez sur **Réglages des emails**. Choisissez un envoi **chaque jour, chaque semaine ou chaque mois**, puis cliquez sur **Enregistrer**. L’option de notification immédiate concerne les nouveaux articles qui remettent clairement en question une référence suivie ; elle est distincte du rythme normal.
 
-Les sources sont vérifiées une fois par jour : un email immédiat signifie une notification après détection et analyse, pas une surveillance instantanée des sites des éditeurs. Si vos alertes sont regroupées dans un digest, suivez l’indication affichée dans les réglages : le regroupement peut déterminer le rythme de réception.
+Les sources sont vérifiées une fois par jour : un email immédiat signifie une notification après détection et analyse, pas une surveillance instantanée des sites des éditeurs. Si vos alertes sont regroupées dans une sélection, suivez l’indication affichée dans les réglages : le regroupement peut déterminer le rythme de réception.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/citations/emails-fr.jpg"><img src="/static/summarizer/img/guides/citations/emails-fr.jpg" alt="Choisissez le rythme des emails et, séparément, la notification des remises en question claires." width="1280" height="720" loading="lazy" /></a>

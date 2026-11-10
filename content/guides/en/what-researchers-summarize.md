@@ -214,5 +214,5 @@ The ten papers with the most summary requests (a paper can be summarized again, 
 <div class="cta-box">
 <p>Want a summary of a paper in your field?</p>
 <a class="btn btn-lg" href="https://www.summarizepaper.com/en/">Look up an arXiv paper</a>
-<a class="btn btn-lg btn-ghost" href="https://www.summarizepaper.com/en/digest/">Get the daily digest</a>
+<a class="btn btn-lg btn-ghost" href="https://www.summarizepaper.com/en/digest/">Get the daily paper alert</a>
 </div>

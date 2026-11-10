@@ -46,11 +46,11 @@ sources:
 | Questions sur l'article | Oui | Oui, à partir du texte intégral et de ses figures |
 | D'où vient chaque affirmation | Non vérifié | Chaque affirmation avec la phrase de l'article, vérifiée mot pour mot, et un lien vers le passage |
 | Plusieurs articles à la fois | Oui, conversations multi-fichiers | Oui, sur la page de chat et dans les collections avec tableaux comparatifs |
-| Compte nécessaire | Non | Non pour lire ; compte gratuit pour le digest et plus de questions |
+| Compte nécessaire | Non | Non pour lire ; compte gratuit pour la sélection et plus de questions |
 | Limites gratuites | 2 documents par jour | Lecture illimitée, 10 nouveaux résumés et 30 questions par jour sans compte |
 | Offre payante | ChatPDF Plus, documents illimités | Premium 7 €/mois, Premium+ 14 €/mois |
 | Langues des résumés | Non vérifié | Anglais et français ; réécritures en 16 langues |
-| Nouveaux articles par email | Non | Digest quotidien des articles arXiv, bioRxiv, medRxiv et des revues |
+| Nouveaux articles par email | Non | Sélection du matin des articles arXiv, bioRxiv, medRxiv et des revues |
 
 ## Ce que ChatPDF fait mieux
 
@@ -64,7 +64,7 @@ sources:
 - **Des réponses vérifiables.** Après chaque réponse, l'[assistant](https://www.summarizepaper.com/fr/chat/) liste ses affirmations, chacune avec la phrase de l'article qui l'appuie, la section ou la figure d'où elle vient et un lien vers ce passage. Les affirmations que l'article n'appuie pas sont signalées.
 - **Un résumé qu'on n'a pas besoin de demander.** La page est structurée de la même façon pour chaque article, avec un résumé vulgarisé compréhensible par tous et des réécritures pour d'autres niveaux de lecture et d'autres langues.
 - **Quelque chose à garder et à partager.** Chaque résumé est une page publique avec l'entrée BibTeX, un export PDF et des exports vers Zotero, Notion et Obsidian, pas une conversation qui se perd dans l'historique.
-- **Suivre son domaine.** Le [digest quotidien](https://www.summarizepaper.com/fr/digest/) envoie par email les nouveaux articles des catégories choisies ; avec Premium, des alertes de citations et de nouvelles versions sur les articles suivis.
+- **Suivre son domaine.** La [sélection du matin](https://www.summarizepaper.com/fr/digest/) envoie par email les nouveaux articles des catégories choisies ; avec Premium, des alertes de citations et de nouvelles versions sur les articles suivis.
 - **Votre propre manuscrit, sans le résumer.** Avec Premium, envoyez votre manuscrit pour [trouver les articles proches qu'il ne cite pas](https://www.summarizepaper.com/fr/missed/) ou [vérifier sa bibliographie](https://www.summarizepaper.com/fr/refcheck/) : articles rétractés et citations que le résumé de l'article cité n'appuie pas.
 
 ## Lequel choisir ?

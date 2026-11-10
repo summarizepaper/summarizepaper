@@ -47,11 +47,11 @@ Key takeaways
 | Questions on the paper | Yes | Yes, from the full text and its figures |
 | Where each claim comes from | Not checked | Each claim with the paper's sentence, checked word for word, and a link to the passage |
 | Several papers at once | Yes, multi-file chats | Yes, on the chat page and in collections with comparison tables |
-| Account needed | No | No to read; free account for the digest and more questions |
+| Account needed | No | No to read; free account for the paper alert and more questions |
 | Free limits | 2 documents a day | Unlimited reading, 10 new summaries and 30 questions a day without an account |
 | Paid plan | ChatPDF Plus, unlimited documents | Premium €7/month, Premium+ €14/month |
 | Summary languages | Not checked | English and French; rewrites in 16 languages |
-| New papers by email | No | Daily digest of arXiv, bioRxiv, medRxiv and journal papers |
+| New papers by email | No | Daily paper alert of arXiv, bioRxiv, medRxiv and journal papers |
 
 ## What ChatPDF does better
 
@@ -65,7 +65,7 @@ Key takeaways
 - **Answers you can check.** After each answer, the [assistant](https://www.summarizepaper.com/en/chat/) lists its claims, each with the sentence of the paper that supports it, the section or figure it comes from and a link to that passage. Claims the paper does not support are labelled.
 - **A summary you do not have to ask for.** The page is structured the same way for every paper, including a lay summary anyone can understand and rewrites for other reading levels and languages.
 - **Something you can keep and share.** Each summary is a public page with the BibTeX entry, a PDF export and exports to Zotero, Notion and Obsidian, not a chat that disappears in your history.
-- **Following the field.** The [daily digest](https://www.summarizepaper.com/en/digest/) emails new papers from the categories you choose; with Premium, citation and new-version alerts on the papers you follow.
+- **Following the field.** The [daily paper alert](https://www.summarizepaper.com/en/digest/) emails new papers from the categories you choose; with Premium, citation and new-version alerts on the papers you follow.
 - **Your own draft, without summarizing it.** With Premium, upload your draft to [find the close papers it does not cite](https://www.summarizepaper.com/en/missed/) or to [check its bibliography](https://www.summarizepaper.com/en/refcheck/) for retracted papers and citations the cited abstract does not support.
 
 ## Which one should you use?

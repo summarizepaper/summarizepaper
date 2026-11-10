@@ -213,5 +213,5 @@ Les dix articles qui ont reçu le plus de demandes de résumé (un article peut 
 <div class="cta-box">
 <p>Vous voulez le résumé d'un article de votre domaine ?</p>
 <a class="btn btn-lg" href="https://www.summarizepaper.com/fr/">Chercher un article</a>
-<a class="btn btn-lg btn-ghost" href="https://www.summarizepaper.com/fr/digest/">Recevoir le digest quotidien</a>
+<a class="btn btn-lg btn-ghost" href="https://www.summarizepaper.com/fr/digest/">Recevoir la sélection du matin</a>
 </div>

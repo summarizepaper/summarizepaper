@@ -141,7 +141,7 @@ Filtrez le dossier avec **Bloch**, attribuez le statut **À lire** et ajoutez un
 
 Vous gardez ainsi la raison de votre intérêt. Les [collections](../organize-research-paper-collections/) permettent ensuite d’organiser les références, tandis que le [chat avec les articles](../how-to-chat-with-research-papers/) aide à formuler et vérifier des questions précises.
 
-Pour une file régulière de papiers proche de votre recherche, utilisez le [digest](../daily-digest-research-papers/). Pour explorer l’activité autour d’un vocabulaire, ouvrez [les sujets qui montent](../rising-research-topics/). La lettre fournit, elle, un rendez-vous de lecture pour découvrir ce qui se passe dans un autre domaine.
+Pour une file régulière de papiers proche de votre recherche, utilisez la [sélection](../daily-digest-research-papers/). Pour explorer l’activité autour d’un vocabulaire, ouvrez [les sujets qui montent](../rising-research-topics/). La lettre fournit, elle, un rendez-vous de lecture pour découvrir ce qui se passe dans un autre domaine.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/weekly/note-fr.jpg"><img src="/static/summarizer/img/guides/weekly/note-fr.jpg" alt="Article sur les points de Bloch filtré dans la collection, avec statut À lire et note française" width="1280" height="720" loading="lazy" /></a>

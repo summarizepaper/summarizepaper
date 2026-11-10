@@ -1,6 +1,6 @@
 ---
-title: 'Daily digest: from new papers to a closer look at 3I/ATLAS'
-description: 'Create a digest step by step: categories, summaries, Premium options and delivery time, then explore a CC BY JWST paper on 3I/ATLAS.'
+title: 'Daily paper alert: from new papers to a closer look at 3I/ATLAS'
+description: 'Create a paper alert step by step: categories, summaries, Premium options and delivery time, then explore a CC BY JWST paper on 3I/ATLAS.'
 date: 2026-10-27
 draft: false
 updated: 2026-10-28
@@ -13,25 +13,25 @@ sources:
   url: https://creativecommons.org/licenses/by/4.0/
 ---
 
-Want a paper selection tailored to your research? Start by creating your **daily digest**, then see how the morning announcements can lead to a closer reading of **interstellar comet 3I/ATLAS**.
+Want a paper selection tailored to your research? Start by creating your **daily paper alert**, then see how the morning announcements can lead to a closer reading of **interstellar comet 3I/ATLAS**.
 
 This guide first walks through the form, block by block, then follows an actual **28 October 2026** edition. Screenshots use the English interface and generated summaries; scientific titles and figure captions retain their original language.
 
-## Create your digest: complete the form step by step
+## Create your paper alert: complete the form step by step
 
-Open [the daily digest](/en/digest/) and sign in. For your first digest, the creation form opens directly. If you already have a digest and your plan allows another one, choose **“+ New digest”**. To edit an existing selection, open its tab instead.
+Open [the daily paper alert](/en/digest/) and sign in. For your first paper alert, the creation form opens directly. If you already have a paper alert and your plan allows another one, choose **“+ New paper alert”**. To edit an existing selection, open its tab instead.
 
 A simple setup needs **at least one category**, your preferred **summary format and language**, and a **frequency, delivery time and time zone**. Keywords, ORCID and the Premium research settings are optional. Here is how to work through the form in order.
 
 ### 1. Name the feed and choose a starting point
 
-With Premium, **“Name of this digest”** helps distinguish multiple feeds, such as “Comets and dust — morning reading”. The name is optional.
+With Premium, **“Name of this paper alert”** helps distinguish multiple feeds, such as “Comets and dust — morning reading”. The name is optional.
 
 **“Start from your publications”** is optional too. Enter your ORCID iD or arXiv author identifier and choose **“Import”** if you want suggestions based on your publications. Review those suggestions before proceeding. You can also leave this field empty and select your fields manually, as in this walkthrough.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/create-en.jpg"><img src="/static/summarizer/img/guides/digest/create-en.jpg" alt="A new digest form: naming is optional, and the ORCID or arXiv import can be skipped when selecting fields manually." width="1280" height="720" loading="lazy" /></a>
-<figcaption>A new digest form: naming is optional, and the ORCID or arXiv import can be skipped when selecting fields manually.</figcaption>
+<a href="/static/summarizer/img/guides/digest/create-en.jpg"><img src="/static/summarizer/img/guides/digest/create-en.jpg" alt="A new paper alert form: naming is optional, and the ORCID or arXiv import can be skipped when selecting fields manually." width="1280" height="720" loading="lazy" /></a>
+<figcaption>A new paper alert form: naming is optional, and the ORCID or arXiv import can be skipped when selecting fields manually.</figcaption>
 </figure>
 
 ### 2. Select at least one category and check the preview
@@ -85,7 +85,7 @@ Use the following fields to refine that personalization:
 | Papers close to your work | Add arXiv identifiers, DOIs or links separated by commas, or use the title search. Example: `2610.37540v1`. |
 | Authors to follow | Enter names separated by commas to follow their new papers across categories. Example: Cristina A. Thomas. |
 | How many papers | Start with the suggested fixed maximum, or choose a strict, normal or broad closeness threshold with a research profile. |
-| Put alerts in this digest | Select this if you want scoop, citation, version and publication alerts in the digest rather than separate emails. |
+| Put alerts in this paper alert | Select this if you want scoop, citation, version and publication alerts in the paper alert rather than separate emails. |
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/advanced-en.jpg"><img src="/static/summarizer/img/guides/digest/advanced-en.jpg" alt="Example Premium settings: an arXiv reference, a followed author and The 25 best papers volume. These fields are optional when creating your first feed." width="1280" height="720" loading="lazy" /></a>
@@ -98,23 +98,23 @@ Use the following fields to refine that personalization:
 
 Select **English** under **“Language of the summaries”**. Under **“Delivery time”**, choose **“Every weekday”** or **“Once a week”**; for the latter, also choose the weekly delivery day. Set the time and check the time zone, opening **“Time zone … (change)”** if needed.
 
-Our reading routine uses **every weekday at 7:00 AM, Europe/Paris**. The weekly-day setting only applies to weekly delivery. Changing the website language does not translate an edition already prepared: its generated summaries use the language chosen for the digest.
+Our reading routine uses **every weekday at 7:00 AM, Europe/Paris**. The weekly-day setting only applies to weekly delivery. Changing the website language does not translate an edition already prepared: its generated summaries use the language chosen for the paper alert.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/schedule-en.jpg"><img src="/static/summarizer/img/guides/digest/schedule-en.jpg" alt="The final settings: English summaries, every-weekday delivery at 7:00 AM, Europe/Paris time zone, and the Start my digest button." width="1280" height="720" loading="lazy" /></a>
-<figcaption>The final settings: English summaries, every-weekday delivery at 7:00 AM, Europe/Paris time zone, and the Start my digest button.</figcaption>
+<a href="/static/summarizer/img/guides/digest/schedule-en.jpg"><img src="/static/summarizer/img/guides/digest/schedule-en.jpg" alt="The final settings: English summaries, every-weekday delivery at 7:00 AM, Europe/Paris time zone, and the Start my paper alert button." width="1280" height="720" loading="lazy" /></a>
+<figcaption>The final settings: English summaries, every-weekday delivery at 7:00 AM, Europe/Paris time zone, and the Start my paper alert button.</figcaption>
 </figure>
 
-### 6. Submit with “Start my digest”
+### 6. Submit with “Start my paper alert”
 
-Before submitting, check that a category is selected, that the preview matches your interests, and that the language, frequency, time and time zone suit you. Then choose **“Start my digest”**: your settings are saved and delivery is scheduled to your account's email address.
+Before submitting, check that a category is selected, that the preview matches your interests, and that the language, frequency, time and time zone suit you. Then choose **“Start my paper alert”**: your settings are saved and delivery is scheduled to your account's email address.
 
-To change it later, return to its tab and choose **“Save”** after editing. **“Send me a preview now”**, available on a saved digest, requests a test email. It is separate from the interactive preview on the right of the form.
+To change it later, return to its tab and choose **“Save”** after editing. **“Send me a preview now”**, available on a saved paper alert, requests a test email. It is separate from the interactive preview on the right of the form.
 
 <span id="read-your-edition"></span>
 ## Read an edition: what does this paper contribute?
 
-Once your digest arrives, open its web page. Here is an **actual 28 October edition** containing ten papers.
+Once your paper alert arrives, open its web page. Here is an **actual 28 October edition** containing ten papers.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/edition-en.jpg"><img src="/static/summarizer/img/guides/digest/edition-en.jpg" alt="An actual 28 October edition: ten Earth and Planetary Astrophysics papers, each with a selection reason and a short research brief." width="1280" height="720" loading="lazy" /></a>
@@ -130,7 +130,7 @@ Search for **`3I/ATLAS`**: the counter shows **1 / 10**. This search only filter
 
 The brief offers a reason to keep reading: JWST/MIRI observations, dust modelling and a constraint on crystalline material. “More like this” and “Less like this” help guide future selections. Use them to express interest in the topic, independently of whether you agree with the conclusions.
 
-Expand “Abstract” to compare the brief with the **original scientific abstract**. The digest’s short summaries are generated from that abstract for initial triage. They do not imply that every paper’s full text was analysed for the digest.
+Expand “Abstract” to compare the brief with the **original scientific abstract**. The paper alert’s short summaries are generated from that abstract for initial triage. They do not imply that every paper’s full text was analysed for the paper alert.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/abstract-en.jpg"><img src="/static/summarizer/img/guides/digest/abstract-en.jpg" alt="The original abstract expands beneath the structured brief, allowing an initial source check without leaving the edition." width="1280" height="720" loading="lazy" /></a>
@@ -155,11 +155,11 @@ Open “Figures and plots” to access **all four figures**. Enlarge **Figure 2*
 <figcaption>Figure 2 enlarged in the English interface. Source: Thomas et al. (2026), arXiv:2610.37540v1, CC BY 4.0; original scientific caption retained.</figcaption>
 </figure>
 
-One detail deserves a reading note: in the [authors’ full text](https://arxiv.org/html/2610.37540v1), the **99% upper limit of 5.3%** constrains the fraction of silicate **emission**, not directly the silicate mass. This is exactly the kind of qualification to check after scanning the digest. Continue with [reading summaries and their sources](../how-to-summarize-a-research-paper/) or [asking a question about one paper](../how-to-chat-with-research-papers/#single-paper-chat).
+One detail deserves a reading note: in the [authors’ full text](https://arxiv.org/html/2610.37540v1), the **99% upper limit of 5.3%** constrains the fraction of silicate **emission**, not directly the silicate mass. This is exactly the kind of qualification to check after scanning the paper alert. Continue with [reading summaries and their sources](../how-to-summarize-a-research-paper/) or [asking a question about one paper](../how-to-chat-with-research-papers/#single-paper-chat).
 
 ## Save a reading task, with a reason to return
 
-From the digest brief, choose “Save to a collection”. Select an existing folder or create **“To read — Dust and small bodies”**.
+From the paper alert brief, choose “Save to a collection”. Select an existing folder or create **“To read — Dust and small bodies”**.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/save-en.jpg"><img src="/static/summarizer/img/guides/digest/save-en.jpg" alt="The selected paper and the new folder name are displayed before creating the reading collection." width="1280" height="720" loading="lazy" /></a>
@@ -177,5 +177,5 @@ A useful routine has three steps: **scan the contributions, open a useful source
 
 <div class="cta-box">
 <p>Build your next reading selection</p>
-<a class="btn btn-lg" data-funnel="guide_tool_daily_digest_research_papers" href="/en/digest/">Set up my daily digest</a>
+<a class="btn btn-lg" data-funnel="guide_tool_daily_digest_research_papers" href="/en/digest/">Set up my daily paper alert</a>
 </div>

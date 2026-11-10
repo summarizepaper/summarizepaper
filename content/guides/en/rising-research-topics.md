@@ -144,14 +144,14 @@ The note preserves why you selected the paper. Add other publications and use th
 </figure>
 ## 9. Find the topics closest to your research
 
-The Premium **For you** view gathers topics from your digest fields and ranks them against the research profile described there. In this example, dusty disks and the chemistry of young systems appear.
+The Premium **For you** view gathers topics from your paper alert fields and ranks them against the research profile described there. In this example, dusty disks and the chemistry of young systems appear.
 
-If the view is empty, check your [digest](../daily-digest-research-papers/) categories and profile; there may also have been no recent signal close to your work. [Weekly letters](../weekly-science-letters/) complement the counts with accounts of the findings. To identify authors behind a specific approach, continue with [Who works on it?](../find-research-teams-by-topic/).
+If the view is empty, check your [paper alert](../daily-digest-research-papers/) categories and profile; there may also have been no recent signal close to your work. [Weekly letters](../weekly-science-letters/) complement the counts with accounts of the findings. To identify authors behind a specific approach, continue with [Who works on it?](../find-research-teams-by-topic/).
 
 A useful path is **notice the signal, put it in context, check the papers, then decide what to read or follow**.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/rising/for-you-en.jpg"><img src="/static/summarizer/img/guides/rising/for-you-en.jpg" alt="English For you view with topics matched to the digest fields and research profile" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/rising/for-you-en.jpg"><img src="/static/summarizer/img/guides/rising/for-you-en.jpg" alt="English For you view with topics matched to the paper alert fields and research profile" width="1280" height="720" loading="lazy" /></a>
 <figcaption>Personalization prioritizes topics to explore; reading establishes what the sources support.</figcaption>
 </figure>
 <div class="cta-box">

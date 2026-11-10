@@ -71,7 +71,7 @@ Les filtres d’années limitent la recherche consultable, pas les nouveaux arti
 
 ## 5. Choisir le rythme et le canal
 
-Dans **Veille**, choisissez **Chaque jour** ou **Chaque semaine**, puis le canal dans **Nouveaux articles**. Notre exemple utilise **Seulement sur cette page et par RSS**. Pour recevoir les résultats dans votre boîte de réception, choisissez **Par email** ; si vos alertes sont regroupées, l’interface peut proposer **Dans mon digest**. La langue se règle séparément.
+Dans **Veille**, choisissez **Chaque jour** ou **Chaque semaine**, puis le canal dans **Nouveaux articles**. Notre exemple utilise **Seulement sur cette page et par RSS**. Pour recevoir les résultats dans votre boîte de réception, choisissez **Par email** ; si vos alertes sont regroupées, l’interface peut proposer **Dans ma sélection**. La langue se règle séparément.
 
 Le champ **Seulement ces catégories** est facultatif : `astro-ph.HE`, par exemple, restreint les annonces à l’astrophysique des hautes énergies. Nous le laissons vide pour ne pas écarter une catégorie voisine. La case d’exclusion des articles proches de ceux jugés non pertinents est également facultative ; les articles écartés restent consultables sur la page.
 
@@ -136,7 +136,7 @@ Utilisez **Mettre cette veille en pause** lorsque le sujet n’est plus priorita
 <figcaption>La veille peut être mise en pause tout en conservant la recherche et ses réglages.</figcaption>
 </figure>
 
-Pour une sélection guidée par votre profil plutôt que par des correspondances de mots, poursuivez avec le [digest quotidien](../daily-digest-research-papers/). Pour repérer des travaux proches du sens d’un projet malgré un vocabulaire différent, utilisez [Scoop watch](../scoop-watch-research-project/). Vos lectures retenues peuvent ensuite être organisées dans les [collections](../organize-research-paper-collections/).
+Pour une sélection guidée par votre profil plutôt que par des correspondances de mots, poursuivez avec la [sélection du matin](../daily-digest-research-papers/). Pour repérer des travaux proches du sens d’un projet malgré un vocabulaire différent, utilisez [Scoop watch](../scoop-watch-research-project/). Vos lectures retenues peuvent ensuite être organisées dans les [collections](../organize-research-paper-collections/).
 
 <div class="cta-box">
 <p>Construire une veille dont vous comprenez chaque correspondance</p>

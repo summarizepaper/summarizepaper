@@ -144,14 +144,14 @@ Cette note conserve la raison de votre sélection, au-delà d’un titre. Vous p
 </figure>
 ## 9. Retrouver les sujets proches de son travail
 
-La vue **Pour vous**, avec Premium, rassemble les sujets des domaines de vos digests et les rapproche du profil de recherche que vous y avez décrit. Dans cet exemple, les disques de poussière et la chimie des jeunes systèmes ressortent.
+La vue **Pour vous**, avec Premium, rassemble les sujets des domaines de vos sélections et les rapproche du profil de recherche que vous y avez décrit. Dans cet exemple, les disques de poussière et la chimie des jeunes systèmes ressortent.
 
-Si cette vue est vide, vérifiez les catégories et le profil de votre [digest](../daily-digest-research-papers/) ; il est aussi possible qu’aucun signal proche n’ait émergé récemment. Les [lettres hebdomadaires](../weekly-science-letters/) complètent les comptes par un récit des résultats. Pour identifier des auteurs derrière un axe précis, poursuivez avec [Qui travaille dessus ?](../find-research-teams-by-topic/).
+Si cette vue est vide, vérifiez les catégories et le profil de votre [sélection](../daily-digest-research-papers/) ; il est aussi possible qu’aucun signal proche n’ait émergé récemment. Les [lettres hebdomadaires](../weekly-science-letters/) complètent les comptes par un récit des résultats. Pour identifier des auteurs derrière un axe précis, poursuivez avec [Qui travaille dessus ?](../find-research-teams-by-topic/).
 
 Une bonne utilisation du signal suit ce parcours : **repérer, remettre en contexte, vérifier les articles, puis décider quoi lire ou suivre**.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/rising/for-you-fr.jpg"><img src="/static/summarizer/img/guides/rising/for-you-fr.jpg" alt="Vue française Pour vous avec sujets proches des domaines et du profil du digest" width="1280" height="720" loading="lazy" /></a>
+<a href="/static/summarizer/img/guides/rising/for-you-fr.jpg"><img src="/static/summarizer/img/guides/rising/for-you-fr.jpg" alt="Vue française Pour vous avec sujets proches des domaines et du profil de la sélection" width="1280" height="720" loading="lazy" /></a>
 <figcaption>La personnalisation priorise les sujets à explorer ; elle ne remplace pas la lecture des sources.</figcaption>
 </figure>
 <div class="cta-box">

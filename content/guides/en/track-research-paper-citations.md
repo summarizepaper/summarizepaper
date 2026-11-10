@@ -37,7 +37,7 @@ For your own research output, use **Follow my papers**: enter your ORCID iD or a
 
 Open **Email settings**, choose **every day, every week or every month**, then click **Save**. The separate immediate-email option applies when a newly found paper clearly questions a followed reference.
 
-The sources are checked once a day. An immediate alert means notification after detection and analysis; it is not continuous monitoring of publishers’ websites. If alerts are bundled into a digest, read the notice in your settings: bundling can determine the delivery schedule.
+The sources are checked once a day. An immediate alert means notification after detection and analysis; it is not continuous monitoring of publishers’ websites. If alerts are bundled into a paper alert, read the notice in your settings: bundling can determine the delivery schedule.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/citations/emails-en.jpg"><img src="/static/summarizer/img/guides/citations/emails-en.jpg" alt="Set the email schedule and the separate option for immediate alerts about clear challenges. Sent alerts are accessible below." width="1280" height="720" loading="lazy" /></a>

@@ -1,6 +1,6 @@
 ---
-title: 'Digest quotidien : des nouveautés à une lecture sur 3I/ATLAS'
-description: 'Créez votre digest pas à pas : catégories, résumés, options Premium et horaire, puis explorez un papier JWST CC BY sur 3I/ATLAS.'
+title: 'Sélection du matin : des nouveautés à une lecture sur 3I/ATLAS'
+description: 'Créez votre sélection pas à pas : catégories, résumés, options Premium et horaire, puis explorez un papier JWST CC BY sur 3I/ATLAS.'
 date: 2026-10-27
 draft: false
 updated: 2026-10-28
@@ -13,25 +13,25 @@ sources:
   url: https://creativecommons.org/licenses/by/4.0/
 ---
 
-Vous souhaitez recevoir une sélection d’articles adaptée à vos recherches ? Commencez par créer votre **digest quotidien**, puis découvrez comment transformer les nouveautés du matin en une lecture utile sur la comète interstellaire **3I/ATLAS**.
+Vous souhaitez recevoir une sélection d’articles adaptée à vos recherches ? Commencez par créer votre **sélection du matin**, puis découvrez comment transformer les nouveautés du matin en une lecture utile sur la comète interstellaire **3I/ATLAS**.
 
 Ce guide suit d’abord le formulaire, bloc par bloc, puis une édition réelle du **28 octobre 2026**. Les captures utilisent l’interface et les synthèses en français ; les titres et les légendes scientifiques conservent leur langue d’origine.
 
-## Créer son digest : remplir le formulaire pas à pas
+## Créer sa sélection : remplir le formulaire pas à pas
 
-Ouvrez [le digest quotidien](/fr/digest/) et connectez-vous à votre compte. Pour un premier digest, le formulaire de création s’affiche directement. Si vous disposez déjà d’un digest et que votre formule permet d’en créer un autre, cliquez sur **« + Nouveau digest »**. Pour modifier une sélection existante, ouvrez plutôt son onglet.
+Ouvrez [la sélection du matin](/fr/digest/) et connectez-vous à votre compte. Pour une première sélection, le formulaire de création s’affiche directement. Si vous disposez déjà d’une sélection et que votre formule permet d’en créer un autre, cliquez sur **« + Nouvelle sélection »**. Pour modifier une sélection existante, ouvrez plutôt son onglet.
 
 Pour commencer simplement, il suffit de **choisir au moins une catégorie**, de vérifier **le format et la langue des résumés**, puis **la fréquence, l’heure et le fuseau d’envoi**. Les mots-clés, l’ORCID et les réglages de recherche Premium ne sont pas obligatoires. Voici comment parcourir les blocs dans l’ordre.
 
 ### 1. Nommer sa veille et choisir comment partir
 
-Avec Premium, le champ **« Nom de ce digest »** permet de distinguer plusieurs veilles : par exemple, « Comètes et poussières — veille du matin ». Ce nom est facultatif.
+Avec Premium, le champ **« Nom de cette sélection »** permet de distinguer plusieurs veilles : par exemple, « Comètes et poussières — veille du matin ». Ce nom est facultatif.
 
 Le bloc **« Partir de vos publications »** est lui aussi facultatif. Si vous souhaitez l’utiliser, indiquez votre identifiant ORCID ou d’auteur arXiv, puis cliquez sur **« Importer »** : l’outil propose des réglages à partir de vos publications. Vérifiez les propositions avant de continuer. Vous pouvez aussi laisser ce champ vide et choisir vos domaines vous-même, comme dans ce parcours.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/create-fr.jpg"><img src="/static/summarizer/img/guides/digest/create-fr.jpg" alt="Le formulaire d’un nouveau digest : le nom est facultatif, et le bloc d’import ORCID ou arXiv peut être ignoré pour choisir manuellement ses domaines." width="1280" height="720" loading="lazy" /></a>
-<figcaption>Le formulaire d’un nouveau digest : le nom est facultatif, et le bloc d’import ORCID ou arXiv peut être ignoré pour choisir manuellement ses domaines.</figcaption>
+<a href="/static/summarizer/img/guides/digest/create-fr.jpg"><img src="/static/summarizer/img/guides/digest/create-fr.jpg" alt="Le formulaire d’une nouvelle sélection : le nom est facultatif, et le bloc d’import ORCID ou arXiv peut être ignoré pour choisir manuellement ses domaines." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Le formulaire d’une nouvelle sélection : le nom est facultatif, et le bloc d’import ORCID ou arXiv peut être ignoré pour choisir manuellement ses domaines.</figcaption>
 </figure>
 
 ### 2. Cocher au moins une catégorie et regarder l’aperçu
@@ -85,7 +85,7 @@ Les champs suivants servent à préciser cette personnalisation :
 | Articles proches de votre travail | Ajoutez des identifiants arXiv, DOI ou liens, séparés par des virgules, ou utilisez la recherche de titres. Exemple : `2610.37540v1`. |
 | Auteurs à suivre | Indiquez les noms, séparés par des virgules, si vous souhaitez suivre leurs nouveaux articles dans toutes les catégories. Exemple : Cristina A. Thomas. |
 | Combien d’articles | Gardez le nombre fixe proposé pour commencer, ou choisissez un seuil strict, normal ou large avec un profil de recherche. |
-| Regrouper les alertes dans le digest | Cochez cette option si vous souhaitez recevoir vos alertes de scoop, citation, version et publication dans le digest plutôt que séparément. |
+| Regrouper les alertes dans la sélection | Cochez cette option si vous souhaitez recevoir vos alertes de scoop, citation, version et publication dans la sélection plutôt que séparément. |
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/advanced-fr.jpg"><img src="/static/summarizer/img/guides/digest/advanced-fr.jpg" alt="Exemple de champs Premium : une référence arXiv, une autrice à suivre et le volume Les 25 meilleurs articles. Ces champs sont facultatifs pour créer sa première veille." width="1280" height="720" loading="lazy" /></a>
@@ -98,23 +98,23 @@ Les champs suivants servent à préciser cette personnalisation :
 
 Dans **« Langue des résumés »**, sélectionnez **Français**. Dans **« Heure d’envoi »**, choisissez **« Chaque jour de semaine »** ou **« Une fois par semaine »** ; dans ce second cas, sélectionnez aussi le jour souhaité. Réglez ensuite l’heure et vérifiez le fuseau, en ouvrant **« Fuseau horaire … (modifier) »** si nécessaire.
 
-Notre routine de lecture : **chaque jour de semaine à 07:00, Europe/Paris**. Le jour du digest hebdomadaire ne concerne que la fréquence hebdomadaire. Changer la langue du site ne traduit pas une édition déjà préparée : sa langue de synthèse dépend du réglage choisi pour le digest.
+Notre routine de lecture : **chaque jour de semaine à 07:00, Europe/Paris**. Le jour de la sélection de la semaine ne concerne que la fréquence hebdomadaire. Changer la langue du site ne traduit pas une édition déjà préparée : sa langue de synthèse dépend du réglage choisi pour la sélection.
 
 <figure class="guide-screenshot">
-<a href="/static/summarizer/img/guides/digest/schedule-fr.jpg"><img src="/static/summarizer/img/guides/digest/schedule-fr.jpg" alt="Les derniers réglages : résumés en français, envoi chaque jour de semaine à 07:00, fuseau Europe/Paris, puis bouton Lancer mon digest." width="1280" height="720" loading="lazy" /></a>
-<figcaption>Les derniers réglages : résumés en français, envoi chaque jour de semaine à 07:00, fuseau Europe/Paris, puis bouton Lancer mon digest.</figcaption>
+<a href="/static/summarizer/img/guides/digest/schedule-fr.jpg"><img src="/static/summarizer/img/guides/digest/schedule-fr.jpg" alt="Les derniers réglages : résumés en français, envoi chaque jour de semaine à 07:00, fuseau Europe/Paris, puis bouton Lancer ma sélection." width="1280" height="720" loading="lazy" /></a>
+<figcaption>Les derniers réglages : résumés en français, envoi chaque jour de semaine à 07:00, fuseau Europe/Paris, puis bouton Lancer ma sélection.</figcaption>
 </figure>
 
-### 6. Valider avec « Lancer mon digest »
+### 6. Valider avec « Lancer ma sélection »
 
-Avant de valider, vérifiez qu’une catégorie est cochée, que l’aperçu correspond à vos intérêts, et que la langue, la fréquence, l’heure et le fuseau vous conviennent. Cliquez ensuite sur **« Lancer mon digest »** : vos réglages sont enregistrés et les envois sont programmés à l’adresse email de votre compte.
+Avant de valider, vérifiez qu’une catégorie est cochée, que l’aperçu correspond à vos intérêts, et que la langue, la fréquence, l’heure et le fuseau vous conviennent. Cliquez ensuite sur **« Lancer ma sélection »** : vos réglages sont enregistrés et les envois sont programmés à l’adresse email de votre compte.
 
-Pour modifier ensuite ce digest, revenez sur son onglet et cliquez sur **« Enregistrer »** après vos changements. Le bouton **« M’envoyer un aperçu maintenant »**, disponible sur un digest enregistré, sert à demander un email d’essai ; il est distinct de l’aperçu interactif affiché à droite du formulaire.
+Pour modifier ensuite cette sélection, revenez sur son onglet et cliquez sur **« Enregistrer »** après vos changements. Le bouton **« M’envoyer un aperçu maintenant »**, disponible sur une sélection enregistrée, sert à demander un email d’essai ; il est distinct de l’aperçu interactif affiché à droite du formulaire.
 
 <span id="read-your-edition"></span>
 ## Lire l’édition : qu’est-ce que ce papier apporte ?
 
-Une fois votre digest reçu, ouvrez sa page web. Voici une **édition réelle du 28 octobre**, qui contenait dix articles.
+Une fois votre sélection reçue, ouvrez sa page web. Voici une **édition réelle du 28 octobre**, qui contenait dix articles.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/edition-fr.jpg"><img src="/static/summarizer/img/guides/digest/edition-fr.jpg" alt="Une édition réelle du 28 octobre : dix articles en astrophysique terrestre et planétaire, avec une raison de sélection et une fiche de lecture pour chacun." width="1280" height="720" loading="lazy" /></a>
@@ -130,7 +130,7 @@ Recherchez **`3I/ATLAS`** : le compteur indique **1 / 10**. Cette recherche filt
 
 La fiche donne une raison de poursuivre : une observation JWST/MIRI, une modélisation de poussières et une contrainte sur la composante cristalline. Les boutons « Plus comme ça » et « Moins comme ça » servent à orienter les prochaines sélections. Utilisez-les selon votre intérêt pour le sujet, indépendamment de votre accord avec les conclusions.
 
-Ouvrez « Résumé scientifique » pour comparer la fiche avec l’**abstract original**. Les rubriques courtes du digest sont produites à partir de cet abstract ; elles servent au tri initial. Elles ne signifient pas que le digest a analysé tous les textes intégraux.
+Ouvrez « Résumé scientifique » pour comparer la fiche avec l’**abstract original**. Les rubriques courtes de la sélection sont produites à partir de cet abstract ; elles servent au tri initial. Elles ne signifient pas que la sélection a analysé tous les textes intégraux.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/abstract-fr.jpg"><img src="/static/summarizer/img/guides/digest/abstract-fr.jpg" alt="L’interface reste en français, tandis que le résumé scientifique original est en anglais. Il permet de vérifier la première synthèse sans quitter l’édition." width="1280" height="720" loading="lazy" /></a>
@@ -155,11 +155,11 @@ Dans « Figures et graphiques », les **quatre figures** sont accessibles. Agran
 <figcaption>Figure 2 agrandie dans l’interface française. Source : Thomas et al. (2026), arXiv:2610.37540v1, CC BY 4.0 ; légende scientifique originale conservée.</figcaption>
 </figure>
 
-Un point mérite une note : dans le [texte intégral des auteurs](https://arxiv.org/html/2610.37540v1), la limite supérieure de **5,3 % à 99 %** porte sur la fraction de l’**émission** des silicates, pas directement sur leur masse. C’est précisément le genre de nuance à rechercher après le survol du digest. Pour approfondir, [apprenez à lire les résumés et leurs sources](../how-to-summarize-a-research-paper/) ou [à poser une question au papier](../how-to-chat-with-research-papers/#single-paper-chat).
+Un point mérite une note : dans le [texte intégral des auteurs](https://arxiv.org/html/2610.37540v1), la limite supérieure de **5,3 % à 99 %** porte sur la fraction de l’**émission** des silicates, pas directement sur leur masse. C’est précisément le genre de nuance à rechercher après le survol de la sélection. Pour approfondir, [apprenez à lire les résumés et leurs sources](../how-to-summarize-a-research-paper/) ou [à poser une question au papier](../how-to-chat-with-research-papers/#single-paper-chat).
 
 ## Garder une lecture, avec une raison de la reprendre
 
-Depuis la fiche du digest, cliquez sur « Enregistrer dans une collection ». Choisissez un dossier existant ou créez **« À lire — Poussières et petits corps »**.
+Depuis la fiche de la sélection, cliquez sur « Enregistrer dans une collection ». Choisissez un dossier existant ou créez **« À lire — Poussières et petits corps »**.
 
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/digest/save-fr.jpg"><img src="/static/summarizer/img/guides/digest/save-fr.jpg" alt="Le papier sélectionné et le nom du nouveau dossier sont affichés avant la création de la collection de lecture." width="1280" height="720" loading="lazy" /></a>
@@ -177,5 +177,5 @@ La routine tient en trois gestes : **parcourir les apports, ouvrir une source ut
 
 <div class="cta-box">
 <p>Construire votre prochaine sélection de lecture</p>
-<a class="btn btn-lg" data-funnel="guide_tool_daily_digest_research_papers" href="/fr/digest/">Configurer mon digest quotidien</a>
+<a class="btn btn-lg" data-funnel="guide_tool_daily_digest_research_papers" href="/fr/digest/">Configurer ma sélection du matin</a>
 </div>
