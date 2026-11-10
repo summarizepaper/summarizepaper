@@ -3,7 +3,7 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'Unsubscribe from the daily digest' %}{% endblock %}
+{% block title %}{% trans 'Unsubscribe from the daily paper alert' %}{% endblock %}
 {% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
@@ -12,9 +12,9 @@
     <p>{% trans 'This unsubscribe link is invalid.' %}</p>
   {% elif done %}
     <h1>{% trans 'You are unsubscribed' %}</h1>
-    <p>{% trans 'You will not receive the daily digest anymore.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Changed your mind?' %}</a></p>
+    <p>{% trans 'You will not receive the daily paper alert anymore.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Changed your mind?' %}</a></p>
   {% else %}
-    <h1>{% trans 'Unsubscribe from the daily digest?' %}</h1>
+    <h1>{% trans 'Unsubscribe from the daily paper alert?' %}</h1>
     <form method="post"><button type="submit" class="btn btn-danger">{% trans 'Unsubscribe' %}</button></form>
   {% endif %}
 </div>

@@ -3314,7 +3314,7 @@ class PremiumDigestExtrasTests(ToolsTestCase):
         digest.send_one(subscription, items, 'https://www.summarizepaper.com', paid=True, listen_url=url,
                         rising=[{'title': 'Rising thing', 'growth': 3.1, 'archive': 'astro-ph', 'text': 'More.'}])
         html = mail.outbox[0].alternatives[0][0]
-        self.assertIn('Listen to this digest', html)
+        self.assertIn('Listen to this paper alert', html)
         self.assertIn('Rising thing', html)
         with mock.patch('summarizer.audio.speak', side_effect=__import__('requests').ConnectionError):
             self.assertIsNone(digest.listen_link(subscription, [DigestItem(arxiv_id='x', lang='en', title='t', blurb='b')],

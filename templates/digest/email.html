@@ -19,10 +19,10 @@
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
   <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
     <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
-    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }}</p>
+    <p style="margin:0 0 24px;color:#666;">{% if weekly %}{% trans 'Your weekly paper alert' %}{% else %}{% trans 'Your daily paper alert' %}{% endif %}{% if subscription.name %} &middot; {{ subscription.name }}{% endif %} &middot; {{ date|date:"j F Y" }}</p>
     <p style="margin:-16px 0 24px;color:#888;font-size:13px;">{{ categories_label }}{% if edition_url and total %} &middot; {% blocktrans count counter=total %}{{ count }} of {{ counter }} paper shown{% plural %}{{ count }} of {{ counter }} papers shown{% endblocktrans %} &middot; <a href="{{ edition_url }}" style="color:#4f46e5;">{% trans 'see them all, ranked' %}</a>{% endif %}</p>
     {% if listen_url %}
-    <p style="margin:0 0 16px;"><a href="{{ listen_url }}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">&#127911; {% trans 'Listen to this digest' %}</a></p>
+    <p style="margin:0 0 16px;"><a href="{{ listen_url }}" style="display:inline-block;background:#4f46e5;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;">&#127911; {% trans 'Listen to this paper alert' %}</a></p>
     {% endif %}
     {% if rising %}
     <div style="background:#f5f3ff;border-radius:8px;padding:16px;margin-bottom:16px;">
@@ -77,8 +77,8 @@
     {% endfor %}
     {% if teaser is not None %}
     <div style="background:#f3f8f4;border-radius:8px;padding:16px;margin-top:8px;">
-      {% if teaser.title %}<p style="margin:0 0 8px;">{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: <strong>{{ title }}</strong>. Premium digests open with the trends of the week in your fields.{% endblocktrans %}</p>
-      {% else %}<p style="margin:0 0 8px;">{% trans 'Premium digests rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}</p>{% endif %}
+      {% if teaser.title %}<p style="margin:0 0 8px;">{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: <strong>{{ title }}</strong>. Premium paper alerts open with the trends of the week in your fields.{% endblocktrans %}</p>
+      {% else %}<p style="margin:0 0 8px;">{% trans 'Premium paper alerts rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}</p>{% endif %}
       <a href="{{ premium_url }}" style="color:#34a853;font-weight:bold;">{% trans 'Discover Premium' %} &rarr;</a>
     </div>
     {% endif %}

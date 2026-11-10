@@ -94,7 +94,7 @@ def subscribe(request, topic, products):
         error = None
         if ('digest' in products and existing_digest is None and
                 len(subscriptions) >= digest.limits(access.has_tool(request.user, 'digest'))['digests']):
-            error = _('You already have a digest. Personalize it below to keep your existing preferences.')
+            error = _('You already have a paper alert. Personalize it below to keep your existing preferences.')
         if ('letters' in products and not (existing_letter and existing_letter.active) and
                 not access.has_tool(request.user, 'letters') and
                 LetterSubscription.objects.filter(user=request.user, active=True).count() >= letters.FREE_SUBSCRIPTIONS):

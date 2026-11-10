@@ -30,11 +30,11 @@
 
   {% if view == 'foryou' %}
     {% if not paid %}
-    <div class="upsell"><p>{% trans 'With Premium, this page gathers the rising topics of the fields of your digest, the closest to your research profile first, and those of your fields come in your Monday digest.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    <div class="upsell"><p>{% trans 'With Premium, this page gathers the rising topics of the fields of your paper alert, the closest to your research profile first, and those of your fields come in your Monday paper alert.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% elif not has_fields %}
-    <p class="notice">{% trans 'Choose your fields in a daily digest, and describe your research there: this page then shows the rising topics closest to it.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Set up my digest' %}</a></p>
+    <p class="notice">{% trans 'Choose your fields in a daily paper alert, and describe your research there: this page then shows the rising topics closest to it.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Set up my paper alert' %}</a></p>
     {% else %}
-      <p class="muted">{% if has_profile %}{% trans 'The rising topics of the last weeks in the fields of your digests, the closest to your research profile first; topics far from it are left out.' %}{% else %}{% trans 'The rising topics of the last weeks in the fields of your digests. Describe your research in your digest to see the closest first.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'My digest' %}</a>{% endif %}</p>
+      <p class="muted">{% if has_profile %}{% trans 'The rising topics of the last weeks in the fields of your paper alerts, the closest to your research profile first; topics far from it are left out.' %}{% else %}{% trans 'The rising topics of the last weeks in the fields of your paper alerts. Describe your research in your paper alert to see the closest first.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'My paper alert' %}</a>{% endif %}</p>
       {% if personal %}
       <div class="item-list">{% for topic in personal %}{% include 'summarizer/trend_card.html' %}{% endfor %}</div>
       {% else %}
@@ -85,7 +85,7 @@
     </p>
     {% endif %}
     {% if hidden %}
-    <div class="upsell" style="margin-top:20px"><p>{% blocktrans count n=hidden %}{{ n }} more rising topic this week.{% plural %}{{ n }} more rising topics this week.{% endblocktrans %} {% trans 'Premium shows them all, the rising topics of each field and category (cs.LG, astro-ph.EP, bioRxiv neuroscience...), those closest to your research, the history of any term compared with others, and puts those of your fields in your Monday digest.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    <div class="upsell" style="margin-top:20px"><p>{% blocktrans count n=hidden %}{{ n }} more rising topic this week.{% plural %}{{ n }} more rising topics this week.{% endblocktrans %} {% trans 'Premium shows them all, the rising topics of each field and category (cs.LG, astro-ph.EP, bioRxiv neuroscience...), those closest to your research, the history of any term compared with others, and puts those of your fields in your Monday paper alert.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% endif %}
   {% else %}
     <p class="notice">{% if ready_on %}{% blocktrans with since=since|date:"j F Y" ready=ready_on|date:"j F Y" %}We count the papers submitted every week since {{ since }}. A rise only means something against several weeks of history: the first topics come out around {{ ready }}.{% endblocktrans %}{% else %}{% trans 'The first rising topics come out once we have counted a few weeks of papers.' %}{% endif %}</p>

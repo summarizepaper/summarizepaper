@@ -145,7 +145,7 @@ def features():
             (_('Zotero kept in sync, without duplicates, with your checks and reviews'), 'integrations/', False, True, True),
         ]),
         (_('Follow your field'), [
-            (_('Daily digest'), 'digest/', _('One digest'), _('Up to 5, ranked for you, read aloud'),
+            (_('Daily paper alert'), 'digest/', _('One paper alert'), _('Up to 5, ranked for you, read aloud'),
              _('Up to 5, ranked for you, read aloud')),
             (_('Weekly letters'), 'letters/', _('On the web, by RSS and one by email'), _('All by email, read aloud'), _('All by email, read aloud')),
             (_('Rising topics'), 'trends/', _('The top ones'), _('All, field by field'), _('All, field by field')),

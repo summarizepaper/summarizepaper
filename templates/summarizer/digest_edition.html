@@ -3,7 +3,7 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% blocktrans with date=edition.sent|date:"j F Y" %}Your digest of {{ date }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with date=edition.sent|date:"j F Y" %}Your paper alert of {{ date }}{% endblocktrans %}{% endblock %}
 {% block extra_head_tags %}<meta name="robots" content="noindex" />
 <style>
   .edition .filters { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; margin: 0 0 16px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); }
@@ -31,16 +31,16 @@
 {% block content %}
 <div class="page edition">
   <header class="page-header">
-    <h1>{% blocktrans with date=edition.sent|date:"j F Y" %}Your digest of {{ date }}{% endblocktrans %}{% if subscription.name %} · {{ subscription.name }}{% endif %}</h1>
+    <h1>{% blocktrans with date=edition.sent|date:"j F Y" %}Your paper alert of {{ date }}{% endblocktrans %}{% if subscription.name %} · {{ subscription.name }}{% endif %}</h1>
     <p class="lead">{% for code, label in categories %}{{ label }} <small class="muted">({{ code }})</small>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
     {% if not expired %}
     <p class="muted">{% blocktrans count counter=total %}{{ shown }} papers were in the email, out of {{ counter }} paper of these announcements. Here they all are, ranked as the email was, with why each one is there.{% plural %}{{ shown }} papers were in the email, out of {{ counter }} papers of these announcements. Here they all are, ranked as the email was, with why each one is there.{% endblocktrans %}
-    {% if threshold %}{% blocktrans with t=threshold|floatformat:2 %}Your digest sends the papers of closeness {{ t }} or more.{% endblocktrans %}{% endif %}</p>
+    {% if threshold %}{% blocktrans with t=threshold|floatformat:2 %}Your paper alert sends the papers of closeness {{ t }} or more.{% endblocktrans %}{% endif %}</p>
     {% endif %}
     {% if LANGUAGE_CODE == 'fr' %}
-    <p><a href="/fr/guides/daily-digest-research-papers/#read-your-edition">Comment lire cette sélection ? Guide illustré du digest</a></p>
+    <p><a href="/fr/guides/daily-digest-research-papers/#read-your-edition">Comment lire cette sélection ? Guide illustré de la sélection</a></p>
     {% elif LANGUAGE_CODE == 'en' %}
-    <p><a href="/en/guides/daily-digest-research-papers/#read-your-edition">How to read this selection? Illustrated digest guide</a></p>
+    <p><a href="/en/guides/daily-digest-research-papers/#read-your-edition">How to read this selection? Illustrated paper alert guide</a></p>
     {% endif %}
   </header>
   {% if expired %}
@@ -76,7 +76,7 @@
   {% endfor %}
   </ol>
   {% endif %}
-  <p class="muted"><a href="/{{ LANGUAGE_CODE }}/digest/?d={{ subscription.pk }}">{% trans 'Your digest settings' %}</a></p>
+  <p class="muted"><a href="/{{ LANGUAGE_CODE }}/digest/?d={{ subscription.pk }}">{% trans 'Your paper alert settings' %}</a></p>
 </div>
 {% endblock %}
 {% block scripts %}

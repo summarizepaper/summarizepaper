@@ -8,7 +8,7 @@
   {% if updates_done %}
   <section class="notice" role="status" data-funnel-view="email_updates_done">
     <h2>{% trans 'Your subscriptions are active' %}</h2>
-    {% if 'digest' in updates_done.products %}<p>{% trans 'Your digest is ready. Check its categories and delivery schedule in your settings.' %}</p>{% endif %}
+    {% if 'digest' in updates_done.products %}<p>{% trans 'Your paper alert is ready. Check its categories and delivery schedule in your settings.' %}</p>{% endif %}
     {% if 'letters' in updates_done.products %}<p>{% trans 'Your weekly letter is selected. You can already read the available editions online.' %}</p><p><a href="{% url 'letter_topic' updates_done.topic %}">{% trans 'Read this week’s letter' %} →</a></p>{% endif %}
     <p>{% trans 'No duplicate subscription was created and your existing preferences were preserved.' %}</p>
   </section>
@@ -16,6 +16,6 @@
   <p>{% trans 'Free with an account. Choose a field, then confirm your subscriptions.' %}</p>
   {% include 'summarizer/email_updates_form.html' %}
   {% endif %}
-  <p class="home-email-links"><a href="{% url 'digest' %}{% if updates_done.digest_id %}?d={{ updates_done.digest_id }}{% endif %}">{% trans 'Personalize my digest' %}</a> · <a href="{% url 'letters' %}">{% trans 'Choose my weekly letters' %}</a></p>
+  <p class="home-email-links"><a href="{% url 'digest' %}{% if updates_done.digest_id %}?d={{ updates_done.digest_id }}{% endif %}">{% trans 'Personalize my paper alert' %}</a> · <a href="{% url 'letters' %}">{% trans 'Choose my weekly letters' %}</a></p>
 </main>
 {% endblock %}

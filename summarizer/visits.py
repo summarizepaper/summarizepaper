@@ -60,7 +60,7 @@ SECTIONS = (
     (('arxividpage', 'tree', 'bibtex', 'paper_figures', 'export_paper', 'neighbours'), 'Article'),
     (('search_results', 'search_journals'), 'Recherche'),
     (('saved_search', 'save_search'), 'Recherches enregistrées'),
-    (('digest',), 'Digest'),
+    (('digest',), 'Sélection du matin'),
     (('letter',), 'Lettres'),
     (('citation',), 'Alertes de citation'),
     (('scoops',), 'Veille anti-scoop'),

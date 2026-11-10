@@ -5,7 +5,7 @@
 
 {% block title %} {% trans 'Frequently Asked Questions - Our AI-Powered Summarization Service' %} {% endblock %}
 {% block extra_head_tags %}
-  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: which papers we summarize, how the summaries and the assistant work, collections, the daily digest and alerts, the tools for researchers, free limits, Premium and Premium+.' %}" />
+  <meta name="description" content="{% trans 'Answers to common questions about SummarizePaper: which papers we summarize, how the summaries and the assistant work, collections, the daily paper alert and other alerts, the tools for researchers, free limits, Premium and Premium+.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/faq/" />
 {% endblock %}
 
@@ -21,7 +21,7 @@
       <details>
         <summary>{% trans "What is this website about?" %}</summary>
         <div class="answer">
-          {% blocktrans %}SummarizePaper helps you read, follow and use research with AI. For any paper from arXiv, a journal or a preprint server, you get a detailed summary, the key points, a lay summary and a blog-style article, which you can have rewritten in 16 languages and for four reading levels. An AI assistant answers your questions about one or several papers with the sentences of the papers that support its answers. Collections keep your papers together and compare them; a daily digest and alerts follow your field; and <a href="/{{ LANGUAGE_CODE }}/tools/">tools for researchers</a> help you check a bibliography, review a question, prepare a journal club or a conference.{% endblocktrans %}
+          {% blocktrans %}SummarizePaper helps you read, follow and use research with AI. For any paper from arXiv, a journal or a preprint server, you get a detailed summary, the key points, a lay summary and a blog-style article, which you can have rewritten in 16 languages and for four reading levels. An AI assistant answers your questions about one or several papers with the sentences of the papers that support its answers. Collections keep your papers together and compare them; a daily paper alert and other alerts follow your field; and <a href="/{{ LANGUAGE_CODE }}/tools/">tools for researchers</a> help you check a bibliography, review a question, prepare a journal club or a conference.{% endblocktrans %}
         </div>
       </details>
       <details>
@@ -121,18 +121,18 @@
       <h2>{% trans "Following your field" %}</h2>
       <div class="accordion">
       <details id="digest">
-        <summary>{% trans "How does the daily digest work?" %}</summary>
+        <summary>{% trans "How does the daily paper alert work?" %}</summary>
         <div class="answer">
-          <p>{% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">digest page</a>, choose up to {{ max_categories }} arXiv categories, bioRxiv and medRxiv subject areas or journal subfields, which cover every journal and other preprint servers such as ChemRxiv, OSF or SSRN (or import them from your ORCID iD or arXiv author identifier), optional keywords, the kind of summaries (for researchers: contribution, method and main result; or 2 sentences in plain language), their language and the time you want to receive it. While you edit, the page shows what you would have received from the latest announcement, and you can send yourself a preview.{% endblocktrans %}</p>
-          <p>{% blocktrans %}Every weekday, you get up to {{ papers_per_email }} new papers, with a link to the full AI summary of each and to a web page where every paper of the day is ranked. No digest is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}</p>
-          <p>{% blocktrans with categories=premium_digest.categories papers=premium_digest.papers digests=premium_digest.digests %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the digest ranks papers by closeness to a description of your research or to reference papers (by arXiv ID or DOI), and can hold every paper close enough rather than a fixed number. It follows authors across all categories, adds a synthesis of the week in your fields, has the full summary of your 3 best papers ready before you open the email, and can be listened to as audio. It can also gather your scoop, citation, new version and publication alerts instead of separate emails. You can have up to {{ digests }} digests, with {{ categories }} categories and {{ papers }} papers each.{% endblocktrans %}</p>
+          <p>{% blocktrans %}On the <a href="/{{ LANGUAGE_CODE }}/digest/">paper alert page</a>, choose up to {{ max_categories }} arXiv categories, bioRxiv and medRxiv subject areas or journal subfields, which cover every journal and other preprint servers such as ChemRxiv, OSF or SSRN (or import them from your ORCID iD or arXiv author identifier), optional keywords, the kind of summaries (for researchers: contribution, method and main result; or 2 sentences in plain language), their language and the time you want to receive it. While you edit, the page shows what you would have received from the latest announcement, and you can send yourself a preview.{% endblocktrans %}</p>
+          <p>{% blocktrans %}Every weekday, you get up to {{ papers_per_email }} new papers, with a link to the full AI summary of each and to a web page where every paper of the day is ranked. No paper alert is sent on Saturday and Sunday in your time zone. You can also receive it once a week instead. Every email has a link to unsubscribe in one click.{% endblocktrans %}</p>
+          <p>{% blocktrans with categories=premium_digest.categories papers=premium_digest.papers digests=premium_digest.digests %}With <a href="/{{ LANGUAGE_CODE }}/premium/">Premium</a>, the paper alert ranks papers by closeness to a description of your research or to reference papers (by arXiv ID or DOI), and can hold every paper close enough rather than a fixed number. It follows authors across all categories, adds a synthesis of the week in your fields, has the full summary of your 3 best papers ready before you open the email, and can be listened to as audio. It can also gather your scoop, citation, new version and publication alerts instead of separate emails. You can have up to {{ digests }} paper alerts, with {{ categories }} categories and {{ papers }} papers each.{% endblocktrans %}</p>
         </div>
       </details>
       <details id="alerts">
         <summary>{% trans "Which alerts can I receive?" %}</summary>
         <div class="answer">
           <ul>
-            <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/saved-searches/">Saved searches</a>: every new paper that matches a search, by email, in the digest or by RSS (one watch with a free account, five with Premium).{% endblocktrans %}</li>
+            <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/saved-searches/">Saved searches</a>: every new paper that matches a search, by email, in the paper alert or by RSS (one watch with a free account, five with Premium).{% endblocktrans %}</li>
             <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/citations/">Citation alerts</a> (Premium): who cites your papers or the papers you follow and what they say about them, what changed when one gets a new version, and when one is published, retracted or corrected.{% endblocktrans %}</li>
             <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/scoops/">Scoop watch</a> (Premium): an email the day a new paper comes close to your project in progress.{% endblocktrans %}</li>
             <li>{% blocktrans %}<a href="/{{ LANGUAGE_CODE }}/letters/">Weekly letters</a>: what happens in other fields, an article per theme on the papers that matter beyond it, on the web and by RSS for everyone, one by email with a free account and all of them with Premium.{% endblocktrans %}</li>
@@ -152,7 +152,7 @@
       <details id="tools">
         <summary>{% trans "Which tools do you offer researchers?" %}</summary>
         <div class="answer">
-          <p>{% trans "Besides the summaries, the assistant, collections and the digest:" %}</p>
+          <p>{% trans "Besides the summaries, the assistant, collections and the paper alert:" %}</p>
           <ul>
             <li>{% trans "To follow your field: citation alerts, the scoop watch, saved searches, weekly letters, the rising topics of arXiv and a map of the groups that work on a topic." %}</li>
             <li>{% trans "To write and submit: a literature review from a research question, “What did I miss?” for the close papers your draft does not cite, a bibliography check, and exports to Zotero, Notion and Obsidian." %}</li>
@@ -195,7 +195,7 @@
       <details>
         <summary>{% trans "Is this website free to use?" %}</summary>
         <div class="answer">
-          {% blocktrans %}Yes. Reading summaries, asking questions, collections, the daily digest, saved searches and the weekly letters are free, within the limits below. An optional <a href="/{{ LANGUAGE_CODE }}/premium/">Premium subscription</a> gives you our most capable model, higher limits and the tools that follow your field and check your work; Premium+ adds the tools that read the most for you.{% endblocktrans %}
+          {% blocktrans %}Yes. Reading summaries, asking questions, collections, the daily paper alert, saved searches and the weekly letters are free, within the limits below. An optional <a href="/{{ LANGUAGE_CODE }}/premium/">Premium subscription</a> gives you our most capable model, higher limits and the tools that follow your field and check your work; Premium+ adds the tools that read the most for you.{% endblocktrans %}
         </div>
       </details>
       <details>
@@ -208,7 +208,7 @@
       <details>
         <summary>{% trans "What does Premium include and how do I cancel?" %}</summary>
         <div class="answer">
-          {% blocktrans %}Premium gives you our most capable AI model for summaries and answers, no daily summary limit, {{ chat_paid }} questions per day to the assistant, unlimited rewrites, larger collections with their comparison tables and open questions, a smarter digest, citation and version alerts, the scoop watch, “Who works on it?”, “What did I miss?” and the bibliography check. It is billed monthly or yearly through Stripe; we never see your card details. You can cancel in one click with the "Manage my subscription" button on the <a href="/{{ LANGUAGE_CODE }}/premium/">Premium page</a>: Premium then stays active until the end of the period you paid for.{% endblocktrans %}
+          {% blocktrans %}Premium gives you our most capable AI model for summaries and answers, no daily summary limit, {{ chat_paid }} questions per day to the assistant, unlimited rewrites, larger collections with their comparison tables and open questions, a smarter paper alert, citation and version alerts, the scoop watch, “Who works on it?”, “What did I miss?” and the bibliography check. It is billed monthly or yearly through Stripe; we never see your card details. You can cancel in one click with the "Manage my subscription" button on the <a href="/{{ LANGUAGE_CODE }}/premium/">Premium page</a>: Premium then stays active until the end of the period you paid for.{% endblocktrans %}
         </div>
       </details>
       <details id="premium-plus">
@@ -220,7 +220,7 @@
       <details>
         <summary>{% trans "Do I need an account?" %}</summary>
         <div class="answer">
-          {% blocktrans %}No account is needed to read summaries or ask a few questions. A free account is needed for collections, the daily digest, saved searches, Premium and more questions per day. You can sign in with Google, or receive a login link by email: no password to remember.{% endblocktrans %}
+          {% blocktrans %}No account is needed to read summaries or ask a few questions. A free account is needed for collections, the daily paper alert, saved searches, Premium and more questions per day. You can sign in with Google, or receive a login link by email: no password to remember.{% endblocktrans %}
         </div>
       </details>
       </div>

@@ -461,7 +461,7 @@ class DigestTests(TestCase):
     def test_unsubscribe_link(self):
         sub = DigestSubscription.objects.create(user=self.user, categories='cs.LG')
         url = '/en/digest/unsubscribe/%s/' % digest.unsubscribe_token(sub)
-        self.assertContains(Client().get(url), 'Unsubscribe from the daily digest?')
+        self.assertContains(Client().get(url), 'Unsubscribe from the daily paper alert?')
         Client(enforce_csrf_checks=True).post(url)
         sub.refresh_from_db()
         self.assertFalse(sub.active)
@@ -469,7 +469,7 @@ class DigestTests(TestCase):
 
     def test_digest_page_saves_subscription(self):
         c = Client(); c.force_login(self.user)
-        self.assertContains(c.get('/en/digest/'), 'Start my digest')
+        self.assertContains(c.get('/en/digest/'), 'Start my paper alert')
         r = c.post('/en/digest/', {'categories': ['cs.LG', 'quant-ph'], 'other': 'math.AP', 'keywords': 'transformer ,  ', 'lang': 'fr',
                                    'send_hour': '18', 'timezone': 'America/New_York'})
         self.assertEqual(r.status_code, 302)
@@ -1989,7 +1989,7 @@ class DigestPageTests(TestCase):
         self.assertRedirects(r, '/en/digest/?d=%d&saved=1' % second.pk, fetch_redirect_response=False)
         page = self.client.get('/en/digest/?d=%d' % second.pk)
         self.assertContains(page, 'Thesis')
-        self.assertContains(page, 'Delete this digest')
+        self.assertContains(page, 'Delete this paper alert')
         self.client.post('/en/digest/', {'digest': str(second.pk), 'action': 'delete'})
         self.assertEqual(list(DigestSubscription.objects.all()), [first])
         other = User.objects.create_user('other', password='x')
@@ -2148,7 +2148,7 @@ class DigestBatchQualityTests(DigestPremiumTests):
             r = c.post('/en/digest/', {'digest': str(sub.pk), 'action': 'preview'})
             self.assertRedirects(r, '/en/digest/?d=%d&preview=again' % sub.pk, fetch_redirect_response=False)
         start.assert_called_once_with(sub.pk)
-        self.assertContains(c.get('/en/digest/?d=%d&preview=sent' % sub.pk), 'Your digest is on its way')
+        self.assertContains(c.get('/en/digest/?d=%d&preview=sent' % sub.pk), 'Your paper alert is on its way')
         self.assertContains(c.get('/en/digest/?d=%d' % sub.pk), 'Send me a preview now')
 
 

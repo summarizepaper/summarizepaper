@@ -3,7 +3,7 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% trans 'Your digest' %}{% endblock %}
+{% block title %}{% trans 'Your paper alert' %}{% endblock %}
 {% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
@@ -12,9 +12,9 @@
     <p>{% trans 'This link is invalid.' %}</p>
   {% elif done %}
     <h1>{% trans 'Thank you' %}</h1>
-    <p>{% if value == 1 %}{% trans 'Your next digests will put papers like this one first:' %}{% else %}{% trans 'Your next digests will show fewer papers like this one:' %}{% endif %}
+    <p>{% if value == 1 %}{% trans 'Your next paper alerts will put papers like this one first:' %}{% else %}{% trans 'Your next paper alerts will show fewer papers like this one:' %}{% endif %}
     {% if item %}<strong>{{ item.title }}</strong>{% endif %}</p>
-    <p><a href="/{{ LANGUAGE_CODE }}/digest/?d={{ subscription.pk }}">{% trans 'Your digest settings' %}</a></p>
+    <p><a href="/{{ LANGUAGE_CODE }}/digest/?d={{ subscription.pk }}">{% trans 'Your paper alert settings' %}</a></p>
   {% else %}
     <form method="post" id="feedback">
       <p>{% if item %}<strong>{{ item.title }}</strong>{% endif %}</p>

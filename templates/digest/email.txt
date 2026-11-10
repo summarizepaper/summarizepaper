@@ -1,7 +1,7 @@
-{% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly paper digest' %}{% else %}{% trans 'Your daily paper digest' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
+{% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly paper alert' %}{% else %}{% trans 'Your daily paper alert' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
 {{ categories_label }}{% if edition_url and total %} - {% blocktrans count counter=total %}{{ count }} of {{ counter }} paper shown{% plural %}{{ count }} of {{ counter }} papers shown{% endblocktrans %}: {{ edition_url }}{% endif %}
 
-{% if listen_url %}{% trans 'Listen to this digest' %}: {{ listen_url }}
+{% if listen_url %}{% trans 'Listen to this paper alert' %}: {{ listen_url }}
 
 {% endif %}{% if rising %}{% trans 'Rising in your fields this week' %}
 {% for topic in rising %}* {{ topic.title }} (x{{ topic.growth }}, {{ topic.archive }}). {{ topic.text }}
@@ -36,7 +36,7 @@
   {{ entry.url }}
 {% endfor %}{% trans 'Manage' %}: {{ section.manage_url }}
 
-{% endfor %}{% if teaser is not None %}{% if teaser.title %}{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: {{ title }}. Premium digests open with the trends of the week in your fields.{% endblocktrans %}{% else %}{% trans 'Premium digests rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}{% endif %}
+{% endfor %}{% if teaser is not None %}{% if teaser.title %}{% blocktrans with category=teaser.category title=teaser.title %}This week in {{ category }}: {{ title }}. Premium paper alerts open with the trends of the week in your fields.{% endblocktrans %}{% else %}{% trans 'Premium paper alerts rank papers by closeness to your research, follow the authors you choose and open with the trends of the week in your fields.' %}{% endif %}
 {% trans 'Discover Premium' %}: {{ premium_url }}
 
 {% endif %}--

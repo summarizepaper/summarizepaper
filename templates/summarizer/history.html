@@ -112,12 +112,12 @@
   <div class="activity-key-digest">
     {% if key_digest_allowed and key_digests %}
     <form method="post" action="{% url 'history_digest_references' %}">{% csrf_token %}
-      <p>{% blocktrans count n=key_count %}Rank the papers of your digest by closeness to your latest key paper.{% plural %}Rank the papers of your digest by closeness to your {{ n }} latest key papers.{% endblocktrans %}</p>
-      {% if key_digests|length > 1 %}<select name="digest" aria-label="{% trans 'Digest' %}">{% for d in key_digests %}<option value="{{ d.pk }}">{{ d.name|default:d.categories|truncatechars:60 }}</option>{% endfor %}</select>{% else %}<input type="hidden" name="digest" value="{{ key_digests.0.pk }}">{% endif %}
-      <button type="submit">{% trans 'Use them as the reference papers of my digest' %}</button>
+      <p>{% blocktrans count n=key_count %}Rank the papers of your paper alert by closeness to your latest key paper.{% plural %}Rank the papers of your paper alert by closeness to your {{ n }} latest key papers.{% endblocktrans %}</p>
+      {% if key_digests|length > 1 %}<select name="digest" aria-label="{% trans 'Paper alert' %}">{% for d in key_digests %}<option value="{{ d.pk }}">{{ d.name|default:d.categories|truncatechars:60 }}</option>{% endfor %}</select>{% else %}<input type="hidden" name="digest" value="{{ key_digests.0.pk }}">{% endif %}
+      <button type="submit">{% trans 'Use them as the reference papers of my paper alert' %}</button>
     </form>
-    {% elif key_digest_allowed %}<p>{% trans 'Your key papers can rank the papers of a daily digest by closeness to them.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Create a digest' %} →</a></p>
-    {% else %}<p>{% trans 'With Premium, your key papers can rank the papers of your daily digest by closeness to them.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>{% endif %}
+    {% elif key_digest_allowed %}<p>{% trans 'Your key papers can rank the papers of a daily paper alert by closeness to them.' %} <a href="/{{ LANGUAGE_CODE }}/digest/">{% trans 'Create a paper alert' %} →</a></p>
+    {% else %}<p>{% trans 'With Premium, your key papers can rank the papers of your daily paper alert by closeness to them.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'See Premium' %}</a></p>{% endif %}
   </div>
   {% endif %}
   {% elif tab == 'results' %}

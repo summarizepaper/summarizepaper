@@ -10,14 +10,14 @@ _GROUPS = [
         ('collections/', 'layer-group', _('Collections'), False, _('Keep papers together, chat with a whole collection, and with Premium compare them in a table and find their open questions.')),
     ]),
     (_('Follow your field'), [
-        ('digest/', 'envelope', _('Daily digest'), False, _('The new arXiv, bioRxiv, medRxiv and journal papers of your fields, ranked for you, every morning.')),
+        ('digest/', 'envelope', _('Daily paper alert'), False, _('The new arXiv, bioRxiv, medRxiv and journal papers of your fields, ranked for you, every morning.')),
         ('scoops/', 'user-secret', _('Scoop watch'), True, _('Describe your project in progress: we email you the day a new paper comes close to it.')),
         ('citations/', 'quote-right', _('Citation alerts'), True, _('Who cites your papers and what they do with them, with the citing sentence and self-citations apart, and what changed when they get a new version.')),
         ('students/', 'graduation-cap', _('Find a research placement'), 'plus', _('Who signs recent papers on your topic and how, their team and acknowledged funding, readings, a first email, and your applications followed with reminders.')),
         ('teams/', 'users', _('Who works on it?'), True, _('The people and institutions who sign the recent papers on your topic, how they sign them and with which approaches; referees without your co-authors, and the new names every month.')),
         ('trends/', 'chart-line', _('Rising topics'), False, _('The topics rising on arXiv, bioRxiv and medRxiv each week, field by field, from several teams, with their history; and whether your own topic is rising.')),
         ('letters/', 'feather-alt', _('Weekly letters'), False, _('What happens next door: each week, an article per field on the papers that matter beyond it, each number checked against the abstracts; on the web, by RSS, one by email for free.')),
-        ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search: every new arXiv, bioRxiv, medRxiv and journal paper that matches it, ranked, by email, in your digest or by RSS, kept on its page. One watch free, five with Premium.')),
+        ('saved-searches/', 'bookmark', _('Saved searches'), False, _('Save a search: every new arXiv, bioRxiv, medRxiv and journal paper that matches it, ranked, by email, in your paper alert or by RSS, kept on its page. One watch free, five with Premium.')),
     ]),
     (_('Write and submit'), [
         ('press-kit/', 'newspaper', _('Press kit'), 'plus', _('Talk about a paper in public without overstating it: a draft release and the questions journalists will ask for its authors, strengths and weaknesses for a researcher asked to comment, reporting angles and questions for the authors for a journalist, every quote checked against the paper.')),

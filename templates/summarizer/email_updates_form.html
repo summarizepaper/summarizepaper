@@ -9,7 +9,7 @@
   </select>
   <fieldset>
     <legend>{% trans '2. Choose what lands in your inbox' %}</legend>
-    <label class="home-email-choice"><input type="checkbox" name="products" value="digest"{% if 'digest' in update_products %} checked{% endif %}><span><strong>{% trans 'Daily digest' %}</strong><small>{% trans 'New papers with short summaries, every weekday.' %}</small></span></label>
+    <label class="home-email-choice"><input type="checkbox" name="products" value="digest"{% if 'digest' in update_products %} checked{% endif %}><span><strong>{% trans 'Daily paper alert' %}</strong><small>{% trans 'New papers with short summaries, every weekday.' %}</small></span></label>
     <label class="home-email-choice"><input type="checkbox" name="products" value="letters"{% if 'letters' in update_products %} checked{% endif %}><span><strong>{% trans 'Weekly letter' %}</strong><small>{% trans 'Six papers put into perspective, once a week.' %}</small></span></label>
   </fieldset>
   <button type="submit" class="btn btn-lg">{% if request.user.is_authenticated %}{% trans 'Receive my research updates' %}{% else %}{% trans 'Continue with a free account' %}{% endif %} <span aria-hidden="true">→</span></button>

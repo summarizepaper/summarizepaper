@@ -31,7 +31,7 @@
       <li>{% trans 'To find collaborators, the competing teams, or referees to suggest to a journal.' %}</li>
       <li>{% trans 'Exports for spreadsheets and reference managers, papers saved in a collection, competing teams followed in your scoop watch.' %}</li>
       <li>{% trans 'Follow a map: every month, the new papers on the topic and the new names.' %}</li>
-      <li>{% trans 'You can start from a project of your scoop watch or the research profile of your digest.' %}</li>
+      <li>{% trans 'You can start from a project of your scoop watch or the research profile of your paper alert.' %}</li>
     </ul>
     {% if anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
@@ -49,7 +49,7 @@
       <p><label>{% trans 'or a project of your scoop watch' %}<br><select name="project"><option value="">—</option>{% for p in projects %}<option value="{{ p.pk }}">{{ p.title }}</option>{% endfor %}</select></label></p>
       {% endif %}
       {% if profile %}
-      <p><label><input type="checkbox" name="use_profile" value="1"> {% trans 'or the research profile of my digest' %}</label><br><small class="muted">{{ profile|truncatechars:160 }}</small></p>
+      <p><label><input type="checkbox" name="use_profile" value="1"> {% trans 'or the research profile of my paper alert' %}</label><br><small class="muted">{{ profile|truncatechars:160 }}</small></p>
       {% endif %}
       <p><label>{% trans 'What for?' %}<br><select name="mode">{% for value, label in modes %}<option value="{{ value }}"{% if value == mode %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></p>
       <p><label>{% trans 'Papers of the last' %} <select name="years">{% for y in year_choices %}<option value="{{ y }}">{% blocktrans count n=y %}{{ n }} year{% plural %}{{ n }} years{% endblocktrans %}</option>{% endfor %}</select></label></p>

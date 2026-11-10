@@ -22,7 +22,7 @@
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'The program is read with the day, time, room, presenter and abstract of each talk: whole from an Indico event or a calendar feed (.ics), by an AI from any other page, PDF or text.' %}</li>
-      <li>{% trans 'Its talks are ranked by closeness to your research: a few sentences, the research profile of your digest, a project of your scoop watch, or the papers of a collection. Your own talks are set apart.' %}</li>
+      <li>{% trans 'Its talks are ranked by closeness to your research: a few sentences, the research profile of your paper alert, a project of your scoop watch, or the papers of a collection. Your own talks are set apart.' %}</li>
       <li>{% trans 'For the closest ones, the AI says why they matter to you and how much, and suggests a question to ask. A talk that overlaps a project of your scoop watch is flagged.' %}</li>
       <li>{% trans 'You get your program day by day with its clashes, to add to your calendar, mark and annotate; the preprints of the talks; and the people to meet, those who cite your papers first.' %}</li>
       <li>{% trans 'Share it with your team to see who goes where; after the conference, put the preprints in a collection, export your notes and draft a first email to the people you met.' %}</li>
@@ -51,7 +51,7 @@
       </details>
       <h2 class="conf-form-step">2. {% trans 'Your research' %}</h2>
       {% if digests|length > 1 %}
-      <p><label>{% trans 'Start from the profile of a digest' %}<br><select data-digest-profile>{% for pk, profile in digests %}<option value="{{ pk }}" data-profile="{{ profile }}">{{ profile|truncatechars:70 }}</option>{% endfor %}</select></label></p>
+      <p><label>{% trans 'Start from the profile of a paper alert' %}<br><select data-digest-profile>{% for pk, profile in digests %}<option value="{{ pk }}" data-profile="{{ profile }}">{{ profile|truncatechars:70 }}</option>{% endfor %}</select></label></p>
       {% endif %}
       <p><label>{% trans 'In a few sentences; separate your topics by a blank line, each one is looked for apart' %}<br><textarea name="interests" style="min-height:110px" data-interests>{{ interests }}</textarea></label></p>
       {% if projects %}

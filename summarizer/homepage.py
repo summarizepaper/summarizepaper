@@ -17,7 +17,7 @@ from .models import SummaryPaper
 FREE_TOOLS = [
     ('paper', '#arxiv-id', 'file-alt', _('Summaries'), _('Key ideas, results and limits of any paper, in 16 languages.'), False, _('Summarize a paper')),
     ('chat', 'chat', 'comments', _('Chat with papers'), _('Ask a question to one paper or several, answered from the text.'), False, _('Ask a question')),
-    ('digest', '#email-updates', 'envelope', _('Daily digest'), _('New papers in your fields every morning, with short summaries.'), True, _('Set up my free digest')),
+    ('digest', '#email-updates', 'envelope', _('Daily paper alert'), _('New papers in your fields every morning, with short summaries.'), True, _('Set up my free paper alert')),
     ('letters', 'letters', 'feather-alt', _('Weekly letters'), _('Each week, the papers that matter in your field, put into perspective.'), False, _('Read this week’s letters')),
     ('trends', 'trends', 'chart-line', _('Rising topics'), _('The topics rising on arXiv, bioRxiv and medRxiv, field by field.'), False, _('See rising topics')),
     ('saved_searches', 'saved_searches', 'bookmark', _('Saved searches'), _('Save a search and get its new papers by email or RSS.'), True, _('Save a search')),

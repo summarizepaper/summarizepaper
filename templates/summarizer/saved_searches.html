@@ -7,7 +7,7 @@
 {% if search_saved_event %}<span hidden data-funnel-view="saved_search_created"></span>{% endif %}
 {% if watch_enabled_event %}<span hidden data-funnel-view="search_watch_enabled"></span>{% endif %}
 {% for message in messages %}<p class="notice" role="status">{{ message }}</p>{% endfor %}
-<p>{% trans 'Reopen a search with its filters, and follow its new papers by email, in your digest, on its page or by RSS.' %}</p>
+<p>{% trans 'Reopen a search with its filters, and follow its new papers by email, in your paper alert, on its page or by RSS.' %}</p>
 <p class="search-filter-note">{% blocktrans count count=watch_limit %}Up to 50 saved searches and {{ count }} active watch with your plan.{% plural %}Up to 50 saved searches and {{ count }} active watches with your plan.{% endblocktrans %} <a href="{% url 'premium' %}">Premium</a></p>
 <p class="search-filter-note">{% trans 'A watch reads every paper announced each day on arXiv, bioRxiv and medRxiv, and keeps those whose title or abstract has all the words of the search; journal papers are read from OpenAlex. What exists when a watch starts is recorded, never sent.' %}</p>
 {% include 'summarizer/delete_notice.html' %}

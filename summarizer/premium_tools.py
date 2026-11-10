@@ -17,7 +17,7 @@ TOOL_CHOICES = (
     ('zotero', _('Zotero integration')),
     ('changes', _('Version alerts')),
     ('citations', _('Citation alerts')),
-    ('digest', _('Daily Digest')),
+    ('digest', _('Daily paper alert')),
     ('letters', _('Weekly letters')),
     ('trends', _('Rising topics')),
     ('saved_searches', _('Saved search watches')),

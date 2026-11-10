@@ -484,7 +484,7 @@ def watches(user):
     """What the user keeps an eye on, tool by tool: [{name, count, detail, url}], the tools they use first."""
     lang = get_language()
     rows = [
-        (_('Daily digest'), DigestSubscription.objects.filter(user=user).count(), 'digest/'),
+        (_('Daily paper alert'), DigestSubscription.objects.filter(user=user).count(), 'digest/'),
         (_('Saved searches'), SavedSearch.objects.filter(user=user).count(), 'saved-searches/'),
         (_('Collections'), Collection.objects.filter(user=user).count(), 'collections/'),
         (_('Followed papers'), FollowedPaper.objects.filter(user=user).count(), 'citations/'),

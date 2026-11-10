@@ -130,7 +130,7 @@ def ensure(items, lang, budget):
         budget[0] -= 1
         if item is None:
             with translation.override(lang):
-                text = _('Here are the new papers of your SummarizePaper digest.')
+                text = _('Here are the new papers of your paper alert from SummarizePaper.')
         else:
             text = clip_text(item)
         try:

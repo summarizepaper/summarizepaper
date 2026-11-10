@@ -78,7 +78,7 @@ def record(body, name=None, user_id=None):
 TASK_LABELS = {
     'summary': 'Résumés', 'assistant': 'Assistant', 'chat': 'Chat multi-articles',
     'presskit': 'Kit presse', 'journal_club': 'Journal club', 'slides': 'Diapositives',
-    'digest': 'Digest quotidien', 'audio': 'Synthèse vocale', 'trends': 'Sujets qui montent',
+    'digest': 'Sélection du matin', 'audio': 'Synthèse vocale', 'trends': 'Sujets qui montent',
     'letters': 'Lettres hebdomadaires', 'scoops': 'Veille anti-scoop', 'students': 'Stages de recherche',
     'teams': 'Qui travaille dessus ?', 'refcheck': 'Vérification bibliographique',
     'reading': 'Niveaux de lecture', 'scoop_alerts': 'Alertes anti-scoop',

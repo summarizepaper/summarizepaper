@@ -268,7 +268,7 @@ def feed(day, kind=None, members_only=False, staff=False):
             add('vote', v.created_at, '%s %s' % ('👍' if v.vote > 0 else '👎', v.paper.arxiv_id), _paper(v.paper.arxiv_id), v.user)
     if wanted('follow'):
         for d in rows(DigestSubscription).select_related('user'):
-            add('follow', d.created, 'Digest : %s' % (d.name or d.categories[:80]), '', d.user)
+            add('follow', d.created, 'Sélection du matin : %s' % (d.name or d.categories[:80]), '', d.user)
         for l in rows(LetterSubscription).select_related('user'):
             add('follow', l.created, 'Lettre : %s' % l.topic, '', l.user)
         for s in rows(SavedSearch).select_related('user'):

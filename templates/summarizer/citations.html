@@ -103,7 +103,7 @@
         <p><label>{% trans 'Send me the new citations' %}
           <select name="every">{% for d in every_choices %}<option value="{{ d }}"{% if pref.every == d %} selected{% endif %}>{% if d == 1 %}{% trans 'every day' %}{% elif d == 7 %}{% trans 'every week' %}{% else %}{% trans 'every month' %}{% endif %}</option>{% endfor %}</select></label></p>
         <p><label><input type="checkbox" name="urgent" value="1"{% if pref.urgent %} checked{% endif %}> {% trans 'Email me at once when a new paper clearly questions a paper I follow' %}</label></p>
-        {% if bundled %}<p class="muted"><small>{% trans 'Your digest carries your citation alerts: they come with it, whatever the rhythm chosen here. Urgent alerts are still sent at once.' %}</small></p>{% endif %}
+        {% if bundled %}<p class="muted"><small>{% trans 'Your paper alert carries your citation alerts: they come with it, whatever the rhythm chosen here. Urgent alerts are still sent at once.' %}</small></p>{% endif %}
         <p><button class="btn btn-sm" type="submit">{% trans 'Save' %}</button></p>
       </form>
     </section>

@@ -8,7 +8,7 @@ One click activates your account and logs you in (the link works for 30 days):
 The site has changed a lot since then:
 - Summaries written from the full text of arXiv papers (key points, lay summary, blog-style article), in English and French
 - An AI assistant that answers your questions about a paper, or about several papers at once
-- A daily email digest of new arXiv papers in the categories you follow
+- A daily paper alert of new arXiv papers in the categories you follow
 - Related papers, BibTeX export and PDF export of summaries
 
 You can also log in with Google, or ask for a login link by email, so no password is needed.

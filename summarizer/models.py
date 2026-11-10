@@ -668,11 +668,11 @@ class SiteSettings(models.Model):
     chat_user_per_day = models.PositiveIntegerField('questions par jour (compte gratuit)', default=100)
     chat_paid_per_day = models.PositiveIntegerField('questions par jour (Premium)', default=500)
     model_free = models.CharField('modèle IA gratuit', max_length=100, default='gpt-6-luna',
-        help_text='Résumés, assistant et digest des comptes gratuits. Identifiant exact de l’API OpenAI.')
+        help_text='Résumés, assistant et sélection des comptes gratuits. Identifiant exact de l’API OpenAI.')
     model_paid = models.CharField('modèle IA Premium', max_length=100, default='gpt-6.1-sol',
         help_text='Résumés et assistant des comptes Premium. Identifiant exact de l’API OpenAI.')
     model_tts = models.CharField('modèle de synthèse vocale', max_length=100, default='gpt-4o-mini-tts',
-        help_text='Digest audio Premium. Identifiant exact de l’API OpenAI (audio/speech).')
+        help_text='Sélection du matin audio Premium. Identifiant exact de l’API OpenAI (audio/speech).')
     tts_voice = models.CharField('voix', max_length=40, default='alloy')
     free_readings_per_day = models.PositiveIntegerField('niveaux de lecture par jour (gratuit)', default=3,
         help_text='Nouvelles versions « expliqué simplement / traduit » par jour sans Premium. Premium : illimité.')
