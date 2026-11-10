@@ -8,6 +8,18 @@
 <h2 id="live-title"{% if not waiting.title %} hidden{% endif %}>{{ waiting.title }}</h2>
 <p>{{ arxiv_id|paper_ref }}{% if waiting.authors %} · {{ waiting.authors }}{% endif %}</p>
 {% if not close %}<p class="muted">{% trans 'The summary is usually ready in 1 to 2 minutes. This page updates by itself.' %}</p>{% endif %}
+{% if not close and not request.user.is_authenticated %}
+<aside class="signup-offer" aria-label="{% trans 'Free account' %}">
+  <div>
+    <p class="signup-offer-title">{% if LANGUAGE_CODE == 'fr' %}Avec un compte gratuit, vos résumés passent en priorité{% else %}With a free account, your summaries go first{% endif %}</p>
+    <p>{% if LANGUAGE_CODE == 'fr' %}Quand le site est chargé, les résumés demandés avec un compte passent avant les autres. Votre recherche continue aussi dans les revues au-delà de 30 recherches par heure.{% else %}When the site is busy, summaries asked for with an account go before the others. Your searches also keep reading the journals past 30 searches an hour.{% endif %}</p>
+  </div>
+  <div class="signup-offer-actions">
+    {% include 'accounts/_google_button.html' with next=request.path inline=True funnel='paper_signup_queue_google' %}
+    <a href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" {% if google_login %}data-funnel="paper_signup_queue">{% trans 'Or with an email address' %}{% else %}class="btn btn-sm" data-funnel="paper_signup_queue">{% trans 'Create a free account' %}{% endif %}</a>
+  </div>
+</aside>
+{% endif %}
 {% if not close %}{% include 'summarizer/source_scope.html' %}{% endif %}
 <p class="live-status" id="live-status" role="status">{% if LANGUAGE_CODE == 'fr' %}Préparation… Les sections apparaissent ci-dessous dès qu’elles sont prêtes.{% else %}Preparing… Sections appear below as soon as they are ready.{% endif %}</p>
 <progress id="live-progress" max="100" value="1" aria-label="{% trans 'Progress' %}"></progress>

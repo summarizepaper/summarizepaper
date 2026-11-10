@@ -20,7 +20,7 @@ def remember(group, field, value):
 def snapshot(arxiv_id, lang):
     group = utils.run_group(arxiv_id, lang)
     data = dict(cache.get(cache_key(group)) or {})
-    running = bool(cache.get(group) or cache.get(group + '-close'))
+    running = bool(cache.get(group) or cache.get(group + '-close') or cache.get(group + '-queued'))
     progress = data.get('progress', {})
     if progress.get('progress') == 0:
         status = 'failed'

@@ -56,6 +56,63 @@ class SynthesisTests(TestCase):
         self.assertTrue(cache.get(self.group))
         consumer.channel_layer.group_discard.assert_awaited_once()
 
+    def test_summary_queue_lets_signed_in_readers_pass_waiting_visitors(self):
+        import asyncio
+        from .consumers import SummaryQueue
+
+        async def run():
+            queue, order = SummaryQueue(1), []
+            await queue.enter(False)
+
+            async def wait(name, signed_in):
+                await queue.enter(signed_in)
+                order.append(name)
+                queue.leave()
+            visitors = [asyncio.create_task(wait(n, False)) for n in ('visitor 1', 'visitor 2')]
+            await asyncio.sleep(0)
+            self.assertEqual(queue.ahead(True), 1)  # the summary being written
+            self.assertEqual(queue.ahead(False), 3)
+            reader = asyncio.create_task(wait('reader', True))
+            await asyncio.sleep(0)
+            queue.leave()
+            await asyncio.gather(reader, *visitors)
+            self.assertEqual(order, ['reader', 'visitor 1', 'visitor 2'])
+            self.assertEqual(queue.running, 0)
+        async_to_sync(run)()
+
+    def test_queued_summary_shows_the_place_in_line_then_runs(self):
+        import asyncio
+        from . import consumers
+        consumer = consumers.HeadlessSummary(self.paper.arxiv_id, 'fr')
+        consumer.channel_layer = mock.Mock(group_send=mock.AsyncMock())
+        consumer.user = mock.Mock(is_authenticated=False)
+        queue = consumers.SummaryQueue(1)
+
+        async def run():
+            await queue.enter(True)
+            with mock.patch.object(consumers, 'summary_queue', queue), \
+                    mock.patch.object(consumers.HeadlessSummary, 'sendmessages', mock.AsyncMock()) as write:
+                waiting = asyncio.create_task(consumer.queued_summary(self.paper.arxiv_id, 'fr', {}, False))
+                await asyncio.sleep(0)
+                self.assertEqual(synthesis.snapshot(self.paper.arxiv_id, 'fr')['status'], 'running')
+                write.assert_not_awaited()
+                queue.leave()
+                await waiting
+                write.assert_awaited_once()
+            self.assertEqual(queue.running, 0)
+        async_to_sync(run)()
+        progress = consumer.channel_layer.group_send.await_args_list[0].args[1]['message']
+        self.assertEqual(progress['queued'], 1)
+        self.assertIn('compte gratuit passent en priorité', progress['loading_message'])
+        self.assertIsNone(cache.get(self.group + '-queued'))
+
+    def test_running_page_offers_an_account_to_visitors_only(self):
+        from django.contrib.auth.models import User
+        cache.set(self.group, True)
+        self.assertContains(self.client.get('/fr/paper/2401.04088v1/'), 'paper_signup_queue')
+        self.client.force_login(User.objects.create_user('reader', 'reader@example.com', 'pw'))
+        self.assertNotContains(self.client.get('/fr/paper/2401.04088v1/'), 'paper_signup_queue')
+
     def test_source_scope_distinguishes_permission_from_available_text(self):
         self.assertEqual(synthesis.license_scope(None), 'checking')
         self.assertEqual(synthesis.license_scope(self.paper), 'full_text_allowed')

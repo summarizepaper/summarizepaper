@@ -93,7 +93,7 @@
     if (state.progress) {
       var p = state.progress;
       progress.value = Math.max(0, Math.min(100, Number(p.progress) || 0));
-      status.textContent = (p.loading_message || '') + (p.progress ? ' · ' + p.progress + '%' : '');
+      status.textContent = (p.loading_message || '') + (p.progress && !p.queued ? ' · ' + p.progress + '%' : '');
       if (p.progress === 0) failed(p.loading_message);
       if (p.progress === 100 && !awaitingRetry) install();
     }

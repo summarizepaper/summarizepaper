@@ -3,6 +3,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer,WebsocketConsumer
 from channels.layers import get_channel_layer
 import json
 import asyncio
+import heapq
+import itertools
 import re
 from asgiref.sync import async_to_sync, sync_to_async
 import summarizer.utils as utils
@@ -21,6 +23,44 @@ from django.core.cache import cache
 import aiohttp
 
 KEEPALIVE_SECONDS = 20  # between two messages while a paper is read
+SUMMARY_SLOTS = 4  # summaries written at once by the web process (one dyno); the next ones wait their turn
+
+
+class SummaryQueue:
+    """At most `slots` summaries are written at once; the others wait, a signed-in reader's before a visitor's
+    without an account (what the running page tells visitors: accounts go first when the site is busy)."""
+
+    def __init__(self, slots):
+        self.slots, self.running, self.waiting, self.arrivals = slots, 0, [], itertools.count()
+
+    def ahead(self, signed_in):
+        """How many summaries a new one would wait for: the waiting ones it does not pass, and one if all slots are taken."""
+        rank = 0 if signed_in else 1
+        return sum(1 for waiting in self.waiting if waiting[0] <= rank) + (self.running >= self.slots)
+
+    async def enter(self, signed_in):
+        if self.running < self.slots and not self.waiting:
+            self.running += 1
+            return
+        turn = asyncio.get_running_loop().create_future()
+        heapq.heappush(self.waiting, (0 if signed_in else 1, next(self.arrivals), turn))
+        try:
+            await turn
+        except asyncio.CancelledError:
+            if turn.done() and not turn.cancelled():
+                self.leave()  # the slot was handed over just before the cancel
+            raise
+
+    def leave(self):
+        while self.waiting:
+            turn = heapq.heappop(self.waiting)[2]
+            if not turn.done():
+                turn.set_result(None)  # the slot goes to the next one in line
+                return
+        self.running -= 1
+
+
+summary_queue = SummaryQueue(SUMMARY_SLOTS)
 
 
 class EmbeddingConsumer(AsyncWebsocketConsumer):
@@ -685,6 +725,30 @@ class LoadingConsumer(AsyncWebsocketConsumer):
             cache.set(self.arxiv_group_name, False)
             await self.send_failure(l)
 
+    async def queued_summary(self, v, l, message, p):
+        """sendmessages once summary_queue has a slot; meanwhile the page shows the place in line."""
+        signed_in = bool(self.user and self.user.is_authenticated)
+        ahead = summary_queue.ahead(signed_in)
+        if ahead:
+            cache.set(self.arxiv_group_name + '-queued', True, 1200)
+            if l == 'fr':
+                text = 'Site chargé : %d résumé(s) avant le vôtre. ' % ahead + (
+                    'Votre compte vous fait passer avant les visiteurs sans compte.' if signed_in else
+                    'Les résumés demandés avec un compte gratuit passent en priorité.')
+            else:
+                text = 'The site is busy: %d summar%s before yours. ' % (ahead, 'y' if ahead == 1 else 'ies') + (
+                    'Your account puts you ahead of visitors without one.' if signed_in else
+                    'Summaries asked for with a free account go first.')
+            await self.send_message_now({'loading_message': text, 'progress': 1, 'queued': ahead})
+        try:
+            await summary_queue.enter(signed_in)
+        finally:
+            cache.delete(self.arxiv_group_name + '-queued')
+        try:
+            await self.sendmessages(v, l, message, p)
+        finally:
+            summary_queue.leave()
+
     async def send_failure(self, l):
         if l == 'fr':
             text = "Une erreur s'est produite pendant le traitement. Réessayez plus tard ou contactez-nous."
@@ -962,7 +1026,8 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         # Join room group
         await self.channel_layer.group_add(self.arxiv_group_name, self.channel_name)
         await self.accept()
-        if cache.get(self.arxiv_group_name) or cache.get(self.arxiv_group_name + '-close'):
+        if (cache.get(self.arxiv_group_name) or cache.get(self.arxiv_group_name + '-close')
+                or cache.get(self.arxiv_group_name + '-queued')):
             await self.send(text_data=json.dumps({'type': 'synthesis_snapshot',
                 'state': synthesis.snapshot(self.arxiv_id, self.language)}))
         print('conn')
@@ -1017,7 +1082,9 @@ class LoadingConsumer(AsyncWebsocketConsumer):
                 #if paid:
                 #    print('paiddddddd')
 
-                asyncio.create_task(self.sendmessages(v,l,message,paid))
+                if cache.get(self.arxiv_group_name + '-queued'):
+                    return  # already waiting for a slot: this page follows it
+                asyncio.create_task(self.queued_summary(v,l,message,paid))
             elif command == 'start_close_task':
                 if not await self.consume_run('close'):
                     return
