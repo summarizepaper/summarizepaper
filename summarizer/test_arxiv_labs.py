@@ -34,7 +34,8 @@ class ArxivLabsCardTests(TestCase):
         self.assertEqual(len(data['findings']), 4)
         self.assertEqual(data['findings'][0], {'text': 'A change of 5 percent.', 'kind': 'result'})  # no quotes
         self.assertEqual(data['limitations'], ['One sample.'])
-        self.assertEqual(data['url'], 'https://www.summarizepaper.com/en/paper/2401.12345v1/')
+        self.assertTrue(data['url'].startswith('https://www.summarizepaper.com/en/paper/2401.12345v1/?utm_source=arxiv-labs&labs='))
+        self.assertEqual(data['version'], 1)
 
     def test_newest_version_with_content_and_old_style_ids(self):
         for arxiv_id in ('hep-th--9901001v1', 'hep-th--9901001v2', 'hep-th--9901001v10'):
@@ -43,7 +44,8 @@ class ArxivLabsCardTests(TestCase):
         Generated.objects.create(kind='insight', key='hep-th--9901001v10', lang='fr', status='done', content=json.dumps(READING))
         response, data = self.get('hep-th/9901001')
         self.assertEqual(data['arxiv_id'], 'hep-th/9901001v2')
-        self.assertTrue(data['url'].endswith('/en/paper/hep-th--9901001v2/'))
+        self.assertIn('/en/paper/hep-th--9901001v2/?', data['url'])
+        self.assertEqual(data['version'], 2)
 
     def test_summary_opening_and_key_points_when_no_reading(self):
         paper = ArxivPaper.objects.create(arxiv_id='2401.00001v2')
@@ -59,12 +61,34 @@ class ArxivLabsCardTests(TestCase):
 
     def test_unknown_paper_gives_the_link_only(self):
         response, data = self.get('2402.99999v3')
-        self.assertEqual(data, {'available': False, 'arxiv_id': '2402.99999v3',
-                                'url': 'https://www.summarizepaper.com/en/paper/2402.99999v3/'})
+        self.assertEqual(sorted(data), ['arxiv_id', 'available', 'url'])
+        self.assertEqual((data['available'], data['arxiv_id']), (False, '2402.99999v3'))
+        self.assertIn('/en/paper/2402.99999v3/?', data['url'])
         response, data = self.get('2402.99999')
-        self.assertTrue(data['url'].endswith('/en/paper/2402.99999v1/'))
+        self.assertIn('/en/paper/2402.99999v1/?', data['url'])
 
     def test_not_an_arxiv_id(self):
         response = self.client.get('/api/arxiv-labs/not-a-paper', follow=True)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response['Access-Control-Allow-Origin'], '*')
+
+
+class ArxivLabsPassTests(TestCase):
+    """A reader coming from the card opens an unknown paper at once; others first get the link page."""
+    def test_the_pass_of_the_card_opens_that_paper_only_for_two_days(self):
+        import datetime
+        from unittest import mock
+        from urllib.parse import urlsplit
+        from . import loadshed
+        url = json.loads(Client().get('/api/arxiv-labs/2402.99999v1').content)['url']
+        link = urlsplit(url)
+        with mock.patch('summarizer.views.arxiv_metadata_or_none', return_value=None) as arxiv:
+            Client().get(link.path + '?' + link.query)
+            arxiv.assert_called()  # past the gate: the page asked arXiv
+        with mock.patch('summarizer.views.arxiv_metadata_or_none', return_value=None) as arxiv:
+            gated = Client().get('/en/paper/2402.99998v1/?' + link.query)  # another paper
+            arxiv.assert_not_called()
+            self.assertEqual(gated['X-Robots-Tag'], 'noindex')
+            old = loadshed.labs_token(link.path, datetime.date.today() - datetime.timedelta(days=3))
+            Client().get(link.path + '?labs=' + old)
+            arxiv.assert_not_called()

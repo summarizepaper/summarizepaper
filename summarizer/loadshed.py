@@ -110,10 +110,37 @@ class LoadShedder:
         await send({'type': 'http.response.body', 'body': BODY})
 
 
+def labs_token(path, day=None):
+    """The pass of a link given by the arXivLabs card (arxiv_labs.py) to one page, valid the day it is given and
+    the next: a reader coming from arXiv, who never has our cookie, opens that paper at once. A scraper could
+    only reuse it for that paper, and only after asking our card for it."""
+    import datetime
+    import hashlib
+    import hmac
+    from django.conf import settings
+    day = day or datetime.datetime.now(datetime.timezone.utc).date()
+    message = ('%s|%s' % (path, day.isoformat())).encode()
+    return hmac.new(settings.SECRET_KEY.encode(), message, hashlib.sha256).hexdigest()[:20]
+
+
+def labs_pass(request):
+    import datetime
+    import hmac
+    token = request.GET.get('labs', '')
+    if not token:
+        return False
+    today = datetime.datetime.now(datetime.timezone.utc).date()
+    return any(hmac.compare_digest(token, labs_token(request.path, today - datetime.timedelta(days=days)))
+               for days in (0, 1))
+
+
 def first_visit(request):
     """For a page that is costly to make, a short page that sets the visitor cookie and links to it, when the
-    request does not carry the cookie yet and comes from no account; None otherwise."""
+    request does not carry the cookie yet and comes from no account (nor from a link of the arXivLabs card);
+    None otherwise."""
     if request.method != 'GET' or COOKIE.decode() in request.COOKIES or request.user.is_authenticated:
+        return None
+    if labs_pass(request):
         return None
     from django.http import HttpResponse
     url = html.escape(request.get_full_path())

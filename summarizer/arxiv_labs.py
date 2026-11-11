@@ -7,13 +7,14 @@ and records nothing. It gives the essentials already written for the paper in En
 summary and its key points, else only the link to the paper's page, where a summary can be made.
 """
 import re
+from urllib.parse import urlencode
 
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils import translation
 from django.views.decorators.http import require_GET
 
-from . import digest, insight, keypoints, sources, unified_search
+from . import digest, insight, keypoints, loadshed, sources, unified_search
 from .models import ArxivPaper, Generated, SummaryPaper
 
 LANG = 'en'  # arXiv's pages are in English
@@ -66,8 +67,11 @@ def repeats(point, text):
 
 
 def page_url(arxiv_id):
+    """The paper's page, counted as a visit from arXivLabs (utm_source), with the pass that spares a reader
+    coming from arXiv the page asking new visitors for our cookie (loadshed.first_visit)."""
     with translation.override(LANG):
-        return SITE + reverse('arxividpage', kwargs={'arxiv_id': arxiv_id})
+        path = reverse('arxividpage', kwargs={'arxiv_id': arxiv_id})
+    return '%s%s?%s' % (SITE, path, urlencode({'utm_source': 'arxiv-labs', 'labs': loadshed.labs_token(path)}))
 
 
 def reading(arxiv_id):
@@ -103,7 +107,8 @@ def card(arxiv_id_candidates, fallback):
                 break
     if not found:
         return {'available': False, 'arxiv_id': fallback.replace('--', '/'), 'url': page_url(fallback)}
-    return dict(found, available=True, arxiv_id=arxiv_id.replace('--', '/'), url=page_url(arxiv_id))
+    return dict(found, available=True, arxiv_id=arxiv_id.replace('--', '/'), version=int(VERSION.search(arxiv_id)[1]),
+                url=page_url(arxiv_id))
 
 
 @require_GET
