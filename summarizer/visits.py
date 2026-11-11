@@ -9,13 +9,15 @@ Baidu in turn, a few seconds apart). So a page only counts once a person has mov
 at the first scroll, touch, key or mouse move, and the activity page only counts the visitors with such a page
 or signed in (activity.py). A visitor is a hash of the IP address and the browser with the day, so the address is not kept
 and a visit cannot be followed from one day to the next. The rows are deleted after VISIT_DAYS days (purge, from
-the hourly send_digest)."""
+the hourly send_digest), those of the visitors who never moved on a page nor signed in after ROBOT_DAYS: tens of
+thousands a day in November 2026, nearly all the home page or a paper page opened once from a new address."""
 import datetime
 import hashlib
 import logging
 from urllib.parse import urlsplit
 
 from django.conf import settings
+from django.db.models import Q
 from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -28,6 +30,7 @@ from .models import PageView
 logger = logging.getLogger(__name__)
 
 VISIT_DAYS = 60
+ROBOT_DAYS = 21  # the 14 days of the activity page's chart and the week before its first day (activity.SERIES_DAYS)
 # Robots that fake mouse moves too came "from" Google to the sign-in page (12 of the 17 confirmed visitors of
 # 4 November, 14:30): search engines never send anyone to the pages robots.txt keeps from them
 ENGINES = ('google.com', 'bing.com', 'yahoo.com', 'yandex.com', 'yandex.ru', 'baidu.com', 'duckduckgo.com', 'ecosia.org', 'qwant.com')
@@ -141,7 +144,11 @@ class PageViewMiddleware:
 
 def purge(now=None):
     now = now or timezone.now()
-    return PageView.objects.filter(created__lt=now - datetime.timedelta(days=VISIT_DAYS)).delete()[0]
+    old = PageView.objects.filter(created__lt=now - datetime.timedelta(days=VISIT_DAYS)).delete()[0]
+    people = PageView.objects.filter(Q(human=True) | Q(user__isnull=False)).values('visitor')
+    robots = PageView.objects.filter(created__lt=now - datetime.timedelta(days=ROBOT_DAYS), user__isnull=True) \
+        .exclude(visitor__in=people).delete()[0]
+    return old + robots
 
 
 @csrf_exempt

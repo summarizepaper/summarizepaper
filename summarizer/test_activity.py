@@ -136,6 +136,17 @@ class PageViewTests(TestCase):
         self.assertEqual(visits.purge(), 1)
         self.assertEqual(PageView.objects.count(), 1)
 
+    def test_pages_of_robots_are_deleted_sooner(self):
+        moved = PageView.objects.create(visitor='p' * 16, view='faq', human=True)
+        unmoved = PageView.objects.create(visitor='p' * 16, view='arxividpage')  # same person, another page
+        member = PageView.objects.create(visitor='m' * 16, view='faq', user=self.reader)
+        robot = PageView.objects.create(visitor='r' * 16, view='summarize')
+        PageView.objects.update(created=timezone.now() - datetime.timedelta(days=visits.ROBOT_DAYS + 1))
+        recent = PageView.objects.create(visitor='s' * 16, view='summarize')
+        self.assertEqual(visits.purge(), 1)
+        self.assertEqual(set(PageView.objects.values_list('pk', flat=True)), {moved.pk, unmoved.pk, member.pk, recent.pk})
+        self.assertFalse(PageView.objects.filter(pk=robot.pk).exists())
+
     def test_only_pages_a_person_moved_on_count(self):
         self.client.get('/fr/faq', follow=True, **self.BROWSER)
         PageView.objects.create(visitor='r' * 16, view='register', path='/fr/register/', referrer='yandex.com')

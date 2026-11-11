@@ -144,7 +144,7 @@ class ToolUse(models.Model):
 
 class PageView(models.Model):
     """A page of the site opened in a browser (visits.py), for the staff activity page: which pages and tools people
-    open, from where. Kept VISIT_DAYS days. `visitor` is a hash of the IP address and the browser that changes every
+    open, from where. Kept VISIT_DAYS days, ROBOT_DAYS for the robots. `visitor` is a hash of the IP address and the browser that changes every
     day, so a visit can be followed through the day but not from one day to the next, and the address is not kept."""
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
