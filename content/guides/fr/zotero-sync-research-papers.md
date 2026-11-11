@@ -23,7 +23,7 @@ sources:
 
 Vos références vivent dans Zotero, et vous lisez les articles ailleurs. **SummarizePaper écrit dans votre bibliothèque Zotero** : un article avec son résumé, une collection synchronisée dans les deux sens, les résultats de votre vérification de bibliographie et votre revue de littérature. Enregistrer un article ne demande aucun compte ; la connexion directe est Premium.
 
-Les captures montrent le côté SummarizePaper, avec la collection *Gaz dans les disques de débris* de nos autres guides : trois articles sur le gaz des disques de débris, chacun avec une note, des étiquettes et un statut de lecture.
+Les exemples utilisent la collection *Gaz dans les disques de débris* de nos autres guides : trois articles sur le gaz des disques de débris, chacun avec une note, des étiquettes et un statut de lecture, envoyés dans une vraie bibliothèque Zotero et montrés dans Zotero 10.
 
 ## 1. Enregistrer un article, gratuitement
 
@@ -47,7 +47,12 @@ Une fois connecté, choisissez la bibliothèque utilisée (la vôtre ou un group
 
 ## 3. Envoyer un article avec son résumé
 
-**Envoyer vers Zotero avec son résumé** crée l’élément, dans sa version publiée s’il y en a une, avec **une note qui contient le résumé IA et les points clés**. La note dit qu’elle a été écrite par un modèle, à partir de quelle version de l’article et quand ; votre propre note est une note à part. Un article déjà dans votre bibliothèque n’est pas dupliqué : il reçoit la collection, les étiquettes et les notes qui lui manquent. L’élément porte notre clé de citation, fixée pour **Better BibTeX**, si bien que vos `\cite` correspondent au `.bib` de nos exports.
+**Envoyer vers Zotero avec son résumé** crée l’élément, dans sa version publiée s’il y en a une, avec **une note qui contient le résumé IA et les points clés**. La note dit qu’elle a été écrite par un modèle, à partir de quelle version de l’article et quand ; votre propre note est une note à part. Un article déjà dans votre bibliothèque n’est pas dupliqué : il reçoit la collection, les étiquettes et les notes qui lui manquent. L’élément porte notre clé de citation, dans le champ **Clé de citation** de Zotero et fixée pour **Better BibTeX**, si bien que vos `\cite` correspondent au `.bib` de nos exports. Les formules du résumé sont affichées par l’éditeur de notes de Zotero.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/zotero/note-fr.jpg"><img src="/static/summarizer/img/guides/zotero/note-fr.jpg" alt="Zotero avec la note de résumé de Observing planetary gaps in the gas of debris disks ouverte : SummarizePaper, la ligne qui dit qu’elle a été écrite par un modèle d’IA à partir de arXiv:2411.14241v1, puis les points clés." width="1280" height="820" loading="lazy" /></a>
+<figcaption>La note de résumé dans Zotero : d’où elle vient, puis les points clés.</figcaption>
+</figure>
 
 ## 4. Synchroniser une collection, dans les deux sens
 
@@ -60,6 +65,20 @@ Dans une [collection](/fr/collections/), **Envoyer vers Zotero et synchroniser**
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/exports/collection-export-fr.jpg"><img src="/static/summarizer/img/guides/exports/collection-export-fr.jpg" alt="La collection Gaz dans les disques de débris avec ses exports : BibTeX, RIS, Ouvrir dans Overleaf, Obsidian (.zip), Markdown, Tableur ou Notion (CSV), et Envoyer vers Zotero et synchroniser (Premium)." width="1156" height="398" loading="lazy" /></a>
 <figcaption>« Envoyer vers Zotero et synchroniser », à côté des autres exports de la collection.</figcaption>
+</figure>
+
+Dans Zotero, la collection a le même nom et les mêmes articles, chacun avec ses deux notes, *SummarizePaper* et *Ma note* ; l’élément garde sa revue, son DOI et sa clé de citation :
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/zotero/library-fr.jpg"><img src="/static/summarizer/img/guides/zotero/library-fr.jpg" alt="Zotero 10 avec la collection Gaz dans les disques de débris : trois articles, chacun avec les notes Ma note et SummarizePaper, et le panneau Info de Observing planetary gaps in the gas of debris disks avec ses auteurs, la revue Astronomy & Astrophysics, le DOI et la clé de citation bergezcasalou2024observing ; les marqueurs de la collection en bas à gauche." width="1280" height="820" loading="lazy" /></a>
+<figcaption>La collection synchronisée dans Zotero : les articles, leurs notes, et l’élément avec sa clé de citation.</figcaption>
+</figure>
+
+Le statut de lecture devient un marqueur (*À lire*, *Lu*, *Article clé*) à côté de vos étiquettes : cliquez dessus dans le sélecteur de marqueurs de Zotero pour voir ce qui reste à lire.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/zotero/toread-fr.jpg"><img src="/static/summarizer/img/guides/zotero/toread-fr.jpg" alt="Zotero avec le marqueur À lire sélectionné : seul Observing planetary gaps in the gas of debris disks reste, avec sa note Ma note ouverte : Les lacunes creusées par les planètes devraient aussi se voir dans le gaz CO." width="1280" height="820" loading="lazy" /></a>
+<figcaption>Les articles à lire, avec la note écrite dans SummarizePaper.</figcaption>
 </figure>
 
 Dans l’autre sens, une collection Zotero s’ouvre ici avec **Depuis Zotero**, sous *Ajouter des articles* : vous pouvez alors discuter avec ses articles, les comparer dans un tableau, trouver les articles qui pourraient lui manquer ou écrire sa revue de littérature, et elle reste synchronisée.

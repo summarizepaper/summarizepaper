@@ -453,6 +453,7 @@ class ExportTests(ToolsTestCase):
         self.assertTrue(data['open'].startswith('zotero://select/library/items/'))
         item = fake.only_item()
         self.assertEqual((item['itemType'], item['archiveID'], item['creators'][0]['lastName']), ('preprint', 'arXiv:2101.00001', 'Lee'))
+        self.assertEqual(item['citationKey'], 'lee2021clouds')
         self.assertIn('Citation Key: lee2021clouds', item['extra'])
         note = fake.notes_of(item['key'])[0]
         self.assertIn('Long summary of the clouds.', note)

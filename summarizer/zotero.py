@@ -347,8 +347,9 @@ def item_for(meta, citekey=''):
         item['repository'] = (meta['journal'] or '').replace(' preprint', '').split(',')[0]
     else:
         item.update(repository='arXiv', archiveID='arXiv:%s' % ref)
-    if citekey:
-        extra.append('Citation Key: %s' % citekey)  # pinned for Better BibTeX: the key of our .bib files
+    if citekey:  # the key of our .bib files: Zotero's own field, and the line Better BibTeX before Zotero 7 pins
+        item['citationKey'] = citekey
+        extra.append('Citation Key: %s' % citekey)
     item['extra'] = '\n'.join(extra)
     return item
 
@@ -358,17 +359,23 @@ def note(body, marker):
     return {'html': body, 'marker': marker}
 
 
+def with_math(text):
+    """Escaped text whose LaTeX formulas Zotero's note editor displays: $$...$$ as a block, $...$ inline."""
+    text = re.sub(r'\$\$(.+?)\$\$', lambda m: '<pre class="math">$$%s$$</pre>' % m.group(1), escape(text), flags=re.S)
+    return re.sub(r'(?<![$\\])\$([^$\n]+?)\$(?!\$)', lambda m: '<span class="math">$%s$</span>' % m.group(1), text)
+
+
 def summary_note(meta, lang):
     row = exports.summary_of(meta['arxiv_id'], lang)
     if row is None:
         return None
     url = exports.page_url(meta, lang)
     with translation.override(lang):
-        points = ''.join('<li>%s</li>' % escape(p) for p in keypoints.stored_points(row.notes))
+        points = ''.join('<li>%s</li>' % with_math(p) for p in keypoints.stored_points(row.notes))
         body = '<h1>SummarizePaper</h1><p><em>%s</em></p>%s<h2>%s</h2><p>%s</p><p><a href="%s">%s</a></p>' % (
             escape(exports.provenance(meta['arxiv_id'], row)),
             '<h2>%s</h2><ul>%s</ul>' % (escape(_('Key points')), points) if points else '',
-            escape(_('Summary')), escape(row.summary.strip()).replace('\n', '<br>'), url, url)
+            escape(_('Summary')), with_math(row.summary.strip()).replace('\n', '<br>'), url, url)
     return note(body, url)
 
 

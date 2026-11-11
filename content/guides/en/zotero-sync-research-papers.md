@@ -23,7 +23,7 @@ sources:
 
 Your references live in Zotero, and you read papers elsewhere. **SummarizePaper writes into your Zotero library**: a paper with its summary, a collection kept in sync both ways, the findings of your bibliography check and your literature review. Saving a paper needs no account at all; the direct connection is Premium.
 
-The screenshots show the SummarizePaper side, with the collection *Gas in debris discs* used in our other guides: three papers on the gas of debris discs, each with a note, tags and a reading status.
+The examples use the collection *Gas in debris discs* of our other guides: three papers on the gas of debris discs, each with a note, tags and a reading status, sent to a real Zotero library and shown in Zotero 10.
 
 ## 1. Save a paper, free
 
@@ -47,7 +47,12 @@ Once connected, choose the library used (yours or a group you may write to) and 
 
 ## 3. Send a paper with its summary
 
-**Send to Zotero with its summary** creates the item, as its published version when there is one, with **a note holding the AI summary and the key points**. The note says it was written by a model, from which version of the paper and when; your own note is a note apart. A paper already in your library is not duplicated: it gets the collection, tags and notes it lacks. The item carries our citation key, pinned for **Better BibTeX**, so your `\cite` commands match the `.bib` of our exports.
+**Send to Zotero with its summary** creates the item, as its published version when there is one, with **a note holding the AI summary and the key points**. The note says it was written by a model, from which version of the paper and when; your own note is a note apart. A paper already in your library is not duplicated: it gets the collection, tags and notes it lacks. The item carries our citation key, in Zotero's **Citation Key** field and pinned for **Better BibTeX**, so your `\cite` commands match the `.bib` of our exports. Formulas in the summary are displayed by Zotero's note editor.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/zotero/note-en.jpg"><img src="/static/summarizer/img/guides/zotero/note-en.jpg" alt="Zotero with the summary note of Observing planetary gaps in the gas of debris disks open: SummarizePaper, the line saying it was written by an AI model from arXiv:2411.14241v1 on 2024-11-28, then the key points, with masses written as formulas." width="1280" height="820" loading="lazy" /></a>
+<figcaption>The summary note in Zotero: where it comes from, then the key points, formulas included.</figcaption>
+</figure>
 
 ## 4. Keep a collection in sync, both ways
 
@@ -60,6 +65,20 @@ In a [collection](/en/collections/), **Send to Zotero and keep in sync** creates
 <figure class="guide-screenshot">
 <a href="/static/summarizer/img/guides/exports/collection-export-en.jpg"><img src="/static/summarizer/img/guides/exports/collection-export-en.jpg" alt="The collection Gas in debris discs with its exports: BibTeX, RIS, Open in Overleaf, Obsidian (.zip), Markdown, Spreadsheet or Notion (CSV), and Send to Zotero and keep in sync (Premium)." width="1156" height="373" loading="lazy" /></a>
 <figcaption>"Send to Zotero and keep in sync", next to the other exports of the collection.</figcaption>
+</figure>
+
+In Zotero, the collection has the same name and the same papers, each with its two notes, *SummarizePaper* and *My note*; the item keeps its journal, DOI and citation key:
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/zotero/library-en.jpg"><img src="/static/summarizer/img/guides/zotero/library-en.jpg" alt="Zotero 10 with the collection Gas in debris discs: three papers, each with the notes My note and SummarizePaper, and the Info pane of Observing planetary gaps in the gas of debris disks with its authors, journal Astronomy & Astrophysics, DOI and citation key bergezcasalou2024observing; the tags of the collection at the bottom left." width="1280" height="820" loading="lazy" /></a>
+<figcaption>The synced collection in Zotero: the papers, their notes, and the item with its citation key.</figcaption>
+</figure>
+
+The reading status becomes a tag (*To read*, *Read*, *Key paper*) next to your own tags: click it in Zotero's tag selector to see what is left to read.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/zotero/toread-en.jpg"><img src="/static/summarizer/img/guides/zotero/toread-en.jpg" alt="Zotero with the tag To read selected: only Observing planetary gaps in the gas of debris disks remains, with its note My note open: Gaps carved by planets should show in the CO gas too." width="1280" height="820" loading="lazy" /></a>
+<figcaption>The papers to read, with the note written in SummarizePaper.</figcaption>
 </figure>
 
 The other way round, a Zotero collection opens here with **From Zotero**, under *Add papers*: you can then chat with its papers, compare them in a table, find the papers it may be missing or write its literature review, and it stays in sync.

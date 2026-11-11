@@ -330,6 +330,11 @@ class ZoteroTests(ToolsTestCase):
         self.assertIn('Plastic stays down.', note)
         self.assertIn('<blockquote>Plastic sinks &amp; stays.</blockquote>', note)
 
+    def test_formulas_are_marked_for_zotero_notes(self):
+        self.assertEqual(zotero.with_math(r'up to $10^{-1}\,M_\oplus$ & $$E=mc^2$$ for \$5'),
+                         r'up to <span class="math">$10^{-1}\,M_\oplus$</span> &amp; '
+                         r'<pre class="math">$$E=mc^2$$</pre> for \$5')
+
     def test_reference_papers_come_from_a_zotero_collection(self):
         user = self.user(paid=True)
         self.account(user)
