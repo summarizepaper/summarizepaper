@@ -635,6 +635,9 @@ p.chat-evidence { color: var(--text-muted, #64748b); }
 .guide ul, .guide ol { padding-left: 22px; margin: 0 0 18px; }
 .guide li { margin-bottom: 8px; }
 .guide li::marker { color: var(--accent); }
+/* example notes wrap inside the column instead of widening the page on phones */
+.guide pre { max-width: 100%; margin: 0 0 18px; padding: 12px 14px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.guide pre code { padding: 0; border: 0; background: none; font-size: inherit; }
 
 .guide .takeaways {
   margin: 0 0 20px;
