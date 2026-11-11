@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
-from . import (views, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+from . import (views, arxiv_labs, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, personal_activity, presskit, questions, reading, refcheck, removal, scoops, slides, students, teams, trends_web, zotero)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -22,6 +22,8 @@ urlpatterns = [
     path("arxiv-id/<str:arxiv_id>/", views.legacy_paper_url),
     re_path(r"^arxiv-id/(?P<cat>[^\d]+)/(?P<arxiv_id>[a-zA-Z0-9]+)/$", views.legacy_paper_url),
     path("arxiv-id/<str:arxiv_id>/<str:error_message>/", views.legacy_paper_url),
+    # the card of the SummarizePaper toggle on arXiv's abstract pages (arXivLabs)
+    re_path(r"^api/arxiv-labs/(?P<reference>.+)$", arxiv_labs.labs_card, name="arxiv_labs_card"),
     path("tree/<str:arxiv_id>/", views.tree, name="tree"),
     path("neighbours/<str:arxiv_id>/why/", neighbours.why_view, name="neighbours_why"),
     path("neighbours/<str:arxiv_id>/mark/", neighbours.mark_view, name="neighbours_mark"),

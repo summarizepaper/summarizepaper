@@ -70,6 +70,7 @@ def robots_txt(request):
         "Disallow: /*/search-results/",
         "Disallow: /*/export/",
         "Disallow: /*/bibtex/",
+        "Disallow: /api/",  # the JSON of the arXivLabs card (arxiv_labs.py), asked by arXiv's pages
         "Sitemap: https://www.summarizepaper.com/sitemap.xml",
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
