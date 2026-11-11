@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% load i18n static_version %}
+{% load i18n static_version typography %}
 {% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Journal club' %} | {% if collection %}{{ collection.name|truncatechars:70 }}{% elif paper %}{{ paper.title|truncatechars:70 }}{% else %}{{ deck.title|truncatechars:70 }}{% endif %}{% endblock %}
 {% block extrahead %}<link rel="stylesheet" href="{% static_v 'summarizer/css/slides.css' %}">{% endblock %}
-{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block extra_head_tags %}{% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex" />{% endblock %}
 
 {% block content %}
 <div class="page deck-page">
@@ -121,7 +121,7 @@
       <details{% if forloop.first %} open{% endif %}>
         <summary>{{ q.question }}</summary>
         <p>{{ q.answer }}</p>
-        {% if q.passage %}<blockquote class="deck-quote">« {{ q.passage.quote }} »{% if q.passage.location %} <small>— {{ q.passage.location }}</small>{% endif %}{% if q.passage.link %} <a href="{{ q.passage.link }}" rel="noopener nofollow" target="_blank">{% trans 'Open in the paper' %}</a>{% endif %}</blockquote>
+        {% if q.passage %}<blockquote class="deck-quote">{{ q.passage.quote|quoted }}{% if q.passage.location %} <small>— {{ q.passage.location }}</small>{% endif %}{% if q.passage.link %} <a href="{{ q.passage.link }}" rel="noopener nofollow" target="_blank">{% trans 'Open in the paper' %}</a>{% endif %}</blockquote>
         {% else %}<p class="muted"><small>{% trans 'No passage of the paper supports this answer: check it before giving it.' %}</small></p>{% endif %}
       </details>
       {% endfor %}

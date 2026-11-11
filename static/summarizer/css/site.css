@@ -756,8 +756,9 @@ p.chat-evidence { color: var(--text-muted, #64748b); }
   transition: border-color .15s, box-shadow .15s, transform .15s;
 }
 .guide-card:hover { border-color: #c7c9f5; box-shadow: var(--shadow); transform: translateY(-1px); }
-.guide-card h2 { margin: 0 0 8px; font-size: 20px; }
-.guide-card:hover h2 { color: var(--accent); }
+.guide-group { margin: 28px 0 12px; font-size: 22px; }
+.guide-card h2, .guide-card h3 { margin: 0 0 8px; font-size: 20px; }
+.guide-card:hover h2, .guide-card:hover h3 { color: var(--accent); }
 .guide-card p { margin: 0 0 12px; color: var(--text-muted); }
 .guide-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
 

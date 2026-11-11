@@ -1405,6 +1405,16 @@ Read the **listings** <b>daily</b>.
         self.assertIn('/en/guides/wip/', html)
         self.assertIn('min read', html)
 
+    def test_the_index_groups_the_guides_like_the_tools(self):
+        self.write('en', 'how-to-chat-with-research-papers', self.GUIDE.replace('Keeping up with arXiv', 'Chat guide'))
+        self.write('en', 'zotero-sync-research-papers', self.GUIDE.replace('Keeping up with arXiv', 'Zotero guide'))
+        self.write('en', 'obsidian-research-paper-notes', self.GUIDE.replace('Keeping up with arXiv', 'Obsidian guide'))
+        self.write('en', 'arxiv-statistics', self.GUIDE.replace('Keeping up with arXiv', 'Statistics guide'))
+        html = self.client.get('/en/guides/').content.decode().split('guides-index', 1)[1]  # not the Tools menu
+        order = [html.index(text) for text in ('Read papers faster', 'Chat guide', 'Write and submit', 'Zotero guide',
+                                                'Obsidian guide', 'Comparisons and statistics', 'Statistics guide')]
+        self.assertEqual(order, sorted(order))
+
     def test_published_guide_listed_in_sitemap_and_llms_txt(self):
         self.assertIn('/en/guides/keep-up/', self.client.get('/sitemap-guides.xml').content.decode())
         self.assertIn('- [Keeping up with arXiv](https://www.summarizepaper.com/en/guides/keep-up/)',

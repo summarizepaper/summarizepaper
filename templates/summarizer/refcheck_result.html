@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n typography %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Bibliography check' %}{% endblock %}
@@ -241,7 +241,7 @@
     <section id="next" aria-labelledby="next-title">
       <h2 id="next-title">{% trans 'Go further' %}</h2>
       <ul class="tool-features">
-        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/?previous={{ row.key }}"><i class="fas fa-redo" aria-hidden="true"></i> {% trans 'Check again after your corrections' %}</a>: {% trans 'send your corrected files: what is solved and what is new is shown, and your marks are kept.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/?previous={{ row.key }}"><i class="fas fa-redo" aria-hidden="true"></i> {% trans 'Check again after your corrections' %}</a>{% colon %} {% trans 'send your corrected files: what is solved and what is new is shown, and your marks are kept.' %}</li>
         {% if result.refs %}
         <li>{% if watch %}<i class="fas fa-bell" aria-hidden="true"></i> <strong>{% trans 'Your references are watched' %}</strong>: {% blocktrans with date=watch.until|date:"j F Y" %}we email you when one of them is published, retracted or corrected, until {{ date }}.{% endblocktrans %}
           <form method="post" style="display:inline">{% csrf_token %}<button class="btn btn-sm btn-ghost" name="action" value="unwatch">{% trans 'Stop watching' %}</button></form>
@@ -257,8 +257,8 @@
           {% trans 'a tag (Retracted, Correction published, Published version available...) and a note on each reference concerned in your library, and the published version of each preprint added next to it. The problems you marked intended or ignored are left out.' %}{% if not zotero_ready %} <a href="/{{ LANGUAGE_CODE }}/integrations/">{% trans 'Connect Zotero' %}</a>{% endif %}
           <span class="tool-status" id="refcheck-zotero-status" aria-live="polite"></span></li>
         {% endif %}
-        <li>{% if missed %}<a href="/{{ LANGUAGE_CODE }}/missed/{{ missed.key }}/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% if missed.status == 'done' %}{% trans 'the close papers your manuscript does not cite, found with these references.' %}{% else %}{% trans 'the search for the close papers your manuscript does not cite is running.' %}{% endif %}
-          {% else %}<a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% trans 'finds the close papers your draft does not cite: give it the same .bib with your PDF.' %}{% endif %}</li>
+        <li>{% if missed %}<a href="/{{ LANGUAGE_CODE }}/missed/{{ missed.key }}/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>{% colon %} {% if missed.status == 'done' %}{% trans 'the close papers your manuscript does not cite, found with these references.' %}{% else %}{% trans 'the search for the close papers your manuscript does not cite is running.' %}{% endif %}
+          {% else %}<a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>{% colon %} {% trans 'finds the close papers your draft does not cite: give it the same .bib with your PDF.' %}{% endif %}</li>
       </ul>
     </section>
     {% endif %}

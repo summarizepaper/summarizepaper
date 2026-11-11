@@ -109,7 +109,12 @@ After the talk, **Draft a follow-up email** writes a first message from the note
 <figcaption>Export, preprints and team, in the last view of the program.</figcaption>
 </figure>
 
-During the conference, a **Now** view shows the talk going on, the next one and the rest of the day.
+On your phone, the program reads the same way, and you mark talks and take notes during the sessions. During the conference, a **Now** view shows the talk going on, the next one and the rest of the day.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/conference/phone-en.jpg"><img src="/static/summarizer/img/guides/conference/phone-en.jpg" alt="Two phone screens: the program by priority with its views, and a talk marked Going with its question and a note." width="804" height="844" loading="lazy" /></a>
+<figcaption>On a phone: the program by priority, and a talk marked Going with its note.</figcaption>
+</figure>
 
 ## Limits
 

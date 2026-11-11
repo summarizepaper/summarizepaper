@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n static_version %}
+{% load i18n static_version typography %}
 {% get_current_language as LANGUAGE_CODE %}
 
 {% block title %}{% trans 'Who works on it?' %}{% endblock %}
@@ -159,10 +159,10 @@
         {% else %}<button class="btn btn-sm" name="action" value="follow">{% trans 'Follow this map' %}</button> <small class="muted">{% trans 'Every month, the new papers on this topic, those of the people of the map apart from the new names, by email.' %}</small>{% endif %}
       </form>
       <ul>
-        <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ result.topic|default:result.title|urlencode }}">{% trans 'A literature review of the topic' %}</a>: {% trans 'the founding and recent papers, grouped by approach, with a referenced synthesis.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>: {% trans 'the papers close to your draft that it does not cite.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/scoops/">{% trans 'Scoop watch' %}</a>: {% trans 'an email the day a new paper comes close to your project, and the new papers of the competing teams you follow.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ result.topic|default:result.title|urlencode }}">{% trans 'Find a research placement' %}</a>: {% trans 'for an internship or a PhD, where these people are now, their teams, readings and a first email.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ result.topic|default:result.title|urlencode }}">{% trans 'A literature review of the topic' %}</a>{% colon %} {% trans 'the founding and recent papers, grouped by approach, with a referenced synthesis.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/missed/">{% trans 'What did I miss?' %}</a>{% colon %} {% trans 'the papers close to your draft that it does not cite.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/">{% trans 'Scoop watch' %}</a>{% colon %} {% trans 'an email the day a new paper comes close to your project, and the new papers of the competing teams you follow.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ result.topic|default:result.title|urlencode }}">{% trans 'Find a research placement' %}</a>{% colon %} {% trans 'for an internship or a PhD, where these people are now, their teams, readings and a first email.' %}</li>
       </ul>
       {% endif %}
     </section>

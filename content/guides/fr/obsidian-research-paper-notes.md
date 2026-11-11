@@ -101,11 +101,53 @@ Pour n’exporter qu’une partie d’une collection, filtrez-la d’abord par u
 
 ## 3. Dans Obsidian
 
-Décompressez le dossier dans votre coffre (*vault*). Les articles se comportent alors comme vos autres notes :
+Décompressez le dossier dans votre coffre (*vault*). Le voici dans Obsidian 1.15, dans un coffre nommé *Notes de recherche* : le dossier de la collection, et la note de chaque article avec ses propriétés telles qu’Obsidian les affiche.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/note-fr.jpg"><img src="/static/summarizer/img/guides/obsidian/note-fr.jpg" alt="Obsidian avec le dossier Gaz-dans-les-disques-de-debris dans l’explorateur de fichiers, et la note bergezcasalou2024observing avec ses propriétés : titre, auteurs, année, revue, DOI, arXiv, clé de citation, liens, étiquettes planètes et ALMA, statut À lire." width="1280" height="820" loading="lazy" /></a>
+<figcaption>La note d’un article dans Obsidian : ses propriétés, ses étiquettes et son statut.</figcaption>
+</figure>
+
+En mode lecture, les points clés et le résumé suivent, avec leurs formules affichées :
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/summary-fr.jpg"><img src="/static/summarizer/img/guides/obsidian/summary-fr.jpg" alt="Le mode lecture de la note dans Obsidian : Points clés, puis le résumé." width="1280" height="820" loading="lazy" /></a>
+<figcaption>Les points clés et le résumé de l’article.</figcaption>
+</figure>
+
+Les articles se comportent alors comme vos autres notes :
 
 - les **étiquettes** sont des tags Obsidian, à chercher et filtrer ;
-- les liens `[[clé de citation]]` marchent depuis n’importe quelle note : écrivez `[[kral2017predictions]]` dans une note de projet pour relier l’article, et ses rétroliens montrent où vous l’avez cité ;
-- les **propriétés** se trient et se filtrent, par exemple avec une base (le plugin de base **Bases**) ou Dataview : tous les articles dont le `status` est *À lire*, par année ;
+- les **propriétés** se trient et se filtrent. Avec une base (le plugin de base **Bases**), les articles de la collection deviennent un tableau de leur année, revue, statut et étiquettes. La nôtre est ce fichier, `Liste de lecture.base`, à côté du dossier :
+
+```yaml
+filters:
+  and:
+    - file.inFolder("Gaz-dans-les-disques-de-debris")
+    - year != null
+views:
+  - type: table
+    name: Par statut
+    order:
+      - file.name
+      - year
+      - journal
+      - status
+      - tags
+```
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/base-fr.jpg"><img src="/static/summarizer/img/guides/obsidian/base-fr.jpg" alt="Une base Obsidian, Liste de lecture : un tableau des trois articles avec leur année, leur revue, leur statut (À lire, Lu, Article clé) et leurs étiquettes." width="1280" height="820" loading="lazy" /></a>
+<figcaption>Les articles de la collection dans une base, avec leur statut et leurs étiquettes.</figcaption>
+</figure>
+
+- les liens `[[clé de citation]]` marchent depuis n’importe quelle note : écrivez `[[kral2017predictions]]` dans une note de projet pour relier l’article ; les rétroliens de l’article montrent où vous l’avez cité, et le graphe montre sur quels articles repose un projet ;
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/links-fr.jpg"><img src="/static/summarizer/img/guides/obsidian/links-fr.jpg" alt="Une note de projet dans Obsidian qui relie trois articles par leurs clés de citation, et son graphe local avec les trois articles autour." width="1280" height="820" loading="lazy" /></a>
+<figcaption>Une note de projet qui cite trois articles, et son graphe local.</figcaption>
+</figure>
+
 - la propriété `citekey` est la clé de nos exports BibTeX et du `.bib` qu’une collection donne à Overleaf : vos notes et votre manuscrit utilisent les mêmes clés.
 
 Quand la collection change, exportez-la à nouveau et remplacez le dossier : chaque note garde son nom, la clé de citation de son article.

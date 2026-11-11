@@ -177,9 +177,35 @@ def _json_ld(guide):
     return json.dumps({'@context': 'https://schema.org', '@graph': graph}, ensure_ascii=False).replace('</', '<\\/')
 
 
+# Guides shown after the guide of a tool, in its group of the index.
+FOLLOWING = {'how-to-summarize-a-research-paper': ('around-a-paper-close-papers-and-versions',),
+             'zotero-sync-research-papers': ('obsidian-research-paper-notes', 'notion-research-paper-database')}
+
+
+def grouped(guides):
+    """[(title, guides)]: the guides of the tools, by the groups of the tools page and in its order; the others
+    (comparisons, statistics) last, with title None."""
+    from .tool_list import TOOL_GROUPS
+    by_slug = {g['slug']: g for g in guides}
+    groups, placed = [], set()
+    for group in TOOL_GROUPS:
+        slugs = []
+        for tool in group['tools']:
+            if tool['guide']:
+                slugs += [tool['guide']] + list(FOLLOWING.get(tool['guide'], ()))
+        found = [by_slug[s] for s in dict.fromkeys(slugs) if s in by_slug and s not in placed]
+        placed.update(g['slug'] for g in found)
+        if found:
+            groups.append((group['title'], found))
+    others = [g for g in guides if g['slug'] not in placed]
+    if others:
+        groups.append((None, others))
+    return groups
+
+
 def guide_index(request):
     guides = published(request.LANGUAGE_CODE, include_drafts=request.user.is_staff)
-    return render(request, 'summarizer/guides.html', {'guides': guides})
+    return render(request, 'summarizer/guides.html', {'guides': guides, 'groups': grouped(guides)})
 
 
 def guide_detail(request, slug):

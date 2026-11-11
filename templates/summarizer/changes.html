@@ -15,6 +15,7 @@
     <span class="eyebrow">{% trans 'What changed' %} · Premium</span>
     <h1>{{ title }}</h1>
     <p class="lead">arXiv: {{ base }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ site_base }}v{{ latest }}/">{% trans 'Summary page' %}</a> · <a href="https://arxiv.org/abs/{{ base }}" target="_blank" rel="noopener">arXiv</a></p>
+  {% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/around-a-paper-close-papers-and-versions/">Comment lire une comparaison de versions ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/around-a-paper-close-papers-and-versions/">How to read a version comparison? Illustrated guide</a></p>{% endif %}
   </header>
 
   {% if not paid %}

@@ -75,6 +75,7 @@
     <p>{% trans 'We compare the title and abstract of this paper with those of every paper summarized on this site, and with the papers Semantic Scholar recommends, those it cites and those citing it (for a much-cited paper, its most recent citations and, from OpenAlex, the most cited ones). Among the prior work and the follow-ups, the papers that use each other in depth, a method it uses and the much-cited follow-ups come a little higher. The levels (very close, close, related) come from the similarity of the texts, not from a judgment of quality; * marks a paper without an abstract, compared by its title. The sentence under a paper is written by an AI from the two abstracts: check it in the papers. A paper marked not relevant by three readers leaves the list.' %}</p>
     {% if hood.computed %}<p>{% blocktrans with day=hood.computed|date:"j F Y" %}Updated on {{ day }}.{% endblocktrans %}</p>
     {% elif not hood.complete %}<p>{% trans 'For now only among the papers summarized on this site: search again to add the prior work, the follow-ups and Semantic Scholar’s recommendations.' %}</p>{% endif %}
+    {% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/around-a-paper-close-papers-and-versions/">Le guide illustré des articles autour d’un article</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/around-a-paper-close-papers-and-versions/">The illustrated guide to the papers around a paper</a></p>{% endif %}
   </details>
 </section>
 {% endwith %}

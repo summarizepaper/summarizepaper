@@ -1,4 +1,4 @@
-{% load i18n %}{# One slide of slides.html, with its notes, its sources and its editor; s=None gives the empty slide that “Add a slide” copies. #}
+{% load i18n typography %}{# One slide of slides.html, with its notes, its sources and its editor; s=None gives the empty slide that “Add a slide” copies. #}
 <article class="slide-item{% if s.figure %} has-figure{% endif %}" data-origin="{% if s %}{{ s.origin|default_if_none:'' }}{% endif %}" data-kind="{{ s.kind|default:'content' }}">
   <div class="slide-frame">{% language deck_lang %}<section lang="{{ deck_lang }}" class="slide{% if s.kind == 'title' %} slide-title{% endif %}" data-kind="{{ s.kind|default:'content' }}" data-layout="{{ s.layout|default:'right' }}" style="--figure-share:{{ s.figure_size|default:50 }}%; --slide-font:{{ s.text_size|default:30 }}px">
     <h2 data-preview-title>{{ s.title }}</h2>
@@ -18,7 +18,7 @@
         <span class="source-mark" aria-hidden="true">{% if c.verified %}✓{% else %}⚠{% endif %}</span>
         <span>{{ c.text }}</span>
         <span class="source-kind">{% if c.kind == 'result' %}{% trans 'Result' %}{% elif c.kind == 'interpretation' %}{% trans 'Interpretation of the authors' %}{% elif c.kind == 'method' %}{% trans 'Method' %}{% else %}{% trans 'Context' %}{% endif %}</span>
-        {% if c.verified %}<blockquote class="deck-quote">« {{ c.quote }} »{% if c.location %} <small>— {{ c.location }}</small>{% endif %}{% if c.link %} <a href="{{ c.link }}" rel="noopener nofollow" target="_blank">{% trans 'Open in the paper' %}</a>{% endif %}</blockquote>
+        {% if c.verified %}<blockquote class="deck-quote">{{ c.quote|quoted }}{% if c.location %} <small>— {{ c.location }}</small>{% endif %}{% if c.link %} <a href="{{ c.link }}" rel="noopener nofollow" target="_blank">{% trans 'Open in the paper' %}</a>{% endif %}</blockquote>
         {% else %}<small class="source-missing">{% trans 'Not found in the paper: check it before presenting.' %}</small>{% endif %}
         {% if c.numbers %}<small class="source-missing">{% trans 'Numbers the paper does not state:' %} {{ c.numbers|join:', ' }}</small>{% endif %}
       </li>{% endfor %}

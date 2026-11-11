@@ -1,4 +1,4 @@
-{% load i18n %}<article class="card topic-card">
+{% load i18n typography %}<article class="card topic-card">
   <p class="topic-meta"><span class="kind kind-{{ topic.kind }}" title="{{ topic.kind_note }}">{{ topic.kind_label }}</span>{% if topic.scope_name %} · <a href="?scope={{ topic.scope|urlencode }}">{{ topic.scope_name }}</a>{% endif %}</p>
   <h2>{{ topic.title }}</h2>
   <div class="topic-figures">
@@ -19,10 +19,10 @@
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ topic.query|urlencode }}" rel="nofollow">{% trans 'Literature review' %}</a>
     <details class="topic-more"><summary class="btn btn-sm btn-ghost">{% trans 'More' %}</summary>
       <ul>
-        <li><a href="/{{ LANGUAGE_CODE }}/search-results/?q={{ topic.main|default:topic.terms.0|urlencode }}" rel="nofollow">{% trans 'Search these papers and follow the term' %}</a>: {% trans 'save the search to get an email when new papers use it.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/scoops/" rel="nofollow">{% trans 'Scoop watch' %}</a>: {% trans 'if your own project is close, be told the day a new paper comes close to it.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ topic.query|urlencode }}" rel="nofollow">{% trans 'Find a research placement' %}</a>: {% trans 'who leads this work, for an internship or a PhD.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ topic.explore }}{% if topic.scope and topic.scope != '*' %}&scope={{ topic.scope|urlencode }}{% elif scope and scope != '*' %}&scope={{ scope|urlencode }}{% endif %}">{% trans 'The history of its terms' %}</a>: {% trans 'compared week by week, to export.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/search-results/?q={{ topic.main|default:topic.terms.0|urlencode }}" rel="nofollow">{% trans 'Search these papers and follow the term' %}</a>{% colon %} {% trans 'save the search to get an email when new papers use it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/" rel="nofollow">{% trans 'Scoop watch' %}</a>{% colon %} {% trans 'if your own project is close, be told the day a new paper comes close to it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/students/?topic={{ topic.query|urlencode }}" rel="nofollow">{% trans 'Find a research placement' %}</a>{% colon %} {% trans 'who leads this work, for an internship or a PhD.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ topic.explore }}{% if topic.scope and topic.scope != '*' %}&scope={{ topic.scope|urlencode }}{% elif scope and scope != '*' %}&scope={{ scope|urlencode }}{% endif %}">{% trans 'The history of its terms' %}</a>{% colon %} {% trans 'compared week by week, to export.' %}</li>
       </ul>
     </details>
   </div>

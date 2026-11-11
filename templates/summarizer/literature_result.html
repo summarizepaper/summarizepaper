@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n typography %}
 {% load dash_slash %}
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -218,13 +218,13 @@
     <section id="next" aria-labelledby="next-title">
       <h2 id="next-title">{% trans 'Go further' %}</h2>
       <ul class="tool-features">
-        <li><a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ links.chat }}"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Chat with these papers' %}</a>: {% blocktrans with n=links.chat_max %}ask them your own questions, answered from their full text when the license allows it (the first {{ n }}).{% endblocktrans %}</li>
-        <li><a href="#save-form"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Save them in a collection' %}</a>: {% trans 'a comparison table whose every cell quotes the paper, their open questions, and what the collection is missing.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/scoops/?{{ links.scoops }}"><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'Follow this question' %}</a>: {% trans 'an email the day a new paper comes close to it.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/teams/?{{ links.teams }}"><i class="fas fa-users" aria-hidden="true"></i> {% trans 'Who works on it?' %}</a>: {% trans 'the teams that sign the recent papers on the question, and referees.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ links.trends }}"><i class="fas fa-chart-line" aria-hidden="true"></i> {% trans 'Is the topic rising?' %}</a>: {% trans 'its papers on arXiv, bioRxiv and medRxiv week after week.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>: {% trans 'once your draft is written, the close papers it does not cite.' %}</li>
-        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/?from=literature:{{ row.key }}"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check these references' %}</a>: {% trans 'retracted or corrected papers and preprints published since, before you cite them; add your manuscript to check what each citation says.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/chat/?ids={{ links.chat }}"><i class="fas fa-comments" aria-hidden="true"></i> {% trans 'Chat with these papers' %}</a>{% colon %} {% blocktrans with n=links.chat_max %}ask them your own questions, answered from their full text when the license allows it (the first {{ n }}).{% endblocktrans %}</li>
+        <li><a href="#save-form"><i class="fas fa-layer-group" aria-hidden="true"></i> {% trans 'Save them in a collection' %}</a>{% colon %} {% trans 'a comparison table whose every cell quotes the paper, their open questions, and what the collection is missing.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/scoops/?{{ links.scoops }}"><i class="fas fa-user-secret" aria-hidden="true"></i> {% trans 'Follow this question' %}</a>{% colon %} {% trans 'an email the day a new paper comes close to it.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/teams/?{{ links.teams }}"><i class="fas fa-users" aria-hidden="true"></i> {% trans 'Who works on it?' %}</a>{% colon %} {% trans 'the teams that sign the recent papers on the question, and referees.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ links.trends }}"><i class="fas fa-chart-line" aria-hidden="true"></i> {% trans 'Is the topic rising?' %}</a>{% colon %} {% trans 'its papers on arXiv, bioRxiv and medRxiv week after week.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/missed/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'What did I miss?' %}</a>{% colon %} {% trans 'once your draft is written, the close papers it does not cite.' %}</li>
+        <li><a href="/{{ LANGUAGE_CODE }}/refcheck/?from=literature:{{ row.key }}"><i class="fas fa-tasks" aria-hidden="true"></i> {% trans 'Check these references' %}</a>{% colon %} {% trans 'retracted or corrected papers and preprints published since, before you cite them; add your manuscript to check what each citation says.' %}</li>
       </ul>
     </section>
     {% endif %}

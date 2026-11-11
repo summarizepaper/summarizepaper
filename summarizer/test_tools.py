@@ -987,7 +987,7 @@ class LiteratureTests(ToolsTestCase):
             'papers': [{'n': 1, 'key': '2101.00001', 'title': 'Sinks', 'authors': 'Ann Lee', 'labels': [], 'year': 2020,
                         'venue': '', 'doi': '', 'cited_by': None}]}))
         page = self.client_for(user).get('/en/literature-review/v1/')
-        self.assertContains(page, '« Old quote. »')
+        self.assertContains(page, '“Old quote.”')
         self.assertNotContains(page, 'Write the synthesis again')  # no pool kept
         self.assertNotContains(page, 'No sentence of the cited papers states it')  # agreements were not checked then
         self.assertContains(self.client_for(user).get('/en/literature-review/v1/export/bib/'), '@misc{lee2020sinks,')
@@ -2857,6 +2857,12 @@ class TrendTests(ToolsTestCase):
         trends._RECENT.clear()
         return content, key
 
+    def soon_after(self):
+        """The weeks after WEEK, when its topics are still recent (trends.recent keeps the last four weeks)."""
+        trends._RECENT.clear()
+        now = timezone.make_aware(datetime.datetime.combine(self.WEEK + datetime.timedelta(days=9), datetime.time(12)))
+        return mock.patch('summarizer.trends.timezone.now', return_value=now)
+
     def test_topics_are_written_in_every_language_with_their_history(self):
         content, key = self.written()
         topic = content['topics'][0]
@@ -2871,8 +2877,9 @@ class TrendTests(ToolsTestCase):
         fr = json.loads(RisingTopics.objects.get(scope='cs.LG', lang='fr').content)['topics'][0]
         self.assertEqual(fr['title'], 'Regarder dans les modèles')
         self.assertEqual(trends.for_digest(['cs.LG'], 'en', self.WEEK + datetime.timedelta(days=14))[0]['archive'], 'cs.LG')
-        self.assertEqual(trends.topic_of_paper(key + 'v2', 'en')[0], 'cs.LG')
-        self.assertEqual(trends.close_topics(np.ones(4, dtype=np.float32) / 2, 'en')[0][1], 'cs.LG')
+        with self.soon_after():
+            self.assertEqual(trends.topic_of_paper(key + 'v2', 'en')[0], 'cs.LG')
+            self.assertEqual(trends.close_topics(np.ones(4, dtype=np.float32) / 2, 'en')[0][1], 'cs.LG')
 
     def test_pages(self):
         _, key = self.written()
@@ -2916,13 +2923,14 @@ class TrendTests(ToolsTestCase):
     def test_links_from_papers_and_projects(self):
         from django.template import Context, Template
         _, key = self.written()
-        with translation.override('en'):
-            shown = Template('{% load rising %}{% rising_topic key as r %}{{ r.title }} {{ r.scope }}').render(Context({'key': key + 'v1'}))
-        self.assertEqual(shown, 'Looking inside AI models cs.LG')
-        user = self.user(paid=True)
-        WatchedProject.objects.create(user=user, title='Probing features', description='x' * 300, last_day=self.WEEK,
-                                      vector=(np.ones(4, dtype=np.float32) / 2).tobytes())
-        self.assertContains(self.client_for(user).get('/en/scoops/'), 'A close topic is rising in Machine Learning (cs.LG)')
+        with self.soon_after():
+            with translation.override('en'):
+                shown = Template('{% load rising %}{% rising_topic key as r %}{{ r.title }} {{ r.scope }}').render(Context({'key': key + 'v1'}))
+            self.assertEqual(shown, 'Looking inside AI models cs.LG')
+            user = self.user(paid=True)
+            WatchedProject.objects.create(user=user, title='Probing features', description='x' * 300, last_day=self.WEEK,
+                                          vector=(np.ones(4, dtype=np.float32) / 2).tobytes())
+            self.assertContains(self.client_for(user).get('/en/scoops/'), 'A close topic is rising in Machine Learning (cs.LG)')
 
     def test_page_before_history(self):
         self.assertContains(Client().get('/en/trends/'), 'first rising topics')

@@ -111,7 +111,12 @@ Après l’exposé, **Rédiger un email de suivi** écrit un premier message à 
 <figcaption>Export, prépublications et équipe, dans la dernière vue du programme.</figcaption>
 </figure>
 
-Pendant la conférence, une vue **Maintenant** montre la présentation en cours, la suivante et le reste de la journée.
+Sur votre téléphone, le programme se lit de la même façon, et vous marquez les présentations et prenez des notes pendant les sessions. Pendant la conférence, une vue **Maintenant** montre la présentation en cours, la suivante et le reste de la journée.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/conference/phone-fr.jpg"><img src="/static/summarizer/img/guides/conference/phone-fr.jpg" alt="Deux écrans de téléphone : le programme par priorité avec ses vues, et une présentation marquée J’y vais avec sa question et une note." width="804" height="844" loading="lazy" /></a>
+<figcaption>Sur téléphone : le programme par priorité, et une présentation marquée « J’y vais » avec sa note.</figcaption>
+</figure>
 
 ## Limites
 

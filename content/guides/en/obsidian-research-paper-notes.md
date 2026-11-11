@@ -101,11 +101,53 @@ To export only part of a collection, filter it by a tag first: the export holds 
 
 ## 3. In Obsidian
 
-Unzip the folder into your vault. The papers then work like your other notes:
+Unzip the folder into your vault. Here it is in Obsidian 1.15, in a vault named *Research notes*: the folder of the collection, and each paper's note with its properties as Obsidian shows them.
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/note-en.jpg"><img src="/static/summarizer/img/guides/obsidian/note-en.jpg" alt="Obsidian with the folder Gas-in-debris-discs in the file explorer, and the note bergezcasalou2024observing with its properties: title, authors, year, journal, DOI, arXiv, citation key, links, tags planets and ALMA, status To read." width="1280" height="820" loading="lazy" /></a>
+<figcaption>The note of a paper in Obsidian: its properties, its tags and its status.</figcaption>
+</figure>
+
+In reading view, the key points and the summary follow, with their formulas displayed:
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/summary-en.jpg"><img src="/static/summarizer/img/guides/obsidian/summary-en.jpg" alt="The reading view of the note in Obsidian: Key points, with the masses of gas written in LaTeX and displayed, then the Summary." width="1280" height="820" loading="lazy" /></a>
+<figcaption>Key points and summary, formulas included.</figcaption>
+</figure>
+
+The papers then work like your other notes:
 
 - the **tags** are Obsidian tags, to search and filter;
-- the links `[[citation key]]` work from any of your notes: write `[[kral2017predictions]]` in a project note to link the paper, and its backlinks show where you cited it;
-- the **properties** can be sorted and filtered, for example with a base (the **Bases** core plugin) or Dataview: all the papers whose `status` is *To read*, by year;
+- the **properties** can be sorted and filtered. With a base (the **Bases** core plugin), the papers of the collection become a table of their year, journal, status and tags. Ours is this file, `Reading list.base`, next to the folder:
+
+```yaml
+filters:
+  and:
+    - file.inFolder("Gas-in-debris-discs")
+    - year != null
+views:
+  - type: table
+    name: By status
+    order:
+      - file.name
+      - year
+      - journal
+      - status
+      - tags
+```
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/base-en.jpg"><img src="/static/summarizer/img/guides/obsidian/base-en.jpg" alt="An Obsidian base, Reading list: a table of the three papers with their year, journal, status (To read, Read, Key paper) and tags." width="1280" height="820" loading="lazy" /></a>
+<figcaption>The papers of the collection in a base, with their status and tags.</figcaption>
+</figure>
+
+- the links `[[citation key]]` work from any of your notes: write `[[kral2017predictions]]` in a project note to link the paper; the paper's backlinks show where you cited it, and the graph shows which papers a project relies on;
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/obsidian/links-en.jpg"><img src="/static/summarizer/img/guides/obsidian/links-en.jpg" alt="A project note in Obsidian linking three papers by their citation keys, and its local graph with the three papers around it." width="1280" height="820" loading="lazy" /></a>
+<figcaption>A project note that cites three papers, and its local graph.</figcaption>
+</figure>
+
 - the `citekey` property is the key of our BibTeX exports and of the `.bib` a collection gives Overleaf, so your notes and your manuscript use the same keys.
 
 When the collection changes, export it again and replace the folder: each note keeps its name, the citation key of its paper.

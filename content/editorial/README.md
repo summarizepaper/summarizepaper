@@ -28,7 +28,8 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 | Journal club | [Lire](../guides/fr/journal-club-slides-from-a-paper.md) | [Read](../guides/en/journal-club-slides-from-a-paper.md) | Créé le 10 novembre : 2607.11677v1 (CC BY), 15 slides EN et 14 FR, sources, questions difficiles, éditeur ; deck de collection de trois articles ; 11 captures par langue |
 | Conference companion | [Lire](../guides/fr/conference-program-talks-to-attend.md) | [Read](../guides/en/conference-program-talks-to-attend.md) | Créé le 10 novembre : DDE 2025 sur Indico (120 exposés), 35 (EN) et 26 (FR) gardés, marques, note, équipe ; 8 captures par langue |
 | Zotero | [Lire](../guides/fr/zotero-sync-research-papers.md) | [Read](../guides/en/zotero-sync-research-papers.md) | Créé le 10 novembre : côté SummarizePaper seulement (RIS, connexion, synchronisation, envois) ; pas de capture d’une bibliothèque connectée ; 5 captures par langue |
-| Obsidian | [Lire](../guides/fr/obsidian-research-paper-notes.md) | [Read](../guides/en/obsidian-research-paper-notes.md) | Créé le 10 novembre : vrais fichiers exportés de la collection de démonstration (note, dossier, propriétés) ; 2 captures par langue |
+| Obsidian | [Lire](../guides/fr/obsidian-research-paper-notes.md) | [Read](../guides/en/obsidian-research-paper-notes.md) | Créé le 10 novembre, captures d’Obsidian 1.15 ajoutées le 11 : coffre de démonstration (note, lecture, base, graphe local) ; 6 captures par langue |
+| Autour d’un article | [Lire](../guides/fr/around-a-paper-close-papers-and-versions.md) | [Read](../guides/en/around-a-paper-close-papers-and-versions.md) | Créé le 11 novembre : outils d’une page d’article, voisinage et carte de 2411.14241v1, comparaison v1→v3 de 2609.04318 (résumés seulement) ; 5 captures par langue |
 | Notion | [Lire](../guides/fr/notion-research-paper-database.md) | [Read](../guides/en/notion-research-paper-database.md) | Créé le 10 novembre : vrai Markdown et vrai CSV exportés ; import décrit d’après l’aide de Notion, non testé dans un espace Notion ; 2 captures par langue |
 
 ## Objets de démonstration dans le compte
@@ -178,3 +179,11 @@ Revue de littérature, Qu’est-ce que j’ai raté ?, Journal club, Compagnon d
 Les résultats viennent d’exécutions réelles sur des dynos ponctuels, avec un utilisateur temporaire Premium+ dans une transaction annulée à la fin : rien n’est resté en production. Ils ont été importés dans la base locale (utilisateur guide-demo) pour les captures. Questions et entrées : origine du gaz des disques de débris (revue) ; PDF de 2411.14241v1 comme brouillon (What did I miss?, texte conservé) ; 2607.11677v1 pour un article seul et avec 2411.14241v1 et 1703.10693v1 pour une collection (journal club) ; https://indico.global/event/8940/ avec trois thèmes de recherche (conférence). Les marques, la note et la coéquipière « Camille » de la conférence ont été créées en local, sans IA.
 
 Les deux exécutions d’une même entrée diffèrent un peu selon la langue (articles retenus, nombre d’articles à citer) : les guides le disent. Le guide Zotero ne montre pas de bibliothèque connectée ; les guides Obsidian et Notion montrent les fichiers exportés, pas les applications. Le nom des dossiers et fichiers d’export d’une collection garde désormais ses lettres accentuées sans accent (débris → debris) au lieu de les remplacer par un tiret.
+
+### Suite du 11 novembre 2026
+
+- Obsidian 1.15 installé (brew) et piloté par CDP avec un profil séparé (`--user-data-dir`), coffres « Research notes » et « Notes de recherche » dans le scratchpad : note, mode lecture, base `Reading list.base`, note de projet et graphe local.
+- Guide « Autour d’un article » : comparaison réelle v1→v3 de 2609.04318 (Morf & Helled, CC BY) sur un dyno en transaction annulée ; arXiv n’avait pas le HTML de chaque version, la comparaison porte sur résumés et commentaires et le dit. 2610.37773 avait d’abord été essayé : versions identiques.
+- Deux captures sur téléphone (390 px, émulation mobile) dans le guide de la conférence.
+- Page /guides/ groupée comme /tools/ ; guides sans outil (comparatifs, statistiques) en dernier.
+- Pas de captures d’une bibliothèque Zotero connectée ni de Notion : l’usage de la clé Zotero de production a été refusé par le classifieur, et Notion demande un compte connecté.

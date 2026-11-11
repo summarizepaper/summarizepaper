@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n static_version %}
+{% load i18n static_version typography %}
 {% block title %}{% trans 'Research placement search' %}{% endblock %}
 {% block extra_head_tags %}<link rel="stylesheet" href="{% static_v 'summarizer/css/students.css' %}"><script defer src="{% static_v 'summarizer/js/students.js' %}"></script>{% include 'summarizer/mathjax.html' %}<meta name="robots" content="noindex">{% endblock %}
 {% block content %}
@@ -40,8 +40,8 @@
     <ul>{% for portal in result.offer_searches %}<li><a href="{{ portal.url }}" target="_blank" rel="noopener">{{ portal.name }}</a>{% if not portal.keywords %} <span class="muted">{% trans '(their list of offers: search it with your keywords)' %}</span>{% endif %}</li>{% endfor %}</ul></section>{% endif %}
   {% if not shared %}
   <section class="card section-card student-next"><h2>{% trans 'Go further on this topic' %}</h2><ul>
-    <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ result.profile.topic|urlencode }}">{% trans 'A literature review of the topic' %}</a>: {% trans 'the founding and recent papers to know before an interview.' %}</li>
-    <li><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ result.profile.topic|urlencode }}">{% trans 'Who works on it?' %}</a>: {% trans 'every institution publishing on the topic, beyond the ten people shown here.' %}</li>
+    <li><a href="/{{ LANGUAGE_CODE }}/literature-review/?question={{ result.profile.topic|urlencode }}">{% trans 'A literature review of the topic' %}</a>{% colon %} {% trans 'the founding and recent papers to know before an interview.' %}</li>
+    <li><a href="/{{ LANGUAGE_CODE }}/teams/?topic={{ result.profile.topic|urlencode }}">{% trans 'Who works on it?' %}</a>{% colon %} {% trans 'every institution publishing on the topic, beyond the ten people shown here.' %}</li>
   </ul></section>
   {% trans 'Anyone with this link sees these leads, their papers and your criteria, never your drafts, your notes or who searched. To show a supervisor or a programme coordinator.' as what %}{% include 'summarizer/result_share.html' %}
   {% include 'summarizer/result_delete.html' with tool='students' %}

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static static_version %}
+{% load static static_version typography %}
 {% load i18n %}
 
 {% get_current_language as LANGUAGE_CODE %}
@@ -51,7 +51,7 @@
 <div class="page">
   <header class="page-header">
   {% if query %}
-    <h1>{% trans 'Search Results for' %} « {{ query }} »</h1>
+    <h1>{% trans 'Search Results for' %} {{ query|quoted }}</h1>
   {% elif filters_active %}<h1>{% trans 'Research search results' %}</h1>
   {% else %}
     <h1>{% trans 'You need to fill in the search field to get a response! Go back and do so...' %}</h1>

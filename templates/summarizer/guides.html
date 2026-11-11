@@ -15,10 +15,12 @@
     <h1>{% trans 'Guides' %}</h1>
     <p class="lead">{% trans 'Guides by SummarizePaper on keeping up with arXiv, reading research papers faster and choosing AI tools for research.' %}</p>
   </header>
+  {% for title, items in groups %}
+  <h2 class="guide-group">{% if title %}{{ title }}{% elif LANGUAGE_CODE == 'fr' %}Comparatifs et statistiques{% else %}Comparisons and statistics{% endif %}</h2>
   <div class="guide-list">
-  {% for guide in guides %}
+  {% for guide in items %}
     <a class="guide-card" href="/{{ LANGUAGE_CODE }}/guides/{{ guide.slug }}/">
-      <h2>{{ guide.title }}</h2>
+      <h3>{{ guide.title }}</h3>
       <p>{{ guide.description }}</p>
       <span class="guide-meta">
         <time datetime="{{ guide.updated|date:'Y-m-d' }}">{{ guide.updated|date:'j F Y' }}</time>
@@ -26,9 +28,12 @@
         {% if guide.draft %}<span class="badge-draft">{% trans 'Draft' %}</span>{% endif %}
       </span>
     </a>
-  {% empty %}
-    <p class="muted">{% trans 'No guides yet.' %}</p>
   {% endfor %}
   </div>
+  {% empty %}
+  <div class="guide-list">
+    <p class="muted">{% trans 'No guides yet.' %}</p>
+  </div>
+  {% endfor %}
 </div>
 {% endblock %}
