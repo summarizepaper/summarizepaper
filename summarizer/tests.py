@@ -2341,6 +2341,7 @@ class LoadShedderTests(TestCase):
         self.assertIn((b'set-cookie', loadshed.SET_COOKIE), refused['headers'])
         self.assertIn(b'http-equiv="refresh"', loadshed.BODY)
         self.assertEqual(self.call(shedder, '/fr/')['status'], 200)
+        self.assertEqual(self.call(shedder, '/api/arxiv-labs/2101.00001')['status'], 200)  # arXiv's pages, cookieless
         self.assertEqual(self.call(shedder, '/en/paper/2101.00001/', cookie=True)['status'], 200)  # the second try
         self.assertEqual((shedder.in_flight, shedder.anonymous), (1, 1))
         shedder.in_flight = 3

@@ -41,6 +41,9 @@ RETRY_AFTER = 5  # seconds
 ALERT_EVERY = 600  # seconds between two Sentry alerts while requests are refused
 EXEMPT = ('/static/', '/favicon.ico', '/robots.txt')
 HOMEPAGES = ('/', '/en/', '/fr/')
+# answers of a few milliseconds asked from other sites, which never carry our cookies: the card of arXiv's
+# abstract pages (arxiv_labs.py) would otherwise be the first turned away whenever scrapers fill the anonymous places
+CHEAP = ('/api/arxiv-labs/',)
 COOKIE = b'sp'
 SET_COOKIE = b'sp=1; Max-Age=31536000; Path=/; SameSite=Lax; Secure'
 ACCOUNT_COOKIE = b'spa'
@@ -71,7 +74,7 @@ class LoadShedder:
         known = has_cookie(scope)
         if not known and scrolled_search(scope):
             return await self.ask_for_cookie(scope, send)
-        homepage = scope.get('path', '') in HOMEPAGES
+        homepage = scope.get('path', '') in HOMEPAGES or scope.get('path', '').startswith(CHEAP)
         counted = not known and not homepage
         guest = not homepage and not has_cookie(scope, ACCOUNT_COOKIE)
         if (self.in_flight >= self.limit or (counted and self.anonymous >= self.anonymous_limit)
