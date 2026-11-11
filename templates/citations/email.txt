@@ -9,7 +9,8 @@
   {% endif %}{% if c.contexts %}"{{ c.contexts.0|truncatechars:320 }}"
   {% endif %}{% if c.also %}{% trans 'Also cites:' %} {% for a in c.also %}{% if not forloop.first %}; {% endif %}{{ a.title }}{% if a.stance %} ({% include 'citations/stance_label.txt' with c=a %}){% endif %}{% endfor %}
   {% endif %}{{ c.url }}
-{% endfor %}{% if paper.more %}{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}: {{ base_url }}/{{ lang }}/citations/{{ paper.followed.pk }}/
+{% endfor %}{% if paper.above %}{% trans 'Shown above, as it also cites another paper you follow:' %} {% for a in paper.above %}{% if not forloop.first %}; {% endif %}{{ a.title }}{% if a.stance %} ({% include 'citations/stance_label.txt' with c=a %}){% endif %}{% endfor %}
+{% endif %}{% if paper.more %}{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %}: {{ base_url }}/{{ lang }}/citations/{{ paper.followed.pk }}/
 {% endif %}{% endfor %}
 {% trans 'Manage the papers you follow:' %} {{ manage_url }}
 {% endautoescape %}

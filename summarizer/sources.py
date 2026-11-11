@@ -299,6 +299,30 @@ def latex_accents(text):
     return ''.join(parts)
 
 
+SUPERSCRIPT = str.maketrans('0123456789+-', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻')
+SYMBOLS = {'\\left': '', '\\right': '', '\\to': '→', '\\rightarrow': '→', '\\pm': '±', '\\sim': '~', '\\simeq': '≃',
+           '\\approx': '≈', '\\times': '×', '\\le': '≤', '\\leq': '≤', '\\ge': '≥', '\\geq': '≥', '\\alpha': 'α',
+           '\\beta': 'β', '\\gamma': 'γ', '\\delta': 'δ', '\\Delta': 'Δ', '\\epsilon': 'ε', '\\mu': 'μ', '\\nu': 'ν',
+           '\\pi': 'π', '\\sigma': 'σ', '\\tau': 'τ', '\\lambda': 'λ', '\\Omega': 'Ω', '\\omega': 'ω', '\\odot': '☉',
+           '\\infty': '∞', '\\%': '%', '\\,': ' ', '\\;': ' ', '\\!': '', '\\ ': ' '}
+
+
+def _plain_formula(match):
+    text = match.group(1)
+    text = re.sub(r'\^\{([0-9+\-]+)\}|\^([0-9+\-])', lambda m: (m.group(1) or m.group(2)).translate(SUPERSCRIPT), text)
+    for command in sorted(SYMBOLS, key=len, reverse=True):
+        text = text.replace(command, SYMBOLS[command])
+    text = re.sub(r'\\(?:mathcal|mathrm|mathbf|mathit|mathsf|text|textrm|rm|it|bf)\s*\{([^{}]*)\}', r'\1', text)
+    text = re.sub(r'_\{([^{}]*)\}|_(\w)', lambda m: m.group(1) or m.group(2), text)
+    text = re.sub(r'\\[A-Za-z]+', '', text)
+    return ' '.join(text.replace('{', '').replace('}', '').split())
+
+
+def plain_math(text):
+    """'$10^6$ s and $\\mathcal{F}t$ values' -> '10⁶ s and Ft values': formulas as text, for emails, feeds and pages without MathJax."""
+    return re.sub(r'\$([^$]+)\$', _plain_formula, text or '')
+
+
 def _strip_tags(text):
     return _clean(re.sub(r'<[^>]+>', ' ', text or ''))
 

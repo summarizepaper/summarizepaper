@@ -1,4 +1,4 @@
-{% load i18n %}<div class="it"><a class="t" href="{{ item.url }}">{{ item.title }}</a>
+{% load i18n seo %}<div class="it"><a class="t" href="{{ item.url }}">{{ item.title|plain_math }}</a>
 <p class="m">{{ item.authors }}{% if item.via %} &middot; <b>{% blocktrans with names=item.via %}you follow {{ names }}{% endblocktrans %}</b>{% endif %}</p>
 <p class="i">{{ item.ident }}{% if item.category %} &middot; {{ item.category }}{% endif %}</p>
 {% if item.reasons %}<p class="w">{% trans 'Why:' %} {{ item.reasons|join:" · " }}</p>{% endif %}

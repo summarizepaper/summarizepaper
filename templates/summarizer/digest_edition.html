@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}{% load reading_marks %}
+{% load i18n seo %}{% load reading_marks %}
 
 {% get_current_language as LANGUAGE_CODE %}
 
@@ -55,7 +55,7 @@
   <ol>
   {% for row in rows %}
     <li data-paper data-primary="{{ row.primary|yesno:'1,0' }}" data-in-email="{{ row.in_email|yesno:'1,0' }}" {% if threshold and row.score is not None and row.score < threshold %}class="below"{% endif %}>
-      <span class="rank">{{ row.rank }}.</span> <a class="title" href="{{ row.url }}">{{ row.title }}</a>
+      <span class="rank">{{ row.rank }}.</span> <a class="title" href="{{ row.url }}">{{ row.title|plain_math }}</a>
       {% if row.in_email %}<span class="badge">{% trans 'in your email' %}</span>{% endif %}
       <div class="meta">{{ row.authors }} · <span class="ident">{{ row.ident }}</span>{% if row.category %} · {{ row.category }}{% endif %}{% if row.score is not None %} · <span class="score" title="{% trans 'Cosine similarity between the paper and the closest part of your profile or of the papers you liked' %}">{% blocktrans with score=row.score|floatformat:2 %}closeness {{ score }}{% endblocktrans %}</span>{% endif %}</div>
       {% if row.reasons %}<div class="why">{{ row.reasons|join:" · " }}</div>{% endif %}

@@ -17,6 +17,7 @@
       {% if c.also %}<div style="font-size:13px;margin-top:4px;color:#555;">{% trans 'Also cites:' %} {% for a in c.also %}{% if not forloop.first %}; {% endif %}{{ a.title }}{% if a.stance %} ({% include 'citations/stance_label.txt' with c=a %}){% endif %}{% endfor %}</div>{% endif %}
     </div>
     {% endfor %}
+    {% if paper.above %}<p style="margin:0 0 14px;color:#555;font-size:13px;">{% trans 'Shown above, as it also cites another paper you follow:' %} {% for a in paper.above %}{% if not forloop.first %}; {% endif %}<a href="{{ a.url }}" style="color:#1a0dab;">{{ a.title }}</a>{% if a.stance %} ({% include 'citations/stance_label.txt' with c=a %}){% endif %}{% endfor %}</p>{% endif %}
     {% if paper.more %}<p style="color:#666;font-size:13px;">{% blocktrans count n=paper.more %}and {{ n }} more{% plural %}and {{ n }} more{% endblocktrans %} · <a href="{{ base_url }}/{{ lang }}/citations/{{ paper.followed.pk }}/" style="color:#666;">{% trans 'See all its citations' %}</a></p>{% endif %}
     {% endfor %}
     <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">

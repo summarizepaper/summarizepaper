@@ -33,6 +33,17 @@ class EmailSenderTests(TestCase):
         self.assertIn('List-Unsubscribe', message.message())
         self.assertTrue(message.alternatives)
 
+    def test_digest_writes_latex_titles_as_text(self):
+        subscription = DigestSubscription.objects.create(user=self.user, categories='astro-ph.SR', lang='en')
+        title = 'Observations of the White Dwarf ZTF J0328$-$1219 Reveal $10^6$ yr'
+        item = DigestItem.objects.create(arxiv_id='2610.00002v1', lang='en', title=title, blurb='A result.')
+        digest.send_one(subscription, [item], 'https://www.summarizepaper.com')
+        message = mail.outbox[0]
+        for text in (message.subject, message.body, message.alternatives[0][0]):
+            self.assertIn('ZTF J0328-1219', text)
+            self.assertNotIn('$', text)
+        self.assertIn('10⁶ yr', message.body)
+
     def test_activation_and_login_links_use_the_same_branded_sender(self):
         request = RequestFactory().get('/en/login/')
         with translation.override('en'), mock.patch('summarizer.mailcheck.undeliverable_reason', return_value=None):

@@ -1226,7 +1226,9 @@ def reasons(entry, wanted=(), private=True):
     from django.utils.translation import gettext as _
     if not entry:
         return []
-    found, closest = [], entry.get('closest') or {}
+    found, closest = [], dict(entry.get('closest') or {})
+    if closest.get('title'):
+        closest['title'] = sources.plain_math(closest['title'])
     kind = closest.get('kind')
     if kind == 'reference':
         found.append(_('Close to your reference paper “%(title)s”') % {'title': closest.get('title')})
@@ -1305,7 +1307,7 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
             'items': items,
             'from_authors': from_authors,
             'count': len(items) + len(from_authors),
-            'top_title': short(first.title, 70) if first else '',
+            'top_title': short(sources.plain_math(first.title), 70) if first else '',
             'top_author': first.via.split(', ')[0] if first is not None and from_authors and first.via else '',
             'categories_label': ', '.join(category_label(c) for c in wanted),
             'total': edition.candidates if edition else 0,

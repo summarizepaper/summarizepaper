@@ -4,7 +4,7 @@ import re
 from django import template
 from django.utils.safestring import mark_safe
 
-from summarizer import keypoints, summary_text
+from summarizer import keypoints, sources, summary_text
 
 register = template.Library()
 
@@ -13,6 +13,12 @@ register = template.Library()
 def oneline(value):
     """Collapse the newlines and runs of spaces found in arXiv titles and abstracts."""
     return re.sub(r'\s+', ' ', str(value or '')).strip()
+
+
+@register.filter
+def plain_math(value):
+    """'ZTF J0328$-$1219' -> 'ZTF J0328-1219': LaTeX formulas of a title as text, where MathJax does not run."""
+    return sources.plain_math(str(value or ''))
 
 
 @register.filter

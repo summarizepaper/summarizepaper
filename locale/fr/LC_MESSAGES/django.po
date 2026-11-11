@@ -23790,3 +23790,7 @@ msgstr "oui"
 
 msgid "no"
 msgstr "non"
+
+msgid "Shown above, as it also cites another paper you follow:"
+msgstr ""
+"Montré plus haut, car il cite aussi un autre article que vous suivez :"

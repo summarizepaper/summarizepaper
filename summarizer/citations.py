@@ -787,7 +787,8 @@ def due_users(now):
 def pending(user, base_url, lang, now=None):
     """(email context, commit(now)) of the new citations not emailed yet to this user, or None.
 
-    A citing paper that cites several of the followed papers is shown once, under the first, with the others."""
+    A citing paper that cites several of the followed papers is shown once, under the first, with the others; the
+    others name it in 'above', or a paper whose citations were all shown higher would show only its counts."""
     now = now or timezone.now()
     papers, archive, delivered = [], [], {}
     followed_rows = list(FollowedPaper.objects.filter(user=user).exclude(pending='').exclude(pending='[]')
@@ -802,17 +803,19 @@ def pending(user, base_url, lang, now=None):
         delivered[followed.pk] = ids
         items = judged_items(followed, citing, ids, base_url, lang, now)
         archive.append({'arxiv_id': followed.arxiv_id, 'title': followed.title, 'mine': followed.mine, 'items': items})
-        email_items = []
+        email_items, above = [], []
         for item in items[:MAX_PER_EMAIL]:
             first = shown.get(item['key'])
             if first is not None:
                 first.setdefault('also', []).append({'title': followed.title or followed.arxiv_id,
                                                      'stance': item['stance'], 'confidence': item['confidence']})
+                above.append({'title': item['title'], 'url': item['url'], 'stance': item['stance'],
+                              'confidence': item['confidence']})
                 continue
             item = dict(item)
             shown[item['key']] = item
             email_items.append(item)
-        papers.append({'followed': followed, 'items': email_items, 'more': max(0, len(items) - MAX_PER_EMAIL),
+        papers.append({'followed': followed, 'items': email_items, 'above': above, 'more': max(0, len(items) - MAX_PER_EMAIL),
                        'summary': summary(items)})
     if not papers:
         return None

@@ -1,4 +1,4 @@
-{% load i18n %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly paper alert' %}{% else %}{% trans 'Your daily paper alert' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
+{% load i18n seo %}{% autoescape off %}{% if weekly %}{% trans 'Your weekly paper alert' %}{% else %}{% trans 'Your daily paper alert' %}{% endif %}{% if subscription.name %} - {{ subscription.name }}{% endif %} - {{ date|date:"j F Y" }}
 {{ categories_label }}{% if edition_url and total %} - {% blocktrans count counter=total %}{{ count }} of {{ counter }} paper shown{% plural %}{{ count }} of {{ counter }} papers shown{% endblocktrans %}: {{ edition_url }}{% endif %}
 
 {% if listen_url %}{% trans 'Listen to this paper alert' %}: {{ listen_url }}
@@ -13,25 +13,25 @@
 
 {% endif %}{% for synthesis in syntheses %}{% blocktrans with category=synthesis.category %}This week in {{ category }}{% endblocktrans %}
 {% for trend in synthesis.trends %}* {{ trend.title }}. {{ trend.text }}{% for paper in trend.papers %}
-  - {{ paper.title }}: {{ paper.url }}{% endfor %}
+  - {{ paper.title|plain_math }}: {{ paper.url }}{% endfor %}
 {% endfor %}{% if synthesis.notable %}{% trans 'Papers to watch:' %}
-{% for paper in synthesis.notable %}- {{ paper.title }}: {{ paper.url }}{% if paper.why %}
+{% for paper in synthesis.notable %}- {{ paper.title|plain_math }}: {{ paper.url }}{% if paper.why %}
   {{ paper.why }}{% endif %}
 {% endfor %}{% endif %}
 {% endfor %}{% if from_authors %}{% trans 'From the authors you follow' %}
 
-{% for item in from_authors %}{{ item.title }}
+{% for item in from_authors %}{{ item.title|plain_math }}
 {{ item.authors }}{% if item.via %} ({% blocktrans with names=item.via %}you follow {{ names }}{% endblocktrans %}){% endif %}
 {% include 'digest/item.txt' %}
 {% endfor %}{% if items %}{% trans 'In your categories' %}
 
-{% endif %}{% endif %}{% for item in items %}{{ item.title }}
+{% endif %}{% endif %}{% for item in items %}{{ item.title|plain_math }}
 {{ item.authors }}
 {% include 'digest/item.txt' %}
 {% endfor %}{% if edition_url and more %}{% blocktrans count counter=more %}See the {{ counter }} other paper of your categories, ranked, with why each one is there{% plural %}See the {{ counter }} other papers of your categories, ranked, with why each one is there{% endblocktrans %}: {{ edition_url }}
 
 {% endif %}{% for section in sections %}== {{ section.title }} ==
-{% for entry in section.items %}- {{ entry.title }}{% if entry.label %} ({{ entry.label }}){% endif %}{% if entry.note %}
+{% for entry in section.items %}- {{ entry.title|plain_math }}{% if entry.label %} ({{ entry.label }}){% endif %}{% if entry.note %}
   {{ entry.note }}{% endif %}
   {{ entry.url }}
 {% endfor %}{% trans 'Manage' %}: {{ section.manage_url }}

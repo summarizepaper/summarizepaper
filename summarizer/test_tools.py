@@ -12,6 +12,7 @@ from django.core import mail
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone, translation
+from django.template.loader import render_to_string
 
 from summarizer import audio, changes, citations, conference, digest, generated, letters, library, literature, missed, presskit, questions, refcheck, scoops, slides, sources, teams, trends, usage
 from summarizer.models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CitationCache, Collection,
@@ -1422,6 +1423,13 @@ class CitationTests(ToolsTestCase):
         self.assertEqual(sum(len(p['items']) for p in context['papers']), 1)
         shown = next(i for p in context['papers'] for i in p['items'])
         self.assertEqual([a['title'] for a in shown['also']], ['First'])
+        emptied = next(p for p in context['papers'] if not p['items'])
+        self.assertEqual([a['title'] for a in emptied['above']], [shown['title']])
+        with translation.override('fr'):
+            html = render_to_string('citations/email.html', dict(context, lang='fr'))
+            text = render_to_string('citations/email.txt', dict(context, lang='fr'))
+        for body in (html, text):
+            self.assertIn('Montré plus haut, car il cite aussi un autre article que vous suivez :', body)
 
     def test_rhythm_is_chosen_and_urgent_alerts_go_at_once(self):
         from .models import CitationAlertLog, CitationPreference
