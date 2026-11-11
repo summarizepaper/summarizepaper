@@ -19,6 +19,7 @@
       {% if result.revision_of and not shared %} · <a href="/{{ LANGUAGE_CODE }}/literature-review/{{ result.revision_of.key }}/">{% trans 'revised from an earlier review' %}</a>{% endif %}
       {% if result.previous and not shared %} · <a href="/{{ LANGUAGE_CODE }}/literature-review/{{ result.previous.key }}/">{% blocktrans with day=result.previous.day|date:"j F Y" %}searched again after the review of {{ day }}{% endblocktrans %}</a>{% endif %}
     </p>{% endif %}
+    {% if not shared %}{% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/literature-review-from-a-research-question/">Comment lire cette revue et ajuster sa sélection ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/literature-review-from-a-research-question/">How to read this review and adjust its selection? Illustrated guide</a></p>{% endif %}{% endif %}
   </header>
 
   {% if message == 'saved' and collection %}<p class="notice" role="status">{% trans 'The papers are in a new collection:' %} <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/">{{ collection.name }}</a> · <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/#table">{% trans 'compare them in a table' %}</a> · <a href="/{{ LANGUAGE_CODE }}/collections/{{ collection.pk }}/#questions">{% trans 'find their open questions' %}</a></p>

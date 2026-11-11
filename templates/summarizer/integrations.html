@@ -22,6 +22,7 @@
     <li><strong>Obsidian</strong>: {% trans 'a note per paper with its properties (citation key, DOI, authors, year, tags, reading status), its key points and its summary; a collection downloads as a folder to drop in your vault, with a note linking its papers.' %}</li>
     <li><strong>Notion</strong>: {% trans 'the Markdown of a paper to import as a page, and the spreadsheet of a collection to import as a database.' %}</li>
   </ul>
+  {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/obsidian-research-paper-notes/">Le guide Obsidian</a> · <a href="/fr/guides/notion-research-paper-database/">Le guide Notion</a>, avec les vrais fichiers exportés</p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/obsidian-research-paper-notes/">The Obsidian guide</a> · <a href="/en/guides/notion-research-paper-database/">The Notion guide</a>, with the real exported files</p>{% endif %}
   <p class="notice">{% trans 'A paper published since its preprint is exported as its published version: journal and DOI, with its arXiv identifier kept. Each summary says it was written by an AI model, from which version of the paper and when.' %}</p>
   <p class="notice">{% trans 'No API key is needed to import a RIS file into Zotero. It contains the reference and the original abstract, when available. The direct connection below adds a separate note with the AI summary and key points.' %}</p>
 
@@ -42,6 +43,7 @@
     <li>{% trans 'A literature review sent as a Zotero collection with a subcollection per approach, each paper with the statements it supports and its sentence that supports them.' %}</li>
     <li>{% trans 'Your Zotero collections as reference papers for your daily paper alert and your scoop watch.' %}</li>
   </ul>
+  {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/zotero-sync-research-papers/" data-funnel="integrations_zotero_guide">Le guide Zotero pas à pas, avec captures</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/zotero-sync-research-papers/" data-funnel="integrations_zotero_guide">The step-by-step Zotero guide, with screenshots</a></p>{% endif %}
   {% if anonymous %}
     {% include 'summarizer/tool_signup.html' with premium_tool=True %}
   {% elif not paid %}

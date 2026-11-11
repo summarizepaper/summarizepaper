@@ -19,6 +19,7 @@ import io
 import json
 import re
 import secrets
+import unicodedata
 
 import requests
 from django.contrib.auth.decorators import login_required
@@ -609,7 +610,9 @@ def add_to_collection(request):
 
 
 def export_name(collection):
-    return re.sub(r'[^A-Za-z0-9_-]+', '-', collection.name).strip('-')[:60] or 'collection'
+    """The file and folder name of a collection's exports: accents dropped (débris -> debris), not the letter."""
+    name = unicodedata.normalize('NFKD', collection.name).encode('ascii', 'ignore').decode()
+    return re.sub(r'[^A-Za-z0-9_-]+', '-', name).strip('-')[:60] or 'collection'
 
 
 @login_required

@@ -42,6 +42,7 @@
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/ris/" rel="nofollow">RIS (Zotero, Mendeley, EndNote)</a> ·
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/md/" rel="nofollow" title="{% trans 'A note with its properties: citation key, DOI, authors, year' %}">Obsidian (Markdown)</a> ·
     <a href="/{{ LANGUAGE_CODE }}/export/{{ arxiv_id }}/notion/" rel="nofollow">Notion (Markdown)</a>
+    {% if LANGUAGE_CODE == 'fr' %}<a class="tool-guide-link" href="/fr/guides/obsidian-research-paper-notes/">Guide Obsidian</a> · <a class="tool-guide-link" href="/fr/guides/notion-research-paper-database/">Guide Notion</a>{% elif LANGUAGE_CODE == 'en' %}<a class="tool-guide-link" href="/en/guides/obsidian-research-paper-notes/">Obsidian guide</a> · <a class="tool-guide-link" href="/en/guides/notion-research-paper-database/">Notion guide</a>{% endif %}
   </div>
 
   <div class="tools-advanced">
@@ -52,6 +53,7 @@
     <span class="tool-label">Zotero</span>
     <button type="button" class="link-button" id="zotero-go" data-funnel="zotero_send_paper">{% trans 'Send to Zotero with its summary' %}</button>
     <span class="tool-status" id="zotero-status"></span>
+    {% if LANGUAGE_CODE == 'fr' %}<a class="tool-guide-link" href="/fr/guides/zotero-sync-research-papers/">Guide Zotero</a>{% elif LANGUAGE_CODE == 'en' %}<a class="tool-guide-link" href="/en/guides/zotero-sync-research-papers/">Zotero guide</a>{% endif %}
   </div>
 
   <div class="tool-row" id="paper-citations" style="scroll-margin-top:90px">
@@ -87,6 +89,7 @@
     <span class="tool-label">{% trans 'Journal club' %} <span class="badge-premium">Premium+</span></span>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/journal-club/{{ arxiv_id }}/" rel="nofollow">{% trans 'Slides to present it' %}</a>
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/journal-club/propose/?arxiv_id={{ arxiv_id|urlencode }}" rel="nofollow">{% trans 'Propose for the journal club' %}</a>
+    {% if LANGUAGE_CODE == 'fr' %}<a class="tool-guide-link" href="/fr/guides/journal-club-slides-from-a-paper/">Guide du journal club</a>{% elif LANGUAGE_CODE == 'en' %}<a class="tool-guide-link" href="/en/guides/journal-club-slides-from-a-paper/">Journal club guide</a>{% endif %}
   </div>
 
   {% if not arxiv_id|is_external %}

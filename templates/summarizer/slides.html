@@ -23,6 +23,7 @@
       <h1>{{ paper.title }}</h1>
       <p class="lead">{{ authors }} · {{ arxiv_id|paper_ref }} · <a href="/{{ LANGUAGE_CODE }}/paper/{{ arxiv_id }}/">{% trans 'Summary page' %}</a></p>
     {% endif %}
+    {% if not shared %}{% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/journal-club-slides-from-a-paper/">Comment vérifier, modifier et présenter ces slides ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/journal-club-slides-from-a-paper/">How to check, edit and present these slides? Illustrated guide</a></p>{% endif %}{% endif %}
   </header>
 
   {% if paid %}

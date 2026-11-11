@@ -45,7 +45,12 @@ _GUIDE_SLUGS = {
     'letters/': 'weekly-science-letters',
     'saved-searches/': 'saved-searches-research-alerts',
     'press-kit/': 'research-paper-press-kit',
+    'literature-review/': 'literature-review-from-a-research-question',
+    'missed/': 'what-did-i-miss-uncited-papers',
     'refcheck/': 'overleaf-bibliography-check',
+    'integrations/': 'zotero-sync-research-papers',
+    'journal-club/': 'journal-club-slides-from-a-paper',
+    'conference/': 'conference-program-talks-to-attend',
 }
 
 TOOL_GROUPS = [

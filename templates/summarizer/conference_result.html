@@ -16,6 +16,7 @@
     {% elif owner %}<p><a href="/{{ LANGUAGE_CODE }}/conference/">← {% trans 'Conference companion' %}</a></p>
     {% else %}<p class="muted">{% trans 'The program of your team' %}</p>{% endif %}
     <h1>{% if result.name %}{{ result.name }}{% else %}{% trans 'Your program' %}{% endif %}</h1>
+    {% if not shared %}{% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/conference-program-talks-to-attend/">Comment lire ce programme, le marquer et le partager ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/conference-program-talks-to-attend/">How to read, mark and share this program? Illustrated guide</a></p>{% endif %}{% endif %}
   </header>
 
   {% if result %}

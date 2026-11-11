@@ -52,6 +52,7 @@
     {% else %}<p class="muted">{% trans 'With Premium+, a synthesis by approach of the papers of your collection, each statement with the sentences that support it.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p>{% endif %}
   </details>
   <p class="muted"><small>{% trans 'Exports keep your notes and tags. Filter by a tag to export only its papers. Drag the papers or use the arrows to order them: the analyses read them in this order.' %}{% if analysed|length > chat_max %} {% blocktrans with n=chat_max %}The chat takes the first {{ n }} selected papers.{% endblocktrans %}{% endif %}</small></p>
+  {% if LANGUAGE_CODE == 'fr' %}<p class="muted"><small>Guides : <a href="/fr/guides/zotero-sync-research-papers/">Zotero</a> · <a href="/fr/guides/obsidian-research-paper-notes/">Obsidian</a> · <a href="/fr/guides/notion-research-paper-database/">Notion</a> · <a href="/fr/guides/overleaf-bibliography-check/">Overleaf</a></small></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><small>Guides: <a href="/en/guides/zotero-sync-research-papers/">Zotero</a> · <a href="/en/guides/obsidian-research-paper-notes/">Obsidian</a> · <a href="/en/guides/notion-research-paper-database/">Notion</a> · <a href="/en/guides/overleaf-bibliography-check/">Overleaf</a></small></p>{% endif %}
   {% endif %}
 
   {% if added %}

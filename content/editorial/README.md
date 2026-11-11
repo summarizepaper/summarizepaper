@@ -1,6 +1,6 @@
 # Guides des outils : index et état des démonstrations
 
-Les 12 articles existent en français et en anglais, avec 236 captures distinctes référencées. Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
+Les 20 guides d’outils existent en français et en anglais (12 repris fin octobre, Overleaf le 9 novembre, 7 créés le 10 novembre). Ils sont configurés pour publication (`draft: false`), avec liens réciproques depuis la page des outils, exemples reproductibles et recommandations de lecture. Les versions de chaque langue sont reliées automatiquement par hreflang.
 
 ## Reprise éditoriale du 28 octobre
 
@@ -22,6 +22,14 @@ Le premier outil, Summaries, a été réécrit autour de Sagittarius A* avec un 
 | Who works on it? | [Lire](../guides/fr/find-research-teams-by-topic.md) | [Read](../guides/en/find-research-teams-by-topic.md) | Repris le 28 octobre : exolunes, 72 articles / 5 approches FR et 59 / 3 EN ; filtres, publications, texte intégral CC BY et figure 6, collections de 10 et 14 entrées ; 12 captures par langue |
 | Find a research placement | [Lire](../guides/fr/find-research-placement-contacts.md) | [Read](../guides/en/find-research-placement-contacts.md) | Repris le 28 octobre : M2, six mois dès avril 2027, France avec alternatives ; 10 pistes par langue, lectures intégrales CC BY, brouillons personnalisés, notes et comparaisons ; 12 captures FR et 11 EN |
 | Press kit | [Lire](../guides/fr/research-paper-press-kit.md) | [Read](../guides/en/research-paper-press-kit.md) | Repris le 29 octobre : points de Bloch, trois rôles, texte intégral CC BY, preuves, formulations, nouveauté non confirmée, figures et crédits ; 17 captures par langue |
+| Bibliography check / Overleaf | [Lire](../guides/fr/overleaf-bibliography-check.md) | [Read](../guides/en/overleaf-bibliography-check.md) | Créé le 9 novembre : projet Overleaf de démonstration sur le gaz des disques de débris, vérification réelle, .bib corrigé, Beamer compilé |
+| Literature review | [Lire](../guides/fr/literature-review-from-a-research-question.md) | [Read](../guides/en/literature-review-from-a-research-question.md) | Créé le 10 novembre : origine du gaz des disques de débris, 296/271 articles trouvés, 30 retenus, 18 résultats sur 18 appuyés par une phrase ; 9 captures par langue |
+| What did I miss? | [Lire](../guides/fr/what-did-i-miss-uncited-papers.md) | [Read](../guides/en/what-did-i-miss-uncited-papers.md) | Créé le 10 novembre : Bergez-Casalou & Kral (2024, CC BY) donné comme brouillon, 114 références lues, 8 (EN) et 10 (FR) articles à citer ; absences vérifiées dans sa bibliographie ; 5 captures par langue |
+| Journal club | [Lire](../guides/fr/journal-club-slides-from-a-paper.md) | [Read](../guides/en/journal-club-slides-from-a-paper.md) | Créé le 10 novembre : 2607.11677v1 (CC BY), 15 slides EN et 14 FR, sources, questions difficiles, éditeur ; deck de collection de trois articles ; 11 captures par langue |
+| Conference companion | [Lire](../guides/fr/conference-program-talks-to-attend.md) | [Read](../guides/en/conference-program-talks-to-attend.md) | Créé le 10 novembre : DDE 2025 sur Indico (120 exposés), 35 (EN) et 26 (FR) gardés, marques, note, équipe ; 8 captures par langue |
+| Zotero | [Lire](../guides/fr/zotero-sync-research-papers.md) | [Read](../guides/en/zotero-sync-research-papers.md) | Créé le 10 novembre : côté SummarizePaper seulement (RIS, connexion, synchronisation, envois) ; pas de capture d’une bibliothèque connectée ; 5 captures par langue |
+| Obsidian | [Lire](../guides/fr/obsidian-research-paper-notes.md) | [Read](../guides/en/obsidian-research-paper-notes.md) | Créé le 10 novembre : vrais fichiers exportés de la collection de démonstration (note, dossier, propriétés) ; 2 captures par langue |
+| Notion | [Lire](../guides/fr/notion-research-paper-database.md) | [Read](../guides/en/notion-research-paper-database.md) | Créé le 10 novembre : vrai Markdown et vrai CSV exportés ; import décrit d’après l’aide de Notion, non testé dans un espace Notion ; 2 captures par langue |
 
 ## Objets de démonstration dans le compte
 
@@ -162,3 +170,11 @@ Cas concret de prudence : observation d’une chaîne, détails résolus de 14�
 Deux figures proposées par kit : 3 et 1 en FR, 3 et 2 en EN. Figure 3 montrée avec tous ses panneaux, légende et crédit vérifiés. Galerie complète de la fiche : dix figures, annexes comprises, contrôlée dans l’interface et capturée dans les deux langues. Dix-sept captures localisées par langue, relues en planches et sur les vues de détail.
 
 Aides ajoutées à l’accueil Kit presse, au kit et à la ligne correspondante des outils d’un article. Correction CSS associée : les éléments portant `hidden` dans le kit restent masqués même lorsqu’une classe impose `display:flex`, notamment le panneau vide de partage avant toute création de lien. Vingt-six tests existants de qualité et de rôles passent ; validation des 24 guides et de leurs images également réussie.
+
+### Sept nouveaux guides — 10 novembre 2026
+
+Revue de littérature, Qu’est-ce que j’ai raté ?, Journal club, Compagnon de conférence, Zotero, Obsidian et Notion, en français et en anglais, avec liens depuis /tools/, les pages des outils, leurs résultats (sauf partagés), les outils d’une page d’article, les exports d’une collection et la page des intégrations.
+
+Les résultats viennent d’exécutions réelles sur des dynos ponctuels, avec un utilisateur temporaire Premium+ dans une transaction annulée à la fin : rien n’est resté en production. Ils ont été importés dans la base locale (utilisateur guide-demo) pour les captures. Questions et entrées : origine du gaz des disques de débris (revue) ; PDF de 2411.14241v1 comme brouillon (What did I miss?, texte conservé) ; 2607.11677v1 pour un article seul et avec 2411.14241v1 et 1703.10693v1 pour une collection (journal club) ; https://indico.global/event/8940/ avec trois thèmes de recherche (conférence). Les marques, la note et la coéquipière « Camille » de la conférence ont été créées en local, sans IA.
+
+Les deux exécutions d’une même entrée diffèrent un peu selon la langue (articles retenus, nombre d’articles à citer) : les guides le disent. Le guide Zotero ne montre pas de bibliothèque connectée ; les guides Obsidian et Notion montrent les fichiers exportés, pas les applications. Le nom des dossiers et fichiers d’export d’une collection garde désormais ses lettres accentuées sans accent (débris → debris) au lieu de les remplacer par un tiret.

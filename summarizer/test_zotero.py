@@ -197,6 +197,11 @@ class ExportTests(ToolsTestCase):
                      'Collection: [[Hot-planets]]'):
             self.assertIn(part, note)
         self.assertIn('- [[lee2021clouds]] Clouds on a hot planet (2021)', archive.read('Hot-planets/Hot-planets.md').decode())
+        collection.name = 'Gaz dans les disques de débris'
+        collection.save()
+        response = self.client_for(user).get('/fr/collections/%d/export/obsidian/' % collection.pk)
+        self.assertIn('Gaz-dans-les-disques-de-debris/Gaz-dans-les-disques-de-debris.md',
+                      zipfile.ZipFile(io.BytesIO(response.content)).namelist())
 
     def test_names_keep_their_particles(self):
         self.assertEqual(exports.split_name('Jean-Pierre van der Waals'), ('Jean-Pierre', 'van der Waals'))
