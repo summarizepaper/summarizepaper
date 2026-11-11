@@ -12,6 +12,7 @@ import unicodedata
 import zipfile
 
 from django.http import Http404, HttpResponse
+from django.utils.http import content_disposition_header
 from django.utils.translation import get_language
 from django.utils.translation import gettext as _
 
@@ -273,28 +274,33 @@ def frontmatter(meta, lang, key, tags=(), status=''):
     return '\n'.join(lines + ['---', ''])
 
 
-def markdown_entry(meta, lang, key=None, tags=(), status=''):
-    """The note of a paper; with key, Obsidian properties first (citekey, DOI, tags...)."""
+def field(name, lang, value):
+    """A bold label and its value on a line of its own, with the French space before the colon."""
+    return '**%s%s** %s  ' % (name, ' :' if lang.startswith('fr') else ':', value)
+
+
+def markdown_entry(meta, lang, key=None, tags=(), status='', heading=True):
+    """The note of a paper; with key, Obsidian properties first (citekey, DOI, tags...); heading: its title first."""
     ref = bare_ref(meta['arxiv_id'])
     journal, doi, _year = journal_of(meta)
     lines = [frontmatter(meta, lang, key, tags, status)] if key else []
-    lines += ['# %s' % meta['title'], '']
+    lines += ['# %s' % meta['title'], ''] if heading else []
     if meta['authors']:
-        lines.append('**%s:** %s  ' % (_('Authors'), authors_line(meta['authors'])))
+        lines.append(field(_('Authors'), lang, authors_line(meta['authors'])))
     if journal:
-        lines.append('**%s:** %s  ' % (_('Published in'), journal))
+        lines.append(field(_('Published in'), lang, journal))
     if doi and journal:
-        lines.append('**DOI:** [%s](https://doi.org/%s)  ' % (doi, doi))
+        lines.append(field('DOI', lang, '[%s](https://doi.org/%s)' % (doi, doi)))
     if sources.is_external(meta['arxiv_id']):
         if meta['journal'] and not journal:
-            lines.append('**%s:** %s  ' % (_('Published in'), meta['journal']))
+            lines.append(field(_('Published in'), lang, meta['journal']))
         if not (doi and journal):
-            lines.append('**%s:** [%s](%s)  ' % (sources.label(meta['arxiv_id']).split(':')[0], ref, sources.ref_url(meta['arxiv_id'])))
+            lines.append(field(sources.label(meta['arxiv_id']).split(':')[0], lang, '[%s](%s)' % (ref, sources.ref_url(meta['arxiv_id']))))
     else:
-        lines.append('**arXiv:** [%s](https://arxiv.org/abs/%s)  ' % (ref, ref))
+        lines.append(field('arXiv', lang, '[%s](https://arxiv.org/abs/%s)' % (ref, ref)))
     if meta['date']:
-        lines.append('**%s:** %s  ' % (_('Date'), meta['date']))
-    lines.append('**%s:** %s' % (_('Summary page'), page_url(meta, lang)))
+        lines.append(field(_('Date'), lang, meta['date']))
+    lines.append(field(_('Summary page'), lang, page_url(meta, lang)).rstrip())
     lines.append('')
     row = summary_of(meta['arxiv_id'], lang)
     if row is not None and row.notes:
@@ -310,7 +316,7 @@ def markdown_entry(meta, lang, key=None, tags=(), status=''):
 
 def _download(text, filename, content_type):
     response = HttpResponse(text, content_type=content_type)
-    response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+    response['Content-Disposition'] = content_disposition_header(True, filename)
     return response
 
 
@@ -322,9 +328,12 @@ def export_paper(request, arxiv_id, fmt):
     name = file_name(arxiv_id)
     if fmt == 'ris':
         return _download(ris_entry(meta), name + '.ris', 'application/x-research-info-systems; charset=utf-8')
-    if fmt in ('md', 'notion'):
-        key = cite_key(meta) if fmt == 'md' else None
-        return _download(markdown_entry(meta, get_language(), key), (key or name) + '.md', 'text/markdown; charset=utf-8')
+    if fmt == 'md':
+        key = cite_key(meta)
+        return _download(markdown_entry(meta, get_language(), key), key + '.md', 'text/markdown; charset=utf-8')
+    if fmt == 'notion':  # Notion names the page after the file, so the title is the file's name, not a heading
+        title = ' '.join(re.sub(r'[\\/:*?"<>|]+', ' ', meta['title']).split())[:150] or name
+        return _download(markdown_entry(meta, get_language(), heading=False), title + '.md', 'text/markdown; charset=utf-8')
     raise Http404
 
 

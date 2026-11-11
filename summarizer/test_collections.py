@@ -522,8 +522,11 @@ class WorkspaceTests(CollectionsTestCase):
         CollectionPaper.objects.filter(arxiv_id='2101.00001v1').update(tags='core', reading='key', note='Cite in ch. 2')
         CitationCache.objects.create(arxiv_id='2101.00001', total=7, checked=timezone.now())
         csv = self.client_for(user).get('/en/collections/%d/export/list/' % collection.pk).content.decode()
-        self.assertIn('Identifier,Title,Authors,Year,Venue', csv)
-        self.assertIn('2101.00001,Paper 2101.00001v1,"Ann Lee, Bob Ray",2021,,,,7,,Key paper,core,Cite in ch. 2,yes,https://arxiv.org/abs/2101.00001', csv)
+        self.assertIn('Title,Identifier,Authors,Year,Venue', csv)
+        self.assertIn('Paper 2101.00001v1,arXiv:2101.00001,"Ann Lee, Bob Ray",2021,,,,7,,Key paper,core,Cite in ch. 2,yes,https://arxiv.org/abs/2101.00001', csv)
+        french = self.client_for(user).get('/fr/collections/%d/export/list/' % collection.pk).content.decode()
+        self.assertIn('Titre,Identifiant,Auteurs,Année,Revue', french)
+        self.assertIn(',Article clé,core,Cite in ch. 2,oui,', french)
 
     def test_literature_review_collections_keep_one_paper_per_work(self):
         user = self.user()

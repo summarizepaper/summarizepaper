@@ -703,14 +703,18 @@ def list_csv(papers, filename):
     reading = dict(READING)
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(['Identifier', 'Title', 'Authors', 'Year', 'Venue', 'Editorial status', 'Notices', 'Citations',
-                     'Newer version', 'Reading status', 'Tags', 'Note', 'Selected', 'Link'])
+    # the title first: Notion names each row of the database it imports after the first column
+    writer.writerow([str(h) for h in (_('Title'), _('Identifier'), _('Authors'), _('Year'), _('Venue'), _('Editorial status'),
+                     _('Notices'), _('Citations'), _('Newer version'), _('Reading status'), _('Tags'), _('Note'),
+                     _('Selected'), _('Link'))])
     for p in papers:
         f = facts.get(p.arxiv_id, {})
-        writer.writerow([exports.bare_ref(p.arxiv_id), p.title, p.authors, f.get('year', ''), f.get('venue', ''),
+        # arXiv: before the number, or Notion and spreadsheets read 2410.12340 as the number 2410.1234
+        ref = exports.bare_ref(p.arxiv_id)
+        writer.writerow([p.title, ref if sources.is_external(p.arxiv_id) else 'arXiv:%s' % ref, p.authors, f.get('year', ''), f.get('venue', ''),
                          f.get('label', ''), '; '.join(str(n['label']) for n in f.get('notices', [])),
                          '' if f.get('citations') is None else f['citations'], f.get('newer') or '',
-                         str(reading.get(p.reading, '')), p.tags, p.note, 'yes' if p.selected else 'no',
+                         str(reading.get(p.reading, '')), p.tags, p.note, str(_('yes') if p.selected else _('no')),
                          sources.ref_url(p.arxiv_id) if sources.is_external(p.arxiv_id)
                          else 'https://arxiv.org/abs/%s' % exports.bare_ref(p.arxiv_id)])
     response = HttpResponse('\ufeff' + out.getvalue(), content_type='text/csv; charset=utf-8')

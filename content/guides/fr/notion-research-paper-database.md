@@ -9,7 +9,7 @@ faq:
   - q: "SummarizePaper écrit-il dans mon espace Notion ?"
     a: "Non. Vous téléchargez un fichier et l’importez vous-même dans Notion : SummarizePaper n’a jamais besoin d’accéder à votre espace."
   - q: "Comment ajouter plus tard de nouveaux articles à la base ?"
-    a: "Exportez à nouveau la collection et, dans Notion, utilisez Fusionner avec un CSV (Merge with CSV) sur la base : les lignes sont ajoutées comme nouvelles lignes, les lignes existantes ne sont pas mises à jour. Ou importez le nouvel export comme une nouvelle base."
+    a: "Exportez à nouveau la collection et, dans l’import CSV de Notion, choisissez Importer dans une base de données existante : les lignes sont ajoutées comme nouvelles lignes, les lignes existantes ne sont pas mises à jour. Ou importez le nouvel export comme une nouvelle base."
 sources:
   - label: Aide de Notion — Importer des données dans Notion
     url: https://www.notion.com/help/import-data-into-notion
@@ -28,17 +28,15 @@ Sur la page de résumé d’un article, ouvrez **Outils pour cet article**, puis
 <figcaption>« Notion (Markdown) », dans les outils de chaque page d’article.</figcaption>
 </figure>
 
-Le fichier contient le titre de l’article en titre, sa référence, puis ses points clés et son résumé, dans la langue du site :
+Le fichier porte le titre de l’article, ici `Observing planetary gaps in the gas of debris disks.md`, et contient sa référence, puis ses points clés et son résumé, dans la langue du site :
 
 ```markdown
-# Observing planetary gaps in the gas of debris disks
-
-**Auteurs:** C. Bergez-Casalou, Q. Kral  
-**Publié dans:** Astronomy & Astrophysics  
-**DOI:** [10.1051/0004-6361/202452097](https://doi.org/10.1051/0004-6361/202452097)  
-**arXiv:** [2411.14241](https://arxiv.org/abs/2411.14241)  
-**Date:** 2024-11-21  
-**Page du résumé:** https://www.summarizepaper.com/fr/paper/2411.14241v1/
+**Auteurs :** C. Bergez-Casalou, Q. Kral  
+**Publié dans :** Astronomy & Astrophysics  
+**DOI :** [10.1051/0004-6361/202452097](https://doi.org/10.1051/0004-6361/202452097)  
+**arXiv :** [2411.14241](https://arxiv.org/abs/2411.14241)  
+**Date :** 2024-11-21  
+**Page du résumé :** https://www.summarizepaper.com/fr/paper/2411.14241v1/
 
 ## Points clés
 
@@ -49,7 +47,19 @@ Le fichier contient le titre de l’article en titre, sa référence, puis ses p
 …
 ```
 
-Dans Notion, ouvrez **Paramètres** (*Settings*) dans la barre latérale, puis **Importer → Texte et Markdown**, et choisissez le fichier : il devient une page avec ses titres, ses libellés en gras, ses liens et ses listes. Le résumé se termine par sa provenance (écrit par un modèle d’IA, à partir de quelle version de l’article et quand). Les formules sont écrites en LaTeX entre dollars : Notion peut les afficher comme du texte.
+Dans Notion, ouvrez le menu de votre espace de travail en bas de la barre latérale, puis **Paramètres → Importer**, et choisissez **Texte et Markdown** :
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/notion/import-fr.jpg"><img src="/static/summarizer/img/guides/notion/import-fr.jpg" alt="Les paramètres de Notion, section Importer : une zone où déposer un fichier ZIP, CSV, PDF, texte, Markdown ou HTML, puis les imports par fichier, dont CSV et Texte et Markdown." width="1280" height="778" loading="lazy" /></a>
+<figcaption>L’import de Notion, dans ses paramètres : CSV pour une collection, Texte et Markdown pour un article.</figcaption>
+</figure>
+
+Le fichier devient une page qui porte le titre de l’article, avec ses libellés en gras, ses liens, ses intertitres et ses listes. Les formules, écrites en LaTeX entre dollars, sont affichées comme des équations. Le résumé se termine par sa provenance (écrit par un modèle d’IA, à partir de quelle version de l’article et quand).
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/notion/page-fr.jpg"><img src="/static/summarizer/img/guides/notion/page-fr.jpg" alt="La page Notion Observing planetary gaps in the gas of debris disks : auteurs, revue, DOI, arXiv, date et lien vers la page du résumé, puis les points clés." width="1280" height="682" loading="lazy" /></a>
+<figcaption>Un article importé dans Notion : sa référence, puis ses points clés.</figcaption>
+</figure>
 
 ## 2. Une collection comme base de données Notion
 
@@ -60,19 +70,31 @@ Dans une [collection](/fr/collections/), cliquez sur **Tableur ou Notion (CSV)**
 <figcaption>« Tableur ou Notion (CSV) », parmi les exports d’une collection.</figcaption>
 </figure>
 
-Le fichier a une ligne par article, avec ces colonnes (leurs noms restent en anglais) : *Identifier, Title, Authors, Year, Venue, Editorial status, Notices, Citations, Newer version, Reading status, Tags, Note, Selected, Link*. Pour notre collection :
+Le fichier a une ligne par article, avec ces colonnes : *Titre, Identifiant, Auteurs, Année, Revue, Statut éditorial, Avis, Citations, Version récente, Statut de lecture, Étiquettes, Note, Sélectionné, Lien*. L’identifiant est écrit `arXiv:2411.14241`, pour qu’un tableur ne le prenne pas pour un nombre. Pour notre collection :
 
-| Title | Year | Venue | Editorial status | Reading status | Tags |
+| Titre | Année | Revue | Statut éditorial | Statut de lecture | Étiquettes |
 | --- | --- | --- | --- | --- | --- |
 | Thermochemical constraints on a primordial-origin of gas-rich debris disks | 2026 | | Soumission ou évaluation annoncée sur arXiv par les auteurs | Article clé | origine, thermochimie |
 | Observing planetary gaps in the gas of debris disks | 2024 | Astronomy & Astrophysics | Publication retrouvée | À lire | planètes, ALMA |
 | Predictions for the secondary CO, C and O gas content of debris discs… | 2017 | Monthly Notices of the Royal Astronomical Society | Publication retrouvée | Lu | origine, modèles |
 
-**Editorial status**, **Notices** et **Newer version** viennent de la vérification de l’endroit où les articles ont été publiés, de leurs avis de rétractation ou de correction et de leurs nouvelles versions : lancez cette vérification dans la collection avant d’exporter pour les remplir.
+**Statut éditorial**, **Avis** et **Version récente** viennent de la vérification de l’endroit où les articles ont été publiés, de leurs avis de rétractation ou de correction et de leurs nouvelles versions : lancez cette vérification dans la collection avant d’exporter pour les remplir.
 
-Dans Notion, ouvrez **Paramètres**, puis **Importer → CSV**, et choisissez le fichier : il devient une base de données avec une ligne par article. Adaptez ensuite la base à votre usage : passez *Reading status* en propriété Sélection pour grouper les articles par statut dans un tableau Kanban, *Tags* en Sélection multiple, *Link* en URL. Notion prend la première colonne comme nom de chaque ligne ; la deuxième, *Title*, est le titre de l’article.
+Dans Notion, ouvrez **Paramètres → Importer → CSV**, choisissez le fichier, gardez **Créer une nouvelle base de données** et cliquez sur **Associer les en-têtes CSV**. Notion propose un type de propriété pour chaque colonne : le *Titre* nomme chaque ligne, l’*Année* est un nombre, le *Lien* une URL. Passez *Statut de lecture* en **Sélectionner** et *Étiquettes* en **Sélection multiple**, pour pouvoir filtrer et grouper les articles par statut et par étiquette.
 
-Pour ajouter les articles mis plus tard dans la collection, exportez-la à nouveau et choisissez **Fusionner avec un CSV** dans le menu de la base : Notion ajoute des lignes, il ne met pas à jour celles qui y sont déjà.
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/notion/columns-fr.jpg"><img src="/static/summarizer/img/guides/notion/columns-fr.jpg" alt="Configurer les colonnes CSV dans Notion : Titre en titre, Identifiant en texte, Année en nombre, avec l’aperçu de la base Gaz-dans-les-disques-de-debris-papers et ses trois articles." width="1280" height="832" loading="lazy" /></a>
+<figcaption>Le type de chaque colonne, choisi avant l’import.</figcaption>
+</figure>
+
+La base a une ligne par article. Renommez-la, et masquez les colonnes dont vous n’avez pas besoin (menu de chaque colonne → **Masquer**) :
+
+<figure class="guide-screenshot">
+<a href="/static/summarizer/img/guides/notion/database-fr.jpg"><img src="/static/summarizer/img/guides/notion/database-fr.jpg" alt="La base Notion Gaz dans les disques de débris : trois articles avec leur année, leur revue, leur statut de lecture (Article clé, À lire, Lu) et leurs étiquettes (origine, thermochimie, planètes, ALMA, modèles)." width="1280" height="682" loading="lazy" /></a>
+<figcaption>La collection dans Notion, avec ses statuts de lecture et ses étiquettes.</figcaption>
+</figure>
+
+Pour ajouter les articles mis plus tard dans la collection, exportez-la à nouveau et, dans l’import CSV, choisissez **Importer dans une base de données existante** : Notion ajoute des lignes, il ne met pas à jour celles qui y sont déjà.
 
 ## Autres fichiers pour Notion
 

@@ -180,8 +180,10 @@ class ExportTests(ToolsTestCase):
         self.assertIn('arxiv: "2101.00001"', text)
         self.assertIn('Coauthor Number18 et al.', text)
         self.assertIn('Summary written by an AI model (SummarizePaper) from arXiv:2101.00001v1 on', text)
-        notion = Client().get('/en/export/2101.00001v1/notion/').content.decode()
-        self.assertTrue(notion.startswith('# Clouds on a hot planet'))
+        notion = Client().get('/en/export/2101.00001v1/notion/')
+        self.assertIn('filename="Clouds on a hot planet.md"', notion['Content-Disposition'])
+        self.assertTrue(notion.content.decode().startswith('**Authors:** Ann Lee'))
+        self.assertIn('**Auteurs :** Ann Lee', Client().get('/fr/export/2101.00001v1/notion/').content.decode())
 
     def test_a_collection_downloads_as_an_obsidian_folder(self):
         self.paper()

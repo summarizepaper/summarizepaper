@@ -23766,3 +23766,27 @@ msgstr ""
 
 msgid "Here are the new papers of your paper alert from SummarizePaper."
 msgstr "Voici les nouveaux articles de votre sélection SummarizePaper."
+
+msgid "Identifier"
+msgstr "Identifiant"
+
+msgid "Venue"
+msgstr "Revue"
+
+msgid "Editorial status"
+msgstr "Statut éditorial"
+
+msgid "Notices"
+msgstr "Avis"
+
+msgid "Selected"
+msgstr "Sélectionné"
+
+msgid "Link"
+msgstr "Lien"
+
+msgid "yes"
+msgstr "oui"
+
+msgid "no"
+msgstr "non"
