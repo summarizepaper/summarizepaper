@@ -2317,10 +2317,11 @@ class AudioTests(TestCase):
 
 class LoadShedderTests(TestCase):
     """New visitors reach the homepage, and a person turned away gets in on the second try."""
-    def call(self, shedder, path, cookie=False):
+    def call(self, shedder, path, cookie=False, account=False):
         sent = []
+        cookies = b'; '.join([b'sp=1'] * cookie + [b'spa=1'] * account)
         scope = {'type': 'http', 'path': path, 'query_string': b'',
-                 'headers': [(b'cookie', b'sp=1')] if cookie else []}
+                 'headers': [(b'cookie', cookies)] if cookies else []}
 
         async def send(message):
             sent.append(message)
@@ -2344,6 +2345,32 @@ class LoadShedderTests(TestCase):
         self.assertEqual((shedder.in_flight, shedder.anonymous), (1, 1))
         shedder.in_flight = 3
         self.assertEqual(self.call(shedder, '/fr/')['status'], 503)  # still held to the overall limit
+
+    def test_the_last_places_are_kept_for_accounts_and_the_busy_page_says_so(self):
+        from summarizer import loadshed
+
+        async def app(scope, receive, send):
+            await send({'type': 'http.response.start', 'status': 200, 'headers': [(b'content-type', b'text/html')]})
+        shedder = loadshed.LoadShedder(app, limit=3, anonymous_limit=1, guest_limit=2)
+        shedder.in_flight, shedder.guests = 2, 2  # visitors without an account hold their places
+        self.assertEqual(self.call(shedder, '/en/paper/2101.00001/', cookie=True)['status'], 503)
+        self.assertEqual(self.call(shedder, '/en/paper/2101.00001/', cookie=True, account=True)['status'], 200)
+        self.assertEqual((shedder.in_flight, shedder.guests), (2, 2))
+        self.assertIn(b'/en/register/', loadshed.BODY)
+        self.assertIn(b'/fr/register/', loadshed.BODY)
+
+    def test_accounts_get_the_cookie_and_lose_it_at_sign_out(self):
+        from django.contrib.auth.models import User
+        user = User.objects.create_user('shed', 'shed@example.com', 'pw')
+        response = self.client.get('/en/')
+        self.assertNotIn('spa', response.cookies)
+        self.client.force_login(user)
+        response = self.client.get('/en/')
+        self.assertEqual(response.cookies['spa'].value, '1')
+        self.client.logout()  # the test client drops every cookie: a browser keeps spa
+        self.client.cookies['spa'] = '1'
+        response = self.client.get('/en/')
+        self.assertEqual(response.cookies['spa'].value, '')
 
 
 class LatexAccentTests(TestCase):

@@ -198,6 +198,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'summarizer.visits.PageViewMiddleware',  # the pages people open, for /admin/activite/
+    'summarizer.loadshed.AccountCookieMiddleware',  # accounts go first when the site is busy
 ]
 
 AUTHENTICATION_BACKENDS = [
