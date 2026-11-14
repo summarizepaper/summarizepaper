@@ -23924,8 +23924,8 @@ msgstr ""
 
 msgid "%(n)s field of %(name)s has its own this week"
 msgid_plural "%(n)s fields of %(name)s have their own this week"
-msgstr[0] "%(n)s domaine de %(name)s a les siens cette semaine"
-msgstr[1] "%(n)s domaines de %(name)s ont les leurs cette semaine"
+msgstr[0] "%(n)s domaine sur %(name)s a les siens cette semaine"
+msgstr[1] "%(n)s domaines sur %(name)s ont les leurs cette semaine"
 
 msgid "%(n)s more rising topic this week on %(name)s"
 msgid_plural "%(n)s more rising topics this week on %(name)s"
