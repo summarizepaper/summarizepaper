@@ -2,26 +2,29 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
 
-{% block title %}{% if scope == '*' %}{% trans 'Rising topics on arXiv this week' %}{% else %}{% blocktrans with name=scope_name %}Rising topics in {{ name }}{% endblocktrans %}{% endif %}{% endblock %}
+{% block title %}{% if scope == '*' and view == 'week' %}{% trans 'Rising research topics this week on arXiv, bioRxiv and medRxiv' %}{% else %}{% blocktrans with name=scope_name %}Rising topics in {{ name }}{% endblocktrans %}{% endif %}{% endblock %}
 {% block extra_head_tags %}
   {% include 'summarizer/mathjax.html' %}
-  <meta name="description" content="{% trans 'The research topics with a sudden rise in new arXiv papers this week, explained in plain language, with example papers.' %}" />
+  <meta name="description" content="{% trans 'The research topics with a sudden rise in new papers this week on arXiv, bioRxiv and medRxiv, explained in plain language, with example papers.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/trends/" />
   {% if scope != '*' or view == 'foryou' or request.GET.week %}<meta name="robots" content="noindex" />{% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="page">
+<div class="page trends-page">
   <header class="page-header">
-    <h1>{% if scope == '*' %}{% trans 'Rising topics on arXiv' %}{% else %}{% blocktrans with name=scope_name %}Rising topics in {{ name }}{% endblocktrans %}{% endif %}</h1>
-    <p class="lead">{% trans 'The terms that appear in many more new papers this week than in the eight weeks before, from several independent teams, grouped into topics and explained in plain language.' %}</p>
-    {% if LANGUAGE_CODE == 'fr' %}<p><a href="/fr/guides/rising-research-topics/">Comment interpréter une hausse et explorer ses articles ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p><a href="/en/guides/rising-research-topics/">How to interpret a rise and explore its papers? Illustrated guide</a></p>{% endif %}
+    <h1>{% trans 'Rising topics in research' %}</h1>
+    <p class="lead">{% trans 'Every week, the topics that appear in many more new papers than usual on arXiv, bioRxiv and medRxiv, from several independent teams, explained in plain language.' %}</p>
+    <p class="trends-links">
+      <a href="/{{ LANGUAGE_CODE }}/trends/explore/"><i class="fas fa-search" aria-hidden="true"></i> {% trans 'Is my topic rising?' %}</a>
+      <a href="#how-it-works"><i class="fas fa-info-circle" aria-hidden="true"></i> {% trans 'How it works' %}</a>
+      {% if LANGUAGE_CODE == 'fr' %}<a href="/fr/guides/rising-research-topics/"><i class="fas fa-book" aria-hidden="true"></i> Guide illustré</a>{% elif LANGUAGE_CODE == 'en' %}<a href="/en/guides/rising-research-topics/"><i class="fas fa-book" aria-hidden="true"></i> Illustrated guide</a>{% endif %}
+    </p>
   </header>
 
-  <nav class="scope-links" aria-label="{% trans 'Views' %}">
-    <a href="?scope=*" class="{% if view == 'week' and scope == '*' %}is-active{% endif %}">{% trans 'All of arXiv' %}</a>
-    <a href="?view=foryou" class="{% if view == 'foryou' %}is-active{% endif %}">{% trans 'For you' %}{% if not paid %} <span class="badge-premium">Premium</span>{% endif %}</a>
-    <a href="/{{ LANGUAGE_CODE }}/trends/explore/">{% trans 'Is my topic rising?' %}</a>
+  <nav class="trends-tabs" aria-label="{% trans 'Sources' %}">
+    {% for s in servers %}<a href="?scope={{ s.scope|urlencode }}" class="{% if view == 'week' and server == s.scope %}is-active{% endif %}"{% if view == 'week' and server == s.scope %} aria-current="page"{% endif %}>{{ s.name }}</a>{% endfor %}
+    <a href="?view=foryou" class="trends-tab-foryou{% if view == 'foryou' %} is-active{% endif %}"{% if view == 'foryou' %} aria-current="page"{% endif %}><i class="fas fa-user" aria-hidden="true"></i> {% trans 'For you' %}{% if not paid %} <span class="badge-premium">Premium</span>{% endif %}</a>
   </nav>
 
   {% if locked %}
@@ -43,11 +46,12 @@
     {% endif %}
   {% else %}
 
-  {% if paid and top_scopes %}
+  {% if top_scopes %}
   <nav class="scope-links" aria-label="{% trans 'Fields' %}">
-    {% for s in top_scopes %}<a href="?scope={{ s.scope|urlencode }}{% if request.GET.week %}&week={{ day|date:'Y-m-d' }}{% endif %}" class="{% if scope == s.scope or archive == s.scope %}is-active{% endif %}">{{ s.name }}</a>{% endfor %}
+    <a href="?scope={{ server|urlencode }}{% if request.GET.week %}&week={{ day|date:'Y-m-d' }}{% endif %}" class="{% if scope == server %}is-active{% endif %}">{% blocktrans with name=server_name %}All of {{ name }}{% endblocktrans %}</a>
+    {% for s in top_scopes %}<a href="?scope={{ s.scope|urlencode }}{% if request.GET.week %}&week={{ day|date:'Y-m-d' }}{% endif %}" class="{% if scope == s.scope or archive == s.scope %}is-active{% endif %}{% if not paid %} is-locked{% endif %}">{{ s.name }}{% if not paid %} <i class="fas fa-lock" aria-label="Premium"></i>{% endif %}</a>{% endfor %}
   </nav>
-  {% if inner_scopes %}
+  {% if inner_scopes and paid %}
   <nav class="scope-links scope-links-inner" aria-label="{% trans 'Categories' %}">
     {% for s in inner_scopes %}<a href="?scope={{ s.scope|urlencode }}{% if request.GET.week %}&week={{ day|date:'Y-m-d' }}{% endif %}" class="{% if scope == s.scope %}is-active{% endif %}">{{ s.name }}</a>{% endfor %}
   </nav>
@@ -56,17 +60,15 @@
 
   {% if day %}
     <div class="week-nav">
-      {% if older %}<a href="?scope={{ scope|urlencode }}&week={{ older|date:'Y-m-d' }}">&larr; {% trans 'Previous week' %}</a>{% endif %}
-      <span class="muted">{% blocktrans with start=day|date:"j F" end=day_end|date:"j F Y" %}Papers submitted from {{ start }} to {{ end }}{% endblocktrans %}</span>
-      {% if newer %}<a href="?scope={{ scope|urlencode }}&week={{ newer|date:'Y-m-d' }}">{% trans 'Next week' %} &rarr;</a>{% endif %}
+      <div>
+        <p class="week-scope">{% if field_name %}{{ server_name }} · {{ field_name }}{% else %}{% blocktrans with name=server_name %}All of {{ name }}{% endblocktrans %}{% endif %}</p>
+        <h2 class="week-title">{% blocktrans with start=day|date:"j F" end=day_end|date:"j F Y" %}Papers submitted from {{ start }} to {{ end }}{% endblocktrans %}</h2>
+      </div>
+      <div class="week-arrows">
+        {% if older %}<a class="btn btn-sm btn-ghost" href="?scope={{ scope|urlencode }}&week={{ older|date:'Y-m-d' }}">&larr; {% trans 'Previous week' %}</a>{% endif %}
+        {% if newer %}<a class="btn btn-sm btn-ghost" href="?scope={{ scope|urlencode }}&week={{ newer|date:'Y-m-d' }}">{% trans 'Next week' %} &rarr;</a>{% endif %}
+      </div>
     </div>
-    {% if next_edition %}
-    <aside class="notice" aria-label="{% trans 'Next edition' %}">
-      <strong>{% trans 'Next edition' %}</strong> — {% blocktrans with start=next_edition.start|date:"j F" end=next_edition.end|date:"j F Y" %}papers submitted from {{ start }} to {{ end }}{% endblocktrans %}.<br>
-      {% if next_edition.pending %}{% trans 'This edition is awaiting publication.' %} {% endif %}
-      {% blocktrans with date=next_edition.date time=next_edition.time utc=next_edition.utc_time %}Calculation starts no earlier than {{ date }} at {{ time }} Paris time ({{ utc }} UTC). Results appear once processing is complete.{% endblocktrans %}
-    </aside>
-    {% endif %}
     {% if letter %}<p class="trend-badge">{% blocktrans with name=letter_name %}What these papers found, told for readers of other fields: the weekly letter "{{ name }}".{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/">{{ letter.title }}</a></p>
     {% elif scope == '*' %}<p class="muted">{% trans 'What the papers found, field by field:' %} <a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'the weekly letters' %}</a>.</p>{% endif %}
     {% if topics %}
@@ -87,20 +89,38 @@
     {% if hidden %}
     <div class="upsell" style="margin-top:20px"><p>{% blocktrans count n=hidden %}{{ n }} more rising topic this week.{% plural %}{{ n }} more rising topics this week.{% endblocktrans %} {% trans 'Premium shows them all, the rising topics of each field and category (cs.LG, astro-ph.EP, bioRxiv neuroscience...), those closest to your research, the history of any term compared with others, and puts those of your fields in your Monday paper alert.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
     {% endif %}
+    {% if next_edition %}
+    <aside class="trends-next" aria-label="{% trans 'Next edition' %}">
+      <strong>{% trans 'Next edition' %}</strong> — {% blocktrans with start=next_edition.start|date:"j F" end=next_edition.end|date:"j F Y" %}papers submitted from {{ start }} to {{ end }}{% endblocktrans %}.<br>
+      {% if next_edition.pending %}{% trans 'This edition is awaiting publication.' %} {% endif %}
+      {% blocktrans with date=next_edition.date time=next_edition.time utc=next_edition.utc_time %}Calculation starts no earlier than {{ date }} at {{ time }} Paris time ({{ utc }} UTC). Results appear once processing is complete.{% endblocktrans %}
+    </aside>
+    {% endif %}
   {% else %}
     <p class="notice">{% if ready_on %}{% blocktrans with since=since|date:"j F Y" ready=ready_on|date:"j F Y" %}We count the papers submitted every week since {{ since }}. A rise only means something against several weeks of history: the first topics come out around {{ ready }}.{% endblocktrans %}{% else %}{% trans 'The first rising topics come out once we have counted a few weeks of papers.' %}{% endif %}</p>
   {% endif %}
   {% endif %}
 
-  <h2>{% trans 'How it works' %}</h2>
-  <p class="muted">{% trans 'Each week, we count how many papers submitted that week (first versions) use each term of one to three words in their title and abstract; acronyms such as RAG or JWST count, and plurals with their singular. A term rises when its share of papers is at least twice its share over the eight weeks before, when so large a rise is very unlikely by chance (a log-likelihood ratio of at least 15), and when it comes from at least three teams, none signing more than half of the papers: one group posting a series is not a trend. An AI then groups the rising terms into topics and names them; it never decides what rises: the counts do.' %}</p>
-  <ul class="muted kind-legend">
-    <li><strong>{% trans 'New' %}</strong>: {% trans 'the term was almost absent from these papers before.' %}</li>
-    <li><strong>{% trans 'Rising for several weeks' %}</strong>: {% trans 'up three weeks in a row or more, not a one-week event.' %}</li>
-    <li><strong>{% trans 'Recurring' %}</strong>: {% trans 'as frequent at this time last year: perhaps a yearly cycle, such as a conference deadline.' %}</li>
-    <li><strong>{% trans 'Comeback' %}</strong>: {% trans 'as frequent some months ago, then less used.' %}</li>
-    <li><strong>{% trans 'Sudden rise' %}</strong>: {% trans 'new this week: often an event, a release, a data set or a deadline.' %}</li>
-  </ul>
-  <p class="muted">{% trans 'The curve on each topic is the share of papers using its main term, per 10,000 papers, over the last six months. Counting the previous Monday-to-Sunday submission week starts on Tuesday at 06:00 UTC, after the normal Monday arXiv announcement. Delayed announcements may still be missing from the first count.' %}</p>
+  <details class="trends-how" id="how-it-works">
+    <summary><h2>{% trans 'How it works' %}</h2></summary>
+    <p class="muted">{% trans 'We count arXiv, bioRxiv and medRxiv separately: each server, and each of their fields, has its own rising topics. Journal articles are not counted.' %}</p>
+    <p class="muted">{% trans 'Each week, we count how many papers submitted that week (first versions) use each term of one to three words in their title and abstract; acronyms such as RAG or JWST count, and plurals with their singular. A term rises when its share of papers is at least twice its share over the eight weeks before, when so large a rise is very unlikely by chance (a log-likelihood ratio of at least 15), and when it comes from at least three teams, none signing more than half of the papers: one group posting a series is not a trend. An AI then groups the rising terms into topics and names them; it never decides what rises: the counts do.' %}</p>
+    <ul class="muted kind-legend">
+      <li><strong>{% trans 'New' %}</strong>: {% trans 'the term was almost absent from these papers before.' %}</li>
+      <li><strong>{% trans 'Rising for several weeks' %}</strong>: {% trans 'up three weeks in a row or more, not a one-week event.' %}</li>
+      <li><strong>{% trans 'Recurring' %}</strong>: {% trans 'as frequent at this time last year: perhaps a yearly cycle, such as a conference deadline.' %}</li>
+      <li><strong>{% trans 'Comeback' %}</strong>: {% trans 'as frequent some months ago, then less used.' %}</li>
+      <li><strong>{% trans 'Sudden rise' %}</strong>: {% trans 'new this week: often an event, a release, a data set or a deadline.' %}</li>
+    </ul>
+    <p class="muted">{% trans 'The curve on each topic is the share of papers using its main term, per 10,000 papers, over the last six months. Counting the previous Monday-to-Sunday submission week starts on Tuesday at 06:00 UTC, after the normal Monday arXiv announcement. Delayed announcements may still be missing from the first count.' %}</p>
+  </details>
 </div>
+<script>
+  (function () {
+    var how = document.getElementById('how-it-works');
+    function open() { if (location.hash === '#how-it-works') how.open = true; }
+    window.addEventListener('hashchange', open); open();
+    document.querySelectorAll('a[href="#how-it-works"]').forEach(function (a) { a.addEventListener('click', function () { how.open = true; }); });
+  })();
+</script>
 {% endblock %}

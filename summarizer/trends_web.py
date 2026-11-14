@@ -78,13 +78,34 @@ def decorate(topic):
     return topic
 
 
+SERVERS = (('*', 'arXiv'), ('biorxiv', 'bioRxiv'), ('medrxiv', 'medRxiv'))
+FREE_SCOPES = {scope for scope, _name in SERVERS}  # the three first topics of each server are free
+
+
+def server_of(scope):
+    """The tab of a scope: '*' for arXiv and its archives and categories, else 'biorxiv' or 'medrxiv'."""
+    return next((s for s in ('biorxiv', 'medrxiv') if scope == s or scope.startswith(s + '.')), '*')
+
+
 def scope_links(lang, day, scope):
-    """The scopes with topics this week: all of arXiv, the archives and servers, then the categories of the open one."""
+    """The fields of the open server with topics this week (arXiv's archives, or bioRxiv's or medRxiv's categories),
+    then the categories of the open arXiv archive."""
     written = set(RisingTopics.objects.filter(lang=lang, day=day).exclude(content__regex=r'"topics"\s*:\s*\[\s*\]').values_list('scope', flat=True))
-    top = sorted((s for s in written if s != '*' and '.' not in s and s in trends_scopes_top()), key=trends.scope_name)
-    archive = archive_of(scope) if scope != '*' else None
-    inner = sorted((s for s in written if '.' in s and archive_of(s) == archive), key=trends.scope_name)
-    return [{'scope': s, 'name': trends.scope_name(s)} for s in top], [{'scope': s, 'name': trends.scope_name(s)} for s in inner]
+    server = server_of(scope)
+    if server == '*':
+        top = [s for s in written if s != '*' and '.' not in s and s in trends_scopes_top() and s not in FREE_SCOPES]
+        archive = archive_of(scope) if scope != '*' else None
+        inner = [s for s in written if '.' in s and server_of(s) == '*' and archive_of(s) == archive]
+    else:
+        top, inner = [s for s in written if s.startswith(server + '.')], []
+    links = lambda scopes: [{'scope': s, 'name': field_name(s)} for s in sorted(scopes, key=field_name)]
+    return links(top), links(inner)
+
+
+def field_name(scope):
+    """A scope's name inside its server's tab: "Neuroscience" rather than "bioRxiv · Neuroscience"."""
+    name = trends.scope_name(scope)
+    return name.split(' · ', 1)[1] if server_of(scope) != '*' and ' · ' in name else name
 
 
 def trends_scopes_top():
@@ -138,13 +159,16 @@ def trends_page(request):
     paid = access.has_tool(request.user, 'trends')
     lang = get_language()
     scope = request.GET.get('scope', '*')
-    if scope != '*' and not RisingTopics.objects.filter(scope=scope).exists():
+    if scope not in FREE_SCOPES and not RisingTopics.objects.filter(scope=scope).exists():
         raise Http404
-    locked = scope != '*' and not paid
+    locked = scope not in FREE_SCOPES and not paid
     if locked:
-        scope = '*'
+        scope = server_of(scope)
     view = 'foryou' if request.GET.get('view') == 'foryou' else 'week'
-    context = {'paid': paid, 'scope': scope, 'scope_name': trends.scope_name(scope), 'view': view, 'locked': locked, 'day': None}
+    server = server_of(scope)
+    context = {'paid': paid, 'scope': scope, 'scope_name': trends.scope_name(scope), 'view': view, 'locked': locked, 'day': None,
+               'servers': [{'scope': s, 'name': n} for s, n in SERVERS], 'server': server,
+               'server_name': dict(SERVERS)[server], 'field_name': field_name(scope) if scope != server else ''}
     if view == 'foryou':
         if paid and request.user.is_authenticated:
             ranked, has_fields, has_profile = for_you(request.user, lang)

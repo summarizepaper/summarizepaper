@@ -2955,6 +2955,28 @@ class TrendTests(ToolsTestCase):
         self.assertContains(page, '2 more rising topics')
         self.assertContains(self.client_for(self.user(paid=True)).get('/en/trends/'), 'Topic 4')
 
+    def test_free_visitors_see_three_topics_of_each_server_and_fields_are_premium(self):
+        day = datetime.date(2026, 10, 19)
+        topics = [{'title': 'Bio %d' % i, 'text': 't', 'terms': ['a'], 'main': 'a', 'count': 9, 'growth': 3.0, 'papers': []}
+                  for i in range(5)]
+        for scope in ('biorxiv', 'biorxiv.neuroscience'):
+            RisingTopics.objects.create(scope=scope, lang='en', day=day, content=json.dumps({'topics': topics}))
+        page = Client().get('/en/trends/?scope=biorxiv')
+        self.assertContains(page, 'Rising topics in research')
+        self.assertContains(page, 'arXiv, bioRxiv and medRxiv')
+        self.assertContains(page, 'Bio 2')
+        self.assertNotContains(page, 'Bio 3')
+        self.assertContains(page, 'All of bioRxiv')
+        self.assertContains(page, 'Neuroscience <i class="fas fa-lock"')
+        self.assertNotContains(page, 'part of Premium')
+        locked = Client().get('/en/trends/?scope=biorxiv.neuroscience')
+        self.assertContains(locked, 'part of Premium')
+        self.assertContains(locked, 'aria-current="page">bioRxiv</a>')
+        self.assertEqual(Client().get('/en/trends/?scope=medrxiv').status_code, 200)
+        paid = self.client_for(self.user(paid=True)).get('/en/trends/?scope=biorxiv.neuroscience')
+        self.assertContains(paid, 'bioRxiv · Neuroscience')
+        self.assertContains(paid, 'Bio 4')
+
     def test_update_reads_the_completed_weeks_then_writes(self):
         for hour, minute, expected in ((5, 59, self.WEEK - trends.WEEK), (6, 0, self.WEEK)):
             with self.subTest(hour=hour, minute=minute):

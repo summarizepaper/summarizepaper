@@ -960,6 +960,31 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .topic-more ul { position: absolute; z-index: 5; right: 0; width: min(420px, 85vw); margin: 6px 0 0; padding: 12px 16px 12px 28px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow); font-size: 14px; }
 .topic-more li + li { margin-top: 6px; }
 .week-nav { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.trends-page .page-header { margin-bottom: 24px; }
+.trends-page .trends-links { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 16px 0 0; font-size: 14px; font-weight: 600; }
+.trends-links a { text-decoration: none; }
+.trends-links a:hover { text-decoration: underline; }
+.trends-links i { font-size: 12px; margin-right: 3px; }
+.trends-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.trends-tabs a { padding: 10px 16px; margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--text-muted); font-weight: 600; text-decoration: none; }
+.trends-tabs a:hover { color: var(--text); }
+.trends-tabs a.is-active { color: var(--accent); border-bottom-color: var(--accent); }
+.trends-tabs .trends-tab-foryou { margin-left: auto; }
+.trends-tabs .trends-tab-foryou i { font-size: 12px; }
+.scope-links a.is-locked { color: var(--text-muted); }
+.scope-links a.is-locked i { font-size: 10px; margin-left: 2px; }
+.trends-page .week-nav { padding: 14px 0; margin: 4px 0 16px; border-bottom: 1px solid var(--border); }
+.trends-page .week-scope { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.trends-page .week-title { margin: 0; font-size: 20px; }
+.trends-page .trends-next { margin: 20px 0 0; padding: 12px 16px; font-size: 14px; color: var(--text-muted); background: var(--bg-soft); border-radius: var(--radius-sm); }
+.week-arrows { display: flex; gap: 8px; }
+.trends-how { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 8px; }
+.trends-how summary { cursor: pointer; list-style: none; }
+.trends-how summary::-webkit-details-marker { display: none; }
+.trends-how summary h2 { display: inline; font-size: 20px; }
+.trends-how summary::after { content: ' +'; font-weight: 700; color: var(--text-muted); }
+.trends-how[open] summary::after { content: ' −'; }
+@media (max-width: 600px) { .trends-tabs a { padding: 10px 10px; } .trends-tabs .trends-tab-foryou { margin-left: 0; } }
 .kind-legend { padding-left: 20px; font-size: 15px; }
 .scope-links-inner a { font-size: 13px; padding: 3px 10px; }
 .explore-form { padding: 18px 20px; margin-bottom: 18px; }
