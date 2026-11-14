@@ -163,3 +163,26 @@
 .digest-example-fields a[aria-current] { background: #24664e; border-color: #24664e; color: white; }
 .digest-example-email { display: block; width: 100%; height: 900px; border: 1px solid var(--home-line); border-radius: 10px; background: #f4f4f4; }
 .digest-example-cta { margin: 24px 0 8px; }
+
+/* This week: rising topics and weekly letters, right after the search */
+.home-week { padding-top: 8px; padding-bottom: 28px; }
+.home-week-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.home-week-card { border: 1px solid var(--home-line); border-radius: 14px; padding: 22px 24px; background: #fff; display: flex; flex-direction: column; box-shadow: 0 10px 28px #192b3b08; border-top: 3px solid var(--accent); }
+.home-week-card header { display: flex; gap: 14px; align-items: start; margin-bottom: 14px; }
+.home-week-card h3 { font-size: 21px; margin: 0; }
+.home-week-card h3 a { color: inherit; text-decoration: none; }
+.home-week-card h3 a:hover { text-decoration: underline; }
+.home-week-card header .home-fine { margin: 2px 0 0; }
+.home-week-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; font-size: 16px; }
+.home-week-topics, .home-week-letters { list-style: none; margin: 0 0 14px; padding: 0; }
+.home-week-topics li { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--home-line); }
+.home-week-topic { min-width: 0; display: flex; flex-direction: column; align-items: start; gap: 4px; }
+.home-week-topic > a { font-weight: 600; line-height: 1.35; }
+.home-week-topic small { color: var(--text-muted); font-size: 13px; }
+.home-week-spark { flex-shrink: 0; width: 120px; }
+.home-week-spark svg { width: 100%; height: auto; display: block; }
+.home-week-letters li { padding: 9px 0; border-top: 1px solid var(--home-line); display: flex; flex-direction: column; gap: 2px; }
+.home-week-letters span { font-size: 12px; font-weight: 600; color: #536677; text-transform: uppercase; letter-spacing: .06em; }
+.home-week-letters a { font-weight: 600; line-height: 1.35; }
+.home-week-cta { margin-top: auto; font-size: 14px; font-weight: 600; }
+@media (max-width: 760px) { .home-week-grid { grid-template-columns: 1fr; } .home-week-card { padding: 18px; } .home-week-spark { width: 84px; } }

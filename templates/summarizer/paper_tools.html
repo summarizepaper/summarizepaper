@@ -68,11 +68,12 @@
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow">{% trans 'The people and institutions who publish on its topic' %}</a>
   </div>
 
-  {% weekly_letter arxiv_id as weekly %}{% if weekly %}
+  {% weekly_letter arxiv_id paper.category as weekly %}{% if weekly %}
   <div class="tool-row">
     <span class="tool-label">{% trans 'Weekly letter' %}</span>
-    <span>{% blocktrans with name=weekly.name day=weekly.letter.day|date:"j F Y" %}Presented in "{{ name }}" of {{ day }}.{% endblocktrans %}
-      <a href="/{{ LANGUAGE_CODE }}/letters/{{ weekly.letter.topic }}/{{ weekly.letter.day|date:'Y-m-d' }}/">{{ weekly.letter.title }}</a></span>
+    <span>{% if weekly.field %}{% blocktrans with name=weekly.name day=weekly.letter.day|date:"j F Y" %}The latest letter of its field, "{{ name }}" of {{ day }}:{% endblocktrans %}{% else %}{% blocktrans with name=weekly.name day=weekly.letter.day|date:"j F Y" %}Presented in "{{ name }}" of {{ day }}.{% endblocktrans %}{% endif %}
+      <a href="/{{ LANGUAGE_CODE }}/letters/{{ weekly.letter.topic }}/{{ weekly.letter.day|date:'Y-m-d' }}/">{{ weekly.letter.title }}</a>
+      · <a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'Receive one by email for free' %}</a></span>
   </div>
   {% endif %}
 
@@ -82,6 +83,11 @@
     <span>{% blocktrans with title=rising.title g=rising.growth name=rising.scope_name %}This paper is part of "{{ title }}", rising in {{ name }} (×{{ g }} compared with usual).{% endblocktrans %}
       <a href="/{{ LANGUAGE_CODE }}/trends/?scope={{ rising.scope|urlencode }}&week={{ rising.week|date:'Y-m-d' }}" rel="nofollow">{% trans 'The rising topics of that week' %}</a> ·
       <a href="/{{ LANGUAGE_CODE }}/trends/explore/?t={{ rising.main|urlencode }}" rel="nofollow">{% trans 'The history of the term' %}</a></span>
+  </div>
+  {% else %}
+  <div class="tool-row">
+    <span class="tool-label">{% trans 'Rising topics' %}</span>
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/trends/">{% trans 'The topics rising on arXiv this week' %}</a>
   </div>
   {% endif %}
 

@@ -137,6 +137,35 @@ def _email_samples(lang):
     return {'fields': fields, 'shown': shown, 'digest': any(f['digest'] for f in fields)}
 
 
+THIS_WEEK_TOPICS = 3
+
+
+def this_week():
+    """The rising topics of all of arXiv and the latest weekly letter of each field, the two things the homepage
+    puts first after the search."""
+    lang = get_language()
+    key = 'home-this-week:%s' % lang
+    found = cache.get(key)
+    if found is None:
+        found = _this_week(lang)
+        cache.set(key, found, 3600)
+    return found
+
+
+def _this_week(lang):
+    from . import letters, trends
+    from .trends_web import decorate
+    week, topics = trends.topics_of('*', lang)
+    rising = [{'title': t['title'], 'text': t.get('text', ''), 'kind_label': str(t['kind_label']), 'kind': t['kind'],
+               'growth': t.get('growth'), 'count': t.get('count'), 'spark': t.get('spark', ''), 'explore': t['explore']}
+              for t in map(decorate, topics[:THIS_WEEK_TOPICS])]
+    latest = letters.latest_letters(lang)
+    newest = max((l.day for l in latest.values()), default=None)
+    shown = [{'topic': slug, 'name': str(spec['name']), 'title': latest[slug].title, 'day': latest[slug].day}
+             for slug, spec in letters.TOPICS.items() if slug in latest and latest[slug].day == newest]
+    return {'week': week, 'rising': rising, 'letters_day': newest, 'letters': shown}
+
+
 def context(request=None):
     from .email_updates import form_context
     currency = billing.selected_currency(request) if request is not None else 'eur'
@@ -146,5 +175,5 @@ def context(request=None):
                   .select_related('paper').order_by('-updated')[:7])
     papers = [p for p in papers if (p.summary or '').strip() or (p.lay_summary or '').strip()]
     return {**form_context(), 'free_tools': free_tools(), 'home_readers': readers(), 'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
-            'email_samples': email_samples(),
+            'email_samples': email_samples(), 'this_week': this_week(),
             'home_price': monthly_price(currency), 'billing_currency': currency, 'billing_currencies': billing.currencies()}

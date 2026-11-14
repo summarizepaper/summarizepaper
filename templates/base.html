@@ -79,6 +79,8 @@
         <i class="fas fa-bars"></i>
       </button>
       <ul class="nav-links">
+        <li><a href="/{{LANGUAGE_CODE}}/trends/" class="nav-feature" data-funnel="nav_feature_click" data-tool="trends"><i class="fas fa-chart-line" aria-hidden="true"></i> {% trans 'Rising topics' context 'header' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/letters/" class="nav-feature" data-funnel="nav_feature_click" data-tool="letters"><i class="fas fa-feather-alt" aria-hidden="true"></i> {% trans 'Weekly letters' context 'header' %}</a></li>
         <li class="nav-dropdown">
           <button type="button" aria-haspopup="true" aria-expanded="false" aria-controls="tools-menu">{% trans 'Tools' %} <i class="fas fa-chevron-down" style="font-size:10px"></i></button>
           <div class="nav-menu nav-menu-tools" id="tools-menu">
@@ -101,7 +103,7 @@
         <li><a href="/{{LANGUAGE_CODE}}/history">{% trans 'Dashboard' %}</a></li>
         {% endif %}
         {% if request.user.is_staff %}
-        <li><a href="/admin/" class="nav-admin" title="Admin"><i class="fas fa-user-shield"></i> Admin</a></li>
+        <li><a href="/admin/" class="nav-admin" title="Admin"><i class="fas fa-user-shield"></i><span class="nav-admin-label"> Admin</span></a></li>
         {% endif %}
         <li class="lang-switch">
           <button type="button" aria-haspopup="true" aria-expanded="false">
@@ -140,6 +142,8 @@
     <div class="container">
       <p>© {% now 'Y' %} Summarize<span style="color:var(--accent)">Paper</span> · {% trans 'Open source' %} on <a href="https://github.com/summarizepaper/summarizepaper">GitHub</a></p>
       <ul>
+        <li><a href="/{{LANGUAGE_CODE}}/trends/" class="footer-feature"><i class="fas fa-chart-line" aria-hidden="true"></i> {% trans 'Rising topics' %}</a></li>
+        <li><a href="/{{LANGUAGE_CODE}}/letters/" class="footer-feature"><i class="fas fa-feather-alt" aria-hidden="true"></i> {% trans 'Weekly letters' %}</a></li>
         <li><a href="/{{LANGUAGE_CODE}}/guides/">{% trans 'Guides' %}</a></li>
         <li><a href="/{{LANGUAGE_CODE}}/about">{% trans 'About' %}</a></li>
         <li><a href="/{{LANGUAGE_CODE}}/contact">{% trans 'Contact' %}</a></li>

@@ -76,6 +76,33 @@
   {% endif %}
 </section>
 
+{% if this_week.rising or this_week.letters %}
+<section class="container home-week" aria-labelledby="week-title">
+  <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Every week, free' %}</p><h2 id="week-title">{% trans 'This week in research' %}</h2></div></div>
+  <div class="home-week-grid">
+    {% if this_week.rising %}<article class="home-week-card">
+      <header><span class="home-week-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span><div><h3><a href="{% url 'trends' %}" data-funnel="home_tool_click" data-tool="trends" data-placement="week">{% trans 'Rising topics' %}</a></h3>
+        <p class="home-fine">{% blocktrans with day=this_week.week|date:"j F" %}On arXiv, papers submitted the week of {{ day }}{% endblocktrans %}</p></div></header>
+      <ol class="home-week-topics">
+        {% for t in this_week.rising %}<li><div class="home-week-topic"><span class="kind kind-{{ t.kind }}">{{ t.kind_label }}</span>
+          <a href="{% url 'trends' %}" data-funnel="home_example_click" data-placement="week_trend">{{ t.title }}</a>
+          {% if t.growth %}<small>{% blocktrans with g=t.growth n=t.count %}×{{ g }} compared with usual · {{ n }} papers{% endblocktrans %}</small>{% endif %}</div>
+          {% if t.spark %}<a class="home-week-spark" href="/{{ LANGUAGE_CODE }}/trends/explore/?{{ t.explore }}" title="{% trans 'The whole history of these terms' %}" aria-label="{% trans 'The whole history of these terms' %}">{{ t.spark|safe }}</a>{% endif %}</li>{% endfor %}
+      </ol>
+      <a class="home-week-cta" href="{% url 'trends' %}" data-funnel="home_tool_click" data-tool="trends" data-placement="week">{% trans 'All the rising topics, field by field' %} →</a>
+    </article>{% endif %}
+    {% if this_week.letters %}<article class="home-week-card">
+      <header><span class="home-week-icon" aria-hidden="true"><i class="fas fa-feather-alt"></i></span><div><h3><a href="{% url 'letters' %}" data-funnel="home_tool_click" data-tool="letters" data-placement="week">{% trans 'Weekly letters' %}</a></h3>
+        <p class="home-fine">{% blocktrans with day=this_week.letters_day|date:"j F Y" %}One article per field, {{ day }}{% endblocktrans %}</p></div></header>
+      <ul class="home-week-letters">
+        {% for l in this_week.letters|slice:":5" %}<li><span>{{ l.name }}</span><a href="{% url 'letter' l.topic l.day|date:'Y-m-d' %}" data-funnel="home_example_click" data-placement="week_letter">{{ l.title }}</a></li>{% endfor %}
+      </ul>
+      <a class="home-week-cta" href="{% url 'letters' %}" data-funnel="home_tool_click" data-tool="letters" data-placement="week">{% if this_week.letters|length > 5 %}{% blocktrans count n=this_week.letters|length %}The {{ n }} letter of this week{% plural %}The {{ n }} letters of this week{% endblocktrans %}{% else %}{% trans 'All the letters of this week' %}{% endif %} →</a>
+    </article>{% endif %}
+  </div>
+</section>
+{% endif %}
+
 <section class="home-section container home-free" id="free-tools" aria-labelledby="free-tools-title">
   <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Free to start' %}</p><h2 id="free-tools-title">{% trans 'Research tools ready to use' %}</h2></div><a href="{% url 'tools' %}">{% trans 'All research tools' %} <span aria-hidden="true">↗</span></a></div>
   <ul class="home-tools">

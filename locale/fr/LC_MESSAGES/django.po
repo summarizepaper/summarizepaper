@@ -23794,3 +23794,46 @@ msgstr "non"
 msgid "Shown above, as it also cites another paper you follow:"
 msgstr ""
 "Montré plus haut, car il cite aussi un autre article que vous suivez :"
+
+msgid "Every week, free"
+msgstr "Chaque semaine, gratuitement"
+
+msgid "This week in research"
+msgstr "Cette semaine dans la recherche"
+
+msgid "On arXiv, papers submitted the week of %(day)s"
+msgstr "Sur arXiv, articles soumis la semaine du %(day)s"
+
+msgid "×%(g)s compared with usual · %(n)s papers"
+msgstr "×%(g)s par rapport à d'habitude · %(n)s articles"
+
+msgid "All the rising topics, field by field"
+msgstr "Tous les sujets qui montent, domaine par domaine"
+
+msgid "One article per field, %(day)s"
+msgstr "Un article par domaine, %(day)s"
+
+msgid "Receive one by email for free"
+msgstr "En recevoir une par email gratuitement"
+
+msgid "All the letters of this week"
+msgstr "Toutes les lettres de la semaine"
+
+msgid "The latest letter of its field, \"%(name)s\" of %(day)s:"
+msgstr "La dernière lettre de son domaine, « %(name)s » du %(day)s :"
+
+msgid "The topics rising on arXiv this week"
+msgstr "Les sujets qui montent sur arXiv cette semaine"
+
+msgid "The %(n)s letter of this week"
+msgid_plural "The %(n)s letters of this week"
+msgstr[0] "La %(n)s lettre de la semaine"
+msgstr[1] "Les %(n)s lettres de la semaine"
+
+msgctxt "header"
+msgid "Rising topics"
+msgstr "Tendances"
+
+msgctxt "header"
+msgid "Weekly letters"
+msgstr "Lettres hebdo"
