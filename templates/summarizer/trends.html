@@ -27,8 +27,13 @@
     <a href="?view=foryou" class="trends-tab-foryou{% if view == 'foryou' %} is-active{% endif %}"{% if view == 'foryou' %} aria-current="page"{% endif %}><i class="fas fa-user" aria-hidden="true"></i> {% trans 'For you' %}{% if not paid %} <span class="badge-premium">Premium</span>{% endif %}</a>
   </nav>
 
-  {% if locked %}
-  <div class="upsell" style="margin-bottom:20px"><p>{% trans 'The rising topics of each field are part of Premium.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+  {% if locked and premium %}
+  <div class="trends-premium trends-premium-field">
+    <p class="trends-premium-title"><i class="fas fa-lock" aria-hidden="true"></i> {% if premium.asked_titles %}{% blocktrans count n=premium.asked_titles|length with name=premium.asked_name %}{{ name }}: {{ n }} rising topic this week, with Premium{% plural %}{{ name }}: {{ n }} rising topics this week, with Premium{% endblocktrans %}{% else %}{% blocktrans with name=premium.asked_name %}The rising topics of {{ name }} are part of Premium{% endblocktrans %}{% endif %}</p>
+    {% if premium.asked_titles %}<ul class="trends-locked">{% for title in premium.asked_titles %}<li>{{ title }}</li>{% endfor %}</ul>{% endif %}
+    <p class="muted">{% trans 'Below, the free topics of the whole server.' %}</p>
+    <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="premium_click" data-placement="trends">{% trans 'Discover Premium' %}{% if premium.price %} · {{ premium.price }}{% endif %}</a>
+  </div>
   {% endif %}
 
   {% if view == 'foryou' %}
@@ -86,8 +91,19 @@
       {% endif %}
     </p>
     {% endif %}
-    {% if hidden %}
-    <div class="upsell" style="margin-top:20px"><p>{% blocktrans count n=hidden %}{{ n }} more rising topic this week.{% plural %}{{ n }} more rising topics this week.{% endblocktrans %} {% trans 'Premium shows them all, the rising topics of each field and category (cs.LG, astro-ph.EP, bioRxiv neuroscience...), those closest to your research, the history of any term compared with others, and puts those of your fields in your Monday paper alert.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
+    {% if premium %}
+    <section class="trends-premium" aria-labelledby="premium-title">
+      <h2 id="premium-title">{% trans 'What Premium adds on this page' %}</h2>
+      <ul class="trends-premium-list">
+        {% if premium.hidden_titles %}<li><strong>{% blocktrans count n=premium.hidden_titles|length with name=server_name %}{{ n }} more rising topic this week on {{ name }}{% plural %}{{ n }} more rising topics this week on {{ name }}{% endblocktrans %}</strong>
+          <ul class="trends-locked">{% for title in premium.hidden_titles %}<li>{{ title }}</li>{% endfor %}</ul></li>{% endif %}
+        <li><strong>{% trans 'The rising topics of each field' %}</strong> — {% if premium.fields %}{% blocktrans count n=premium.fields with name=server_name %}{{ n }} field of {{ name }} has its own this week{% plural %}{{ n }} fields of {{ name }} have their own this week{% endblocktrans %}{% if server == '*' %}{% trans ', down to categories such as cs.LG or astro-ph.EP' %}{% endif %}.{% else %}{% trans 'astrophysics, machine learning, neuroscience…, down to categories such as cs.LG or astro-ph.EP.' %}{% endif %}</li>
+        <li><strong>{% trans 'For you' %}</strong> — {% trans 'the topics closest to your research first, in the fields of your paper alert.' %}</li>
+        <li><strong>{% trans 'In your inbox' %}</strong> — {% trans 'the rising topics of your fields in your Monday paper alert.' %}</li>
+        <li><strong>{% trans 'History of terms' %}</strong> — {% trans 'three terms compared week by week, in any field, with the counts to download.' %}</li>
+      </ul>
+      <a class="btn" href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="premium_click" data-placement="trends">{% trans 'Discover Premium' %}{% if premium.price %} · {{ premium.price }}{% endif %}</a>
+    </section>
     {% endif %}
     {% if next_edition %}
     <aside class="trends-next" aria-label="{% trans 'Next edition' %}">

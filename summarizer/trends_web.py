@@ -108,6 +108,21 @@ def field_name(scope):
     return name.split(' · ', 1)[1] if server_of(scope) != '*' and ' · ' in name else name
 
 
+def premium_preview(request, lang, day, server, hidden, asked):
+    """What Premium adds on this page, from this week's rows: the titles of the topics not shown, how many fields of
+    the open server have their own topics, and the topics of the locked field a visitor asked for."""
+    from . import billing, homepage
+    written = {row.scope: row for row in RisingTopics.objects.filter(lang=lang, day=day).only('scope', 'content')}
+    titles = lambda row: [t['title'] for t in json.loads(row.content).get('topics', [])] if row else []
+    fields = [s for s in written if s != server and server_of(s) == server and titles(written[s])]
+    preview = {'hidden_titles': [t['title'] for t in hidden], 'fields': len(fields),
+               'price': homepage.monthly_price(billing.selected_currency(request))}
+    if asked:
+        _week, asked_topics = trends.topics_of(asked, lang, week=day if asked in written else None)
+        preview.update(asked_name=field_name(asked), asked_titles=[t['title'] for t in asked_topics])
+    return preview
+
+
 def trends_scopes_top():
     from .digest import ARCHIVES, BIO_ARCHIVES
     return set(ARCHIVES + BIO_ARCHIVES)
@@ -162,6 +177,7 @@ def trends_page(request):
     if scope not in FREE_SCOPES and not RisingTopics.objects.filter(scope=scope).exists():
         raise Http404
     locked = scope not in FREE_SCOPES and not paid
+    asked = scope
     if locked:
         scope = server_of(scope)
     view = 'foryou' if request.GET.get('view') == 'foryou' else 'week'
@@ -193,6 +209,8 @@ def trends_page(request):
         'older': weeks[index + 1] if index + 1 < len(weeks) else None, 'newer': weeks[index - 1] if index > 0 else None,
         'since': first, 'ready_on': first + trends.WEEK * (trends.MIN_BASE_WEEKS + 1) + trends.CLOSE if first else None,
     })
+    if not paid and (day or locked):
+        context['premium'] = premium_preview(request, lang, day, server, topics[trends.FREE_TOPICS:], asked if locked else None)
     from . import letters
     letter = letters.latest_for_scope(scope, lang)
     if letter is not None:

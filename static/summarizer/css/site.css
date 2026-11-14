@@ -978,6 +978,19 @@ blockquote.key-sentence { margin: 0 0 12px; padding: 8px 16px; border-left: 3px 
 .trends-page .week-title { margin: 0; font-size: 20px; }
 .trends-page .trends-next { margin: 20px 0 0; padding: 12px 16px; font-size: 14px; color: var(--text-muted); background: var(--bg-soft); border-radius: var(--radius-sm); }
 .week-arrows { display: flex; gap: 8px; }
+.trends-premium { margin: 24px 0 0; padding: 22px 24px; border: 1px solid #fde68a; border-radius: var(--radius); background: #fffbeb; }
+.trends-premium h2 { margin: 0 0 12px; font-size: 20px; }
+.trends-premium-list { margin: 0 0 18px; padding: 0; list-style: none; }
+.trends-premium-list > li { position: relative; padding: 8px 0 8px 26px; border-top: 1px solid #fdecb5; }
+.trends-premium-list > li:first-child { border-top: 0; }
+.trends-premium-list > li::before { content: '\2713'; position: absolute; left: 2px; top: 8px; color: var(--premium); font-weight: 700; }
+.trends-locked { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.trends-locked li { padding: 6px 10px; background: #fff; border: 1px dashed #f2d27a; border-radius: var(--radius-sm); font-size: 14px; color: var(--text-muted); }
+.trends-locked li::before { content: '\f023'; font-family: 'Font Awesome 5 Free'; font-weight: 900; font-size: 11px; margin-right: 8px; color: var(--premium); }
+.trends-premium-field { margin: 0 0 20px; }
+.trends-premium-title { margin: 0 0 6px; font-weight: 700; }
+.trends-premium-title i { color: var(--premium); font-size: 13px; margin-right: 4px; }
+.trends-premium-field .muted { font-size: 14px; margin: 10px 0 12px; }
 .trends-how { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 8px; }
 .trends-how summary { cursor: pointer; list-style: none; }
 .trends-how summary::-webkit-details-marker { display: none; }

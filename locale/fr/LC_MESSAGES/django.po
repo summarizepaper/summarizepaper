@@ -23876,3 +23876,63 @@ msgstr ""
 
 msgid "The topics rising in research this week"
 msgstr "Les sujets qui montent dans la recherche cette semaine"
+
+msgid ", down to categories such as cs.LG or astro-ph.EP"
+msgstr ", jusqu'aux catégories comme cs.LG ou astro-ph.EP"
+
+msgid "Below, the free topics of the whole server."
+msgstr "Ci-dessous, les sujets gratuits de tout le serveur."
+
+msgid "History of terms"
+msgstr "Historique des termes"
+
+msgid "In your inbox"
+msgstr "Dans votre boîte mail"
+
+msgid "The rising topics of %(name)s are part of Premium"
+msgstr "Les sujets qui montent en %(name)s font partie de Premium"
+
+msgid "The rising topics of each field"
+msgstr "Les sujets qui montent de chaque domaine"
+
+msgid "What Premium adds on this page"
+msgstr "Ce que Premium ajoute sur cette page"
+
+msgid ""
+"astrophysics, machine learning, neuroscience…, down to categories such as "
+"cs.LG or astro-ph.EP."
+msgstr ""
+"astrophysique, apprentissage automatique, neurosciences…, jusqu'aux "
+"catégories comme cs.LG ou astro-ph.EP."
+
+msgid "the rising topics of your fields in your Monday paper alert."
+msgstr "les sujets qui montent dans vos domaines, dans votre alerte du lundi."
+
+msgid ""
+"the topics closest to your research first, in the fields of your paper "
+"alert."
+msgstr ""
+"les sujets les plus proches de vos recherches d'abord, dans les domaines de "
+"votre alerte."
+
+msgid ""
+"three terms compared week by week, in any field, with the counts to "
+"download."
+msgstr ""
+"trois termes comparés semaine par semaine, dans n’importe quel domaine, avec"
+" les comptages à télécharger."
+
+msgid "%(n)s field of %(name)s has its own this week"
+msgid_plural "%(n)s fields of %(name)s have their own this week"
+msgstr[0] "%(n)s domaine de %(name)s a les siens cette semaine"
+msgstr[1] "%(n)s domaines de %(name)s ont les leurs cette semaine"
+
+msgid "%(n)s more rising topic this week on %(name)s"
+msgid_plural "%(n)s more rising topics this week on %(name)s"
+msgstr[0] "%(n)s autre sujet qui monte cette semaine sur %(name)s"
+msgstr[1] "%(n)s autres sujets qui montent cette semaine sur %(name)s"
+
+msgid "%(name)s: %(n)s rising topic this week, with Premium"
+msgid_plural "%(name)s: %(n)s rising topics this week, with Premium"
+msgstr[0] "%(name)s : %(n)s sujet qui monte cette semaine, avec Premium"
+msgstr[1] "%(name)s : %(n)s sujets qui montent cette semaine, avec Premium"
