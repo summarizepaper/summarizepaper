@@ -24027,3 +24027,59 @@ msgstr "Partager les sujets qui montent cette semaine sur %(name)s"
 msgid "Share this letter"
 msgstr "Partager cette lettre"
 
+#, python-format
+msgid "Our new paper: %(title)s"
+msgstr "Notre nouvel article : %(title)s"
+
+#, python-format
+msgid "Our paper: %(title)s"
+msgstr "Notre article : %(title)s"
+
+msgid "What we found:"
+msgstr "Ce que nous avons trouvé :"
+
+msgid "A summary for every reader, and the paper answers your questions:"
+msgstr ""
+"Un résumé pour tous les lecteurs, et l'article répond à vos questions :"
+
+msgid "Our new paper:"
+msgstr "Notre nouvel article :"
+
+msgid "Our paper:"
+msgstr "Notre article :"
+
+#, python-format
+msgid "Rising this week on %(server)s: %(title)s"
+msgstr "Ça monte cette semaine sur %(server)s : %(title)s"
+
+#, python-format
+msgid "papers of %(week)s"
+msgstr "articles du %(week)s"
+
+msgid "Example papers, the history of the term and who works on it:"
+msgstr ""
+"Des exemples d'articles, l'historique du terme et qui travaille dessus :"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Share your paper"
+msgstr "Partager votre article"
+
+msgid ""
+"You sign this paper: the post below speaks in your name. Edit it, then "
+"publish it."
+msgstr ""
+"Vous signez cet article : le post ci-dessous parle en votre nom. Modifiez-"
+"le, puis publiez-le."
+
+msgid "Share it with your colleagues"
+msgstr "Partagez-le avec vos collègues"
+
+#, python-format
+msgid "Share “%(title)s”"
+msgstr "Partager « %(title)s »"
+
+msgid "Share it: a post ready for LinkedIn, X or Bluesky"
+msgstr "La partager : un post prêt pour LinkedIn, X ou Bluesky"
+

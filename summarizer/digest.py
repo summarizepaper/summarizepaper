@@ -1282,6 +1282,8 @@ def send_one(subscription, items, base_url, from_authors=(), syntheses=(), ready
             item.save_url = ('%s/%s/digest/l/%s/' % (base_url, lang, link_code('k', edition, rank)) if edition else
                              '%s/%s/digest/save/%s/' % (base_url, lang, save_token(subscription, item.arxiv_id)))
             item.ready = item.arxiv_id in ready
+            # a summarized paper has a post ready on its page (see social.py)
+            item.share_url = tracked('%s/%s/paper/%s/' % (base_url, lang, item.arxiv_id), campaign, 'share') + '#share' if item.ready else ''
             item.via = ', '.join((via or {}).get(item.arxiv_id, []))
             categories = [c for c in item.categories.split(',') if c]
             item.category = categories[0] if categories else ''

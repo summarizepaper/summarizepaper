@@ -1381,3 +1381,6 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .share-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .share-post .share-help { margin-top: 10px; font-size: 13px; }
 .share-post .share-status { min-height: 1em; margin-top: 0; margin-bottom: 16px; font-size: 14px; color: var(--success); }
+.share-compact:not([open]) { display: none; }
+.topic-card .share-post { margin: 16px 0 0; box-shadow: none; }
+.topic-card.is-shared { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }

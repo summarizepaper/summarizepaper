@@ -800,6 +800,7 @@ def send(now, budget, base_url=digest.BASE_URL):
                 link['tracked'] = tracked('%s/%s/paper/%s/' % (base_url, letter.lang, link['arxiv_id']), 'paper')
                 link['title'] = plain_math(link['title'])
         context['feedback_url'] = tracked(url + '#feedback', 'feedback')
+        context['share_url'] = tracked(url, 'share') + '#share'
         with translation.override(letter.lang):
             text = render_to_string('letters/email.txt', context)
             html = render_to_string('letters/email.html', context)

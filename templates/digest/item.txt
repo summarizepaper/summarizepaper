@@ -4,4 +4,5 @@
 {% endfor %}{% else %}{{ item.blurb }}
 {% endif %}{% trans 'Read the summary:' %} {{ item.url }}
 {% if item.abs_url %}{{ item.source }}: {{ item.abs_url }}
-{% endif %}{% trans 'Save to a collection' %}: {{ item.save_url }}
+{% endif %}{% trans 'Save to a collection' %}: {{ item.save_url }}{% if item.share_url %}
+{% trans 'Share' %}: {{ item.share_url }}{% endif %}

@@ -1,21 +1,27 @@
 import datetime
 import io
 import json
+from unittest import mock
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
-from django.test import Client, TestCase
+from django.contrib.auth.models import User
+from django.core import mail
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from PIL import Image
 
-from . import social
-from .models import ArxivPaper, Generated, Letter, RisingTopics, SummaryPaper
+from . import accounts, letters, social
+from .models import ArxivPaper, Author, Generated, Letter, LetterSubscription, PaperAuthor, RisingTopics, SummaryPaper
+
+CC_BY = 'http://creativecommons.org/licenses/by/4.0/'
 
 WEEK = datetime.date(2026, 10, 26)
 
 
 def topic(i):
     return {'title': 'Topic %d' % i, 'terms': ['term %d' % i], 'main': 'term %d' % i, 'kind': 'spike',
-            'growth': '4.%d' % i, 'count': 10 + i, 'teams': 5 + i, 'papers': []}
+            'growth': '4.%d' % i, 'count': 10 + i, 'teams': 5 + i, 'papers': [], 'text': 'What topic %d is about.' % i}
 
 
 class PictureTests(TestCase):
@@ -104,7 +110,7 @@ class PostTests(TestCase):
     def test_trends_post_holds_only_the_free_topics(self):
         RisingTopics.objects.create(scope='*', lang='en', day=WEEK, content=json.dumps({'topics': [topic(i) for i in range(1, 6)]}))
         soup = BeautifulSoup(Client().get('/en/trends/').content, 'html.parser')
-        text = soup.select_one('[data-share] textarea').get_text()
+        text = soup.select_one('#share textarea').get_text()
         self.assertIn('1. Topic 1 — ×4.1, 11 papers from 6 teams', text)
         self.assertIn('3. Topic 3', text)
         self.assertNotIn('Topic 4', text)
@@ -113,7 +119,7 @@ class PostTests(TestCase):
                          'https://www.summarizepaper.com/og/en/trends/arxiv/2026-10-26.png')
         RisingTopics.objects.create(scope='medrxiv', lang='en', day=WEEK, content=json.dumps({'topics': [topic(1)]}))
         text = BeautifulSoup(Client().get('/en/trends/', {'scope': 'medrxiv'}).content, 'html.parser') \
-            .select_one('[data-share] textarea').get_text()
+            .select_one('#share textarea').get_text()
         self.assertIn('?scope=medrxiv&week=2026-10-26', text)
 
     def test_letter_post(self):
@@ -127,3 +133,131 @@ class PostTests(TestCase):
         self.assertIn('https://www.summarizepaper.com/en/letters/space/2026-10-26/', text)
         self.assertEqual(soup.select_one('meta[property="og:image"]')['content'],
                          'https://www.summarizepaper.com/og/en/letter/space/2026-10-26.png')
+
+
+def png_bytes(size=(800, 500)):
+    out = io.BytesIO()
+    Image.new('RGB', size, (200, 30, 30)).save(out, 'PNG')
+    return out.getvalue()
+
+
+class FigureTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.paper = ArxivPaper.objects.create(arxiv_id='2401.04088v1', title='Open paper', abstract='Abstract.', license=CC_BY)
+        SummaryPaper.objects.create(paper=self.paper, lang='en', summary='The summary of it all.', notes='[]')
+
+    def test_a_figure_is_fetched_in_the_background_then_drawn(self):
+        with mock.patch('summarizer.social.threading.Thread') as thread:
+            response = Client().get('/og/en/p/2401.04088v1.png')
+        self.assertEqual(response['Cache-Control'], social.CACHE_SOON)
+        thread.assert_called_once()
+        gallery = {'figures': [{'label': 'Figure 1', 'images': ['https://arxiv.org/html/2401.04088v1/x1.png']}]}
+        fetched = mock.Mock(content=png_bytes(), raise_for_status=lambda: None)
+        with mock.patch('summarizer.chat_figures.paper_gallery', return_value=gallery), \
+                mock.patch('requests.get', return_value=fetched):
+            social.fetch_figure('2401.04088v1')
+        picture, credit = social.figure_of(self.paper)
+        self.assertEqual(credit, 'Figure 1 · CC BY 4.0')
+        response = Client().get('/og/en/p/2401.04088v1.png')
+        self.assertEqual(response['Cache-Control'], social.CACHE)
+        drawn = Image.open(io.BytesIO(response.content)).convert('RGB')
+        self.assertEqual(drawn.getpixel((1000, 280)), (200, 30, 30))  # the figure, on the right
+
+    def test_no_figure_for_non_commercial_licenses_nor_papers_without_one(self):
+        self.paper.license = 'http://creativecommons.org/licenses/by-nc/4.0/'
+        self.assertIsNone(social.figure_of(self.paper))
+        self.paper.license = CC_BY
+        with mock.patch('summarizer.chat_figures.paper_gallery', return_value={'figures': []}):
+            social.fetch_figure('2401.04088v1')
+        self.assertIsNone(social.figure_of(self.paper))
+        self.assertEqual(Client().get('/og/en/p/2401.04088v1.png')['Cache-Control'], social.CACHE)
+
+    def test_papers_never_summarized_have_no_picture(self):
+        ArxivPaper.objects.create(arxiv_id='2401.00001v1', title='Bare', abstract='Abstract')
+        self.assertEqual(Client().get('/og/en/p/2401.00001v1.png').status_code, 404)
+
+    def test_too_many_pictures_at_once_get_a_short_503(self):
+        with mock.patch.object(social.RENDER_SLOTS, 'acquire', return_value=False), mock.patch('summarizer.social.threading.Thread'):
+            response = Client().get('/og/en/p/2401.04088v1.png')
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response['Retry-After'], '10')
+
+
+class AuthorTests(TestCase):
+    def setUp(self):
+        self.paper = ArxivPaper.objects.create(arxiv_id='2401.04088v1', title='Gas in disks', abstract='Abstract.',
+                                               category='astro-ph.EP', published_arxiv=datetime.date.today())
+        SummaryPaper.objects.create(paper=self.paper, lang='en', summary='We show a thing. And more.', notes="['Point one']")
+        author = Author.objects.create(name='Quentin Kral')
+        PaperAuthor.objects.create(author=author, paper=self.paper, author_order=1)
+        self.user = User.objects.create_user('qk', 'qk@example.org', 'x')
+
+    def box(self):
+        client = Client()
+        client.force_login(self.user)
+        return BeautifulSoup(client.get('/en/paper/2401.04088v1/').content, 'html.parser').select_one('[data-share]')
+
+    def test_an_author_gets_a_first_person_post_unfolded(self):
+        box = self.box()
+        self.assertFalse(box.has_attr('open'))
+        self.assertIn('Gas in disks\n', box.select_one('textarea').get_text())
+        self.user.first_name, self.user.last_name = 'Q.', 'Kral'
+        self.user.save()
+        box = self.box()
+        self.assertTrue(box.has_attr('open'))
+        text = box.select_one('textarea').get_text()
+        self.assertTrue(text.startswith('Our new paper: Gas in disks'))
+        self.assertIn('What we found:', text)
+        self.assertIn('You sign this paper', box.get_text())
+        self.paper.published_arxiv = datetime.date(2024, 1, 1)
+        self.paper.save()
+        self.assertTrue(self.box().select_one('textarea').get_text().startswith('Our paper: Gas in disks'))
+
+    def test_google_sign_in_keeps_the_name_when_the_account_has_none(self):
+        accounts.remember_name(self.user, {'given_name': 'Quentin', 'family_name': 'Kral'})
+        self.user.refresh_from_db()
+        self.assertEqual((self.user.first_name, self.user.last_name), ('Quentin', 'Kral'))
+        accounts.remember_name(self.user, {'given_name': 'Other', 'family_name': 'Name'})
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.last_name, 'Kral')
+
+
+class TopicTests(TestCase):
+    def setUp(self):
+        RisingTopics.objects.create(scope='*', lang='en', day=WEEK, content=json.dumps({'topics': [topic(i) for i in range(1, 6)]}))
+
+    def test_each_free_topic_has_its_post_and_picture(self):
+        soup = BeautifulSoup(Client().get('/en/trends/').content, 'html.parser')
+        boxes = soup.select('.topic-card [data-share]')
+        self.assertEqual([b['id'] for b in boxes], ['share-topic-1', 'share-topic-2', 'share-topic-3'])
+        text = boxes[1].select_one('textarea').get_text()
+        self.assertTrue(text.startswith('Rising this week on arXiv: Topic 2'))
+        self.assertIn('×4.2, 12 papers from 7 teams', text)
+        self.assertIn('What topic 2 is about.', text)
+        self.assertIn('https://www.summarizepaper.com/en/trends/?week=2026-10-26&topic=2', text)
+        self.assertEqual(len(soup.select('[data-share-open]')), 3)
+        self.assertEqual(Client().get('/og/en/topic/arxiv/2026-10-26/2.png').status_code, 200)
+        self.assertEqual(Client().get('/og/en/topic/arxiv/2026-10-26/4.png').status_code, 404)
+
+    def test_a_shared_topic_link_previews_that_topic(self):
+        soup = BeautifulSoup(Client().get('/en/trends/', {'week': '2026-10-26', 'topic': '2'}).content, 'html.parser')
+        self.assertEqual(soup.select_one('meta[property="og:title"]')['content'], 'Topic 2')
+        self.assertEqual(soup.select_one('meta[property="og:image"]')['content'],
+                         'https://www.summarizepaper.com/og/en/topic/arxiv/2026-10-26/2.png')
+        self.assertIn('is-shared', soup.select_one('#topic-2')['class'])
+        soup = BeautifulSoup(Client().get('/en/trends/', {'topic': '9'}).content, 'html.parser')
+        self.assertEqual(soup.select_one('meta[property="og:title"]')['content'], 'Rising this week on arXiv')
+
+
+class EmailTests(TestCase):
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_the_letter_email_links_to_its_post(self):
+        content = {'sections': [{'heading': 'Stars', 'text': 'Text.', 'papers': []}], 'papers': {}, 'closing': '', 'count': 6}
+        Letter.objects.create(topic='space', lang='en', day=WEEK, title='Space this week', dek='News.', content=json.dumps(content))
+        user = User.objects.create_user('reader', 'reader@example.org', 'x')
+        LetterSubscription.objects.create(user=user, topic='space', lang='en')
+        self.assertEqual(letters.send(None, 5, base_url='https://www.summarizepaper.com'), 1)
+        share = 'https://www.summarizepaper.com/en/letters/space/2026-10-26/?utm_source=letter&utm_medium=email&utm_content=share#share'
+        self.assertIn(share, mail.outbox[0].body)
+        self.assertIn(share.replace('&', '&amp;'), mail.outbox[0].alternatives[0][0])

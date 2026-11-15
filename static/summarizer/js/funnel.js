@@ -11,7 +11,7 @@
     if (['paper', 'digest', 'refcheck', 'missed', 'scoops', 'literature', 'chat', 'letters', 'trends', 'saved_searches'].includes(element.dataset.tool)) data.tool = element.dataset.tool;
     if (['astronomy', 'biology', 'computing'].includes(element.dataset.domain)) data.domain = element.dataset.domain;
     if (['close', 'prior', 'followup'].includes(element.dataset.group)) data.group = element.dataset.group;
-    if (['linkedin', 'x', 'bluesky', 'copy', 'native'].includes(element.dataset.network)) data.network = element.dataset.network;
+    if (['linkedin', 'x', 'bluesky', 'email', 'copy', 'native'].includes(element.dataset.network)) data.network = element.dataset.network;
     return data;
   }
   document.addEventListener('click', function (event) {

@@ -11,21 +11,33 @@ function setup({edited = null, share = null} = {}) {
   let clickHandler, copied = null;
   const status = {textContent: ''};
   const area = {defaultValue: TEXT, value: edited === null ? TEXT : edited};
+  const fetched = [];
   const box = {
-    dataset: {url: URL_, short: 'What it shows.\n\n#arXiv', copied: 'Copied', linkedinCopied: 'Copied for LinkedIn'},
+    id: 'share-topic-2', open: false, dataset: {url: URL_, short: 'What it shows.\n\n#arXiv', subject: 'Title', copied: 'Copied', linkedinCopied: 'Copied for LinkedIn', image: 'https://example.org/og.png'},
     getAttribute: name => URL_ + '?utm_source=' + name.replace('data-link-', ''),
+    hasAttribute: name => name === 'data-share',
     querySelector: sel => (sel === '[data-share-text]' ? area : status),
+    scrollIntoView() {},
   };
-  const document = {addEventListener: (type, handler) => { if (type === 'click') clickHandler = handler; }, querySelectorAll: () => [], getElementById: () => null};
+  const document = {readyState: 'complete', addEventListener: (type, handler) => { if (type === 'click') clickHandler = handler; },
+                    querySelectorAll: () => [], querySelector: () => null, getElementById: id => (id === box.id ? box : null)};
   const navigator = {clipboard: {writeText: text => { copied = text; return Promise.resolve(); }}, share};
   const window = {isSecureContext: true, addEventListener() {}};
-  vm.runInNewContext(source, {document, navigator, window, location: {hash: ''}, Promise});
+  const context = {document, navigator, window, location: {hash: ''}, Promise, fetch: url => { fetched.push(url); return Promise.resolve(); }};
+  vm.runInNewContext(source, context);
+  vm.runInNewContext(source, context);  // a second box of the page loads the file again: one handler only
   function click(network) {
-    const button = {dataset: {shareNetwork: network}, closest: sel => (sel === '[data-share]' ? box : button)};
-    clickHandler({target: {closest: () => button}});
+    const button = {dataset: {shareNetwork: network}, closest: sel => (sel === '[data-share]' ? box : sel.indexOf('data-share-open') !== -1 ? null : button)};
+    clickHandler({target: {closest: sel => button.closest(sel)}});
     return button;
   }
-  return {click, copied: () => copied, status};
+  function openFrom(id) {
+    const opener = {dataset: {shareOpen: id}};
+    let prevented = false;
+    clickHandler({preventDefault: () => { prevented = true; }, target: {closest: sel => (sel.indexOf('data-share-open') !== -1 ? opener : null)}});
+    return prevented;
+  }
+  return {click, openFrom, box, fetched, copied: () => copied, status};
 }
 
 test('X gets the short post and the link tagged for X, apart', () => {
@@ -63,4 +75,19 @@ test('the phone share sheet gets the text and the link apart', () => {
   click('native');
   assert.equal(shared.url, URL_ + '?utm_source=native');
   assert.equal(shared.text, 'Title\n\nWhat it shows.\n\nRead it:\n\n#arXiv');
+});
+
+test('an email gets the subject and the whole post with its tagged link', () => {
+  const {click} = setup();
+  const href = click('email').href;
+  assert.ok(href.startsWith('mailto:?subject=Title&body='));
+  assert.equal(decodeURIComponent(href.split('body=')[1]), TEXT.replace(URL_, URL_ + '?utm_source=email'));
+});
+
+test("a card's Share button opens its box and asks for its picture once", () => {
+  const {openFrom, box, fetched} = setup();
+  assert.equal(openFrom('share-topic-2'), true);
+  assert.equal(box.open, true);
+  openFrom('share-topic-2');
+  assert.deepEqual(fetched, ['https://example.org/og.png']);
 });

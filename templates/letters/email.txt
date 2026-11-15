@@ -9,6 +9,7 @@
 {{ closing }}
 
 {% trans 'Read it with the tools for each paper' %}: {{ tools_url }}
-{% trans 'Choose your letters' %}: {{ manage_url }}
+{% if share_url %}{% trans 'Share it: a post ready for LinkedIn, X or Bluesky' %}: {{ share_url }}
+{% endif %}{% trans 'Choose your letters' %}: {{ manage_url }}
 {% trans 'Unsubscribe:' %} {{ unsubscribe_url }}
 {% endautoescape %}

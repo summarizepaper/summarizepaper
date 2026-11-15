@@ -290,6 +290,14 @@ def google_user(email):
     return user, False
 
 
+def remember_name(user, profile):
+    """Keep the name Google gives when the account has none: it tells the authors of a paper apart (press kit, share)."""
+    first, last = (profile.get('given_name') or '').strip()[:150], (profile.get('family_name') or '').strip()[:150]
+    if (first or last) and not (user.first_name or user.last_name):
+        user.first_name, user.last_name = first, last
+        user.save(update_fields=['first_name', 'last_name'])
+
+
 def google_callback(request):
     pending = request.session.pop(GOOGLE_SESSION_KEY, None) or {}
     lang = pending.get('lang') or settings.LANGUAGE_CODE
@@ -306,6 +314,7 @@ def google_callback(request):
         if not email or not profile.get('email_verified'):
             return render(request, 'accounts/google_error.html', status=400)
         user, fresh = google_user(email)
+        remember_name(user, profile)
         login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
         target = pending.get('next') or '/%s/%s' % (lang, '?activated=True' if fresh else '')
         # Not a redirect: browsers may leave the new session cookie off the next hop of a

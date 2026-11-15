@@ -6,7 +6,7 @@
  data-sources-url="{% url 'chat_sources' %}" data-quota-url="{% url 'chat_quota' %}"
  data-share-url="{% url 'chat_share' %}" data-unshare-url="{% url 'chat_unshare' 'TOKEN' %}"
  data-share-failed="{% trans 'The conversation could not be shared. Try again in a moment.' %}"
- data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}" data-ask-again="{% trans 'Ask again' %}"
+ data-copy="{% trans 'Copy' %}" data-copied="{% trans 'Copied' %}" data-ask-again="{% trans 'Ask again' %}"{% if share %} data-share-prompt="{% trans 'Share it with your colleagues' %}"{% endif %}
  data-sources="{% trans 'Sources' %}" data-stopped="{% trans 'Stopped.' %}"
  data-export-general="{% trans 'general knowledge' %}" data-export-not-found="{% trans 'passage not found: check' %}"
  data-export-unsupported="{% trans 'not supported by the paper' %}"
@@ -102,8 +102,9 @@
   {% endif %}
 
   {% if share %}
-  {% trans 'Share this paper' as share_heading %}{% trans 'One of the authors? The post below presents your paper: edit it, then publish it.' as share_note %}
-  {% include 'summarizer/share_post.html' with heading=share_heading note=share_note %}
+  {% if share_author %}{% trans 'Share your paper' as share_heading %}{% trans 'You sign this paper: the post below speaks in your name. Edit it, then publish it.' as share_note %}
+  {% else %}{% trans 'Share this paper' as share_heading %}{% trans 'One of the authors? The post below presents your paper: edit it, then publish it.' as share_note %}{% endif %}
+  {% include 'summarizer/share_post.html' with heading=share_heading note=share_note open=share_author %}
   {% endif %}
 
   {% if not request.user.is_authenticated %}

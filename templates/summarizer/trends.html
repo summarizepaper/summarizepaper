@@ -10,9 +10,15 @@
   {% if scope != '*' or view == 'foryou' or request.GET.week %}<meta name="robots" content="noindex" />{% endif %}
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="SummarizePaper" />
+  {% if shared_topic %}
+  <meta property="og:title" content="{{ shared_topic.title }}" />
+  <meta property="og:description" content="{% blocktrans with name=server_name %}Rising this week on {{ name }}{% endblocktrans %} · {{ shared_topic.text|truncatechars:180 }}" />
+  <meta property="og:url" content="{{ shared_topic.share.url }}" />
+  {% else %}
   <meta property="og:title" content="{% if share %}{% blocktrans with name=server_name %}Rising this week on {{ name }}{% endblocktrans %}{% else %}{% trans 'Rising topics in research' %}{% endif %}" />
   <meta property="og:description" content="{% if share %}{% for topic in topics|slice:':3' %}{{ topic.title }}{% if not forloop.last %} · {% endif %}{% endfor %}{% else %}{% trans 'The research topics with a sudden rise in new papers this week on arXiv, bioRxiv and medRxiv, explained in plain language, with example papers.' %}{% endif %}" />
   {% if share %}<meta property="og:url" content="{{ share.url }}" />{% endif %}
+  {% endif %}
   {% if og_image %}
   <meta property="og:image" content="{{ og_image }}" />
   <meta property="og:image:width" content="1200" />

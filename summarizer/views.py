@@ -1164,6 +1164,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 sumpaper.blog = summary_text.without_invented_references(
                     utils.clean_blog_html(sumpaper.blog), [a.name for a in paper.authors.all()], paper.journal_ref, paper.comments)
             paper_insight = insight.for_page(arxiv_id, lang) if sumpaper else None
+            share_author = bool(sumpaper) and social.is_author(request.user, paper)
             stuff_for_frontend.update({
                 'paper':paper,
                 'structured_data':paper_structured_data(paper, sumpaper, lang),
@@ -1191,8 +1192,10 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'insight_unavailable': insight.unavailable(arxiv_id, lang),
                 'topic':keywords[0] if keywords else '',
                 'saved_matches':saved_searches.matching(request.user, arxiv_id),
-                'og_image':social.paper_image_url(paper, sumpaper, lang),
-                'share':social.paper_share(paper, sumpaper, paper_insight, lang)
+                'og_image':social.paper_image_url(paper, sumpaper, lang) if sumpaper else None,
+                'share_author':share_author,
+                'share':social.paper_share(paper, sumpaper, paper_insight, lang, author=share_author,
+                                           image=social.paper_image_url(paper, sumpaper, lang))
                         if sumpaper and (paper_insight or sumpaper.summary or sumpaper.lay_summary) else None,
             })
         else:

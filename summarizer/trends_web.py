@@ -210,11 +210,18 @@ def trends_page(request):
         'since': first, 'ready_on': first + trends.WEEK * (trends.MIN_BASE_WEEKS + 1) + trends.CLOSE if first else None,
     })
     if day and scope == server and topics:
-        # the free topics, those anyone opening the shared link sees
+        # the free topics, those anyone opening the shared link sees, each with its own post
         free = topics[:trends.FREE_TOPICS]
         slug = next(s for s, sc in social.SERVER_SLUGS.items() if sc == server)
         context.update(share=social.trends_share(server, context['server_name'], day, free, lang),
                        og_image=social.image_url('trends', lang, slug, day.isoformat()))
+        for index, topic in enumerate(context['topics'][:trends.FREE_TOPICS], 1):
+            topic.update(anchor='topic-%d' % index,
+                         share=social.topic_share(server, context['server_name'], day, free[index - 1], index, lang))
+        asked_topic = request.GET.get('topic', '')
+        if asked_topic.isdigit() and 1 <= int(asked_topic) <= len(free):
+            shared = context['topics'][int(asked_topic) - 1]
+            context.update(shared_topic=shared, og_image=shared['share']['image'])
     if not paid and (day or locked):
         context['premium'] = premium_preview(request, lang, day, server, topics[trends.FREE_TOPICS:], asked if locked else None)
     from . import letters

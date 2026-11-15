@@ -36,7 +36,14 @@
         var buttons = root.querySelectorAll('.vote-btn'); buttons.forEach(function (b) {b.disabled = true;});
         fetch(form.action, {method: 'POST', body: data, headers: {'X-Requested-With': 'fetch'}})
           .then(function (r) {if (!r.ok) throw r; return r.json();})
-          .then(function (res) {root.querySelector('#vote-total').textContent = res.total; var msg = root.querySelector('#vote-message'); msg.textContent = res.message; msg.hidden = false; msg.classList.toggle('ok', !res.already);})
+          .then(function (res) {
+            root.querySelector('#vote-total').textContent = res.total; var msg = root.querySelector('#vote-message'); msg.textContent = res.message; msg.hidden = false; msg.classList.toggle('ok', !res.already);
+            // a reader who found the synthesis useful is the one most likely to pass it on
+            if (data.get('direction') === 'up' && !res.already && root.dataset.sharePrompt && document.getElementById('share')) {
+              var link = document.createElement('a'); link.href = '#share'; link.textContent = root.dataset.sharePrompt; link.dataset.funnel = 'share_after_vote';
+              msg.appendChild(document.createTextNode(' ')); msg.appendChild(link);
+            }
+          })
           .catch(function () {var msg = root.querySelector('#vote-message'); msg.textContent = root.dataset.error; msg.hidden = false;})
           .finally(function () {buttons.forEach(function (b) {b.disabled = false;});});
       });

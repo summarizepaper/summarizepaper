@@ -11,9 +11,11 @@ The pictures are drawn on request and cached by Cloudflare and the networks (Cac
 import datetime
 import functools
 import io
+import logging
 import os
 import re
-from urllib.parse import urlencode
+import threading
+from urllib.parse import quote, urlencode
 
 from django.conf import settings
 from django.http import Http404, HttpResponse
@@ -21,11 +23,20 @@ from django.utils import formats, translation
 from django.utils.translation import gettext as _
 from PIL import Image, ImageDraw, ImageFont
 
+logger = logging.getLogger(__name__)
+
 SITE = 'https://www.summarizepaper.com'
 LANGS = ('en', 'fr')
-NETWORKS = ('linkedin', 'x', 'bluesky', 'copy', 'native')
+NETWORKS = ('linkedin', 'x', 'bluesky', 'email', 'copy', 'native')
+NEW_PAPER_DAYS = 90  # an author's post says "our new paper" within this many days of the first version
 SHORT = 200  # characters of the post for X (280, the link counted as 23) and Bluesky (300, the whole link counted)
 CACHE = 'public, max-age=86400, s-maxage=604800'
+CACHE_SOON = 'public, max-age=60, s-maxage=60'  # drawn without the figure being fetched: asked again soon
+RENDER_SLOTS = threading.BoundedSemaphore(2)
+FIGURE_LICENSES = {'by', 'by-sa', 'zero', 'mark'}
+FIGURE_KEY = 'og-figure:v1:%s'
+FIGURE_WIDTH = 440
+MAX_FIGURE_BYTES = 8_000_000
 
 WIDTH, HEIGHT = 1200, 630
 MARGIN = 72
@@ -102,20 +113,33 @@ def tagged(url, network):
     return '%s%sutm_source=%s' % (url, '&' if '?' in url else '?', network)
 
 
-def share(url, text, short, tool):
-    """What share_post.html needs: the post, a shorter one for X and Bluesky (whose limits count the link), and the
-    page link with its utm_source for each network. The post shows the bare link; the script swaps in the tagged one."""
+def share(url, text, short, tool, subject, key='share', image=''):
+    """What share_post.html needs: the post, a shorter one for X and Bluesky (whose limits count the link), the subject
+    of an email, and the page link with its utm_source for each network. The post shows the bare link; the script
+    swaps in the tagged one. `key` tells apart several boxes of one page; `image` is the picture to draw in advance."""
     links = {n: tagged(url, n) for n in NETWORKS}
     hrefs = {  # without the script; with it, the edited post goes instead
         'linkedin': 'https://www.linkedin.com/feed/?' + urlencode({'shareActive': 'true', 'text': text.replace(url, links['linkedin'])}),
         'x': 'https://x.com/intent/post?' + urlencode({'text': short, 'url': links['x']}),
         'bluesky': 'https://bsky.app/intent/compose?' + urlencode({'text': '%s\n%s' % (short, links['bluesky'])}),
+        'email': 'mailto:?' + urlencode({'subject': subject, 'body': text.replace(url, links['email'])}, quote_via=quote),
     }
-    return {'url': url, 'text': text, 'short': short, 'tool': tool, 'links': links, 'hrefs': hrefs}
+    return {'url': url, 'text': text, 'short': short, 'tool': tool, 'subject': subject, 'links': links, 'hrefs': hrefs,
+            'key': key, 'image': image}
 
 
-def paper_share(paper, sumpaper, insight, lang):
-    """The post for a paper page: its title, what it shows in one sentence, three findings, the link."""
+def is_author(user, paper):
+    """Whether a signed-in reader signs the paper: the name of their account (Google gives it) among its authors."""
+    from .digest import name_key, same_author
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    key = name_key('%s %s' % (user.first_name, user.last_name))
+    return bool(key) and any(same_author(key, a.name) for a in paper.authors.all())
+
+
+def paper_share(paper, sumpaper, insight, lang, author=False, image=''):
+    """The post for a paper page: its title, what it shows in one sentence, three findings, the link. An author's
+    post speaks in the first person: "Our new paper: …"."""
     from . import keypoints, sources
     url = '%s/%s/paper/%s/' % (SITE, lang, paper.arxiv_id)
     title = plain(paper.title)
@@ -125,32 +149,74 @@ def paper_share(paper, sumpaper, insight, lang):
         hook = first_sentence(sumpaper.summary or sumpaper.lay_summary or paper.abstract)
         points = [shorten(p, 240) for p in keypoints.stored_points(sumpaper.notes)[:3]]
     tags = category_tags(paper.category, arxiv=not sources.is_external(paper.arxiv_id))
-    lines = [title, '', plain(hook)]
-    if points:
-        lines += ['', _('Key findings:')] + ['• ' + plain(p) for p in points]
-    lines += ['', '%s %s' % (_('AI summary, key points and questions to the paper:'), url), '', tags]
-    short = shorten(hook, SHORT - len(tags) - 2) + '\n\n' + tags
-    return share(url, '\n'.join(lines), short, 'paper')
+    if author:
+        published = paper.published_arxiv
+        recent = published is None or (datetime.date.today() - published).days <= NEW_PAPER_DAYS
+        lead = (_('Our new paper: %(title)s') if recent else _('Our paper: %(title)s')) % {'title': title}
+        lines = [lead, '', plain(hook)]
+        if points:
+            lines += ['', _('What we found:')] + ['• ' + plain(p) for p in points]
+        lines += ['', '%s %s' % (_('A summary for every reader, and the paper answers your questions:'), url), '', tags]
+        short = shorten('%s %s' % ((_('Our new paper:') if recent else _('Our paper:')), plain(hook)), SHORT - len(tags) - 2)
+    else:
+        lines = [title, '', plain(hook)]
+        if points:
+            lines += ['', _('Key findings:')] + ['• ' + plain(p) for p in points]
+        lines += ['', '%s %s' % (_('AI summary, key points and questions to the paper:'), url), '', tags]
+        short = shorten(hook, SHORT - len(tags) - 2)
+    return share(url, '\n'.join(lines), short + '\n\n' + tags, 'paper', title, image=image)
+
+
+def trends_url(server, day, lang, topic=None):
+    slug = next(s for s, scope in SERVER_SLUGS.items() if scope == server)
+    return '%s/%s/trends/?%sweek=%s%s' % (SITE, lang, '' if server == '*' else 'scope=%s&' % slug, day.isoformat(),
+                                         '&topic=%d' % topic if topic else '')
+
+
+def week_label(day):
+    return '%s – %s' % (formats.date_format(day, 'j F'), formats.date_format(day + datetime.timedelta(days=6), 'j F Y'))
+
+
+def topic_figures(topic):
+    """'×4.5, 12 papers from 12 teams', with what the topic has."""
+    figures = []
+    if topic.get('growth'):
+        figures.append('×%s' % formats.localize(topic['growth']))
+    if topic.get('count') and topic.get('teams'):
+        figures.append(_('%(n)s papers from %(t)s teams') % {'n': topic['count'], 't': topic['teams']})
+    return ', '.join(figures)
 
 
 def trends_share(server, server_name, day, topics, lang):
     """The post for the free topics of a server's week: each with its rise and its number of papers and teams."""
-    slug = next(s for s, scope in SERVER_SLUGS.items() if scope == server)
-    url = '%s/%s/trends/?%sweek=%s' % (SITE, lang, '' if server == '*' else 'scope=%s&' % slug, day.isoformat())
-    week = '%s – %s' % (formats.date_format(day, 'j F'), formats.date_format(day + datetime.timedelta(days=6), 'j F Y'))
-    lines = [_('Rising research topics this week on %(server)s (papers of %(week)s):') % {'server': server_name, 'week': week}, '']
+    url = trends_url(server, day, lang)
+    lines = [_('Rising research topics this week on %(server)s (papers of %(week)s):') % {'server': server_name, 'week': week_label(day)}, '']
     for i, topic in enumerate(topics, 1):
-        figures = []
-        if topic.get('growth'):
-            figures.append('×%s' % topic['growth'])
-        if topic.get('count') and topic.get('teams'):
-            figures.append(_('%(n)s papers from %(t)s teams') % {'n': topic['count'], 't': topic['teams']})
-        lines.append('%d. %s' % (i, plain(topic['title'])) + (' — ' + ', '.join(figures) if figures else ''))
+        figures = topic_figures(topic)
+        lines.append('%d. %s' % (i, plain(topic['title'])) + (' — ' + figures if figures else ''))
     tags = hashtags('#' + server_name, '#Research', '#Science')
     lines += ['', '%s %s' % (_('Counted in the title and abstract of every new paper, explained in plain language:'), url), '', tags]
     lead = _('Rising this week on %(server)s:') % {'server': server_name}
     short = shorten('%s %s' % (lead, ' · '.join(plain(t['title']) for t in topics)), SHORT - len(tags) - 2) + '\n\n' + tags
-    return share(url, '\n'.join(lines), short, 'trends')
+    return share(url, '\n'.join(lines), short, 'trends', lead.rstrip(' :'))
+
+
+def topic_share(server, server_name, day, topic, index, lang):
+    """The post for one free topic of the week: its name, its rise, what it is about, the link to its card."""
+    url = trends_url(server, day, lang, index)
+    figures = topic_figures(topic)
+    lead = _('Rising this week on %(server)s: %(title)s') % {'server': server_name, 'title': plain(topic['title'])}
+    lines = [lead, '']
+    if figures:
+        lines += ['%s (%s)' % (figures, _('papers of %(week)s') % {'week': week_label(day)}), '']
+    if topic.get('text'):
+        lines += [shorten(topic['text'], 600), '']
+    tags = hashtags('#' + server_name, '#Research', '#Science')
+    lines += ['%s %s' % (_('Example papers, the history of the term and who works on it:'), url), '', tags]
+    short = shorten('%s%s' % (lead, ' — ' + figures if figures else ''), SHORT - len(tags) - 2) + '\n\n' + tags
+    slug = next(s for s, scope in SERVER_SLUGS.items() if scope == server)
+    return share(url, '\n'.join(lines), short, 'trends', plain(topic['title']), key='share-topic-%d' % index,
+                 image=image_url('topic', lang, slug, day.isoformat(), str(index)))
 
 
 def letter_share(letter, sections, lang):
@@ -163,7 +229,7 @@ def letter_share(letter, sections, lang):
         lines += ['', _('In this letter:')] + ['• ' + h for h in headings]
     lines += ['', '%s %s' % (_('Each finding links to its paper:'), url), '', tags]
     short = shorten('%s — %s' % (plain(letter.title), plain(letter.dek)), SHORT - len(tags) - 2) + '\n\n' + tags
-    return share(url, '\n'.join(lines), short, 'letters')
+    return share(url, '\n'.join(lines), short, 'letters', plain(letter.title))
 
 
 # --- the picture -------------------------------------------------------------------------------------------------
@@ -268,18 +334,30 @@ def logo(height):
     return image.resize((round(image.width * height / image.height), height), Image.LANCZOS)
 
 
-def card(eyebrow, title, body='', items=(), note=''):
+def card(eyebrow, title, body='', items=(), note='', figure=None, credit=''):
     """A 1200x630 PNG: the brand band, a small line above the title, the title, then a paragraph or a short list of
-    (figure, text) rows, and the logo with the address at the bottom."""
+    (figure, text) rows, and the logo with the address at the bottom. With `figure` (a PIL image of the paper), the
+    text takes the left and the figure the right, its credit below it."""
     image = Image.new('RGB', (WIDTH, HEIGHT), 'white')
     draw = ImageDraw.Draw(image)
     for x in range(WIDTH):
         draw.line([(x, 0), (x, 11)], fill=gradient_at(x / (WIDTH - 1)))
     inner = WIDTH - 2 * MARGIN
+    titles, body_size = (60, 54, 48, 42), 32
+    if figure is not None:
+        box = (WIDTH - MARGIN - FIGURE_WIDTH, 44, WIDTH - MARGIN, FOOTER - (52 if credit else 24))
+        shown = figure.copy()
+        shown.thumbnail((box[2] - box[0], box[3] - box[1]), Image.LANCZOS)
+        image.paste(shown, (box[0] + (box[2] - box[0] - shown.width) // 2, box[1] + (box[3] - box[1] - shown.height) // 2))
+        if credit:
+            line = wrap(credit, 20, 400, FIGURE_WIDTH, 1)[0][0]
+            write(draw, box[2] - measure(line, 20, 400), FOOTER - 20, line, 20, 400, MUTED)
+        inner -= FIGURE_WIDTH + 40
+        titles, body_size = (50, 44, 38, 34), 28
     y = 96
     write(draw, MARGIN, y, wrap(eyebrow, 26, 600, inner, 1)[0][0] if eyebrow else '', 26, 600, ACCENT)
     y += 26
-    size, lines = fit(title, (60, 54, 48, 42), 800, inner, 2 if items else (3 if body else 5))
+    size, lines = fit(title, titles, 800, inner, 2 if items else (3 if body else 5) + (1 if figure is not None else 0))
     step = round(size * 1.2)
     for line in lines:
         y += step
@@ -294,11 +372,12 @@ def card(eyebrow, title, body='', items=(), note=''):
             write(draw, MARGIN, y, figure, 32, 700, ACCENT)
             write(draw, MARGIN + figure_width, y, wrap(text, 32, 500, inner - figure_width, 1)[0][0], 32, 500, TEXT)
     elif body:
-        room = int((FOOTER - 24 - y) // 44)
+        leading = round(body_size * 1.38)
+        room = int((FOOTER - (64 if note else 24) - y) // leading)
         if room > 0:
-            for line in wrap(body, 32, 400, inner, room)[0]:
-                y += 44
-                write(draw, MARGIN, y, line, 32, 400, MUTED)
+            for line in wrap(body, body_size, 400, inner, room)[0]:
+                y += leading
+                write(draw, MARGIN, y, line, body_size, 400, MUTED)
     if note:
         write(draw, MARGIN, FOOTER - 28, wrap(note, 24, 400, inner, 1)[0][0], 24, 400, MUTED)
     draw.line([(MARGIN, FOOTER), (WIDTH - MARGIN, FOOTER)], fill=BORDER, width=2)
@@ -312,10 +391,94 @@ def card(eyebrow, title, body='', items=(), note=''):
     return out.getvalue()
 
 
-def png(content):
+def png(content, cache=CACHE):
     response = HttpResponse(content, content_type='image/png')
-    response['Cache-Control'] = CACHE
+    response['Cache-Control'] = cache
     return response
+
+
+def rendered(draw_card):
+    """The PNG drawn by `draw_card`, at most RENDERS at once: a burst of new addresses gets a short 503 rather than
+    tying up the process (each picture takes about 0.1 s of CPU)."""
+    if not RENDER_SLOTS.acquire(timeout=5):
+        response = HttpResponse(status=503)
+        response['Retry-After'] = '10'
+        return response
+    try:
+        return draw_card()
+    finally:
+        RENDER_SLOTS.release()
+
+
+# --- a figure of the paper in its picture ---------------------------------------------------------------------------
+
+def figure_license(paper):
+    """Whether a figure may illustrate the paper's picture: CC BY, BY-SA, CC0 or public domain (no NC: the picture
+    advertises the site; no ND: the figure is resized)."""
+    from . import sources
+    code, _version = sources.license_code(paper.license)
+    return code in FIGURE_LICENSES and 'creativecommons.org' in (paper.license or '').lower()
+
+
+def figure_of(paper):
+    """(PIL image, credit) of the paper's first figure, None when it has none we may show, or 'pending' while it is
+    being fetched (in a thread: the gallery reads the paper's HTML, which can take seconds)."""
+    from django.core.cache import cache
+    if not figure_license(paper):
+        return None
+    found = cache.get(FIGURE_KEY % paper.arxiv_id)
+    if found is None:
+        if cache.add(FIGURE_KEY % paper.arxiv_id + ':lock', 1, 120):
+            threading.Thread(target=fetch_figure, args=(paper.arxiv_id,), daemon=True).start()
+        return 'pending'
+    if not found:
+        return None
+    data, credit = found
+    return Image.open(io.BytesIO(data)), credit
+
+
+def fetch_figure(arxiv_id):
+    """Store the first figure of the paper, shrunk to the picture's size, for a week (or that it has none, for a day)."""
+    import requests
+    from django.core.cache import cache
+    from django.db import connection
+    from . import chat_figures, sources
+    from .models import ArxivPaper
+    try:
+        paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+        connection.close()  # Postgres allows 20: none held during the downloads below
+        gallery = chat_figures.paper_gallery(paper) if paper else {'figures': []}
+        connection.close()  # the gallery of a journal paper reads the database too
+        for figure in gallery.get('figures', [])[:4]:
+            url = figure['images'][0]
+            if not chat_figures.safe_image(url):
+                continue
+            try:
+                response = requests.get(url, timeout=(4, 10), headers={'User-Agent': sources.USER_AGENT})
+                response.raise_for_status()
+                if len(response.content) > MAX_FIGURE_BYTES:
+                    continue
+                picture = Image.open(io.BytesIO(response.content))
+                picture.load()
+            except (requests.RequestException, OSError, Image.DecompressionBombError):
+                continue  # an SVG or a broken image: the next figure
+            if picture.width < 200 or picture.height < 120:
+                continue
+            flat = Image.new('RGB', picture.size, 'white')
+            picture = picture.convert('RGBA')
+            flat.paste(picture, mask=picture.getchannel('A'))
+            flat.thumbnail((FIGURE_WIDTH * 2, (FOOTER - 96) * 2), Image.LANCZOS)
+            out = io.BytesIO()
+            flat.save(out, 'JPEG', quality=82, optimize=True)
+            credit = '%s · %s' % ((figure.get('label') or 'Figure').rstrip(' :.'), sources.license_label(paper.license))
+            cache.set(FIGURE_KEY % arxiv_id, (out.getvalue(), credit), 7 * 86400)
+            return
+        cache.set(FIGURE_KEY % arxiv_id, b'', 86400)
+    except Exception:
+        logger.exception('Figure of %s for its picture failed', arxiv_id)
+        cache.set(FIGURE_KEY % arxiv_id, b'', 3600)
+    finally:
+        connection.close()
 
 
 def _lang(lang):
@@ -327,43 +490,64 @@ def _lang(lang):
 # --- the picture of each page (og:image) -------------------------------------------------------------------------
 
 def paper_image(request, lang, arxiv_id):
+    """A paper's picture, with its first figure when its license allows; only for papers summarized here."""
     from . import insight, sources
     from .models import ArxivPaper, SummaryPaper
     from .templatetags.dash_slash import category_label
     paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
-    if paper is None:
+    _lang(lang)
+    if paper is None or not SummaryPaper.objects.filter(paper=paper).exists():
         raise Http404
-    with translation.override(_lang(lang)):
+    with translation.override(lang):
         sumpaper = SummaryPaper.objects.filter(paper=paper, lang=lang).first()
         reading = insight.for_page(arxiv_id, lang) if sumpaper else None
         body = reading['tldr'] if reading else first_sentence(
             (sumpaper and (sumpaper.summary or sumpaper.lay_summary)) or paper.abstract, 400)
+        found = figure_of(paper)
+        figure, credit = found if isinstance(found, tuple) else (None, '')
         eyebrow = ' · '.join(filter(None, [_('AI summary').upper(), sources.label(arxiv_id),
-                                           category_label(paper.category) if paper.category else '']))
-        return png(card(eyebrow, plain(paper.title) or sources.label(arxiv_id), body))
+                                           category_label(paper.category) if paper.category and figure is None else '']))
+        return rendered(lambda: png(card(eyebrow, plain(paper.title) or sources.label(arxiv_id), body, figure=figure, credit=credit),
+                                    CACHE_SOON if found == 'pending' else CACHE))
 
 
-def trends_image(request, lang, server, day):
+def _week_topics(server, day, lang):
     from . import trends
-    from .trends_web import SERVERS
     if server not in SERVER_SLUGS:
         raise Http404
     try:
         week = datetime.date.fromisoformat(day)
     except ValueError:
         raise Http404
-    scope = SERVER_SLUGS[server]
-    with translation.override(_lang(lang)):
-        found, topics = trends.topics_of(scope, lang, week=week)
-        if found is None:
-            raise Http404
-        name = dict(SERVERS)[scope]
-        eyebrow = '%s · %s – %s' % (_('Rising topics in research').upper(), formats.date_format(week, 'j F'),
-                                    formats.date_format(week + datetime.timedelta(days=6), 'j F Y'))
-        title = _('Rising this week on %(server)s') % {'server': name}
-        items = [('×%s' % t['growth'] if t.get('growth') else '•', plain(t['title'])) for t in topics[:trends.FREE_TOPICS]]
+    found, topics = trends.topics_of(SERVER_SLUGS[server], _lang(lang), week=week)
+    if found is None:
+        raise Http404
+    return week, topics[:trends.FREE_TOPICS]
+
+
+def trends_image(request, lang, server, day):
+    from .trends_web import SERVERS
+    week, topics = _week_topics(server, day, lang)
+    with translation.override(lang):
+        eyebrow = '%s · %s' % (_('Rising topics in research').upper(), week_label(week))
+        title = _('Rising this week on %(server)s') % {'server': dict(SERVERS)[SERVER_SLUGS[server]]}
+        items = [('×%s' % formats.localize(t['growth']) if t.get('growth') else '•', plain(t['title'])) for t in topics]
         note = _('×: papers using the topic this week, compared with the eight weeks before.')
-        return png(card(eyebrow, title, items=items, note=note))
+        return rendered(lambda: png(card(eyebrow, title, items=items, note=note)))
+
+
+def topic_image(request, lang, server, day, index):
+    """One free topic of the week: its rise and number of teams above its name, what it is about below."""
+    from .trends_web import SERVERS
+    week, topics = _week_topics(server, day, lang)
+    if not 1 <= index <= len(topics):
+        raise Http404
+    topic = topics[index - 1]
+    with translation.override(lang):
+        name = dict(SERVERS)[SERVER_SLUGS[server]]
+        eyebrow = ' · '.join(filter(None, [(_('Rising this week on %(server)s') % {'server': name}).upper(), topic_figures(topic)]))
+        note = '%s · %s' % (_('Rising topics in research'), week_label(week))
+        return rendered(lambda: png(card(eyebrow, plain(topic['title']), plain(topic.get('text', '')), note=note)))
 
 
 def letter_image(request, lang, topic, day):
@@ -371,7 +555,7 @@ def letter_image(request, lang, topic, day):
     with translation.override(_lang(lang)):
         letter = letters._letter(topic, day, lang)
         eyebrow = '%s · %s' % (letters.localized_name(topic, lang)[1].upper(), formats.date_format(letter.day, 'j F Y'))
-        return png(card(eyebrow, plain(letter.title), plain(letter.dek)))
+        return rendered(lambda: png(card(eyebrow, plain(letter.title), plain(letter.dek))))
 
 
 def image_url(kind, lang, *parts, version=None):
