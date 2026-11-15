@@ -598,7 +598,10 @@ class MissedTests(ToolsTestCase):
         self.assertContains(self.client_for(user).get('/en/missed/k/'), 'could only be searched in part')
 
     def test_page_is_premium_and_draft_text_is_searched(self):
-        self.assertContains(self.client_for(self.user()).get('/en/missed/'), 'Discover Premium')
+        free = self.user()  # one free try, then Premium
+        self.assertContains(self.client_for(free).get('/en/missed/'), 'Your first search with this tool is free')
+        Generated.objects.create(kind='missed', key='tried', user=free, status='done', content='{}', trial=True)
+        self.assertContains(self.client_for(free).get('/en/missed/'), 'Discover Premium')
         client = self.client_for(self.user('pro', paid=True))
         self.assertContains(client.post('/en/missed/', {'text': 'too short'}), 'at least the title')
         with mock.patch('summarizer.missed.find', return_value={'title': 'Draft T', 'items': [], 'searched': 3, 'cited': 3}) as find:
@@ -2255,7 +2258,10 @@ class TeamsTests(ToolsTestCase):
         self.assertEqual(result['version'], teams.RESULT_VERSION)
 
     def test_page_is_premium_and_starts_from_a_project(self):
-        self.assertContains(self.client_for(self.user()).get('/en/teams/'), 'Discover Premium')
+        free = self.user()  # one free try, then Premium
+        self.assertContains(self.client_for(free).get('/en/teams/'), 'Your first search with this tool is free')
+        Generated.objects.create(kind='teams', key='tried', user=free, status='done', content='{}', trial=True)
+        self.assertContains(self.client_for(free).get('/en/teams/'), 'Discover Premium')
         user = self.user('pro', paid=True)
         project = WatchedProject.objects.create(user=user, title='Moons', description='x' * 300, search_text='Exomoons by astrometry.')
         client = self.client_for(user)

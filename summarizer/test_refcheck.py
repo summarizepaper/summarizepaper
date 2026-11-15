@@ -330,7 +330,10 @@ class PageTests(ToolsTestCase):
         return Generated.objects.create(kind='refcheck', key='k1', user=user, status='done', content=json.dumps(result))
 
     def test_page_is_premium_and_report_is_private(self):
-        self.assertContains(self.client_for(self.user()).get('/en/refcheck/'), 'Discover Premium')
+        free = self.user()  # one free try, then Premium
+        self.assertContains(self.client_for(free).get('/en/refcheck/'), 'Your first search with this tool is free')
+        Generated.objects.create(kind='refcheck', key='tried', user=free, status='done', content='{}', trial=True)
+        self.assertContains(self.client_for(free).get('/en/refcheck/'), 'Discover Premium')
         client = self.client_for(self.user('pro', paid=True))
         self.assertContains(client.post('/en/refcheck/', {'bibtext': 'no entries here'}), 'We found no BibTeX entry')
         self.assertContains(client.post('/en/refcheck/', {'bibtext': '', 'arxiv': 'not an id'}), 'is not an arXiv identifier')

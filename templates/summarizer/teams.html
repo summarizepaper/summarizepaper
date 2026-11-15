@@ -18,7 +18,8 @@
   </header>
 
   <p><a href="{% url 'students' %}">{% trans 'Looking for an internship or PhD? Explore research placement leads.' %}</a></p>
-  {% if anonymous or not paid %}
+  {% if anonymous or not paid and not trial_open %}
+    {% if example %}{% include 'summarizer/tool_teaser.html' with t=example %}{% endif %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'We write several searches from your topic and run them on OpenAlex, which knows the papers of journals and preprint servers with the institutions of their authors. You see the searches and can change them.' %}</li>
@@ -33,7 +34,8 @@
       <li>{% trans 'Follow a map: every month, the new papers on the topic and the new names.' %}</li>
       <li>{% trans 'You can start from a project of your scoop watch or the research profile of your paper alert.' %}</li>
     </ul>
-    {% if anonymous %}
+    {% if example %}
+    {% elif anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
     {% else %}
       <div class="upsell"><p>{% trans 'Explore publications and authors on your topic.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
@@ -42,7 +44,8 @@
     {% if error == 'empty' %}<p class="error">{% trans 'Describe the topic in a few words at least.' %}</p>
     {% elif error == 'orcid' %}<p class="error">{% trans 'This is not an ORCID iD (0000-0000-0000-0000).' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
-    <form method="post" class="card section-card">
+    {% if trial_open %}{% include 'summarizer/tool_trial_note.html' %}{% endif %}
+    <form method="post" class="card section-card" id="tool-form">
       {% csrf_token %}
       <p><label>{% trans 'The topic: a few keywords or a few sentences' %}<br><textarea name="topic" style="min-height:90px" placeholder="{% trans 'e.g. detection of exomoons by astrometry' %}">{{ topic }}</textarea></label></p>
       {% if projects %}

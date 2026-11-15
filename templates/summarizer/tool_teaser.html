@@ -1,0 +1,32 @@
+{% load i18n %}{# The first results of a tool, the others greyed: t (teasers.teaser), offer (teasers.audience), own (the visitor's own result) #}
+<section class="card section-card teaser" data-funnel-view="teaser_{% if own %}trial{% else %}example{% endif %}_view">
+  <p class="teaser-kicker">{% if own %}{% trans 'Your free try: the first results' %}{% else %}{% trans 'A real example: the first results' %}{% endif %}</p>
+  <p class="teaser-headline"><strong>{{ t.headline }}</strong></p>
+  <ol class="teaser-list">
+    {% for item in t.items %}
+    <li class="teaser-item">
+      <span class="teaser-title">{{ item.title }}</span>
+      {% if item.meta %}<span class="meta">{{ item.meta }}</span>{% endif %}
+      {% if item.note %}<span class="teaser-note">{{ item.note|truncatewords:40 }}</span>{% endif %}
+    </li>
+    {% endfor %}
+    {% for _ in t.greyed %}<li class="teaser-item teaser-greyed" aria-hidden="true"><span></span><span></span></li>{% endfor %}
+  </ol>
+  {% if t.hidden %}
+  <p class="teaser-more"><i class="fas fa-lock" aria-hidden="true"></i>
+    {% blocktrans count n=t.hidden %}{{ n }} more result hidden{% plural %}{{ n }} more results hidden{% endblocktrans %}</p>
+  {% endif %}
+  <div class="item-actions">
+    {% if offer == 'signup' %}
+      <span>{% if t.kind == 'literature' %}{% trans 'Create a free account, then Premium+ runs it on your own question.' %}{% else %}{% trans 'Create a free account: your first search with this tool is free, its first results shown in full.' %}{% endif %}</span>
+      <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="teaser_signup" data-tool="{{ t.kind }}" data-placement="{% if own %}trial{% else %}teaser{% endif %}">{% trans 'Create a free account' %}</a>
+      <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
+    {% elif offer == 'trial' %}
+      <span>{% trans 'Your first search with this tool is free: run it on your own work below.' %}</span>
+      <a class="btn" href="#tool-form" data-funnel="teaser_trial" data-tool="{{ t.kind }}" data-placement="teaser">{% trans 'Try it for free' %}</a>
+    {% else %}
+      <span>{% if own %}{% trans 'See every result, export them, follow them and run it again with Premium.' %}{% elif offer == 'plus' %}{% trans 'Run it on your own question with Premium+.' %}{% else %}{% trans 'Run it on your own work with Premium.' %}{% endif %}</span>
+      <a class="btn" href="/{{ LANGUAGE_CODE }}/premium/{% if offer == 'plus' %}#plus{% endif %}" data-funnel="teaser_premium" data-tool="{{ t.kind }}" data-placement="{% if own %}trial{% else %}teaser{% endif %}">{% if offer == 'plus' %}{% trans 'Discover Premium+' %}{% else %}{% trans 'Discover Premium' %}{% endif %}</a>
+    {% endif %}
+  </div>
+</section>

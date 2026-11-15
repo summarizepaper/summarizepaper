@@ -774,6 +774,11 @@ class Generated(models.Model):
     error = models.TextField(blank=True, default='')
     share_token = models.CharField(max_length=32, blank=True, default='', db_index=True)  # read-only public link (see result_share.py)
     share_expires = models.DateTimeField(blank=True, null=True)
+    showcase = models.BooleanField('exemple sur la page de l’outil', default=False,
+        help_text='Le début du résultat est montré à ceux qui n’ont pas l’outil (teasers.py). Seulement les résultats '
+                  'd’un compte staff : jamais la recherche de quelqu’un d’autre.')
+    trial = models.BooleanField('essai gratuit', default=False,
+        help_text='La recherche offerte une fois par outil à un compte gratuit : il en voit les premiers résultats.')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -792,6 +797,14 @@ class Generated(models.Model):
 
     def __str__(self):
         return '%s %s (%s, %s)' % (self.kind, self.key, self.lang, self.status)
+
+
+class ToolExample(Generated):
+    """The finished results of staff accounts that a Premium tool's page can show as its example (teasers.py)."""
+    class Meta:
+        proxy = True
+        verbose_name = 'exemple d’outil'
+        verbose_name_plural = 'exemples des outils'
 
 
 class Collection(models.Model):

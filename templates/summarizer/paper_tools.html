@@ -1,4 +1,4 @@
-{% load i18n %}{% load dash_slash %}{% load rising %}{% load weekly_letter %}{% load reading_marks %}
+{% load i18n %}{% load dash_slash %}{% load rising %}{% load weekly_letter %}{% load reading_marks %}{% load around %}
 <section class="card tools-card" id="tools" data-paper="{{ arxiv_id }}" data-base="/{{ LANGUAGE_CODE }}">
   <h3>{% trans 'Tools for this paper' %}</h3>
 
@@ -46,6 +46,7 @@
   </div>
 
   <div class="tools-advanced">
+  {% paper_around arxiv_id paper.title as around %}
   <h4>{% trans 'Advanced tools' %} <span class="badge-premium">Premium</span></h4>
   <p class="tools-pitch">{% trans 'For researchers who follow a field closely: citation alerts, journal-club slides, version comparison and Zotero export.' %} {% if not paid %}<a href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="paper_premium_click">{% trans 'Discover Premium' %}</a>{% endif %}</p>
 
@@ -58,14 +59,31 @@
 
   <div class="tool-row" id="paper-citations" style="scroll-margin-top:90px">
     <span class="tool-label">{% trans 'Citation alerts' %}</span>
+    {% if around.citing and not around.paid_citations %}<span>{% if around.citing_more %}{% blocktrans with n=around.citing %}More than {{ n }} papers already cite it: be emailed each new one.{% endblocktrans %}{% else %}{% blocktrans count n=around.citing %}{{ n }} paper already cites it: be emailed each new one.{% plural %}{{ n }} papers already cite it: be emailed each new one.{% endblocktrans %}{% endif %}</span>{% endif %}
     <button type="button" class="btn btn-sm btn-ghost" id="follow-go" data-following="{{ following|yesno:'1,0' }}">{% if following %}{% trans 'Stop following its citations' %}{% else %}{% trans 'Tell me who cites it' %}{% endif %}</button>
     <span class="tool-status" id="follow-status"></span>
     {% if LANGUAGE_CODE == 'fr' %}<a href="/fr/guides/track-research-paper-citations/">Guide des alertes de citations</a>{% elif LANGUAGE_CODE == 'en' %}<a href="/en/guides/track-research-paper-citations/">Citation alerts guide</a>{% endif %}
   </div>
 
-  <div class="tool-row">
+  <div class="tool-row around-row">
     <span class="tool-label">{% trans 'Who works on it?' %}</span>
-    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow">{% trans 'The people and institutions who publish on its topic' %}</a>
+    {% if around.people %}
+    <div class="around-people" data-funnel-view="teaser_around_view">
+      <p>{% blocktrans count n=around.people.papers %}Among the {{ n }} paper around this one, the name that comes back most:{% plural %}Among the {{ n }} papers around this one, the name that comes back most:{% endblocktrans %}
+        {% for p in around.people.items %}<strong>{{ p.name }}</strong> ({% blocktrans count n=p.papers %}{{ n }} paper{% plural %}{{ n }} papers{% endblocktrans %}){% endfor %}</p>
+      {% if around.people.hidden %}<p class="around-greyed" aria-hidden="true">{% for _ in around.people.greyed %}<span></span>{% endfor %}</p>
+      <p class="muted"><i class="fas fa-lock" aria-hidden="true"></i> {% blocktrans count n=around.people.hidden %}{{ n }} more person signs several of them. The full map adds their institutions and approaches, from the papers of the last years.{% plural %}{{ n }} more people sign several of them. The full map adds their institutions and approaches, from the papers of the last years.{% endblocktrans %}</p>{% endif %}
+    </div>
+    {% endif %}
+    {% if around.offer == 'signup' %}
+      <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/register/?next={{ around.teams_next|urlencode }}" rel="nofollow" data-funnel="teaser_signup" data-tool="teams" data-placement="paper">{% trans 'Create a free account: your first map is free' %}</a>
+    {% elif around.offer == 'trial' %}
+      <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}#tool-form" rel="nofollow" data-funnel="teaser_trial" data-tool="teams" data-placement="paper">{% trans 'Map who works on its topic: your first map is free' %}</a>
+    {% elif around.offer == 'premium' %}
+      <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow" data-funnel="teaser_premium" data-tool="teams" data-placement="paper">{% trans 'The people and institutions who publish on its topic' %}</a>
+    {% else %}
+      <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}" rel="nofollow">{% trans 'The people and institutions who publish on its topic' %}</a>
+    {% endif %}
   </div>
 
   {% weekly_letter arxiv_id paper.category as weekly %}{% if weekly %}

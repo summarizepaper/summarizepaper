@@ -42,7 +42,7 @@ from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, generated, mailcheck, result_share, similar, sources, student_papers
+from . import access, generated, mailcheck, result_share, similar, sources, student_papers, teasers
 from .models import CitationAuthorWatch, Collection, Generated, TopicMapWatch, WatchedProject
 
 logger = logging.getLogger(__name__)
@@ -539,12 +539,13 @@ def start(request, topic, options):
 
 def teams_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/teams.html', {'anonymous': True, 'per_day': PER_DAY})
+        return render(request, 'summarizer/teams.html', dict(teasers.page_context(request, 'teams'), anonymous=True, per_day=PER_DAY))
     paid = access.has_tool(request.user, 'teams')
+    trial = teasers.trial_open(request.user, 'teams')
     projects = WatchedProject.objects.filter(user=request.user).exclude(description='')
     profile = research_profile(request.user)
     error = None
-    if request.method == 'POST' and paid:
+    if request.method == 'POST' and (paid or trial):
         project = projects.filter(pk=request.POST.get('project') or 0).first()
         if project:
             topic = '%s\n\n%s' % (project.title, project.search_text or project.description)
@@ -560,18 +561,21 @@ def teams_page(request):
         elif not _spend(request.user):
             error = 'quota'
         else:
-            return start(request, topic, {'mode': request.POST.get('mode'), 'years': request.POST.get('years'),
-                                          'orcids': [orcid]})
+            response = start(request, topic, {'mode': request.POST.get('mode'), 'years': request.POST.get('years'),
+                                              'orcids': [orcid]})
+            if not paid:
+                teasers.mark_trial(request.user, 'teams')
+            return response
     searches = Generated.objects.filter(kind='teams', user=request.user).order_by('-created')[:20]
     followed = set(TopicMapWatch.objects.filter(user=request.user).values_list('row_id', flat=True))
     for s in searches:
         s.followed = s.pk in followed
-    return render(request, 'summarizer/teams.html', {
+    return render(request, 'summarizer/teams.html', dict(teasers.page_context(request, 'teams'), **{
         'paid': paid, 'error': error, 'searches': searches, 'projects': projects, 'per_day': PER_DAY,
         'profile': profile, 'modes': MODE_LABELS, 'year_choices': YEAR_CHOICES,
         'mode': request.POST.get('mode') or request.GET.get('mode') or 'overview',
         'orcid': request.POST.get('orcid', '') if request.method == 'POST' else ', '.join(my_orcids(request.user)),
-        'topic': (request.POST.get('topic') if request.method == 'POST' else request.GET.get('topic', '')).strip()[:MAX_CHARS]})
+        'topic': (request.POST.get('topic') if request.method == 'POST' else request.GET.get('topic', '')).strip()[:MAX_CHARS]}))
 
 
 def display(result, shared=False):
@@ -698,10 +702,12 @@ def act(request, row):
 
 @login_required
 def teams_result(request, key):
-    if not access.has_tool(request.user, 'teams'):
-        raise Http404
-    row = Generated.objects.filter(kind='teams', key=key, user=request.user).first()
+    row = Generated.objects.filter(kind='teams', key=key, user=request.user).first() if request.user.is_authenticated else None
     if row is None:
+        raise Http404
+    if teasers.trial_view(request.user, row):
+        return teasers.trial_page(request, row)
+    if not access.has_tool(request.user, 'teams'):
         raise Http404
     if request.method == 'POST':
         response = act(request, row)

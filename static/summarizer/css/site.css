@@ -1384,3 +1384,21 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .share-compact:not([open]) { display: none; }
 .topic-card .share-post { margin: 16px 0 0; box-shadow: none; }
 .topic-card.is-shared { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* First results of a tool, the others greyed (teasers.py): greyed rows carry no content, only their count. */
+.teaser { border-color: var(--accent-soft); }
+.teaser-kicker { margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); }
+.teaser-headline { margin: 0 0 10px; }
+.teaser-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+.teaser-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; overflow-wrap: anywhere; }
+.teaser-title { font-weight: 600; }
+.teaser-note { font-size: 14px; color: var(--text-muted); }
+.teaser-greyed { background: var(--bg-soft); gap: 8px; }
+.teaser-greyed span { display: block; height: 10px; border-radius: 5px; background: var(--border); width: 70%; }
+.teaser-greyed span + span { width: 45%; }
+.teaser-more { margin: 0 0 10px; color: var(--text-muted); font-size: 14px; }
+.teaser .item-actions { align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.around-people { flex-basis: 100%; }
+.around-people p { margin: 0 0 6px; }
+.around-greyed { display: flex; flex-wrap: wrap; gap: 6px; }
+.around-greyed span { display: inline-block; width: 92px; height: 12px; border-radius: 6px; background: var(--border); }

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% load i18n %}
+{% block title %}{{ tool_name }}{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex">{% if row.status == 'pending' %}<meta http-equiv="refresh" content="15">{% endif %}{% endblock %}
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <p><a href="/{{ LANGUAGE_CODE }}/{{ path }}/">← {{ tool_name }}</a></p>
+    <h1>{{ tool_name }}</h1>
+  </header>
+  {% if row.status == 'pending' %}
+    <p class="notice">{% trans 'Your search is running: it takes a few minutes. This page reloads by itself, and we email you when it is ready.' %}</p>
+  {% elif t %}
+    {% include 'summarizer/tool_teaser.html' with own=True offer=offer %}
+  {% elif row.status == 'done' %}
+    <p class="notice">{% trans 'Your search found nothing to show.' %}</p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="teaser_premium" data-placement="trial">{% trans 'Discover Premium' %}</a></p>
+  {% else %}
+    <p class="notice">{% trans 'Your search failed. Your free try is not spent: you can run it again.' %}</p>
+    <p><a class="btn" href="/{{ LANGUAGE_CODE }}/{{ path }}/">{% trans 'Try again' %}</a></p>
+  {% endif %}
+</div>
+{% endblock %}

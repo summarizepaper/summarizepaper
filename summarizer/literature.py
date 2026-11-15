@@ -51,7 +51,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import (access, assistant, citations, digest, evidence, exports, generated, library, mailcheck, overleaf, result_share, similar,
+from . import (teasers, access, assistant, citations, digest, evidence, exports, generated, library, mailcheck, overleaf, result_share, similar,
                sources, tdm)
 from .models import ArxivPaper, Collection, Generated, PaperText
 
@@ -871,7 +871,7 @@ def _start(work, user):
 
 def literature_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/literature.html', {'anonymous': True, 'per_day': PER_DAY})
+        return render(request, 'summarizer/literature.html', dict(teasers.page_context(request, 'literature'), anonymous=True, per_day=PER_DAY))
     paid = access.has_tool(request.user, 'literature')
     error = None
     question = ' '.join(request.GET.get('question', '').split())[:MAX_CHARS]  # from another tool's topic
@@ -888,7 +888,7 @@ def literature_page(request):
     reviews = Generated.objects.filter(kind='literature', user=request.user).order_by('-created')[:20]
     collections = Collection.objects.filter(user=request.user).order_by('-updated')[:20] if paid else []
     return render(request, 'summarizer/literature.html', {
-        'paid': paid, 'error': error, 'reviews': reviews, 'per_day': PER_DAY, 'question': question,
+        **teasers.page_context(request, 'literature'), 'paid': paid, 'error': error, 'reviews': reviews, 'per_day': PER_DAY, 'question': question,
         'min_chars': MIN_CHARS, 'max_chars': MAX_CHARS, 'collections': collections})
 
 

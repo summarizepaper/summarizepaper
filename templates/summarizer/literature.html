@@ -18,6 +18,7 @@
   </header>
 
   {% if anonymous or not paid %}
+    {% if example %}{% include 'summarizer/tool_teaser.html' with t=example %}{% endif %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'We turn your question into its key concepts, their synonyms, and several literature searches.' %}</li>
@@ -32,7 +33,8 @@
       <li>{% trans 'An exploratory synthesis, not a systematic review: the searches, sources and counts are shown so you can judge the coverage.' %}</li>
       <li>{% trans 'Save the papers in a collection to compare them in a table or chat with them, or review a collection you already have.' %}</li>
     </ul>
-    {% if anonymous %}
+    {% if example %}
+    {% elif anonymous %}
       {% include 'summarizer/tool_signup.html' with plus_tool=True %}
     {% else %}
       <div class="upsell"><p>{% trans 'Go from a question to the papers that answer it, grouped and cited.' %} <a href="/{{ LANGUAGE_CODE }}/premium/#plus">{% trans 'Discover Premium+' %}</a></p></div>

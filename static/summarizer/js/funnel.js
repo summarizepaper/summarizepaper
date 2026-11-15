@@ -7,8 +7,8 @@
   }
   function context(element) {
     var data = {};
-    if (['hero', 'needs', 'examples', 'offer', 'recent', 'free', 'preview', 'week', 'week_trend', 'week_letter', 'trends'].includes(element.dataset.placement)) data.placement = element.dataset.placement;
-    if (['paper', 'digest', 'refcheck', 'missed', 'scoops', 'literature', 'chat', 'letters', 'trends', 'saved_searches'].includes(element.dataset.tool)) data.tool = element.dataset.tool;
+    if (['hero', 'needs', 'examples', 'offer', 'recent', 'free', 'preview', 'week', 'week_trend', 'week_letter', 'trends', 'teaser', 'trial', 'paper'].includes(element.dataset.placement)) data.placement = element.dataset.placement;
+    if (['paper', 'digest', 'refcheck', 'missed', 'scoops', 'literature', 'chat', 'letters', 'trends', 'saved_searches', 'teams'].includes(element.dataset.tool)) data.tool = element.dataset.tool;
     if (['astronomy', 'biology', 'computing'].includes(element.dataset.domain)) data.domain = element.dataset.domain;
     if (['close', 'prior', 'followup'].includes(element.dataset.group)) data.group = element.dataset.group;
     if (['linkedin', 'x', 'bluesky', 'email', 'copy', 'native'].includes(element.dataset.network)) data.network = element.dataset.network;

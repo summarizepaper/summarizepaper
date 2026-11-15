@@ -1,0 +1,3 @@
+{% load i18n %}{# Above a Premium tool's form, for a free account that has not tried it yet (teasers.trial_open) #}
+{% if example %}{% include 'summarizer/tool_teaser.html' with t=example %}{% endif %}
+<p class="notice" data-funnel-view="trial_form_view"><strong>{% trans 'Your first search with this tool is free.' %}</strong> {% trans 'You will see its first results in full, the others counted; Premium shows them all.' %}</p>

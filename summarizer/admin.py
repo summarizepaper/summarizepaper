@@ -26,7 +26,7 @@ from unfold.widgets import UnfoldAdminTextareaWidget
 from . import activity, guides, letters, usage
 from .models import (AIPrice, AIUsage, AIassistant, AnnouncedPaper, ArxivBatch, ArxivPaper, Author, CategorySynthesis, DigestClick,
                      DigestEdition, DigestFeedback,
-                     DigestItem, DigestSubscription, Guide, NeighbourFeedback, PaperAuthor, PaperHistory,
+                     DigestItem, DigestSubscription, Generated, Guide, ToolExample, NeighbourFeedback, PaperAuthor, PaperHistory,
                      PaperScore, PaymentPlan, PDFHistory, PickledData, PressKitReport, Search, SiteSettings, SummaryPaper,
                      SuppressedEmail, EmailEvent, OutreachContact, TdmCount, TdmDecision, UserPlan, PremiumGrant, Vote)
 
@@ -533,6 +533,37 @@ class NeighbourFeedbackAdmin(ModelAdmin):
     list_display = ('ref', 'arxiv_id', 'user', 'created')
     search_fields = ('ref', 'arxiv_id')
 admin.site.register(PaymentPlan, ModelAdmin)
+
+
+@admin.register(ToolExample)
+class ToolExampleAdmin(ModelAdmin):
+    list_display = ('kind', 'lang', 'title', 'user', 'showcase', 'created')
+    list_filter = ('kind', 'lang', 'showcase')
+    fields = ('kind', 'lang', 'user', 'title', 'showcase', 'created')
+    readonly_fields = ('kind', 'lang', 'user', 'title', 'created')
+    actions = ('show', 'hide')
+
+    def get_queryset(self, request):
+        from .teasers import SHOWCASE_TOOLS
+        return super().get_queryset(request).filter(kind__in=SHOWCASE_TOOLS, status='done', user__is_staff=True)
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.display(description='titre')
+    def title(self, obj):
+        data = obj.data()
+        return data.get('title') or data.get('topic') or data.get('question') or obj.key
+
+    @admin.action(description='Montrer comme exemple (un seul par outil et par langue)')
+    def show(self, request, queryset):
+        for row in queryset:
+            Generated.objects.filter(kind=row.kind, lang=row.lang, showcase=True).exclude(pk=row.pk).update(showcase=False)
+            Generated.objects.filter(pk=row.pk).update(showcase=True)
+
+    @admin.action(description='Ne plus montrer comme exemple')
+    def hide(self, request, queryset):
+        queryset.update(showcase=False)
 
 
 class PickledDataAdmin(ModelAdmin):

@@ -18,7 +18,8 @@
     {% if LANGUAGE_CODE == 'fr' %}<p class="muted"><a href="/fr/guides/what-did-i-miss-uncited-papers/">Comment trouver les articles que votre brouillon ne cite pas ? Guide illustré</a></p>{% elif LANGUAGE_CODE == 'en' %}<p class="muted"><a href="/en/guides/what-did-i-miss-uncited-papers/">How to find the papers your draft does not cite? Illustrated guide</a></p>{% endif %}
   </header>
 
-  {% if anonymous or not paid %}
+  {% if anonymous or not paid and not trial_open %}
+    {% if example %}{% include 'summarizer/tool_teaser.html' with t=example %}{% endif %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'Upload the PDF of your draft, or paste its text with its references; add its .bib file if you have one.' %}</li>
@@ -32,7 +33,8 @@
       <li>{% trans 'Mark each paper, export them to BibTeX or Zotero, and search again before resubmitting: what is new since is marked.' %}</li>
       <li>{% trans 'Your draft is read once and is not stored, unless you ask us to keep it, encrypted, to search again.' %}</li>
     </ul>
-    {% if anonymous %}
+    {% if example %}
+    {% elif anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
     {% else %}
       <div class="upsell"><p>{% trans 'Before you submit, make sure no close paper is missing from your references.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>
@@ -42,7 +44,8 @@
     {% elif error == 'bib' %}<p class="error">{% trans 'Send a .bib file of 5 MB at most.' %}</p>
     {% elif error == 'empty' %}<p class="error">{% trans 'Send a PDF, or paste at least the title, abstract and references of your draft.' %}</p>
     {% elif error == 'quota' %}<p class="error">{% blocktrans %}You can run {{ per_day }} searches a day. Come back tomorrow.{% endblocktrans %}</p>{% endif %}
-    <form method="post" enctype="multipart/form-data" class="card section-card">
+    {% if trial_open %}{% include 'summarizer/tool_trial_note.html' %}{% endif %}
+    <form method="post" enctype="multipart/form-data" class="card section-card" id="tool-form">
       {% csrf_token %}
       {% trans 'Your draft (PDF)' as upload_label %}
       {% include 'summarizer/file_upload.html' with upload_name='draft' upload_accept='application/pdf,.pdf' upload_formats='.pdf' upload_required_extension='.pdf' %}

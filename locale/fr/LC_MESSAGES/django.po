@@ -24150,3 +24150,156 @@ msgstr ""
 "La lecture des articles déjà résumés est illimitée. Le lancement de nouveaux"
 " résumés est limité à %(runs_anonymous)s par jour sans compte, "
 "%(runs_per_day)s par jour avec un compte gratuit, et illimité avec Premium."
+
+msgid "%(i)s, %(p)s and %(w)s on “%(title)s”."
+msgstr "%(i)s, %(p)s et %(w)s sur « %(title)s »."
+
+msgid "Your free try: the first results"
+msgstr "Votre essai gratuit : les premiers résultats"
+
+msgid "A real example: the first results"
+msgstr "Un exemple réel : les premiers résultats"
+
+msgid "Create a free account, then Premium+ runs it on your own question."
+msgstr ""
+"Créez un compte gratuit, puis Premium+ la lance sur votre propre question."
+
+msgid ""
+"Create a free account: your first search with this tool is free, its first "
+"results shown in full."
+msgstr ""
+"Créez un compte gratuit : votre première recherche avec cet outil est "
+"offerte, ses premiers résultats montrés en entier."
+
+msgid ""
+"Your first search with this tool is free: run it on your own work below."
+msgstr ""
+"Votre première recherche avec cet outil est offerte : lancez-la sur vos "
+"propres travaux ci-dessous."
+
+msgid "Try it for free"
+msgstr "Essayer gratuitement"
+
+msgid ""
+"See every result, export them, follow them and run it again with Premium."
+msgstr ""
+"Voyez tous les résultats, exportez-les, suivez-les et relancez la recherche "
+"avec Premium."
+
+msgid "Run it on your own question with Premium+."
+msgstr "Lancez-la sur votre propre question avec Premium+."
+
+msgid "Run it on your own work with Premium."
+msgstr "Lancez-le sur vos propres travaux avec Premium."
+
+msgid ""
+"Your search is running: it takes a few minutes. This page reloads by itself,"
+" and we email you when it is ready."
+msgstr ""
+"Votre recherche est en cours : elle prend quelques minutes. Cette page se "
+"recharge toute seule, et nous vous écrivons quand elle est prête."
+
+msgid "Your search found nothing to show."
+msgstr "Votre recherche n’a rien trouvé à montrer."
+
+msgid "Your search failed. Your free try is not spent: you can run it again."
+msgstr ""
+"Votre recherche a échoué. Votre essai gratuit n’est pas utilisé : vous "
+"pouvez la relancer."
+
+msgid "Your first search with this tool is free."
+msgstr "Votre première recherche avec cet outil est offerte."
+
+msgid ""
+"You will see its first results in full, the others counted; Premium shows "
+"them all."
+msgstr ""
+"Vous verrez ses premiers résultats en entier, les autres comptés ; Premium "
+"les montre tous."
+
+msgid "More than %(n)s papers already cite it: be emailed each new one."
+msgstr ""
+"Plus de %(n)s articles le citent déjà : recevez chaque nouveau par email."
+
+msgid "Create a free account: your first map is free"
+msgstr "Créez un compte gratuit : votre première carte est offerte"
+
+msgid "Map who works on its topic: your first map is free"
+msgstr ""
+"Cartographier qui travaille sur son sujet : votre première carte est offerte"
+
+msgid "%(n)d paper"
+msgid_plural "%(n)d papers"
+msgstr[0] "%(n)d article"
+msgstr[1] "%(n)d articles"
+
+msgid "%(n)d institution"
+msgid_plural "%(n)d institutions"
+msgstr[0] "%(n)d institution"
+msgstr[1] "%(n)d institutions"
+
+msgid "%(n)d person"
+msgid_plural "%(n)d people"
+msgstr[0] "%(n)d personne"
+msgstr[1] "%(n)d personnes"
+
+msgid "%(n)d close paper the draft does not cite"
+msgid_plural "%(n)d close papers the draft does not cite"
+msgstr[0] "%(n)d article proche que le brouillon ne cite pas"
+msgstr[1] "%(n)d articles proches que le brouillon ne cite pas"
+
+msgid "%(n)d that a referee would expect"
+msgid_plural "%(n)d that a referee would expect"
+msgstr[0] "dont %(n)d qu’un rapporteur attendrait"
+msgstr[1] "dont %(n)d qu’un rapporteur attendrait"
+
+msgid "%(n)d reference to correct or check"
+msgid_plural "%(n)d references to correct or check"
+msgstr[0] "%(n)d référence à corriger ou vérifier"
+msgstr[1] "%(n)d références à corriger ou vérifier"
+
+msgid "out of %(n)d"
+msgid_plural "out of %(n)d"
+msgstr[0] "sur %(n)d"
+msgstr[1] "sur %(n)d"
+
+msgid "%(n)d sentence whose citation to check"
+msgid_plural "%(n)d sentences whose citation to check"
+msgstr[0] "%(n)d phrase dont la citation est à vérifier"
+msgstr[1] "%(n)d phrases dont la citation est à vérifier"
+
+msgid "in %(n)d theme"
+msgid_plural "in %(n)d themes"
+msgstr[0] "en %(n)d thème"
+msgstr[1] "en %(n)d thèmes"
+
+msgid "%(n)s more result hidden"
+msgid_plural "%(n)s more results hidden"
+msgstr[0] "%(n)s autre résultat masqué"
+msgstr[1] "%(n)s autres résultats masqués"
+
+msgid "%(n)s paper already cites it: be emailed each new one."
+msgid_plural "%(n)s papers already cite it: be emailed each new one."
+msgstr[0] "%(n)s article le cite déjà : recevez chaque nouveau par email."
+msgstr[1] "%(n)s articles le citent déjà : recevez chaque nouveau par email."
+
+msgid "Among the %(n)s paper around this one, the name that comes back most:"
+msgid_plural ""
+"Among the %(n)s papers around this one, the name that comes back most:"
+msgstr[0] ""
+"Parmi le %(n)s article autour de celui-ci, le nom qui revient le plus :"
+msgstr[1] ""
+"Parmi les %(n)s articles autour de celui-ci, le nom qui revient le plus :"
+
+msgid ""
+"%(n)s more person signs several of them. The full map adds their "
+"institutions and approaches, from the papers of the last years."
+msgid_plural ""
+"%(n)s more people sign several of them. The full map adds their institutions"
+" and approaches, from the papers of the last years."
+msgstr[0] ""
+"%(n)s autre personne en signe plusieurs. La carte complète ajoute leurs "
+"institutions et leurs approches, d’après les articles des dernières années."
+msgstr[1] ""
+"%(n)s autres personnes en signent plusieurs. La carte complète ajoute leurs "
+"institutions et leurs approches, d’après les articles des dernières années."

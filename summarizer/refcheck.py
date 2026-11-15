@@ -42,7 +42,7 @@ from django.utils import timezone
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, bibliography, citations, digest, generated, refcheck_claims, refcheck_sources, result_share, sources
+from . import access, bibliography, citations, teasers, digest, generated, refcheck_claims, refcheck_sources, result_share, sources
 from .models import Collection, Generated, ReferenceWatch, ZoteroAccount
 
 logger = logging.getLogger(__name__)
@@ -809,7 +809,7 @@ def loader(bib, tex, tex_name, archive, pdf, arxiv, zotero):
 
 def refcheck_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/refcheck.html', {'anonymous': True, 'per_day': PER_DAY})
+        return render(request, 'summarizer/refcheck.html', dict(teasers.page_context(request, 'refcheck'), anonymous=True, per_day=PER_DAY))
     paid = access.has_tool(request.user, 'refcheck')
     error = None
     previous = Generated.objects.filter(kind='refcheck', user=request.user, status='done',
@@ -818,7 +818,7 @@ def refcheck_page(request):
     zotero = zotero if zotero is not None and zotero.api_key else None
     origin = request.POST.get('from') or request.GET.get('from') or ''
     lent = borrowed(request, origin) if origin else None
-    if request.method == 'POST' and paid:
+    if request.method == 'POST' and (paid or teasers.trial_open(request.user, 'refcheck')):
         bib = _text(request.FILES.get('bib'), request.POST.get('bibtext', ''))
         if lent is not None and bib is not None:
             bib = lent[1] + '\n\n' + bib
@@ -855,10 +855,12 @@ def refcheck_page(request):
                 row = generated.start('refcheck', uuid.uuid4().hex, get_language(),
                                       write(load, get_language(), request.user, previous, with_missed,
                                             collection if collection and zotero else ''), user=request.user)
+                if not paid:
+                    teasers.mark_trial(request.user, 'refcheck')
                 return redirect('/%s/refcheck/%s/' % (get_language(), row.key))
     checks = Generated.objects.filter(kind='refcheck', user=request.user).order_by('-created')[:20]
     return render(request, 'summarizer/refcheck.html', {
-        'paid': paid, 'error': error, 'checks': checks, 'per_day': PER_DAY, 'previous': previous, 'zotero': zotero,
+        **teasers.page_context(request, 'refcheck'), 'paid': paid, 'error': error, 'checks': checks, 'per_day': PER_DAY, 'previous': previous, 'zotero': zotero,
         'zotero_selected': request.POST.get('zotero') or request.GET.get('zotero', ''),
         'lent': lent, 'lent_from': origin if lent else '',
         'recheck_free': previous is not None and cache.get(RECHECK_KEY % previous.key) is None,
@@ -953,6 +955,9 @@ def save_collection(request, row, result):
 
 @login_required
 def refcheck_result(request, key):
+    own = Generated.objects.filter(kind='refcheck', key=key, user=request.user).first()
+    if own is not None and teasers.trial_view(request.user, own):
+        return teasers.trial_page(request, own)
     row = _row(request, key)
     if request.method == 'POST' and row.status == 'done':
         action = request.POST.get('action')

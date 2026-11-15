@@ -49,7 +49,7 @@ from django.utils import timezone, translation
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import (access, assistant, bibliography, digest, evidence, exports, generated, library, literature, mailcheck,
+from . import (teasers, access, assistant, bibliography, digest, evidence, exports, generated, library, literature, mailcheck,
                neighbours, overleaf, result_share, similar, sources)
 from .models import Collection, Generated
 
@@ -611,10 +611,10 @@ def _start(request, work):
 
 def missed_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/missed.html', {'anonymous': True, 'per_day': PER_DAY})
+        return render(request, 'summarizer/missed.html', dict(teasers.page_context(request, 'missed'), anonymous=True, per_day=PER_DAY))
     paid = access.has_tool(request.user, 'missed')
     error = None
-    if request.method == 'POST' and paid:
+    if request.method == 'POST' and (paid or teasers.trial_open(request.user, 'missed')):
         upload = request.FILES.get('draft')
         bib_upload = request.FILES.get('bib')
         text = request.POST.get('text', '').strip()
@@ -629,10 +629,13 @@ def missed_page(request):
         else:
             data = upload.read() if upload is not None else None
             bib = bib_upload.read().decode('utf-8', errors='replace') if bib_upload is not None else ''
-            return _start(request, write(data, text, get_language(), bib, keep=bool(request.POST.get('keep')),
-                                         refcheck_key=start_refcheck(request, bib)))
+            response = _start(request, write(data, text, get_language(), bib, keep=bool(request.POST.get('keep')),
+                                             refcheck_key=start_refcheck(request, bib)))
+            if not paid:
+                teasers.mark_trial(request.user, 'missed')
+            return response
     searches = Generated.objects.filter(kind='missed', user=request.user).order_by('-created')[:20]
-    return render(request, 'summarizer/missed.html', {'paid': paid, 'error': error, 'searches': searches,
+    return render(request, 'summarizer/missed.html', {**teasers.page_context(request, 'missed'), 'paid': paid, 'error': error, 'searches': searches,
                                                       'refcheck_allowed': access.has_tool(request.user, 'refcheck'),
                                                       'per_day': PER_DAY, 'upload_max_bytes': MAX_UPLOAD, 'upload_max_mb': MAX_UPLOAD // (1024 * 1024),
                                                       'bib_max_bytes': MAX_BIB_UPLOAD})
@@ -688,10 +691,8 @@ def links(result):
 
 
 def _row(request, key):
-    if not access.has_tool(request.user, 'missed'):
-        raise Http404
     row = Generated.objects.filter(kind='missed', key=key, user=request.user).first()
-    if row is None:
+    if row is None or not access.has_tool(request.user, 'missed'):
         raise Http404
     return row
 
@@ -748,6 +749,9 @@ def save_collection(request, row, result):
 
 @login_required
 def missed_result(request, key):
+    row = Generated.objects.filter(kind='missed', key=key, user=request.user).first()
+    if row is not None and teasers.trial_view(request.user, row):
+        return teasers.trial_page(request, row)
     row = _row(request, key)
     if request.method == 'POST' and row.status == 'done':
         action = request.POST.get('action')
