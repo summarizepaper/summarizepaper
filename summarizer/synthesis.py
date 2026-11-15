@@ -60,3 +60,13 @@ def license_scope(paper):
     if source == 'abstract' and sources.is_external(paper.arxiv_id) and sources.rights_kept_out(paper.arxiv_id, ask=False):
         return 'abstract_license'
     return ('abstract_unavailable' if source == 'abstract' else 'full_text') if source else 'full_text_allowed'
+
+
+def page_scope(scope, reading):
+    """The scope shown on a finished page: what its synthesis read, not the text stored since. The reading
+    (insight.py) is written in the same run as the summary of its language, and records whether it had the full
+    text: a summary written from the abstract while arXiv did not answer, whose full text another language's run
+    read later, must not say "full text"."""
+    if not reading or scope not in ('full_text', 'abstract_unavailable', 'full_text_allowed'):
+        return scope
+    return 'abstract_unavailable' if reading.get('abstract_only') else 'full_text'

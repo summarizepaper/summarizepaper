@@ -1,3 +1,4 @@
+import json
 from unittest import mock
 from asgiref.sync import async_to_sync
 from bs4 import BeautifulSoup
@@ -139,6 +140,25 @@ class SynthesisTests(TestCase):
         self.assertEqual(synthesis.license_scope(self.paper), 'full_text')
         self.paper.license = 'http://arxiv.org/licenses/nonexclusive-distrib/1.0/'
         self.assertEqual(synthesis.license_scope(self.paper), 'abstract_license')
+
+    def test_page_scope_says_what_the_synthesis_of_this_language_read(self):
+        # the English run got only the abstract; the French run read the full text later and stored it
+        self.assertEqual(synthesis.page_scope('full_text', {'abstract_only': True}), 'abstract_unavailable')
+        self.assertEqual(synthesis.page_scope('abstract_unavailable', {'abstract_only': False}), 'full_text')
+        self.assertEqual(synthesis.page_scope('full_text', None), 'full_text')
+        self.assertEqual(synthesis.page_scope('abstract_license', {'abstract_only': False}), 'abstract_license')
+
+    def test_page_with_an_abstract_only_reading_does_not_claim_the_full_text(self):
+        from summarizer.models import Generated
+        from summarizer import insight
+        SummaryPaper.objects.create(paper=self.paper, lang='en', summary='Summary', notes='["Point"]', lay_summary='Simple')
+        PaperText.objects.create(arxiv_id=self.paper.arxiv_id, source='html', text='Full text stored by a later run')
+        Generated.objects.create(kind=insight.KIND, key=self.paper.arxiv_id, lang='en', status='done', content=json.dumps(
+            {'tldr': 'The point.', 'findings': [{'text': 'A finding'}], 'abstract_only': True}))
+        page = self.client.get('/en/paper/2401.04088v1/').content.decode()
+        self.assertIn('the full text could not be retrieved', page)
+        self.assertNotIn('based on the paper’s full text', page)
+        self.assertIn('Based on the abstract only', page)
 
     def test_completed_fragment_bypasses_running_page_and_contains_working_controls(self):
         SummaryPaper.objects.create(paper=self.paper, lang='fr', summary='Résumé prêt',

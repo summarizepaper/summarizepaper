@@ -1167,6 +1167,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 sumpaper.blog = summary_text.without_invented_references(
                     utils.clean_blog_html(sumpaper.blog), [a.name for a in paper.authors.all()], paper.journal_ref, paper.comments)
             paper_insight = insight.for_page(arxiv_id, lang) if sumpaper else None
+            stuff_for_frontend['source_scope'] = synthesis.page_scope(stuff_for_frontend.get('source_scope'), paper_insight)
             share_author = bool(sumpaper) and social.is_author(request.user, paper)
             stuff_for_frontend.update({
                 'paper':paper,
