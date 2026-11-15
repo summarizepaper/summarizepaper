@@ -317,10 +317,11 @@ class TeaserTests(ToolsTestCase):
         self.assertIn('sandbox=""', html)
         self.row(staff, kind='citation_example', showcase=True, trial=False, content={
             'paper': 'Planck 2018', 'subject': '3 new citations', 'html': email,
-            'items': [{'title': 'A tension', 'label': 'questions it', 'note': 'Finds a lower H0.'}]})
+            'items': [{'title': 'Passing', 'label': 'mentions it', 'note': 'Cites it among others.', 'stance': 'mentions'},
+                      {'title': 'A tension', 'label': 'questions it', 'note': 'Finds a lower H0.', 'stance': 'questions'}]})
         html = Client().get('/en/citations/').content.decode()
-        self.assertIn('1 new paper citing “Planck 2018”', html)
-        self.assertIn('Finds a lower H0.', html)
+        self.assertIn('2 new papers citing “Planck 2018”', html)
+        self.assertLess(html.index('Finds a lower H0.'), html.index('Cites it among others.'))  # the telling one first
         premium = Client().get('/en/premium/').content.decode()
         for name in ('Journal club', 'Collections and comparison tables', 'Scoop watch', 'Citation alerts'):
             self.assertIn(name, premium)

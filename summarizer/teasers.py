@@ -409,7 +409,9 @@ def _citation(row):
                 _('The sentences that cite it, read in the citing paper'),
                 _('Self-citations apart, and an email at once when a paper questions it'),
                 _('Every day, week or month, for your papers and those you follow')]
-    best = next((c for c in cites if c.get('note')), None)
+    telling = ('questions', 'supports', 'builds_on', 'uses', 'mentions', '')  # what makes a citation worth reading first
+    noted = [c for c in cites if c.get('note')]
+    best = min(noted, key=lambda c: telling.index(c.get('stance') if c.get('stance') in telling else '')) if noted else None
     highlights = [_highlight(best.get('label') or '', best['note'], best.get('title') or '')] if best else []
     items = [_item(c.get('title') or '', c.get('label') or '', c.get('note') or '') for c in cites]
     return headline, items, contents, highlights, {'email': data.get('html', ''), 'email_subject': data.get('subject', '')}
