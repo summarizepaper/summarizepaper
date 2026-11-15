@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% if LANGUAGE_CODE == 'fr' %}Bibliothèques, écoles doctorales et revues{% else %}Libraries, doctoral schools and journals{% endif %} - SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% if LANGUAGE_CODE == 'fr' %}SummarizePaper pour les bibliothèques, les écoles doctorales, les revues et les conférences : outils gratuits pour vos lecteurs, vérification des bibliographies de thèses et de soumissions, accès Premium de groupe.{% else %}SummarizePaper for libraries, doctoral schools, journals and conferences: free tools for your readers, bibliography checks of theses and submissions, group Premium access.{% endif %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/institutions/" />
+  <style>
+    .institutions .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 24px 0 8px; }
+    .institutions .card { border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+    .institutions .card h3 { margin-top: 0; }
+    .institutions .cta { display: inline-block; margin: 8px 0 24px; }
+    .institutions .muted { color: var(--text-muted); }
+  </style>
+{% endblock %}
+
+{% block header_class %}{% endblock %}
+
+{% block content %}
+<main class="page prose institutions">
+{% if LANGUAGE_CODE == 'fr' %}
+  <header class="page-header">
+    <h1>Pour les bibliothèques, les écoles doctorales et les revues</h1>
+    <p class="muted">Des outils pour lire les articles de recherche, et pour vérifier les références avant qu’un manuscrit ou une thèse ne parte.</p>
+  </header>
+
+  <div class="cards">
+    <section class="card">
+      <h3>Bibliothèques</h3>
+      <p>Vos lecteurs peuvent utiliser gratuitement, sans compte, les résumés de n’importe quel article arXiv, bioRxiv ou medRxiv (idées clés, résultats, limites, en 16 langues) et poser leurs questions à l’article. Avec un compte gratuit : une alerte quotidienne des nouveaux articles de leurs domaines.</p>
+    </section>
+    <section class="card">
+      <h3>Écoles doctorales</h3>
+      <p>Avant le dépôt, la <a href="/fr/refcheck/">vérification de bibliographie</a> identifie chaque référence d’une thèse par son DOI ou sa notice arXiv, signale les références inexistantes, erronées, rétractées ou dépassées, et, avec le LaTeX, confronte chaque phrase qui cite à l’article cité.</p>
+    </section>
+    <section class="card">
+      <h3>Revues et conférences</h3>
+      <p>La même vérification sur les soumissions, depuis un PDF, une source LaTeX ou un identifiant arXiv : un rapport par manuscrit, pour les éditeurs ou les relecteurs. <a href="/fr/examples/bibliography-check-grounding-answers-in-retrieved-passages/">Voir un exemple de rapport</a>.</p>
+    </section>
+  </div>
+
+  <h2>Ce que nous proposons</h2>
+  <ul>
+    <li><strong>Un essai gratuit</strong> : nous vérifions gratuitement les bibliographies d’une dizaine de thèses ou de soumissions de votre choix, et vous envoyons les rapports.</li>
+    <li><strong>Un accès Premium de groupe</strong> : tous les outils Premium pour la liste de comptes que vous nous donnez (un laboratoire, un département, une école doctorale, un comité éditorial), pour la durée convenue. Devis sur demande.</li>
+    <li><strong>Un lien pour votre guide</strong> : si SummarizePaper a sa place dans votre guide des outils d’IA, nous répondons volontiers aux questions de vos bibliothécaires.</li>
+  </ul>
+  <a class="btn btn-primary cta" href="/fr/contact/?about=institutions">Nous écrire</a>
+
+  <h2>Ce qu’il faut savoir</h2>
+  <ul>
+    <li>Le texte intégral d’un article n’est lu que si sa licence ou l’exception de fouille de textes et de données le permet ; sinon le résumé est écrit à partir de l’abstract, et la page le dit. Voir notre <a href="/fr/tdm/">politique de fouille de textes</a>.</li>
+    <li>Les manuscrits envoyés pour une vérification ne sont pas publiés ; un rapport n’est partagé que si son auteur crée un lien de partage.</li>
+    <li>Le code du site est ouvert (licence MIT) : <a href="https://github.com/summarizepaper/summarizepaper">github.com/summarizepaper/summarizepaper</a>.</li>
+    <li>SummarizePaper est développé par un chercheur.</li>
+  </ul>
+{% else %}
+  <header class="page-header">
+    <h1>For libraries, doctoral schools and journals</h1>
+    <p class="muted">Tools to read research papers, and to check references before a manuscript or a thesis goes out.</p>
+  </header>
+
+  <div class="cards">
+    <section class="card">
+      <h3>Libraries</h3>
+      <p>Your readers can use for free, without an account, the summaries of any arXiv, bioRxiv or medRxiv paper (key ideas, results and limits, in 16 languages) and ask the paper their questions. With a free account: a daily email of the new papers in their fields.</p>
+    </section>
+    <section class="card">
+      <h3>Doctoral schools</h3>
+      <p>Before submission, the <a href="/en/refcheck/">bibliography check</a> matches every reference of a thesis to its DOI or arXiv record, flags non-existent, wrong, retracted or outdated references and, with the LaTeX, reads each citing sentence against the cited paper.</p>
+    </section>
+    <section class="card">
+      <h3>Journals and conferences</h3>
+      <p>The same check on submissions, from a PDF, a LaTeX source or an arXiv identifier: one report per manuscript, for editors or referees. <a href="/en/examples/bibliography-check-grounding-answers-in-retrieved-passages/">See an example report</a>.</p>
+    </section>
+  </div>
+
+  <h2>What we offer</h2>
+  <ul>
+    <li><strong>A free trial</strong>: we check the bibliographies of about ten theses or submissions of your choice for free and send you the reports.</li>
+    <li><strong>Group Premium access</strong>: all Premium tools for the list of accounts you give us (a lab, a department, a doctoral school, an editorial board), for the agreed period. Quote on request.</li>
+    <li><strong>A link for your guide</strong>: if SummarizePaper belongs in your guide to AI tools, we are glad to answer your librarians’ questions.</li>
+  </ul>
+  <a class="btn btn-primary cta" href="/en/contact/?about=institutions">Write to us</a>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li>A paper’s full text is read only when its license or the text and data mining exception allows it; otherwise the summary is written from the abstract, and the page says so. See our <a href="/en/tdm/">text and data mining policy</a>.</li>
+    <li>Manuscripts sent for a check are not published; a report is shared only if its author creates a share link.</li>
+    <li>The site’s code is open source (MIT license): <a href="https://github.com/summarizepaper/summarizepaper">github.com/summarizepaper/summarizepaper</a>.</li>
+    <li>SummarizePaper is built by a researcher.</li>
+  </ul>
+{% endif %}
+</main>
+{% endblock %}

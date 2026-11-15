@@ -24966,3 +24966,6 @@ msgid_plural "%(tool)s: %(n)s more results of your free search"
 msgstr[0] "%(tool)s : %(n)s autre résultat de votre recherche gratuite"
 msgstr[1] "%(tool)s : %(n)s autres résultats de votre recherche gratuite"
 
+msgid "For institutions"
+msgstr "Pour les établissements"
+

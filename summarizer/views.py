@@ -470,6 +470,10 @@ def tdm_policy(request):
     from . import tdm
     return render(request, "summarizer/tdm.html", {'keep_days': tdm.KEEP_DAYS, 'agent': tdm.ROBOTS_AGENT})
 
+def institutions(request):
+    """For libraries, doctoral schools, journals and conferences: what they can use and what we offer them."""
+    return render(request, "summarizer/institutions.html", {})
+
 def about(request):
     stuff_for_frontend = {}
 

@@ -39,6 +39,7 @@ urlpatterns = [
     path("search-results/", views.search_results, name="search_results"),
     path("create-embed/", views.create_embed, name="create_embed"),
     path("about/", views.about, name="about"),
+    path("institutions/", views.institutions, name="institutions"),
     path("chat/", chat_page.page, name="chat"),
     path("chat/sources/", chat_page.supplied, name="chat_sources"),
     path("chat/export/<str:fmt>/", chat_page.export_selection, name="chat_export"),

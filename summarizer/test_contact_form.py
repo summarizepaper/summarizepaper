@@ -91,3 +91,16 @@ class ContactProtectionTests(TestCase):
             self.assertEqual(self.client.post('/en/contact/', self.fields).status_code, 503)
         self.assertEqual(self.client.post('/en/contact/', self.fields).status_code, 302)
         self.assertEqual(len(mail.outbox), 1)
+
+
+class InstitutionsPageTests(TestCase):
+    def test_page_in_both_languages_links_to_a_prefilled_contact_form(self):
+        for lang, title, ask in (('en', 'For libraries, doctoral schools and journals', 'Number of people or manuscripts'),
+                                 ('fr', 'Pour les bibliothèques, les écoles doctorales et les revues', 'Nombre de personnes ou de manuscrits')):
+            page = self.client.get('/%s/institutions/' % lang)
+            self.assertContains(page, title)
+            self.assertContains(page, '/%s/contact/?about=institutions' % lang)
+            self.assertContains(page, '/%s/institutions/' % lang)  # footer link
+            self.assertContains(self.client.get('/%s/contact/?about=institutions' % lang), ask)
+        self.assertNotContains(self.client.get('/en/contact/'), 'Number of people or manuscripts')
+        self.assertContains(self.client.get('/fr/about/'), 'Pour les établissements')

@@ -53,10 +53,19 @@ def _over_limit(scope, identity, maximum):
     return cache.incr(key) > maximum
 
 
+INSTITUTION_MESSAGE = {
+    'en': 'Institution (library, doctoral school, journal, conference):\nWhat we would like (free trial, group access, other):\nNumber of people or manuscripts:\n',
+    'fr': 'Établissement (bibliothèque, école doctorale, revue, conférence) :\nCe qui nous intéresse (essai gratuit, accès de groupe, autre) :\nNombre de personnes ou de manuscrits :\n',
+}
+
+
 def page(request):
     user = request.user
     initial = ({'name': user.get_full_name() or user.username, 'email': user.email}
-               if user.is_authenticated else None)
+               if user.is_authenticated else {})
+    if request.method != 'POST' and request.GET.get('about') == 'institutions':  # from /institutions/
+        from django.utils.translation import get_language
+        initial['message'] = INSTITUTION_MESSAGE.get(get_language(), INSTITUTION_MESSAGE['en'])
     form = ContactForm(request.POST if request.method == 'POST' else None, initial=initial)
     context = {'form': form, 'started': start_token(),
                'sent': 1 if request.session.pop('contact_sent', False) else None}
