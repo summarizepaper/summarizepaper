@@ -10,6 +10,7 @@ the examples themselves (teaser_* events) are counted in Umami.
 import datetime
 
 from django.contrib.auth.models import User
+from django.db.models import Count
 from django.utils import timezone
 
 from . import activity, teasers
@@ -105,10 +106,23 @@ def report(days, now=None):
         tools.append({'label': label, 'visitors': _visitors(anonymous, view=view), 'members': _visitors(views.filter(user__isnull=False), view=view),
                       'examples': _visitors(views, view='example', path__contains='/examples/%s' % _prefix(kind)),
                       'tries': tried.count(), 'paid': UserPlan.objects.filter(user_id__in=triers, paid=True).exclude(stripe_subscription_id='').count()})
-    return {'days': days, 'start': start, 'funnel': funnel, 'tools': tools, 'journeys': journeys(start, now, now),
+    found = journeys(start, now, now)
+    return {'days': days, 'start': start, 'funnel': funnel, 'tools': tools, 'journeys': found, 'sources': by_source(views, found),
             'trials': [{'user': p.user, 'created': p.created, 'end': p.trial_end, 'tier': p.get_tier_display(), 'state': _state(p, now)}
                        for p in sorted(plans, key=lambda p: p.created, reverse=True)],
             'optouts': ConversionEmail.objects.filter(kind='optout').count()}
+
+
+def by_source(views, found):
+    """Visitors, sign-ups and subscriptions by utm_source (bluesky-bot, outreach-author, the share buttons...)."""
+    rows = {r['source']: {'source': r['source'], 'visitors': r['n'], 'signups': 0, 'paid': 0}
+            for r in views.exclude(source='').values('source').annotate(n=Count('visitor', distinct=True))}
+    for j in found:
+        first = j['origin'] if j['origin'] in rows else None
+        if first:
+            rows[first]['signups'] += 1
+            rows[first]['paid'] += 1 if j['plan'].startswith(('payant', 'essai')) else 0
+    return sorted(rows.values(), key=lambda r: (-r['signups'], -r['visitors']))
 
 
 def _prefix(kind):

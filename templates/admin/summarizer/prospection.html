@@ -1,0 +1,52 @@
+{% extends 'admin/base.html' %}
+{% load unfold %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<h1 class="font-semibold text-2xl text-important mb-4">Prospection : e-mails aux auteurs</h1>
+<p class="text-subtle mb-6">Chaque semaine, les auteurs des articles choisis par les lettres (sauf l’astronomie et tout article listé en astro-ph) reçoivent un e-mail, une seule fois par adresse, <strong>seulement après votre validation</strong>. L’adresse vient de la version HTML de l’article sur arXiv. Les e-mails validés partent avec la tâche horaire, {{ per_day }} par jour au plus, depuis <code>{{ sender }}</code>.
+Envoyés : {{ counts.sent }} · validés en attente : {{ counts.approved }} · écartés : {{ counts.rejected }} · sans adresse : {{ counts.no_email }} · expirés : {{ counts.expired }} · échecs : {{ counts.failed }}.</p>
+
+<h2 class="font-semibold text-lg mb-3">À valider ({{ pending|length }})</h2>
+{% if pending %}
+<form method="post">{% csrf_token %}
+<div class="flex gap-2 mb-3">
+    <button class="bg-primary-600 text-white rounded-default px-3 py-2 font-semibold" name="action" value="approve">Valider la sélection</button>
+    <button class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700" name="action" value="reject">Écarter la sélection</button>
+    <label class="px-3 py-2"><input type="checkbox" onclick="document.querySelectorAll('input[name=ids]').forEach(function (b) { b.checked = this.checked; }, this)"> tout cocher</label>
+</div>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    {% for p in pending %}
+    <tr class="border-b border-base-200 dark:border-base-700 align-top">
+        <td class="px-3 py-2"><input type="checkbox" name="ids" value="{{ p.pk }}"></td>
+        <td class="px-3 py-2">
+            <div><strong>{{ p.email }}</strong>{% if p.name %} ({{ p.name }}){% endif %} · lettre {{ p.topic }} du {{ p.letter_day|date:"d/m" }} · <a class="text-primary-600" href="https://arxiv.org/abs/{{ p.arxiv_id }}" rel="noopener">{{ p.arxiv_id }}</a></div>
+            <details><summary class="cursor-pointer">{{ p.subject }}</summary><pre class="whitespace-pre-wrap text-sm mt-2">{{ p.body }}</pre></details>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</form>
+{% else %}
+<p class="text-subtle mb-8">Rien à valider pour l’instant.</p>
+{% endif %}
+
+{% if approved %}
+<h2 class="font-semibold text-lg mb-3">Validés, en attente d’envoi ({{ approved|length }})</h2>
+<ul class="mb-8">{% for p in approved %}<li>{{ p.email }} · {{ p.subject }}</li>{% endfor %}</ul>
+{% endif %}
+
+<h2 class="font-semibold text-lg mb-3">Derniers envois</h2>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    {% for p in sent %}
+    <tr class="border-b border-base-200 dark:border-base-700"><td class="px-3 py-2 whitespace-nowrap">{{ p.sent|date:"d/m H:i" }}</td><td class="px-3 py-2">{{ p.email }}</td><td class="px-3 py-2">{{ p.subject }}</td></tr>
+    {% empty %}
+    <tr><td class="px-3 py-2 text-subtle">Aucun envoi.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

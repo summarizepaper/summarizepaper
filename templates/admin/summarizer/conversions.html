@@ -31,6 +31,17 @@
     {% endfor %}
 </table>
 
+<h2 class="font-semibold text-lg mb-3">Par source (utm_source)</h2>
+<p class="text-subtle mb-3"><code>bluesky-bot</code> : les comptes Bluesky du site ; <code>outreach-author</code> : les e-mails aux auteurs (Prospection) ; les autres : boutons de partage, e-mails du site.</p>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    <tr class="border-b border-base-200 dark:border-base-700 text-subtle"><th class="px-3 py-2 text-left">Source</th><th class="px-3 py-2 text-right">Visiteurs</th><th class="px-3 py-2 text-right">Inscriptions</th><th class="px-3 py-2 text-right">Abonnements (essai ou payant)</th></tr>
+    {% for s in report.sources %}
+    <tr class="border-b border-base-200 dark:border-base-700"><td class="px-3 py-2">{{ s.source }}</td><td class="px-3 py-2 text-right">{{ s.visitors }}</td><td class="px-3 py-2 text-right">{{ s.signups }}</td><td class="px-3 py-2 text-right">{{ s.paid }}</td></tr>
+    {% empty %}
+    <tr><td class="px-3 py-2 text-subtle">Aucune visite avec une source.</td></tr>
+    {% endfor %}
+</table>
+
 <h2 class="font-semibold text-lg mb-3">Les inscriptions, une par une</h2>
 <p class="text-subtle mb-3">Les pages vues par le même navigateur dans les 12 heures avant l’inscription.</p>
 <table class="w-full mb-8 border border-base-200 dark:border-base-700">

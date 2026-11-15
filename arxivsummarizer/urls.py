@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from summarizer.admin import activity_view, conversions_view
+from summarizer.outreach import queue_view as outreach_queue_view
 from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
@@ -36,6 +37,7 @@ sitemaps = {
 urlpatterns = [
     path('admin/activite/', admin.site.admin_view(activity_view), name='admin_activity'),
     path('admin/conversions/', admin.site.admin_view(conversions_view), name='admin_conversions'),
+    path('admin/prospection/', admin.site.admin_view(outreach_queue_view), name='admin_prospection'),
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt),
     path('llms.txt', llms_txt),

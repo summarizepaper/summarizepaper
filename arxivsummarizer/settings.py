@@ -45,6 +45,18 @@ SECRETSG = os.getenv('SECRETSG')
 SECRETCMTA = os.getenv('SECRETCMTA')
 
 DEFAULT_FROM_EMAIL = 'SummarizePaper <contact@summarizepaper.com>'
+# the emails to people without an account (summarizer/outreach.py), approved one by one on /admin/prospection/:
+# best from an address of a subdomain, so that complaints do not weigh on the domain of the account emails
+OUTREACH_FROM_EMAIL = os.getenv('OUTREACH_FROM_EMAIL', DEFAULT_FROM_EMAIL)
+OUTREACH_REPLY_TO = os.getenv('OUTREACH_REPLY_TO', 'contact@summarizepaper.com')
+OUTREACH_SIGNATURE = os.getenv('OUTREACH_SIGNATURE', 'The SummarizePaper team')
+# the site's Bluesky accounts by theme of the weekly letters (summarizer/bluesky.py), JSON:
+# {"ai": {"handle": "...", "password": "<app password>"}, "*": {...}}
+try:
+    import json as _json
+    BLUESKY_ACCOUNTS = _json.loads(os.getenv('BLUESKY_ACCOUNTS', '') or '{}')
+except ValueError:
+    BLUESKY_ACCOUNTS = {}
 # MX lookups before emailing an address (summarizer/mailcheck.py); tests turn them off
 MAILCHECK_DNS = sys.argv[1:2] != ['test']
 # per-visitor request limits (access.throttled); off in the test suite, whose requests all come from one address
@@ -159,6 +171,7 @@ UNFOLD = {
                 {"title": "Administration", "icon": "dashboard", "link": reverse_lazy("admin:index")},
                 {"title": "Activité du jour", "icon": "timeline", "link": reverse_lazy("admin_activity")},
                 {"title": "Conversions", "icon": "conversion_path", "link": reverse_lazy("admin_conversions")},
+                {"title": "Prospection", "icon": "campaign", "link": reverse_lazy("admin_prospection")},
                 {"title": "Relances et retours", "icon": "outgoing_mail", "link": reverse_lazy("admin:summarizer_outreachcontact_changelist")},
                 {"title": "Événements d'envoi", "icon": "mark_email_read", "link": reverse_lazy("admin:summarizer_emailevent_changelist")},
                 {"title": "Coûts API", "icon": "payments", "link": reverse_lazy("admin:summarizer_aiusage_changelist")},

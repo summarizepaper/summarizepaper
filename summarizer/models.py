@@ -1645,3 +1645,51 @@ class Trash(models.Model):
 
     class Meta:
         ordering = ('-created', '-pk')
+
+
+class BlueskyPost(models.Model):
+    """A post of the Bluesky accounts of the site (bluesky.py): a weekly letter ('letter', key 'topic/day'), then its
+    papers one a day ('paper', key the arXiv id), each posted once per theme."""
+    KINDS = [('letter', 'Lettre de la semaine'), ('paper', 'Article')]
+    topic = models.CharField(max_length=20)
+    kind = models.CharField(max_length=10, choices=KINDS)
+    key = models.CharField(max_length=100)
+    account = models.CharField(max_length=200)
+    uri = models.CharField(max_length=300, blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('topic', 'kind', 'key')
+        ordering = ('-created',)
+        verbose_name = 'post Bluesky'
+        verbose_name_plural = 'posts Bluesky'
+
+    def __str__(self):
+        return '%s %s %s' % (self.topic, self.kind, self.key)
+
+
+class Prospect(models.Model):
+    """An email to someone who has no account, written by outreach.py and sent only once a staff member approved it
+    on /admin/prospection/: the authors of the papers picked by a weekly letter (kind 'author')."""
+    STATUSES = [('pending', 'À valider'), ('approved', 'Validé, en attente d’envoi'), ('sent', 'Envoyé'),
+                ('rejected', 'Écarté'), ('failed', 'Échec d’envoi'), ('expired', 'Expiré'), ('no_email', 'Sans adresse')]
+    kind = models.CharField(max_length=20, default='author')
+    status = models.CharField(max_length=10, choices=STATUSES, default='pending', db_index=True)
+    email = models.EmailField(blank=True, default='', db_index=True)
+    name = models.CharField(max_length=200, blank=True, default='')
+    arxiv_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
+    topic = models.CharField(max_length=20, blank=True, default='')
+    letter_day = models.DateField(blank=True, null=True)
+    subject = models.CharField(max_length=300, blank=True, default='')
+    body = models.TextField(blank=True, default='')
+    created = models.DateTimeField(auto_now_add=True)
+    decided = models.DateTimeField(blank=True, null=True)
+    sent = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = 'prospect'
+        verbose_name_plural = 'prospects'
+
+    def __str__(self):
+        return '%s %s (%s)' % (self.email or self.arxiv_id, self.kind, self.status)
