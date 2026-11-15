@@ -9,6 +9,8 @@ The accounts are in the BLUESKY_ACCOUNTS setting (an environment variable holdin
 "ai.summarizepaper.com", "password": "<app password>"}, "*": {...}}. "*" posts the themes that have no account of
 their own; without "*", those themes are not posted. A theme posts at most once a day, after START_HOUR (UTC), and
 an account at most once an hourly run, so that a shared account spreads its posts over the afternoon.
+
+The same posts go to Mastodon (mastodon.py, MASTODON_ACCOUNTS) with run(network='mastodon'), tracked apart.
 """
 import datetime
 import io
@@ -35,7 +37,10 @@ TAG = re.compile(r'(?<!\S)#(\w+)')
 TIMEOUT = 30
 
 
-def accounts():
+def accounts(network='bluesky'):
+    if network == 'mastodon':
+        from . import mastodon
+        return mastodon.accounts()
     found = getattr(settings, 'BLUESKY_ACCOUNTS', None) or {}
     return {k: v for k, v in found.items() if isinstance(v, dict) and v.get('handle') and v.get('password')}
 
@@ -45,13 +50,17 @@ def account_for(topic, found=None):
     return found.get(topic) or found.get('*')
 
 
+def account_name(account):
+    return account.get('handle') or account.get('instance', '')
+
+
 # --- what to post next --------------------------------------------------------------------------------------
 
-def _posted(topic, kind, key):
-    return BlueskyPost.objects.filter(topic=topic, kind=kind, key=key).exists()
+def _posted(topic, kind, key, network='bluesky'):
+    return BlueskyPost.objects.filter(topic=topic, kind=kind, key=key, network=network).exists()
 
 
-def next_item(topic, today):
+def next_item(topic, today, network='bluesky'):
     """('letter', key, letter) for a letter not posted yet, else ('paper', arxiv_id, letter) for its next paper
     whose English summary is written, else None."""
     from .presskit import paper_id
@@ -60,31 +69,31 @@ def next_item(topic, today):
     if letter is None:
         return None
     key = '%s/%s' % (topic, letter.day.isoformat())
-    if not _posted(topic, 'letter', key):
+    if not _posted(topic, 'letter', key, network):
         return 'letter', key, letter
     content = json.loads(letter.content)
     for raw in content.get('order') or list(content.get('papers', {})):
         arxiv_id = paper_id(raw) or raw
-        if _posted(topic, 'paper', arxiv_id):
+        if _posted(topic, 'paper', arxiv_id, network):
             continue
         if SummaryPaper.objects.filter(paper__arxiv_id=arxiv_id, lang='en').exists():
             return 'paper', arxiv_id, letter
     return None
 
 
-def _with_utm(url, topic):
-    return '%s%s%s' % (url, '&' if '?' in url else '?', UTM % topic)
+def _with_utm(url, topic, network='bluesky'):
+    return '%s%s%s' % (url, '&' if '?' in url else '?', UTM.replace('bluesky', network) % topic)
 
 
-def letter_post(letter):
+def letter_post(letter, network='bluesky'):
     """(text, link, card title, card description, picture bytes) of a letter."""
     share = social.letter_share(letter, [], 'en')
     response = social.letter_image(None, 'en', letter.topic, letter.day.isoformat())
-    return (share['short'], _with_utm(share['url'], letter.topic), social.plain(letter.title),
+    return (share['short'], _with_utm(share['url'], letter.topic, network), social.plain(letter.title),
             social.shorten(social.plain(letter.dek), 280), response.content)
 
 
-def paper_post(arxiv_id, topic):
+def paper_post(arxiv_id, topic, network='bluesky'):
     from . import insight
     from .models import ArxivPaper
     paper = ArxivPaper.objects.get(arxiv_id=arxiv_id)
@@ -92,7 +101,7 @@ def paper_post(arxiv_id, topic):
     share = social.paper_share(paper, sumpaper, insight.for_page(arxiv_id, 'en'), 'en')
     response = social.paper_image(None, 'en', arxiv_id)
     hook = share['short'].split('\n\n')[0]
-    return (share['short'], _with_utm(share['url'], topic), social.shorten(social.plain(paper.title), 200),
+    return (share['short'], _with_utm(share['url'], topic, network), social.shorten(social.plain(paper.title), 200),
             social.shorten(hook, 280), getattr(response, 'content', b''))
 
 
@@ -159,36 +168,41 @@ def post(account, text, link, title, description, picture, now):
 
 # --- the hourly step ------------------------------------------------------------------------------------------
 
-def run(now, dry_run=False):
-    """Post what is due; the number of posts (with dry_run, of posts that would be made)."""
-    found = accounts()
+def run(now, dry_run=False, network='bluesky'):
+    """Post what is due on one network ('bluesky' or 'mastodon', whose posts are told apart in BlueskyPost.network);
+    the number of posts (with dry_run, of posts that would be made)."""
+    found = accounts(network)
     if not found or now.astimezone(datetime.timezone.utc).hour < START_HOUR:
         return 0
+    if network == 'mastodon':
+        from .mastodon import post as publish
+    else:
+        publish = post
     today = now.date()
     used = set()  # one post per account and run
     done = 0
     for topic in letters.TOPICS:
         account = account_for(topic, found)
-        if account is None or account['handle'] in used:
+        if account is None or account_name(account) in used:
             continue
-        if BlueskyPost.objects.filter(topic=topic, created__date=today).exists():
+        if BlueskyPost.objects.filter(topic=topic, network=network, created__date=today).exists():
             continue
-        item = next_item(topic, today)
+        item = next_item(topic, today, network)
         if item is None:
             continue
         kind, key, letter = item
         try:
-            content = letter_post(letter) if kind == 'letter' else paper_post(key, topic)
+            content = letter_post(letter, network) if kind == 'letter' else paper_post(key, topic, network)
             if dry_run:
-                logger.info('Bluesky %s (%s): %s', topic, kind, content[0])
+                logger.info('%s %s (%s): %s', network, topic, kind, content[0])
                 done += 1
                 continue
-            uri = post(account, *content, now=now)
+            uri = publish(account, *content, now=now)
         except Exception:
-            logger.exception('Bluesky post %s %s failed', topic, key)
-            used.add(account['handle'])
+            logger.exception('%s post %s %s failed', network, topic, key)
+            used.add(account_name(account))
             continue
-        BlueskyPost.objects.create(topic=topic, kind=kind, key=key, account=account['handle'], uri=uri)
-        used.add(account['handle'])
+        BlueskyPost.objects.create(topic=topic, kind=kind, key=key, network=network, account=account_name(account), uri=uri)
+        used.add(account_name(account))
         done += 1
     return done

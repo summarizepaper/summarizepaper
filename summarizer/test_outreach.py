@@ -152,3 +152,29 @@ class BlueskyTests(ToolsTestCase):
             with override_settings(BLUESKY_ACCOUNTS={}):
                 self.assertEqual(bluesky.run(self.now), 0)
             post.assert_not_called()
+
+
+@override_settings(BLUESKY_ACCOUNTS={'*': {'handle': 'main.bsky.social', 'password': 'p'}},
+                   MASTODON_ACCOUNTS={'*': {'instance': 'https://fediscience.org', 'token': 't'}})
+class MastodonTests(ToolsTestCase):
+    def test_each_network_posts_on_its_own_with_its_utm(self):
+        self.paper()
+        day = timezone.now().date() - datetime.timedelta(days=2)
+        Letter.objects.create(topic='quantum', lang='en', day=day, title='Qubits this week', dek='What changed.',
+                              content=json.dumps({'sections': [], 'order': ['2101.00001'], 'papers': {'2101.00001': 'T'}}))
+        now = timezone.now().replace(hour=15)
+        sent = []
+        with mock.patch('summarizer.social.figure_of', return_value=None), \
+                mock.patch.object(bluesky, 'post', return_value='at://x'), \
+                mock.patch('summarizer.mastodon.post', side_effect=lambda account, *a, **k: sent.append(a) or 'https://m/1'):
+            self.assertEqual(bluesky.run(now), 1)
+            self.assertEqual(bluesky.run(now, network='mastodon'), 1)
+            self.assertEqual(bluesky.run(now, network='mastodon'), 0)
+        self.assertIn('utm_source=mastodon-bot', sent[0][1])
+        self.assertEqual(sorted(BlueskyPost.objects.values_list('network', flat=True)), ['bluesky', 'mastodon'])
+
+    def test_status_text_keeps_the_link_within_the_limit(self):
+        from summarizer import mastodon
+        text = mastodon.status_text('word ' * 200, 'https://www.summarizepaper.com/en/x/')
+        self.assertTrue(text.endswith('https://www.summarizepaper.com/en/x/'))
+        self.assertLessEqual(len(text) - len('https://www.summarizepaper.com/en/x/') + 23, 500)

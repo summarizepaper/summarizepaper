@@ -41,6 +41,7 @@ class Command(BaseCommand):
                            ('conversion emails', lambda: conversion_emails.run(now, budget, base_url=options['base_url'])),
                            ('outreach emails', lambda: outreach.run(now, budget)),
                            ('bluesky posts', lambda: bluesky.run(now)),
+                           ('mastodon posts', lambda: bluesky.run(now, network='mastodon')),
                            ('reading checks', lambda: personal_activity.check_readings(now)),
                            ('publication details', lambda: publication_status.refresh_queued()),
                            ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url'])),

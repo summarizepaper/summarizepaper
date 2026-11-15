@@ -1651,6 +1651,7 @@ class BlueskyPost(models.Model):
     """A post of the Bluesky accounts of the site (bluesky.py): a weekly letter ('letter', key 'topic/day'), then its
     papers one a day ('paper', key the arXiv id), each posted once per theme."""
     KINDS = [('letter', 'Lettre de la semaine'), ('paper', 'Article')]
+    network = models.CharField(max_length=20, default='bluesky')
     topic = models.CharField(max_length=20)
     kind = models.CharField(max_length=10, choices=KINDS)
     key = models.CharField(max_length=100)
@@ -1659,7 +1660,7 @@ class BlueskyPost(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('topic', 'kind', 'key')
+        unique_together = ('network', 'topic', 'kind', 'key')
         ordering = ('-created',)
         verbose_name = 'post Bluesky'
         verbose_name_plural = 'posts Bluesky'

@@ -57,6 +57,11 @@ try:
     BLUESKY_ACCOUNTS = _json.loads(os.getenv('BLUESKY_ACCOUNTS', '') or '{}')
 except ValueError:
     BLUESKY_ACCOUNTS = {}
+# the same posts on Mastodon (summarizer/mastodon.py), JSON: {"*": {"instance": "https://fediscience.org", "token": "<access token>"}}
+try:
+    MASTODON_ACCOUNTS = _json.loads(os.getenv('MASTODON_ACCOUNTS', '') or '{}')
+except ValueError:
+    MASTODON_ACCOUNTS = {}
 # MX lookups before emailing an address (summarizer/mailcheck.py); tests turn them off
 MAILCHECK_DNS = sys.argv[1:2] != ['test']
 # per-visitor request limits (access.throttled); off in the test suite, whose requests all come from one address
