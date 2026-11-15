@@ -73,6 +73,7 @@ class PostTests(TestCase):
         self.assertTrue(soup.select_one('meta[property="og:image"]')['content'].startswith(
             'https://www.summarizepaper.com/og/en/p/2401.04088v1.png?v='))
         self.assertEqual(soup.select_one('meta[name="twitter:card"]')['content'], 'summary_large_image')
+        self.assertEqual(soup.select_one('meta[name="author"]')['content'], 'SummarizePaper')
         box = soup.select_one('[data-share]')
         text = box.select_one('textarea').get_text()
         self.assertIn('Gas in debris disks', text)
