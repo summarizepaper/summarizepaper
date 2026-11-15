@@ -1,7 +1,17 @@
 {% load i18n %}{# The first results of a tool, the others greyed: t (teasers.teaser), offer (teasers.audience), own (the visitor's own result) #}
 <section class="card section-card teaser"{% if not compact %} data-funnel-view="teaser_{% if own %}trial{% else %}example{% endif %}_view"{% endif %}>
-  <p class="teaser-kicker">{% if compact %}{{ t.name }}{% if t.plus %} · Premium+{% endif %}{% elif own %}{% trans 'Your free try: the first results' %}{% else %}{% trans 'A real example: the first results' %}{% endif %}</p>
+  <p class="teaser-kicker">{% if compact %}{{ t.name }}{% if t.plus %} · Premium+{% endif %}{% elif own %}{% trans 'Your free try: a preview of your result' %}{% else %}{% trans 'A real example: what you get' %}{% endif %}</p>
   <p class="teaser-headline"><strong>{{ t.headline }}</strong></p>
+  {% if t.contents %}<ul class="teaser-contents" aria-label="{% trans 'In the result' %}">{% for c in t.contents %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
+  {% for h in t.highlights %}{% if not compact or forloop.first %}
+  <div class="teaser-highlight">
+    <span class="teaser-highlight-label">{{ h.label }}</span>
+    {% if h.quote %}<blockquote>{{ h.text|truncatewords:60 }}</blockquote>{% else %}<p>{{ h.text|truncatewords:60 }}</p>{% endif %}
+    {% if h.meta %}<p class="meta">{% if h.quote %}→ {% endif %}{{ h.meta|truncatewords:30 }}</p>{% endif %}
+  </div>
+  {% endif %}{% endfor %}
+  {% if not compact %}
+  <p class="teaser-highlight-label">{% trans 'The first results' %}</p>
   <ol class="teaser-list">
     {% for item in t.items %}
     <li class="teaser-item">
@@ -15,6 +25,7 @@
   {% if t.hidden %}
   <p class="teaser-more"><i class="fas fa-lock" aria-hidden="true"></i>
     {% blocktrans count n=t.hidden %}{{ n }} more result hidden{% plural %}{{ n }} more results hidden{% endblocktrans %}</p>
+  {% endif %}
   {% endif %}
   {% if compact %}
   <p><a href="/{{ LANGUAGE_CODE }}/{{ t.path }}/" data-funnel="teaser_tool_open" data-tool="{{ t.kind }}" data-placement="offer">{% trans 'See the tool' %} →</a></p>

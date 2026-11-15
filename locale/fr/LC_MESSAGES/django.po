@@ -24354,3 +24354,131 @@ msgstr[1] ""
 
 msgid "“%(title)s”"
 msgstr "« %(title)s »"
+
+msgid "The landscape of the topic"
+msgstr "Le paysage du sujet"
+
+msgid "Exports, a collection of the papers, a monthly follow-up"
+msgstr "Exports, collection des articles, suivi chaque mois"
+
+msgid "An approach"
+msgstr "Une approche"
+
+msgid "Where to cite each one, section by section"
+msgstr "Où citer chacun, section par section"
+
+msgid "How to position your work against each one"
+msgstr "Comment vous situer par rapport à chacun"
+
+msgid ""
+"What each one is to your draft: same question, competing method, earlier "
+"result, data..."
+msgstr ""
+"Ce que chacun est pour votre brouillon : même question, méthode concurrente,"
+" résultat antérieur, données…"
+
+msgid "Where to cite it and how to position yourself"
+msgstr "Où le citer et comment vous situer"
+
+msgid "A follow-up of your references until your paper is published"
+msgstr "Un suivi de vos références jusqu’à la publication"
+
+msgid "A citation the cited paper contradicts"
+msgstr "Une citation contredite par l’article cité"
+
+msgid "A corrected entry"
+msgstr "Une entrée corrigée"
+
+msgid "A synthesis, each sentence with its papers"
+msgstr "Une synthèse, chaque phrase avec ses articles"
+
+msgid "Each statement with the quoted sentence of its paper"
+msgstr "Chaque affirmation avec la phrase citée de son article"
+
+msgid "The synthesis"
+msgstr "La synthèse"
+
+msgid "A disagreement between the papers"
+msgstr "Un désaccord entre les articles"
+
+msgid "An open question"
+msgstr "Une question ouverte"
+
+msgid "Your free try: a preview of your result"
+msgstr "Votre essai gratuit : un aperçu de votre résultat"
+
+msgid "A real example: what you get"
+msgstr "Un exemple réel : ce que vous obtenez"
+
+msgid "In the result"
+msgstr "Dans le résultat"
+
+msgid "The first results"
+msgstr "Les premiers résultats"
+
+msgid "%(n)d approach, named and described"
+msgid_plural "%(n)d approaches, each named and described"
+msgstr[0] "%(n)d approche, nommée et décrite"
+msgstr[1] "%(n)d approches, chacune nommée et décrite"
+
+msgid "%(n)d person who signs first, last or as corresponding author"
+msgid_plural "%(n)d people who sign first, last or as corresponding author"
+msgstr[0] ""
+"%(n)d personne qui signe en premier, en dernier ou comme auteur "
+"correspondant"
+msgstr[1] ""
+"%(n)d personnes qui signent en premier, en dernier ou comme auteur "
+"correspondant"
+
+msgid "%(n)d country"
+msgid_plural "%(n)d countries"
+msgstr[0] "%(n)d pays"
+msgstr[1] "%(n)d pays"
+
+msgid "%(n)d paper probably already in your references, matched for you"
+msgid_plural ""
+"%(n)d papers probably already in your references, matched for you"
+msgstr[0] ""
+"%(n)d article sans doute déjà dans vos références, retrouvé pour vous"
+msgstr[1] ""
+"%(n)d articles sans doute déjà dans vos références, retrouvés pour vous"
+
+msgid "%(n)d paper screened in journals and preprints"
+msgid_plural "%(n)d papers screened in journals and preprints"
+msgstr[0] "%(n)d article passé en revue dans les revues et les preprints"
+msgstr[1] "%(n)d articles passés en revue dans les revues et les preprints"
+
+msgid "%(n)d corrected BibTeX entry, ready to paste"
+msgid_plural "%(n)d corrected BibTeX entries, ready to paste"
+msgstr[0] "%(n)d entrée BibTeX corrigée, prête à coller"
+msgstr[1] "%(n)d entrées BibTeX corrigées, prêtes à coller"
+
+msgid "%(n)d citation checked against the paper it cites"
+msgid_plural "%(n)d citations checked against the papers they cite"
+msgstr[0] "%(n)d citation vérifiée dans l’article cité"
+msgstr[1] "%(n)d citations vérifiées dans les articles cités"
+
+msgid "%(n)d cited key missing from the .bib"
+msgid_plural "%(n)d cited keys missing from the .bib"
+msgstr[0] "%(n)d clé citée absente du .bib"
+msgstr[1] "%(n)d clés citées absentes du .bib"
+
+msgid "%(n)d theme with its findings"
+msgid_plural "%(n)d themes with their findings"
+msgstr[0] "%(n)d thème avec ses résultats"
+msgstr[1] "%(n)d thèmes avec leurs résultats"
+
+msgid "%(n)d point of consensus"
+msgid_plural "%(n)d points of consensus"
+msgstr[0] "%(n)d point de consensus"
+msgstr[1] "%(n)d points de consensus"
+
+msgid "%(n)d disagreement, each side with its papers"
+msgid_plural "%(n)d disagreements, each side with its papers"
+msgstr[0] "%(n)d désaccord, chaque camp avec ses articles"
+msgstr[1] "%(n)d désaccords, chaque camp avec ses articles"
+
+msgid "%(n)d open question"
+msgid_plural "%(n)d open questions"
+msgstr[0] "%(n)d question ouverte"
+msgstr[1] "%(n)d questions ouvertes"

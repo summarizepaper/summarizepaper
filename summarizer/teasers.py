@@ -74,6 +74,11 @@ def _item(title, meta='', note=''):
     return {'title': title, 'meta': meta, 'note': note}
 
 
+def _highlight(label, text, meta='', quote=False):
+    """A passage of what the tool writes besides its list (a synthesis, where to cite, a contradicted citation...)."""
+    return {'label': label, 'text': text, 'meta': meta, 'quote': quote}
+
+
 def _teams(row):
     from . import teams
     result = row.data()
@@ -88,7 +93,22 @@ def _teams(row):
         'p': ngettext('%(n)d person', '%(n)d people', people) % {'n': people},
         'w': ngettext('%(n)d paper', '%(n)d papers', works) % {'n': works},
         'title': result.get('title') or result.get('topic') or ''}
-    return headline, items
+    approaches = [a for a in result.get('approaches') or [] if a.get('name')]
+    leads = sum(1 for p in shown['people'] if p.get('lead'))
+    contents = [x for x in (
+        result.get('landscape') and _('The landscape of the topic'),
+        len(approaches) > 1 and ngettext('%(n)d approach, named and described', '%(n)d approaches, each named and described', len(approaches)) % {'n': len(approaches)},
+        leads and ngettext('%(n)d person who signs first, last or as corresponding author', '%(n)d people who sign first, last or as corresponding author', leads) % {'n': leads},
+        shown['countries'] and ngettext('%(n)d country', '%(n)d countries', len(shown['countries'])) % {'n': len(shown['countries'])},
+        _('Exports, a collection of the papers, a monthly follow-up')) if x]
+    highlights = []
+    if result.get('landscape'):
+        highlights.append(_highlight(_('The landscape'), result['landscape']))
+    if len(approaches) > 1:
+        a = approaches[0]
+        highlights.append(_highlight(_('An approach'), a.get('description') or '', '%s · %s' % (
+            a['name'], ngettext('%(n)d paper', '%(n)d papers', a.get('papers') or 0) % {'n': a.get('papers') or 0})))
+    return headline, items, contents, highlights
 
 
 def _missed(row):
@@ -96,14 +116,38 @@ def _missed(row):
     result = missed.shown(row)
     if not result:
         return None
+    ordered = [i for _importance, group in result['groups'] for i in group]
     items = [_item(i['title'], ' · '.join(str(x) for x in (i.get('authors'), i.get('year')) if x), i.get('relation') or '')
-             for _importance, group in result['groups'] for i in group]
+             for i in ordered]
     high = sum(1 for i in result['active'] if i.get('importance') == 'high')
     headline = ngettext('%(n)d close paper the draft does not cite', '%(n)d close papers the draft does not cite',
                         len(items)) % {'n': len(items)}
     if high:
         headline += ', ' + ngettext('%(n)d that a referee would expect', '%(n)d that a referee would expect', high) % {'n': high}
-    return headline + '.', items
+    searched = result.get('searched') if isinstance(result.get('searched'), int) else 0
+    probable = len(result.get('probable') or [])
+    contents = [x for x in (
+        any(i.get('section') for i in ordered) and _('Where to cite each one, section by section'),
+        any(i.get('position') for i in ordered) and _('How to position your work against each one'),
+        any(i.get('kind') for i in ordered) and _('What each one is to your draft: same question, competing method, earlier result, data...'),
+        probable and ngettext('%(n)d paper probably already in your references, matched for you', '%(n)d papers probably already in your references, matched for you', probable) % {'n': probable},
+        searched and ngettext('%(n)d paper screened in journals and preprints', '%(n)d papers screened in journals and preprints', searched) % {'n': searched}) if x]
+    highlights = []
+    best = next((i for i in ordered if i.get('position')), None)
+    if best:  # never the sentences of the draft itself
+        highlights.append(_highlight(_('Where to cite it and how to position yourself'), best['position'],
+                                     ' · '.join(x for x in (best.get('section') or '', best['title']) if x)))
+    return headline + '.', items, contents, highlights
+
+
+def bib_changes(before, after):
+    """'field: old → new' for the fields a correction changes or adds, from two BibTeX entries."""
+    def fields(entry):
+        return {m.group(1).lower(): ' '.join(m.group(2).split())
+                for m in re.finditer(r'^\s*(\w+)\s*=\s*[{"](.*?)[}"]\s*,?\s*$', entry or '', re.M)}
+    old, new = fields(before), fields(after)
+    return ['%s: %s → %s' % (k, old[k], v) if k in old else '%s: + %s' % (k, v)
+            for k, v in new.items() if old.get(k) != v]
 
 
 def _refcheck(row):
@@ -117,10 +161,29 @@ def _refcheck(row):
     headline = ngettext('%(n)d reference to correct or check', '%(n)d references to correct or check', len(items)) % {'n': len(items)}
     if refs:
         headline += ' ' + ngettext('out of %(n)d', 'out of %(n)d', refs) % {'n': refs}
-    claims = len(result.get('open_claims') or [])
+    claims = result.get('open_claims') or []
     if claims:
-        headline += ', ' + ngettext('%(n)d sentence whose citation to check', '%(n)d sentences whose citation to check', claims) % {'n': claims}
-    return headline + '.', items
+        headline += ', ' + ngettext('%(n)d sentence whose citation to check', '%(n)d sentences whose citation to check', len(claims)) % {'n': len(claims)}
+    corrections = result.get('corrections') or {}
+    checked = result.get('claims_checked') if isinstance(result.get('claims_checked'), int) else 0
+    kinds = sorted((result.get('kinds') or {}).items(), key=lambda kv: refcheck.LEVELS.index(next(
+        (i['level'] for p in result['active'] for i in p['active'] if i['kind'] == kv[0]), refcheck.LEVELS[-1])))
+    contents = ['%s (%d)' % (refcheck.KIND_LABELS.get(kind, kind), n) for kind, n in kinds[:4]]
+    contents += [x for x in (
+        corrections and ngettext('%(n)d corrected BibTeX entry, ready to paste', '%(n)d corrected BibTeX entries, ready to paste', len(corrections)) % {'n': len(corrections)},
+        checked and ngettext('%(n)d citation checked against the paper it cites', '%(n)d citations checked against the papers they cite', checked) % {'n': checked},
+        result.get('undefined') and ngettext('%(n)d cited key missing from the .bib', '%(n)d cited keys missing from the .bib', len(result['undefined'])) % {'n': len(result['undefined'])},
+        _('A follow-up of your references until your paper is published')) if x]
+    highlights = []
+    contradicted = next((c for c in claims if c.get('verdict') == 'contradicted' and c.get('reason')), None)
+    if contradicted:
+        highlights.append(_highlight(_('A citation the cited paper contradicts'), contradicted['sentence'], contradicted['reason'], quote=True))
+    for key, correction in corrections.items():
+        changed = bib_changes(correction.get('before'), correction.get('after'))
+        if changed:
+            highlights.append(_highlight(_('A corrected entry'), ' · '.join(changed[:3]), key))
+            break
+    return headline + '.', items, contents, highlights
 
 
 def _literature(row):
@@ -135,7 +198,23 @@ def _literature(row):
     if themes:
         headline += ' ' + ngettext('in %(n)d theme', 'in %(n)d themes', themes) % {'n': themes}
     question = result.get('title') or result.get('question') or ''
-    return headline + (' · ' + _('“%(title)s”') % {'title': question} if question else '') + '.', items
+    overview, consensus = result.get('overview') or [], result.get('consensus') or []
+    disagreements, gaps = result.get('disagreements') or [], result.get('gaps') or []
+    contents = [x for x in (
+        overview and _('A synthesis, each sentence with its papers'),
+        themes and ngettext('%(n)d theme with its findings', '%(n)d themes with their findings', themes) % {'n': themes},
+        consensus and ngettext('%(n)d point of consensus', '%(n)d points of consensus', len(consensus)) % {'n': len(consensus)},
+        disagreements and ngettext('%(n)d disagreement, each side with its papers', '%(n)d disagreements, each side with its papers', len(disagreements)) % {'n': len(disagreements)},
+        gaps and ngettext('%(n)d open question', '%(n)d open questions', len(gaps)) % {'n': len(gaps)},
+        _('Each statement with the quoted sentence of its paper')) if x]
+    highlights = []
+    if overview:
+        highlights.append(_highlight(_('The synthesis'), overview[0]['text']))
+    if disagreements:
+        highlights.append(_highlight(_('A disagreement between the papers'), disagreements[0]['text']))
+    elif gaps:
+        highlights.append(_highlight(_('An open question'), gaps[0]['text']))
+    return headline + (' · ' + _('“%(title)s”') % {'title': question} if question else '') + '.', items, contents, highlights
 
 
 READERS = {'teams': _teams, 'missed': _missed, 'refcheck': _refcheck, 'literature': _literature}
@@ -146,7 +225,8 @@ def greyed(count):
 
 
 def teaser(row, shown=SHOWN):
-    """{'kind', 'headline', 'items' (shown in full), 'hidden', 'greyed', 'path'} of a finished result, else None."""
+    """{'kind', 'headline', 'contents' (what the result holds besides its list), 'highlights' (passages of it),
+    'items' (shown in full), 'hidden', 'greyed', 'path', 'name', 'plus'} of a finished result, else None."""
     if row is None or row.status != 'done' or row.kind not in READERS:
         return None
     try:
@@ -155,10 +235,10 @@ def teaser(row, shown=SHOWN):
         return None
     if not found:
         return None
-    headline, items = found
+    headline, items, contents, highlights = found
     hidden = max(len(items) - shown, 0)
     from .premium_tools import TOOL_CHOICES
-    return {'kind': row.kind, 'headline': headline, 'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden),
+    return {'kind': row.kind, 'headline': headline, 'contents': contents, 'highlights': highlights, 'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden),
             'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[row.kind], 'plus': row.kind in access.PLUS_TOOLS}
 
 

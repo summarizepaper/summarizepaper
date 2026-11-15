@@ -14,7 +14,9 @@ from summarizer.test_tools import ToolsTestCase
 def missed_result(n=5):
     return {'version': 2, 'title': 'Clouds on hot planets', 'searched_on': '2026-11-10',
             'items': [{'key': '2101.0000%dv1' % i, 'title': 'Paper number %d' % i, 'authors': 'Lee et al.', 'year': 2025,
-                       'importance': 'high' if i < 2 else 'low', 'relation': 'Same question, other telescope %d.' % i}
+                       'importance': 'high' if i < 2 else 'low', 'relation': 'Same question, other telescope %d.' % i,
+                       'position': 'Cite it as the first detection %d.' % i, 'section': 'Introduction',
+                       'draft_quote': 'A secret sentence of the draft %d.' % i}
                       for i in range(n)]}
 
 
@@ -53,6 +55,8 @@ class TeaserTests(ToolsTestCase):
         self.assertNotIn('other telescope 4', html)
         self.assertIn('3 more results hidden', html)
         self.assertIn('/en/premium/', html)
+        self.assertIn('How to position your work against each one', html)
+        self.assertNotIn('secret sentence', html)  # never the draft's own sentences
         # nor does the status API give the whole result away
         self.assertEqual(self.client_for(ann).get('/en/ai/%d/' % row.pk).status_code, 404)
         # its actions (share, mark...) stay closed: the page is the teaser again
@@ -199,9 +203,10 @@ class TeaserTests(ToolsTestCase):
         self.row(staff, showcase=True, content=missed_result(4))
         html = Client().get('/en/premium/').content.decode()
         self.assertIn('Real results, before you subscribe', html)
-        self.assertIn('Paper number 0', html)
+        self.assertIn('Cite it as the first detection 0.', html)  # what the tool writes, not only its list
+        self.assertIn('Where to cite each one, section by section', html)
         self.assertNotIn('Paper number 1', html)
-        self.assertIn('3 more results hidden', html)
+        self.assertNotIn('secret sentence', html)
 
     def test_the_paper_page_shows_the_first_change_of_its_latest_version(self):
         from unittest import mock
@@ -224,3 +229,8 @@ class TeaserTests(ToolsTestCase):
         paid = self.client_for(self.user('bob', paid=True)).get('/en/paper/2101.00001v3/').content.decode()
         self.assertNotIn('more changes, and whether', paid)
         self.assertIsNone(teasers.version_changes(None, '2101.00001v1'))
+
+    def test_a_correction_says_which_fields_change(self):
+        before = '@article{k,\n  title={A},\n  year={2016}\n}'
+        after = '@article{k,\n  title = {A},\n  year = {2017},\n  doi = {10.1/x}\n}'
+        self.assertEqual(teasers.bib_changes(before, after), ['year: 2016 → 2017', 'doi: + 10.1/x'])

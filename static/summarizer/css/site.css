@@ -1404,3 +1404,9 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .around-greyed span { display: inline-block; width: 92px; height: 12px; border-radius: 6px; background: var(--border); }
 .teaser-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-bottom: 32px; }
 .teaser-grid .teaser { margin: 0; }
+.teaser-contents { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.teaser-contents li { padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--text); font-size: 13px; line-height: 1.4; }
+.teaser-highlight { margin: 0 0 12px; padding: 12px 14px; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--bg-soft); overflow-wrap: anywhere; }
+.teaser-highlight p, .teaser-highlight blockquote { margin: 4px 0 0; }
+.teaser-highlight blockquote { font-style: italic; }
+.teaser-highlight-label { display: block; margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text-muted); }
