@@ -20,10 +20,16 @@ from .models import Generated
 SHOWN = 2  # results shown in full; the others are counted and greyed
 GREYED_MAX = 3  # greyed rows drawn, whatever the count
 TRIAL_TOOLS = ('teams', 'missed', 'refcheck')  # the least costly of the Premium tools that read a whole search
-SHOWCASE_TOOLS = ('teams', 'missed', 'refcheck', 'literature')
-PATHS = {'teams': 'teams', 'missed': 'missed', 'refcheck': 'refcheck', 'literature': 'literature-review'}
+# The kinds of result an example can be, in the order of the Premium page; the tool of each (premium_tools)
+SHOWCASE_TOOLS = ('teams', 'missed', 'refcheck', 'literature', 'slides_v3', 'compare', 'scoop_example', 'citation_example')
+TOOL_OF = {'slides_v3': 'journal_club', 'compare': 'collections', 'scoop_example': 'scoops', 'citation_example': 'citations'}
+KIND_OF = {tool: kind for kind, tool in TOOL_OF.items()}
+PATHS = {'teams': 'teams', 'missed': 'missed', 'refcheck': 'refcheck', 'literature': 'literature-review',
+         'slides_v3': 'journal-club', 'compare': 'collections', 'scoop_example': 'scoops', 'citation_example': 'citations'}
 GUIDES = {'teams': 'find-research-teams-by-topic', 'missed': 'what-did-i-miss-uncited-papers',
-          'refcheck': 'overleaf-bibliography-check', 'literature': 'literature-review-from-a-research-question'}
+          'refcheck': 'overleaf-bibliography-check', 'literature': 'literature-review-from-a-research-question',
+          'slides_v3': 'journal-club-slides-from-a-paper', 'compare': 'organize-research-paper-collections',
+          'scoop_example': 'scoop-watch-research-project', 'citation_example': 'track-research-paper-citations'}
 # The fields an example can come from (Generated.showcase_field): a visitor sees the one of the papers they read
 FIELDS = (('astro', pgettext_lazy('research field', 'Astrophysics')), ('cs', pgettext_lazy('research field', 'Computer science and AI')),
           ('bio', pgettext_lazy('research field', 'Biology and medicine')))
@@ -107,10 +113,16 @@ def visitor_field(request):
     return remembered if remembered in names else DEFAULT_FIELD
 
 
+def examples_of(**filters):
+    """The results marked as examples: a staff account's, or one shared by every reader (a journal club deck), never
+    the private result of anybody else."""
+    from django.db.models import Q
+    return Generated.objects.filter(Q(user__is_staff=True) | Q(user__isnull=True), showcase=True, status='done', **filters)
+
+
 def showcase(kind, lang, field=''):
-    """The example of a tool: of this field and language first, then of this field, then of this language, then any;
-    only from a staff account's result."""
-    rows = Generated.objects.filter(kind=kind, showcase=True, status='done', user__is_staff=True).order_by('-updated')
+    """The example of a tool: of this field and language first, then of this field, then of this language, then any."""
+    rows = examples_of(kind=kind).order_by('-updated')
     for chosen in (rows.filter(showcase_field=field, lang=lang), rows.filter(showcase_field=field), rows.filter(lang=lang), rows):
         row = chosen.first()
         if row is not None:
@@ -120,8 +132,7 @@ def showcase(kind, lang, field=''):
 
 def fields_shown(kinds):
     """[(code, name)] of the fields with an example of one of these tools."""
-    have = set(Generated.objects.filter(kind__in=kinds, showcase=True, status='done', user__is_staff=True)
-               .values_list('showcase_field', flat=True))
+    have = set(examples_of(kind__in=kinds).values_list('showcase_field', flat=True))
     return [(code, name) for code, name in FIELDS if code in have]
 
 
@@ -297,7 +308,110 @@ def _literature(row):
     return headline + (' · ' + _('“%(title)s”') % {'title': question} if question else '') + '.', items, contents, highlights
 
 
-READERS = {'teams': _teams, 'missed': _missed, 'refcheck': _refcheck, 'literature': _literature}
+def _slides(row):
+    from . import slides
+    deck = slides.normalized(row)
+    pages = deck.get('pages') or []
+    if not pages:
+        return None
+    paper = (deck.get('papers') or [{}])[0]
+    headline = ngettext('%(n)d slide for a %(m)d-minute talk', '%(n)d slides for a %(m)d-minute talk', len(pages)) % {
+        'n': len(pages), 'm': deck.get('duration') or 20} + ' · ' + _('“%(title)s”') % {'title': paper.get('title') or deck.get('title', '')}
+    kinds = {p.get('kind') for p in pages}
+    sourced = [p for p in pages if p.get('kind') == 'content' and any(c.get('verified') for c in p.get('sources') or [])]
+    figures = [p for p in pages if p.get('figure')]
+    contents = [x for x in (
+        sourced and _('Each point with its passage of the paper'),
+        'columns' in kinds and _('Earlier work and what came next, strengths and limits stated by the authors'),
+        _('Where the paper stands: published, corrected, newer version'),
+        figures and ngettext('%(n)d figure of the paper, with its credit', '%(n)d figures of the paper, with their credit', len(figures)) % {'n': len(figures)},
+        deck.get('qa') and ngettext('%(n)d hard question to prepare', '%(n)d hard questions to prepare', len(deck['qa'])) % {'n': len(deck['qa'])},
+        _('Presenter view, PowerPoint, Beamer and a link to share')) if x]
+    highlights = []
+    if sourced:
+        page = sourced[0]
+        check = next(c for c in page['sources'] if c.get('verified'))
+        highlights.append(_highlight(_('A slide'), ' · '.join(page.get('bullets', [])[:3]), page['title'],
+                                     proof=_proof(check.get('quote'), paper.get('title'), paper.get('id'))))
+    items = [_item(p.get('title') or '', ' · '.join(p.get('bullets', [])[:1]) if p.get('kind') == 'content' else '') for p in pages]
+    return headline, items, contents, highlights
+
+
+def _compare(row):
+    from . import comparison
+    data = comparison.display(row.data(), row.lang)
+    rows, cols = data['rows'], data['columns']
+    if len(rows) < 2:
+        return None
+    headline = _('%(n)d papers compared on %(c)d columns') % {'n': len(rows), 'c': len(cols)} + '.'
+    contents = [x for x in (
+        _('Columns: %(names)s') % {'names': ', '.join(str(label) for _code, label in cols)},
+        data['filled'] and _('%(q)d of the %(f)d cells with their passage of the paper') % {'q': data['quoted'], 'f': data['filled']},
+        data['agreements'] and ngettext('%(n)d point where they agree', '%(n)d points where they agree', len(data['agreements'])) % {'n': len(data['agreements'])},
+        data['disagreements'] and ngettext('%(n)d point where they disagree', '%(n)d points where they disagree', len(data['disagreements'])) % {'n': len(data['disagreements'])},
+        data['gaps'] and ngettext('%(n)d question none of them addresses', '%(n)d questions none of them addresses', len(data['gaps'])) % {'n': len(data['gaps'])},
+        _('Cells you correct by hand, CSV export, a chat with the papers')) if x]
+    highlights = []
+    for name, label in (('disagreements', _('Where the papers disagree')), ('agreements', _('Where the papers agree'))):
+        finding = next((f for f in data[name] if f['passages']), None)
+        if finding:
+            passage = finding['passages'][0]
+            source = rows[passage['n'] - 1]
+            highlights.append(_highlight(label, finding['text'], '', proof=_proof(
+                passage['quote'], '%s · %s' % (source['title'], passage['label']), source['arxiv_id'])))
+            break
+    items = []
+    for r in rows:
+        cell = next((c for c in r['cells'] if not c['missing']), None)
+        items.append(_item(r['title'], '%s: %s' % (dict(cols).get(cell['code'], ''), cell['text']) if cell else ''))
+    return headline, items, contents, highlights
+
+
+OVERLAP_LABELS = {'high': _lazy('Strong overlap'), 'partial': _lazy('Partial overlap')}
+
+
+def _scoop(row):
+    data = row.data()
+    matches = data.get('matches') or []
+    if not matches:
+        return None
+    high = sum(1 for m in matches if m.get('overlap') == 'high')
+    headline = ngettext('%(n)d new paper close to the project “%(title)s”, found in the announcements of its first days',
+                        '%(n)d new papers close to the project “%(title)s”, found in the announcements of its first days',
+                        len(matches)) % {'n': len(matches), 'title': data.get('project', '')}
+    contents = [x for x in (
+        high and ngettext('%(n)d strong overlap, emailed the day it is announced', '%(n)d strong overlaps, emailed the day they are announced', high) % {'n': high},
+        _('How close it is on each facet: question, method, data, results'),
+        _('What it shares with your project and what stays your own'),
+        _('What to do: cite it, set your project apart, contact the authors, hurry'),
+        _('The prior art of the last three years, and the new papers of the teams you name')) if x]
+    best = matches[0]
+    highlights = [_highlight(str(OVERLAP_LABELS.get(best.get('overlap'), '')), best.get('shared') or '', best.get('title') or '')]
+    if best.get('original'):
+        highlights.append(_highlight(_('What stays your own'), best['original']))
+    items = [_item(m.get('title') or '', str(OVERLAP_LABELS.get(m.get('overlap'), '')), m.get('shared') or '') for m in matches]
+    return headline, items, contents, highlights, {'email': data.get('html', ''), 'email_subject': data.get('subject', '')}
+
+
+def _citation(row):
+    data = row.data()
+    cites = data.get('items') or []
+    if not cites:
+        return None
+    headline = ngettext('%(n)d new paper citing “%(title)s”', '%(n)d new papers citing “%(title)s”', len(cites)) % {
+        'n': len(cites), 'title': data.get('paper', '')}
+    contents = [_('What each one does with it: questions it, supports it, builds on it, uses it or mentions it'),
+                _('The sentences that cite it, read in the citing paper'),
+                _('Self-citations apart, and an email at once when a paper questions it'),
+                _('Every day, week or month, for your papers and those you follow')]
+    best = next((c for c in cites if c.get('note')), None)
+    highlights = [_highlight(best.get('label') or '', best['note'], best.get('title') or '')] if best else []
+    items = [_item(c.get('title') or '', c.get('label') or '', c.get('note') or '') for c in cites]
+    return headline, items, contents, highlights, {'email': data.get('html', ''), 'email_subject': data.get('subject', '')}
+
+
+READERS = {'teams': _teams, 'missed': _missed, 'refcheck': _refcheck, 'literature': _literature,
+           'slides_v3': _slides, 'compare': _compare, 'scoop_example': _scoop, 'citation_example': _citation}
 
 
 def greyed(count):
@@ -315,13 +429,16 @@ def teaser(row, shown=SHOWN):
         return None
     if not found:
         return None
-    headline, items, contents, highlights = found
+    headline, items, contents, highlights = found[:4]
+    extras = found[4] if len(found) > 4 else {}
     lead = next((h for h in highlights if h.get('proof')), highlights[0] if highlights else None)
     hidden = max(len(items) - shown, 0)
     from .premium_tools import TOOL_CHOICES
-    return {'kind': row.kind, 'headline': headline, 'contents': contents, 'highlights': highlights[:2], 'lead': lead,
-            'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden),
-            'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[row.kind], 'plus': row.kind in access.PLUS_TOOLS,
+    tool = TOOL_OF.get(row.kind, row.kind)
+    return {'kind': row.kind, 'tool': tool, 'headline': headline, 'contents': contents, 'highlights': highlights[:2], 'lead': lead,
+            'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden), 'trial': tool in TRIAL_TOOLS,
+            'email': extras.get('email', ''), 'email_subject': extras.get('email_subject', ''),
+            'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[tool], 'plus': tool in access.PLUS_TOOLS,
             'guide': GUIDES.get(row.kind, ''), 'quality': QUALITY.get(row.kind, ''), 'field': row.showcase_field,
             'demo': row.showcase}
 
@@ -346,14 +463,15 @@ def examples(request):
             'example_field': field, 'example_fields': fields_shown(SHOWCASE_TOOLS)}
 
 
-def page_context(request, kind):
-    """What a tool's page needs for its example and its call to action."""
+def page_context(request, tool):
+    """What a tool's page needs for its example and its call to action (tool: a key of premium_tools)."""
     from django.utils.translation import get_language
     field = visitor_field(request)
+    kind = KIND_OF.get(tool, tool)
     example = teaser(showcase(kind, get_language(), field)) if kind in SHOWCASE_TOOLS else None
     return {'example': example, 'example_field': field,
-            'example_fields': fields_shown([kind]) if example else [], 'quality': QUALITY.get(kind, ''),
-            'offer': audience(request.user, kind), 'trial_open': trial_open(request.user, kind)}
+            'example_fields': fields_shown([kind]) if example else [], 'quality': QUALITY.get(tool, ''),
+            'offer': audience(request.user, tool), 'trial_open': trial_open(request.user, tool)}
 
 
 # --- the paper page: who signs the papers around it ------------------------------------

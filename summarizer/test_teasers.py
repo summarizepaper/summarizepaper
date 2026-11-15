@@ -276,3 +276,51 @@ class TeaserTests(ToolsTestCase):
         self.assertIn('/en/paper/2101.00000v1/', html)
         self.assertIn('/en/guides/what-did-i-miss-uncited-papers/', html)
         self.assertIn('Measured in November 2026', Client().get('/en/conference/').content.decode())
+
+    def test_the_four_examples_of_slides_tables_and_alert_emails(self):
+        staff = self.user('staff')
+        staff.is_staff = True
+        staff.save()
+        deck = {'generation_version': 3, 'title': 'Clouds', 'duration': 20, 'papers': [{'id': '2101.00001v1', 'title': 'Clouds on a hot planet'}],
+                'qa': [{'q': 'Why?'}], 'pages': [
+                    {'kind': 'title', 'title': 'Clouds on a hot planet', 'bullets': ['Ann Lee'], 'sources': []},
+                    {'kind': 'content', 'title': 'What they found', 'bullets': ['Thick clouds at the terminator'],
+                     'sources': [{'verified': True, 'quote': 'We detect thick clouds at the terminator.'}]},
+                    {'kind': 'content', 'title': 'Method', 'bullets': ['Transit spectra'], 'sources': []}]}
+        Generated.objects.create(kind='slides_v3', key='2101.00001v1', lang='en', status='done', showcase=True, content=json.dumps(deck))
+        html = Client().get('/en/journal-club/').content.decode()
+        self.assertIn('3 slides for a 20-minute talk', html)
+        self.assertIn('We detect thick clouds at the terminator.', html)
+        self.assertIn('Create a free account, then Premium+ runs it on your own work.', html)
+        self.assertNotIn('your first search with this tool is free', html)
+        table = {'version': 2, 'template': 'general', 'columns': [['question', ''], ['method', '']], 'ids': ['a', 'b'],
+                 'rows': [{'arxiv_id': 'a', 'title': 'Paper A', 'source': 'full_text', 'cells': {
+                              'question': {'text': 'Clouds?', 'quote': 'We ask about clouds.'}, 'method': {'text': 'Spectra', 'quote': ''}}},
+                          {'arxiv_id': 'b', 'title': 'Paper B', 'source': 'abstract', 'cells': {
+                              'question': {'text': 'Hazes?', 'quote': 'We ask about hazes.'}, 'method': {'text': 'Imaging', 'quote': ''}}}],
+                 'agreements': [], 'gaps': [],
+                 'disagreements': [{'text': 'A finds clouds, B hazes.', 'papers': ['a', 'b'], 'columns': ['question']}]}
+        self.row(staff, kind='compare', showcase=True, content=table, trial=False)
+        html = self.client_for(self.user()).get('/en/collections/').content.decode()
+        self.assertIn('2 papers compared on 2 columns', html)
+        self.assertIn('A finds clouds, B hazes.', html)
+        self.assertIn('We ask about clouds.', html)
+        email = '<p>A paper close to your project</p>'
+        self.row(staff, kind='scoop_example', showcase=True, trial=False, content={
+            'project': 'Exomoons', 'subject': '1 close paper', 'html': email,
+            'matches': [{'title': 'Moons by timing', 'overlap': 'high', 'shared': 'Same method.', 'original': 'Your data.'},
+                        {'title': 'Other', 'overlap': 'partial', 'shared': 'Same object.', 'original': ''}]})
+        html = Client().get('/en/scoops/').content.decode()
+        self.assertIn('2 new papers close to the project “Exomoons”', html)
+        self.assertIn('The email you would have received', html)
+        self.assertIn('srcdoc="&lt;p&gt;A paper close to your project&lt;/p&gt;"', html)  # escaped, in a sandbox
+        self.assertIn('sandbox=""', html)
+        self.row(staff, kind='citation_example', showcase=True, trial=False, content={
+            'paper': 'Planck 2018', 'subject': '3 new citations', 'html': email,
+            'items': [{'title': 'A tension', 'label': 'questions it', 'note': 'Finds a lower H0.'}]})
+        html = Client().get('/en/citations/').content.decode()
+        self.assertIn('1 new paper citing “Planck 2018”', html)
+        self.assertIn('Finds a lower H0.', html)
+        premium = Client().get('/en/premium/').content.decode()
+        for name in ('Journal club', 'Collections and comparison tables', 'Scoop watch', 'Citation alerts'):
+            self.assertIn(name, premium)

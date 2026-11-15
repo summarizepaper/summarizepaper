@@ -24,6 +24,7 @@
   </header>
 
   {% if anonymous or not paid %}
+    {% if example %}{% include 'summarizer/tool_teaser.html' with t=example %}{% endif %}
     <h2>{% trans 'What you can do' %}</h2>
     <ul class="tool-features">
       <li>{% trans 'Follow all your papers at once from your ORCID iD or arXiv author identifier, and your new papers as they appear; or follow your team\'s papers or any paper: paste their arXiv identifiers or DOIs, or click "Tell me who cites it" on a paper page.' %}</li>
@@ -35,7 +36,8 @@
       <li>{% blocktrans with n=max_followed %}Up to {{ n }} papers followed.{% endblocktrans %}</li>
     </ul>
     <p class="muted">{% trans 'Useful to see who uses your results, spot a criticism early, or follow how a key paper of your field is received.' %}</p>
-    {% if anonymous %}
+    {% if example %}
+    {% elif anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
     {% else %}
       <div class="upsell"><p><a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>

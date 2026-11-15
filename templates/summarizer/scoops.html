@@ -58,6 +58,7 @@
   </header>
 
   {% if anonymous or not paid %}
+    {% if example %}{% include 'summarizer/tool_teaser.html' with t=example %}{% endif %}
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'Describe your project in a few paragraphs (question, method, data, expected results), or upload the PDF of your draft: an AI writes the description from it.' %}</li>
@@ -74,7 +75,8 @@
       <li>{% trans 'Your description stays private and is only used for the comparison. A PDF is read once and is not stored, unless you ask us to keep its text for the full-text comparisons.' %}</li>
     </ul>
     <p class="muted">{% trans 'Useful during a thesis or a long project, to know early that a competing team is close, cite it, and adjust how you present your work.' %}</p>
-    {% if anonymous %}
+    {% if example %}
+    {% elif anonymous %}
       {% include 'summarizer/tool_signup.html' with premium_tool=True %}
     {% else %}
       <div class="upsell"><p>{% trans 'Know the day a close paper comes out, not the day a reviewer tells you.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p></div>

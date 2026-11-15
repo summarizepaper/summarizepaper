@@ -1419,3 +1419,6 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .teaser-quality, .teaser-guide { margin: 0 0 10px; font-size: 14px; }
 .teaser-quality { color: var(--text-muted); }
 .teaser-quality i { color: var(--success); }
+.teaser-email { margin: 0 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.teaser-email summary { cursor: pointer; padding: 10px 12px; font-weight: 600; overflow-wrap: anywhere; }
+.teaser-email iframe { display: block; width: 100%; height: 520px; border: 0; border-top: 1px solid var(--border); background: #fff; }

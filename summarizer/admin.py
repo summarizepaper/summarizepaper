@@ -545,8 +545,10 @@ class ToolExampleAdmin(ModelAdmin):
     actions = ('show', 'hide')
 
     def get_queryset(self, request):
+        from django.db.models import Q
         from .teasers import SHOWCASE_TOOLS
-        return super().get_queryset(request).filter(kind__in=SHOWCASE_TOOLS, status='done', user__is_staff=True)
+        return super().get_queryset(request).filter(Q(user__is_staff=True) | Q(user__isnull=True, showcase=True),
+                                                    kind__in=SHOWCASE_TOOLS, status='done')
 
     def has_add_permission(self, request):
         return False
@@ -554,7 +556,7 @@ class ToolExampleAdmin(ModelAdmin):
     @admin.display(description='titre')
     def title(self, obj):
         data = obj.data()
-        return data.get('title') or data.get('topic') or data.get('question') or obj.key
+        return data.get('title') or data.get('topic') or data.get('question') or data.get('project') or data.get('paper') or obj.key
 
     @admin.action(description='Montrer comme exemple (un seul par outil, langue et domaine)')
     def show(self, request, queryset):

@@ -1021,7 +1021,9 @@ def preference(user):
 
 def citations_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/citations.html', {'anonymous': True, 'max_followed': MAX_FOLLOWED})
+        from . import teasers
+        return render(request, 'summarizer/citations.html', {'anonymous': True, 'max_followed': MAX_FOLLOWED,
+                                                              **teasers.page_context(request, 'citations')})
     paid = access.has_tool(request.user, 'citations')
     error, notice = None, None
     lang = get_language()
@@ -1103,7 +1105,9 @@ def citations_page(request):
     last_sent = (CitationAlertLog.objects.filter(user=request.user).values_list('sent', flat=True).first()
                  if paid and not history.paginator.count else None)
     from . import digest_bundle
+    from . import teasers
     return render(request, 'summarizer/citations.html', {
+        **teasers.page_context(request, 'citations'),
         'paid': paid, 'followed': followed, 'error': error, 'notice': notice, 'max_followed': MAX_FOLLOWED,
         'alert_history': history, 'last_unarchived_alert': last_sent,
         'pref': preference(request.user) if paid else None, 'every_choices': EVERY_CHOICES,

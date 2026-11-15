@@ -30,6 +30,7 @@
     <li><strong>Premium</strong> : {% trans 'the open questions of the collection, the papers it may be missing, where each paper was published and whether it was retracted, imports from Zotero, and an email when a paper of the collection is cited or updated.' %}</li>
   </ul>
   <p class="muted">{% blocktrans with n=limits.collections p=limits.papers pn=premium.collections pp=premium.papers %}Free: {{ n }} collections of {{ p }} papers. Premium: {{ pn }} collections of {{ pp }} papers.{% endblocktrans %}</p>
+  {% if example %}{% include 'summarizer/tool_teaser.html' with t=example offer='signup' %}{% endif %}
   {% include 'summarizer/tool_signup.html' %}
   {% else %}
   {% include 'summarizer/delete_notice.html' %}
@@ -75,6 +76,7 @@
   {% endif %}
 
   {% if not paid %}
+  {% if example %}<div style="margin-top:24px">{% include 'summarizer/tool_teaser.html' with t=example %}</div>{% endif %}
   <div class="upsell" style="margin-top:24px">
     <p><strong>{% trans 'With Premium' %}</strong>: {% trans 'a comparison table of each collection whose cells come with their source in the paper, the open questions, the papers it may be missing, retraction checks, citation and version alerts; up to 100 collections of 200 papers; and Zotero both ways.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Discover Premium' %}</a></p>
   </div>

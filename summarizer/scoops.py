@@ -979,7 +979,9 @@ def act(request, projects, action):
 
 def scoops_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/scoops.html', {'anonymous': True, 'max_projects': MAX_PROJECTS})
+        from . import teasers
+        return render(request, 'summarizer/scoops.html', {'anonymous': True, 'max_projects': MAX_PROJECTS,
+                                                           **teasers.page_context(request, 'scoops')})
     paid = access.has_tool(request.user, 'scoops')
     error = None
     projects = WatchedProject.objects.filter(user=request.user)
@@ -1034,7 +1036,9 @@ def scoops_page(request):
         project.working = not project.failed and (
             (not project.last_day and project.created > stale) or project.prior_status == 'pending'
             or any(m.deep_status == 'pending' for m in matches))
+    from . import teasers
     return render(request, 'summarizer/scoops.html', {
+        **teasers.page_context(request, 'scoops'),
         'paid': paid, 'projects': projects, 'error': error, 'max_projects': MAX_PROJECTS, 'min_chars': MIN_CHARS,
         'author_name': projects[0].author_name if projects else '',
         'collections': Collection.objects.filter(user=request.user).order_by('name') if paid else [],

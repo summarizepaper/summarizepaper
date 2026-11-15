@@ -24603,3 +24603,142 @@ msgstr[1] ""
 
 msgid "%(found)s; %(claims)s"
 msgstr "%(found)s ; %(claims)s"
+
+msgid "Each point with its passage of the paper"
+msgstr "Chaque point avec son passage de l’article"
+
+msgid ""
+"Earlier work and what came next, strengths and limits stated by the authors"
+msgstr ""
+"Les travaux antérieurs et ce qui a suivi, forces et limites énoncées par les"
+" auteurs"
+
+msgid "Where the paper stands: published, corrected, newer version"
+msgstr "Où en est l’article : publié, corrigé, nouvelle version"
+
+msgid "Presenter view, PowerPoint, Beamer and a link to share"
+msgstr "Vue présentateur, PowerPoint, Beamer et un lien à partager"
+
+msgid "A slide"
+msgstr "Une diapositive"
+
+msgid "%(n)d papers compared on %(c)d columns"
+msgstr "%(n)d articles comparés sur %(c)d colonnes"
+
+msgid "Columns: %(names)s"
+msgstr "Colonnes : %(names)s"
+
+msgid "%(q)d of the %(f)d cells with their passage of the paper"
+msgstr "%(q)d des %(f)d cellules avec leur passage de l’article"
+
+msgid "Cells you correct by hand, CSV export, a chat with the papers"
+msgstr ""
+"Cellules corrigeables à la main, export CSV, discussion avec les articles"
+
+msgid "Where the papers disagree"
+msgstr "Là où les articles divergent"
+
+msgid "How close it is on each facet: question, method, data, results"
+msgstr ""
+"Sa proximité sur chaque facette : question, méthode, données, résultats"
+
+msgid "What it shares with your project and what stays your own"
+msgstr "Ce qu’il partage avec votre projet et ce qui reste à vous"
+
+msgid ""
+"What to do: cite it, set your project apart, contact the authors, hurry"
+msgstr ""
+"Que faire : le citer, vous démarquer, contacter les auteurs, vous dépêcher"
+
+msgid ""
+"The prior art of the last three years, and the new papers of the teams you "
+"name"
+msgstr ""
+"L’état de l’art des trois dernières années, et les nouveaux articles des "
+"équipes que vous nommez"
+
+msgid "What stays your own"
+msgstr "Ce qui reste à vous"
+
+msgid ""
+"What each one does with it: questions it, supports it, builds on it, uses it"
+" or mentions it"
+msgstr ""
+"Ce que chacun en fait : le conteste, le soutient, s’appuie dessus, l’utilise"
+" ou le mentionne"
+
+msgid "The sentences that cite it, read in the citing paper"
+msgstr "Les phrases qui le citent, lues dans l’article citant"
+
+msgid "Self-citations apart, and an email at once when a paper questions it"
+msgstr ""
+"Les autocitations à part, et un email immédiat quand un article le conteste"
+
+msgid "Every day, week or month, for your papers and those you follow"
+msgstr ""
+"Chaque jour, semaine ou mois, pour vos articles et ceux que vous suivez"
+
+msgid "The email you would have received"
+msgstr "L’email que vous auriez reçu"
+
+msgid "Create a free account, then Premium+ runs it on your own work."
+msgstr ""
+"Créez un compte gratuit, puis Premium+ le lance sur vos propres travaux."
+
+msgid "Create a free account, then Premium runs it on your own work."
+msgstr ""
+"Créez un compte gratuit, puis Premium le lance sur vos propres travaux."
+
+msgid "%(n)d slide for a %(m)d-minute talk"
+msgid_plural "%(n)d slides for a %(m)d-minute talk"
+msgstr[0] "%(n)d diapositive pour un exposé de %(m)d minutes"
+msgstr[1] "%(n)d diapositives pour un exposé de %(m)d minutes"
+
+msgid "%(n)d figure of the paper, with its credit"
+msgid_plural "%(n)d figures of the paper, with their credit"
+msgstr[0] "%(n)d figure de l’article, avec son crédit"
+msgstr[1] "%(n)d figures de l’article, avec leur crédit"
+
+msgid "%(n)d hard question to prepare"
+msgid_plural "%(n)d hard questions to prepare"
+msgstr[0] "%(n)d question difficile à préparer"
+msgstr[1] "%(n)d questions difficiles à préparer"
+
+msgid "%(n)d point where they agree"
+msgid_plural "%(n)d points where they agree"
+msgstr[0] "%(n)d point d’accord"
+msgstr[1] "%(n)d points d’accord"
+
+msgid "%(n)d point where they disagree"
+msgid_plural "%(n)d points where they disagree"
+msgstr[0] "%(n)d point de désaccord"
+msgstr[1] "%(n)d points de désaccord"
+
+msgid "%(n)d question none of them addresses"
+msgid_plural "%(n)d questions none of them addresses"
+msgstr[0] "%(n)d question qu’aucun ne traite"
+msgstr[1] "%(n)d questions qu’aucun ne traite"
+
+msgid ""
+"%(n)d new paper close to the project “%(title)s”, found in the announcements"
+" of its first days"
+msgid_plural ""
+"%(n)d new papers close to the project “%(title)s”, found in the "
+"announcements of its first days"
+msgstr[0] ""
+"%(n)d nouvel article proche du projet « %(title)s », trouvé dans les "
+"annonces de ses premiers jours"
+msgstr[1] ""
+"%(n)d nouveaux articles proches du projet « %(title)s », trouvés dans les "
+"annonces de ses premiers jours"
+
+msgid "%(n)d strong overlap, emailed the day it is announced"
+msgid_plural "%(n)d strong overlaps, emailed the day they are announced"
+msgstr[0] "%(n)d fort recouvrement, envoyé par email le jour de son annonce"
+msgstr[1] ""
+"%(n)d forts recouvrements, envoyés par email le jour de leur annonce"
+
+msgid "%(n)d new paper citing “%(title)s”"
+msgid_plural "%(n)d new papers citing “%(title)s”"
+msgstr[0] "%(n)d nouvel article qui cite « %(title)s »"
+msgstr[1] "%(n)d nouveaux articles qui citent « %(title)s »"

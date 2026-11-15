@@ -324,7 +324,9 @@ def _page(collection, tab='', **params):
 
 def collections_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/collections.html', {'anonymous': True, 'limits': FREE, 'premium': PREMIUM})
+        from . import teasers
+        return render(request, 'summarizer/collections.html', {'anonymous': True, 'limits': FREE, 'premium': PREMIUM,
+                                                               **teasers.page_context(request, 'collections')})
     paid = access.has_tool(request.user, 'collections')
     collections = list(Collection.objects.filter(user=request.user).prefetch_related('papers'))
     can_create = len(collections) < limits(paid)['collections']
@@ -338,8 +340,9 @@ def collections_page(request):
         c.shared = bool(c.share_token and (c.share_expires is None or c.share_expires > now))
         c.editors = c.members.count()
     joined = list(Collection.objects.filter(members__user=request.user).select_related('user').prefetch_related('papers'))
+    from . import teasers
     return render(request, 'summarizer/collections.html', {
-        'collections': collections, 'joined': joined, 'paid': paid, 'can_create': can_create, 'limits': limits(paid),
+        **(teasers.page_context(request, 'collections') if not paid else {}), 'collections': collections, 'joined': joined, 'paid': paid, 'can_create': can_create, 'limits': limits(paid),
         'premium': PREMIUM})
 
 

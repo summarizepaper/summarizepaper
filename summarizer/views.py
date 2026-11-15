@@ -1328,7 +1328,9 @@ def paper_tool_start(request, tool):
                 return redirect(reverse(tool, args=(key,)))
             return redirect(reverse('arxividpage', args=(key,)) + '#tools')
         return redirect(reverse('search_results') + '?' + urlencode({'q': query, 'src': 'all'}))
+    from . import teasers
     return render(request, 'summarizer/paper_tool_start.html', {
+        **(teasers.page_context(request, 'journal_club') if tool == 'slides' and not access.has_tool(request.user, 'journal_club') else {}),
         'tool_name': title, 'description': description, 'tool_route': tool,
         'examples': sorted(DEMO_KITS) if tool == 'presskit' else [],
         'recent_papers': ArxivPaper.objects.exclude(title__isnull=True).exclude(title='').order_by('-created')[:6],

@@ -6,6 +6,12 @@
   {% if t.contents %}<ul class="teaser-contents" aria-label="{% trans 'In the result' %}">{% for c in t.contents %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
   {% if compact %}{% if t.lead %}{% include 'summarizer/tool_teaser_highlight.html' with h=t.lead %}{% endif %}
   {% else %}{% for h in t.highlights %}{% include 'summarizer/tool_teaser_highlight.html' %}{% endfor %}{% endif %}
+  {% if t.email and not compact %}
+  <details class="teaser-email">
+    <summary data-funnel="teaser_email_open" data-tool="{{ t.tool }}">{% trans 'The email you would have received' %}{% if t.email_subject %} · <em>{{ t.email_subject }}</em>{% endif %}</summary>
+    <iframe srcdoc="{{ t.email }}" sandbox="" loading="lazy" title="{% trans 'The email you would have received' %}"></iframe>
+  </details>
+  {% endif %}
   {% if not compact %}
   <p class="teaser-highlight-label">{% trans 'The first results' %}</p>
   <ol class="teaser-list">
@@ -32,7 +38,7 @@
   {% else %}
   <div class="item-actions">
     {% if offer == 'signup' %}
-      <span>{% if t.kind == 'literature' %}{% trans 'Create a free account, then Premium+ runs it on your own question.' %}{% else %}{% trans 'Create a free account: your first search with this tool is free, its first results shown in full.' %}{% endif %}</span>
+      <span>{% if t.trial %}{% trans 'Create a free account: your first search with this tool is free, its first results shown in full.' %}{% elif t.plus %}{% trans 'Create a free account, then Premium+ runs it on your own work.' %}{% else %}{% trans 'Create a free account, then Premium runs it on your own work.' %}{% endif %}</span>
       {% include 'accounts/_google_button.html' with next=request.path inline=True funnel='teaser_signup_google' %}
       <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="teaser_signup" data-tool="{{ t.kind }}" data-placement="{% if own %}trial{% else %}teaser{% endif %}">{% trans 'Create a free account' %}</a>
       <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
