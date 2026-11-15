@@ -777,6 +777,9 @@ class Generated(models.Model):
     showcase = models.BooleanField('exemple sur la page de l’outil', default=False,
         help_text='Le début du résultat est montré à ceux qui n’ont pas l’outil (teasers.py). Seulement les résultats '
                   'd’un compte staff : jamais la recherche de quelqu’un d’autre.')
+    showcase_field = models.CharField('domaine de l’exemple', max_length=10, blank=True, default='',
+        choices=[('astro', 'Astrophysique'), ('cs', 'Informatique et IA'), ('bio', 'Biologie et médecine')],
+        help_text='Montré en priorité aux visiteurs de ce domaine (teasers.FIELDS).')
     trial = models.BooleanField('essai gratuit', default=False,
         help_text='La recherche offerte une fois par outil à un compte gratuit : il en voit les premiers résultats.')
     created = models.DateTimeField(auto_now_add=True)

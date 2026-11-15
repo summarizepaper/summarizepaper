@@ -195,7 +195,7 @@ def premium(request):
         'billing_currency': currency, 'billing_currencies': currencies(),
         'is_paid': paid, 'is_plus': plus,
         'features': features(),
-        'examples': teasers.examples(get_language()),
+        **teasers.examples(request),
         'trial_days': trial_days(request.user),
         'premium_activated': activated,
         'plan': plan,

@@ -1,0 +1,8 @@
+{% load i18n %}<div class="teaser-highlight">
+  <span class="teaser-highlight-label">{{ h.label }}</span>
+  {% if h.quote %}<blockquote>{{ h.text|truncatewords:60 }}</blockquote>{% else %}<p>{{ h.text|truncatewords:60 }}</p>{% endif %}
+  {% if h.meta %}<p class="meta">{% if h.quote %}→ {% endif %}{{ h.meta|truncatewords:30 }}</p>{% endif %}
+  {% if h.proof %}<div class="teaser-proof"><span class="teaser-proof-label">{% trans 'Its source' %}</span>
+    <q>{{ h.proof.quote|truncatewords:45 }}</q>
+    <span class="meta">— {% if h.proof.paper %}<a href="/{{ LANGUAGE_CODE }}/paper/{{ h.proof.paper }}/">{{ h.proof.title|truncatewords:16 }}</a>{% else %}{{ h.proof.title|truncatewords:16 }}{% endif %}</span></div>{% endif %}
+</div>

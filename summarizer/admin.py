@@ -537,9 +537,10 @@ admin.site.register(PaymentPlan, ModelAdmin)
 
 @admin.register(ToolExample)
 class ToolExampleAdmin(ModelAdmin):
-    list_display = ('kind', 'lang', 'title', 'user', 'showcase', 'created')
-    list_filter = ('kind', 'lang', 'showcase')
-    fields = ('kind', 'lang', 'user', 'title', 'showcase', 'created')
+    list_display = ('kind', 'lang', 'showcase_field', 'title', 'user', 'showcase', 'created')
+    list_filter = ('kind', 'lang', 'showcase_field', 'showcase')
+    list_editable = ('showcase_field',)
+    fields = ('kind', 'lang', 'user', 'title', 'showcase_field', 'showcase', 'created')
     readonly_fields = ('kind', 'lang', 'user', 'title', 'created')
     actions = ('show', 'hide')
 
@@ -555,10 +556,11 @@ class ToolExampleAdmin(ModelAdmin):
         data = obj.data()
         return data.get('title') or data.get('topic') or data.get('question') or obj.key
 
-    @admin.action(description='Montrer comme exemple (un seul par outil et par langue)')
+    @admin.action(description='Montrer comme exemple (un seul par outil, langue et domaine)')
     def show(self, request, queryset):
         for row in queryset:
-            Generated.objects.filter(kind=row.kind, lang=row.lang, showcase=True).exclude(pk=row.pk).update(showcase=False)
+            Generated.objects.filter(kind=row.kind, lang=row.lang, showcase_field=row.showcase_field,
+                                     showcase=True).exclude(pk=row.pk).update(showcase=False)
             Generated.objects.filter(pk=row.pk).update(showcase=True)
 
     @admin.action(description='Ne plus montrer comme exemple')

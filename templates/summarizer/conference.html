@@ -20,6 +20,7 @@
   </header>
 
   {% if anonymous or not paid %}
+    <p class="teaser-quality"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ quality }}</p>
     <h2>{% trans 'How it works' %}</h2>
     <ol class="tool-steps">
       <li>{% trans 'The program is read with the day, time, room, presenter and abstract of each talk: whole from an Indico event or a calendar feed (.ics), by an AI from any other page, PDF or text.' %}</li>

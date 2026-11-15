@@ -24482,3 +24482,48 @@ msgid "%(n)d open question"
 msgid_plural "%(n)d open questions"
 msgstr[0] "%(n)d question ouverte"
 msgstr[1] "%(n)d questions ouvertes"
+
+msgid "A point of consensus, with its source"
+msgstr "Un point de consensus, avec sa source"
+
+msgid "Example in"
+msgstr "Exemple en"
+
+msgid "Examples in"
+msgstr "Exemples en"
+
+msgid "See a complete example, explained step by step"
+msgstr "Voir un exemple complet, expliqué pas à pas"
+
+msgid "Its source"
+msgstr "Sa source"
+
+msgid ""
+"Measured in November 2026 on 52 citations annotated by hand: no false alarm "
+"and no miss, in English and French. An easy test set, which does not replace"
+" a check on your own manuscript."
+msgstr ""
+"Mesuré en novembre 2026 sur 52 citations annotées à la main : aucune fausse "
+"alerte et aucun oubli, en anglais et en français. Un jeu de test facile, qui"
+" ne remplace pas une vérification sur votre propre manuscrit."
+
+msgid ""
+"Measured in November 2026 on the program of ACAT 2024 (175 contributions): "
+"96 to 99% of the talks read, days and times right, and the 10 key talks of a"
+" test profile ranked first."
+msgstr ""
+"Mesuré en novembre 2026 sur le programme d’ACAT 2024 (175 contributions) : "
+"96 à 99 % des exposés lus, jours et horaires justes, et les 10 exposés clés "
+"d’un profil de test classés en tête."
+
+msgctxt "research field"
+msgid "Astrophysics"
+msgstr "astrophysique"
+
+msgctxt "research field"
+msgid "Computer science and AI"
+msgstr "informatique et IA"
+
+msgctxt "research field"
+msgid "Biology and medicine"
+msgstr "biologie et médecine"

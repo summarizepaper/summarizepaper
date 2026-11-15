@@ -39,7 +39,7 @@ from django.utils.crypto import constant_time_compare, salted_hmac
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
-from . import access, conference_import, digest, generated, library, missed, result_share, similar, sources
+from . import access, conference_import, digest, generated, library, missed, result_share, similar, sources, teasers
 from .models import (CitationCache, Collection, ConferenceMark, ConferenceMember, ConferenceProgram, FollowedPaper,
                      Generated, WatchedProject)
 
@@ -1110,7 +1110,8 @@ def ranking_options(request, projects, collections):
 
 def conference_page(request):
     if not request.user.is_authenticated:
-        return render(request, 'summarizer/conference.html', {'anonymous': True, 'per_day': PER_DAY})
+        return render(request, 'summarizer/conference.html', {'anonymous': True, 'per_day': PER_DAY,
+                                                              'quality': teasers.QUALITY['conference']})
     paid = access.has_tool(request.user, 'conference')
     projects = WatchedProject.objects.filter(user=request.user).exclude(description='')
     collections = Collection.objects.filter(user=request.user)
@@ -1141,6 +1142,7 @@ def conference_page(request):
     searches = Generated.objects.filter(kind='conference', user=request.user).order_by('-created')[:20]
     digests = list(request.user.digests.exclude(profile='').values_list('pk', 'profile'))
     return render(request, 'summarizer/conference.html', {
+        'quality': teasers.QUALITY['conference'],
         'paid': paid, 'error': error, 'searches': searches, 'projects': projects, 'collections': collections,
         'per_day': PER_DAY, 'form': form, 'digests': digests,
         'upload_max_bytes': missed.MAX_UPLOAD, 'upload_max_mb': missed.MAX_UPLOAD // (1024 * 1024),

@@ -1410,3 +1410,12 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .teaser-highlight p, .teaser-highlight blockquote { margin: 4px 0 0; }
 .teaser-highlight blockquote { font-style: italic; }
 .teaser-highlight-label { display: block; margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text-muted); }
+.teaser-fields { margin: 0 0 8px; font-size: 13px; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.teaser-fields a { color: var(--accent); text-decoration: none; padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; }
+.teaser-fields a[aria-current] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.teaser-proof { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 14px; }
+.teaser-proof q { display: block; margin: 2px 0; font-style: italic; }
+.teaser-proof-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text-muted); }
+.teaser-quality, .teaser-guide { margin: 0 0 10px; font-size: 14px; }
+.teaser-quality { color: var(--text-muted); }
+.teaser-quality i { color: var(--success); }

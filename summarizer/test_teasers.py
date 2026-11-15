@@ -234,3 +234,45 @@ class TeaserTests(ToolsTestCase):
         before = '@article{k,\n  title={A},\n  year={2016}\n}'
         after = '@article{k,\n  title = {A},\n  year = {2017},\n  doi = {10.1/x}\n}'
         self.assertEqual(teasers.bib_changes(before, after), ['year: 2016 → 2017', 'doi: + 10.1/x'])
+
+    def test_the_example_follows_the_visitors_field(self):
+        staff = self.user('staff')
+        staff.is_staff = True
+        staff.save()
+        astro = missed_result(3)
+        astro['items'][0]['position'] = 'Cite it for the exomoons.'
+        bio = missed_result(3)
+        bio['items'][0]['position'] = 'Cite it for the protein folding.'
+        self.row(staff, showcase=True, showcase_field='astro', content=astro)
+        self.row(staff, showcase=True, showcase_field='bio', content=bio)
+        self.assertEqual(teasers.field_of('astro-ph.EP'), 'astro')
+        self.assertEqual(teasers.field_of('cs.CL'), 'cs')
+        self.assertEqual(teasers.field_of('q-bio.NC'), 'bio')
+        self.assertEqual(teasers.field_of('biorxiv'), 'bio')
+        self.assertEqual(teasers.field_of('math.AP'), '')
+        client = Client()
+        html = client.get('/en/missed/?ex=bio').content.decode()
+        self.assertIn('protein folding', html)
+        self.assertIn('?ex=astro#example', html)  # the other fields, one click away
+        html = client.get('/en/missed/?ex=astro').content.decode()
+        self.assertIn('exomoons', html)
+        # without a choice: the field of the last paper read, else the default (cs: none here, so another one)
+        self.assertIn('Cite it for the', client.get('/en/missed/').content.decode())
+        session = client.session
+        session['example_field'] = 'bio'
+        session.save()
+        self.assertIn('protein folding', client.get('/en/missed/').content.decode())
+        self.assertIn('protein folding', client.get('/en/premium/').content.decode())
+
+    def test_an_example_shows_its_source_its_measured_quality_and_a_complete_example(self):
+        staff = self.user('staff')
+        staff.is_staff = True
+        staff.save()
+        result = missed_result(3)
+        result['items'][0]['abstract_quote'] = 'We detect the gap in CO emission.'
+        self.row(staff, showcase=True, content=result)
+        html = Client().get('/en/missed/').content.decode()
+        self.assertIn('We detect the gap in CO emission.', html)
+        self.assertIn('/en/paper/2101.00000v1/', html)
+        self.assertIn('/en/guides/what-did-i-miss-uncited-papers/', html)
+        self.assertIn('Measured in November 2026', Client().get('/en/conference/').content.decode())

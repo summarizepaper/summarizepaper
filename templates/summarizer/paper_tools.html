@@ -46,7 +46,7 @@
   </div>
 
   <div class="tools-advanced">
-  {% paper_around arxiv_id paper.title as around %}
+  {% paper_around arxiv_id paper.title paper.category as around %}
   <h4>{% trans 'Advanced tools' %} <span class="badge-premium">Premium</span></h4>
   <p class="tools-pitch">{% trans 'For researchers who follow a field closely: citation alerts, journal-club slides, version comparison and Zotero export.' %} {% if not paid %}<a href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="paper_premium_click">{% trans 'Discover Premium' %}</a>{% endif %}</p>
 

@@ -166,6 +166,7 @@
   {% if examples %}
   <h2 id="examples" data-funnel-view="premium_examples_view">{% trans 'Real results, before you subscribe' %}</h2>
   <p class="muted">{% trans 'The start of a real search with each tool; a free account runs its first search with most of them for free.' %}</p>
+  {% if example_fields|length > 1 %}<p class="teaser-fields">{% trans 'Examples in' %}{% for code, name in example_fields %} <a href="?ex={{ code }}#examples" rel="nofollow"{% if code == example_field %} aria-current="true"{% endif %} data-funnel="teaser_field" data-placement="offer">{{ name }}</a>{% endfor %}</p>{% endif %}
   <div class="teaser-grid">{% for t in examples %}{% include 'summarizer/tool_teaser.html' with compact=True %}{% endfor %}</div>
   {% endif %}
 

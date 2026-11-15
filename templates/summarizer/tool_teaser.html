@@ -1,15 +1,11 @@
 {% load i18n %}{# The first results of a tool, the others greyed: t (teasers.teaser), offer (teasers.audience), own (the visitor's own result) #}
-<section class="card section-card teaser"{% if not compact %} data-funnel-view="teaser_{% if own %}trial{% else %}example{% endif %}_view"{% endif %}>
+<section class="card section-card teaser"{% if not compact and not own %} id="example"{% endif %}{% if not compact %} data-funnel-view="teaser_{% if own %}trial{% else %}example{% endif %}_view"{% endif %}>
   <p class="teaser-kicker">{% if compact %}{{ t.name }}{% if t.plus %} · Premium+{% endif %}{% elif own %}{% trans 'Your free try: a preview of your result' %}{% else %}{% trans 'A real example: what you get' %}{% endif %}</p>
+  {% if not compact and not own and example_fields|length > 1 %}<p class="teaser-fields">{% trans 'Example in' %}{% for code, name in example_fields %} <a href="?ex={{ code }}#example" rel="nofollow"{% if code == t.field %} aria-current="true"{% endif %} data-funnel="teaser_field" data-tool="{{ t.kind }}">{{ name }}</a>{% endfor %}</p>{% endif %}
   <p class="teaser-headline"><strong>{{ t.headline }}</strong></p>
   {% if t.contents %}<ul class="teaser-contents" aria-label="{% trans 'In the result' %}">{% for c in t.contents %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
-  {% for h in t.highlights %}{% if not compact or forloop.first %}
-  <div class="teaser-highlight">
-    <span class="teaser-highlight-label">{{ h.label }}</span>
-    {% if h.quote %}<blockquote>{{ h.text|truncatewords:60 }}</blockquote>{% else %}<p>{{ h.text|truncatewords:60 }}</p>{% endif %}
-    {% if h.meta %}<p class="meta">{% if h.quote %}→ {% endif %}{{ h.meta|truncatewords:30 }}</p>{% endif %}
-  </div>
-  {% endif %}{% endfor %}
+  {% if compact %}{% if t.lead %}{% include 'summarizer/tool_teaser_highlight.html' with h=t.lead %}{% endif %}
+  {% else %}{% for h in t.highlights %}{% include 'summarizer/tool_teaser_highlight.html' %}{% endfor %}{% endif %}
   {% if not compact %}
   <p class="teaser-highlight-label">{% trans 'The first results' %}</p>
   <ol class="teaser-list">
@@ -25,6 +21,10 @@
   {% if t.hidden %}
   <p class="teaser-more"><i class="fas fa-lock" aria-hidden="true"></i>
     {% blocktrans count n=t.hidden %}{{ n }} more result hidden{% plural %}{{ n }} more results hidden{% endblocktrans %}</p>
+  {% endif %}
+  {% if not own %}
+  {% if t.quality %}<p class="teaser-quality"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ t.quality }}</p>{% endif %}
+  {% if t.guide and LANGUAGE_CODE in 'en fr' %}<p class="teaser-guide"><a href="/{{ LANGUAGE_CODE }}/guides/{{ t.guide }}/" data-funnel="teaser_guide" data-tool="{{ t.kind }}" data-placement="teaser">{% trans 'See a complete example, explained step by step' %} →</a></p>{% endif %}
   {% endif %}
   {% endif %}
   {% if compact %}

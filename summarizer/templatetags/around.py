@@ -6,7 +6,7 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def paper_around(context, arxiv_id, title=''):
+def paper_around(context, arxiv_id, title='', category=''):
     from urllib.parse import quote
     from django.utils.translation import get_language
     from summarizer import neighbours, teasers
@@ -17,6 +17,7 @@ def paper_around(context, arxiv_id, title=''):
         data = {}
     request = context.get('request')
     user = getattr(request, 'user', None)
+    teasers.remember_field(request, category)
     citing = (data.get('counts') or {}).get('cites') or 0
     return {'people': teasers.people_around(data), 'citing': citing, 'citing_more': citing >= neighbours.LINKED,
             'offer': teasers.audience(user, 'teams'), 'teams_next': teams_next,

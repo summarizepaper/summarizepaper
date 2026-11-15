@@ -12,7 +12,7 @@ import re
 from collections import Counter
 
 from django.utils import timezone
-from django.utils.translation import gettext as _, ngettext
+from django.utils.translation import gettext as _, gettext_lazy as _lazy, ngettext, pgettext_lazy
 
 from . import access
 from .models import Generated
@@ -22,6 +22,20 @@ GREYED_MAX = 3  # greyed rows drawn, whatever the count
 TRIAL_TOOLS = ('teams', 'missed', 'refcheck')  # the least costly of the Premium tools that read a whole search
 SHOWCASE_TOOLS = ('teams', 'missed', 'refcheck', 'literature')
 PATHS = {'teams': 'teams', 'missed': 'missed', 'refcheck': 'refcheck', 'literature': 'literature-review'}
+GUIDES = {'teams': 'find-research-teams-by-topic', 'missed': 'what-did-i-miss-uncited-papers',
+          'refcheck': 'overleaf-bibliography-check', 'literature': 'literature-review-from-a-research-question'}
+# The fields an example can come from (Generated.showcase_field): a visitor sees the one of the papers they read
+FIELDS = (('astro', pgettext_lazy('research field', 'Astrophysics')), ('cs', pgettext_lazy('research field', 'Computer science and AI')),
+          ('bio', pgettext_lazy('research field', 'Biology and medicine')))
+DEFAULT_FIELD = 'cs'  # most of the papers summarized on the site
+FIELD_SESSION_KEY = 'example_field'
+# The quality measured for a tool, with its date and its limits (management commands *_benchmark)
+QUALITY = {
+    'refcheck': _lazy('Measured in November 2026 on 52 citations annotated by hand: no false alarm and no miss, in English '
+                      'and French. An easy test set, which does not replace a check on your own manuscript.'),
+    'conference': _lazy('Measured in November 2026 on the program of ACAT 2024 (175 contributions): 96 to 99% of the talks '
+                        'read, days and times right, and the 10 key talks of a test profile ranked first.'),
+}
 
 
 # --- who may see what --------------------------------------------------------------
@@ -62,10 +76,53 @@ def audience(user, kind):
 
 # --- the examples ------------------------------------------------------------------
 
-def showcase(kind, lang):
-    """The example of a tool in this language (else in another), only from a staff account's result."""
+def field_of(category):
+    """The example field of an arXiv category or a source ('astro-ph.EP', 'cs.CL', 'q-bio.NC', 'biorxiv'...), else ''."""
+    head = (category or '').split('.')[0].lower()
+    if head.startswith('astro'):
+        return 'astro'
+    if head in ('cs', 'stat', 'eess') or 'computer' in head:
+        return 'cs'
+    if head in ('q-bio', 'biorxiv', 'medrxiv') or 'medic' in head or 'bio' in head:
+        return 'bio'
+    return ''
+
+
+def remember_field(request, category):
+    """The paper page notes the field of the paper read, for the examples of the tools; never creates a session."""
+    field = field_of(category)
+    session = getattr(request, 'session', None)
+    if field and session is not None and session.session_key and session.get(FIELD_SESSION_KEY) != field:
+        session[FIELD_SESSION_KEY] = field
+
+
+def visitor_field(request):
+    """The field the visitor chose (?ex=), else of the last paper they read, else DEFAULT_FIELD."""
+    names = dict(FIELDS)
+    chosen = request.GET.get('ex', '')
+    if chosen in names:
+        return chosen
+    session = getattr(request, 'session', None)
+    remembered = session.get(FIELD_SESSION_KEY, '') if session is not None else ''
+    return remembered if remembered in names else DEFAULT_FIELD
+
+
+def showcase(kind, lang, field=''):
+    """The example of a tool: of this field and language first, then of this field, then of this language, then any;
+    only from a staff account's result."""
     rows = Generated.objects.filter(kind=kind, showcase=True, status='done', user__is_staff=True).order_by('-updated')
-    return rows.filter(lang=lang).first() or rows.first()
+    for chosen in (rows.filter(showcase_field=field, lang=lang), rows.filter(showcase_field=field), rows.filter(lang=lang), rows):
+        row = chosen.first()
+        if row is not None:
+            return row
+    return None
+
+
+def fields_shown(kinds):
+    """[(code, name)] of the fields with an example of one of these tools."""
+    have = set(Generated.objects.filter(kind__in=kinds, showcase=True, status='done', user__is_staff=True)
+               .values_list('showcase_field', flat=True))
+    return [(code, name) for code, name in FIELDS if code in have]
 
 
 # --- the first results of each tool --------------------------------------------------
@@ -74,9 +131,15 @@ def _item(title, meta='', note=''):
     return {'title': title, 'meta': meta, 'note': note}
 
 
-def _highlight(label, text, meta='', quote=False):
-    """A passage of what the tool writes besides its list (a synthesis, where to cite, a contradicted citation...)."""
-    return {'label': label, 'text': text, 'meta': meta, 'quote': quote}
+def _highlight(label, text, meta='', quote=False, proof=None):
+    """A passage of what the tool writes besides its list (a synthesis, where to cite, a contradicted citation...);
+    proof: {'quote', 'title', 'paper'} the sentence of a paper it rests on, and that paper (its page when 'paper')."""
+    return {'label': label, 'text': text, 'meta': meta, 'quote': quote, 'proof': proof}
+
+
+def _proof(quote, title, paper=''):
+    quote = ' '.join(str(quote or '').split())
+    return {'quote': quote, 'title': title or '', 'paper': paper or ''} if quote else None
 
 
 def _teams(row):
@@ -136,7 +199,8 @@ def _missed(row):
     best = next((i for i in ordered if i.get('position')), None)
     if best:  # never the sentences of the draft itself
         highlights.append(_highlight(_('Where to cite it and how to position yourself'), best['position'],
-                                     ' · '.join(x for x in (best.get('section') or '', best['title']) if x)))
+                                     best.get('section') or '',
+                                     proof=_proof(best.get('abstract_quote'), best['title'], best.get('key'))))
     return headline + '.', items, contents, highlights
 
 
@@ -177,7 +241,9 @@ def _refcheck(row):
     highlights = []
     contradicted = next((c for c in claims if c.get('verdict') == 'contradicted' and c.get('reason')), None)
     if contradicted:
-        highlights.append(_highlight(_('A citation the cited paper contradicts'), contradicted['sentence'], contradicted['reason'], quote=True))
+        passage = contradicted.get('passage') if isinstance(contradicted.get('passage'), dict) else {}
+        highlights.append(_highlight(_('A citation the cited paper contradicts'), contradicted['sentence'], contradicted['reason'],
+                                     quote=True, proof=_proof(passage.get('quote'), contradicted.get('title'))))
     for key, correction in corrections.items():
         changed = bib_changes(correction.get('before'), correction.get('after'))
         if changed:
@@ -210,6 +276,13 @@ def _literature(row):
     highlights = []
     if overview:
         highlights.append(_highlight(_('The synthesis'), overview[0]['text']))
+    numbers = {p.get('n'): p for p in result.get('papers') or []}
+    backed = next((c for c in consensus for s in c.get('support') or [] if s.get('quote') and s.get('n') in numbers), None)
+    if backed:
+        support = next(s for s in backed['support'] if s.get('quote') and s.get('n') in numbers)
+        paper = numbers[support['n']]
+        highlights.append(_highlight(_('A point of consensus, with its source'), backed['text'],
+                                     proof=_proof(support['quote'], paper.get('title'), paper.get('key'))))
     if disagreements:
         highlights.append(_highlight(_('A disagreement between the papers'), disagreements[0]['text']))
     elif gaps:
@@ -236,10 +309,14 @@ def teaser(row, shown=SHOWN):
     if not found:
         return None
     headline, items, contents, highlights = found
+    lead = next((h for h in highlights if h.get('proof')), highlights[0] if highlights else None)
     hidden = max(len(items) - shown, 0)
     from .premium_tools import TOOL_CHOICES
-    return {'kind': row.kind, 'headline': headline, 'contents': contents, 'highlights': highlights, 'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden),
-            'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[row.kind], 'plus': row.kind in access.PLUS_TOOLS}
+    return {'kind': row.kind, 'headline': headline, 'contents': contents, 'highlights': highlights[:2], 'lead': lead,
+            'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden),
+            'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[row.kind], 'plus': row.kind in access.PLUS_TOOLS,
+            'guide': GUIDES.get(row.kind, ''), 'quality': QUALITY.get(row.kind, ''), 'field': row.showcase_field,
+            'demo': row.showcase}
 
 
 def trial_page(request, row):
@@ -254,15 +331,21 @@ def trial_page(request, row):
         'tool_name': dict(TOOL_CHOICES)[row.kind]})
 
 
-def examples(lang):
-    """The example of each tool that has one, its first result only, for the Premium page."""
-    return [t for t in (teaser(showcase(kind, lang), shown=1) for kind in SHOWCASE_TOOLS) if t]
+def examples(request):
+    """The example of each tool that has one, in the visitor's field, for the Premium page."""
+    from django.utils.translation import get_language
+    field = visitor_field(request)
+    return {'examples': [t for t in (teaser(showcase(kind, get_language(), field), shown=1) for kind in SHOWCASE_TOOLS) if t],
+            'example_field': field, 'example_fields': fields_shown(SHOWCASE_TOOLS)}
 
 
 def page_context(request, kind):
     """What a tool's page needs for its example and its call to action."""
     from django.utils.translation import get_language
-    return {'example': teaser(showcase(kind, get_language())) if kind in SHOWCASE_TOOLS else None,
+    field = visitor_field(request)
+    example = teaser(showcase(kind, get_language(), field)) if kind in SHOWCASE_TOOLS else None
+    return {'example': example, 'example_field': field,
+            'example_fields': fields_shown([kind]) if example else [], 'quality': QUALITY.get(kind, ''),
             'offer': audience(request.user, kind), 'trial_open': trial_open(request.user, kind)}
 
 
