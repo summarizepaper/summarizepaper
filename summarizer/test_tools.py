@@ -153,9 +153,12 @@ class ReadingTests(ToolsTestCase):
             for _ in range(5):
                 self.assertEqual(Client().post('/en/reading/2101.00001v1/', {'level': 'child', 'lang': 'es'}).json()['status'], 'done')
             self.assertEqual(chat.call_count, 1)
-            client = Client(REMOTE_ADDR='10.0.0.2')
-            for level in ('highschool', 'undergrad', 'expert'):
-                self.assertEqual(client.post('/en/reading/2101.00001v1/', {'level': level, 'lang': 'en'}).status_code, 200)
+            visitor = Client(REMOTE_ADDR='10.0.0.2')  # one new version a day without an account
+            self.assertEqual(visitor.post('/en/reading/2101.00001v1/', {'level': 'highschool', 'lang': 'en'}).status_code, 200)
+            self.assertEqual(visitor.post('/en/reading/2101.00001v1/', {'level': 'undergrad', 'lang': 'en'}).status_code, 429)
+            client = self.client_for(self.user('bea'))  # three with a free account
+            for level in ('undergrad', 'expert', 'child'):
+                self.assertEqual(client.post('/en/reading/2101.00001v1/', {'level': level, 'lang': 'it'}).status_code, 200)
             self.assertEqual(client.post('/en/reading/2101.00001v1/', {'level': 'child', 'lang': 'de'}).status_code, 429)
             paid = self.client_for(self.user(paid=True))
             self.assertEqual(paid.post('/en/reading/2101.00001v1/', {'level': 'child', 'lang': 'de'}).status_code, 200)

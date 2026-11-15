@@ -47,6 +47,9 @@ window.SPPaperTools = {init: function () {
       level: document.getElementById('reading-level').value,
       lang: document.getElementById('reading-lang').value
     }).then(finish(function (json) {
+      if (json.status === 'quota' && t.quotaAnonymous) {
+        return show(readingStatus, t.quotaAnonymous, {href: base + '/register/?next=' + encodeURIComponent(location.pathname), text: t.signup});
+      }
       if (json.status === 'quota') return show(readingStatus, t.quota, {href: base + '/premium/', text: t.premiumLink});
       if (json.status === 'done') return renderReading(json.data);
       if (!json.id) return show(readingStatus, t.failed);

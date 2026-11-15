@@ -82,8 +82,13 @@ def hash_ip(ip):
 
 
 def runs_per_day():
-    """New summaries per day without Premium (set in the admin)."""
+    """New summaries per day and per account with a free account (set in the admin)."""
     return SiteSettings.current().free_runs_per_day
+
+
+def anonymous_runs_per_day():
+    """New summaries per day and per address without an account (set in the admin): fewer, to make the account worth it."""
+    return SiteSettings.current().anonymous_runs_per_day
 
 
 def chat_messages_per_day():
@@ -140,10 +145,13 @@ def run_quota(user, hashed_ip):
     ).exists()
     if recent:
         return False, "robot"
-    runs_today = PaperHistory.objects.filter(
-        ip_address=hashed_ip, created__gte=now - timezone.timedelta(days=1)
-    ).count()
-    if runs_today >= runs_per_day() and not is_paid(user):
+    if is_paid(user):
+        return True, None
+    # a free account counts its own summaries, wherever it asks from; without an account, the address counts
+    signed_in = user is not None and user.is_authenticated
+    today = PaperHistory.objects.filter(created__gte=now - timezone.timedelta(days=1))
+    today = today.filter(user=user) if signed_in else today.filter(user=None, ip_address=hashed_ip)
+    if today.count() >= (runs_per_day() if signed_in else anonymous_runs_per_day()):
         return False, "toomany"
     return True, None
 

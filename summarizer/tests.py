@@ -82,6 +82,23 @@ class QuotaTests(TestCase):
         PaperHistory.objects.filter(ip_address=ip).update(created=timezone.now() - timezone.timedelta(minutes=5))
         self.assertEqual(access.run_quota(None, ip), (False, 'toomany'))
 
+    def test_a_free_account_counts_its_own_summaries_not_its_address(self):
+        ip, other_ip = access.hash_ip('81.0.0.10'), access.hash_ip('81.0.0.11')
+        earlier = timezone.now() - timezone.timedelta(minutes=5)
+        PaperHistory.objects.create(arxiv_id='a', ip_address=ip)
+        PaperHistory.objects.update(created=earlier)
+        self.assertEqual(access.anonymous_runs_per_day(), 1)
+        self.assertEqual(access.run_quota(None, ip), (False, 'toomany'))  # the visitor's one summary of the day
+        reader = User.objects.create_user('quota-reader', 'reader@example.org', 'x')
+        self.assertEqual(access.run_quota(reader, ip), (True, None))  # signing in on the same address gives more
+        for i in range(access.runs_per_day()):
+            PaperHistory.objects.create(arxiv_id='b%d' % i, user=reader, ip_address=ip)
+        PaperHistory.objects.update(created=earlier)
+        self.assertEqual(access.run_quota(reader, other_ip), (False, 'toomany'))  # moving address gives nothing
+        self.assertEqual(access.run_quota(None, other_ip), (True, None))  # and the account's runs spend no visitor's
+        UserPlan.objects.create(user=reader, paid=True)
+        self.assertEqual(access.run_quota(reader, ip), (True, None))
+
     def test_chat_quota_anonymous(self):
         ip = access.hash_ip('81.0.0.9')
         start = access.chat_quota_left(None, ip)
@@ -1519,7 +1536,7 @@ class AdminTests(TestCase):
     def test_quotas_follow_site_settings(self):
         self.assertEqual(access.runs_per_day(), 10)
         cfg = SiteSettings.current()
-        cfg.free_runs_per_day = 2
+        cfg.anonymous_runs_per_day = 2
         cfg.chat_anonymous_per_day = 1
         cfg.save()
         ip = access.hash_ip('9.9.9.9')
@@ -2388,4 +2405,53 @@ class LatexAccentTests(TestCase):
         xml = FEED.replace('LSST and Keck', "R\\'enyi and Keck")
         paper = {p['arxiv_id']: p for p in digest.parse_feed(xml)}['2610.22354v1']
         self.assertTrue(paper['title'].startswith('Rényi and Keck'))
+
+
+class DailyLimitPageTests(TestCase):
+    """The page shown when the day's summaries are used: an account to visitors, Premium to free accounts."""
+    def setUp(self):
+        from summarizer.models import ArxivPaper
+        SiteSettings.clear_cache()
+        self.addCleanup(SiteSettings.clear_cache)
+        ArxivPaper.objects.create(arxiv_id='2401.04089v1', title='Example research')
+        PaperHistory.objects.create(arxiv_id='x', ip_address=access.hash_ip('127.0.0.1'))
+        PaperHistory.objects.update(created=timezone.now() - timezone.timedelta(minutes=5))
+
+    def test_a_visitor_is_offered_an_account_with_its_figures(self):
+        page = self.client.post('/en/paper/2401.04089v1/', {'run_button': '1'})
+        self.assertContains(page, 'data-funnel="paper_signup_quota"')
+        self.assertContains(page, 'you can start 1 new summary per day')
+        self.assertContains(page, 'A free account starts %d per day' % access.runs_per_day())
+        self.assertNotContains(page, '10 papers in a period')
+        page = self.client.post('/fr/paper/2401.04089v1/', {'run_button': '1'})
+        self.assertContains(page, 'Sans compte, vous pouvez lancer 1 nouveau résumé par jour')
+
+    def test_a_free_account_is_offered_premium(self):
+        reader = User.objects.create_user('limit-reader', 'limit@example.org', 'x')
+        for i in range(access.runs_per_day()):
+            PaperHistory.objects.create(arxiv_id='y%d' % i, user=reader, ip_address='elsewhere')
+        PaperHistory.objects.update(created=timezone.now() - timezone.timedelta(minutes=5))
+        self.client.force_login(reader)
+        page = self.client.post('/en/paper/2401.04089v1/', {'run_button': '1'})
+        self.assertContains(page, 'A free account starts %d new summaries per day' % access.runs_per_day())
+        self.assertContains(page, 'data-funnel="paper_quota_premium"')
+        self.assertNotContains(page, 'paper_signup_quota')
+
+
+class ReadingQuotaTests(TestCase):
+    def setUp(self):
+        SiteSettings.clear_cache()
+        self.addCleanup(SiteSettings.clear_cache)
+        cfg = SiteSettings.current()
+        cfg.anonymous_readings_per_day, cfg.free_readings_per_day = 1, 3
+        cfg.save()
+
+    def test_rewrites_per_day_depend_on_the_account(self):
+        from django.contrib.auth.models import AnonymousUser
+        from summarizer import reading
+        request = RequestFactory().get('/', REMOTE_ADDR='81.0.0.12')
+        request.user = AnonymousUser()
+        self.assertEqual(reading.quota_left(request), 1)
+        request.user = User.objects.create_user('rewrite-reader', 'rewrite@example.org', 'x')
+        self.assertEqual(reading.quota_left(request), 3)
 

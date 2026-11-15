@@ -121,6 +121,8 @@
        data-working="{% trans 'Writing… this takes about 20 seconds.' %}"
        data-failed="{% trans 'Something went wrong. Please try again.' %}"
        data-quota="{% trans 'No free rewrites left today. Premium has no limit.' %}"
+       {% if not request.user.is_authenticated %}data-quota-anonymous="{% blocktrans with n=readings_free %}No rewrites left today without an account. A free account gives {{ n }} per day.{% endblocktrans %}"
+       data-signup="{% trans 'Create a free account' %}"{% endif %}
        data-added="{% trans 'Added to' %}"
        data-already="{% trans 'Already in this collection.' %}"
        data-full="{% trans 'This collection is full.' %}"

@@ -662,8 +662,10 @@ class EmailEvent(models.Model):
 
 class SiteSettings(models.Model):
     """Quotas and AI models, edited in the admin. A single row; read it with SiteSettings.current()."""
-    free_runs_per_day = models.PositiveIntegerField('résumés par jour (gratuit)', default=10,
-        help_text='Nouveaux résumés par jour et par IP sans Premium. Premium : illimité.')
+    anonymous_runs_per_day = models.PositiveIntegerField('résumés par jour (sans compte)', default=1,
+        help_text='Nouveaux résumés par jour et par adresse IP, sans compte.')
+    free_runs_per_day = models.PositiveIntegerField('résumés par jour (compte gratuit)', default=10,
+        help_text='Nouveaux résumés par jour et par compte, sans Premium. Premium : illimité.')
     chat_anonymous_per_day = models.PositiveIntegerField('questions par jour (sans compte)', default=30)
     chat_user_per_day = models.PositiveIntegerField('questions par jour (compte gratuit)', default=100)
     chat_paid_per_day = models.PositiveIntegerField('questions par jour (Premium)', default=500)
@@ -674,8 +676,10 @@ class SiteSettings(models.Model):
     model_tts = models.CharField('modèle de synthèse vocale', max_length=100, default='gpt-4o-mini-tts',
         help_text='Sélection du matin audio Premium. Identifiant exact de l’API OpenAI (audio/speech).')
     tts_voice = models.CharField('voix', max_length=40, default='alloy')
-    free_readings_per_day = models.PositiveIntegerField('niveaux de lecture par jour (gratuit)', default=3,
-        help_text='Nouvelles versions « expliqué simplement / traduit » par jour sans Premium. Premium : illimité.')
+    free_readings_per_day = models.PositiveIntegerField('niveaux de lecture par jour (compte gratuit)', default=3,
+        help_text='Nouvelles versions « expliqué simplement / traduit » par jour et par compte, sans Premium. Premium : illimité.')
+    anonymous_readings_per_day = models.PositiveIntegerField('niveaux de lecture par jour (sans compte)', default=1,
+        help_text='Nouvelles versions « expliqué simplement / traduit » par jour et par adresse IP, sans compte.')
     updated = models.DateTimeField(auto_now=True)
 
     _cached = None

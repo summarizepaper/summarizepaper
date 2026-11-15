@@ -127,7 +127,8 @@ class SiteSettingsAdmin(ModelAdmin):
     form = SiteSettingsForm
     readonly_fields = ('last_change',)
     fieldsets = (
-        ('Résumés', {'fields': ('free_runs_per_day', 'free_readings_per_day')}),
+        ('Résumés', {'fields': ('anonymous_runs_per_day', 'free_runs_per_day', 'anonymous_readings_per_day', 'free_readings_per_day'),
+                      'description': 'Sans compte : par adresse IP. Avec un compte gratuit : par compte. Gardez le compte gratuit au-dessus, c’est ce qui pousse à en créer un.'}),
         ('Questions à l’assistant', {'fields': ('chat_anonymous_per_day', 'chat_user_per_day', 'chat_paid_per_day')}),
         ('Modèles IA', {'fields': ('model_free', 'model_paid', 'model_tts', 'tts_voice'),
                         'description': 'Les changements s’appliquent en moins de 30 secondes sur tous les serveurs.'}),

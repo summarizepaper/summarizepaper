@@ -73,7 +73,13 @@ def quota_left(request):
         return None
     who = request.user.pk if request.user.is_authenticated else access.hash_ip(access.client_ip(request))
     used = cache.get(QUOTA_KEY % (who, timezone.now().date()), 0)
-    return max(0, SiteSettings.current().free_readings_per_day - used)
+    return max(0, per_day(request.user) - used)
+
+
+def per_day(user):
+    """New versions per day without Premium: per account with a free account, per address without one."""
+    cfg = SiteSettings.current()
+    return cfg.free_readings_per_day if user.is_authenticated else cfg.anonymous_readings_per_day
 
 
 def _spend(request):

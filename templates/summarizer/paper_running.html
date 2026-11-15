@@ -11,8 +11,8 @@
 {% if not close and not request.user.is_authenticated %}
 <aside class="signup-offer" aria-label="{% trans 'Free account' %}">
   <div>
-    <p class="signup-offer-title">{% if LANGUAGE_CODE == 'fr' %}Avec un compte gratuit, vos résumés passent en priorité{% else %}With a free account, your summaries go first{% endif %}</p>
-    <p>{% if LANGUAGE_CODE == 'fr' %}Quand le site est chargé, les résumés demandés avec un compte passent avant les autres. Votre recherche continue aussi dans les revues au-delà de 30 recherches par heure.{% else %}When the site is busy, summaries asked for with an account go before the others. Your searches also keep reading the journals past 30 searches an hour.{% endif %}</p>
+    <p class="signup-offer-title">{% if LANGUAGE_CODE == 'fr' %}Avec un compte gratuit : {{ runs_free }} résumés par jour, en priorité{% else %}With a free account: {{ runs_free }} summaries a day, first in line{% endif %}</p>
+    <p>{% if LANGUAGE_CODE == 'fr' %}Sans compte, vous lancez {{ runs_anonymous }} nouveau{{ runs_anonymous|pluralize:"x" }} résumé{{ runs_anonymous|pluralize }} par jour. Avec un compte, {{ runs_free }}, qui passent avant les autres quand le site est chargé, et votre recherche continue dans les revues au-delà de 30 recherches par heure.{% else %}Without an account, you start {{ runs_anonymous }} new summar{{ runs_anonymous|pluralize:"y,ies" }} a day. With one, {{ runs_free }}, which go before the others when the site is busy, and your searches keep reading the journals past 30 searches an hour.{% endif %}</p>
   </div>
   <div class="signup-offer-actions">
     {% include 'accounts/_google_button.html' with next=request.path inline=True funnel='paper_signup_queue_google' %}

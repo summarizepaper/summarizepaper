@@ -111,7 +111,7 @@
   <aside class="signup-offer" aria-label="{% trans 'Free account' %}">
     <div>
       <p class="signup-offer-title">{% if paper.category %}{% blocktrans with field=paper.category|category_label %}Every morning, the new papers of {{ field }} with a short summary{% endblocktrans %}{% else %}{% trans 'Every morning, the new papers of your fields with a short summary' %}{% endif %}</p>
-      <p>{% trans 'Free with an account, like your reading list and the history of your questions.' %} <a href="/{{ LANGUAGE_CODE }}/digest/example/{% if paper.category|starter_topic %}?field={{ paper.category|starter_topic }}{% endif %}" rel="nofollow">{% trans 'See an example' %}</a></p>
+      <p>{% blocktrans with n=runs_free %}Free with an account, like {{ n }} new summaries a day, your reading list and the history of your questions.{% endblocktrans %} <a href="/{{ LANGUAGE_CODE }}/digest/example/{% if paper.category|starter_topic %}?field={{ paper.category|starter_topic }}{% endif %}" rel="nofollow">{% trans 'See an example' %}</a></p>
     </div>
     <div class="signup-offer-actions">
       {% with digest_next='/'|add:LANGUAGE_CODE|add:'/digest/' %}

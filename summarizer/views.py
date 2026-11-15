@@ -484,6 +484,7 @@ def faq(request):
         'sofyear': '2023',
         'sofdate': '2023-03-30',
         'runs_per_day': access.runs_per_day(),
+        'runs_anonymous': access.anonymous_runs_per_day(),
         'chat_anonymous': access.chat_messages_per_day()['anonymous'],
         'chat_free': access.chat_messages_per_day()['user'],
         'chat_paid': access.chat_messages_per_day()['paid'],
@@ -895,7 +896,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
     from . import synthesis
     known_paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
     stuff_for_frontend = {"arxiv_id": arxiv_id,"onhero":onhero,"language":lang,"hashed_ip_address":hashed_ip_address,'paid':paid,
-                          'source_scope': synthesis.license_scope(known_paper)}
+                          'source_scope': synthesis.license_scope(known_paper),
+                          'runs_free': access.runs_per_day(), 'runs_anonymous': access.anonymous_runs_per_day(),
+                          'readings_free': SiteSettings.current().free_readings_per_day}
 
     print('jk')
     regex_pattern1=r'^\d{4}\.\d{4,5}(v\d+)?$'
