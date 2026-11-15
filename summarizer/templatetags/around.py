@@ -20,4 +20,15 @@ def paper_around(context, arxiv_id, title=''):
     citing = (data.get('counts') or {}).get('cites') or 0
     return {'people': teasers.people_around(data), 'citing': citing, 'citing_more': citing >= neighbours.LINKED,
             'offer': teasers.audience(user, 'teams'), 'teams_next': teams_next,
-            'paid_citations': teasers.access.has_tool(user, 'citations')}
+            'paid_citations': teasers.access.has_tool(user, 'citations'),
+            'paid_changes': teasers.access.has_tool(user, 'changes')}
+
+
+@register.simple_tag(takes_context=True)
+def version_changes(context, arxiv_id):
+    """{% version_changes arxiv_id as vc %}: see teasers.version_changes. Never fatal."""
+    from summarizer import teasers
+    try:
+        return teasers.version_changes(context.get('request'), str(arxiv_id or ''))
+    except Exception:
+        return None

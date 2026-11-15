@@ -1,6 +1,6 @@
 {% load i18n %}{# The first results of a tool, the others greyed: t (teasers.teaser), offer (teasers.audience), own (the visitor's own result) #}
-<section class="card section-card teaser" data-funnel-view="teaser_{% if own %}trial{% else %}example{% endif %}_view">
-  <p class="teaser-kicker">{% if own %}{% trans 'Your free try: the first results' %}{% else %}{% trans 'A real example: the first results' %}{% endif %}</p>
+<section class="card section-card teaser"{% if not compact %} data-funnel-view="teaser_{% if own %}trial{% else %}example{% endif %}_view"{% endif %}>
+  <p class="teaser-kicker">{% if compact %}{{ t.name }}{% if t.plus %} · Premium+{% endif %}{% elif own %}{% trans 'Your free try: the first results' %}{% else %}{% trans 'A real example: the first results' %}{% endif %}</p>
   <p class="teaser-headline"><strong>{{ t.headline }}</strong></p>
   <ol class="teaser-list">
     {% for item in t.items %}
@@ -16,9 +16,13 @@
   <p class="teaser-more"><i class="fas fa-lock" aria-hidden="true"></i>
     {% blocktrans count n=t.hidden %}{{ n }} more result hidden{% plural %}{{ n }} more results hidden{% endblocktrans %}</p>
   {% endif %}
+  {% if compact %}
+  <p><a href="/{{ LANGUAGE_CODE }}/{{ t.path }}/" data-funnel="teaser_tool_open" data-tool="{{ t.kind }}" data-placement="offer">{% trans 'See the tool' %} →</a></p>
+  {% else %}
   <div class="item-actions">
     {% if offer == 'signup' %}
       <span>{% if t.kind == 'literature' %}{% trans 'Create a free account, then Premium+ runs it on your own question.' %}{% else %}{% trans 'Create a free account: your first search with this tool is free, its first results shown in full.' %}{% endif %}</span>
+      {% include 'accounts/_google_button.html' with next=request.path inline=True funnel='teaser_signup_google' %}
       <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next={{ request.path|urlencode }}" rel="nofollow" data-funnel="teaser_signup" data-tool="{{ t.kind }}" data-placement="{% if own %}trial{% else %}teaser{% endif %}">{% trans 'Create a free account' %}</a>
       <a href="/{{ LANGUAGE_CODE }}/login/?next={{ request.path|urlencode }}" rel="nofollow">{% trans 'Log in' %}</a>
     {% elif offer == 'trial' %}
@@ -29,4 +33,5 @@
       <a class="btn" href="/{{ LANGUAGE_CODE }}/premium/{% if offer == 'plus' %}#plus{% endif %}" data-funnel="teaser_premium" data-tool="{{ t.kind }}" data-placement="{% if own %}trial{% else %}teaser{% endif %}">{% if offer == 'plus' %}{% trans 'Discover Premium+' %}{% else %}{% trans 'Discover Premium' %}{% endif %}</a>
     {% endif %}
   </div>
+  {% endif %}
 </section>

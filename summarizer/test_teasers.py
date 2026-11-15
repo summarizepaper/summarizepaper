@@ -1,4 +1,5 @@
 import json
+import re
 import uuid
 
 from django.contrib.auth.models import AnonymousUser
@@ -157,3 +158,69 @@ class TeaserTests(ToolsTestCase):
         for kind, path in (('teams', 'teams'), ('missed', 'missed'), ('refcheck', 'refcheck'), ('literature', 'literature-review')):
             row = self.row(ann, kind=kind, trial=False, content={})
             self.assertEqual(self.client_for(ann).get('/en/%s/%s/' % (path, row.key)).status_code, 404, kind)
+
+    def test_an_email_sign_up_from_a_teaser_comes_back_to_the_tool(self):
+        from unittest import mock
+        from django.core import mail
+        with mock.patch('summarizer.accounts.looks_like_bot', return_value=False), \
+             mock.patch('summarizer.mailcheck.undeliverable_reason', return_value=''):
+            Client().post('/en/register/?next=/en/teams/%3Ftopic%3DExomoons', {
+                'username': 'newcomer', 'email': 'newcomer@example.org', 'password1': 'a-Long-pass-123',
+                'password2': 'a-Long-pass-123', 'next': '/en/teams/?topic=Exomoons'})
+        link = re.search(r'https?://\S+/login/link/\S+', mail.outbox[-1].body).group(0)
+        path = link.split('://', 1)[1].split('/', 1)[1]
+        response = Client().post('/' + path)
+        self.assertEqual(response['Location'], '/en/teams/?topic=Exomoons')
+
+    def test_a_first_subscription_starts_with_seven_free_days_and_only_the_first(self):
+        from types import SimpleNamespace
+        from unittest import mock
+        from django.test import override_settings
+        from summarizer.models import UserPlan
+        ann = self.user()
+        with override_settings(STRIPE_SECRET_KEY='sk_test', STRIPE_PRICE_MONTHLY='price_test'), \
+             mock.patch('stripe.checkout.Session.create', return_value=SimpleNamespace(url='https://checkout.stripe.com/t')) as create:
+            self.client_for(ann).post('/en/premium/checkout/', {'period': 'monthly'})
+            params = create.call_args.kwargs
+            self.assertEqual(params['subscription_data']['trial_period_days'], 7)
+            self.assertEqual(params['payment_method_collection'], 'always')
+            with mock.patch('summarizer.billing.price_label', return_value='7 EUR'):
+                self.assertContains(self.client_for(ann).get('/en/premium/'), '7 days free')
+            UserPlan.objects.create(user=ann, paid=False, stripe_subscription_id='sub_old')  # subscribed before
+            self.client_for(ann).post('/en/premium/checkout/', {'period': 'monthly'})
+            self.assertNotIn('trial_period_days', create.call_args.kwargs['subscription_data'])
+            with mock.patch('summarizer.billing.price_label', return_value='7 EUR'):
+                self.assertNotContains(self.client_for(ann).get('/en/premium/'), '7 days free')
+
+    def test_the_premium_page_shows_the_first_result_of_each_example(self):
+        staff = self.user('staff')
+        staff.is_staff = True
+        staff.save()
+        self.row(staff, showcase=True, content=missed_result(4))
+        html = Client().get('/en/premium/').content.decode()
+        self.assertIn('Real results, before you subscribe', html)
+        self.assertIn('Paper number 0', html)
+        self.assertNotIn('Paper number 1', html)
+        self.assertIn('3 more results hidden', html)
+
+    def test_the_paper_page_shows_the_first_change_of_its_latest_version(self):
+        from unittest import mock
+        self.paper(arxiv_id='2101.00001v3')
+        anonymous = Client().get('/en/paper/2101.00001v3/').content.decode()
+        self.assertNotIn('From v2 to v3', anonymous)  # nothing computed, and a visitor never starts it
+        self.assertFalse(Generated.objects.filter(kind='changes').exists())
+        comparison = {'changes': [{'kind': 'results', 'importance': 'major', 'detail': 'The mass is now 3 Jupiter masses.'},
+                                  {'kind': 'figures', 'importance': 'minor', 'detail': 'Figure 2 redrawn.'},
+                                  {'kind': 'writing', 'importance': 'minor', 'detail': 'Typos.'}], 'results_changed': True}
+        with mock.patch('summarizer.changes.compare', return_value=comparison):
+            self.client_for(self.user()).get('/en/paper/2101.00001v3/')
+        row = Generated.objects.get(kind='changes', key='2101.00001:2:3', lang='en')
+        self.assertEqual(row.status, 'done')
+        anonymous = Client().get('/en/paper/2101.00001v3/').content.decode()
+        self.assertIn('From v2 to v3', anonymous)
+        self.assertIn('The mass is now 3 Jupiter masses.', anonymous)
+        self.assertNotIn('Figure 2 redrawn', anonymous)
+        self.assertIn('2 more changes, and whether the main results changed, with Premium.', anonymous)
+        paid = self.client_for(self.user('bob', paid=True)).get('/en/paper/2101.00001v3/').content.decode()
+        self.assertNotIn('more changes, and whether', paid)
+        self.assertIsNone(teasers.version_changes(None, '2101.00001v1'))

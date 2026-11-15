@@ -97,6 +97,7 @@
         {% if monthly_price %}<div class="price">{{ monthly_price }}</div>{% endif %}
         {% if yearly_price %}<p class="fine">{{ yearly_price }}</p>{% endif %}
         <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next=/{{ LANGUAGE_CODE }}/premium/" data-funnel="premium_signup">{% trans 'Create a free account to subscribe' %}</a>
+        {% include 'summarizer/premium_trial_note.html' %}
         <p><small>{% trans 'Already registered?' %} <a href="/{{ LANGUAGE_CODE }}/login/?next=/{{ LANGUAGE_CODE }}/premium/">{% trans 'Log in' %}</a></small></p>
       {% else %}
         <form method="post" data-funnel="checkout_start" data-currency="{{ billing_currency }}" action="{% url 'premium_checkout' %}">{% csrf_token %}
@@ -106,6 +107,7 @@
           {% if yearly_price %}<div class="price">{{ yearly_price }}</div>
           <button type="submit" class="btn" name="period" value="yearly">{% trans 'Subscribe yearly' %}</button>{% endif %}
         </form>
+        {% include 'summarizer/premium_trial_note.html' %}
         {% if can_manage %}<form method="post" action="{% url 'premium_portal' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost">{% trans 'Manage my subscription' %}</button></form>{% endif %}
       {% endif %}
       <ul>
@@ -138,6 +140,7 @@
         {% if plus_monthly_price %}<div class="price">{{ plus_monthly_price }}</div>{% endif %}
         {% if plus_yearly_price %}<p class="fine">{{ plus_yearly_price }}</p>{% endif %}
         <a class="btn" href="/{{ LANGUAGE_CODE }}/register/?next=/{{ LANGUAGE_CODE }}/premium/%23plus" data-funnel="premium_signup">{% trans 'Create a free account to subscribe' %}</a>
+        {% include 'summarizer/premium_trial_note.html' %}
       {% else %}
         <form method="post" data-funnel="checkout_start" data-currency="{{ billing_currency }}" action="{% url 'premium_checkout' %}">{% csrf_token %}
           <input type="hidden" name="currency" value="{{ billing_currency }}"><input type="hidden" name="tier" value="plus">
@@ -146,6 +149,7 @@
           {% if plus_yearly_price %}<div class="price">{{ plus_yearly_price }}</div>
           <button type="submit" class="btn" name="period" value="yearly">{% trans 'Subscribe yearly' %}</button>{% endif %}
         </form>
+        {% include 'summarizer/premium_trial_note.html' %}
       {% endif %}
       <ul>
         <li>{% trans 'Everything in Premium' %}</li>
@@ -158,6 +162,12 @@
     </div>
   </div>
   <p class="fine"><i class="fas fa-lock"></i> {% trans 'Payments are handled by Stripe. We never see your card details.' %} {% trans 'Cancel anytime in one click' %}</p>
+
+  {% if examples %}
+  <h2 id="examples" data-funnel-view="premium_examples_view">{% trans 'Real results, before you subscribe' %}</h2>
+  <p class="muted">{% trans 'The start of a real search with each tool; a free account runs its first search with most of them for free.' %}</p>
+  <div class="teaser-grid">{% for t in examples %}{% include 'summarizer/tool_teaser.html' with compact=True %}{% endfor %}</div>
+  {% endif %}
 
   <h2 id="compare">{% trans 'Everything in each offer' %}</h2>
   <div class="compare-wrap offer-table">

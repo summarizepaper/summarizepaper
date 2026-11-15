@@ -76,6 +76,7 @@
     </div>
     {% endif %}
     {% if around.offer == 'signup' %}
+      {% include 'accounts/_google_button.html' with next=around.teams_next inline=True funnel='teaser_signup_google' %}
       <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/register/?next={{ around.teams_next|urlencode }}" rel="nofollow" data-funnel="teaser_signup" data-tool="teams" data-placement="paper">{% trans 'Create a free account: your first map is free' %}</a>
     {% elif around.offer == 'trial' %}
       <a class="btn btn-sm" href="/{{ LANGUAGE_CODE }}/teams/?topic={{ paper.title|urlencode }}#tool-form" rel="nofollow" data-funnel="teaser_trial" data-tool="teams" data-placement="paper">{% trans 'Map who works on its topic: your first map is free' %}</a>
@@ -119,7 +120,16 @@
   {% if not arxiv_id|is_external %}
   <div class="tool-row">
     <span class="tool-label">{% trans 'Versions' %}</span>
-    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id }}/" rel="nofollow">{% trans 'What changed between versions' %}</a>
+    {% version_changes arxiv_id as vc %}
+    {% if vc.pending %}<span class="muted">{% blocktrans with old=vc.old new=vc.new %}What changed from v{{ old }} to v{{ new }} is being read; it will show here at your next visit.{% endblocktrans %}</span>
+    {% elif vc.first %}
+    <div class="around-people" data-funnel-view="teaser_versions_view">
+      <p>{% blocktrans with old=vc.old new=vc.new %}From v{{ old }} to v{{ new }}:{% endblocktrans %} {% if vc.first.importance == 'major' %}<span class="importance high">{% trans 'Major' %}</span>{% endif %} {{ vc.first.detail }}</p>
+      {% if vc.hidden and not around.paid_changes %}<p class="around-greyed" aria-hidden="true">{% for _ in vc.greyed %}<span></span>{% endfor %}</p>
+      <p class="muted"><i class="fas fa-lock" aria-hidden="true"></i> {% blocktrans count n=vc.hidden %}{{ n }} more change, and whether the main results changed, with Premium.{% plural %}{{ n }} more changes, and whether the main results changed, with Premium.{% endblocktrans %}</p>{% endif %}
+    </div>
+    {% endif %}
+    <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/changes/{{ arxiv_id }}/" rel="nofollow"{% if vc.first and not around.paid_changes %} data-funnel="teaser_premium" data-placement="paper"{% endif %}>{% trans 'What changed between versions' %}</a>
     {% if LANGUAGE_CODE == 'fr' %}<a class="tool-guide-link" href="/fr/guides/around-a-paper-close-papers-and-versions/">Guide des versions</a>{% elif LANGUAGE_CODE == 'en' %}<a class="tool-guide-link" href="/en/guides/around-a-paper-close-papers-and-versions/">Versions guide</a>{% endif %}
   </div>
   {% endif %}

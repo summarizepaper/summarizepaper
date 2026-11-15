@@ -1,0 +1,1 @@
+{% load i18n typography %}{% if trial_days %}<p class="fine trial-note"><strong>{% blocktrans count n=trial_days %}{{ n }} day free{% plural %}{{ n }} days free{% endblocktrans %}</strong>{% colon %} {% trans 'nothing is charged before the end of the trial, and you can cancel in one click until then.' %}</p>{% endif %}

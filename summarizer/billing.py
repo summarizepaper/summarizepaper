@@ -37,10 +37,19 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.views.decorators.cache import never_cache
 
-from . import access
+from . import access, teasers
 from .models import SiteSettings, UserPlan
 
 logger = logging.getLogger(__name__)
+
+TRIAL_DAYS = 7  # free days of a first subscription (card asked at checkout, nothing charged before the end)
+
+
+def trial_days(user):
+    """TRIAL_DAYS for a first subscription (any visitor without one yet), else 0: one trial per account."""
+    if user is not None and user.is_authenticated and UserPlan.objects.filter(user=user).exclude(stripe_subscription_id='').exists():
+        return 0
+    return TRIAL_DAYS
 
 
 def billing_enabled():
@@ -186,6 +195,8 @@ def premium(request):
         'billing_currency': currency, 'billing_currencies': currencies(),
         'is_paid': paid, 'is_plus': plus,
         'features': features(),
+        'examples': teasers.examples(get_language()),
+        'trial_days': trial_days(request.user),
         'premium_activated': activated,
         'plan': plan,
         'tool_grants': list(access.active_grants(request.user)),
@@ -232,6 +243,10 @@ def checkout(request):
         'allow_promotion_codes': True,
         'subscription_data': {'metadata': {'user_id': str(request.user.id)}},
     }
+    days = trial_days(request.user)
+    if days:
+        params['subscription_data']['trial_period_days'] = days
+        params['payment_method_collection'] = 'always'
     if plan and plan.stripe_customer_id:
         params['customer'] = plan.stripe_customer_id
     elif request.user.email:

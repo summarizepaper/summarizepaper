@@ -1402,3 +1402,5 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .around-people p { margin: 0 0 6px; }
 .around-greyed { display: flex; flex-wrap: wrap; gap: 6px; }
 .around-greyed span { display: inline-block; width: 92px; height: 12px; border-radius: 6px; background: var(--border); }
+.teaser-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-bottom: 32px; }
+.teaser-grid .teaser { margin: 0; }

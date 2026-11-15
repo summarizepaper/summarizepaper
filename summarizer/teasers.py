@@ -135,7 +135,7 @@ def _literature(row):
     if themes:
         headline += ' ' + ngettext('in %(n)d theme', 'in %(n)d themes', themes) % {'n': themes}
     question = result.get('title') or result.get('question') or ''
-    return headline + (' · “%s”' % question if question else '') + '.', items
+    return headline + (' · ' + _('“%(title)s”') % {'title': question} if question else '') + '.', items
 
 
 READERS = {'teams': _teams, 'missed': _missed, 'refcheck': _refcheck, 'literature': _literature}
@@ -157,8 +157,9 @@ def teaser(row, shown=SHOWN):
         return None
     headline, items = found
     hidden = max(len(items) - shown, 0)
+    from .premium_tools import TOOL_CHOICES
     return {'kind': row.kind, 'headline': headline, 'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden),
-            'path': PATHS[row.kind]}
+            'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[row.kind], 'plus': row.kind in access.PLUS_TOOLS}
 
 
 def trial_page(request, row):
@@ -171,6 +172,11 @@ def trial_page(request, row):
     return render(request, 'summarizer/tool_trial_result.html', {
         'row': row, 't': teaser(row), 'offer': audience(request.user, row.kind), 'path': PATHS[row.kind],
         'tool_name': dict(TOOL_CHOICES)[row.kind]})
+
+
+def examples(lang):
+    """The example of each tool that has one, its first result only, for the Premium page."""
+    return [t for t in (teaser(showcase(kind, lang), shown=1) for kind in SHOWCASE_TOOLS) if t]
 
 
 def page_context(request, kind):
@@ -199,3 +205,42 @@ def people_around(data, shown=1, least=2):
     hidden = len(frequent) - shown
     return {'items': [{'name': name, 'papers': n} for name, n in frequent[:shown]], 'hidden': max(hidden, 0),
             'greyed': greyed(max(hidden, 0)), 'papers': len(items)}
+
+
+# --- the paper page: what changed in its latest version ---------------------------------
+
+VERSION_TEASERS_PER_DAY = 30  # comparisons started for the teaser (the paid model reads both versions)
+VERSION_TEASERS_KEY = 'version-teasers:%s'
+
+
+def version_changes(request, arxiv_id):
+    """The first change between the paper's version and the one before, the others counted and greyed:
+    {'old', 'new', 'first', 'hidden', 'greyed', 'pending'} or None. A comparison is shared by every reader; one
+    is started for a signed-in reader who is not a crawler, at most VERSION_TEASERS_PER_DAY a day."""
+    from django.core.cache import cache
+    from django.utils.translation import get_language
+    from . import changes, generated, sources
+    if not arxiv_id or sources.is_external(arxiv_id):
+        return None
+    base, shown = changes.base_id(arxiv_id)
+    if shown < 2:
+        return None
+    old, new, lang = shown - 1, shown, get_language()
+    key = changes.comparison_key(base, old, new)
+    row = Generated.objects.filter(kind='changes', key=key, lang=lang).first()
+    user = getattr(request, 'user', None)
+    if row is None and user is not None and user.is_authenticated and not access.crawler(request):
+        day = VERSION_TEASERS_KEY % timezone.now().date()
+        cache.add(day, 0, 86400 * 2)
+        if cache.incr(day) <= VERSION_TEASERS_PER_DAY:
+            row = generated.start('changes', key, lang, changes.write(base, old, new, lang))
+    if row is None or row.status not in ('done', 'pending'):
+        return None
+    found = {'old': old, 'new': new, 'pending': row.status == 'pending', 'first': None, 'hidden': 0, 'greyed': range(0)}
+    if row.status == 'done':
+        items = row.data().get('changes') or []
+        if not items:
+            return None
+        hidden = len(items) - 1
+        found.update(first=items[0], hidden=hidden, greyed=greyed(hidden))
+    return found
