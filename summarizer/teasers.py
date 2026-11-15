@@ -337,6 +337,11 @@ def _slides(row):
     return headline, items, contents, highlights
 
 
+# a "disagreement" that says there is none ("The table does not establish a direct contradiction...") makes a poor example
+NO_DISAGREEMENT = re.compile(r"\b(no|not|neither|aucune?|pas|ni)\b[^.]{0,60}\b(contradict\w*|disagree\w*|conflict\w*|désaccord|divergen\w*)",
+                             re.I)
+
+
 def _compare(row):
     from . import comparison
     data = comparison.display(row.data(), row.lang)
@@ -353,7 +358,7 @@ def _compare(row):
         _('Cells you correct by hand, CSV export, a chat with the papers')) if x]
     highlights = []
     for name, label in (('disagreements', _('Where the papers disagree')), ('agreements', _('Where the papers agree'))):
-        finding = next((f for f in data[name] if f['passages']), None)
+        finding = next((f for f in data[name] if f['passages'] and not NO_DISAGREEMENT.search(f['text'])), None)
         if finding:
             passage = finding['passages'][0]
             source = rows[passage['n'] - 1]

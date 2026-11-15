@@ -324,3 +324,8 @@ class TeaserTests(ToolsTestCase):
         premium = Client().get('/en/premium/').content.decode()
         for name in ('Journal club', 'Collections and comparison tables', 'Scoop watch', 'Citation alerts'):
             self.assertIn(name, premium)
+
+    def test_a_table_example_never_leads_with_a_disagreement_that_says_there_is_none(self):
+        self.assertTrue(teasers.NO_DISAGREEMENT.search('The table does not establish a direct contradiction about scale.'))
+        self.assertTrue(teasers.NO_DISAGREEMENT.search('Le tableau n’établit aucune contradiction directe.'))
+        self.assertFalse(teasers.NO_DISAGREEMENT.search('The papers offer competing explanations for the CO.'))
