@@ -1776,7 +1776,49 @@ def arxiv_search(query):
     return papers
 
 # aiohttp waits up to 5 minutes by default; a page waiting on arXiv also holds a database connection
-ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=20)
+ARXIV_TIMEOUT = aiohttp.ClientTimeout(total=10)  # past it, the OAI-PMH record (_oai_metadata)
+
+
+OAI_TIMEOUT = aiohttp.ClientTimeout(total=15)
+
+
+async def _oai_metadata(session, identifier, base):
+    """The record in the list form of get_arxiv_metadata, from arXiv's OAI-PMH server: [0, ...] when arXiv does not
+    know the paper, None when the server cannot be read either."""
+    oai = '{http://arxiv.org/OAI/arXiv/}'
+    try:
+        async with session.get('https://oaipmh.arxiv.org/oai', params={
+                'verb': 'GetRecord', 'identifier': 'oai:arXiv.org:' + base, 'metadataPrefix': 'arXiv'},
+                timeout=OAI_TIMEOUT) as response:
+            if response.status != 200:
+                return None
+            data = await response.text()
+        root = ElementTree.fromstring(data)
+    except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError):
+        return None
+    record = root.find('.//' + oai + 'arXiv')
+    if record is None:
+        error = root.find('{http://www.openarchives.org/OAI/2.0/}error')
+        if error is not None and error.get('code') == 'idDoesNotExist':
+            return [0, [], [], '', '', '', '', '', '', '', '', '', '', data]
+        return None
+
+    def text(parent, name):
+        return ' '.join((parent.findtext(oai + name) or '').split())
+
+    authors = record.findall(oai + 'authors/' + oai + 'author')
+    names = [' '.join(part for part in (text(a, 'forenames'), text(a, 'keyname'), text(a, 'suffix')) if part) for a in authors]
+    created = text(record, 'created')
+    doi = text(record, 'doi').split(' ')[0]
+    license_value = text(record, 'license')
+    if license_value:
+        from django.core.cache import cache
+        await asyncio.to_thread(cache.set, 'arxiv-license:' + base, license_value, 86400)
+    return [1, names, [text(a, 'affiliation') for a in authors], 'http://arxiv.org/abs/' + identifier,
+            sources.latex_accents(text(record, 'title')), 'https://doi.org/' + doi if doi else '',
+            sources.latex_accents(text(record, 'abstract')), (text(record, 'categories').split() or [''])[0],
+            (text(record, 'updated') or created) + 'T00:00:00Z', created + 'T00:00:00Z', text(record, 'journal-ref'),
+            text(record, 'comments'), license_value, data]
 
 
 async def get_arxiv_metadata(arxiv_id):
@@ -1794,13 +1836,23 @@ async def get_arxiv_metadata(arxiv_id):
     base = re.sub(r'v\d+$', '', identifier)
     ns = {'a': 'http://www.w3.org/2005/Atom', 'arxiv': 'http://arxiv.org/schemas/atom'}
     async with aiohttp.ClientSession(timeout=ARXIV_TIMEOUT) as session:
-        async with session.get('https://export.arxiv.org/api/query', params={'id_list': identifier}) as response:
-            if response.status != 200:
-                raise sources.SourceUnavailable('arXiv metadata HTTP %s' % response.status)
-            data = await response.text()
-        root = ElementTree.fromstring(data)
-        if root.tag != '{http://www.w3.org/2005/Atom}feed':
-            raise sources.SourceUnavailable('Invalid arXiv Atom response')
+        try:
+            async with session.get('https://export.arxiv.org/api/query', params={'id_list': identifier}) as response:
+                if response.status != 200:
+                    raise sources.SourceUnavailable('arXiv metadata HTTP %s' % response.status)
+                data = await response.text()
+            root = ElementTree.fromstring(data)
+            if root.tag != '{http://www.w3.org/2005/Atom}feed':
+                raise sources.SourceUnavailable('Invalid arXiv Atom response')
+        except (asyncio.TimeoutError, aiohttp.ClientError, ElementTree.ParseError, sources.SourceUnavailable) as error:
+            # the export API is often slow on records it has not cached (over 20 s, which failed a quarter of the
+            # summaries asked in October 2026); arXiv's OAI-PMH server answers the same record in a fraction of a second
+            result = await _oai_metadata(session, identifier, base)
+            if result is None:
+                raise sources.SourceUnavailable('arXiv metadata unavailable (%s)' % (type(error).__name__,)) from error
+            if result[0] == 1:
+                await asyncio.to_thread(cache.set, key, result, 900 if result[12] else 60)
+            return result
         entry = next((e for e in root.findall('a:entry', ns)
                       if re.sub(r'v\d+$', '', e.findtext('a:id', '', ns).split('/abs/')[-1]) == base), None)
         if entry is None:

@@ -103,6 +103,11 @@ class PaperHistory(models.Model):
     user = models.ForeignKey(User,blank=True, null=True, on_delete=models.CASCADE)
     ip_address = models.TextField(blank=True, null=True)
     lang = models.CharField(max_length=10,default='en')
+    # how the run ended (consumers.queued_summary): failed runs give the day's quota back (access.run_quota)
+    OUTCOMES = [('', 'en cours ou jamais lancé'), ('done', 'résumé livré'), ('failed', 'échec'),
+                ('unavailable', 'source indisponible')]
+    outcome = models.CharField('issue', max_length=12, blank=True, default='', choices=OUTCOMES)
+    failure = models.CharField('erreur', max_length=200, blank=True, default='')
 
     def __str__(self):
         return self.arxiv_id#+' '+self.user.username

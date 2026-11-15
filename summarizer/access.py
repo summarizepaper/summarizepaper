@@ -26,6 +26,7 @@ CLOUDFLARE_NETWORKS = [ipaddress.ip_network(n) for n in (
 )]
 
 RUN_MIN_INTERVAL_SECONDS = 10
+RUN_PENDING_MINUTES = 30  # a run with no outcome after this never started (page closed, robot): it counts no more
 RUN_TOKENS_SESSION_KEY = "allowed_runs"
 
 
@@ -149,11 +150,25 @@ def run_quota(user, hashed_ip):
         return True, None
     # a free account counts its own summaries, wherever it asks from; without an account, the address counts
     signed_in = user is not None and user.is_authenticated
-    today = PaperHistory.objects.filter(created__gte=now - timezone.timedelta(days=1))
+    # only runs that gave a summary, or may still give one, spend the quota
+    today = (PaperHistory.objects.filter(created__gte=now - timezone.timedelta(days=1))
+             .exclude(outcome__in=('failed', 'unavailable'))
+             .exclude(outcome='', created__lt=now - timezone.timedelta(minutes=RUN_PENDING_MINUTES)))
     today = today.filter(user=user) if signed_in else today.filter(user=None, ip_address=hashed_ip)
     if today.count() >= (runs_per_day() if signed_in else anonymous_runs_per_day()):
         return False, "toomany"
     return True, None
+
+
+def settle_run(user, hashed_ip, arxiv_id, lang, outcome, failure=''):
+    """Record how the visitor's latest pending run of this paper ended (see run_quota)."""
+    signed_in = user is not None and user.is_authenticated
+    rows = PaperHistory.objects.filter(arxiv_id=arxiv_id, lang=lang, outcome='',
+                                       created__gte=timezone.now() - timezone.timedelta(hours=1))
+    rows = rows.filter(user=user) if signed_in else rows.filter(user=None, ip_address=hashed_ip)
+    row = rows.order_by('-created').first()
+    if row is not None:
+        PaperHistory.objects.filter(pk=row.pk).update(outcome=outcome, failure=failure[:200])
 
 
 def throttled(name, request, per_minute):

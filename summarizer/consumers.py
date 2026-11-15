@@ -677,7 +677,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         if page_running:
         # Page is already running, do not start it again
-            return
+            return False
         else:
             # Page is not running, start it now and update the status in the cache
             cache.delete(synthesis.cache_key(self.arxiv_group_name))
@@ -712,18 +712,23 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
 
     async def sendmessages(self,v,l,message,p):
+        """Run the summary; return (outcome, failure) as PaperHistory records them, outcome None when this call ran
+        nothing (the paper was already being summarized)."""
         try:
-            await self._sendmessages(v,l,message,p)
-        except generated.SourceUnavailable:
+            ran = await self._sendmessages(v,l,message,p)
+        except generated.SourceUnavailable as error:
             cache.set(self.arxiv_group_name, False)
             text = ('Résumé indisponible : aucun abstract ni texte intégral autorisé n’a pu être récupéré. Consultez l’article original.'
                     if l == 'fr' else 'Summary unavailable: no abstract or permitted full text could be obtained. Please consult the original article.')
             await self.send_message_now({'loading_message': text, 'progress': 0})
-        except Exception:
+            return 'unavailable', str(error)
+        except Exception as error:
             logger.exception('Summary failed for %s', v)
             #release the "running" lock so the paper can be run again
             cache.set(self.arxiv_group_name, False)
             await self.send_failure(l)
+            return 'failed', '%s: %s' % (type(error).__name__, error)
+        return ('done', '') if ran else (None, '')
 
     async def queued_summary(self, v, l, message, p):
         """sendmessages once summary_queue has a slot; meanwhile the page shows the place in line."""
@@ -745,15 +750,19 @@ class LoadingConsumer(AsyncWebsocketConsumer):
         finally:
             cache.delete(self.arxiv_group_name + '-queued')
         try:
-            await self.sendmessages(v, l, message, p)
+            outcome, failure = await self.sendmessages(v, l, message, p)
         finally:
             summary_queue.leave()
+        if outcome:
+            await database_sync_to_async(access.settle_run)(self.user, self.hashed_ip, v, l, outcome, failure)
 
     async def send_failure(self, l):
         if l == 'fr':
-            text = "Une erreur s'est produite pendant le traitement. Réessayez plus tard ou contactez-nous."
+            text = ("Une erreur s'est produite pendant le traitement. Cet essai ne compte pas dans vos résumés du jour : "
+                    "réessayez dans quelques minutes, ou contactez-nous.")
         else:
-            text = "Something went wrong while processing the paper. Please try again later or contact us."
+            text = ("Something went wrong while processing the paper. This attempt does not count toward your summaries "
+                    "of the day: try again in a few minutes, or contact us.")
         await self.send_message_now({"loading_message": text, "progress": 0})
 
     async def _sendmessages(self,v,l,message,p):
@@ -764,7 +773,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         if page_running:
         # Page is already running, do not start it again
-            return
+            return False
         else:
             # Page is not running, start it now and update the status in the cache
             cache.delete(synthesis.cache_key(self.arxiv_group_name))
@@ -1006,6 +1015,7 @@ class LoadingConsumer(AsyncWebsocketConsumer):
 
         #del self.sendmessages_running[self.arxiv_group_name]
         cache.set(self.arxiv_group_name, False)
+        return True
 
     async def connect(self):
         self.arxiv_id = self.scope["url_route"]["kwargs"]["arxiv_id"]

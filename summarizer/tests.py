@@ -99,6 +99,32 @@ class QuotaTests(TestCase):
         UserPlan.objects.create(user=reader, paid=True)
         self.assertEqual(access.run_quota(reader, ip), (True, None))
 
+    def test_failed_and_never_started_runs_give_the_quota_back(self):
+        ip = access.hash_ip('81.0.0.13')
+        now = timezone.now()
+        row = PaperHistory.objects.create(arxiv_id='a', lang='en', ip_address=ip)
+        PaperHistory.objects.filter(pk=row.pk).update(created=now - timezone.timedelta(minutes=5))
+        self.assertEqual(access.run_quota(None, ip), (False, 'toomany'))  # still running: it counts
+        access.settle_run(None, ip, 'a', 'en', 'failed', 'TimeoutError: ')
+        self.assertEqual(PaperHistory.objects.get(pk=row.pk).outcome, 'failed')
+        self.assertEqual(access.run_quota(None, ip), (True, None))
+        PaperHistory.objects.filter(pk=row.pk).update(outcome='unavailable')
+        self.assertEqual(access.run_quota(None, ip), (True, None))
+        PaperHistory.objects.filter(pk=row.pk).update(outcome='')  # never started: counts for half an hour only
+        PaperHistory.objects.filter(pk=row.pk).update(created=now - timezone.timedelta(minutes=access.RUN_PENDING_MINUTES + 1))
+        self.assertEqual(access.run_quota(None, ip), (True, None))
+        PaperHistory.objects.filter(pk=row.pk).update(outcome='done')
+        self.assertEqual(access.run_quota(None, ip), (False, 'toomany'))
+
+    def test_settle_run_marks_only_this_visitors_pending_run(self):
+        ip, other = access.hash_ip('81.0.0.14'), access.hash_ip('81.0.0.15')
+        mine = PaperHistory.objects.create(arxiv_id='a', lang='en', ip_address=ip)
+        theirs = PaperHistory.objects.create(arxiv_id='a', lang='en', ip_address=other)
+        french = PaperHistory.objects.create(arxiv_id='a', lang='fr', ip_address=ip)
+        access.settle_run(None, ip, 'a', 'en', 'done')
+        self.assertEqual([r.outcome for r in PaperHistory.objects.filter(pk__in=(mine.pk, theirs.pk, french.pk)).order_by('pk')],
+                         ['done', '', ''])
+
     def test_chat_quota_anonymous(self):
         ip = access.hash_ip('81.0.0.9')
         start = access.chat_quota_left(None, ip)

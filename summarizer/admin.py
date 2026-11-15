@@ -407,7 +407,12 @@ class HistoryAdmin(ModelAdmin):
     raw_id_fields = ('user',)
 
 
-admin.site.register(PaperHistory, HistoryAdmin)
+class PaperHistoryAdmin(HistoryAdmin):
+    list_display = ('arxiv_id', 'user', 'lang', 'created', 'outcome', 'failure')
+    list_filter = ('outcome', 'lang')
+
+
+admin.site.register(PaperHistory, PaperHistoryAdmin)
 admin.site.register(PDFHistory, HistoryAdmin)
 
 

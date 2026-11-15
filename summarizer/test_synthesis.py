@@ -91,7 +91,7 @@ class SynthesisTests(TestCase):
         async def run():
             await queue.enter(True)
             with mock.patch.object(consumers, 'summary_queue', queue), \
-                    mock.patch.object(consumers.HeadlessSummary, 'sendmessages', mock.AsyncMock()) as write:
+                    mock.patch.object(consumers.HeadlessSummary, 'sendmessages', mock.AsyncMock(return_value=(None, ''))) as write:
                 waiting = asyncio.create_task(consumer.queued_summary(self.paper.arxiv_id, 'fr', {}, False))
                 await asyncio.sleep(0)
                 self.assertEqual(synthesis.snapshot(self.paper.arxiv_id, 'fr')['status'], 'running')
@@ -105,6 +105,23 @@ class SynthesisTests(TestCase):
         self.assertEqual(progress['queued'], 1)
         self.assertIn('compte gratuit passent en priorité', progress['loading_message'])
         self.assertIsNone(cache.get(self.group + '-queued'))
+
+    def test_a_failed_run_is_recorded_so_it_gives_the_quota_back(self):
+        from . import access, consumers
+        from .models import PaperHistory
+        ip = access.hash_ip('81.0.0.20')
+        row = PaperHistory.objects.create(arxiv_id=self.paper.arxiv_id, lang='fr', ip_address=ip)
+        consumer = consumers.HeadlessSummary(self.paper.arxiv_id, 'fr')
+        consumer.channel_layer = mock.Mock(group_send=mock.AsyncMock())
+        consumer.user, consumer.hashed_ip = mock.Mock(is_authenticated=False), ip
+        with mock.patch.object(consumers, 'summary_queue', consumers.SummaryQueue(1)), \
+                mock.patch.object(consumers.HeadlessSummary, '_sendmessages', mock.AsyncMock(side_effect=TimeoutError())), \
+                mock.patch.object(consumers.logger, 'exception'):
+            async_to_sync(consumer.queued_summary)(self.paper.arxiv_id, 'fr', {}, False)
+        row.refresh_from_db()
+        self.assertEqual((row.outcome, row.failure), ('failed', 'TimeoutError: '))
+        message = consumer.channel_layer.group_send.await_args_list[-1].args[1]['message']['loading_message']
+        self.assertIn('ne compte pas dans vos résumés du jour', message)
 
     def test_running_page_offers_an_account_to_visitors_only(self):
         from django.contrib.auth.models import User
@@ -260,12 +277,39 @@ class ArxivMetadataResilienceTests(TestCase):
         self.assertEqual(connect.call_count, 1)
         self.assertEqual(first[12], '')
 
-    def test_primary_http_errors_stop_before_license_lookup_and_are_not_cached(self):
-        manager, session = self.session([self.response('<html>Rate limited</html>', status=429)])
+    OAI = '''<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><GetRecord><record><metadata>
+    <arXiv xmlns="http://arxiv.org/OAI/arXiv/"><id>2607.11677</id><created>2026-07-01</created>
+    <authors><author><keyname>Example</keyname><forenames>Ann</forenames><affiliation>Lab</affiliation></author></authors>
+    <title>Paper
+      title</title><categories>astro-ph.EP astro-ph.SR</categories><doi>10.1/x</doi>
+    <license>http://creativecommons.org/licenses/by/4.0/</license><abstract>Public abstract</abstract></arXiv>
+    </metadata></record></GetRecord></OAI-PMH>'''
+
+    def test_a_slow_or_failing_export_api_falls_back_on_the_oai_record(self):
+        import asyncio
+        for primary in [self.response('', error=asyncio.TimeoutError()), self.response('<html>Rate limited</html>', status=429)]:
+            cache.clear()
+            manager, session = self.session([primary, self.response(self.OAI)])
+            with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager):
+                data = async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
+            self.assertEqual(data[:13], [1, ['Ann Example'], ['Lab'], 'http://arxiv.org/abs/2607.11677v1', 'Paper title',
+                                         'https://doi.org/10.1/x', 'Public abstract', 'astro-ph.EP', '2026-07-01T00:00:00Z',
+                                         '2026-07-01T00:00:00Z', '', '', 'http://creativecommons.org/licenses/by/4.0/'])
+            self.assertEqual(cache.get('arxiv-metadata-v3:2607.11677v1'), data)
+
+    def test_oai_says_when_arxiv_does_not_know_the_paper(self):
+        import asyncio
+        missing = '<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><error code="idDoesNotExist">no</error></OAI-PMH>'
+        manager, session = self.session([self.response('', error=asyncio.TimeoutError()), self.response(missing)])
+        with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager):
+            self.assertEqual(async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')[0], 0)
+
+    def test_when_both_arxiv_services_fail_nothing_is_cached(self):
+        manager, session = self.session([self.response('<html>Rate limited</html>', status=429), self.response('', status=503)])
         with mock.patch.object(utils.aiohttp, 'ClientSession', return_value=manager):
             with self.assertRaises(utils.sources.SourceUnavailable):
                 async_to_sync(utils.get_arxiv_metadata)('2607.11677v1')
-        self.assertEqual(session.get.call_count, 1)
+        self.assertEqual(session.get.call_count, 2)
         self.assertIsNone(cache.get('arxiv-metadata-v3:2607.11677v1'))
 
     def test_known_license_can_be_reused_without_contacting_the_license_service(self):
