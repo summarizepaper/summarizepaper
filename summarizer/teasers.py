@@ -232,8 +232,9 @@ def _refcheck(row):
                             len(items)) % {'n': len(items)}
     claims = result.get('open_claims') or []
     if claims:
-        headline += '; ' + ngettext('in %(n)d sentence, the cited paper may not say what it is cited for',
-                                    'in %(n)d sentences, the cited paper may not say what it is cited for', len(claims)) % {'n': len(claims)}
+        headline = _('%(found)s; %(claims)s') % {'found': headline, 'claims': ngettext(
+            'in %(n)d sentence, the cited paper may not say what it is cited for',
+            'in %(n)d sentences, the cited paper may not say what it is cited for', len(claims)) % {'n': len(claims)}}
     corrections = result.get('corrections') or {}
     checked = result.get('claims_checked') if isinstance(result.get('claims_checked'), int) else 0
     kinds = sorted((result.get('kinds') or {}).items(), key=lambda kv: refcheck.LEVELS.index(next(

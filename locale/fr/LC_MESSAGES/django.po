@@ -24600,3 +24600,6 @@ msgstr[0] ""
 msgstr[1] ""
 "dans %(n)d phrases, l’article cité ne dit peut-être pas ce qu’on lui "
 "attribue"
+
+msgid "%(found)s; %(claims)s"
+msgstr "%(found)s ; %(claims)s"
