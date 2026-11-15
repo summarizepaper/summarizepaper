@@ -29,6 +29,7 @@ class PictureTests(TestCase):
         title = 'Détection de CO$_2$ par JWST : α ≈ 0.3, ∇·B = 0, Шкала и 量子 ' * 6
         Image.open(io.BytesIO(social.card('EYEBROW', title, 'word ' * 400)))
         Image.open(io.BytesIO(social.card('EYEBROW', 'Rising', items=[('×12', 'x' * 300)] * 6, note='Note')))
+        self.assertEqual(social.first_sentence(', , , , We present Mixtral 8x7B, a model. It wins.'), 'We present Mixtral 8x7B, a model.')
         lines, complete = social.wrap('word ' * 200, 32, 400, 1000, 3)
         self.assertFalse(complete)
         self.assertEqual(len(lines), 3)

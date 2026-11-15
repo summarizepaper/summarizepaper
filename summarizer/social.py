@@ -69,7 +69,8 @@ def plain(text):
     """One line of plain text from stored summaries: no tags, Markdown stars, LaTeX dollars or runs of spaces."""
     from . import sources
     from .templatetags.seo import plaintext
-    return re.sub(r'\s+', ' ', plaintext(sources.plain_math(str(text or ''))).replace('**', '')).strip()
+    text = re.sub(r'\s+', ' ', plaintext(sources.plain_math(str(text or ''))).replace('**', '')).strip()
+    return re.sub(r'^[\s,;:.·•*\-–—]+', '', text)  # older summaries can start with ", , , ," left by stripped tags
 
 
 def shorten(text, limit):
