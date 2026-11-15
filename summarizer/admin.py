@@ -88,6 +88,19 @@ def activity_view(request):
     return render(request, 'admin/summarizer/activity.html', context)
 
 
+def conversions_view(request):
+    """/admin/conversions/: from a visit to a paid subscription over 7, 30 or 60 days (conversions.py)."""
+    from . import conversions
+    try:
+        days = int(request.GET.get('jours', 30))
+    except ValueError:
+        days = 30
+    days = days if days in conversions.PERIODS else 30
+    context = dict(admin.site.each_context(request), title='Conversions', periods=conversions.PERIODS,
+                   report=conversions.report(days))
+    return render(request, 'admin/summarizer/conversions.html', context)
+
+
 # --- site settings: quotas and AI models ---------------------------------
 
 def _check_model(name):

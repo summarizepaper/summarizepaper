@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from django.views.decorators.csrf import csrf_exempt
-from . import (views, arxiv_labs, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
+from . import (views, example_pages, conversion_emails, arxiv_labs, account_deletion, user_outreach, getting_started, search_filters, saved_searches, billing, conference, digest, digest_web, email_updates, accounts, reactivation, guides, audio, citations, exports, generated, letters,
                synthesis, changes, chat_figures, chat_page, collection_tools, comparison, library, literature, missed, neighbours, personal_activity, presskit, questions, reading, refcheck, removal, scoops, slides, students, teams, trends_web, zotero)
 from django.contrib.auth import views as auth_views
 from .views import RegisterView, ActivateView, CustomLoginView, logout_view
@@ -54,6 +54,9 @@ urlpatterns = [
     path("faq/", views.faq, name="faq"),
     path("tools/", views.tools, name="tools"),
     path("guides/", guides.guide_index, name="guides"),
+    path("examples/", example_pages.index, name="examples"),
+    path("examples/<slug:address>/", example_pages.detail, name="example"),
+    path("emails/stop/<str:token>/", conversion_emails.optout, name="conversion_optout"),
     path("guides/<slug:slug>/", guides.guide_detail, name="guide"),
     path("author/quentin-kral/", TemplateView.as_view(template_name="summarizer/author.html"), name="author"),
     path("contact/", views.contact, name="contact"),

@@ -1,0 +1,30 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 20px;color:#666;">{% blocktrans %}Your {{ plan }} trial{% endblocktrans %}</p>
+    <p style="font-size:15px;line-height:1.5;margin:0 0 16px;">{% if amount %}{% blocktrans %}Your free days end on {{ end }}. Your subscription then continues by itself: the first payment, {{ amount }}, is taken that day.{% endblocktrans %}{% else %}{% blocktrans %}Your free days end on {{ end }}. Your subscription then continues by itself, and its first payment is taken that day.{% endblocktrans %}{% endif %}</p>
+    {% if made %}
+    <p style="font-size:15px;line-height:1.5;margin:0 0 8px;"><strong>{% trans 'What you made during your trial' %}</strong></p>
+    {% for m in made %}
+    <div style="border-left:3px solid #34a853;padding:4px 0 4px 12px;margin:0 0 10px;font-size:14px;line-height:1.5;"><span style="color:#666;">{{ m.tool }}</span><br><a href="{{ m.url }}" style="color:#1a0dab;">{{ m.title|default:m.tool }}</a></div>
+    {% endfor %}
+    <p style="font-size:14px;line-height:1.5;color:#444;">{% trans 'Your results stay yours, and your alerts keep running.' %}</p>
+    {% else %}
+    <p style="font-size:15px;line-height:1.5;margin:0 0 8px;">{% trans 'You have not tried the tools yet: there is still time. Three to start with:' %}</p>
+    <ul style="font-size:15px;line-height:1.6;margin:0 0 16px;padding-left:20px;">
+      <li><a href="{{ base_url }}/{{ lang }}/missed/" style="color:#1a0dab;">{% trans 'What did I miss?' %}</a> — {% trans 'the close papers your draft does not cite' %}</li>
+      <li><a href="{{ base_url }}/{{ lang }}/refcheck/" style="color:#1a0dab;">{% trans 'Bibliography check' %}</a> — {% trans 'wrong references, and citations the cited paper does not support' %}</li>
+      <li><a href="{{ base_url }}/{{ lang }}/citations/" style="color:#1a0dab;">{% trans 'Citation alerts' %}</a> — {% trans 'who cites your papers, and what for' %}</li>
+    </ul>
+    <p style="margin:0 0 16px;"><a href="{{ tools_url }}" style="color:#1a0dab;">{% trans 'Every tool' %} →</a></p>
+    {% endif %}
+    <p style="font-size:14px;line-height:1.5;color:#444;margin:16px 0;">{% trans 'To stop before any payment, cancel on the Premium page (Manage my subscription): you keep everything until the end of your free days.' %}</p>
+    <p style="margin:0 0 24px;"><a href="{{ premium_url }}" style="color:#1a0dab;">{% trans 'My subscription' %} →</a></p>
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      {% trans 'You get this email once, before the end of your trial.' %} <a href="{{ optout_url }}" style="color:#888;">{% trans 'No more emails like this one' %}</a>
+    </p>
+  </div>
+</body>
+</html>

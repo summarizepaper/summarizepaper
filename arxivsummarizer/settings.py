@@ -158,6 +158,7 @@ UNFOLD = {
             {"title": "Pilotage", "items": [
                 {"title": "Administration", "icon": "dashboard", "link": reverse_lazy("admin:index")},
                 {"title": "Activité du jour", "icon": "timeline", "link": reverse_lazy("admin_activity")},
+                {"title": "Conversions", "icon": "conversion_path", "link": reverse_lazy("admin_conversions")},
                 {"title": "Relances et retours", "icon": "outgoing_mail", "link": reverse_lazy("admin:summarizer_outreachcontact_changelist")},
                 {"title": "Événements d'envoi", "icon": "mark_email_read", "link": reverse_lazy("admin:summarizer_emailevent_changelist")},
                 {"title": "Coûts API", "icon": "payments", "link": reverse_lazy("admin:summarizer_aiusage_changelist")},

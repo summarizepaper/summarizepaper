@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{% trans 'Real examples of AI research tools: journal club slides, literature reviews, citation alerts' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{% trans 'Real results of the SummarizePaper tools on well-known papers, in astrophysics, computer science and AI, biology and medicine: each statement with the passage of the paper behind it.' %}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/examples/" />
+  <link rel="alternate" hreflang="en" href="https://www.summarizepaper.com/en/examples/" />
+  <link rel="alternate" hreflang="fr" href="https://www.summarizepaper.com/fr/examples/" />
+  {% if not groups %}<meta name="robots" content="noindex" />{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page guides-index examples-index">
+  <header class="page-header">
+    <h1>{% trans 'Real examples of the tools' %}</h1>
+    <p class="lead">{% trans 'What the tools wrote on well-known papers and questions, as you would get it: each statement with the passage of the paper behind it.' %}</p>
+  </header>
+  {% for name, cards in groups %}
+  <h2 class="guide-group">{{ name }}</h2>
+  <div class="guide-list">
+    {% for c in cards %}
+    <a class="guide-card" href="{{ c.url }}" data-funnel="example_page_open" data-placement="examples">
+      <h3>{{ c.title }}</h3>
+    </a>
+    {% endfor %}
+  </div>
+  {% empty %}
+  <p class="muted">{% trans 'No examples yet.' %}</p>
+  {% endfor %}
+  <p><a class="btn" href="/{{ LANGUAGE_CODE }}/premium/" data-funnel="teaser_premium" data-placement="examples">{% trans 'Discover Premium' %}</a></p>
+</div>
+{% endblock %}

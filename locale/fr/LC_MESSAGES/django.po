@@ -24742,3 +24742,227 @@ msgid "%(n)d new paper citing “%(title)s”"
 msgid_plural "%(n)d new papers citing “%(title)s”"
 msgstr[0] "%(n)d nouvel article qui cite « %(title)s »"
 msgstr[1] "%(n)d nouveaux articles qui citent « %(title)s »"
+
+msgid "Other fields"
+msgstr "Autres domaines"
+
+
+msgid "You will not get these emails any more. Your paper alerts and digests, if you have some, are not changed."
+msgstr "Vous ne recevrez plus ces e-mails. Vos alertes et vos sélections d’articles, si vous en avez, ne changent pas."
+
+
+msgid "Your %(plan)s trial"
+msgstr "Votre essai %(plan)s"
+
+
+msgid "Your free days end on %(end)s. Your subscription then continues by itself: the first payment, %(amount)s, is taken that day."
+msgstr "Vos jours gratuits se terminent le %(end)s. Votre abonnement continue ensuite tout seul : le premier paiement, %(amount)s, est prélevé ce jour-là."
+
+
+msgid "Your free days end on %(end)s. Your subscription then continues by itself, and its first payment is taken that day."
+msgstr "Vos jours gratuits se terminent le %(end)s. Votre abonnement continue ensuite tout seul, et son premier paiement est prélevé ce jour-là."
+
+
+msgid "What you made during your trial"
+msgstr "Ce que vous avez fait pendant votre essai"
+
+
+msgid "Your results stay yours, and your alerts keep running."
+msgstr "Vos résultats restent les vôtres, et vos alertes continuent."
+
+
+msgid "You have not tried the tools yet: there is still time. Three to start with:"
+msgstr "Vous n’avez pas encore essayé les outils : il est encore temps. Trois pour commencer :"
+
+
+msgid "the close papers your draft does not cite"
+msgstr "les articles proches que votre brouillon ne cite pas"
+
+
+msgid "wrong references, and citations the cited paper does not support"
+msgstr "les références erronées, et les citations que l’article cité ne soutient pas"
+
+
+msgid "who cites your papers, and what for"
+msgstr "qui cite vos articles, et pour quoi"
+
+
+msgid "Every tool"
+msgstr "Tous les outils"
+
+
+msgid "To stop before any payment, cancel on the Premium page (Manage my subscription): you keep everything until the end of your free days."
+msgstr "Pour arrêter avant tout paiement, annulez sur la page Premium (Gérer mon abonnement) : vous gardez tout jusqu’à la fin de vos jours gratuits."
+
+
+msgid "My subscription"
+msgstr "Mon abonnement"
+
+
+msgid "You get this email once, before the end of your trial."
+msgstr "Vous recevez cet e-mail une seule fois, avant la fin de votre essai."
+
+
+msgid "No more emails like this one"
+msgstr "Ne plus recevoir ce type d’e-mail"
+
+
+msgid "Your free search with %(tool)s"
+msgstr "Votre recherche gratuite avec %(tool)s"
+
+
+msgid "With Premium, you also get:"
+msgstr "Avec Premium, vous avez aussi :"
+
+
+msgid "See every result with Premium+"
+msgstr "Voir tous les résultats avec Premium+"
+
+
+msgid "See every result with Premium"
+msgstr "Voir tous les résultats avec Premium"
+
+
+msgid "Your first %(trial_days)s days are free: nothing is charged if you cancel before their end."
+msgstr "Vos %(trial_days)s premiers jours sont gratuits : rien n’est prélevé si vous annulez avant la fin."
+
+
+msgid "Open your result again"
+msgstr "Rouvrir votre résultat"
+
+
+msgid "You get this email once, after your free search."
+msgstr "Vous recevez cet e-mail une seule fois, après votre recherche gratuite."
+
+
+msgid "Your %(plan)s trial ends on %(end)s"
+msgstr "Votre essai %(plan)s se termine le %(end)s"
+
+
+msgid "%(tool)s: your free search, and what Premium adds"
+msgstr "%(tool)s : votre recherche gratuite, et ce que Premium ajoute"
+
+
+msgid "Real examples of AI research tools: journal club slides, literature reviews, citation alerts"
+msgstr "Exemples réels d’outils d’IA pour la recherche : journal club, revue de littérature, alertes de citations"
+
+
+msgid "Real results of the SummarizePaper tools on well-known papers, in astrophysics, computer science and AI, biology and medicine: each statement with the passage of the paper behind it."
+msgstr "Des résultats réels des outils SummarizePaper sur des articles connus, en astrophysique, informatique et IA, biologie et médecine : chaque affirmation avec le passage de l’article qui la fonde."
+
+
+msgid "Real examples of the tools"
+msgstr "Exemples réels des outils"
+
+
+msgid "What the tools wrote on well-known papers and questions, as you would get it: each statement with the passage of the paper behind it."
+msgstr "Ce que les outils ont écrit sur des articles et des questions connus, tel que vous le recevriez : chaque affirmation avec le passage de l’article qui la fonde."
+
+
+msgid "No examples yet."
+msgstr "Pas encore d’exemple."
+
+
+msgid "Examples"
+msgstr "Exemples"
+
+
+msgid "The paper and its summary"
+msgstr "L’article et son résumé"
+
+
+msgid "The whole result, as its owner would share it"
+msgstr "Le résultat complet, tel que son auteur le partagerait"
+
+
+msgid "Other examples"
+msgstr "Autres exemples"
+
+
+msgid "Every example"
+msgstr "Tous les exemples"
+
+
+msgid "Every example, in your field"
+msgstr "Tous les exemples, dans votre domaine"
+
+
+msgid "Every example in detail, in your field"
+msgstr "Tous les exemples en détail, dans votre domaine"
+
+
+msgid "Who works on “%(s)s”? The teams, people and approaches"
+msgstr "Qui travaille sur « %(s)s » ? Les équipes, les chercheurs et les approches"
+
+
+msgid "The close papers a draft on “%(s)s” does not cite"
+msgstr "Les articles proches qu’un brouillon sur « %(s)s » ne cite pas"
+
+
+msgid "Bibliography check of a draft: “%(s)s”"
+msgstr "Vérification de la bibliographie d’un brouillon : « %(s)s »"
+
+
+msgid "Literature review: %(s)s"
+msgstr "Revue de littérature : %(s)s"
+
+
+msgid "Journal club slides on “%(s)s”, each point with its passage of the paper"
+msgstr "Présentation de journal club sur « %(s)s », chaque point avec son passage de l’article"
+
+
+msgid "%(s)s: the papers compared side by side"
+msgstr "%(s)s : les articles comparés côte à côte"
+
+
+msgid "Scoop watch of a research project: “%(s)s”"
+msgstr "Veille anti-scoop d’un projet de recherche : « %(s)s »"
+
+
+msgid "Who cites “%(s)s”, and what for"
+msgstr "Qui cite « %(s)s », et pour quoi"
+
+
+msgid "From a topic, the tool read the papers on it and grouped who signs them: institutions, people, the approaches they take and the countries where the work is done."
+msgstr "À partir d’un sujet, l’outil a lu les articles qui en traitent et regroupé ceux qui les signent : institutions, chercheurs, approches suivies et pays où le travail se fait."
+
+
+msgid "From a draft (here a demonstration manuscript), the tool searched journals and preprints for the close papers it does not cite, and says where to cite each one and how to position the draft."
+msgstr "À partir d’un brouillon (ici un manuscrit de démonstration), l’outil a cherché dans les revues et les preprints les articles proches qu’il ne cite pas, et dit où citer chacun et comment positionner le brouillon."
+
+
+msgid "From a LaTeX draft and its .bib (here a demonstration manuscript), the tool checked every reference against the records of the papers, then whether the cited papers say what they are cited for."
+msgstr "À partir d’un brouillon LaTeX et de son .bib (ici un manuscrit de démonstration), l’outil a vérifié chaque référence dans les notices des articles, puis si les articles cités disent bien ce pour quoi ils sont cités."
+
+
+msgid "From a research question, the tool read the papers that answer it and wrote a synthesis, the points of consensus and of disagreement and the open questions, each with its sources."
+msgstr "À partir d’une question de recherche, l’outil a lu les articles qui y répondent et écrit une synthèse, les points de consensus et de désaccord et les questions ouvertes, chacun avec ses sources."
+
+
+msgid "From the paper alone, the tool wrote a journal club presentation: each point comes with the passage of the paper it rests on, with the figures, the context and the questions to prepare."
+msgstr "À partir du seul article, l’outil a écrit une présentation de journal club : chaque point vient avec le passage de l’article sur lequel il repose, avec les figures, le contexte et les questions à préparer."
+
+
+msgid "From a collection of papers, the tool filled a table, one row per paper, each cell with its passage of the paper, then said where the papers agree and where they disagree."
+msgstr "À partir d’une collection d’articles, l’outil a rempli un tableau, une ligne par article, chaque case avec son passage de l’article, puis dit où les articles s’accordent et où ils divergent."
+
+
+msgid "From the description of a research project, the scoop watch reads the new papers of each day and emails those that come close, and why. Here, the email of its first days."
+msgstr "À partir de la description d’un projet de recherche, la veille anti-scoop lit les nouveaux articles de chaque jour et envoie par e-mail ceux qui s’en approchent, et pourquoi. Ici, l’e-mail de ses premiers jours."
+
+
+msgid "Citation alerts read the papers that cite a paper you follow and say what each one does with it. Here, the email of the latest papers citing this one."
+msgstr "Les alertes de citations lisent les articles qui citent un article que vous suivez et disent ce que chacun en fait. Ici, l’e-mail des derniers articles qui citent celui-ci."
+
+
+msgid "You saw the first %(shown)s; %(n)s more is waiting in your result."
+msgid_plural "You saw the first %(shown)s; %(n)s more are waiting in your result."
+msgstr[0] "Vous avez vu les %(shown)s premiers ; %(n)s autre vous attend dans votre résultat."
+msgstr[1] "Vous avez vu les %(shown)s premiers ; %(n)s autres vous attendent dans votre résultat."
+
+
+msgid "%(tool)s: %(n)s more result of your free search"
+msgid_plural "%(tool)s: %(n)s more results of your free search"
+msgstr[0] "%(tool)s : %(n)s autre résultat de votre recherche gratuite"
+msgstr[1] "%(tool)s : %(n)s autres résultats de votre recherche gratuite"
+

@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, changes, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, visits, zotero
+from summarizer import audio, changes, conversion_emails, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, visits, zotero
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ class Command(BaseCommand):
                            ('letter emails', lambda: letters.send(now, budget)),
                            ('search watches', lambda: saved_searches.run(now, budget, base_url=options['base_url'])),
                            ('publication alerts', lambda: publication_alerts.run(now, budget)),
+                           ('conversion emails', lambda: conversion_emails.run(now, budget, base_url=options['base_url'])),
                            ('reading checks', lambda: personal_activity.check_readings(now)),
                            ('publication details', lambda: publication_status.refresh_queued()),
                            ('placement reminders', lambda: students.send_reminders(now, budget, base_url=options['base_url'])),
@@ -57,7 +58,7 @@ class Command(BaseCommand):
             except Exception:
                 logger.exception('Hourly step %s failed', name)
                 continue
-            if name in ('scoop alerts', 'citation alerts', 'version alerts', 'letter emails', 'search watches', 'publication alerts',
+            if name in ('scoop alerts', 'citation alerts', 'version alerts', 'letter emails', 'search watches', 'publication alerts', 'conversion emails',
                         'placement reminders', 'placement new papers', 'topic maps', 'conference changes'):
                 budget -= done
             self.stdout.write('%s: %s' % (name, done))

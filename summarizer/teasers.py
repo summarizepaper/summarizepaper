@@ -425,7 +425,7 @@ def greyed(count):
     return range(min(count, GREYED_MAX))
 
 
-def teaser(row, shown=SHOWN):
+def teaser(row, shown=SHOWN, highlights_shown=2):
     """{'kind', 'headline', 'contents' (what the result holds besides its list), 'highlights' (passages of it),
     'items' (shown in full), 'hidden', 'greyed', 'path', 'name', 'plus'} of a finished result, else None."""
     if row is None or row.status != 'done' or row.kind not in READERS:
@@ -442,7 +442,7 @@ def teaser(row, shown=SHOWN):
     hidden = max(len(items) - shown, 0)
     from .premium_tools import TOOL_CHOICES
     tool = TOOL_OF.get(row.kind, row.kind)
-    return {'kind': row.kind, 'tool': tool, 'headline': headline, 'contents': contents, 'highlights': highlights[:2], 'lead': lead,
+    return {'kind': row.kind, 'tool': tool, 'headline': headline, 'contents': contents, 'highlights': highlights[:highlights_shown], 'lead': lead,
             'items': items[:shown], 'hidden': hidden, 'greyed': greyed(hidden), 'trial': tool in TRIAL_TOOLS,
             'email': extras.get('email', ''), 'email_subject': extras.get('email_subject', ''),
             'path': PATHS[row.kind], 'name': dict(TOOL_CHOICES)[tool], 'plus': tool in access.PLUS_TOOLS,

@@ -31,6 +31,7 @@
   {% if not own %}
   {% if t.quality %}<p class="teaser-quality"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ t.quality }}</p>{% endif %}
   {% if t.guide and LANGUAGE_CODE in 'en fr' %}<p class="teaser-guide"><a href="/{{ LANGUAGE_CODE }}/guides/{{ t.guide }}/" data-funnel="teaser_guide" data-tool="{{ t.kind }}" data-placement="teaser">{% trans 'See a complete example, explained step by step' %} →</a></p>{% endif %}
+  {% if not example_page %}<p class="teaser-guide"><a href="/{{ LANGUAGE_CODE }}/examples/" data-funnel="teaser_examples" data-tool="{{ t.kind }}" data-placement="teaser">{% trans 'Every example, in your field' %} →</a></p>{% endif %}
   {% endif %}
   {% endif %}
   {% if compact %}

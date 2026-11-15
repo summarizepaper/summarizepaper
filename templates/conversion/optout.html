@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Done' %} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}<meta name="robots" content="noindex" />{% endblock %}
+{% block content %}
+<div class="page">
+  <section class="card section-card">
+    <h1>{% trans 'Done' %}</h1>
+    <p>{% trans 'You will not get these emails any more. Your paper alerts and digests, if you have some, are not changed.' %}</p>
+  </section>
+</div>
+{% endblock %}

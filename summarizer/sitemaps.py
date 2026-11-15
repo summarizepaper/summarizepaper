@@ -13,7 +13,7 @@ class StaticViewSitemap(Sitemap):
     protocol = 'https'
 
     def items(self):
-        items = ['summarize','about','author','faq','contact','privacy','legal','tdm','digest','tools','premium','letters','trends','trends_explore','collections','missed','literature','refcheck','citations','scoops','teams','conference','integrations']
+        items = ['summarize','about','author','faq','contact','privacy','legal','tdm','digest','tools','premium','letters','trends','trends_explore','collections','missed','literature','refcheck','citations','scoops','teams','conference','integrations','examples']
         if guides.published('en'):
             items.append('guides')
         return items
@@ -60,6 +60,22 @@ class GuideSitemap(Sitemap):
 
     def lastmod(self, item):
         return item.get('updated')
+
+
+class ExampleSitemap(Sitemap):
+    """The public pages of the tools' examples (example_pages.py), English and French."""
+    priority = 0.7
+    protocol = 'https'
+
+    def items(self):
+        from . import example_pages
+        return [(lang, address, row.updated) for lang in ('en', 'fr') for row, _about, address in example_pages.listed(lang)]
+
+    def location(self, item):
+        return '/%s/examples/%s/' % (item[0], item[1])
+
+    def lastmod(self, item):
+        return item[2]
 
 
 class LetterSitemap(Sitemap):

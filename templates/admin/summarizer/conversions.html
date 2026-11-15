@@ -1,0 +1,60 @@
+{% extends 'admin/base.html' %}
+{% load unfold %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <h1 class="font-semibold text-2xl text-important">Conversions des {{ report.days }} derniers jours</h1>
+    <div class="flex gap-2">{% for d in periods %}
+        <a class="border border-base-200 rounded-default px-3 py-2 dark:border-base-700{% if d == report.days %} font-semibold text-primary-600{% endif %}" href="?jours={{ d }}">{{ d }} j</a>{% endfor %}
+    </div>
+</div>
+<p class="text-subtle mb-6">D’une visite à un abonnement payant, à partir des pages vues (robots et équipe exclus, comme sur l’activité du jour), des comptes, des essais et de Stripe. Les clics sur les exemples (événements <code>teaser_*</code>) sont dans <a class="text-primary-600" href="https://cloud.umami.is/" rel="noopener">Umami</a>. Désinscrits des e-mails de conversion : {{ report.optouts }}.</p>
+
+<h2 class="font-semibold text-lg mb-3">Le parcours</h2>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    {% for label, value, note in report.funnel %}
+    <tr class="border-b border-base-200 dark:border-base-700"><td class="px-3 py-2">{{ label }}</td><td class="px-3 py-2 font-semibold text-right">{{ value }}</td><td class="px-3 py-2 text-subtle">{{ note }}</td></tr>
+    {% endfor %}
+</table>
+
+<h2 class="font-semibold text-lg mb-3">Par outil</h2>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    <tr class="border-b border-base-200 dark:border-base-700 text-subtle"><th class="px-3 py-2 text-left">Outil</th><th class="px-3 py-2 text-right">Visiteurs sans compte</th><th class="px-3 py-2 text-right">Membres</th><th class="px-3 py-2 text-right">Pages d’exemple</th><th class="px-3 py-2 text-right">Essais gratuits</th><th class="px-3 py-2 text-right">Abonnés parmi eux</th></tr>
+    {% for t in report.tools %}
+    <tr class="border-b border-base-200 dark:border-base-700"><td class="px-3 py-2">{{ t.label }}</td><td class="px-3 py-2 text-right">{{ t.visitors }}</td><td class="px-3 py-2 text-right">{{ t.members }}</td><td class="px-3 py-2 text-right">{{ t.examples }}</td><td class="px-3 py-2 text-right">{{ t.tries }}</td><td class="px-3 py-2 text-right">{{ t.paid }}</td></tr>
+    {% endfor %}
+</table>
+
+<h2 class="font-semibold text-lg mb-3">Les inscriptions, une par une</h2>
+<p class="text-subtle mb-3">Les pages vues par le même navigateur dans les 12 heures avant l’inscription.</p>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    <tr class="border-b border-base-200 dark:border-base-700 text-subtle"><th class="px-3 py-2 text-left">Date</th><th class="px-3 py-2 text-left">Compte</th><th class="px-3 py-2 text-left">Arrivé par</th><th class="px-3 py-2 text-left">Vu avant</th><th class="px-3 py-2 text-left">Essais</th><th class="px-3 py-2 text-left">Abonnement</th></tr>
+    {% for j in report.journeys %}
+    <tr class="border-b border-base-200 dark:border-base-700 align-top">
+        <td class="px-3 py-2 whitespace-nowrap">{{ j.user.date_joined|date:"d/m H:i" }}</td>
+        <td class="px-3 py-2"><a class="text-primary-600" href="{% url 'admin:auth_user_change' j.user.pk %}">{{ j.user.username }}</a>{% if not j.active %} <span class="text-subtle">(non activé)</span>{% endif %}</td>
+        <td class="px-3 py-2">{{ j.origin|default:"—" }}{% if j.first %}<br><span class="text-subtle">{{ j.first|truncatechars:60 }}</span>{% endif %}</td>
+        <td class="px-3 py-2">{{ j.seen|join:", "|default:"—" }}{% if j.papers %}{% if j.seen %}, {% endif %}{{ j.papers }} article{{ j.papers|pluralize }}{% endif %}</td>
+        <td class="px-3 py-2">{{ j.tries|join:", "|default:"—" }}</td>
+        <td class="px-3 py-2">{{ j.plan|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td class="px-3 py-2 text-subtle" colspan="6">Aucune inscription.</td></tr>
+    {% endfor %}
+</table>
+
+<h2 class="font-semibold text-lg mb-3">Abonnements Stripe commencés</h2>
+<table class="w-full mb-8 border border-base-200 dark:border-base-700">
+    {% for p in report.trials %}
+    <tr class="border-b border-base-200 dark:border-base-700"><td class="px-3 py-2">{{ p.created|date:"d/m H:i" }}</td><td class="px-3 py-2"><a class="text-primary-600" href="{% url 'admin:auth_user_change' p.user.pk %}">{{ p.user.username }}</a></td><td class="px-3 py-2">{{ p.tier }}</td><td class="px-3 py-2">{% if p.end %}essai jusqu’au {{ p.end|date:"d/m" }}{% else %}sans essai{% endif %}</td><td class="px-3 py-2">{{ p.state }}</td></tr>
+    {% empty %}
+    <tr><td class="px-3 py-2 text-subtle">Aucun.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

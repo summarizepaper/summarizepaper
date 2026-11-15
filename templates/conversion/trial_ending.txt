@@ -1,0 +1,20 @@
+{% load i18n %}{% autoescape off %}{% if amount %}{% blocktrans %}Your free days end on {{ end }}. Your subscription then continues by itself: the first payment, {{ amount }}, is taken that day.{% endblocktrans %}{% else %}{% blocktrans %}Your free days end on {{ end }}. Your subscription then continues by itself, and its first payment is taken that day.{% endblocktrans %}{% endif %}
+{% if made %}
+{% trans 'What you made during your trial' %}
+{% for m in made %}- {{ m.tool }}: {{ m.title|default:m.tool }} {{ m.url }}
+{% endfor %}
+{% trans 'Your results stay yours, and your alerts keep running.' %}
+{% else %}
+{% trans 'You have not tried the tools yet: there is still time. Three to start with:' %}
+- {% trans 'What did I miss?' %}: {{ base_url }}/{{ lang }}/missed/
+- {% trans 'Bibliography check' %}: {{ base_url }}/{{ lang }}/refcheck/
+- {% trans 'Citation alerts' %}: {{ base_url }}/{{ lang }}/citations/
+{% trans 'Every tool' %}: {{ tools_url }}
+{% endif %}
+{% trans 'To stop before any payment, cancel on the Premium page (Manage my subscription): you keep everything until the end of your free days.' %}
+{% trans 'My subscription' %}: {{ premium_url }}
+
+--
+{% trans 'You get this email once, before the end of your trial.' %}
+{% trans 'No more emails like this one' %}: {{ optout_url }}
+{% endautoescape %}

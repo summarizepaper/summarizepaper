@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block title %}{{ title }} | SummarizePaper{% endblock %}
+{% block extra_head_tags %}
+  <meta name="description" content="{{ t.headline|truncatechars:155 }}" />
+  <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/examples/{{ address }}/" />
+  {% for code, url in alternates %}<link rel="alternate" hreflang="{{ code }}" href="https://www.summarizepaper.com{{ url }}" />
+  {% endfor %}
+{% endblock %}
+
+{% block content %}
+<div class="page example-page">
+  <header class="page-header">
+    <p class="crumb"><a href="/{{ LANGUAGE_CODE }}/examples/">{% trans 'Examples' %}</a>{% if field_name %} · {{ field_name }}{% endif %} · <a href="/{{ LANGUAGE_CODE }}/{{ t.path }}/">{{ t.name }}</a>{% if t.plus %} (Premium+){% endif %}</p>
+    <h1>{{ title }}</h1>
+    <p class="lead">{{ intro }}</p>
+  </header>
+  {% include 'summarizer/tool_teaser.html' %}
+  {% if full_url %}
+  <p class="teaser-full"><a href="{{ full_url }}" data-funnel="example_full_open" data-tool="{{ t.tool }}" data-placement="examples">{% if t.kind == 'slides_v3' %}{% trans 'The paper and its summary' %}{% else %}{% trans 'The whole result, as its owner would share it' %}{% endif %} →</a></p>
+  {% endif %}
+  {% if more %}
+  <section class="example-more">
+    <h2>{% trans 'Other examples' %}{% if field_name %} · {{ field_name }}{% endif %}</h2>
+    <ul>{% for c in more %}<li><a href="{{ c.url }}">{{ c.title }}</a></li>{% endfor %}</ul>
+    <p><a href="/{{ LANGUAGE_CODE }}/examples/">{% trans 'Every example' %} →</a></p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

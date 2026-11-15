@@ -52,6 +52,8 @@ class UserPlan(models.Model):
     tier = models.CharField(max_length=10, default='premium', choices=(('premium', 'Premium'), ('plus', 'Premium+')))
     stripe_customer_id = models.CharField(max_length=100, blank=True, default='')
     stripe_subscription_id = models.CharField(max_length=100, blank=True, default='', db_index=True)
+    #end of the free days of a first subscription (billing.TRIAL_DAYS), from Stripe; None without a trial
+    trial_end = models.DateTimeField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -636,6 +638,25 @@ class ReactivationEmail(models.Model):
 
     def __str__(self):
         return '%s (%s)' % (self.email, self.sent)
+
+
+class ConversionEmail(models.Model):
+    """An email sent once to help a free account or a trial decide (conversion_emails.py): 'trial_result' the day
+    after a free try of a tool (key: the Generated row), 'trial_ending' two days before a Stripe trial ends (key: the
+    subscription), 'optout' when the user asked for no more of them."""
+    KINDS = [('trial_result', 'Après un essai gratuit'), ('trial_ending', 'Fin de l’essai Premium'), ('optout', 'Désinscrit')]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversion_emails')
+    kind = models.CharField(max_length=20, choices=KINDS)
+    key = models.CharField(max_length=100, blank=True, default='')
+    sent = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'kind', 'key')
+        verbose_name = 'e-mail de conversion'
+        verbose_name_plural = 'e-mails de conversion'
+
+    def __str__(self):
+        return '%s %s %s' % (self.user_id, self.kind, self.key)
 
 
 class SuppressedEmail(models.Model):

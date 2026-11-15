@@ -1,0 +1,1 @@
+{% load i18n %}{% if t.hidden %}{% blocktrans count n=t.hidden with tool=t.name %}{{ tool }}: {{ n }} more result of your free search{% plural %}{{ tool }}: {{ n }} more results of your free search{% endblocktrans %}{% else %}{% blocktrans with tool=t.name %}{{ tool }}: your free search, and what Premium adds{% endblocktrans %}{% endif %}

@@ -332,6 +332,9 @@ def sync_subscription(subscription, user=None):
     plan.tier = tier_of_price((items[0].get('price') or {}).get('id')) if items else 'premium'
     plan.expires = _period_end(subscription)
     plan.canceling = bool(subscription.get('cancel_at_period_end') or subscription.get('cancel_at'))
+    trial_end = subscription.get('trial_end')
+    if trial_end:  # kept after the trial: the conversions page counts the trials that became paid
+        plan.trial_end = datetime.datetime.fromtimestamp(trial_end, tz=datetime.timezone.utc)
     plan.save()
     return plan
 

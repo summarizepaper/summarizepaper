@@ -14,12 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from summarizer.admin import activity_view
+from summarizer.admin import activity_view, conversions_view
 from django.urls import include, path, re_path
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemap_views
-from summarizer.sitemaps import GuideSitemap, LetterSitemap, StaticViewSitemap, SummarizedPaperSitemap
+from summarizer.sitemaps import ExampleSitemap, GuideSitemap, LetterSitemap, StaticViewSitemap, SummarizedPaperSitemap
 from summarizer import accounts, billing, mail_events, social, visits
 from summarizer.views import llms_txt, robots_txt
 
@@ -29,11 +29,13 @@ sitemaps = {
     'papers': SummarizedPaperSitemap,
     'guides': GuideSitemap,
     'letters': LetterSitemap,
+    'examples': ExampleSitemap,
     'static': StaticViewSitemap,
 }
 
 urlpatterns = [
     path('admin/activite/', admin.site.admin_view(activity_view), name='admin_activity'),
+    path('admin/conversions/', admin.site.admin_view(conversions_view), name='admin_conversions'),
     path('admin/', admin.site.urls),
     path('robots.txt', robots_txt),
     path('llms.txt', llms_txt),

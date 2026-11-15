@@ -1,0 +1,24 @@
+{% load i18n %}<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 4px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="margin:0 0 20px;color:#666;">{% blocktrans with tool=t.name %}Your free search with {{ tool }}{% endblocktrans %}</p>
+    <p style="font-size:16px;line-height:1.5;margin:0 0 12px;"><strong>{{ t.headline }}</strong></p>
+    <p style="font-size:15px;line-height:1.5;margin:0 0 8px;">{% if t.hidden %}{% blocktrans count n=t.hidden with shown=t.items|length %}You saw the first {{ shown }}; {{ n }} more is waiting in your result.{% plural %}You saw the first {{ shown }}; {{ n }} more are waiting in your result.{% endblocktrans %} {% endif %}{% trans 'With Premium, you also get:' %}</p>
+    <ul style="font-size:15px;line-height:1.5;margin:0 0 16px;padding-left:20px;">{% for c in t.contents %}<li>{{ c }}</li>{% endfor %}</ul>
+    {% for item in t.items %}
+    <div style="border-left:3px solid #34a853;padding:4px 0 4px 12px;margin:0 0 12px;font-size:14px;line-height:1.5;"><strong>{{ item.title }}</strong>{% if item.meta %}<br><span style="color:#666;">{{ item.meta }}</span>{% endif %}</div>
+    {% endfor %}
+    {% for _ in t.greyed %}<div style="border-left:3px solid #ddd;padding:4px 0 4px 12px;margin:0 0 12px;"><div style="background:#eee;height:12px;width:70%;margin:4px 0;"></div><div style="background:#f2f2f2;height:10px;width:45%;"></div></div>{% endfor %}
+    <p style="margin:24px 0 12px;">
+      <a href="{{ premium_url }}" style="background:#34a853;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;font-weight:bold;display:inline-block;">{% if t.plus %}{% trans 'See every result with Premium+' %}{% else %}{% trans 'See every result with Premium' %}{% endif %}</a>
+    </p>
+    <p style="font-size:14px;line-height:1.5;color:#444;margin:0 0 4px;">{% if trial_days %}{% blocktrans %}Your first {{ trial_days }} days are free: nothing is charged if you cancel before their end.{% endblocktrans %}{% endif %}</p>
+    <p style="font-size:14px;margin:0 0 24px;"><a href="{{ result_url }}" style="color:#1a0dab;">{% trans 'Open your result again' %}</a></p>
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      {% trans 'You get this email once, after your free search.' %} <a href="{{ optout_url }}" style="color:#888;">{% trans 'No more emails like this one' %}</a>
+    </p>
+  </div>
+</body>
+</html>

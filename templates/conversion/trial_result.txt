@@ -1,0 +1,16 @@
+{% load i18n %}{% autoescape off %}{{ t.headline }}
+
+{% if t.hidden %}{% blocktrans count n=t.hidden with shown=t.items|length %}You saw the first {{ shown }}; {{ n }} more is waiting in your result.{% plural %}You saw the first {{ shown }}; {{ n }} more are waiting in your result.{% endblocktrans %} {% endif %}{% trans 'With Premium, you also get:' %}
+{% for c in t.contents %}- {{ c }}
+{% endfor %}
+{% for item in t.items %}* {{ item.title }}{% if item.meta %} ({{ item.meta }}){% endif %}
+{% endfor %}
+{% if t.plus %}{% trans 'See every result with Premium+' %}{% else %}{% trans 'See every result with Premium' %}{% endif %}: {{ premium_url }}
+{% if trial_days %}{% blocktrans %}Your first {{ trial_days }} days are free: nothing is charged if you cancel before their end.{% endblocktrans %}{% endif %}
+
+{% trans 'Open your result again' %}: {{ result_url }}
+
+--
+{% trans 'You get this email once, after your free search.' %}
+{% trans 'No more emails like this one' %}: {{ optout_url }}
+{% endautoescape %}
