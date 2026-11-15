@@ -222,12 +222,18 @@ def _refcheck(row):
     items = [_item('%s · %s' % (p['key'], p.get('title') or ''), '', ', '.join(dict.fromkeys(i['label'] for i in p['active'])))
              for p in result['active']]
     refs = len(result.get('refs') or [])
-    headline = ngettext('%(n)d reference to correct or check', '%(n)d references to correct or check', len(items)) % {'n': len(items)}
-    if refs:
-        headline += ' ' + ngettext('out of %(n)d', 'out of %(n)d', refs) % {'n': refs}
+    if refs and len(items) == refs and refs > 1:
+        headline = _('All %(n)d references have a problem to fix or check') % {'n': refs}
+    elif refs:
+        headline = ngettext('%(n)d of the %(total)d references has a problem to fix or check',
+                            '%(n)d of the %(total)d references have a problem to fix or check', len(items)) % {'n': len(items), 'total': refs}
+    else:
+        headline = ngettext('%(n)d reference has a problem to fix or check', '%(n)d references have a problem to fix or check',
+                            len(items)) % {'n': len(items)}
     claims = result.get('open_claims') or []
     if claims:
-        headline += ', ' + ngettext('%(n)d sentence whose citation to check', '%(n)d sentences whose citation to check', len(claims)) % {'n': len(claims)}
+        headline += '; ' + ngettext('in %(n)d sentence, the cited paper may not say what it is cited for',
+                                    'in %(n)d sentences, the cited paper may not say what it is cited for', len(claims)) % {'n': len(claims)}
     corrections = result.get('corrections') or {}
     checked = result.get('claims_checked') if isinstance(result.get('claims_checked'), int) else 0
     kinds = sorted((result.get('kinds') or {}).items(), key=lambda kv: refcheck.LEVELS.index(next(

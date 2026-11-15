@@ -113,12 +113,16 @@
       <ul>
         <li>{% trans 'Our most capable AI model for summaries and answers' %}</li>
         <li>{% trans 'No daily summary limit' %}</li>
-        <li>{% blocktrans %}{{ chat_paid }} questions per day to the AI assistant{% endblocktrans %}</li>
-        <li>{% trans 'A smarter paper alert, read aloud, and every weekly letter by email, read aloud' %}</li>
-        <li>{% trans 'Comparison tables and open questions of your collections' %}</li>
-        <li>{% trans 'Citation and version alerts, scoop watch, who works on a topic' %}</li>
-        <li>{% trans 'The rising topics of every field and category, those closest to your research, and the history of any term, compared and exported' %}</li>
-        <li>{% trans 'What did I miss? and the bibliography check before you submit' %}</li>
+        <li><a href="{% url 'chat' %}">{% trans 'AI assistant' %}</a>{% colon %} {% blocktrans %}{{ chat_paid }} questions per day{% endblocktrans %}</li>
+        <li><a href="{% url 'digest' %}">{% trans 'Daily paper alert' %}</a>{% colon %} {% trans 'up to 5, ranked for your research, read aloud' %}</li>
+        <li><a href="{% url 'letters' %}">{% trans 'Weekly letters' %}</a>{% colon %} {% trans 'every letter by email, read aloud' %}</li>
+        <li><a href="{% url 'collections' %}">{% trans 'Collections' %}</a>{% colon %} {% trans 'comparison tables and open questions of your papers' %}</li>
+        <li><a href="{% url 'citations' %}">{% trans 'Citation alerts' %}</a>{% colon %} {% trans 'the new papers that cite yours or those you follow, and their new versions' %}</li>
+        <li><a href="{% url 'scoops' %}">{% trans 'Scoop watch' %}</a>{% colon %} {% trans 'the new papers close to your ongoing project' %}</li>
+        <li><a href="{% url 'teams' %}">{% trans 'Who works on it?' %}</a>{% colon %} {% trans 'the people and institutions who publish on a topic, and their approaches' %}</li>
+        <li><a href="{% url 'trends' %}">{% trans 'Rising topics' %}</a>{% colon %} {% trans 'of every field and category, those closest to your research, and the history of any term, compared and exported' %}</li>
+        <li><a href="{% url 'missed' %}">{% trans 'What did I miss?' %}</a>{% colon %} {% trans 'the close papers your draft does not cite, where to cite them and how to position yourself' %}</li>
+        <li><a href="{% url 'refcheck' %}">{% trans 'Bibliography check' %}</a>{% colon %} {% trans 'retracted or corrected papers, published preprints, wrong entries, and citations the cited paper does not support' %}</li>
       </ul>
     </div>
 
