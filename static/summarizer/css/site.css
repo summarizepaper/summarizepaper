@@ -1365,3 +1365,19 @@ a.tool-card:hover { border-color: var(--accent); transform: translateY(-1px); }
 .result-delete { margin: 16px 0; text-align: right; }
 .delete-check { width: 18px; height: 18px; vertical-align: -2px; margin-right: 6px; }
 .delete-check-label { margin-left: 16px; font-size: 14px; color: var(--text-muted); }
+
+/* ---------- A post ready for LinkedIn, X or Bluesky (share_post.html) ---------- */
+.share-post { margin: 24px 0; padding: 0; }
+.share-post > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 16px 20px; cursor: pointer; list-style: none; }
+.share-post > summary::-webkit-details-marker { display: none; }
+.share-post > summary::after { content: '\25BE'; margin-left: auto; color: var(--text-muted); }
+.share-post[open] > summary::after { content: '\25B4'; }
+.share-post > summary i { color: var(--accent); }
+.share-post > summary .muted { font-size: 14px; }
+.share-post > :not(summary) { margin-left: 20px; margin-right: 20px; }
+.share-post .share-note { margin-top: 0; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); font-size: 15px; }
+.share-post .share-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+.share-post textarea { display: block; box-sizing: border-box; width: calc(100% - 40px); min-height: 220px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit; font-size: 15px; line-height: 1.5; resize: vertical; }
+.share-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.share-post .share-help { margin-top: 10px; font-size: 13px; }
+.share-post .share-status { min-height: 1em; margin-top: 0; margin-bottom: 16px; font-size: 14px; color: var(--success); }

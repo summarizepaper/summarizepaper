@@ -8,6 +8,17 @@
   <meta name="description" content="{% trans 'The research topics with a sudden rise in new papers this week on arXiv, bioRxiv and medRxiv, explained in plain language, with example papers.' %}" />
   <link rel="canonical" href="https://www.summarizepaper.com/{{ LANGUAGE_CODE }}/trends/" />
   {% if scope != '*' or view == 'foryou' or request.GET.week %}<meta name="robots" content="noindex" />{% endif %}
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="SummarizePaper" />
+  <meta property="og:title" content="{% if share %}{% blocktrans with name=server_name %}Rising this week on {{ name }}{% endblocktrans %}{% else %}{% trans 'Rising topics in research' %}{% endif %}" />
+  <meta property="og:description" content="{% if share %}{% for topic in topics|slice:':3' %}{{ topic.title }}{% if not forloop.last %} · {% endif %}{% endfor %}{% else %}{% trans 'The research topics with a sudden rise in new papers this week on arXiv, bioRxiv and medRxiv, explained in plain language, with example papers.' %}{% endif %}" />
+  {% if share %}<meta property="og:url" content="{{ share.url }}" />{% endif %}
+  {% if og_image %}
+  <meta property="og:image" content="{{ og_image }}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -78,6 +89,7 @@
     {% elif scope == '*' %}<p class="muted">{% trans 'What the papers found, field by field:' %} <a href="/{{ LANGUAGE_CODE }}/letters/">{% trans 'the weekly letters' %}</a>.</p>{% endif %}
     {% if topics %}
     <div class="item-list">{% for topic in topics %}{% include 'summarizer/trend_card.html' %}{% endfor %}</div>
+    {% if share %}{% blocktrans with name=server_name asvar share_heading %}Share this week's rising topics on {{ name }}{% endblocktrans %}{% include 'summarizer/share_post.html' with heading=share_heading %}{% endif %}
     {% else %}
     <p class="notice">
       {% if result_status == 'no_signal' %}

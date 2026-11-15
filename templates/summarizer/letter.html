@@ -15,6 +15,12 @@
   <meta property="og:type" content="article" />
   <meta property="og:title" content="{{ letter.title }}" />
   <meta property="og:description" content="{{ letter.dek }}" />
+  <meta property="og:site_name" content="SummarizePaper" />
+  <meta property="og:url" content="{{ share.url }}" />
+  <meta property="og:image" content="{{ og_image }}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "headline": "{{ letter.title|escapejs }}", "description": "{{ letter.dek|escapejs }}", "datePublished": "{{ letter.created|date:'c' }}", "inLanguage": "{{ LANGUAGE_CODE }}", "publisher": {"@id": "https://www.summarizepaper.com/#organization"}, "author": {"@type": "Organization", "name": "SummarizePaper"}}</script>
 {% endblock %}
 
@@ -115,6 +121,8 @@
     {% endif %}
     <a class="btn btn-sm btn-ghost" href="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/feed/">RSS</a>
   </div>
+
+  {% trans 'Share this letter' as share_heading %}{% include 'summarizer/share_post.html' with heading=share_heading %}
 
   <div class="card letter-feedback" id="feedback" data-url="/{{ LANGUAGE_CODE }}/letters/{{ letter.topic }}/{{ letter.day|date:'Y-m-d' }}/feedback/">
     {% csrf_token %}

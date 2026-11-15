@@ -48,6 +48,7 @@
     <a href="/{{ LANGUAGE_CODE }}/bibtex/{{ arxiv_id }}/" rel="nofollow" data-citation aria-haspopup="dialog" class="action" data-funnel="paper_action_cite"><i class="fas fa-quote-right"></i> {% trans 'Cite' %}</a>
     <a href="#tools" class="action" data-funnel="paper_action_save"><i class="fas fa-bookmark"></i> {% trans 'Save' %}</a>
     {% if topic %}<a href="/{{ LANGUAGE_CODE }}/search-results/?q={{ topic|urlencode }}" rel="nofollow" class="action" data-funnel="paper_action_follow"><i class="fas fa-bell"></i> {% trans 'Follow this topic' %}</a>{% endif %}
+    {% if share %}<a href="#share" class="action action-share" data-funnel="paper_action_share"><i class="fas fa-share-alt"></i> {% trans 'Share' %}</a>{% endif %}
   </nav>
 
   {% if insight or notes or keywords %}
@@ -98,6 +99,11 @@
     </div>
     {% endif %}
   </section>
+  {% endif %}
+
+  {% if share %}
+  {% trans 'Share this paper' as share_heading %}{% trans 'One of the authors? The post below presents your paper: edit it, then publish it.' as share_note %}
+  {% include 'summarizer/share_post.html' with heading=share_heading note=share_note %}
   {% endif %}
 
   {% if not request.user.is_authenticated %}

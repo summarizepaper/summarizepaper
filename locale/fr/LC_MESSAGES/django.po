@@ -23936,3 +23936,94 @@ msgid "%(name)s: %(n)s rising topic this week, with Premium"
 msgid_plural "%(name)s: %(n)s rising topics this week, with Premium"
 msgstr[0] "%(name)s : %(n)s sujet qui monte cette semaine, avec Premium"
 msgstr[1] "%(name)s : %(n)s sujets qui montent cette semaine, avec Premium"
+
+# Sharing on LinkedIn, X and Bluesky (social.py, share_post.html)
+msgid "Key findings:"
+msgstr "À retenir :"
+
+msgid "AI summary, key points and questions to the paper:"
+msgstr "Résumé IA, points clés et questions à l'article :"
+
+#, python-format
+msgid "Rising research topics this week on %(server)s (papers of %(week)s):"
+msgstr ""
+"Les sujets de recherche qui montent cette semaine sur %(server)s (articles "
+"du %(week)s) :"
+
+#, python-format
+msgid "%(n)s papers from %(t)s teams"
+msgstr "%(n)s articles de %(t)s équipes"
+
+msgid ""
+"Counted in the title and abstract of every new paper, explained in plain "
+"language:"
+msgstr ""
+"Comptés dans le titre et le résumé de chaque nouvel article, expliqués "
+"simplement :"
+
+#, python-format
+msgid "Rising this week on %(server)s:"
+msgstr "Ça monte cette semaine sur %(server)s :"
+
+msgid "In this letter:"
+msgstr "Dans cette lettre :"
+
+msgid "Each finding links to its paper:"
+msgstr "Chaque résultat renvoie à son article :"
+
+#, python-format
+msgid "Rising this week on %(server)s"
+msgstr "Ça monte cette semaine sur %(server)s"
+
+msgid ""
+"×: papers using the topic this week, compared with the eight weeks before."
+msgstr ""
+"× : part des articles de la semaine sur le sujet, comparée aux huit semaines"
+" d'avant."
+
+msgid "The post is copied."
+msgstr "Le post est copié."
+
+msgid "The post is copied: if LinkedIn does not fill it in, paste it there."
+msgstr "Le post est copié : si LinkedIn ne le remplit pas, collez-le."
+
+msgid "A post ready for LinkedIn, X or Bluesky"
+msgstr "Un post prêt pour LinkedIn, X ou Bluesky"
+
+msgid "The post, to edit as you like:"
+msgstr "Le post, à modifier comme vous voulez :"
+
+msgid "Copy the post"
+msgstr "Copier le post"
+
+msgid "Other apps"
+msgstr "Autres applications"
+
+msgid ""
+"X and Bluesky get a shorter post, unless you edit it above. The link shows a"
+" preview picture of this page."
+msgstr ""
+"X et Bluesky reçoivent un post plus court, sauf si vous le modifiez ci-"
+"dessus. Le lien affiche une image d'aperçu de cette page."
+
+msgid "Share this paper"
+msgstr "Partager cet article"
+
+msgid ""
+"One of the authors? The post below presents your paper: edit it, then "
+"publish it."
+msgstr ""
+"Vous êtes l'un des auteurs ? Le post ci-dessous présente votre article : "
+"modifiez-le, puis publiez-le."
+
+#, python-format
+msgid "Rising this week on %(name)s"
+msgstr "Ça monte cette semaine sur %(name)s"
+
+#, python-format
+msgid "Share this week's rising topics on %(name)s"
+msgstr "Partager les sujets qui montent cette semaine sur %(name)s"
+
+msgid "Share this letter"
+msgstr "Partager cette lettre"
+

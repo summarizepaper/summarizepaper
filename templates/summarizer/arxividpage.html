@@ -33,8 +33,16 @@
   <meta property="og:title" content="{{ paper_title|default:arxiv_id|oneline }}" />
   <meta property="og:description" content="{{ page_excerpt|plaintext|truncatechars:200 }}" />
   <meta property="og:url" content="https://www.summarizepaper.com/{{LANGUAGE_CODE}}/paper/{{ arxiv_id }}/" />
+  {% if og_image %}
+  <meta property="og:image" content="{{ og_image }}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="{{ paper_title|default:arxiv_id|oneline }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  {% else %}
   <meta property="og:image" content="https://www.summarizepaper.com{% static 'summarizer/images/logo.png' %}" />
   <meta name="twitter:card" content="summary" />
+  {% endif %}
   {% if structured_data %}
   <script type="application/ld+json">{{ structured_data }}</script>
   {% endif %}
@@ -431,6 +439,7 @@
   }
   .paper-actions .action { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; padding: 4px 2px; border: 0; background: none; font-size: 11px; text-align: center; line-height: 1.2; }
   .paper-actions .action i { font-size: 16px; }
+  .paper-actions .action-share { display: none; } /* the bar holds six; the share box follows the essentials */
   #paper-detail { padding-bottom: 72px; }
   /* the on-screen keyboard would push the bar over the field being typed in */
   body:has(:is(input, textarea, select):focus) .paper-actions { display: none; }

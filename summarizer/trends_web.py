@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.translation import get_language, gettext as _, gettext_lazy, ngettext
 
-from . import access, trends
+from . import access, social, trends
 from .digest import THRESHOLDS, archive_of
 from .models import DigestSubscription, RisingTopics, TermWeek
 
@@ -209,6 +209,12 @@ def trends_page(request):
         'older': weeks[index + 1] if index + 1 < len(weeks) else None, 'newer': weeks[index - 1] if index > 0 else None,
         'since': first, 'ready_on': first + trends.WEEK * (trends.MIN_BASE_WEEKS + 1) + trends.CLOSE if first else None,
     })
+    if day and scope == server and topics:
+        # the free topics, those anyone opening the shared link sees
+        free = topics[:trends.FREE_TOPICS]
+        slug = next(s for s, sc in social.SERVER_SLUGS.items() if sc == server)
+        context.update(share=social.trends_share(server, context['server_name'], day, free, lang),
+                       og_image=social.image_url('trends', lang, slug, day.isoformat()))
     if not paid and (day or locked):
         context['premium'] = premium_preview(request, lang, day, server, topics[trends.FREE_TOPICS:], asked if locked else None)
     from . import letters

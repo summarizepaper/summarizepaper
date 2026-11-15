@@ -13,7 +13,7 @@ from .tool_list import TOOL_GROUPS
 from django.conf import settings
 from django.core.mail import send_mail, EmailMessage
 import summarizer.utils as utils
-from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, loadshed, mailcheck, neighbours, publication_status, reading, sources, exports, insight, summary_text, tdm
+from summarizer import access, accounts, assistant, chat_page, citations, digest, homepage, unified_search, search_filters, saved_searches, library, loadshed, mailcheck, neighbours, publication_status, reading, sources, exports, insight, social, summary_text, tdm
 from datetime import datetime, timedelta
 import ast
 from django.core.cache import cache
@@ -1191,6 +1191,9 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'insight_unavailable': insight.unavailable(arxiv_id, lang),
                 'topic':keywords[0] if keywords else '',
                 'saved_matches':saved_searches.matching(request.user, arxiv_id),
+                'og_image':social.paper_image_url(paper, sumpaper, lang),
+                'share':social.paper_share(paper, sumpaper, paper_insight, lang)
+                        if sumpaper and (paper_insight or sumpaper.summary or sumpaper.lay_summary) else None,
             })
         else:
             print('nope')

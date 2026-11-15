@@ -1,0 +1,22 @@
+{% load i18n static_version %}
+{% comment %}A post ready for LinkedIn, X or Bluesky, to edit before posting (see social.py).
+Expects share (social.share), heading, and optionally note and open.{% endcomment %}
+<details class="card share-post" id="share" data-share data-url="{{ share.url }}" data-short="{{ share.short }}"
+ data-link-linkedin="{{ share.links.linkedin }}" data-link-x="{{ share.links.x }}" data-link-bluesky="{{ share.links.bluesky }}"
+ data-link-copy="{{ share.links.copy }}" data-link-native="{{ share.links.native }}"
+ data-copied="{% trans 'The post is copied.' %}" data-linkedin-copied="{% trans 'The post is copied: if LinkedIn does not fill it in, paste it there.' %}"{% if open %} open{% endif %}>
+  <summary><i class="fas fa-share-alt" aria-hidden="true"></i> <strong>{{ heading }}</strong> <span class="muted">{% trans 'A post ready for LinkedIn, X or Bluesky' %}</span></summary>
+  {% if note %}<p class="share-note">{{ note }}</p>{% endif %}
+  <label class="share-label" for="share-text">{% trans 'The post, to edit as you like:' %}</label>
+  <textarea id="share-text" rows="11" data-share-text spellcheck="true">{{ share.text }}</textarea>
+  <div class="share-buttons">
+    <a class="btn btn-sm" href="{{ share.hrefs.linkedin }}" target="_blank" rel="noopener" data-share-network="linkedin" data-funnel="share_click" data-network="linkedin" data-tool="{{ share.tool }}"><i class="fab fa-linkedin" aria-hidden="true"></i> LinkedIn</a>
+    <a class="btn btn-sm" href="{{ share.hrefs.x }}" target="_blank" rel="noopener" data-share-network="x" data-funnel="share_click" data-network="x" data-tool="{{ share.tool }}">X</a>
+    <a class="btn btn-sm" href="{{ share.hrefs.bluesky }}" target="_blank" rel="noopener" data-share-network="bluesky" data-funnel="share_click" data-network="bluesky" data-tool="{{ share.tool }}"><i class="fas fa-cloud" aria-hidden="true"></i> Bluesky</a>
+    <button type="button" class="btn btn-sm btn-ghost" data-share-network="copy" data-funnel="share_click" data-network="copy" data-tool="{{ share.tool }}"><i class="fas fa-copy" aria-hidden="true"></i> {% trans 'Copy the post' %}</button>
+    <button type="button" class="btn btn-sm btn-ghost" data-share-network="native" data-funnel="share_click" data-network="native" data-tool="{{ share.tool }}" hidden><i class="fas fa-ellipsis-h" aria-hidden="true"></i> {% trans 'Other apps' %}</button>
+  </div>
+  <p class="muted share-help">{% trans 'X and Bluesky get a shorter post, unless you edit it above. The link shows a preview picture of this page.' %}</p>
+  <p class="share-status" role="status" aria-live="polite"></p>
+</details>
+<script defer src="{% static_v 'summarizer/js/share-post.js' %}"></script>

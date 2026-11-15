@@ -37,7 +37,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from . import access, digest, generated, mailcheck, similar, sources
+from . import access, digest, generated, mailcheck, similar, social, sources
 from .models import (AnnouncedPaper, ArxivBatch, ArxivPaper, Collection, DigestSubscription, Letter, LetterFeedback,
                      LetterSubscription, PaperAudio, PaperEmbedding, PaperHistory, RisingTopics, WatchedProject)
 
@@ -984,6 +984,8 @@ def letter_page(request, topic, day):
                    older=same.filter(day__lt=letter.day).order_by('-day').values_list('day', flat=True).first(),
                    newer=same.filter(day__gt=letter.day).order_by('day').values_list('day', flat=True).first(),
                    rising=rising_for(letter), audio=paid)
+    context.update(share=social.letter_share(letter, context['sections'], letter.lang),
+                   og_image=social.image_url('letter', letter.lang, letter.topic, letter.day.isoformat()))
     if paid and request.user.is_authenticated:
         marks = personal_marks(request.user, letter)
         for section in context['sections']:

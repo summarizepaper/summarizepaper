@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib.sitemaps import views as sitemap_views
 from summarizer.sitemaps import GuideSitemap, LetterSitemap, StaticViewSitemap, SummarizedPaperSitemap
-from summarizer import accounts, billing, mail_events, visits
+from summarizer import accounts, billing, mail_events, social, visits
 from summarizer.views import llms_txt, robots_txt
 
 app_name = 'summarizer'
@@ -41,6 +41,10 @@ urlpatterns = [
     path('cloudmailin/events/<str:secret>/', mail_events.webhook, name='cloudmailin_events'),
     path('google/callback/', accounts.google_callback, name='google_callback'),
     path('visit/', visits.seen, name='visit_seen'),
+    # the pictures shown when a page is shared (og:image), see social.py
+    path('og/<str:lang>/p/<str:arxiv_id>.png', social.paper_image, name='og_paper'),
+    path('og/<str:lang>/trends/<str:server>/<str:day>.png', social.trends_image, name='og_trends'),
+    path('og/<str:lang>/letter/<slug:topic>/<str:day>.png', social.letter_image, name='og_letter'),
     path('sitemap.xml', sitemap_views.index, {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap-section'}),
     path('sitemap-<section>.xml', sitemap_views.sitemap, {'sitemaps': sitemaps}, name='sitemap-section'),
     path('', include('summarizer.urls')),
