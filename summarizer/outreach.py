@@ -116,8 +116,7 @@ def write(paper, letter, name):
     _theme, letter_name = letters.localized_name(letter.topic, 'en')
     title = social.plain(paper.title)
     letter_url = tagged('%s/en/letters/%s/%s/' % (SITE, letter.topic, letter.day.isoformat()), letter.topic)
-    paper_url = tagged('%s/en/paper/%s/' % (SITE, paper.arxiv_id), letter.topic)
-    citations_url = tagged('%s/en/citations/' % SITE, letter.topic)
+    paper_url = tagged('%s/en/paper/%s/' % (SITE, paper.arxiv_id), letter.topic) + '#own-paper'
     greeting = 'Dear %s,' % name if name else 'Hello,'
     subject = 'Your paper in “%s”' % letter_name
     body = '\n\n'.join([
@@ -127,7 +126,8 @@ def write(paper, letter, name):
         'It also has a page of its own, with a plain-language summary, its key findings and answers to readers’ '
         'questions drawn from the text. The page has a post ready if you would like to share the paper on LinkedIn, '
         'X or Bluesky:\n%s' % paper_url,
-        'SummarizePaper can also tell you who cites your papers and what they say about them:\n%s' % citations_url,
+        'If you like, the page can also email you each time a new paper cites yours, with what it says about it: '
+        'free for your own paper.',
         'Best regards,\n%s' % settings.OUTREACH_SIGNATURE,
     ])
     return subject, body

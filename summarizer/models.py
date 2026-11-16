@@ -967,6 +967,7 @@ class FollowedPaper(models.Model):
     known = models.TextField(blank=True, default='')  # JSON list of the citing papers already reported
     pending = models.TextField(blank=True, default='')  # JSON list of citing papers not emailed yet
     mine = models.BooleanField(default=False)  # the user's own paper, not only one they watch
+    free = models.BooleanField(default=False)  # the one own paper a free account follows (citations.own_view)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

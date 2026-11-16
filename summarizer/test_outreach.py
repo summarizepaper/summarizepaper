@@ -178,3 +178,50 @@ class MastodonTests(ToolsTestCase):
         text = mastodon.status_text('word ' * 200, 'https://www.summarizepaper.com/en/x/')
         self.assertTrue(text.endswith('https://www.summarizepaper.com/en/x/'))
         self.assertLessEqual(len(text) - len('https://www.summarizepaper.com/en/x/') + 23, 500)
+
+
+class OwnPaperAlertTests(ToolsTestCase):
+    def test_an_author_from_our_email_is_offered_the_free_alert_once(self):
+        self.paper()
+        page = Client().get('/en/paper/2101.00001v1/?utm_source=outreach-author')
+        self.assertContains(page, 'Is this your paper?')
+        self.assertContains(page, '/en/citations/mine/2101.00001v1/')
+        self.assertNotContains(Client().get('/en/paper/2101.00001v1/'), 'Is this your paper?')
+
+    def test_following_ones_own_paper_is_free_for_one_paper(self):
+        from summarizer import citations
+        from summarizer.models import FollowedPaper
+        self.paper()
+        self.paper('2101.00002v1')
+        client = Client()
+        self.assertEqual(client.get('/en/citations/mine/2101.00001v1/').status_code, 302)  # to sign in
+        ann = self.user()
+        client.force_login(ann)
+        with mock.patch.object(citations.generated, 'background'):
+            response = client.get('/en/citations/mine/2101.00001v1/')
+            self.assertIn('own=following', response['Location'])
+            followed = FollowedPaper.objects.get(user=ann)
+            self.assertTrue(followed.mine and followed.free)
+            self.assertTrue(citations.alerted(ann))
+            self.assertIn('own=taken', client.get('/en/citations/mine/2101.00002v1/')['Location'])
+        self.assertEqual(FollowedPaper.objects.filter(user=ann).count(), 1)
+        self.assertContains(client.get('/en/paper/2101.00001v1/?own=following'), 'Done: you will get an email')
+
+    def test_premium_follows_without_using_the_free_slot(self):
+        from summarizer import citations
+        from summarizer.models import FollowedPaper
+        self.paper()
+        boss = self.user('boss', paid=True)
+        client = Client()
+        client.force_login(boss)
+        with mock.patch.object(citations.generated, 'background'):
+            client.get('/en/citations/mine/2101.00001v1/')
+        self.assertFalse(FollowedPaper.objects.get(user=boss).free)
+
+    def test_a_free_account_without_its_own_paper_gets_no_alerts(self):
+        from summarizer import citations
+        from summarizer.models import FollowedPaper
+        ann = self.user()
+        FollowedPaper.objects.create(user=ann, arxiv_id='2101.00009', pending='["x"]')
+        self.assertFalse(citations.alerted(ann))
+        self.assertFalse(citations.can_email(ann, set()))

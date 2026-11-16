@@ -24969,3 +24969,40 @@ msgstr[1] "%(tool)s : %(n)s autres résultats de votre recherche gratuite"
 msgid "For institutions"
 msgstr "Pour les établissements"
 
+msgid ""
+"Done: you will get an email each time a new paper cites this one, with what "
+"it says about it."
+msgstr ""
+"C’est fait : vous recevrez un e-mail chaque fois qu’un nouvel article citera"
+" celui-ci, avec ce qu’il en dit."
+
+msgid "Your free alert already follows another of your papers."
+msgstr "Votre alerte gratuite suit déjà un autre de vos articles."
+
+msgid "Premium follows all of them."
+msgstr "Premium les suit tous."
+
+msgid "Citations of your paper"
+msgstr "Citations de votre article"
+
+msgid "Is this your paper? Get an email each time a new paper cites it"
+msgstr ""
+"C’est votre article ? Recevez un e-mail chaque fois qu’un nouvel article le "
+"cite"
+
+msgid ""
+"Free for your own paper: who cites it and what they say about it (supports "
+"it, questions it, builds on it). No credit card."
+msgstr ""
+"Gratuit pour votre propre article : qui le cite et ce qu’on en dit "
+"(l’appuie, le remet en question, s’en sert). Sans carte bancaire."
+
+msgid "Follow its citations"
+msgstr "Suivre ses citations"
+
+msgid "A library, a doctoral school, a journal or a conference?"
+msgstr "Une bibliothèque, une école doctorale, une revue ou une conférence ?"
+
+msgid "See what we offer institutions"
+msgstr "Voir ce que nous proposons aux établissements"
+

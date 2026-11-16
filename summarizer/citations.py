@@ -791,8 +791,10 @@ def pending(user, base_url, lang, now=None):
     others name it in 'above', or a paper whose citations were all shown higher would show only its counts."""
     now = now or timezone.now()
     papers, archive, delivered = [], [], {}
-    followed_rows = list(FollowedPaper.objects.filter(user=user).exclude(pending='').exclude(pending='[]')
-                         .order_by('-mine', '-created'))
+    rows = FollowedPaper.objects.filter(user=user).exclude(pending='').exclude(pending='[]')
+    if not access.has_tool(user, 'citations'):
+        rows = rows.filter(free=True)  # a free account: only its own paper
+    followed_rows = list(rows.order_by('-mine', '-created'))
     shown = {}
     for followed in followed_rows:
         cached = CitationCache.objects.filter(arxiv_id=followed.arxiv_id).first()
@@ -857,9 +859,14 @@ def item_label(c):
     return ' · '.join(parts)
 
 
+def alerted(user):
+    """Whether this user gets citation alerts: Premium, or a free account for the one own paper it follows."""
+    return access.has_tool(user, 'citations') or FollowedPaper.objects.filter(user=user, free=True).exists()
+
+
 def bundle_section(user, base_url, lang, now):
     """The new citations as a section of the user's digest (see digest_bundle), in the active language."""
-    if not access.has_tool(user, 'citations'):
+    if not alerted(user):
         return None
     found = pending(user, base_url, lang, now)
     if found is None:
@@ -898,7 +905,7 @@ def send_one(user, now, base_url, urgent=False):
 
 
 def can_email(user, suppressed):
-    return bool(user.email) and user.email.strip().lower() not in suppressed and access.has_tool(user, 'citations')
+    return bool(user.email) and user.email.strip().lower() not in suppressed and alerted(user)
 
 
 def send_alerts(now, budget, base_url=digest.BASE_URL):
@@ -1366,6 +1373,48 @@ def follow_view(request):
     if created and followed.known == '':
         generated.background(refresh_new, [arxiv_id])
     return JsonResponse({'status': 'following'})
+
+
+OWN_SESSION = 'own_paper_offer'
+
+
+def offers_own(request, arxiv_id, author=False):
+    """Whether the paper page offers this visitor the free alert for their own paper: an author who came from our
+    email (utm_source=outreach-author, remembered in the session) or a signed-in reader whose name is among the
+    authors, who does not follow the paper yet."""
+    key = base_id(arxiv_id)
+    if not key:
+        return False
+    if request.GET.get('utm_source') == 'outreach-author':
+        request.session[OWN_SESSION] = key
+    if not (author or request.session.get(OWN_SESSION) == key):
+        return False
+    return not is_following(request.user, arxiv_id)
+
+
+def own_view(request, arxiv_id):
+    """/citations/mine/<id>/: follow the citations of one's own paper, free for one paper (Premium: any number).
+    Reached after signing in from the paper page, so a GET does it; it only adds a watch, and redoing it is harmless."""
+    from django.contrib.auth.views import redirect_to_login
+    from django.shortcuts import redirect
+    key = base_id(arxiv_id)
+    paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
+    if not key or paper is None:
+        raise Http404
+    if not request.user.is_authenticated:
+        return redirect_to_login(request.get_full_path())
+    page = '%s?own=%%s#own-paper' % paper.get_absolute_url()
+    paid = access.has_tool(request.user, 'citations')
+    if not paid and FollowedPaper.objects.filter(user=request.user, free=True).exclude(arxiv_id=key).exists():
+        return redirect(page % 'taken')
+    followed, created = follow(request.user, key, mine=True)
+    if not paid and not followed.free:
+        followed.free = True
+        followed.save(update_fields=['free'])
+    if created and followed.known == '':
+        generated.background(refresh_new, [key])
+    request.session.pop(OWN_SESSION, None)
+    return redirect(page % 'following')
 
 
 def is_following(user, arxiv_id):

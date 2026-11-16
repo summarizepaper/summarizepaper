@@ -1173,6 +1173,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
             paper_insight = insight.for_page(arxiv_id, lang) if sumpaper else None
             stuff_for_frontend['source_scope'] = synthesis.page_scope(stuff_for_frontend.get('source_scope'), paper_insight)
             share_author = bool(sumpaper) and social.is_author(request.user, paper)
+            own_offer = citations.offers_own(request, arxiv_id, author=share_author)
             stuff_for_frontend.update({
                 'paper':paper,
                 'structured_data':paper_structured_data(paper, sumpaper, lang),
@@ -1202,6 +1203,7 @@ def arxividpage(request, arxiv_id, error_message=None, cat=None, _fragment=False
                 'saved_matches':saved_searches.matching(request.user, arxiv_id),
                 'og_image':social.paper_image_url(paper, sumpaper, lang) if sumpaper else None,
                 'share_author':share_author,
+                'own_offer':own_offer, 'own_state':request.GET.get('own', ''),
                 'share':social.paper_share(paper, sumpaper, paper_insight, lang, author=share_author,
                                            image=social.paper_image_url(paper, sumpaper, lang))
                         if sumpaper and (paper_insight or sumpaper.summary or sumpaper.lay_summary) else None,

@@ -107,7 +107,30 @@
   {% include 'summarizer/share_post.html' with heading=share_heading note=share_note open=share_author %}
   {% endif %}
 
-  {% if not request.user.is_authenticated %}
+  {% if own_state == 'following' %}
+  <p class="notice" id="own-paper">{% trans 'Done: you will get an email each time a new paper cites this one, with what it says about it.' %}</p>
+  {% elif own_state == 'taken' %}
+  <p class="notice" id="own-paper">{% trans 'Your free alert already follows another of your papers.' %} <a href="/{{ LANGUAGE_CODE }}/premium/">{% trans 'Premium follows all of them.' %}</a></p>
+  {% elif own_offer %}
+  <aside class="signup-offer own-paper-offer" id="own-paper" aria-label="{% trans 'Citations of your paper' %}">
+    <div>
+      <p class="signup-offer-title">{% trans 'Is this your paper? Get an email each time a new paper cites it' %}</p>
+      <p>{% trans 'Free for your own paper: who cites it and what they say about it (supports it, questions it, builds on it). No credit card.' %}</p>
+    </div>
+    <div class="signup-offer-actions">
+      {% with own_next='/'|add:LANGUAGE_CODE|add:'/citations/mine/'|add:arxiv_id|add:'/' %}
+      {% if request.user.is_authenticated %}
+      <a class="btn btn-primary btn-sm" href="{{ own_next }}" rel="nofollow" data-funnel="paper_own_follow">{% trans 'Follow its citations' %}</a>
+      {% else %}
+      {% include 'accounts/_google_button.html' with next=own_next inline=True funnel='paper_own_google' %}
+      <a href="/{{ LANGUAGE_CODE }}/register/?next={{ own_next|urlencode }}" rel="nofollow" {% if google_login %}data-funnel="paper_own_register">{% trans 'Or with an email address' %}{% else %}class="btn btn-sm" data-funnel="paper_own_register">{% trans 'Create a free account' %}{% endif %}</a>
+      {% endif %}
+      {% endwith %}
+    </div>
+  </aside>
+  {% endif %}
+
+  {% if not request.user.is_authenticated and not own_offer %}
   <aside class="signup-offer" aria-label="{% trans 'Free account' %}">
     <div>
       <p class="signup-offer-title">{% if paper.category %}{% blocktrans with field=paper.category|category_label %}Every morning, the new papers of {{ field }} with a short summary{% endblocktrans %}{% else %}{% trans 'Every morning, the new papers of your fields with a short summary' %}{% endif %}</p>

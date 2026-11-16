@@ -18,8 +18,10 @@ Paper pages follow the pattern `https://www.summarizepaper.com/<lang>/paper/<id>
 - [Collections](https://www.summarizepaper.com/en/collections/): keep papers together with notes, tags and reading status, import BibTeX or RIS, chat with them, edit them with co-authors, share a read-only link; with Premium, compare them in a table whose every cell cites the passage of the paper behind it, find their open questions and the papers they are missing, check retractions, and get an email when a paper is cited, updated or published
 - [Literature review](https://www.summarizepaper.com/en/literature-review/) (Premium+): from a research question, 15 to 30 founding and recent papers grouped by approach, with a synthesis whose findings quote the abstracts and a report of the searches run
 - [What did I miss?](https://www.summarizepaper.com/en/missed/) and [Bibliography check](https://www.summarizepaper.com/en/refcheck/) (Premium): the close papers a draft does not cite (from searches, the papers citing its references and the founding papers of the field, each with where to cite it); retracted and corrected references, preprints published since (with the corrected BibTeX), incomplete entries and duplicates, and citations the cited papers do not support, checked against the abstracts then the full text with the passage; references watched until publication
-- [Citation alerts](https://www.summarizepaper.com/en/citations/) and [Scoop watch](https://www.summarizepaper.com/en/scoops/) (Premium): who cites a paper, what they do with it (from the citing sentence, self-citations apart) and every citation per year, new versions, and new papers close to a project in progress
+- [Citation alerts](https://www.summarizepaper.com/en/citations/) and [Scoop watch](https://www.summarizepaper.com/en/scoops/) (Premium; an author can follow the citations of one of their own papers for free, from its paper page): who cites a paper, what they do with it (from the citing sentence, self-citations apart) and every citation per year, new versions, and new papers close to a project in progress
 - [Journal club](https://www.summarizepaper.com/en/journal-club/), [Press kit](https://www.summarizepaper.com/en/press-kit/), [Conference companion](https://www.summarizepaper.com/en/conference/) and [Research placements](https://www.summarizepaper.com/en/students/) (Premium+)
+- [Examples](https://www.summarizepaper.com/en/examples/): real results of each Premium tool (bibliography check, missed papers, literature review, journal club deck, comparison table, citation alert, scoop watch), by field
+- [For institutions](https://www.summarizepaper.com/en/institutions/): for libraries, doctoral schools, journals and conferences: the free tools their readers can use without an account, bibliography checks of theses and submissions (a free trial on about ten of them), and group Premium access on quote
 
 {% if guides %}## Guides
 
@@ -31,7 +33,8 @@ Cite a summary with its paper page URL, for example https://www.summarizepaper.c
 
 ## Optional
 
-- [Premium and Premium+](https://www.summarizepaper.com/en/premium/): Premium (€7 a month) gives the most capable model, higher daily limits and the research tools; Premium+ (€14 a month) adds the tools that read the most: literature review, journal club, press kits, conference companion and research placements. Billed monthly or yearly
+- [Premium and Premium+](https://www.summarizepaper.com/en/premium/): Premium (€7 a month) gives the most capable model, higher daily limits and the research tools; Premium+ (€14 a month) adds the tools that read the most: literature review, journal club, press kits, conference companion and research placements. Billed monthly or yearly; a first subscription starts with 7 free days
 - [Privacy policy](https://www.summarizepaper.com/en/privacy/)
-- [Source code](https://github.com/summarizepaper/summarizepaper): the site is open source
+- [Source code](https://github.com/summarizepaper/summarizepaper): the site is open source (MIT license)
+- [Bluesky](https://bsky.app/profile/summarizepaper.com): each weekly letter and its papers, field by field
 {% endautoescape %}

@@ -193,6 +193,7 @@ urlpatterns = [
     path("refcheck/<str:key>/", refcheck.refcheck_result, name="refcheck_result"),
     path("refcheck/<str:key>/bib/", refcheck.refcheck_bib, name="refcheck_bib"),
     path("citations/follow/", citations.follow_view, name="citations_follow"),
+    path("citations/mine/<str:arxiv_id>/", citations.own_view, name="citations_own"),
     path("citations/<int:pk>/", citations.citation_detail, name="citation_detail"),
     path("trends/", trends_web.trends_page, name="trends"),
     path("trends/explore/", trends_web.trends_explore, name="trends_explore"),
