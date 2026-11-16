@@ -1408,6 +1408,11 @@ Read the **listings** <b>daily</b>.
         self.assertNotIn('hreflang="fr"', html)
         self.assertNotIn('SoftwareApplication', html)
 
+    def test_guide_offers_the_free_daily_alert_to_visitors_without_an_account(self):
+        html = self.client.get('/en/guides/keep-up/').content.decode()
+        self.assertIn('class="signup-offer"', html)
+        self.assertIn('/en/register/?next=/en/digest/', html)
+
     def test_dataset_adds_dataset_markup(self):
         self.write('en', 'stats', self.GUIDE.replace('date:', 'dataset:\n  name: Usage stats\n  description: Counts.\n  temporalCoverage: 2023-02-24/2026-10-18\ndate:'))
         html = self.client.get('/en/guides/stats/').content.decode()

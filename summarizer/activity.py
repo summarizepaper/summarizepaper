@@ -131,10 +131,14 @@ def _series(start, end, staff=False):
 
 def _people(start, end):
     """The visitors who are people: signed in, or they moved on a page (visits.seen) and did not come "from" a
-    search engine to a sign-in or sign-up page, which robots.txt keeps out of search engines (visits.FAKED)."""
+    search engine to a sign-in or sign-up page, which robots.txt keeps out of search engines (visits.FAKED), nor
+    open a sign-in or sign-up page as the very first page of their browser with no site and no link before it: in
+    November 2026, all 29 such "visitors" of the sign-up page in a week left without anything else."""
     span = {'created__gte': start, 'created__lt': end}
     faked = PageView.objects.filter(**span, referrer__in=visits.ENGINES, view__in=visits.UNLISTED).values('visitor')
-    return PageView.objects.filter(Q(human=True, user__isnull=True) & ~Q(visitor__in=faked) | Q(user__isnull=False), **span).values('visitor')
+    direct = PageView.objects.filter(**span, first=True, referrer='', source='', view__in=visits.UNLISTED).values('visitor')
+    return PageView.objects.filter(Q(human=True, user__isnull=True) & ~Q(visitor__in=faked) & ~Q(visitor__in=direct)
+                                   | Q(user__isnull=False), **span).values('visitor')
 
 
 def _visits(start, end, staff=False):

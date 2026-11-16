@@ -160,6 +160,14 @@ class PageViewTests(TestCase):
         self.assertEqual(activity.sources(activity.today())['referrers'], [('(direct ou inconnu)', 1)])
         self.assertEqual(self.client.get('/visit/').status_code, 405)
 
+    def test_a_sign_up_page_opened_first_and_from_nowhere_is_a_robot(self):
+        PageView.objects.create(visitor='d' * 16, view='register', path='/en/register/', first=True, human=True)
+        PageView.objects.create(visitor='e' * 16, view='faq', path='/en/faq/', first=True, human=True)
+        PageView.objects.create(visitor='e' * 16, view='register', path='/en/register/', human=True)  # came from the faq
+        PageView.objects.create(visitor='n' * 16, view='register', path='/en/register/', first=True, source='email', human=True)
+        numbers = {n['key']: n['value'] for n in activity.numbers(activity.today())}
+        self.assertEqual((numbers['visitors'], numbers['robots']), (2, 1))
+
     def test_a_search_engine_never_sends_anyone_to_the_sign_in_page(self):
         PageView.objects.create(visitor='f' * 16, view='login', path='/fr/login/', referrer='google.com', human=True)
         PageView.objects.create(visitor='g' * 16, view='arxividpage', path='/fr/paper/1/', referrer='google.com', human=True)

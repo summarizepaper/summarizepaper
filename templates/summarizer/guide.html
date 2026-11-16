@@ -10,6 +10,13 @@
   {% endfor %}
   {% if guide.draft %}<meta name="robots" content="noindex" />{% endif %}
   <script type="application/ld+json">{{ json_ld|safe }}</script>
+  <style>
+    .guide .signup-offer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px;
+      margin: 32px 0; padding: 16px 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--accent-soft); font-size: 14px; }
+    .guide .signup-offer p { margin: 0; }
+    .guide .signup-offer-title { font-weight: 600; font-size: 15px; margin-bottom: 2px !important; }
+    .guide .signup-offer-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -30,6 +37,21 @@
     <button type="button" class="btn btn-sm guide-image-close">{% trans 'Close' %}</button>
     <figure><img alt="" /><figcaption></figcaption></figure>
   </dialog>
+
+  {% if not request.user.is_authenticated %}
+  <aside class="signup-offer" aria-label="{% trans 'Free account' %}">
+    <div>
+      <p class="signup-offer-title">{% trans 'Every morning, the new papers of your fields with a short summary' %}</p>
+      <p><a href="/{{ LANGUAGE_CODE }}/digest/example/" rel="nofollow">{% trans 'See an example' %}</a> · <a href="/{{ LANGUAGE_CODE }}/" data-funnel="guide_summarize">{% trans 'Summarize a paper' %}</a></p>
+    </div>
+    <div class="signup-offer-actions">
+      {% with digest_next='/'|add:LANGUAGE_CODE|add:'/digest/' %}
+      {% include 'accounts/_google_button.html' with next=digest_next inline=True funnel='guide_signup_google' %}
+      <a href="/{{ LANGUAGE_CODE }}/register/?next={{ digest_next|urlencode }}" rel="nofollow" {% if google_login %}data-funnel="guide_signup">{% trans 'Or with an email address' %}{% else %}class="btn btn-sm" data-funnel="guide_signup">{% trans 'Create a free account' %}{% endif %}</a>
+      {% endwith %}
+    </div>
+  </aside>
+  {% endif %}
 
   {% if guide.faq %}
   <h2>{% trans 'FAQ' %}</h2>
