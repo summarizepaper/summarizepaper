@@ -123,8 +123,8 @@ def write(paper, letter, name):
     body = '\n\n'.join([
         greeting,
         '“%s” is one of the six papers we picked this week for “%s”, our free weekly letter, and it now has a '
-        'plain-language summary on SummarizePaper.com, an open source site that reads new arXiv papers for '
-        'researchers.' % (title, letter_name),
+        'plain-language summary on SummarizePaper.com, an open source site that reads new papers and '
+        'preprints for researchers.' % (title, letter_name),
         'We can also email you each time a new paper cites it, with the sentence where it does. It is free for your '
         'own paper and takes one click with Google:\n%s' % paper_url,
         'Best regards,\n%s' % settings.OUTREACH_SIGNATURE,
