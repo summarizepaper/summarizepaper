@@ -67,6 +67,14 @@ class OutreachTests(ToolsTestCase):
         outreach.prepare(self.now, fetch=fetch)
         self.assertEqual(Prospect.objects.get().status, 'pending')
 
+    def test_latex_dashes_become_real_dashes(self):
+        paper = self.quantum_paper()
+        paper.title = 'The Thomas--Fermi limit at 74--159 K --- revisited'
+        paper.save()
+        subject, body = outreach.write(paper, self.letter(), '')
+        self.assertIn('Thomas–Fermi limit at 74–159 K — revisited', body)
+        self.assertNotIn('--', subject)
+
     def test_astronomy_is_left_out_even_cross_listed(self):
         self.paper()  # astro-ph.EP
         self.letter(topic='climate')

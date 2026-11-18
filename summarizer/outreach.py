@@ -114,7 +114,7 @@ def tagged(url, topic):
 def write(paper, letter, name):
     """(subject, body) of the email about one paper of one letter."""
     _theme, letter_name = letters.localized_name(letter.topic, 'en')
-    title = social.plain(paper.title)
+    title = social.plain(paper.title).replace('---', '—').replace('--', '–')  # LaTeX dashes
     # One link only, to the paper's own page and its free citation alert: the first emails also linked the letter,
     # and most readers stopped there (2026-11-18: 22 visitors from 29 emails, no sign-up).
     paper_url = tagged('%s/en/paper/%s/' % (SITE, paper.arxiv_id), letter.topic) + '#own-paper'
