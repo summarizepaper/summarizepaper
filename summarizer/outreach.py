@@ -115,22 +115,26 @@ def write(paper, letter, name):
     """(subject, body) of the email about one paper of one letter."""
     _theme, letter_name = letters.localized_name(letter.topic, 'en')
     title = social.plain(paper.title)
-    letter_url = tagged('%s/en/letters/%s/%s/' % (SITE, letter.topic, letter.day.isoformat()), letter.topic)
+    # One link only, to the paper's own page and its free citation alert: the first emails also linked the letter,
+    # and most readers stopped there (2026-11-18: 22 visitors from 29 emails, no sign-up).
     paper_url = tagged('%s/en/paper/%s/' % (SITE, paper.arxiv_id), letter.topic) + '#own-paper'
     greeting = 'Dear %s,' % name if name else 'Hello,'
-    subject = 'Your paper in “%s”' % letter_name
+    subject = 'Your paper “%s” in “%s”' % (short_title(title), letter_name)
     body = '\n\n'.join([
         greeting,
-        'Your paper “%s” is one of the six papers we picked this week for “%s”, a free weekly letter that puts the '
-        'notable new papers of the field in perspective:\n%s' % (title, letter_name, letter_url),
-        'It also has a page of its own, with a plain-language summary, its key findings and answers to readers’ '
-        'questions drawn from the text. The page has a post ready if you would like to share the paper on LinkedIn, '
-        'X or Bluesky:\n%s' % paper_url,
-        'If you like, the page can also email you each time a new paper cites yours, with what it says about it: '
-        'free for your own paper.',
+        '“%s” is one of the six papers we picked this week for “%s”, our free weekly letter, and it now has a '
+        'plain-language summary on SummarizePaper.com.' % (title, letter_name),
+        'We can also email you each time a new paper cites it, with the sentence where it does. It is free for your '
+        'own paper and takes one click with Google:\n%s' % paper_url,
         'Best regards,\n%s' % settings.OUTREACH_SIGNATURE,
     ])
     return subject, body
+
+
+def short_title(title, limit=60):
+    if len(title) <= limit:
+        return title
+    return title[:limit].rsplit(' ', 1)[0].rstrip(' ,:;-') + '…'
 
 
 def footer(prospect):

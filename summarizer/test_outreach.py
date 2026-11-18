@@ -47,9 +47,16 @@ class OutreachTests(ToolsTestCase):
         self.assertIn('Dear Ann Lee,', prospect.body)
         self.assertIn('Quantum physics this week', prospect.subject)
         self.assertIn('/en/paper/2101.00001v1/?utm_source=outreach-author', prospect.body)
+        self.assertIn('#own-paper', prospect.body)
+        self.assertEqual(prospect.body.count('https://'), 1)  # one link: the paper's page and its citation alert
         outreach.prepare(self.now, fetch=fetch)  # considered once
         self.assertEqual(Prospect.objects.count(), 1)
         self.assertEqual(fetch.call_count, 1)
+
+    def test_long_titles_are_cut_on_a_word_in_the_subject(self):
+        self.assertEqual(outreach.short_title('Short title'), 'Short title')
+        cut = outreach.short_title('A study of ' + 'very ' * 20 + 'long titles')
+        self.assertTrue(cut.endswith('very…') and len(cut) <= 61, cut)
 
     def test_astronomy_is_left_out_even_cross_listed(self):
         self.paper()  # astro-ph.EP
