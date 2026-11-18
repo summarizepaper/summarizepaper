@@ -48,6 +48,7 @@ class OutreachTests(ToolsTestCase):
         self.assertIn('Quantum physics this week', prospect.subject)
         self.assertIn('/en/paper/2101.00001v1/?utm_source=outreach-author', prospect.body)
         self.assertIn('#own-paper', prospect.body)
+        self.assertIn('an open source site', prospect.body)
         self.assertEqual(prospect.body.count('https://'), 1)  # one link: the paper's page and its citation alert
         outreach.prepare(self.now, fetch=fetch)  # considered once
         self.assertEqual(Prospect.objects.count(), 1)
