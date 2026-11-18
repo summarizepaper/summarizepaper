@@ -170,7 +170,9 @@ def prepare(now, limit=PREPARE_PER_RUN, fetch=fetch_emails):
             break
         common = dict(kind='author', arxiv_id=arxiv_id, topic=letter.topic, letter_day=letter.day)
         paper = ArxivPaper.objects.filter(arxiv_id=arxiv_id).first()
-        if paper is None or sources.is_external(arxiv_id) or excluded_paper(arxiv_id):
+        if paper is None:
+            continue  # its page is not written yet (the letter came first): a later run (2026-11-16 lost 37 papers)
+        if sources.is_external(arxiv_id) or excluded_paper(arxiv_id):
             Prospect.objects.create(status='rejected', **common)
             continue
         looked += 1

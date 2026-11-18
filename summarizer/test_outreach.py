@@ -58,6 +58,15 @@ class OutreachTests(ToolsTestCase):
         cut = outreach.short_title('A study of ' + 'very ' * 20 + 'long titles')
         self.assertTrue(cut.endswith('very…') and len(cut) <= 61, cut)
 
+    def test_a_letter_paper_without_its_page_yet_is_tried_again_later(self):
+        self.letter()
+        fetch = mock.Mock(return_value=['ann.lee@uni.edu'])
+        outreach.prepare(self.now, fetch=fetch)
+        self.assertFalse(Prospect.objects.exists())
+        self.quantum_paper()
+        outreach.prepare(self.now, fetch=fetch)
+        self.assertEqual(Prospect.objects.get().status, 'pending')
+
     def test_astronomy_is_left_out_even_cross_listed(self):
         self.paper()  # astro-ph.EP
         self.letter(topic='climate')
