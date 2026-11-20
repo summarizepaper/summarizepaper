@@ -17,7 +17,7 @@ TODAY = datetime.date(2026, 11, 20)
 
 def keep_topics(scope, items):
     """The model's check without the model: drops the generic phrase, labels the rest."""
-    return {i['term']: {'label': i['term'].title(), 'gloss': {'en': 'a gloss', 'fr': 'une glose'}}
+    return {i['term']: {'label': i['term'].title(), 'gloss': {'en': 'about ' + i['term'], 'fr': 'sur ' + i['term']}}
             for i in items if i['term'] != 'higher mean'}
 
 
