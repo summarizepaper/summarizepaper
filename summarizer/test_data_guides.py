@@ -31,7 +31,7 @@ class TopicsGuideTests(TestCase):
             week = last - datetime.timedelta(weeks=i)
             recent = i < data_guides.WINDOW
             counts = {'stable topic': 20, 'graph neural operator': 12 if recent else 0, 'higher mean': 15 if recent else 0,
-                      'old topic': 2 if recent else 30}
+                      'old topic': 2 if recent else 30, 'neutron-star': 12 if recent else 0, 'neutron star': 40}
             counts = {k: v for k, v in counts.items() if v >= 2}
             for scope in ('*', 'cs'):
                 TermWeek.objects.create(scope=scope, week=week, papers=300, counts=json.dumps(counts))
@@ -44,6 +44,7 @@ class TopicsGuideTests(TestCase):
         self.assertFalse(en.draft)
         self.assertIn('Graph Neural Operator', en.body)
         self.assertNotIn('Higher Mean', en.body)  # dropped by the check
+        self.assertNotIn('Neutron-Star', en.body)  # a new spelling of a common term, not a new topic
         self.assertNotIn('Stable Topic', en.body.split('losing ground')[0])  # did not grow
         self.assertIn('Old Topic', en.body.split('losing ground')[1])
         self.assertIn('computer science and AI', en.body)

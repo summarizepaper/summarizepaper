@@ -156,6 +156,7 @@ TOPIC_SCOPES = [
 ROWS = 10
 MIN_GROWTH = 2.0
 MIN_LLR = 20.0
+MIN_PAPERS = 25  # papers using a term in the latest weeks, below which a small field's counts are noise
 CANDIDATES = 40
 REFRESH_DAYS = 28
 
@@ -199,6 +200,22 @@ def _plain(term):
     return not all(w in trends.STOP or w in trends.GENERIC for w in term.split()) and not re.fullmatch(r'[\d\s\-]+', term)
 
 
+def spellings(term):
+    """The other spellings of a term: 'language-model' <-> 'language model'."""
+    found = set()
+    if '-' in term:
+        found.add(term.replace('-', ' '))
+    if ' ' in term:
+        found.add(term.replace(' ', '-'))
+    return found - {term}
+
+
+def variant(term, n, *tallies):
+    """Whether another spelling of the term is at least as common in either window: abstracts hyphenate more and
+    more compounds ('language-model agents'), which makes 'language-model' rise while 'language model' does not."""
+    return any(tally.get(other, 0) >= n for other in spellings(term) for tally in tallies)
+
+
 def ranked_terms(scope, recent, base):
     """{'papers', 'base_papers', 'growing': [...], 'fading': [...]} of a scope, before the model's check."""
     from . import trends
@@ -206,13 +223,15 @@ def ranked_terms(scope, recent, base):
     base_papers, base_counts, base_present = _window(scope, base)
     if papers < 2000 or base_papers < 1000:
         return None
-    floor = max(10, papers // 2000)
+    floor = max(MIN_PAPERS, papers // 2000)
     growing, fading = [], []
     for term, n in counts.items():
         if n < floor or not _plain(term):
             continue
-        # a stored week without the term had 0 or 1 paper using it: half a paper (as in trends.rising_terms)
-        before = base_counts.get(term, 0) + 0.5 * (len(base) - base_present.get(term, 0))
+        if variant(term, n, counts, base_counts):
+            continue
+        # a stored week without the term had 0 or 1 paper using it: count 1, so that a rare term does not look new
+        before = base_counts.get(term, 0) + 1.0 * (len(base) - base_present.get(term, 0))
         expected = before / base_papers * papers
         growth = n / expected
         llr = 2 * (n * math.log(n / expected) - (n - expected))
@@ -222,6 +241,8 @@ def ranked_terms(scope, recent, base):
         if before < 4 * floor or not _plain(term):
             continue
         n = counts.get(term, 0)
+        if variant(term, before, base_counts, counts):
+            continue
         expected = before / base_papers * papers
         if n and n / expected <= 1 / MIN_GROWTH:
             llr = 2 * (n * math.log(n / expected) - (n - expected))
@@ -255,7 +276,10 @@ def check_terms(scope, items):
         'These terms come from counting the words of the titles and abstracts of %s papers; they are lowercased '
         'and plural words are cut to a stem ("time-sery" means "time series", "galaxy" may mean "galaxies"). Keep '
         'only the terms that name a specific research topic, method, model, object, instrument, dataset, material or '
-        'phenomenon a researcher would recognize. Drop generic wording ("higher mean", "evaluated baseline"), '
+        'phenomenon a researcher of that field would name as what a paper is about. Drop generic wording ("higher '
+        'mean", "evaluated baseline"), general vocabulary of the field that is not a topic by itself ("median", '
+        '"routing", "operating point", "absolute error", "magnetic field", "neural network", "gene expression"), '
+        'statistical tests and metrics, a spelling variant of a common term, '
         'phrases of a template, formatting, a conference name, a fragment that names nothing on its own, and '
         'anything you are not sure is a real topic. For each kept term give "label": its readable form, as it would '
         'be written in a paper (restore plurals, capitals and acronyms; never add words), and "gloss": what it is, '
@@ -273,6 +297,17 @@ def check_terms(scope, items):
     return kept
 
 
+def _distinct(items):
+    """One row per readable label: two stems can name the same thing ('nuclear recoil')."""
+    seen, kept = set(), []
+    for item in items:
+        key = re.sub(r'[^a-z0-9]', '', item['label'].lower())
+        if key not in seen:
+            seen.add(key)
+            kept.append(item)
+    return kept
+
+
 def topics_data(today=None, check=None):
     """Everything the topics guide shows, or None without enough history."""
     check = check or check_terms
@@ -287,8 +322,8 @@ def topics_data(today=None, check=None):
             continue
         candidates = ranked['growing'] + (ranked['fading'] if scope == '*' else [])
         kept = check(scope, candidates)
-        growing = [dict(i, **kept[i['term']]) for i in ranked['growing'] if i['term'] in kept][:ROWS]
-        fading = [dict(i, **kept[i['term']]) for i in ranked['fading'] if i['term'] in kept][:ROWS] if scope == '*' else []
+        growing = _distinct([dict(i, **kept[i['term']]) for i in ranked['growing'] if i['term'] in kept])[:ROWS]
+        fading = _distinct([dict(i, **kept[i['term']]) for i in ranked['fading'] if i['term'] in kept])[:ROWS] if scope == '*' else []
         if growing:
             sections.append({'scope': scope, 'field': {'en': en, 'fr': fr}, 'papers': ranked['papers'],
                              'base_papers': ranked['base_papers'], 'growing': growing, 'fading': fading})
@@ -379,12 +414,12 @@ def topics_page(data, lang):
                 % (link(lang, 'trends/explore/'), link(lang, 'trends/'), link(lang, 'guides/rising-research-topics/'), link(lang, 'digest/')))
     body.append(t(lang, '## Methodology and limits', '## Méthode et limites'))
     body.append(t(lang, '''- **Papers**: every new arXiv paper, dated by the submission of its first version (arXiv OAI-PMH), and the new bioRxiv and medRxiv preprints. A paper counts in each archive of its categories.
-- **Terms**: words and phrases of 1 to 3 words of the title and abstract, lowercased, with plurals cut to a stem; the readable form shown is restored afterwards. Terms a single paper used in a week are not stored, so a term absent from a stored week counts as half a paper.
+- **Terms**: words and phrases of 1 to 3 words of the title and abstract, lowercased, with plurals cut to a stem; the readable form shown is restored afterwards. Terms a single paper used in a week are not stored, so a term absent from a stored week counts as one paper. Spelling variants ("language-model" for "language model") are left out when the other spelling is at least as common.
 - **Share**: papers using the term divided by all papers of the scope, in the latest 13 weeks, divided by the same ratio over %s. Listed terms at least doubled their share and pass a likelihood-ratio test (far from chance).
 - **Filtering**: the counts choose the terms. A language model only removes candidates that are not research topics (generic wording, template phrases) and writes the readable form and the short description.
 - Words are not topics: a new name for an old idea rises too, and a term can grow because of one large collaboration.''',
                   '''- **Articles** : chaque nouvel article arXiv, daté par la soumission de sa première version (OAI-PMH d’arXiv), et les nouveaux preprints bioRxiv et medRxiv. Un article compte dans chaque archive de ses catégories.
-- **Termes** : mots et expressions de 1 à 3 mots du titre et du résumé, en minuscules, pluriels ramenés à une racine ; la forme lisible affichée est rétablie ensuite. Les termes qu’un seul article a employés dans une semaine ne sont pas conservés : un terme absent d’une semaine compte pour un demi-article.
+- **Termes** : mots et expressions de 1 à 3 mots du titre et du résumé, en minuscules, pluriels ramenés à une racine ; la forme lisible affichée est rétablie ensuite. Les termes qu’un seul article a employés dans une semaine ne sont pas conservés : un terme absent d’une semaine compte pour un article. Les variantes d’orthographe (« language-model » pour « language model ») sont écartées quand l’autre graphie est au moins aussi fréquente.
 - **Part** : articles employant le terme divisés par l’ensemble des articles du périmètre sur les 13 dernières semaines, rapportés au même ratio sur %s. Les termes listés ont au moins doublé leur part et passent un test du rapport de vraisemblance (loin du hasard).
 - **Filtrage** : les comptages choisissent les termes. Un modèle de langage retire seulement les candidats qui ne sont pas des sujets de recherche (formulations génériques, phrases toutes faites) et écrit la forme lisible et la courte description.
 - Un mot n’est pas un sujet : un nouveau nom pour une vieille idée progresse aussi, et un terme peut grimper à cause d’une seule grande collaboration.''') % compare)
