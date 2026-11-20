@@ -166,6 +166,28 @@ def _this_week(lang):
     return {'week': week, 'rising': rising, 'letters_day': newest, 'letters': shown}
 
 
+# Guides linked from the homepage body: the data pages first, then the guides of the most used tools.
+HOME_GUIDES = ['arxiv-statistics', 'fastest-growing-research-topics', 'authors-per-paper', 'arxiv-papers-published-in-journals',
+               'how-to-summarize-a-research-paper', 'how-to-chat-with-research-papers', 'daily-digest-research-papers',
+               'literature-review-from-a-research-question']
+
+
+def home_guides(lang=None):
+    """[{'title', 'url'}] of the published HOME_GUIDES in this language; cached an hour."""
+    from . import guides
+    lang = lang or get_language()
+    key = 'home-guides:%s' % lang
+    found = cache.get(key)
+    if found is None:
+        found = []
+        for slug in HOME_GUIDES:
+            guide = guides.load(lang, slug)
+            if guide and not guide.get('draft'):
+                found.append({'title': guide['title'], 'url': '/%s/guides/%s/' % (lang, slug)})
+        cache.set(key, found, 3600)
+    return found
+
+
 def context(request=None):
     from .email_updates import form_context
     currency = billing.selected_currency(request) if request is not None else 'eur'
@@ -175,5 +197,5 @@ def context(request=None):
                   .select_related('paper').order_by('-updated')[:7])
     papers = [p for p in papers if (p.summary or '').strip() or (p.lay_summary or '').strip()]
     return {**form_context(), 'free_tools': free_tools(), 'home_readers': readers(), 'latestpapers': papers[:3], 'example_paper': papers[0] if papers else None,
-            'email_samples': email_samples(), 'this_week': this_week(),
+            'email_samples': email_samples(), 'this_week': this_week(), 'home_guides': home_guides(),
             'home_price': monthly_price(currency), 'billing_currency': currency, 'billing_currencies': billing.currencies()}

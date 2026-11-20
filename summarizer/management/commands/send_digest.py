@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from summarizer import audio, bluesky, changes, conversion_emails, outreach, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, visits, zotero
+from summarizer import audio, bluesky, changes, conversion_emails, data_guides, outreach, citations, conference, digest, homepage, letters, neighbours, personal_activity, publication_alerts, publication_status, removal, scoops, students, tdm, teams, trends, usage, saved_searches, visits, zotero
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,9 @@ class Command(BaseCommand):
                            ('trash', lambda: removal.purge(now)),
                            ('page views', lambda: visits.purge(now)),
                            # last: once a week it reads two weeks of arXiv and writes topics for a few minutes
-                           ('trends', lambda: trends.update(now))):
+                           ('trends', lambda: trends.update(now)),
+                           # once a month, after the week's counts: the fastest-growing topics guide
+                           ('data guides', lambda: data_guides.refresh_due(now))):
             try:
                 with usage.task(name.replace(' ', '_')):
                     done = step()

@@ -25006,3 +25006,11 @@ msgstr "Une bibliothèque, une école doctorale, une revue ou une conférence ?"
 msgid "See what we offer institutions"
 msgstr "Voir ce que nous proposons aux établissements"
 
+msgid "Data and guides"
+msgstr "Données et guides"
+
+msgid "Research publishing, in numbers"
+msgstr "La publication scientifique en chiffres"
+
+msgid "All guides"
+msgstr "Tous les guides"

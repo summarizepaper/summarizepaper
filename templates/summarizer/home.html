@@ -194,6 +194,13 @@
   </div>
 </section>
 
+{% if home_guides %}
+<section class="home-section container home-guides" aria-labelledby="guides-title">
+  <div class="home-section-heading"><div><p class="home-kicker">{% trans 'Data and guides' %}</p><h2 id="guides-title">{% trans 'Research publishing, in numbers' %}</h2></div><a href="/{{ LANGUAGE_CODE }}/guides/">{% trans 'All guides' %} <span aria-hidden="true">↗</span></a></div>
+  <ul class="home-guide-list">{% for g in home_guides %}<li><a href="{{ g.url }}">{{ g.title }}</a></li>{% endfor %}</ul>
+</section>
+{% endif %}
+
 <section class="home-section home-trust container" aria-labelledby="sources-title">
   <div><p class="home-kicker">{% trans 'Grounded in scientific literature' %}</p><h2 id="sources-title">{% trans 'Research papers, with their sources' %}</h2><p class="home-source-list">arXiv · {% trans 'Journals via DOI' %} · bioRxiv · medRxiv · HAL · OSF · PubMed</p><p>{% trans 'When a license permits it, summaries use the full text. Otherwise they use the abstract and say so. AI output is a starting point: check the original paper for your research decisions.' %}</p></div>
   <div class="home-trust-links"><a href="{% url 'faq' %}">{% trans 'How the summaries work' %} →</a><a href="{% url 'author' %}">{% trans 'Meet the researcher behind SummarizePaper' %} →</a><a href="https://github.com/summarizepaper/summarizepaper">{% trans 'Explore the open-source code' %} ↗</a></div>
