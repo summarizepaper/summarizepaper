@@ -298,13 +298,17 @@ def check_terms(scope, items):
 
 
 def _distinct(items):
-    """One row per readable label: two stems can name the same thing ('nuclear recoil')."""
+    """One row per thing named: two stems can give the same label ('nuclear recoil'), and an acronym and its full
+    name get the same description ('LZ' and 'LUX-ZEPLIN')."""
     seen, kept = set(), []
     for item in items:
-        key = re.sub(r'[^a-z0-9]', '', item['label'].lower())
-        if key not in seen:
-            seen.add(key)
+        keys = {re.sub(r'[^a-z0-9]', '', item['label'].lower())}
+        gloss = re.sub(r'[^a-z0-9]', '', (item.get('gloss') or {}).get('en', '').lower())
+        if gloss:
+            keys.add('gloss:' + gloss)
+        if not keys & seen:
             kept.append(item)
+        seen |= keys
     return kept
 
 
