@@ -1,0 +1,1 @@
+{% if lang == 'fr' %}{% if trials|length == 1 %}Votre essai gratuit sur SummarizePaper{% else %}Vos {{ trials|length }} essais gratuits sur SummarizePaper{% endif %}{% else %}{% if trials|length == 1 %}Your free try on SummarizePaper{% else %}Your {{ trials|length }} free tries on SummarizePaper{% endif %}{% endif %}

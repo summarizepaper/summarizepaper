@@ -643,8 +643,10 @@ class ReactivationEmail(models.Model):
 class ConversionEmail(models.Model):
     """An email sent once to help a free account or a trial decide (conversion_emails.py): 'trial_result' the day
     after a free try of a tool (key: the Generated row), 'trial_ending' two days before a Stripe trial ends (key: the
-    subscription), 'optout' when the user asked for no more of them."""
-    KINDS = [('trial_result', 'Après un essai gratuit'), ('trial_ending', 'Fin de l’essai Premium'), ('optout', 'Désinscrit')]
+    subscription), 'welcome' the day after signing up and 'announce' once to older members (the free tries left),
+    'optout' when the user asked for no more of them."""
+    KINDS = [('trial_result', 'Après un essai gratuit'), ('trial_ending', 'Fin de l’essai Premium'),
+             ('welcome', 'Bienvenue (essais gratuits)'), ('announce', 'Annonce des essais gratuits'), ('optout', 'Désinscrit')]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversion_emails')
     kind = models.CharField(max_length=20, choices=KINDS)
     key = models.CharField(max_length=100, blank=True, default='')

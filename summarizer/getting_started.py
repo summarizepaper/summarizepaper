@@ -107,7 +107,9 @@ def page(request):
         'What are the limitations of this study? Distinguish observations from the authors’ interpretations.',
     ])
     source_label = ('Prépublication arXiv' if lang == 'fr' else 'arXiv preprint') if not sources.is_external(key) else 'DOI'
+    from .teasers import open_trials
     return render(request, 'summarizer/getting_started.html', {
+        'trials': open_trials(request.user, lang) if request.user.is_authenticated else [],
         'example_ready': ready, 'paper': paper, 'questions': questions, 'insight': reading,
         'evidence_exercise': exercise, 'domain': selected, 'source_label': source_label, 'is_preprint': not sources.is_external(key),
         'domains': [{'slug': slug, 'label': row[lang]} for slug, row in EXAMPLES.items()],

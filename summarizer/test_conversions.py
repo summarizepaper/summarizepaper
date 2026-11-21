@@ -1,10 +1,12 @@
 import datetime
+import io
 import json
 import uuid
 from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core import mail
+from django.core.management import call_command
 from django.test import override_settings
 from django.utils import timezone
 
@@ -52,6 +54,57 @@ class ConversionEmailTests(ToolsTestCase):
         self.assertEqual(self.client.get('/en/emails/stop/forged/').status_code, 404)
         self.assertEqual(conversion_emails.run(timezone.now(), 10), 0)
         self.assertEqual(mail.outbox, [])
+
+    def joined(self, user, hours_ago):
+        User.objects.filter(pk=user.pk).update(date_joined=timezone.now() - datetime.timedelta(hours=hours_ago))
+        return User.objects.get(pk=user.pk)
+
+    def test_the_day_after_signing_up_one_email_lists_the_free_tries_left(self):
+        ann = self.joined(self.user(), 22)
+        Generated.objects.create(kind='teams', key='t1', lang='en', user=ann, status='done', trial=True, content='{}')
+        self.joined(self.user('fresh'), 2)  # signed up a moment ago: not yet
+        self.joined(self.user('old'), 24 * 5)  # too long ago: the announce command's job
+        self.joined(self.user('bob', paid=True), 22)  # a subscriber has no free try to run
+        self.assertEqual(conversion_emails.run(timezone.now(), 10), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, ['ann@example.com'])
+        self.assertEqual(message.subject, 'Your 2 free tries on SummarizePaper')
+        html = message.alternatives[0][0]
+        self.assertIn('/en/refcheck/?utm_source=email&amp;utm_medium=email&amp;utm_campaign=welcome#tool-form', html)
+        self.assertIn('/en/missed/', html)
+        self.assertNotIn('/en/teams/', html)  # already tried
+        self.assertIn('7 days of', html)
+        self.assertIn('List-Unsubscribe', message.extra_headers)
+        self.assertEqual(conversion_emails.run(timezone.now(), 10), 0)  # once only
+
+    def test_older_members_get_the_announce_once_and_never_after_a_stop(self):
+        ann = self.joined(self.user(), 24 * 30)
+        cid = self.joined(self.user('cid'), 24 * 30)
+        ConversionEmail.objects.create(user=cid, kind='optout')
+        self.joined(self.user('bob', paid=True), 24 * 30)
+        self.joined(self.user('new'), 22)  # gets the welcome instead
+        self.assertEqual([u.username for u in conversion_emails.announce_candidates()], ['ann'])
+        call_command('announce_trials', stdout=io.StringIO())  # without --send: nothing
+        self.assertEqual(mail.outbox, [])
+        call_command('announce_trials', '--send', stdout=io.StringIO())
+        self.assertEqual(len(mail.outbox), 1)
+        text = mail.outbox[0].body
+        self.assertIn('Since November, a free account can run each of these Premium tools once', text)
+        self.assertIn('utm_campaign=announce', text)
+        self.assertEqual(conversion_emails.announce_candidates(), [])
+
+    def test_the_welcome_page_and_the_home_page_offer_the_free_tries_left(self):
+        ann = self.user()
+        client = self.client_for(ann)
+        page = client.get('/fr/getting-started/').content.decode()
+        self.assertIn('Vos 3 essais gratuits', page)
+        self.assertIn('/fr/teams/#tool-form', page)
+        Generated.objects.create(kind='teams', key='t1', lang='en', user=ann, status='done', trial=True, content='{}')
+        home = client.get('/en/').content.decode()
+        self.assertIn('Your 2 free tries', home)
+        self.assertNotIn('/en/teams/#tool-form', home)
+        self.assertNotIn('free tries', self.client.get('/en/').content.decode())  # visitors without an account
+        self.assertNotIn('free tries', self.client_for(self.user('bob', paid=True)).get('/en/').content.decode())
 
     @override_settings(STRIPE_SECRET_KEY='sk_test', STRIPE_PRICE_MONTHLY='price_m')
     def test_two_days_before_a_trial_ends_one_email_with_the_payment_and_what_was_made(self):

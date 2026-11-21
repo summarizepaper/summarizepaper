@@ -457,6 +457,9 @@ def summarize(request):
     activated = request.GET.get('activated', False)
     stuff_for_frontend.update(homepage.context(request))
     stuff_for_frontend['activated'] = activated
+    if request.user.is_authenticated:
+        from .teasers import open_trials
+        stuff_for_frontend['trials'] = open_trials(request.user, get_language())
 
 
     return render(request, 'summarizer/home.html', stuff_for_frontend)

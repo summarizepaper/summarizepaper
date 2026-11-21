@@ -13,6 +13,7 @@
     <p class="lead">{% if LANGUAGE_CODE == 'fr' %}Choisissez un domaine, vérifiez un résultat, explorez les figures et préparez votre première question.{% else %}Choose a field, check a finding, explore the figures and prepare your first question.{% endif %}</p>
     <a class="getting-started-skip" href="{% url 'summarize' %}" data-funnel="getting_started_skip">{% if LANGUAGE_CODE == 'fr' %}Je préfère utiliser mon propre article{% else %}I’d rather use my own paper{% endif %} →</a>
   </header>
+  {% if trials %}{% include 'summarizer/trial_offer.html' with placement='getting_started' %}{% endif %}
   <nav class="getting-started-domains" aria-label="{% if LANGUAGE_CODE == 'fr' %}Choisir un domaine{% else %}Choose a field{% endif %}">
     {% for choice in domains %}<a href="?domain={{ choice.slug }}" {% if choice.slug == domain %}aria-current="true"{% endif %} data-funnel="getting_started_domain" data-domain="{{ choice.slug }}">{{ choice.label }}</a>{% endfor %}
   </nav>

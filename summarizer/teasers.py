@@ -68,6 +68,34 @@ def trial_view(user, row):
     return row.trial and row.user_id == getattr(user, 'pk', None) and not access.has_tool(user, row.kind)
 
 
+# The free tries offered to a new member (welcome page, home page, welcome email), the quickest to start first:
+# name, what it reads and gives, the button
+TRIAL_OFFERS = {
+    'teams': {
+        'en': ('Who works on it?', 'Describe a topic in a few words: the people, teams and institutions who publish on it, and their approaches.', 'Map a topic'),
+        'fr': ('Qui travaille dessus ?', 'Décrivez un sujet en quelques mots : les chercheurs, équipes et institutions qui publient dessus, et leurs approches.', 'Cartographier un sujet')},
+    'refcheck': {
+        'en': ('Bibliography check', 'Your .bib, or the arXiv identifier of your paper: retracted papers, preprints published since, entries to correct, and citations the cited paper does not support.', 'Check my references'),
+        'fr': ('Vérification de bibliographie', 'Votre .bib, ou l’identifiant arXiv de votre article : articles rétractés, prépublications publiées depuis, entrées à corriger, et citations que l’article cité ne soutient pas.', 'Vérifier mes références')},
+    'missed': {
+        'en': ('What did I miss?', 'Your draft as a PDF: the closest papers it does not cite yet, and how to position yourself against each.', 'Find what I missed'),
+        'fr': ('Qu\'est-ce que j\'ai raté ?', 'Votre brouillon en PDF : les articles les plus proches qu’il ne cite pas encore, et comment vous positionner face à chacun.', 'Trouver ce qui manque')},
+}
+TRIAL_ORDER = ('teams', 'refcheck', 'missed')
+
+
+def open_trials(user, lang='en'):
+    """The free tries this account may still run, in TRIAL_ORDER: [{'tool', 'name', 'pitch', 'button', 'path'}]."""
+    lang = 'fr' if lang == 'fr' else 'en'
+    found = []
+    for kind in TRIAL_ORDER:
+        if trial_open(user, kind):
+            name, pitch, button = TRIAL_OFFERS[kind][lang]
+            found.append({'tool': kind, 'name': name, 'pitch': pitch, 'button': button,
+                          'path': '/%s/%s/#tool-form' % (lang, PATHS[kind])})
+    return found
+
+
 def audience(user, kind):
     """What the call to action offers: 'signup', 'open' (the tool is theirs), 'trial' (they may run it once),
     'premium' or 'plus'."""

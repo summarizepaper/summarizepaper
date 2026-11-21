@@ -22,6 +22,7 @@
 {% block content %}
 <main class="home">
 {% if activated %}<div class="container"><p class="notice" role="status">{% trans 'Your account is now activated and you are logged in.' %}</p></div>{% endif %}
+{% if trials %}<div class="container">{% include 'summarizer/trial_offer.html' with placement='home' %}</div>{% endif %}
 <section class="home-hero container" aria-labelledby="home-title">
   <div class="home-intro">
     <p class="home-kicker">{% trans 'From the first paper to your next submission' %}</p>

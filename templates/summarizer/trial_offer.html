@@ -1,0 +1,14 @@
+{# The free tries a member may still run (teasers.open_trials), on the welcome and home pages. #}
+<section class="card section-card trial-offer" data-funnel-view="trial_offer_view" data-placement="{{ placement }}" style="margin:1.25rem 0">
+  <h2 style="margin-top:0">{% if LANGUAGE_CODE == 'fr' %}{% if trials|length == 1 %}Votre essai gratuit{% else %}Vos {{ trials|length }} essais gratuits{% endif %}{% else %}{% if trials|length == 1 %}Your free try{% else %}Your {{ trials|length }} free tries{% endif %}{% endif %}</h2>
+  <p class="muted">{% if LANGUAGE_CODE == 'fr' %}Votre compte gratuit peut lancer une fois {% if trials|length == 1 %}cet outil Premium{% else %}chacun de ces outils Premium{% endif %}, sans carte bancaire : vous voyez les premiers résultats en entier.{% else %}Your free account can run {% if trials|length == 1 %}this Premium tool{% else %}each of these Premium tools{% endif %} once, no card needed: you see the first results in full.{% endif %}</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+    {% for t in trials %}
+    <div style="border:1px solid var(--border, #e3e3e3);border-radius:8px;padding:1rem;display:flex;flex-direction:column;gap:.5rem">
+      <strong>{{ t.name }}</strong>
+      <span style="flex:1">{{ t.pitch }}</span>
+      <a class="btn btn-sm{% if not forloop.first %} btn-ghost{% endif %}" href="{{ t.path }}" data-funnel="trial_offer_click" data-tool="{{ t.tool }}" data-placement="{{ placement }}">{{ t.button }}</a>
+    </div>
+    {% endfor %}
+  </div>
+</section>

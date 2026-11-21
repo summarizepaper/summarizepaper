@@ -1,0 +1,39 @@
+{% autoescape off %}{% if lang == 'fr' %}Bonjour,
+
+{% if announce %}Vous avez un compte sur SummarizePaper. Depuis novembre, un compte gratuit peut lancer une fois{% else %}Merci de vous être inscrit sur SummarizePaper. Votre compte gratuit peut lancer une fois{% endif %} {% if trials|length == 1 %}cet outil Premium{% else %}chacun de ces outils Premium{% endif %}, sans carte bancaire. Vous voyez les premiers résultats en entier :
+{% for t in trials %}
+- {{ t.name }}
+  {{ t.pitch }}
+  {{ t.button }} : {{ t.url }}
+{% endfor %}
+{% if trials.0.tool == 'teams' %}Le plus rapide : « Qui travaille dessus ? » ne demande qu'un sujet en quelques mots.
+{% endif %}{% if trial_days %}
+Pour tout voir, les {{ trial_days }} premiers jours de Premium sont gratuits, sans frais si vous annulez avant la fin : {{ premium_url }}
+{% endif %}
+Une question ou une remarque ? Répondez simplement à cet e-mail.
+
+L'équipe SummarizePaper
+
+--
+{% if announce %}Vous recevez cet e-mail une seule fois.{% else %}Vous recevez cet e-mail une fois, après votre inscription.{% endif %}
+Ne plus recevoir ce type d'e-mail : {{ optout_url }}
+{% else %}Hello,
+
+{% if announce %}You have an account on SummarizePaper. Since November, a free account can run{% else %}Thank you for signing up to SummarizePaper. Your free account can run{% endif %} {% if trials|length == 1 %}this Premium tool{% else %}each of these Premium tools{% endif %} once, no card needed. You see the first results in full:
+{% for t in trials %}
+- {{ t.name }}
+  {{ t.pitch }}
+  {{ t.button }}: {{ t.url }}
+{% endfor %}
+{% if trials.0.tool == 'teams' %}The quickest: "Who works on it?" only needs a topic in a few words.
+{% endif %}{% if trial_days %}
+To see everything, your first {{ trial_days }} days of Premium are free, nothing charged if you cancel before their end: {{ premium_url }}
+{% endif %}
+A question or a remark? Just reply to this email.
+
+The SummarizePaper team
+
+--
+{% if announce %}You get this email only once.{% else %}You get this email once, after signing up.{% endif %}
+No more emails like this one: {{ optout_url }}
+{% endif %}{% endautoescape %}

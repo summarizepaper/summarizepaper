@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;color:#222;">
+  <div style="max-width:640px;margin:0 auto;background:#fff;padding:24px 20px;">
+    <p style="margin:0 0 20px;font-size:20px;font-weight:bold;">Summarize<span style="color:#34a853">Paper</span></p>
+    <p style="font-size:15px;line-height:1.5;margin:0 0 16px;">{% if lang == 'fr' %}{% if announce %}Vous avez un compte sur SummarizePaper. Depuis novembre, un compte gratuit peut lancer une fois{% else %}Merci de vous être inscrit sur SummarizePaper. Votre compte gratuit peut lancer une fois{% endif %} {% if trials|length == 1 %}cet outil Premium{% else %}chacun de ces outils Premium{% endif %}, sans carte bancaire. Vous voyez les premiers résultats en entier.{% else %}{% if announce %}You have an account on SummarizePaper. Since November, a free account can run{% else %}Thank you for signing up to SummarizePaper. Your free account can run{% endif %} {% if trials|length == 1 %}this Premium tool{% else %}each of these Premium tools{% endif %} once, no card needed. You see the first results in full.{% endif %}</p>
+    {% for t in trials %}
+    <div style="border-left:3px solid #34a853;padding:6px 0 6px 12px;margin:0 0 16px;font-size:15px;line-height:1.5;">
+      <strong>{{ t.name }}</strong><br><span style="color:#444;">{{ t.pitch }}</span><br>
+      <a href="{{ t.url }}" style="display:inline-block;margin-top:8px;{% if forloop.first %}background:#34a853;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;font-weight:bold;{% else %}color:#1a0dab;{% endif %}">{{ t.button }}</a>
+    </div>
+    {% endfor %}
+    {% if trials.0.tool == 'teams' %}<p style="font-size:14px;line-height:1.5;color:#444;margin:0 0 12px;">{% if lang == 'fr' %}Le plus rapide : « Qui travaille dessus ? » ne demande qu’un sujet en quelques mots.{% else %}The quickest: “Who works on it?” only needs a topic in a few words.{% endif %}</p>{% endif %}
+    {% if trial_days %}<p style="font-size:14px;line-height:1.5;color:#444;margin:0 0 12px;">{% if lang == 'fr' %}Pour tout voir, les {{ trial_days }} premiers jours de <a href="{{ premium_url }}" style="color:#1a0dab;">Premium</a> sont gratuits, sans frais si vous annulez avant la fin.{% else %}To see everything, your first {{ trial_days }} days of <a href="{{ premium_url }}" style="color:#1a0dab;">Premium</a> are free, nothing charged if you cancel before their end.{% endif %}</p>{% endif %}
+    <p style="font-size:14px;line-height:1.5;margin:0 0 24px;">{% if lang == 'fr' %}Une question ou une remarque ? Répondez simplement à cet e-mail.<br><br>L’équipe SummarizePaper{% else %}A question or a remark? Just reply to this email.<br><br>The SummarizePaper team{% endif %}</p>
+    <p style="border-top:1px solid #eee;padding-top:16px;color:#888;font-size:12px;">
+      {% if lang == 'fr' %}{% if announce %}Vous recevez cet e-mail une seule fois.{% else %}Vous recevez cet e-mail une fois, après votre inscription.{% endif %} <a href="{{ optout_url }}" style="color:#888;">Ne plus recevoir ce type d’e-mail</a>{% else %}{% if announce %}You get this email only once.{% else %}You get this email once, after signing up.{% endif %} <a href="{{ optout_url }}" style="color:#888;">No more emails like this one</a>{% endif %}
+    </p>
+  </div>
+</body>
+</html>

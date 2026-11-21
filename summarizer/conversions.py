@@ -91,6 +91,8 @@ def report(days, now=None):
         ('… sur la page Premium', _visitors(views, view='premium'), ''),
         ('… sur la page d’inscription', _visitors(anonymous, view='register'), ''),
         ('Inscriptions', signups.count(), '%d activées' % active.count()),
+        ('E-mails de bienvenue (essais gratuits)', followups.filter(kind='welcome').count(), 'le lendemain de l’inscription'),
+        ('Annonce des essais aux anciens membres', followups.filter(kind='announce').count(), 'commande announce_trials'),
         ('Essais gratuits d’un outil', tries.count(), '%d comptes' % tries.values('user').distinct().count()),
         ('E-mails après l’essai gratuit', followups.filter(kind='trial_result').count(), ''),
         ('Abonnements Stripe commencés', len(plans), '%d avec essai de 7 jours' % len(trials)),
