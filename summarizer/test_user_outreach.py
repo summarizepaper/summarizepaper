@@ -15,6 +15,19 @@ from summarizer.models import OutreachContact, SuppressedEmail, DigestSubscripti
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', MAILCHECK_DNS=False)
+class StoppedOutreachTests(TestCase):
+    def test_the_stopped_campaign_sends_nothing_even_from_the_scheduler(self):
+        User.objects.create_user('reader', email='reader@example.com', last_login=timezone.now())
+        output = io.StringIO()
+        call_command('contact_users', '--send', stdout=output)
+        self.assertIn('arrêtée', output.getvalue())
+        with self.assertRaises(outreach.BatchStopped): outreach.send_batch()
+        self.assertEqual(mail.outbox, [])
+        self.assertFalse(OutreachContact.objects.exists())
+
+
+@patch.object(outreach, 'STOPPED', False)
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', MAILCHECK_DNS=False)
 class OutreachTests(TestCase):
     def user(self, name='reader', email='reader@example.com', **kwargs):
         return User.objects.create_user(name, email=email, last_login=timezone.now(), **kwargs)

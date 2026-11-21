@@ -19,6 +19,9 @@ class Command(BaseCommand):
                 self.stdout.write('Utilisateur %s · %s · %s' % (user.pk,user_outreach.language(user),user.outreach_activity.date()))
             self.stdout.write(user_outreach.message('fr','https://www.summarizepaper.com/desinscription/APERÇU')[1])
             return
+        if user_outreach.STOPPED:
+            self.stdout.write('Campagne arrêtée : aucun message envoyé.')
+            return
         try: sent = user_outreach.send_batch(options['limit'],options['segment'])
         except user_outreach.BatchStopped as exc: raise CommandError(str(exc))
         self.stdout.write('%d message(s) accepté(s) par SMTP ; livraison et réponses à vérifier.' % len(sent))

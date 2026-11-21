@@ -25,6 +25,9 @@ from .models import AIassistant, AnnouncementSent, OutreachContact, PaperHistory
 BASE = 'https://www.summarizepaper.com'
 SALT = 'summarizer.feedback-optout.v1'
 MAX_BATCH = 6
+# Stopped on 2026-11-21 (114 sent since 11-05): the older members get the free-tries announce instead
+# (conversion_emails.send_announce). The scheduler job may still call contact_users: it sends nothing.
+STOPPED = True
 # The daily quota follows the Paris calendar day, so a scheduler run a few minutes early is not refused.
 DAY_ZONE = zoneinfo.ZoneInfo('Europe/Paris')
 
@@ -122,6 +125,7 @@ def sent_today(now=None):
 
 
 def send_batch(limit=MAX_BATCH, segment='auto'):
+    if STOPPED: raise BatchStopped('Campagne de retour arrêtée (user_outreach.STOPPED).')
     if not 1 <= limit <= MAX_BATCH: raise BatchStopped('Un lot contient de 1 à 6 messages.')
     if segment not in ('auto', 'recent', 'older'): raise BatchStopped('Segment inconnu.')
     with batch_lock():
