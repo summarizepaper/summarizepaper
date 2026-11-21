@@ -88,6 +88,42 @@ def table(header, rows):
     return '\n'.join(lines)
 
 
+DATA_PAGES = [('arxiv-statistics', 'arXiv statistics: submissions per year and field', 'Statistiques d’arXiv : soumissions par année et par domaine'),
+              ('fastest-growing-research-topics', 'The fastest-growing research topics', 'Les sujets de recherche en plus forte croissance'),
+              ('authors-per-paper', 'How many authors per paper, by field', 'Combien d’auteurs par article, par domaine'),
+              ('arxiv-papers-published-in-journals', 'How many arXiv preprints are published in journals', 'Combien de preprints arXiv sont publiés en revue')]
+
+
+def related(lang, slug):
+    """The other statistics pages, linked from each one."""
+    items = ['- [%s](%s)' % (t(lang, en, fr), link(lang, 'guides/%s/' % other)) for other, en, fr in DATA_PAGES if other != slug]
+    return t(lang, '## More research publishing data', '## Plus de données sur la publication scientifique') + '\n\n' + '\n'.join(items)
+
+
+def _esc(text):
+    return str(text).replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+
+
+def bar_chart(title, caption, rows, aria, top=None):
+    """A horizontal bar chart in the guides' SVG style (.viz in site.css; guide.html shows data-tip on hover).
+
+    rows: (label, value, shown value, tooltip); bars scale to `top` (default: the largest value)."""
+    top = top or max(v for _l, v, _s, _t in rows) or 1
+    left, right, step, bar = 150, 690, 30, 18
+    height = 16 + step * len(rows)
+    parts = ['<figure class="viz">', '<figcaption><strong>%s</strong><span>%s</span></figcaption>' % (_esc(title), _esc(caption)),
+             '<div class="viz-scroll"><svg viewBox="0 0 760 %d" role="img" aria-label="%s">' % (height, _esc(aria))]
+    for i, (label, value, shown, tip) in enumerate(rows):
+        y = 8 + i * step
+        width = max(2.0, (right - left) * value / top)
+        parts.append('<text class="row" x="%d" y="%.1f" dy="4" text-anchor="end"><tspan class="cat">%s</tspan></text>' % (left - 10, y + bar / 2, _esc(label)))
+        parts.append('<g class="hit" data-tip="%s"><rect x="0" y="%d" width="760" height="%d" fill="transparent"/>'
+                     '<rect class="bar" x="%d" y="%d" width="%.1f" height="%d" rx="3"/></g>' % (_esc(tip), y - 6, step, left, y, width, bar))
+        parts.append('<text class="val" x="%.1f" y="%.1f" dy="4">%s</text>' % (left + width + 6, y + bar / 2, _esc(shown)))
+    parts += ['</svg></div>', '</figure>']
+    return '\n'.join(parts)
+
+
 class _Dumper(yaml.SafeDumper):
     def ignore_aliases(self, data):  # the same date twice must not become '&id001' and '*id001'
         return True
@@ -416,6 +452,7 @@ def topics_page(data, lang):
 - La page des [sujets en hausse](%s) nomme chaque semaine les sujets qui bondissent dans chaque catégorie d’arXiv, bioRxiv et medRxiv ; voir [comment la lire](%s).
 - L’[alerte quotidienne](%s) envoie chaque jour ouvré les nouveaux articles de vos catégories, chacun avec un résumé en deux phrases.''')
                 % (link(lang, 'trends/explore/'), link(lang, 'trends/'), link(lang, 'guides/rising-research-topics/'), link(lang, 'digest/')))
+    body.append(related(lang, TOPICS_SLUG))
     body.append(t(lang, '## Methodology and limits', '## Méthode et limites'))
     body.append(t(lang, '''- **Papers**: every new arXiv paper, dated by the submission of its first version (arXiv OAI-PMH), and the new bioRxiv and medRxiv preprints. A paper counts in each archive of its categories.
 - **Terms**: words and phrases of 1 to 3 words of the title and abstract, lowercased, with plurals cut to a stem; the readable form shown is restored afterwards. Terms a single paper used in a week are not stored, so a term absent from a stored week counts as one paper. Spelling variants ("language-model" for "language model") are left out when the other spelling is at least as common.
@@ -543,12 +580,16 @@ def cohorts(records, years):
 
 
 def author_stats(papers):
-    counts = [p['authors'] for p in papers if p['authors'] > 0]
+    papers = [p for p in papers if p['authors'] > 0]
+    counts = [p['authors'] for p in papers]
     if not counts:
         return None
     n = len(counts)
+    # a paper signed by one collaboration name ('groups' harvested since November 2026) is not a single-author paper
+    solo = sum(p['authors'] == 1 and not p.get('groups') for p in papers)
     return {'papers': n, 'median': statistics.median(counts), 'mean': sum(counts) / n,
-            'solo': 100 * sum(c == 1 for c in counts) / n, 'ten': 100 * sum(c >= 10 for c in counts) / n,
+            'solo': 100 * solo / n, 'ten': 100 * sum(c >= 10 for c in counts) / n,
+            'groups': 100 * sum(bool(p.get('groups')) for p in papers) / n,
             'hundred': 100 * sum(c >= 100 for c in counts) / n, 'max': max(counts),
             'bins': Counter(min(c, 11) if c <= 10 else (11 if c < 100 else 12) for c in counts)}
 
@@ -556,14 +597,14 @@ def author_stats(papers):
 def authors_data(records, year, earlier):
     by_year = cohorts(records, {year, earlier})
     data = {'year': year, 'earlier': earlier, 'all': author_stats(by_year[year]), 'all_earlier': author_stats(by_year[earlier]),
-            'fields': []}
+            'fields': [], 'groups_known': all('groups' in p for p in by_year[year][:1000])}
     for code, _en, _fr in FIELDS:
         now = author_stats([p for p in by_year[year] if field_of(p['cats']) == code])
         before = author_stats([p for p in by_year[earlier] if field_of(p['cats']) == code])
         if now and now['papers'] >= 200:
             data['fields'].append({'code': code, 'now': now, 'before': before})
     biggest = sorted(by_year[year], key=lambda p: -p['authors'])[:5]
-    data['biggest'] = [{'id': p['id'], 'authors': p['authors'], 'field': field_of(p['cats'])} for p in biggest]
+    data['biggest'] = [{'id': p['id'], 'authors': p['authors'], 'field': field_of(p['cats']), 'title': p.get('title', '')} for p in biggest]
     return data
 
 
@@ -582,8 +623,12 @@ def authors_page(data, lang, made):
     a, b = data['all'], data['all_earlier']
     fields = sorted(data['fields'], key=lambda f: (-f['now']['median'], -f['now']['mean']))
     most, least = fields[0], fields[-1]
-    # collaborations signing as one name make high-energy experiment look single-authored: not a real superlative
-    solo = sorted([f for f in fields if f['code'] not in COLLABORATIONS], key=lambda f: -f['now']['solo'])[0]
+    # without the group flag, collaborations signing as one name make high-energy experiment look single-authored
+    masked = () if data.get('groups_known') else COLLABORATIONS
+    solo = sorted([f for f in fields if f['code'] not in masked], key=lambda f: -f['now']['solo'])[0]
+
+    def solo_cell(f, key):
+        return '—' if f['code'] in masked else pct(f[key]['solo'], lang)
     takeaways = [
         t(lang, 'An arXiv paper submitted in %d had **%s authors** at the median (mean %s), over %s papers.',
           'Un article arXiv soumis en %d comptait **%s auteurs** en médiane (moyenne %s), sur %s articles.')
@@ -604,35 +649,49 @@ def authors_page(data, lang, made):
                 % (num(a['papers'], lang), year, _median(a['median'], lang), dec(a['mean'], lang), pct(a['ten'], lang, 1), pct(a['hundred'], lang, 2)))
     labels = [str(i) for i in range(1, 11)] + [t(lang, '11–99', '11 à 99'), t(lang, '100 or more', '100 ou plus')]
     rows = [(labels[i - 1], num(a['bins'].get(i, 0), lang), pct(100 * a['bins'].get(i, 0) / a['papers'], lang, 1)) for i in range(1, 13)]
+    body.append(bar_chart(t(lang, 'arXiv papers by number of authors, %d', 'Articles arXiv selon le nombre d’auteurs, %d') % year,
+                          t(lang, 'Share of the %s papers submitted in %d. Source: arXiv OAI-PMH metadata.', 'Part des %s articles soumis en %d. Source : métadonnées OAI-PMH d’arXiv.') % (num(a['papers'], lang), year),
+                          [(labels[i - 1], a['bins'].get(i, 0), pct(100 * a['bins'].get(i, 0) / a['papers'], lang, 1),
+                            '%s %s: %s %s' % (labels[i - 1], t(lang, 'authors', 'auteurs'), num(a['bins'].get(i, 0), lang), t(lang, 'papers', 'articles'))) for i in range(1, 13)],
+                          t(lang, 'Bar chart of arXiv papers submitted in %d by number of authors: %s had 3 authors, the most common count, and %s had one.',
+                            'Graphique en barres des articles arXiv soumis en %d selon le nombre d’auteurs : %s en avaient 3, le nombre le plus fréquent, et %s un seul.')
+                          % (year, pct(100 * a['bins'].get(3, 0) / a['papers'], lang, 1), pct(100 * a['bins'].get(1, 0) / a['papers'], lang, 1))))
     body.append(t(lang, 'Papers submitted in %d by number of authors:', 'Articles soumis en %d selon le nombre d’auteurs :') % year)
     body.append(table(t(lang, ['Authors', 'Papers', 'Share'], ['Auteurs', 'Articles', 'Part']), rows))
     body.append(t(lang, '## Which fields have the most authors per paper?', '## Quels domaines comptent le plus d’auteurs par article ?'))
     rows = [(_field(f['code'], lang), num(f['now']['papers'], lang), _median(f['now']['median'], lang), dec(f['now']['mean'], lang),
-             pct(f['now']['solo'], lang), pct(f['now']['ten'], lang)) for f in fields]
+             solo_cell(f, 'now'), pct(f['now']['ten'], lang)) for f in fields]
     body.append(t(lang, 'By the primary category of papers submitted in %d, ordered by median:', 'Selon la catégorie principale des articles soumis en %d, par médiane décroissante :') % year)
     body.append(table(t(lang, ['Field', 'Papers', 'Median authors', 'Mean', 'Single author', '10 authors or more'],
                         ['Domaine', 'Articles', 'Médiane d’auteurs', 'Moyenne', 'Un seul auteur', '10 auteurs ou plus']), rows))
+    if masked:
+        body.append(t(lang, '— High-energy experiment and nuclear physics collaborations often sign as one name on arXiv ("ATLAS Collaboration"), so their single-author share is not shown.',
+                      '— Les collaborations de physique des hautes énergies expérimentale et de physique nucléaire signent souvent d’un seul nom sur arXiv (« ATLAS Collaboration ») : leur part d’articles à un seul auteur n’est pas indiquée.'))
     body.append(t(lang, '## Are papers written by more authors than before?', '## Les articles ont-ils plus d’auteurs qu’avant ?'))
-    body.append(t(lang, 'Over all of arXiv, the mean went from %s authors in %d to %s in %d, and the share of single-author papers from %s to %s.',
-                  'Sur tout arXiv, la moyenne est passée de %s auteurs en %d à %s en %d, et la part des articles à un seul auteur de %s à %s.')
-                % (dec(b['mean'], lang), earlier, dec(a['mean'], lang), year, pct(b['solo'], lang, 1), pct(a['solo'], lang, 1)))
-    rows = [(_field(f['code'], lang), dec(f['before']['mean'], lang), dec(f['now']['mean'], lang), pct(f['before']['solo'], lang), pct(f['now']['solo'], lang))
+    body.append(t(lang, 'Over all of arXiv, the median went from %s authors in %d to %s in %d, the share of papers with 10 authors or more went from %s to %s, and the share of single-author papers from %s to %s. Medians and shares are used here rather than means, which a few papers with thousands of authors can move: one gravitational-wave paper with 1,800 authors weighs as much as 900 two-author papers.',
+                  'Sur tout arXiv, la médiane est passée de %s auteurs en %d à %s en %d, la part des articles à 10 auteurs ou plus de %s à %s, et celle des articles à un seul auteur de %s à %s. On compare ici des médianes et des parts plutôt que des moyennes, que quelques articles à plusieurs milliers d’auteurs suffisent à déplacer : un article sur les ondes gravitationnelles à 1 800 auteurs pèse autant que 900 articles à deux auteurs.')
+                % (_median(b['median'], lang), earlier, _median(a['median'], lang), year, pct(b['ten'], lang, 1), pct(a['ten'], lang, 1), pct(b['solo'], lang, 1), pct(a['solo'], lang, 1)))
+    rows = [(_field(f['code'], lang), _median(f['before']['median'], lang), _median(f['now']['median'], lang), pct(f['before']['ten'], lang), pct(f['now']['ten'], lang),
+             solo_cell(f, 'before'), solo_cell(f, 'now'))
             for f in sorted(fields, key=lambda f: -f['now']['papers']) if f['before']]
-    body.append(table(t(lang, ['Field', 'Mean %d' % earlier, 'Mean %d' % year, 'Single author %d' % earlier, 'Single author %d' % year],
-                        ['Domaine', 'Moyenne %d' % earlier, 'Moyenne %d' % year, 'Un seul auteur %d' % earlier, 'Un seul auteur %d' % year]), rows))
+    body.append(table(t(lang, ['Field', 'Median %d' % earlier, 'Median %d' % year, '10+ authors %d' % earlier, '10+ authors %d' % year, 'Single author %d' % earlier, 'Single author %d' % year],
+                        ['Domaine', 'Médiane %d' % earlier, 'Médiane %d' % year, '10 auteurs ou plus %d' % earlier, '10 auteurs ou plus %d' % year, 'Un seul auteur %d' % earlier, 'Un seul auteur %d' % year]), rows))
     body.append(t(lang, '## Which papers had the most authors?', '## Quels articles avaient le plus d’auteurs ?'))
     body.append(t(lang, 'The %d arXiv papers with the longest author lists:', 'Les articles arXiv de %d avec les plus longues listes d’auteurs :') % year)
-    body.append('\n'.join('- [arXiv:%s](%s) — %s %s, %s' % (p['id'], link(lang, 'paper/%s/' % p['id']), num(p['authors'], lang), t(lang, 'authors', 'auteurs'),
-                                                            _field(p['field'], lang) if p['field'] else '') for p in data['biggest']))
+    body.append('\n'.join('- [%s](%s)%s — %s %s, %s' % (_esc(p['title']).replace('[', '(').replace(']', ')') if p.get('title') else 'arXiv:' + p['id'],
+                                                        link(lang, 'paper/%s/' % p['id']), ' (arXiv:%s)' % p['id'] if p.get('title') else '',
+                                                        num(p['authors'], lang), t(lang, 'authors', 'auteurs'),
+                                                        _field(p['field'], lang) if p['field'] else '') for p in data['biggest']))
     body.append(t(lang, 'Read any of them in minutes: each link opens a summary on SummarizePaper. To see who works on a topic rather than who signed one paper, [Who works on it?](%s) maps the teams behind a research topic.',
                   'Lisez-les en quelques minutes : chaque lien ouvre un résumé sur SummarizePaper. Pour savoir qui travaille sur un sujet plutôt que qui a signé un article, [Qui travaille dessus ?](%s) cartographie les équipes derrière un sujet de recherche.')
                 % link(lang, 'guides/find-research-teams-by-topic/'))
+    body.append(related(lang, AUTHORS_SLUG))
     body.append(t(lang, '## Methodology and limits', '## Méthode et limites'))
-    body.append(t(lang, '''- **Papers**: every arXiv paper whose identifier starts with %s or %s (submitted that year), from the arXiv metadata of arXiv's OAI-PMH interface. New versions of a paper do not count again.
+    body.append(t(lang, '''- **Papers**: every arXiv paper whose identifier starts with %s or %s (submitted that year), from the arXiv metadata of arXiv's OAI-PMH interface. New versions of a paper do not count again. The yearly totals match arXiv's own monthly submission statistics.
 - **Authors**: the names in the arXiv author list of the latest version. Some large collaborations sign as one name ("ATLAS Collaboration") on arXiv, so high-energy experiment counts are lower than in the journal versions.
 - **Field**: the archive of the primary category; physics.* is "physics (other)", nucl-ex and nucl-th are nuclear physics, hep-lat is counted with hep-th. Fields with fewer than 200 papers are left out of the table, not of the totals.
 - The median is the middle paper: half the papers have as many authors or fewer.''',
-                  '''- **Articles** : chaque article arXiv dont l’identifiant commence par %s ou %s (soumis cette année-là), d’après les métadonnées de l’interface OAI-PMH d’arXiv. Les nouvelles versions d’un article ne comptent pas à nouveau.
+                  '''- **Articles** : chaque article arXiv dont l’identifiant commence par %s ou %s (soumis cette année-là), d’après les métadonnées de l’interface OAI-PMH d’arXiv. Les nouvelles versions d’un article ne comptent pas à nouveau. Les totaux annuels correspondent aux statistiques mensuelles de soumissions publiées par arXiv.
 - **Auteurs** : les noms de la liste d’auteurs arXiv de la dernière version. Certaines grandes collaborations signent d’un seul nom (« ATLAS Collaboration ») sur arXiv : les comptes de physique des hautes énergies expérimentale sont donc plus bas que dans les versions publiées en revue.
 - **Domaine** : l’archive de la catégorie principale ; physics.* forme « physique (autres) », nucl-ex et nucl-th la physique nucléaire, hep-lat est compté avec hep-th. Les domaines de moins de 200 articles sont absents du tableau, pas des totaux.
 - La médiane est l’article du milieu : la moitié des articles ont autant d’auteurs ou moins.''') % (str(earlier)[2:] + 'xx', str(year)[2:] + 'xx'))
@@ -778,23 +837,47 @@ def journal_of(jref):
     return re.sub(r'\.(?=[A-Za-z])', '. ', name)[:80]
 
 
+# the arXiv comments of a paper accepted somewhere ('Accepted at NeurIPS 2023', 'To appear in ...')
+ACCEPTED = re.compile(r'\b(accepted|to appear|camera[- ]ready|published (?:in|at|by)|presented at|appears? in)\b', re.I)
+NOT_ACCEPTED = re.compile(r'\b(not (?:yet )?(?:been )?(?:accepted|published)|under review|submitted to|in submission)\b', re.I)
+
+
+def accepted(comments):
+    return bool(comments) and bool(ACCEPTED.search(comments)) and not NOT_ACCEPTED.search(comments)
+
+
+def venue_of(record):
+    """The journal or conference of a paper: journal reference, then DOI, then a conference named in accepted comments."""
+    name = journal_of(record['jref']) or journal_from_doi(record['doi'])
+    if name or not accepted(record.get('comments')):
+        return name
+    for pattern, conference in CONFERENCES:
+        if pattern.search(record['comments']):
+            return conference
+    return ''
+
+
+def _published(papers):
+    """(papers, with a journal reference or DOI, with one or accepted per the comments)."""
+    formal = sum(bool(p['jref'] or p['doi']) for p in papers)
+    return len(papers), formal, sum(bool(p['jref'] or p['doi'] or accepted(p.get('comments'))) for p in papers)
+
+
 def journal_data(records, years):
     by_year = cohorts(records, set(years))
-    data = {'years': years, 'fields': [], 'all': {}}
+    data = {'years': years, 'fields': [], 'all': {}, 'comments_known': all('comments' in p for p in by_year[years[0]][:1000])}
     for year in years:
-        papers = by_year[year]
-        data['all'][year] = (len(papers), sum(bool(p['jref'] or p['doi']) for p in papers))
+        data['all'][year] = _published(by_year[year])
     newest_full = years[-1]
     cohort = years[0]
     for code, _en, _fr in FIELDS:
         shares = {}
         for year in years:
             papers = [p for p in by_year[year] if field_of(p['cats']) == code]
-            shares[year] = (len(papers), sum(bool(p['jref'] or p['doi']) for p in papers))
+            shares[year] = _published(papers)
         if shares[cohort][0] < 300:
             continue
-        journals = Counter(journal_of(p['jref']) or journal_from_doi(p['doi']) for p in by_year[cohort]
-                           if field_of(p['cats']) == code and (p['jref'] or p['doi']))
+        journals = Counter(venue_of(p) for p in by_year[cohort] if field_of(p['cats']) == code)
         journals.pop('', None)
         data['fields'].append({'code': code, 'shares': shares, 'journals': [(name, c) for name, c in journals.most_common(5) if c >= 5]})
     data['newest'] = newest_full
@@ -804,14 +887,15 @@ def journal_data(records, years):
 def journals_page(data, lang, made):
     years = data['years']
     cohort, newest = years[0], years[-1]
-    n, published = data['all'][cohort]
+    n, published, _with_comments = data['all'][cohort]
     share = 100 * published / n
     fields = sorted(data['fields'], key=lambda f: -f['shares'][cohort][1] / f['shares'][cohort][0])
     hi, lo = fields[0], fields[-1]
 
-    def s(f, year):
-        total, done = f['shares'][year]
-        return 100 * done / total if total else 0
+    def s(f, year, with_comments=False):
+        total, done, done_or_accepted = f['shares'][year]
+        return 100 * (done_or_accepted if with_comments else done) / total if total else 0
+    commented = data.get('comments_known')
     takeaways = [
         t(lang, '**%s** of the arXiv papers submitted in %d now show a journal reference or a DOI on arXiv (%s of %s).',
           '**%s** des articles arXiv soumis en %d affichent aujourd’hui une référence de revue ou un DOI sur arXiv (%s sur %s).')
@@ -821,6 +905,11 @@ def journals_page(data, lang, made):
         t(lang, 'For papers submitted in %d, the share is still %s: publication takes time.', 'Pour les articles soumis en %d, la part n’est encore que de %s : la publication prend du temps.')
         % (newest, pct(100 * data['all'][newest][1] / max(data['all'][newest][0], 1), lang)),
     ]
+    cs = next((f for f in fields if f['code'] == 'cs'), None)
+    if commented and cs:
+        takeaways.append(t(lang, 'Counting the papers whose arXiv comments say they were accepted (mostly at conferences), computer science goes from %s to **%s**.',
+                           'En comptant les articles dont les commentaires arXiv indiquent une acceptation (surtout en conférence), l’informatique passe de %s à **%s**.')
+                         % (pct(s(cs, cohort), lang), pct(s(cs, cohort, True), lang)))
     body = ['<div class="takeaways" markdown="1">\n\n%s\n\n%s\n\n</div>' % (t(lang, 'Key numbers', 'Chiffres clés'), '\n'.join('- ' + x for x in takeaways))]
     body.append('<p class="note">%s</p>' % t(lang, 'Counted by SummarizePaper from the metadata of every arXiv paper submitted from %d to %d (arXiv OAI-PMH, harvested on %s). A journal reference is added by the authors, or by arXiv from some publishers, so these shares are a lower bound.',
                                               'Calculé par SummarizePaper à partir des métadonnées de chaque article arXiv soumis de %d à %d (OAI-PMH d’arXiv, récupérées le %s). La référence de revue est ajoutée par les auteurs, ou par arXiv pour certains éditeurs : ces parts sont donc un minimum.')
@@ -833,13 +922,33 @@ def journals_page(data, lang, made):
     body.append(table(t(lang, ['Submitted in', 'Papers', 'With a journal reference or DOI', 'Share'],
                         ['Soumis en', 'Articles', 'Avec référence de revue ou DOI', 'Part']), rows))
     body.append(t(lang, '## Which fields publish their preprints in journals most?', '## Quels domaines publient le plus leurs preprints en revue ?'))
+    body.append(bar_chart(t(lang, 'Share of %d arXiv papers with a journal reference or DOI, by field', 'Part des articles arXiv de %d avec référence de revue ou DOI, par domaine') % cohort,
+                          t(lang, 'Primary category of each paper. A lower bound: many published papers have neither. Source: arXiv OAI-PMH metadata.',
+                            'Catégorie principale de chaque article. Un minimum : beaucoup d’articles publiés n’ont ni l’un ni l’autre. Source : métadonnées OAI-PMH d’arXiv.'),
+                          [(f['code'] if f['code'] not in ('nucl', 'physics') else {'nucl': 'nucl', 'physics': 'physics.*'}[f['code']], s(f, cohort), pct(s(f, cohort), lang),
+                            '%s: %s' % (t(lang, *FIELD_NAMES[f['code']]), pct(s(f, cohort), lang))) for f in fields],
+                          t(lang, 'Bar chart of the share of arXiv papers submitted in %d that show a journal reference or DOI, by field, from %s in %s to %s in %s.',
+                            'Graphique en barres de la part des articles arXiv soumis en %d qui affichent une référence de revue ou un DOI, par domaine, de %s en %s à %s en %s.')
+                          % (cohort, pct(s(hi, cohort), lang), t(lang, *FIELD_NAMES[hi['code']]), pct(s(lo, cohort), lang), t(lang, *FIELD_NAMES[lo['code']])), top=100))
     rows = [(_field(f['code'], lang),) + tuple(pct(s(f, y), lang) for y in years) for f in fields]
     body.append(table([t(lang, 'Field', 'Domaine')] + [t(lang, 'Submitted %d', 'Soumis en %d') % y for y in years], rows))
     body.append(t(lang, 'Physics and astronomy papers are usually submitted to arXiv when they go to a journal, and authors update the record once published. In computer science most papers go to conferences, whose proceedings are often not entered as a journal reference, so the low share there does not mean the papers stay unpublished.',
                   'En physique et en astronomie, les articles sont en général déposés sur arXiv au moment de la soumission à une revue, et les auteurs complètent la notice une fois l’article publié. En informatique, la plupart des articles vont en conférence, dont les actes sont rarement indiqués comme référence de revue : la part faible n’y signifie pas que les articles restent inédits.'))
+    if commented:
+        body.append(t(lang, '## What about conference papers?', '## Et les articles de conférence ?'))
+        body.append(t(lang, 'Many authors write in the arXiv comments where a paper was accepted ("Accepted at NeurIPS 2022", "To appear in ..."), without adding a journal reference. Counting those papers too, for papers submitted in %d:',
+                      'Beaucoup d’auteurs indiquent dans les commentaires arXiv où l’article a été accepté (« Accepted at NeurIPS 2022 », « To appear in ... »), sans ajouter de référence de revue. En comptant aussi ces articles, pour ceux soumis en %d :') % cohort)
+        rows = [(_field(f['code'], lang), pct(s(f, cohort), lang), pct(s(f, cohort, True), lang))
+                for f in sorted(fields, key=lambda f: -(s(f, cohort, True) - s(f, cohort)))]
+        body.append(table(t(lang, ['Field', 'Journal reference or DOI', 'Including accepted per the comments'],
+                            ['Domaine', 'Référence de revue ou DOI', 'Y compris acceptés selon les commentaires']), rows))
+        body.append(t(lang, 'The comments are free text written by the authors; "accepted" is read from words such as accepted, to appear or camera-ready, and comments that say "submitted to" or "under review" are not counted.',
+                      'Les commentaires sont un texte libre écrit par les auteurs ; l’acceptation est lue dans des mots comme accepted, to appear ou camera-ready, et les commentaires qui disent « submitted to » ou « under review » ne sont pas comptés.'))
     body.append(t(lang, '## Where are arXiv preprints published?', '## Où les preprints arXiv sont-ils publiés ?'))
-    body.append(t(lang, 'The most frequent journals of papers submitted in %d, read from their journal reference or DOI, by field:',
-                  'Les revues les plus fréquentes des articles soumis en %d, lues dans leur référence de revue ou leur DOI, par domaine :') % cohort)
+    body.append((t(lang, 'The most frequent journals and conferences of papers submitted in %d, read from their journal reference, DOI or arXiv comments, by field:',
+                   'Les revues et conférences les plus fréquentes des articles soumis en %d, lues dans leur référence de revue, leur DOI ou leurs commentaires arXiv, par domaine :') if commented else
+                 t(lang, 'The most frequent journals of papers submitted in %d, read from their journal reference or DOI, by field:',
+                   'Les revues les plus fréquentes des articles soumis en %d, lues dans leur référence de revue ou leur DOI, par domaine :')) % cohort)
     rows = []
     for f in sorted(fields, key=lambda f: -f['shares'][cohort][0]):
         if f['journals']:
@@ -853,6 +962,7 @@ def journals_page(data, lang, made):
 - Sur SummarizePaper, la page d’un article indique sa version publiée quand elle est trouvée, et les lecteurs Premium peuvent être [alertés quand un preprint suivi est publié](%s).
 - Pour toute une liste de lecture, Premium surveille une [collection](%s) et vous écrit quand l’un de ses articles est publié, rétracté ou corrigé.''')
                 % (link(lang, 'guides/track-research-paper-citations/'), link(lang, 'guides/organize-research-paper-collections/')))
+    body.append(related(lang, JOURNALS_SLUG))
     body.append(t(lang, '## Methodology and limits', '## Méthode et limites'))
     body.append(t(lang, '''- **Papers**: every arXiv paper whose identifier starts with the year (2201–2212 for %d, and so on), from the arXiv metadata of arXiv's OAI-PMH interface, harvested on %s.
 - **Published**: the arXiv record has a journal reference or a DOI. Both are entered by the authors or added by arXiv for some publishers; many published papers have neither, so every share here is a lower bound, lowest in fields that publish in conference proceedings.

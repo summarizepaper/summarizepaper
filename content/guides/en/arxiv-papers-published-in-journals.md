@@ -47,6 +47,66 @@ At least 40% of the papers submitted to arXiv in 2022 point to a published versi
 
 ## Which fields publish their preprints in journals most?
 
+<figure class="viz">
+<figcaption><strong>Share of 2022 arXiv papers with a journal reference or DOI, by field</strong><span>Primary category of each paper. A lower bound: many published papers have neither. Source: arXiv OAI-PMH metadata.</span></figcaption>
+<div class="viz-scroll"><svg viewBox="0 0 760 556" role="img" aria-label="Bar chart of the share of arXiv papers submitted in 2022 that show a journal reference or DOI, by field, from 87% in Astrophysics to 18% in Economics.">
+<text class="row" x="140" y="17.0" dy="4" text-anchor="end"><tspan class="cat">astro-ph</tspan></text>
+<g class="hit" data-tip="Astrophysics: 87%"><rect x="0" y="2" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="8" width="468.7" height="18" rx="3"/></g>
+<text class="val" x="624.7" y="17.0" dy="4">87%</text>
+<text class="row" x="140" y="47.0" dy="4" text-anchor="end"><tspan class="cat">gr-qc</tspan></text>
+<g class="hit" data-tip="General relativity and quantum cosmology: 81%"><rect x="0" y="32" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="38" width="435.1" height="18" rx="3"/></g>
+<text class="val" x="591.1" y="47.0" dy="4">81%</text>
+<text class="row" x="140" y="77.0" dy="4" text-anchor="end"><tspan class="cat">nucl</tspan></text>
+<g class="hit" data-tip="Nuclear physics: 77%"><rect x="0" y="62" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="68" width="415.5" height="18" rx="3"/></g>
+<text class="val" x="571.5" y="77.0" dy="4">77%</text>
+<text class="row" x="140" y="107.0" dy="4" text-anchor="end"><tspan class="cat">cond-mat</tspan></text>
+<g class="hit" data-tip="Condensed matter: 74%"><rect x="0" y="92" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="98" width="399.0" height="18" rx="3"/></g>
+<text class="val" x="555.0" y="107.0" dy="4">74%</text>
+<text class="row" x="140" y="137.0" dy="4" text-anchor="end"><tspan class="cat">hep-th</tspan></text>
+<g class="hit" data-tip="High-energy physics, theory: 74%"><rect x="0" y="122" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="128" width="398.2" height="18" rx="3"/></g>
+<text class="val" x="554.2" y="137.0" dy="4">74%</text>
+<text class="row" x="140" y="167.0" dy="4" text-anchor="end"><tspan class="cat">hep-ph</tspan></text>
+<g class="hit" data-tip="High-energy physics, phenomenology: 72%"><rect x="0" y="152" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="158" width="390.3" height="18" rx="3"/></g>
+<text class="val" x="546.3" y="167.0" dy="4">72%</text>
+<text class="row" x="140" y="197.0" dy="4" text-anchor="end"><tspan class="cat">quant-ph</tspan></text>
+<g class="hit" data-tip="Quantum physics: 69%"><rect x="0" y="182" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="188" width="371.8" height="18" rx="3"/></g>
+<text class="val" x="527.8" y="197.0" dy="4">69%</text>
+<text class="row" x="140" y="227.0" dy="4" text-anchor="end"><tspan class="cat">nlin</tspan></text>
+<g class="hit" data-tip="Nonlinear sciences: 66%"><rect x="0" y="212" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="218" width="358.3" height="18" rx="3"/></g>
+<text class="val" x="514.3" y="227.0" dy="4">66%</text>
+<text class="row" x="140" y="257.0" dy="4" text-anchor="end"><tspan class="cat">hep-ex</tspan></text>
+<g class="hit" data-tip="High-energy physics, experiment: 60%"><rect x="0" y="242" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="248" width="321.6" height="18" rx="3"/></g>
+<text class="val" x="477.6" y="257.0" dy="4">60%</text>
+<text class="row" x="140" y="287.0" dy="4" text-anchor="end"><tspan class="cat">physics.*</tspan></text>
+<g class="hit" data-tip="Other physics: 57%"><rect x="0" y="272" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="278" width="310.2" height="18" rx="3"/></g>
+<text class="val" x="466.2" y="287.0" dy="4">57%</text>
+<text class="row" x="140" y="317.0" dy="4" text-anchor="end"><tspan class="cat">math-ph</tspan></text>
+<g class="hit" data-tip="Mathematical physics: 55%"><rect x="0" y="302" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="308" width="296.0" height="18" rx="3"/></g>
+<text class="val" x="452.0" y="317.0" dy="4">55%</text>
+<text class="row" x="140" y="347.0" dy="4" text-anchor="end"><tspan class="cat">q-bio</tspan></text>
+<g class="hit" data-tip="Quantitative biology: 29%"><rect x="0" y="332" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="338" width="158.4" height="18" rx="3"/></g>
+<text class="val" x="314.4" y="347.0" dy="4">29%</text>
+<text class="row" x="140" y="377.0" dy="4" text-anchor="end"><tspan class="cat">eess</tspan></text>
+<g class="hit" data-tip="Electrical engineering and systems science: 25%"><rect x="0" y="362" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="368" width="133.4" height="18" rx="3"/></g>
+<text class="val" x="289.4" y="377.0" dy="4">25%</text>
+<text class="row" x="140" y="407.0" dy="4" text-anchor="end"><tspan class="cat">math</tspan></text>
+<g class="hit" data-tip="Mathematics: 24%"><rect x="0" y="392" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="398" width="131.0" height="18" rx="3"/></g>
+<text class="val" x="287.0" y="407.0" dy="4">24%</text>
+<text class="row" x="140" y="437.0" dy="4" text-anchor="end"><tspan class="cat">stat</tspan></text>
+<g class="hit" data-tip="Statistics: 20%"><rect x="0" y="422" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="428" width="108.6" height="18" rx="3"/></g>
+<text class="val" x="264.6" y="437.0" dy="4">20%</text>
+<text class="row" x="140" y="467.0" dy="4" text-anchor="end"><tspan class="cat">cs</tspan></text>
+<g class="hit" data-tip="Computer science: 20%"><rect x="0" y="452" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="458" width="107.2" height="18" rx="3"/></g>
+<text class="val" x="263.2" y="467.0" dy="4">20%</text>
+<text class="row" x="140" y="497.0" dy="4" text-anchor="end"><tspan class="cat">q-fin</tspan></text>
+<g class="hit" data-tip="Quantitative finance: 20%"><rect x="0" y="482" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="488" width="106.0" height="18" rx="3"/></g>
+<text class="val" x="262.0" y="497.0" dy="4">20%</text>
+<text class="row" x="140" y="527.0" dy="4" text-anchor="end"><tspan class="cat">econ</tspan></text>
+<g class="hit" data-tip="Economics: 18%"><rect x="0" y="512" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="518" width="96.6" height="18" rx="3"/></g>
+<text class="val" x="252.6" y="527.0" dy="4">18%</text>
+</svg></div>
+</figure>
+
 | Field | Submitted 2022 | Submitted 2023 | Submitted 2024 | Submitted 2025 |
 |---|---|---|---|---|
 | Astrophysics (astro-ph) | 87% | 58% | 45% | 46% |
@@ -100,6 +160,12 @@ The most frequent journals of papers submitted in 2022, read from their journal 
 - On arXiv, look for the "Journal reference" and "DOI" lines under the abstract; they are often missing even when the paper is published.
 - On SummarizePaper, a paper page shows its journal version when one is found, and Premium readers can be [alerted when a followed preprint is published](https://www.summarizepaper.com/en/guides/track-research-paper-citations/).
 - For a whole reading list, Premium watches a [collection](https://www.summarizepaper.com/en/guides/organize-research-paper-collections/) and emails you when one of its papers is published, retracted or corrected.
+
+## More research publishing data
+
+- [arXiv statistics: submissions per year and field](https://www.summarizepaper.com/en/guides/arxiv-statistics/)
+- [The fastest-growing research topics](https://www.summarizepaper.com/en/guides/fastest-growing-research-topics/)
+- [How many authors per paper, by field](https://www.summarizepaper.com/en/guides/authors-per-paper/)
 
 ## Methodology and limits
 

@@ -177,6 +177,12 @@ cs.AI est passée de cinquième plus grande catégorie en 2025 à quasi-égalit�
 
 Ce que les gens choisissent de lire donne une autre image : voir [quelles catégories arXiv les lecteurs résument](https://www.summarizepaper.com/fr/guides/what-researchers-summarize/), où les modèles de langage sont 2,8 fois surreprésentés et les mathématiques presque absentes.
 
+## Plus de données sur la publication scientifique
+
+- [Les sujets de recherche en plus forte croissance](https://www.summarizepaper.com/fr/guides/fastest-growing-research-topics/), mis à jour chaque mois à partir des résumés d'arXiv, bioRxiv et medRxiv
+- [Combien d'auteurs par article](https://www.summarizepaper.com/fr/guides/authors-per-paper/), par domaine, sur tous les articles soumis en 2022 et 2025
+- [Combien de preprints arXiv sont publiés en revue](https://www.summarizepaper.com/fr/guides/arxiv-papers-published-in-journals/), par domaine et par année, et où
+
 ## Comment suivre un tel volume
 
 À environ 780 nouveaux articles par jour en 2025, et davantage en 2026, personne ne lit tout, même dans une seule grande catégorie : cs.LG a reçu à elle seule environ 70 articles par jour en 2025. Deux habitudes aident :

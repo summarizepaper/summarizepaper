@@ -113,6 +113,38 @@ class MetadataGuidesTests(TestCase):
             self.assertIn('Phys. Rev. D', body)
             self.assertTrue(meta['faq'])
 
+    def test_charts_links_and_masked_collaborations(self):
+        records = self.records()
+        authors = data_guides.authors_data(records, 2025, 2022)
+        self.assertFalse(authors['groups_known'])
+        meta, body = data_guides.authors_page(authors, 'en', TODAY)
+        self.assertEqual(body.count('<figure class="viz">'), 1)
+        self.assertIn('/en/guides/arxiv-papers-published-in-journals/', body)
+        self.assertNotIn('/en/guides/authors-per-paper/', body)  # no link to itself
+        hep = [line for line in body.splitlines() if line.startswith('| High-energy physics, experiment')]
+        self.assertTrue(hep and all('—' in line for line in hep))
+        meta, body = data_guides.journals_page(data_guides.journal_data(records, [2022, 2023, 2024, 2025]), 'fr', TODAY)
+        self.assertEqual(body.count('<figure class="viz">'), 1)
+        self.assertNotIn('Et les articles de conférence', body)  # no comments harvested
+
+    def test_groups_and_accepted_comments(self):
+        records = self.records()
+        for r in records.values():
+            r['groups'] = 1 if r['cats'][0] == 'hep-ex' else 0
+            r['comments'] = 'Accepted at NeurIPS 2023' if r['cats'][0] == 'math.AP' else 'Submitted to ICML'
+        authors = data_guides.authors_data(records, 2025, 2022)
+        self.assertTrue(authors['groups_known'])
+        hep = next(f for f in authors['fields'] if f['code'] == 'hep-ex')
+        self.assertEqual(hep['now']['solo'], 0)  # signed by a collaboration
+        journals = data_guides.journal_data(records, [2022, 2023, 2024, 2025])
+        math = next(f for f in journals['fields'] if f['code'] == 'math')
+        self.assertEqual(math['shares'][2022][1:], (0, 400))
+        self.assertEqual(math['journals'], [('NeurIPS', 400)])
+        meta, body = data_guides.journals_page(journals, 'en', TODAY)
+        self.assertIn('What about conference papers?', body)
+        self.assertFalse(data_guides.accepted('Submitted to ICML, under review'))
+        self.assertTrue(data_guides.accepted('To appear in JHEP'))
+
     def test_write_file_keeps_the_publication_date(self):
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder)
@@ -151,15 +183,15 @@ class HarvestParseTests(TestCase):
     PAGE = b'''<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"><ListRecords>
 <record><header><identifier>oai:arXiv.org:2501.00001</identifier><datestamp>2025-01-03</datestamp></header>
 <metadata><arXiv xmlns="http://arxiv.org/OAI/arXiv/"><id>2501.00001</id><authors><author><keyname>A</keyname></author>
-<author><keyname>B</keyname></author></authors><categories>astro-ph.EP cs.LG</categories>
+<author><keyname>ATLAS Collaboration</keyname></author></authors><categories>astro-ph.EP cs.LG</categories><comments>Accepted at ICML 2025</comments>
 <journal-ref>MNRAS 1, 2</journal-ref><doi>10.1093/x 10.1093/y</doi></arXiv></metadata></record>
 <record><header status="deleted"><identifier>oai:arXiv.org:2501.00002</identifier><datestamp>2025-01-04</datestamp></header></record>
 <resumptionToken cursor="0">abc</resumptionToken></ListRecords></OAI-PMH>'''
 
     def test_parse(self):
         records, token, latest = arxiv_metadata.parse(self.PAGE)
-        self.assertEqual(records, [{'id': '2501.00001', 'cats': ['astro-ph.EP', 'cs.LG'], 'authors': 2,
-                                    'jref': 'MNRAS 1, 2', 'doi': '10.1093/x'}])
+        self.assertEqual(records, [{'id': '2501.00001', 'cats': ['astro-ph.EP', 'cs.LG'], 'authors': 2, 'groups': 1,
+                                    'jref': 'MNRAS 1, 2', 'doi': '10.1093/x', 'comments': 'Accepted at ICML 2025'}])
         self.assertEqual((token, latest), ('abc', '2025-01-04'))
 
     def test_expired_token_is_an_error(self):

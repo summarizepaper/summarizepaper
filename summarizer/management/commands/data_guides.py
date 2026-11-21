@@ -1,7 +1,8 @@
 """Write the statistics guides of data_guides.py.
 
     manage.py data_guides topics [--dry-run DIR]      # production: TermWeek -> Guide rows (also monthly in send_digest)
-    manage.py data_guides harvest --file F [--since 2022-01-01]   # laptop: arXiv OAI-PMH metadata, resumable
+    manage.py data_guides harvest --file F [--since 2022-01-01] [--update]   # laptop: arXiv OAI-PMH metadata, resumable;
+                                                                  # --update adds what changed since a finished harvest
     manage.py data_guides metadata --file F [--year 2025]         # laptop: authors and journals guides -> content/guides
 """
 import os
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         parser.add_argument('--file', help='the harvested metadata (.jsonl.gz)')
         parser.add_argument('--since', default='2022-01-01')
         parser.add_argument('--year', type=int, help='the last complete year (default: last year)')
+        parser.add_argument('--update', action='store_true', help='harvest: continue a finished harvest from its last date')
         parser.add_argument('--dry-run', metavar='DIR', help='write the Markdown pages into DIR instead of saving them')
 
     def handle(self, what, **options):
@@ -38,12 +40,15 @@ class Command(BaseCommand):
         if not options['file']:
             raise CommandError('--file is required')
         if what == 'harvest':
-            arxiv_metadata.harvest(options['file'], options['since'], log=self.stdout.write)
+            arxiv_metadata.harvest(options['file'], options['since'], log=self.stdout.write, update=options['update'])
             return
         year = options['year'] or today.year - 1
         records = arxiv_metadata.load(options['file'])
         self.stdout.write('%d records' % len(records))
         authors = data_guides.authors_data(records, year, year - 3)
+        titles = arxiv_metadata.titles([p['id'] for p in authors['biggest']])
+        for paper in authors['biggest']:
+            paper['title'] = titles.get(paper['id'], '')
         journals = data_guides.journal_data(records, list(range(year - 3, year + 1)))
         for lang in data_guides.LANGS:
             for slug, page in ((data_guides.AUTHORS_SLUG, data_guides.authors_page(authors, lang, today)),

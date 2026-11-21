@@ -47,6 +47,66 @@ Au moins 40 % des articles soumis à arXiv en 2022 renvoient à une version pub
 
 ## Quels domaines publient le plus leurs preprints en revue ?
 
+<figure class="viz">
+<figcaption><strong>Part des articles arXiv de 2022 avec référence de revue ou DOI, par domaine</strong><span>Catégorie principale de chaque article. Un minimum : beaucoup d’articles publiés n’ont ni l’un ni l’autre. Source : métadonnées OAI-PMH d’arXiv.</span></figcaption>
+<div class="viz-scroll"><svg viewBox="0 0 760 556" role="img" aria-label="Graphique en barres de la part des articles arXiv soumis en 2022 qui affichent une référence de revue ou un DOI, par domaine, de 87 % en Astrophysique à 18 % en Économie.">
+<text class="row" x="140" y="17.0" dy="4" text-anchor="end"><tspan class="cat">astro-ph</tspan></text>
+<g class="hit" data-tip="Astrophysique: 87 %"><rect x="0" y="2" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="8" width="468.7" height="18" rx="3"/></g>
+<text class="val" x="624.7" y="17.0" dy="4">87 %</text>
+<text class="row" x="140" y="47.0" dy="4" text-anchor="end"><tspan class="cat">gr-qc</tspan></text>
+<g class="hit" data-tip="Relativité générale et cosmologie quantique: 81 %"><rect x="0" y="32" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="38" width="435.1" height="18" rx="3"/></g>
+<text class="val" x="591.1" y="47.0" dy="4">81 %</text>
+<text class="row" x="140" y="77.0" dy="4" text-anchor="end"><tspan class="cat">nucl</tspan></text>
+<g class="hit" data-tip="Physique nucléaire: 77 %"><rect x="0" y="62" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="68" width="415.5" height="18" rx="3"/></g>
+<text class="val" x="571.5" y="77.0" dy="4">77 %</text>
+<text class="row" x="140" y="107.0" dy="4" text-anchor="end"><tspan class="cat">cond-mat</tspan></text>
+<g class="hit" data-tip="Matière condensée: 74 %"><rect x="0" y="92" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="98" width="399.0" height="18" rx="3"/></g>
+<text class="val" x="555.0" y="107.0" dy="4">74 %</text>
+<text class="row" x="140" y="137.0" dy="4" text-anchor="end"><tspan class="cat">hep-th</tspan></text>
+<g class="hit" data-tip="Physique des hautes énergies, théorie: 74 %"><rect x="0" y="122" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="128" width="398.2" height="18" rx="3"/></g>
+<text class="val" x="554.2" y="137.0" dy="4">74 %</text>
+<text class="row" x="140" y="167.0" dy="4" text-anchor="end"><tspan class="cat">hep-ph</tspan></text>
+<g class="hit" data-tip="Physique des hautes énergies, phénoménologie: 72 %"><rect x="0" y="152" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="158" width="390.3" height="18" rx="3"/></g>
+<text class="val" x="546.3" y="167.0" dy="4">72 %</text>
+<text class="row" x="140" y="197.0" dy="4" text-anchor="end"><tspan class="cat">quant-ph</tspan></text>
+<g class="hit" data-tip="Physique quantique: 69 %"><rect x="0" y="182" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="188" width="371.8" height="18" rx="3"/></g>
+<text class="val" x="527.8" y="197.0" dy="4">69 %</text>
+<text class="row" x="140" y="227.0" dy="4" text-anchor="end"><tspan class="cat">nlin</tspan></text>
+<g class="hit" data-tip="Sciences non linéaires: 66 %"><rect x="0" y="212" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="218" width="358.3" height="18" rx="3"/></g>
+<text class="val" x="514.3" y="227.0" dy="4">66 %</text>
+<text class="row" x="140" y="257.0" dy="4" text-anchor="end"><tspan class="cat">hep-ex</tspan></text>
+<g class="hit" data-tip="Physique des hautes énergies, expérience: 60 %"><rect x="0" y="242" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="248" width="321.6" height="18" rx="3"/></g>
+<text class="val" x="477.6" y="257.0" dy="4">60 %</text>
+<text class="row" x="140" y="287.0" dy="4" text-anchor="end"><tspan class="cat">physics.*</tspan></text>
+<g class="hit" data-tip="Autres domaines de la physique: 57 %"><rect x="0" y="272" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="278" width="310.2" height="18" rx="3"/></g>
+<text class="val" x="466.2" y="287.0" dy="4">57 %</text>
+<text class="row" x="140" y="317.0" dy="4" text-anchor="end"><tspan class="cat">math-ph</tspan></text>
+<g class="hit" data-tip="Physique mathématique: 55 %"><rect x="0" y="302" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="308" width="296.0" height="18" rx="3"/></g>
+<text class="val" x="452.0" y="317.0" dy="4">55 %</text>
+<text class="row" x="140" y="347.0" dy="4" text-anchor="end"><tspan class="cat">q-bio</tspan></text>
+<g class="hit" data-tip="Biologie quantitative: 29 %"><rect x="0" y="332" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="338" width="158.4" height="18" rx="3"/></g>
+<text class="val" x="314.4" y="347.0" dy="4">29 %</text>
+<text class="row" x="140" y="377.0" dy="4" text-anchor="end"><tspan class="cat">eess</tspan></text>
+<g class="hit" data-tip="Génie électrique et science des systèmes: 25 %"><rect x="0" y="362" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="368" width="133.4" height="18" rx="3"/></g>
+<text class="val" x="289.4" y="377.0" dy="4">25 %</text>
+<text class="row" x="140" y="407.0" dy="4" text-anchor="end"><tspan class="cat">math</tspan></text>
+<g class="hit" data-tip="Mathématiques: 24 %"><rect x="0" y="392" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="398" width="131.0" height="18" rx="3"/></g>
+<text class="val" x="287.0" y="407.0" dy="4">24 %</text>
+<text class="row" x="140" y="437.0" dy="4" text-anchor="end"><tspan class="cat">stat</tspan></text>
+<g class="hit" data-tip="Statistiques: 20 %"><rect x="0" y="422" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="428" width="108.6" height="18" rx="3"/></g>
+<text class="val" x="264.6" y="437.0" dy="4">20 %</text>
+<text class="row" x="140" y="467.0" dy="4" text-anchor="end"><tspan class="cat">cs</tspan></text>
+<g class="hit" data-tip="Informatique: 20 %"><rect x="0" y="452" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="458" width="107.2" height="18" rx="3"/></g>
+<text class="val" x="263.2" y="467.0" dy="4">20 %</text>
+<text class="row" x="140" y="497.0" dy="4" text-anchor="end"><tspan class="cat">q-fin</tspan></text>
+<g class="hit" data-tip="Finance quantitative: 20 %"><rect x="0" y="482" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="488" width="106.0" height="18" rx="3"/></g>
+<text class="val" x="262.0" y="497.0" dy="4">20 %</text>
+<text class="row" x="140" y="527.0" dy="4" text-anchor="end"><tspan class="cat">econ</tspan></text>
+<g class="hit" data-tip="Économie: 18 %"><rect x="0" y="512" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="518" width="96.6" height="18" rx="3"/></g>
+<text class="val" x="252.6" y="527.0" dy="4">18 %</text>
+</svg></div>
+</figure>
+
 | Domaine | Soumis en 2022 | Soumis en 2023 | Soumis en 2024 | Soumis en 2025 |
 |---|---|---|---|---|
 | Astrophysique (astro-ph) | 87 % | 58 % | 45 % | 46 % |
@@ -100,6 +160,12 @@ Les revues les plus fréquentes des articles soumis en 2022, lues dans leur réf
 - Sur arXiv, cherchez les lignes « Journal reference » et « DOI » sous le résumé ; elles manquent souvent même quand l’article est publié.
 - Sur SummarizePaper, la page d’un article indique sa version publiée quand elle est trouvée, et les lecteurs Premium peuvent être [alertés quand un preprint suivi est publié](https://www.summarizepaper.com/fr/guides/track-research-paper-citations/).
 - Pour toute une liste de lecture, Premium surveille une [collection](https://www.summarizepaper.com/fr/guides/organize-research-paper-collections/) et vous écrit quand l’un de ses articles est publié, rétracté ou corrigé.
+
+## Plus de données sur la publication scientifique
+
+- [Statistiques d’arXiv : soumissions par année et par domaine](https://www.summarizepaper.com/fr/guides/arxiv-statistics/)
+- [Les sujets de recherche en plus forte croissance](https://www.summarizepaper.com/fr/guides/fastest-growing-research-topics/)
+- [Combien d’auteurs par article, par domaine](https://www.summarizepaper.com/fr/guides/authors-per-paper/)
 
 ## Méthode et limites
 

@@ -39,6 +39,48 @@ Key numbers
 
 Across the 284,486 papers submitted to arXiv in 2025, the median paper had 4 authors and the mean was 6.0. The mean is pulled up by large collaborations: 7.6% of papers had 10 authors or more, and 0.27% had 100 or more.
 
+<figure class="viz">
+<figcaption><strong>arXiv papers by number of authors, 2025</strong><span>Share of the 284,486 papers submitted in 2025. Source: arXiv OAI-PMH metadata.</span></figcaption>
+<div class="viz-scroll"><svg viewBox="0 0 760 376" role="img" aria-label="Bar chart of arXiv papers submitted in 2025 by number of authors: 18.9% had 3 authors, the most common count, and 11.2% had one.">
+<text class="row" x="140" y="17.0" dy="4" text-anchor="end"><tspan class="cat">1</tspan></text>
+<g class="hit" data-tip="1 authors: 31,765 papers"><rect x="0" y="2" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="8" width="318.5" height="18" rx="3"/></g>
+<text class="val" x="474.5" y="17.0" dy="4">11.2%</text>
+<text class="row" x="140" y="47.0" dy="4" text-anchor="end"><tspan class="cat">2</tspan></text>
+<g class="hit" data-tip="2 authors: 49,555 papers"><rect x="0" y="32" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="38" width="496.9" height="18" rx="3"/></g>
+<text class="val" x="652.9" y="47.0" dy="4">17.4%</text>
+<text class="row" x="140" y="77.0" dy="4" text-anchor="end"><tspan class="cat">3</tspan></text>
+<g class="hit" data-tip="3 authors: 53,857 papers"><rect x="0" y="62" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="68" width="540.0" height="18" rx="3"/></g>
+<text class="val" x="696.0" y="77.0" dy="4">18.9%</text>
+<text class="row" x="140" y="107.0" dy="4" text-anchor="end"><tspan class="cat">4</tspan></text>
+<g class="hit" data-tip="4 authors: 42,737 papers"><rect x="0" y="92" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="98" width="428.5" height="18" rx="3"/></g>
+<text class="val" x="584.5" y="107.0" dy="4">15.0%</text>
+<text class="row" x="140" y="137.0" dy="4" text-anchor="end"><tspan class="cat">5</tspan></text>
+<g class="hit" data-tip="5 authors: 30,584 papers"><rect x="0" y="122" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="128" width="306.7" height="18" rx="3"/></g>
+<text class="val" x="462.7" y="137.0" dy="4">10.8%</text>
+<text class="row" x="140" y="167.0" dy="4" text-anchor="end"><tspan class="cat">6</tspan></text>
+<g class="hit" data-tip="6 authors: 21,980 papers"><rect x="0" y="152" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="158" width="220.4" height="18" rx="3"/></g>
+<text class="val" x="376.4" y="167.0" dy="4">7.7%</text>
+<text class="row" x="140" y="197.0" dy="4" text-anchor="end"><tspan class="cat">7</tspan></text>
+<g class="hit" data-tip="7 authors: 15,051 papers"><rect x="0" y="182" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="188" width="150.9" height="18" rx="3"/></g>
+<text class="val" x="306.9" y="197.0" dy="4">5.3%</text>
+<text class="row" x="140" y="227.0" dy="4" text-anchor="end"><tspan class="cat">8</tspan></text>
+<g class="hit" data-tip="8 authors: 10,355 papers"><rect x="0" y="212" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="218" width="103.8" height="18" rx="3"/></g>
+<text class="val" x="259.8" y="227.0" dy="4">3.6%</text>
+<text class="row" x="140" y="257.0" dy="4" text-anchor="end"><tspan class="cat">9</tspan></text>
+<g class="hit" data-tip="9 authors: 6,873 papers"><rect x="0" y="242" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="248" width="68.9" height="18" rx="3"/></g>
+<text class="val" x="224.9" y="257.0" dy="4">2.4%</text>
+<text class="row" x="140" y="287.0" dy="4" text-anchor="end"><tspan class="cat">10</tspan></text>
+<g class="hit" data-tip="10 authors: 4,774 papers"><rect x="0" y="272" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="278" width="47.9" height="18" rx="3"/></g>
+<text class="val" x="203.9" y="287.0" dy="4">1.7%</text>
+<text class="row" x="140" y="317.0" dy="4" text-anchor="end"><tspan class="cat">11–99</tspan></text>
+<g class="hit" data-tip="11–99 authors: 16,176 papers"><rect x="0" y="302" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="308" width="162.2" height="18" rx="3"/></g>
+<text class="val" x="318.2" y="317.0" dy="4">5.7%</text>
+<text class="row" x="140" y="347.0" dy="4" text-anchor="end"><tspan class="cat">100 or more</tspan></text>
+<g class="hit" data-tip="100 or more authors: 779 papers"><rect x="0" y="332" width="760" height="30" fill="transparent"/><rect class="bar" x="150" y="338" width="7.8" height="18" rx="3"/></g>
+<text class="val" x="163.8" y="347.0" dy="4">0.3%</text>
+</svg></div>
+</figure>
+
 Papers submitted in 2025 by number of authors:
 
 | Authors | Papers | Share |
@@ -62,14 +104,14 @@ By the primary category of papers submitted in 2025, ordered by median:
 
 | Field | Papers | Median authors | Mean | Single author | 10 authors or more |
 |---|---|---|---|---|---|
-| High-energy physics, experiment (hep-ex) | 1,090 | 7 | 181.8 | 29% | 45% |
+| High-energy physics, experiment (hep-ex) | 1,090 | 7 | 181.8 | — | 45% |
 | Astrophysics (astro-ph) | 18,660 | 5 | 13.0 | 7% | 27% |
 | Other physics (physics.*) | 17,437 | 4 | 6.6 | 9% | 12% |
 | Condensed matter (cond-mat) | 18,715 | 4 | 5.5 | 7% | 14% |
 | Computer science (cs) | 128,835 | 4 | 5.2 | 6% | 7% |
 | Quantitative biology (q-bio) | 3,229 | 4 | 5.2 | 10% | 9% |
 | Electrical engineering and systems science (eess) | 12,613 | 4 | 4.7 | 4% | 5% |
-| Nuclear physics (nucl-ex, nucl-th) | 1,824 | 3 | 13.4 | 18% | 13% |
+| Nuclear physics (nucl-ex, nucl-th) | 1,824 | 3 | 13.4 | — | 13% |
 | General relativity and quantum cosmology (gr-qc) | 4,471 | 3 | 9.2 | 20% | 2% |
 | Quantum physics (quant-ph) | 11,890 | 3 | 4.5 | 11% | 6% |
 | High-energy physics, phenomenology (hep-ph) | 5,604 | 3 | 3.6 | 15% | 1% |
@@ -81,46 +123,54 @@ By the primary category of papers submitted in 2025, ordered by median:
 | Mathematics (math) | 42,670 | 2 | 2.3 | 29% | 0% |
 | Mathematical physics (math-ph) | 1,348 | 2 | 2.3 | 30% | 0% |
 
+— High-energy experiment and nuclear physics collaborations often sign as one name on arXiv ("ATLAS Collaboration"), so their single-author share is not shown.
+
 ## Are papers written by more authors than before?
 
-Over all of arXiv, the mean went from 5.3 authors in 2022 to 6.0 in 2025, and the share of single-author papers from 12.7% to 11.2%.
+Over all of arXiv, the median went from 3 authors in 2022 to 4 in 2025, the share of papers with 10 authors or more went from 5.6% to 7.6%, and the share of single-author papers from 12.7% to 11.2%. Medians and shares are used here rather than means, which a few papers with thousands of authors can move: one gravitational-wave paper with 1,800 authors weighs as much as 900 two-author papers.
 
-| Field | Mean 2022 | Mean 2025 | Single author 2022 | Single author 2025 |
-|---|---|---|---|---|
-| Computer science (cs) | 4.4 | 5.2 | 6% | 6% |
-| Mathematics (math) | 2.2 | 2.3 | 30% | 29% |
-| Condensed matter (cond-mat) | 5.1 | 5.5 | 7% | 7% |
-| Astrophysics (astro-ph) | 11.2 | 13.0 | 7% | 7% |
-| Other physics (physics.*) | 6.4 | 6.6 | 10% | 9% |
-| Electrical engineering and systems science (eess) | 4.5 | 4.7 | 4% | 4% |
-| Quantum physics (quant-ph) | 4.2 | 4.5 | 12% | 11% |
-| Statistics (stat) | 3.3 | 3.3 | 10% | 10% |
-| High-energy physics, phenomenology (hep-ph) | 4.2 | 3.6 | 16% | 15% |
-| High-energy physics, theory (hep-th) | 2.9 | 2.8 | 21% | 21% |
-| General relativity and quantum cosmology (gr-qc) | 5.1 | 9.2 | 21% | 20% |
-| Quantitative biology (q-bio) | 4.5 | 5.2 | 10% | 10% |
-| Economics (econ) | 2.4 | 2.4 | 28% | 34% |
-| Nuclear physics (nucl-ex, nucl-th) | 15.4 | 13.4 | 20% | 18% |
-| Mathematical physics (math-ph) | 2.2 | 2.3 | 33% | 30% |
-| Quantitative finance (q-fin) | 2.8 | 2.8 | 19% | 24% |
-| High-energy physics, experiment (hep-ex) | 114.7 | 181.8 | 38% | 29% |
-| Nonlinear sciences (nlin) | 2.9 | 2.9 | 16% | 16% |
+| Field | Median 2022 | Median 2025 | 10+ authors 2022 | 10+ authors 2025 | Single author 2022 | Single author 2025 |
+|---|---|---|---|---|---|---|
+| Computer science (cs) | 4 | 4 | 3% | 7% | 6% | 6% |
+| Mathematics (math) | 2 | 2 | 0% | 0% | 30% | 29% |
+| Condensed matter (cond-mat) | 4 | 4 | 12% | 14% | 7% | 7% |
+| Astrophysics (astro-ph) | 5 | 5 | 24% | 27% | 7% | 7% |
+| Other physics (physics.*) | 4 | 4 | 11% | 12% | 10% | 9% |
+| Electrical engineering and systems science (eess) | 4 | 4 | 4% | 5% | 4% | 4% |
+| Quantum physics (quant-ph) | 3 | 3 | 5% | 6% | 12% | 11% |
+| Statistics (stat) | 3 | 3 | 1% | 1% | 10% | 10% |
+| High-energy physics, phenomenology (hep-ph) | 3 | 3 | 3% | 1% | 16% | 15% |
+| High-energy physics, theory (hep-th) | 3 | 3 | 2% | 1% | 21% | 21% |
+| General relativity and quantum cosmology (gr-qc) | 3 | 3 | 2% | 2% | 21% | 20% |
+| Quantitative biology (q-bio) | 4 | 4 | 7% | 9% | 10% | 10% |
+| Economics (econ) | 2 | 2 | 0% | 0% | 28% | 34% |
+| Nuclear physics (nucl-ex, nucl-th) | 3 | 3 | 17% | 13% | — | — |
+| Mathematical physics (math-ph) | 2 | 2 | 0% | 0% | 33% | 30% |
+| Quantitative finance (q-fin) | 3 | 3 | 0% | 1% | 19% | 24% |
+| High-energy physics, experiment (hep-ex) | 4 | 7 | 41% | 45% | — | — |
+| Nonlinear sciences (nlin) | 3 | 3 | 0% | 1% | 16% | 16% |
 
 ## Which papers had the most authors?
 
 The 2025 arXiv papers with the longest author lists:
 
-- [arXiv:2507.06261](https://www.summarizepaper.com/en/paper/2507.06261/) — 3,435 authors, Computer science (cs)
-- [arXiv:2501.01495](https://www.summarizepaper.com/en/paper/2501.01495/) — 1,819 authors, Astrophysics (astro-ph)
-- [arXiv:2508.18081](https://www.summarizepaper.com/en/paper/2508.18081/) — 1,812 authors, General relativity and quantum cosmology (gr-qc)
-- [arXiv:2508.18080](https://www.summarizepaper.com/en/paper/2508.18080/) — 1,811 authors, General relativity and quantum cosmology (gr-qc)
-- [arXiv:2508.18083](https://www.summarizepaper.com/en/paper/2508.18083/) — 1,808 authors, Astrophysics (astro-ph)
+- [Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next Generation Agentic Capabilities](https://www.summarizepaper.com/en/paper/2507.06261/) (arXiv:2507.06261) — 3,435 authors, Computer science (cs)
+- [Search for continuous gravitational waves from known pulsars in the first part of the fourth LIGO-Virgo-KAGRA observing run](https://www.summarizepaper.com/en/paper/2501.01495/) (arXiv:2501.01495) — 1,819 authors, Astrophysics (astro-ph)
+- [GWTC-4.0: Methods for Identifying and Characterizing Gravitational-wave Transients](https://www.summarizepaper.com/en/paper/2508.18081/) (arXiv:2508.18081) — 1,812 authors, General relativity and quantum cosmology (gr-qc)
+- [GWTC-4.0: An Introduction to Version 4.0 of the Gravitational-Wave Transient Catalog](https://www.summarizepaper.com/en/paper/2508.18080/) (arXiv:2508.18080) — 1,811 authors, General relativity and quantum cosmology (gr-qc)
+- [GWTC-4.0: Population Properties of Merging Compact Binaries](https://www.summarizepaper.com/en/paper/2508.18083/) (arXiv:2508.18083) — 1,808 authors, Astrophysics (astro-ph)
 
 Read any of them in minutes: each link opens a summary on SummarizePaper. To see who works on a topic rather than who signed one paper, [Who works on it?](https://www.summarizepaper.com/en/guides/find-research-teams-by-topic/) maps the teams behind a research topic.
 
+## More research publishing data
+
+- [arXiv statistics: submissions per year and field](https://www.summarizepaper.com/en/guides/arxiv-statistics/)
+- [The fastest-growing research topics](https://www.summarizepaper.com/en/guides/fastest-growing-research-topics/)
+- [How many arXiv preprints are published in journals](https://www.summarizepaper.com/en/guides/arxiv-papers-published-in-journals/)
+
 ## Methodology and limits
 
-- **Papers**: every arXiv paper whose identifier starts with 22xx or 25xx (submitted that year), from the arXiv metadata of arXiv's OAI-PMH interface. New versions of a paper do not count again.
+- **Papers**: every arXiv paper whose identifier starts with 22xx or 25xx (submitted that year), from the arXiv metadata of arXiv's OAI-PMH interface. New versions of a paper do not count again. The yearly totals match arXiv's own monthly submission statistics.
 - **Authors**: the names in the arXiv author list of the latest version. Some large collaborations sign as one name ("ATLAS Collaboration") on arXiv, so high-energy experiment counts are lower than in the journal versions.
 - **Field**: the archive of the primary category; physics.* is "physics (other)", nucl-ex and nucl-th are nuclear physics, hep-lat is counted with hep-th. Fields with fewer than 200 papers are left out of the table, not of the totals.
 - The median is the middle paper: half the papers have as many authors or fewer.
