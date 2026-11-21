@@ -9,6 +9,15 @@
   {% for alt in alternates %}<link rel="alternate" hreflang="{{ alt.lang }}" href="{{ alt.url }}" />
   {% endfor %}
   {% if guide.draft %}<meta name="robots" content="noindex" />{% endif %}
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="{{ guide.title }}" />
+  <meta property="og:description" content="{{ guide.description }}" />
+  <meta property="og:site_name" content="SummarizePaper" />
+  <meta property="og:url" content="{{ guide.url }}" />
+  <meta property="og:image" content="{{ og_image }}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
   <script type="application/ld+json">{{ json_ld|safe }}</script>
   <style>
     .guide .signup-offer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px;

@@ -214,3 +214,15 @@ class HomeGuidesTests(TestCase):
             links = [a['href'] for a in soup.select('.home-guide-list a')]
             self.assertIn('/%s/guides/arxiv-statistics/' % lang, links)
             self.assertNotIn('/%s/guides/authors-per-paper/' % lang, links) if not guides.load(lang, 'authors-per-paper') else None
+
+
+class GuideImageTests(TestCase):
+    def test_guides_have_a_preview_image(self):
+        response = self.client.get('/en/guides/arxiv-statistics/')
+        self.assertContains(response, 'property="og:image" content="https://www.summarizepaper.com/og/en/guide/arxiv-statistics.png?v=')
+        self.assertContains(response, 'summary_large_image')
+        image = self.client.get('/og/fr/guide/arxiv-statistics.png')
+        self.assertEqual(image.status_code, 200)
+        self.assertEqual(image['Content-Type'], 'image/png')
+        self.assertEqual(self.client.get('/og/en/guide/no-such-guide.png').status_code, 404)
+        self.assertEqual(self.client.get('/og/de/guide/arxiv-statistics.png').status_code, 404)

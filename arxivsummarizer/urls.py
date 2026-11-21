@@ -49,6 +49,7 @@ urlpatterns = [
     path('og/<str:lang>/p/<str:arxiv_id>.png', social.paper_image, name='og_paper'),
     path('og/<str:lang>/trends/<str:server>/<str:day>.png', social.trends_image, name='og_trends'),
     path('og/<str:lang>/letter/<slug:topic>/<str:day>.png', social.letter_image, name='og_letter'),
+    path('og/<str:lang>/guide/<slug:slug>.png', social.guide_image, name='og_guide'),
     path('og/<str:lang>/topic/<str:server>/<str:day>/<int:index>.png', social.topic_image, name='og_topic'),
     path('sitemap.xml', sitemap_views.index, {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemap-section'}),
     path('sitemap-<section>.xml', sitemap_views.sitemap, {'sitemaps': sitemaps}, name='sitemap-section'),

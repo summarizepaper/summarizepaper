@@ -558,6 +558,24 @@ def letter_image(request, lang, topic, day):
         return rendered(lambda: png(card(eyebrow, plain(letter.title), plain(letter.dek))))
 
 
+def guide_image(request, lang, slug):
+    """A guide's picture: its title and description; the statistics pages say they are data."""
+    from . import data_guides, guides
+    guide = guides.load(_lang(lang), slug)
+    if guide is None or guide.get('draft'):
+        raise Http404
+    with translation.override(lang):
+        kind = _('Research publishing data') if slug in {s for s, _en, _fr in data_guides.DATA_PAGES} else _('Guide')
+        updated = guide.get('updated') or guide.get('date')
+        eyebrow = ' · '.join(filter(None, [kind.upper(), formats.date_format(updated, 'j F Y') if updated else '']))
+        return rendered(lambda: png(card(eyebrow, plain(guide['title']), plain(guide.get('description', '')))))
+
+
+def guide_image_url(guide):
+    updated = guide.get('updated') or guide.get('date')
+    return image_url('guide', guide['lang'], guide['slug'], version=updated.strftime('%Y%m%d') if updated else None)
+
+
 def image_url(kind, lang, *parts, version=None):
     """The address of a page's picture; `version` changes when its text does, so that caches take the new one."""
     url = '%s/og/%s/%s/%s.png' % (SITE, lang, kind, '/'.join(parts))

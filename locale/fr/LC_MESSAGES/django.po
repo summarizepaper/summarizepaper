@@ -25014,3 +25014,9 @@ msgstr "La publication scientifique en chiffres"
 
 msgid "All guides"
 msgstr "Tous les guides"
+
+msgid "Research publishing data"
+msgstr "Données sur la publication scientifique"
+
+msgid "Guide"
+msgstr "Guide"

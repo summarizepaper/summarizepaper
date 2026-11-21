@@ -208,6 +208,11 @@ def guide_index(request):
     return render(request, 'summarizer/guides.html', {'guides': guides, 'groups': grouped(guides)})
 
 
+def _social():
+    from . import social  # social imports this module's neighbours; loaded late to avoid an import cycle
+    return social
+
+
 def guide_detail(request, slug):
     lang = request.LANGUAGE_CODE
     guide = load(lang, slug)
@@ -219,6 +224,7 @@ def guide_detail(request, slug):
         'guide': guide,
         'alternates': alternates if len(alternates) > 1 else [],
         'json_ld': _json_ld(guide),
+        'og_image': _social().guide_image_url(guide),
     })
 
 
