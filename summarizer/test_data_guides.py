@@ -132,6 +132,12 @@ class MetadataGuidesTests(TestCase):
                            ('Proceedings of the 36th AAAI Conference', 'AAAI'), ('Proceedings of the 2022 Conference', ''),
                            ('Universe 8 (2022) 1', 'Universe'), ('', '')):
             self.assertEqual(data_guides.journal_of(jref), name, jref)
+        for doi, name in (('10.1093/mnras/stac123', 'MNRAS'), ('10.1103/PhysRevD.105.1', 'Phys. Rev. D'),
+                          ('10.1103/PhysRevLett.128.1', 'Phys. Rev. Lett.'), ('10.3847/1538-4357/ac1', 'Astrophys. J.'),
+                          ('10.1038/s41467-022-1', 'Nature Commun.'), ('10.1234/unknown', '')):
+            self.assertEqual(data_guides.journal_from_doi(doi), name, doi)
+        self.assertEqual(data_guides.journal_of('Insurance: Mathematics and Economics 105 (2022) 1'), 'Insurance: Mathematics and Economics')
+        self.assertEqual(data_guides.journal_of('Pacific J. Math. 318 (2022)'), 'Pacific J. Math.')
 
     def test_field_and_year(self):
         self.assertEqual(data_guides.field_of(['nucl-th', 'hep-ph']), 'nucl')

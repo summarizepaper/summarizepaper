@@ -693,11 +693,12 @@ JOURNAL_ALIASES = {
     'EPTCS': ('eptcs', 'electronicproceedingsintheoreticalcomputerscience'),
     'SIGMA': ('sigma', 'symmetryintegrabilityandgeometrymethodsandapplications'),
     'JINST': ('jinst', 'journalofinstrumentation'),
+    'SciPost Phys.': ('scipostphys', 'scipostphysics'),
 }
 JOURNAL_KEYS = {key: name for name, keys in JOURNAL_ALIASES.items() for key in keys}
 PHYS_REV = re.compile(r'^(?:phys\.?\s*rev\.?|physical\s+review)\s*(letters|lett\b\.?|[a-e]\b|x\b|research|applied|materials|fluids|accel)?', re.I)
 PHYS_REV_PARTS = {'letters': 'Lett.', 'lett': 'Lett.', 'lett.': 'Lett.', 'research': 'Research', 'applied': 'Applied',
-                  'materials': 'Materials', 'fluids': 'Fluids', 'accel': 'Accel. Beams'}
+                  'materials': 'Materials', 'fluids': 'Fluids', 'accel': 'Accel. Beams', 'accelbeams': 'Accel. Beams'}
 CONFERENCES = [(re.compile(r'\b%s\b' % pattern, re.I), name) for pattern, name in (
     ('neurips|nips', 'NeurIPS'), ('neural information processing systems', 'NeurIPS'), ('icml', 'ICML'),
     ('international conference on machine learning', 'ICML'), ('iclr', 'ICLR'),
@@ -707,6 +708,45 @@ CONFERENCES = [(re.compile(r'\b%s\b' % pattern, re.I), name) for pattern, name i
     ('interspeech', 'Interspeech'), ('icassp', 'ICASSP'), ('icra', 'ICRA'), ('iros', 'IROS'), ('kdd', 'KDD'),
     ('miccai', 'MICCAI'), ('aistats', 'AISTATS'), ('uai', 'UAI'), ('colt', 'COLT'), ('stoc', 'STOC'), ('focs', 'FOCS'),
     ('soda', 'SODA'), ('chi', 'CHI'), ('www|the web conference', 'WWW'), ('sigir', 'SIGIR'))]
+# journals read from a DOI when the journal reference is missing or unreadable (prefix of the lowercased DOI)
+DOI_JOURNALS = [(re.compile(pattern), name) for pattern, name in (
+    (r'^10\.1093/mnras', 'MNRAS'), (r'^10\.3847/1538-4357/', 'Astrophys. J.'), (r'^10\.3847/2041-8213/', 'Astrophys. J. Lett.'),
+    (r'^10\.3847/1538-4365/', 'Astrophys. J. Suppl.'), (r'^10\.3847/1538-3881/', 'Astron. J.'), (r'^10\.3847/psj/', 'Planet. Sci. J.'),
+    (r'^10\.1051/0004-6361/', 'Astron. Astrophys.'), (r'^10\.1088/1475-7516/', 'JCAP'), (r'^10\.1007/jhep', 'JHEP'),
+    (r'^10\.1140/epjc/', 'Eur. Phys. J. C'), (r'^10\.1140/epja/', 'Eur. Phys. J. A'), (r'^10\.1140/epjp/', 'Eur. Phys. J. Plus'),
+    (r'^10\.1016/j\.physletb', 'Phys. Lett. B'), (r'^10\.1016/j\.physleta', 'Phys. Lett. A'), (r'^10\.1016/j\.nuclphysb', 'Nucl. Phys. B'),
+    (r'^10\.1016/j\.physa\.', 'Physica A'), (r'^10\.1016/j\.physd\.', 'Physica D'), (r'^10\.1016/j\.aim\.', 'Advances in Mathematics'),
+    (r'^10\.1016/j\.dark\.', 'Phys. Dark Univ.'), (r'^10\.1016/j\.jcp\.', 'J. Comput. Phys.'), (r'^10\.1016/j\.patcog', 'Pattern Recognition'),
+    (r'^10\.1038/s41467', 'Nature Commun.'), (r'^10\.1038/s41586', 'Nature'), (r'^10\.1038/s41550', 'Nature Astron.'),
+    (r'^10\.1038/s41567', 'Nature Phys.'), (r'^10\.1038/s41598', 'Sci. Rep.'), (r'^10\.1038/s41534', 'npj Quantum Inf.'),
+    (r'^10\.1038/s41566', 'Nature Photon.'), (r'^10\.1038/s42005', 'Commun. Phys.'), (r'^10\.1126/sciadv', 'Sci. Adv.'),
+    (r'^10\.1126/science', 'Science'), (r'^10\.1073/pnas', 'PNAS'), (r'^10\.22331/q-', 'Quantum'), (r'^10\.21468/scipostphys\.', 'SciPost Phys.'),
+    (r'^10\.1103/prxquantum', 'PRX Quantum'), (r'^10\.1364/oe\.', 'Opt. Express'), (r'^10\.1364/ol\.', 'Opt. Lett.'),
+    (r'^10\.1109/lra\.', 'IEEE Robotics and Automation Letters'), (r'^10\.1109/access', 'IEEE Access'), (r'^10\.1109/icassp', 'ICASSP'),
+    (r'^10\.1109/icra', 'ICRA'), (r'^10\.1109/tpami', 'IEEE TPAMI'), (r'^10\.1109/tsp\.', 'IEEE Trans. Signal Process.'),
+    (r'^10\.1109/tip\.', 'IEEE Trans. Image Process.'), (r'^10\.1109/tgrs', 'IEEE Trans. Geosci. Remote Sens.'),
+    (r'^10\.21437/interspeech', 'Interspeech'), (r'^10\.4204/eptcs', 'EPTCS'), (r'^10\.46298/lmcs', 'Logical Methods in Computer Science'),
+    (r'^10\.3842/sigma', 'SIGMA'), (r'^10\.2140/agt', 'Algebr. Geom. Topol.'), (r'^10\.3390/universe', 'Universe'), (r'^10\.3390/e\d', 'Entropy'),
+    (r'^10\.3390/sym', 'Symmetry'), (r'^10\.1088/1361-6382/', 'Class. Quantum Grav.'), (r'^10\.1088/1748-0221/', 'JINST'),
+    (r'^10\.1088/1751-8121/', 'J. Phys. A'), (r'^10\.1088/1367-2630/', 'New J. Phys.'), (r'^10\.1088/1361-648x/', 'J. Phys.: Condens. Matter'),
+    (r'^10\.1088/1742-5468/', 'J. Stat. Mech.'), (r'^10\.1088/1674-1137/', 'Chin. Phys. C'), (r'^10\.1088/1674-4527/', 'Res. Astron. Astrophys.'),
+    (r'^10\.1209/0295-5075/', 'EPL'), (r'^10\.7566/jpsj', 'J. Phys. Soc. Jpn.'), (r'^10\.1017/jfm', 'J. Fluid Mech.'),
+    (r'^10\.1371/journal\.pone', 'PLOS ONE'),
+    (r'^10\.1098/rspa', 'Proc. R. Soc. A'), (r'^10\.4230/lipics', 'LIPIcs'), (r'^10\.3389/fphy', 'Front. Phys.'))]
+DOI_PHYS_REV = re.compile(r'^10\.1103/physrev(lett|research|applied|materials|fluids|accelbeams|[a-ex])\b')
+
+
+def journal_from_doi(doi):
+    doi = (doi or '').lower()
+    match = DOI_PHYS_REV.match(doi)
+    if match:
+        return 'Phys. Rev. ' + PHYS_REV_PARTS.get(match.group(1), match.group(1).upper())
+    for pattern, name in DOI_JOURNALS:
+        if pattern.match(doi):
+            return name
+    return ''
+
+
 ENDS_BADLY = re.compile(r'\b(of|the|on|in|and|for|to|at|proceedings|proc|conference|conf|journal|vol|accepted|submitted|published)\.?$', re.I)
 
 
@@ -724,7 +764,9 @@ def journal_of(jref):
         if pattern.search(text):
             return name
     # the name runs to the first volume number, year or parenthesis
-    name = re.split(r'\s*(?:\(|\d|,|;|:|\bvol\b|\bvolume\b)', text, maxsplit=1, flags=re.I)[0].strip(' .-')
+    name = re.split(r'\s*(?:\(|\d|,|;|:(?=\s*\d)|\bvol\b|\bvolume\b)', text, maxsplit=1, flags=re.I)[0].strip(' -').rstrip(' ')
+    if '. ' not in name:  # keep the final dot of an abbreviated name ('Pacific J. Math.'), not of 'MNRAS.'
+        name = name.rstrip(' .')
     key = re.sub(r'[^a-z]', '', name.lower())
     if key in JOURNAL_KEYS:
         return JOURNAL_KEYS[key]
@@ -751,9 +793,10 @@ def journal_data(records, years):
             shares[year] = (len(papers), sum(bool(p['jref'] or p['doi']) for p in papers))
         if shares[cohort][0] < 300:
             continue
-        journals = Counter(journal_of(p['jref']) for p in by_year[cohort] if field_of(p['cats']) == code and p['jref'])
+        journals = Counter(journal_of(p['jref']) or journal_from_doi(p['doi']) for p in by_year[cohort]
+                           if field_of(p['cats']) == code and (p['jref'] or p['doi']))
         journals.pop('', None)
-        data['fields'].append({'code': code, 'shares': shares, 'journals': journals.most_common(5)})
+        data['fields'].append({'code': code, 'shares': shares, 'journals': [(name, c) for name, c in journals.most_common(5) if c >= 5]})
     data['newest'] = newest_full
     return data
 
@@ -795,8 +838,8 @@ def journals_page(data, lang, made):
     body.append(t(lang, 'Physics and astronomy papers are usually submitted to arXiv when they go to a journal, and authors update the record once published. In computer science most papers go to conferences, whose proceedings are often not entered as a journal reference, so the low share there does not mean the papers stay unpublished.',
                   'En physique et en astronomie, les articles sont en général déposés sur arXiv au moment de la soumission à une revue, et les auteurs complètent la notice une fois l’article publié. En informatique, la plupart des articles vont en conférence, dont les actes sont rarement indiqués comme référence de revue : la part faible n’y signifie pas que les articles restent inédits.'))
     body.append(t(lang, '## Where are arXiv preprints published?', '## Où les preprints arXiv sont-ils publiés ?'))
-    body.append(t(lang, 'The most frequent journals in the journal references of papers submitted in %d, by field:',
-                  'Les revues les plus fréquentes dans les références des articles soumis en %d, par domaine :') % cohort)
+    body.append(t(lang, 'The most frequent journals of papers submitted in %d, read from their journal reference or DOI, by field:',
+                  'Les revues les plus fréquentes des articles soumis en %d, lues dans leur référence de revue ou leur DOI, par domaine :') % cohort)
     rows = []
     for f in sorted(fields, key=lambda f: -f['shares'][cohort][0]):
         if f['journals']:
@@ -814,11 +857,11 @@ def journals_page(data, lang, made):
     body.append(t(lang, '''- **Papers**: every arXiv paper whose identifier starts with the year (2201–2212 for %d, and so on), from the arXiv metadata of arXiv's OAI-PMH interface, harvested on %s.
 - **Published**: the arXiv record has a journal reference or a DOI. Both are entered by the authors or added by arXiv for some publishers; many published papers have neither, so every share here is a lower bound, lowest in fields that publish in conference proceedings.
 - **Field**: the archive of the primary category; physics.* is "physics (other)", nucl-ex and nucl-th are nuclear physics. Fields with fewer than 300 papers in %d are left out.
-- **Journals**: names read from the journal reference, normalized (abbreviations and spacing); a reference without a recognizable name is not counted in that table.''',
+- **Journals**: names read from the journal reference, normalized (abbreviations and spacing), or else from the DOI prefix of the main publishers; a paper whose journal cannot be recognized is not counted in that table.''',
                   '''- **Articles** : chaque article arXiv dont l’identifiant commence par l’année (2201 à 2212 pour %d, etc.), d’après les métadonnées de l’interface OAI-PMH d’arXiv, récupérées le %s.
 - **Publié** : la notice arXiv porte une référence de revue ou un DOI. Les deux sont saisis par les auteurs ou ajoutés par arXiv pour certains éditeurs ; beaucoup d’articles publiés n’ont ni l’un ni l’autre : chaque part est donc un minimum, plus encore dans les domaines qui publient dans des actes de conférence.
 - **Domaine** : l’archive de la catégorie principale ; physics.* forme « physique (autres) », nucl-ex et nucl-th la physique nucléaire. Les domaines de moins de 300 articles en %d sont exclus.
-- **Revues** : noms lus dans la référence de revue, normalisés (abréviations et espaces) ; une référence sans nom reconnaissable n’est pas comptée dans ce tableau.''')
+- **Revues** : noms lus dans la référence de revue, normalisés (abréviations et espaces), ou à défaut dans le préfixe DOI des principaux éditeurs ; un article dont la revue n’est pas reconnue n’est pas compté dans ce tableau.''')
                 % (cohort, day(made, lang), cohort))
     body.append(cta(lang))
     faq = [
