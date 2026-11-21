@@ -26,7 +26,7 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import formats, timezone, translation
 
 from . import access, mailcheck, teasers
-from .models import ConversionEmail, Generated, ToolUse, UserPlan
+from .models import ConversionEmail, EmailEvent, Generated, ToolUse, UserPlan
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +178,9 @@ def send_welcomes(now, budget, base_url=BASE_URL):
     return sent
 
 
+FAILED_EVENTS = ('bounce', 'soft_bounce', 'suppressed', 'retries_exhausted', 'complaint', 'spam')
+
+
 def announce_candidates(now=None):
     """The members who signed up before the free tries existed and may still run one, most recently active first."""
     from .models import OutreachContact
@@ -186,8 +189,10 @@ def announce_candidates(now=None):
     now = now or timezone.now()
     suppressed = mailcheck.suppressed()
     done = set(ConversionEmail.objects.filter(kind__in=('welcome', 'announce')).values_list('user_id', flat=True))
-    stopped = {canonical(e) for e in OutreachContact.objects.filter(status__in=('unsubscribed', 'bounced', 'suppressed'))
+    stopped = {canonical(e) for e in OutreachContact.objects.filter(status__in=('unsubscribed', 'bounced', 'suppressed', 'failed'))
                .values_list('email', flat=True)}
+    # Any address a delivery ever failed for, from any email of the site, even when it was not suppressed
+    stopped |= {canonical(e) for e in EmailEvent.objects.filter(kind__in=FAILED_EVENTS).values_list('recipient', flat=True)}
     staff = {canonical(e) for e in User.objects.filter(is_staff=True).values_list('email', flat=True)}
     found, seen = [], set()
     users = (User.objects.filter(is_active=True, is_staff=False, date_joined__lt=now - WELCOME_TOO_OLD)

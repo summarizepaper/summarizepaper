@@ -11,7 +11,7 @@ from django.test import override_settings
 from django.utils import timezone
 
 from summarizer import billing, conversion_emails, conversions, example_pages
-from summarizer.models import ConversionEmail, Generated, PageView, UserPlan
+from summarizer.models import ConversionEmail, EmailEvent, Generated, PageView, UserPlan
 from summarizer.test_teasers import missed_result
 from summarizer.test_tools import ToolsTestCase
 
@@ -83,6 +83,9 @@ class ConversionEmailTests(ToolsTestCase):
         ConversionEmail.objects.create(user=cid, kind='optout')
         self.joined(self.user('bob', paid=True), 24 * 30)
         self.joined(self.user('new'), 22)  # gets the welcome instead
+        for name, kind in (('dan', 'soft_bounce'), ('eve', 'retries_exhausted')):  # a delivery failed once: never again
+            self.joined(self.user(name), 24 * 30)
+            EmailEvent.objects.create(recipient='%s@example.com' % name, kind=kind)
         self.assertEqual([u.username for u in conversion_emails.announce_candidates()], ['ann'])
         call_command('announce_trials', stdout=io.StringIO())  # without --send: nothing
         self.assertEqual(mail.outbox, [])
