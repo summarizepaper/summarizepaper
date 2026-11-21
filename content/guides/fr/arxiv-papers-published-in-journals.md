@@ -8,6 +8,8 @@ faq:
   a: Au moins 40 % des articles soumis à arXiv en 2022 portent une référence de revue ou un DOI sur arXiv. La part réelle est plus élevée, car les auteurs ne les ajoutent pas toujours.
 - q: Quels domaines publient le plus leurs preprints arXiv ?
   a: Astrophysique (astro-ph), avec 87 % des articles de 2022 affichant une version publiée ; Économie (econ) a la part la plus faible (18 %). Une part faible reflète aussi les auteurs qui n’ajoutent jamais la référence, et les articles de conférence.
+- q: Combien de preprints d’informatique sur arXiv sont publiés ?
+  a: Des articles d’informatique soumis à arXiv en 2022, 20 % affichent une référence de revue ou un DOI, mais 40 % si l’on compte aussi ceux dont les commentaires arXiv indiquent une acceptation, surtout en conférence (NeurIPS, CVPR, AAAI...).
 - q: Les articles arXiv sont-ils évalués par les pairs ?
   a: 'Non : arXiv se contente de modérer les soumissions. L’évaluation par les pairs a lieu dans la revue ou la conférence ; une référence de revue sur arXiv montre qu’une version y a été publiée.'
 dataset:
@@ -29,6 +31,7 @@ Chiffres clés
 - Le plus haut : **Astrophysique (astro-ph)**, 87 %.
 - Le plus bas : **Économie (econ)**, 18 %.
 - Pour les articles soumis en 2025, la part n’est encore que de 21 % : la publication prend du temps.
+- En comptant les articles dont les commentaires arXiv indiquent une acceptation (surtout en conférence), l’informatique passe de 20 % à **40 %**.
 
 </div>
 
@@ -130,24 +133,51 @@ Au moins 40 % des articles soumis à arXiv en 2022 renvoient à une version pub
 
 En physique et en astronomie, les articles sont en général déposés sur arXiv au moment de la soumission à une revue, et les auteurs complètent la notice une fois l’article publié. En informatique, la plupart des articles vont en conférence, dont les actes sont rarement indiqués comme référence de revue : la part faible n’y signifie pas que les articles restent inédits.
 
+## Et les articles de conférence ?
+
+Beaucoup d’auteurs indiquent dans les commentaires arXiv où l’article a été accepté (« Accepted at NeurIPS 2022 », « To appear in ... »), sans ajouter de référence de revue. En comptant aussi ces articles, pour ceux soumis en 2022 :
+
+| Domaine | Référence de revue ou DOI | Y compris acceptés selon les commentaires |
+|---|---|---|
+| Informatique (cs) | 20 % | 40 % |
+| Génie électrique et science des systèmes (eess) | 25 % | 39 % |
+| Statistiques (stat) | 20 % | 26 % |
+| Mathématiques (math) | 24 % | 30 % |
+| Astrophysique (astro-ph) | 87 % | 91 % |
+| Physique des hautes énergies, expérience (hep-ex) | 60 % | 63 % |
+| Biologie quantitative (q-bio) | 29 % | 33 % |
+| Physique des hautes énergies, phénoménologie (hep-ph) | 72 % | 76 % |
+| Finance quantitative (q-fin) | 20 % | 23 % |
+| Relativité générale et cosmologie quantique (gr-qc) | 81 % | 83 % |
+| Physique nucléaire (nucl-ex, nucl-th) | 77 % | 80 % |
+| Physique des hautes énergies, théorie (hep-th) | 74 % | 76 % |
+| Sciences non linéaires (nlin) | 66 % | 68 % |
+| Économie (econ) | 18 % | 20 % |
+| Physique mathématique (math-ph) | 55 % | 57 % |
+| Autres domaines de la physique (physics.*) | 57 % | 59 % |
+| Physique quantique (quant-ph) | 69 % | 70 % |
+| Matière condensée (cond-mat) | 74 % | 75 % |
+
+Les commentaires sont un texte libre écrit par les auteurs ; l’acceptation est lue dans des mots comme accepted, to appear ou camera-ready, et les commentaires qui disent « submitted to » ou « under review » ne sont pas comptés.
+
 ## Où les preprints arXiv sont-ils publiés ?
 
-Les revues les plus fréquentes des articles soumis en 2022, lues dans leur référence de revue ou leur DOI, par domaine :
+Les revues et conférences les plus fréquentes des articles soumis en 2022, lues dans leur référence de revue, leur DOI ou leurs commentaires arXiv, par domaine :
 
-| Domaine | Revues les plus fréquentes (articles) |
+| Domaine | Revues et conférences les plus fréquentes (articles) |
 |---|---|
-| Informatique (cs) | EPTCS (210), IEEE Robotics and Automation Letters (200), NeurIPS (134), IEEE Access (133), ICRA (117) |
+| Informatique (cs) | NeurIPS (1 060), CVPR (1 006), AAAI (702), ECCV (633), EMNLP (586) |
 | Mathématiques (math) | J. Comput. Phys. (132), Algebr. Geom. Topol. (97), Advances in Mathematics (73), SIGMA (68), Alg. Number Th. (56) |
 | Matière condensée (cond-mat) | Phys. Rev. B (3 099), Phys. Rev. Lett. (700), Phys. Rev. E (592), Nature Commun. (333), Phys. Rev. Research (321) |
 | Astrophysique (astro-ph) | MNRAS (3 513), Astrophys. J. (2 477), Astron. Astrophys. (1 960), Astrophys. J. Lett. (581), Phys. Rev. D (521) |
 | Autres domaines de la physique (physics.*) | Phys. Rev. A (317), JINST (238), J. Fluid Mech. (233), Opt. Express (206), Phys. Rev. E (205) |
-| Génie électrique et science des systèmes (eess) | ICASSP (64), IEEE Trans. Signal Process. (55), Interspeech (51), IEEE Access (38), IEEE Trans. Geosci. Remote Sens. (21) |
+| Génie électrique et science des systèmes (eess) | Interspeech (199), ICASSP (184), MICCAI (112), IEEE Trans. Signal Process. (55), IEEE Access (38) |
 | Physique quantique (quant-ph) | Phys. Rev. A (986), Phys. Rev. Lett. (366), Quantum (355), Phys. Rev. Research (231), Phys. Rev. B (171) |
 | Physique des hautes énergies, phénoménologie (hep-ph) | Phys. Rev. D (1 232), JHEP (693), Eur. Phys. J. C (311), Phys. Lett. B (231), JCAP (134) |
-| Statistiques (stat) | Journal of Machine Learning Research (26), NeurIPS (23), ICML (23), Statistics in Medicine (14), IEEE Trans. Signal Process. (13) |
+| Statistiques (stat) | NeurIPS (92), ICML (62), AISTATS (32), Journal of Machine Learning Research (26), ICLR (21) |
 | Physique des hautes énergies, théorie (hep-th) | JHEP (1 207), Phys. Rev. D (676), Eur. Phys. J. C (148), Phys. Lett. B (132), SciPost Phys. (108) |
 | Relativité générale et cosmologie quantique (gr-qc) | Phys. Rev. D (898), Eur. Phys. J. C (248), Class. Quantum Grav. (199), JCAP (142), Universe (105) |
-| Biologie quantitative (q-bio) | Phys. Rev. E (35), Sci. Rep. (16), Chaos (12), PLOS ONE (12), Phys. Rev. Research (8) |
+| Biologie quantitative (q-bio) | Phys. Rev. E (35), NeurIPS (21), Sci. Rep. (16), Chaos (12), PLOS ONE (12) |
 | Physique nucléaire (nucl-ex, nucl-th) | Phys. Rev. C (492), Phys. Lett. B (104), Phys. Rev. D (91), Phys. Rev. Lett. (65), Eur. Phys. J. A (55) |
 | Économie (econ) | Journal of Econometrics (5), Econom. Theory (5) |
 | Physique mathématique (math-ph) | J. Phys. A (38), J. Math. Phys. (29), J. Phys. A: Math. Theor. (27), Commun. Math. Phys. (15), Ann. Henri Poincaré (12) |
@@ -172,7 +202,7 @@ Les revues les plus fréquentes des articles soumis en 2022, lues dans leur réf
 - **Articles** : chaque article arXiv dont l’identifiant commence par l’année (2201 à 2212 pour 2022, etc.), d’après les métadonnées de l’interface OAI-PMH d’arXiv, récupérées le 21 novembre 2026.
 - **Publié** : la notice arXiv porte une référence de revue ou un DOI. Les deux sont saisis par les auteurs ou ajoutés par arXiv pour certains éditeurs ; beaucoup d’articles publiés n’ont ni l’un ni l’autre : chaque part est donc un minimum, plus encore dans les domaines qui publient dans des actes de conférence.
 - **Domaine** : l’archive de la catégorie principale ; physics.* forme « physique (autres) », nucl-ex et nucl-th la physique nucléaire. Les domaines de moins de 300 articles en 2022 sont exclus.
-- **Revues** : noms lus dans la référence de revue, normalisés (abréviations et espaces), ou à défaut dans le préfixe DOI des principaux éditeurs ; un article dont la revue n’est pas reconnue n’est pas compté dans ce tableau.
+- **Revues** : noms lus dans la référence de revue, normalisés (abréviations et espaces), ou à défaut dans le préfixe DOI des principaux éditeurs, ou à défaut dans une conférence citée par des commentaires qui disent l’article accepté ; un article dont la revue n’est pas reconnue n’est pas compté dans ce tableau.
 
 <div class="cta-box">
 <p>Suivez votre domaine sans lire toutes les listes</p>

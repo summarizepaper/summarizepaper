@@ -8,6 +8,8 @@ faq:
   a: At least 40% of the papers submitted to arXiv in 2022 carry a journal reference or a DOI on arXiv. The true share is higher, since authors do not always add them.
 - q: Which fields publish most of their arXiv preprints?
   a: Astrophysics (astro-ph), with 87% of 2022 papers showing a journal version; Economics (econ) has the lowest share (18%). A low share also reflects authors who never add the reference, and conference papers.
+- q: How many computer science preprints on arXiv are published?
+  a: Of the computer science papers submitted to arXiv in 2022, 20% show a journal reference or DOI, but 40% once papers whose arXiv comments say they were accepted, mostly at conferences such as NeurIPS, CVPR or AAAI, are counted too.
 - q: Are arXiv papers peer reviewed?
   a: 'No: arXiv only moderates submissions. Peer review happens at the journal or conference; a journal reference on arXiv shows that a version was published there.'
 dataset:
@@ -29,6 +31,7 @@ Key numbers
 - Highest: **Astrophysics (astro-ph)**, 87%.
 - Lowest: **Economics (econ)**, 18%.
 - For papers submitted in 2025, the share is still 21%: publication takes time.
+- Counting the papers whose arXiv comments say they were accepted (mostly at conferences), computer science goes from 20% to **40%**.
 
 </div>
 
@@ -130,24 +133,51 @@ At least 40% of the papers submitted to arXiv in 2022 point to a published versi
 
 Physics and astronomy papers are usually submitted to arXiv when they go to a journal, and authors update the record once published. In computer science most papers go to conferences, whose proceedings are often not entered as a journal reference, so the low share there does not mean the papers stay unpublished.
 
+## What about conference papers?
+
+Many authors write in the arXiv comments where a paper was accepted ("Accepted at NeurIPS 2022", "To appear in ..."), without adding a journal reference. Counting those papers too, for papers submitted in 2022:
+
+| Field | Journal reference or DOI | Including accepted per the comments |
+|---|---|---|
+| Computer science (cs) | 20% | 40% |
+| Electrical engineering and systems science (eess) | 25% | 39% |
+| Statistics (stat) | 20% | 26% |
+| Mathematics (math) | 24% | 30% |
+| Astrophysics (astro-ph) | 87% | 91% |
+| High-energy physics, experiment (hep-ex) | 60% | 63% |
+| Quantitative biology (q-bio) | 29% | 33% |
+| High-energy physics, phenomenology (hep-ph) | 72% | 76% |
+| Quantitative finance (q-fin) | 20% | 23% |
+| General relativity and quantum cosmology (gr-qc) | 81% | 83% |
+| Nuclear physics (nucl-ex, nucl-th) | 77% | 80% |
+| High-energy physics, theory (hep-th) | 74% | 76% |
+| Nonlinear sciences (nlin) | 66% | 68% |
+| Economics (econ) | 18% | 20% |
+| Mathematical physics (math-ph) | 55% | 57% |
+| Other physics (physics.*) | 57% | 59% |
+| Quantum physics (quant-ph) | 69% | 70% |
+| Condensed matter (cond-mat) | 74% | 75% |
+
+The comments are free text written by the authors; "accepted" is read from words such as accepted, to appear or camera-ready, and comments that say "submitted to" or "under review" are not counted.
+
 ## Where are arXiv preprints published?
 
-The most frequent journals of papers submitted in 2022, read from their journal reference or DOI, by field:
+The most frequent journals and conferences of papers submitted in 2022, read from their journal reference, DOI or arXiv comments, by field:
 
-| Field | Most frequent journals (papers) |
+| Field | Most frequent journals and conferences (papers) |
 |---|---|
-| Computer science (cs) | EPTCS (210), IEEE Robotics and Automation Letters (200), NeurIPS (134), IEEE Access (133), ICRA (117) |
+| Computer science (cs) | NeurIPS (1,060), CVPR (1,006), AAAI (702), ECCV (633), EMNLP (586) |
 | Mathematics (math) | J. Comput. Phys. (132), Algebr. Geom. Topol. (97), Advances in Mathematics (73), SIGMA (68), Alg. Number Th. (56) |
 | Condensed matter (cond-mat) | Phys. Rev. B (3,099), Phys. Rev. Lett. (700), Phys. Rev. E (592), Nature Commun. (333), Phys. Rev. Research (321) |
 | Astrophysics (astro-ph) | MNRAS (3,513), Astrophys. J. (2,477), Astron. Astrophys. (1,960), Astrophys. J. Lett. (581), Phys. Rev. D (521) |
 | Other physics (physics.*) | Phys. Rev. A (317), JINST (238), J. Fluid Mech. (233), Opt. Express (206), Phys. Rev. E (205) |
-| Electrical engineering and systems science (eess) | ICASSP (64), IEEE Trans. Signal Process. (55), Interspeech (51), IEEE Access (38), IEEE Trans. Geosci. Remote Sens. (21) |
+| Electrical engineering and systems science (eess) | Interspeech (199), ICASSP (184), MICCAI (112), IEEE Trans. Signal Process. (55), IEEE Access (38) |
 | Quantum physics (quant-ph) | Phys. Rev. A (986), Phys. Rev. Lett. (366), Quantum (355), Phys. Rev. Research (231), Phys. Rev. B (171) |
 | High-energy physics, phenomenology (hep-ph) | Phys. Rev. D (1,232), JHEP (693), Eur. Phys. J. C (311), Phys. Lett. B (231), JCAP (134) |
-| Statistics (stat) | Journal of Machine Learning Research (26), NeurIPS (23), ICML (23), Statistics in Medicine (14), IEEE Trans. Signal Process. (13) |
+| Statistics (stat) | NeurIPS (92), ICML (62), AISTATS (32), Journal of Machine Learning Research (26), ICLR (21) |
 | High-energy physics, theory (hep-th) | JHEP (1,207), Phys. Rev. D (676), Eur. Phys. J. C (148), Phys. Lett. B (132), SciPost Phys. (108) |
 | General relativity and quantum cosmology (gr-qc) | Phys. Rev. D (898), Eur. Phys. J. C (248), Class. Quantum Grav. (199), JCAP (142), Universe (105) |
-| Quantitative biology (q-bio) | Phys. Rev. E (35), Sci. Rep. (16), Chaos (12), PLOS ONE (12), Phys. Rev. Research (8) |
+| Quantitative biology (q-bio) | Phys. Rev. E (35), NeurIPS (21), Sci. Rep. (16), Chaos (12), PLOS ONE (12) |
 | Nuclear physics (nucl-ex, nucl-th) | Phys. Rev. C (492), Phys. Lett. B (104), Phys. Rev. D (91), Phys. Rev. Lett. (65), Eur. Phys. J. A (55) |
 | Economics (econ) | Journal of Econometrics (5), Econom. Theory (5) |
 | Mathematical physics (math-ph) | J. Phys. A (38), J. Math. Phys. (29), J. Phys. A: Math. Theor. (27), Commun. Math. Phys. (15), Ann. Henri Poincaré (12) |
@@ -172,7 +202,7 @@ The most frequent journals of papers submitted in 2022, read from their journal 
 - **Papers**: every arXiv paper whose identifier starts with the year (2201–2212 for 2022, and so on), from the arXiv metadata of arXiv's OAI-PMH interface, harvested on 21 November 2026.
 - **Published**: the arXiv record has a journal reference or a DOI. Both are entered by the authors or added by arXiv for some publishers; many published papers have neither, so every share here is a lower bound, lowest in fields that publish in conference proceedings.
 - **Field**: the archive of the primary category; physics.* is "physics (other)", nucl-ex and nucl-th are nuclear physics. Fields with fewer than 300 papers in 2022 are left out.
-- **Journals**: names read from the journal reference, normalized (abbreviations and spacing), or else from the DOI prefix of the main publishers; a paper whose journal cannot be recognized is not counted in that table.
+- **Journals**: names read from the journal reference, normalized (abbreviations and spacing), or else from the DOI prefix of the main publishers, or else from a conference named in comments that say the paper was accepted; a paper whose journal cannot be recognized is not counted in that table.
 
 <div class="cta-box">
 <p>Follow your field without reading every listing</p>

@@ -144,6 +144,10 @@ class MetadataGuidesTests(TestCase):
         self.assertIn('What about conference papers?', body)
         self.assertFalse(data_guides.accepted('Submitted to ICML, under review'))
         self.assertTrue(data_guides.accepted('To appear in JHEP'))
+        self.assertTrue(data_guides.accepted('In Proceedings of the 2021 IEEE/RSJ IROS'))
+        self.assertFalse(data_guides.accepted('11 pages, extension of our proceedings of last year, submitted to PRD'))
+        self.assertEqual(data_guides.venue_of({'jref': '', 'doi': '', 'comments': 'Accepted to NeurIPS2022'}), 'NeurIPS')
+        self.assertEqual(data_guides.journal_of('Chin. Phys. C 46 (2022) 1'), 'Chin. Phys. C')
 
     def test_write_file_keeps_the_publication_date(self):
         folder = tempfile.mkdtemp()

@@ -5,11 +5,11 @@ date: 2026-11-21
 updated: 2026-11-21
 faq:
 - q: Combien d’auteurs compte un article scientifique en moyenne ?
-  a: Les articles soumis à arXiv en 2025 comptaient 6,0 auteurs en moyenne et 4 en médiane ; 11,2 % n’avaient qu’un seul auteur.
+  a: Les articles soumis à arXiv en 2025 comptaient 6,0 auteurs en moyenne et 4 en médiane ; 11,1 % n’avaient qu’un seul auteur.
 - q: Quel domaine compte le plus d’auteurs par article ?
   a: Sur arXiv en 2025, Physique des hautes énergies, expérience (hep-ex), avec une médiane de 7 auteurs par article. Physique mathématique (math-ph) en comptait le moins, avec une médiane de 2.
 - q: Les articles à un seul auteur sont-ils fréquents ?
-  a: 11,2 % des articles soumis à arXiv en 2025 n’avaient qu’un seul auteur (12,7 % en 2022). Ils sont les plus fréquents en Économie (econ) (34 %).
+  a: 11,1 % des articles soumis à arXiv en 2025 n’avaient qu’un seul auteur (12,5 % en 2022). Ils sont les plus fréquents en Économie (econ) (34 %).
 dataset:
   name: Auteurs par article arXiv selon le domaine, 2022 et 2025
   description: Nombre d’auteurs de chaque article arXiv soumis en 2022 et 2025, par catégorie principale.
@@ -26,7 +26,7 @@ sources:
 Chiffres clés
 
 - Un article arXiv soumis en 2025 comptait **4 auteurs** en médiane (moyenne 6,0), sur 284 486 articles.
-- **11,2 %** des articles de 2025 n’avaient qu’un seul auteur, contre 12,7 % en 2022.
+- **11,1 %** des articles de 2025 n’avaient qu’un seul auteur, contre 12,5 % en 2022.
 - Le plus d’auteurs : **Physique des hautes énergies, expérience (hep-ex)**, médiane 7.
 - Le moins d’auteurs : **Physique mathématique (math-ph)**, médiane 2.
 - Le plus d’articles à un seul auteur : **Économie (econ)**, 34 %.
@@ -104,14 +104,14 @@ Selon la catégorie principale des articles soumis en 2025, par médiane décroi
 
 | Domaine | Articles | Médiane d’auteurs | Moyenne | Un seul auteur | 10 auteurs ou plus |
 |---|---|---|---|---|---|
-| Physique des hautes énergies, expérience (hep-ex) | 1 090 | 7 | 181,8 | — | 45 % |
+| Physique des hautes énergies, expérience (hep-ex) | 1 090 | 7 | 181,8 | 13 % | 45 % |
 | Astrophysique (astro-ph) | 18 660 | 5 | 13,0 | 7 % | 27 % |
 | Autres domaines de la physique (physics.*) | 17 437 | 4 | 6,6 | 9 % | 12 % |
 | Matière condensée (cond-mat) | 18 715 | 4 | 5,5 | 7 % | 14 % |
 | Informatique (cs) | 128 835 | 4 | 5,2 | 6 % | 7 % |
 | Biologie quantitative (q-bio) | 3 229 | 4 | 5,2 | 10 % | 9 % |
 | Génie électrique et science des systèmes (eess) | 12 613 | 4 | 4,7 | 4 % | 5 % |
-| Physique nucléaire (nucl-ex, nucl-th) | 1 824 | 3 | 13,4 | — | 13 % |
+| Physique nucléaire (nucl-ex, nucl-th) | 1 824 | 3 | 13,4 | 14 % | 13 % |
 | Relativité générale et cosmologie quantique (gr-qc) | 4 471 | 3 | 9,2 | 20 % | 2 % |
 | Physique quantique (quant-ph) | 11 890 | 3 | 4,5 | 11 % | 6 % |
 | Physique des hautes énergies, phénoménologie (hep-ph) | 5 604 | 3 | 3,6 | 15 % | 1 % |
@@ -123,11 +123,9 @@ Selon la catégorie principale des articles soumis en 2025, par médiane décroi
 | Mathématiques (math) | 42 670 | 2 | 2,3 | 29 % | 0 % |
 | Physique mathématique (math-ph) | 1 348 | 2 | 2,3 | 30 % | 0 % |
 
-— Les collaborations de physique des hautes énergies expérimentale et de physique nucléaire signent souvent d’un seul nom sur arXiv (« ATLAS Collaboration ») : leur part d’articles à un seul auteur n’est pas indiquée.
-
 ## Les articles ont-ils plus d’auteurs qu’avant ?
 
-Sur tout arXiv, la médiane est passée de 3 auteurs en 2022 à 4 en 2025, la part des articles à 10 auteurs ou plus de 5,6 % à 7,6 %, et celle des articles à un seul auteur de 12,7 % à 11,2 %. On compare ici des médianes et des parts plutôt que des moyennes, que quelques articles à plusieurs milliers d’auteurs suffisent à déplacer : un article sur les ondes gravitationnelles à 1 800 auteurs pèse autant que 900 articles à deux auteurs.
+Sur tout arXiv, la médiane est passée de 3 auteurs en 2022 à 4 en 2025, la part des articles à 10 auteurs ou plus de 5,6 % à 7,6 %, et celle des articles à un seul auteur de 12,5 % à 11,1 %. On compare ici des médianes et des parts plutôt que des moyennes, que quelques articles à plusieurs milliers d’auteurs suffisent à déplacer : un article sur les ondes gravitationnelles à 1 800 auteurs pèse autant que 900 articles à deux auteurs.
 
 | Domaine | Médiane 2022 | Médiane 2025 | 10 auteurs ou plus 2022 | 10 auteurs ou plus 2025 | Un seul auteur 2022 | Un seul auteur 2025 |
 |---|---|---|---|---|---|---|
@@ -144,21 +142,21 @@ Sur tout arXiv, la médiane est passée de 3 auteurs en 2022 à 4 en 2025, la pa
 | Relativité générale et cosmologie quantique (gr-qc) | 3 | 3 | 2 % | 2 % | 21 % | 20 % |
 | Biologie quantitative (q-bio) | 4 | 4 | 7 % | 9 % | 10 % | 10 % |
 | Économie (econ) | 2 | 2 | 0 % | 0 % | 28 % | 34 % |
-| Physique nucléaire (nucl-ex, nucl-th) | 3 | 3 | 17 % | 13 % | — | — |
+| Physique nucléaire (nucl-ex, nucl-th) | 3 | 3 | 17 % | 13 % | 16 % | 14 % |
 | Physique mathématique (math-ph) | 2 | 2 | 0 % | 0 % | 33 % | 30 % |
 | Finance quantitative (q-fin) | 3 | 3 | 0 % | 1 % | 19 % | 24 % |
-| Physique des hautes énergies, expérience (hep-ex) | 4 | 7 | 41 % | 45 % | — | — |
+| Physique des hautes énergies, expérience (hep-ex) | 4 | 7 | 41 % | 45 % | 18 % | 13 % |
 | Sciences non linéaires (nlin) | 3 | 3 | 0 % | 1 % | 16 % | 16 % |
 
 ## Quels articles avaient le plus d’auteurs ?
 
 Les articles arXiv de 2025 avec les plus longues listes d’auteurs :
 
-- [Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next Generation Agentic Capabilities](https://www.summarizepaper.com/fr/paper/2507.06261/) (arXiv:2507.06261) — 3 435 auteurs, Informatique (cs)
-- [Search for continuous gravitational waves from known pulsars in the first part of the fourth LIGO-Virgo-KAGRA observing run](https://www.summarizepaper.com/fr/paper/2501.01495/) (arXiv:2501.01495) — 1 819 auteurs, Astrophysique (astro-ph)
-- [GWTC-4.0: Methods for Identifying and Characterizing Gravitational-wave Transients](https://www.summarizepaper.com/fr/paper/2508.18081/) (arXiv:2508.18081) — 1 812 auteurs, Relativité générale et cosmologie quantique (gr-qc)
-- [GWTC-4.0: An Introduction to Version 4.0 of the Gravitational-Wave Transient Catalog](https://www.summarizepaper.com/fr/paper/2508.18080/) (arXiv:2508.18080) — 1 811 auteurs, Relativité générale et cosmologie quantique (gr-qc)
-- [GWTC-4.0: Population Properties of Merging Compact Binaries](https://www.summarizepaper.com/fr/paper/2508.18083/) (arXiv:2508.18083) — 1 808 auteurs, Astrophysique (astro-ph)
+- [arXiv:2507.06261](https://www.summarizepaper.com/fr/paper/2507.06261/) — 3 435 auteurs, Informatique (cs)
+- [arXiv:2501.01495](https://www.summarizepaper.com/fr/paper/2501.01495/) — 1 819 auteurs, Astrophysique (astro-ph)
+- [arXiv:2508.18081](https://www.summarizepaper.com/fr/paper/2508.18081/) — 1 812 auteurs, Relativité générale et cosmologie quantique (gr-qc)
+- [arXiv:2508.18080](https://www.summarizepaper.com/fr/paper/2508.18080/) — 1 811 auteurs, Relativité générale et cosmologie quantique (gr-qc)
+- [arXiv:2508.18083](https://www.summarizepaper.com/fr/paper/2508.18083/) — 1 808 auteurs, Astrophysique (astro-ph)
 
 Lisez-les en quelques minutes : chaque lien ouvre un résumé sur SummarizePaper. Pour savoir qui travaille sur un sujet plutôt que qui a signé un article, [Qui travaille dessus ?](https://www.summarizepaper.com/fr/guides/find-research-teams-by-topic/) cartographie les équipes derrière un sujet de recherche.
 

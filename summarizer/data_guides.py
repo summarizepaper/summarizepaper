@@ -758,7 +758,8 @@ JOURNAL_KEYS = {key: name for name, keys in JOURNAL_ALIASES.items() for key in k
 PHYS_REV = re.compile(r'^(?:phys\.?\s*rev\.?|physical\s+review)\s*(letters|lett\b\.?|[a-e]\b|x\b|research|applied|materials|fluids|accel)?', re.I)
 PHYS_REV_PARTS = {'letters': 'Lett.', 'lett': 'Lett.', 'lett.': 'Lett.', 'research': 'Research', 'applied': 'Applied',
                   'materials': 'Materials', 'fluids': 'Fluids', 'accel': 'Accel. Beams', 'accelbeams': 'Accel. Beams'}
-CONFERENCES = [(re.compile(r'\b%s\b' % pattern, re.I), name) for pattern, name in (
+# (?![a-z]) rather than \b, so that 'NeurIPS2022' matches too
+CONFERENCES = [(re.compile(r'\b(?:%s)(?![a-z])' % pattern, re.I), name) for pattern, name in (
     ('neurips|nips', 'NeurIPS'), ('neural information processing systems', 'NeurIPS'), ('icml', 'ICML'),
     ('international conference on machine learning', 'ICML'), ('iclr', 'ICLR'),
     ('international conference on learning representations', 'ICLR'), ('cvpr', 'CVPR'),
@@ -838,7 +839,8 @@ def journal_of(jref):
 
 
 # the arXiv comments of a paper accepted somewhere ('Accepted at NeurIPS 2023', 'To appear in ...')
-ACCEPTED = re.compile(r'\b(accepted|to appear|camera[- ]ready|published (?:in|at|by)|presented at|appears? in)\b', re.I)
+ACCEPTED = re.compile(r'\b(accepted|to appear|camera[- ]ready|published (?:in|at|by|as)|presented at|appears? in|appeared in)\b'
+                      r'|^\W*(?:in )?proceedings of\b', re.I)
 NOT_ACCEPTED = re.compile(r'\b(not (?:yet )?(?:been )?(?:accepted|published)|under review|submitted to|in submission)\b', re.I)
 
 
@@ -953,7 +955,8 @@ def journals_page(data, lang, made):
     for f in sorted(fields, key=lambda f: -f['shares'][cohort][0]):
         if f['journals']:
             rows.append((_field(f['code'], lang), ', '.join('%s (%s)' % (name, num(c, lang)) for name, c in f['journals'])))
-    body.append(table([t(lang, 'Field', 'Domaine'), t(lang, 'Most frequent journals (papers)', 'Revues les plus fréquentes (articles)')], rows))
+    body.append(table([t(lang, 'Field', 'Domaine'), t(lang, 'Most frequent journals and conferences (papers)', 'Revues et conférences les plus fréquentes (articles)') if commented
+                       else t(lang, 'Most frequent journals (papers)', 'Revues les plus fréquentes (articles)')], rows))
     body.append(t(lang, '## How to know if a preprint was published', '## Comment savoir si un preprint a été publié'))
     body.append(t(lang, '''- On arXiv, look for the "Journal reference" and "DOI" lines under the abstract; they are often missing even when the paper is published.
 - On SummarizePaper, a paper page shows its journal version when one is found, and Premium readers can be [alerted when a followed preprint is published](%s).
@@ -967,12 +970,12 @@ def journals_page(data, lang, made):
     body.append(t(lang, '''- **Papers**: every arXiv paper whose identifier starts with the year (2201–2212 for %d, and so on), from the arXiv metadata of arXiv's OAI-PMH interface, harvested on %s.
 - **Published**: the arXiv record has a journal reference or a DOI. Both are entered by the authors or added by arXiv for some publishers; many published papers have neither, so every share here is a lower bound, lowest in fields that publish in conference proceedings.
 - **Field**: the archive of the primary category; physics.* is "physics (other)", nucl-ex and nucl-th are nuclear physics. Fields with fewer than 300 papers in %d are left out.
-- **Journals**: names read from the journal reference, normalized (abbreviations and spacing), or else from the DOI prefix of the main publishers; a paper whose journal cannot be recognized is not counted in that table.''',
+- **Journals**: names read from the journal reference, normalized (abbreviations and spacing), or else from the DOI prefix of the main publishers%s; a paper whose journal cannot be recognized is not counted in that table.''',
                   '''- **Articles** : chaque article arXiv dont l’identifiant commence par l’année (2201 à 2212 pour %d, etc.), d’après les métadonnées de l’interface OAI-PMH d’arXiv, récupérées le %s.
 - **Publié** : la notice arXiv porte une référence de revue ou un DOI. Les deux sont saisis par les auteurs ou ajoutés par arXiv pour certains éditeurs ; beaucoup d’articles publiés n’ont ni l’un ni l’autre : chaque part est donc un minimum, plus encore dans les domaines qui publient dans des actes de conférence.
 - **Domaine** : l’archive de la catégorie principale ; physics.* forme « physique (autres) », nucl-ex et nucl-th la physique nucléaire. Les domaines de moins de 300 articles en %d sont exclus.
-- **Revues** : noms lus dans la référence de revue, normalisés (abréviations et espaces), ou à défaut dans le préfixe DOI des principaux éditeurs ; un article dont la revue n’est pas reconnue n’est pas compté dans ce tableau.''')
-                % (cohort, day(made, lang), cohort))
+- **Revues** : noms lus dans la référence de revue, normalisés (abréviations et espaces), ou à défaut dans le préfixe DOI des principaux éditeurs%s ; un article dont la revue n’est pas reconnue n’est pas compté dans ce tableau.''')
+                % (cohort, day(made, lang), cohort, t(lang, ', or else from a conference named in comments that say the paper was accepted', ', ou à défaut dans une conférence citée par des commentaires qui disent l’article accepté') if commented else ''))
     body.append(cta(lang))
     faq = [
         {'q': t(lang, 'What percentage of arXiv papers get published?', 'Quel pourcentage des articles arXiv est publié ?'),
@@ -987,6 +990,11 @@ def journals_page(data, lang, made):
          'a': t(lang, 'No: arXiv only moderates submissions. Peer review happens at the journal or conference; a journal reference on arXiv shows that a version was published there.',
                 'Non : arXiv se contente de modérer les soumissions. L’évaluation par les pairs a lieu dans la revue ou la conférence ; une référence de revue sur arXiv montre qu’une version y a été publiée.')},
     ]
+    if commented and cs:
+        faq.insert(2, {'q': t(lang, 'How many computer science preprints on arXiv are published?', 'Combien de preprints d’informatique sur arXiv sont publiés ?'),
+                       'a': t(lang, 'Of the computer science papers submitted to arXiv in %d, %s show a journal reference or DOI, but %s once papers whose arXiv comments say they were accepted, mostly at conferences such as NeurIPS, CVPR or AAAI, are counted too.',
+                              'Des articles d’informatique soumis à arXiv en %d, %s affichent une référence de revue ou un DOI, mais %s si l’on compte aussi ceux dont les commentaires arXiv indiquent une acceptation, surtout en conférence (NeurIPS, CVPR, AAAI...).')
+                       % (cohort, pct(s(cs, cohort), lang), pct(s(cs, cohort, True), lang))})
     meta = {'title': t(lang, 'How many arXiv preprints are published in journals? Data by field (%d–%d)', 'Combien de preprints arXiv sont publiés en revue ? Les données par domaine (%d–%d)') % (cohort, newest),
             'description': t(lang, 'Share of arXiv papers with a journal reference or DOI by field and year, and the journals they appear in, from every paper submitted since %d.',
                              'Part des articles arXiv avec référence de revue ou DOI par domaine et par année, et revues où ils paraissent, sur tous les articles depuis %d.') % cohort,

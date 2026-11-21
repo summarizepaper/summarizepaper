@@ -5,11 +5,11 @@ date: 2026-11-21
 updated: 2026-11-21
 faq:
 - q: How many authors does a scientific paper have on average?
-  a: Papers submitted to arXiv in 2025 had 6.0 authors on average and 4 at the median; 11.2% had a single author.
+  a: Papers submitted to arXiv in 2025 had 6.0 authors on average and 4 at the median; 11.1% had a single author.
 - q: Which field has the most authors per paper?
   a: On arXiv in 2025, High-energy physics, experiment (hep-ex), with a median of 7 authors per paper. Mathematical physics (math-ph) had the fewest, with a median of 2.
 - q: How common are single-author papers?
-  a: 11.2% of arXiv papers submitted in 2025 had a single author (12.7% in 2022). They are most common in Economics (econ) (34%).
+  a: 11.1% of arXiv papers submitted in 2025 had a single author (12.5% in 2022). They are most common in Economics (econ) (34%).
 dataset:
   name: Authors per arXiv paper by field, 2022 and 2025
   description: Number of authors of every arXiv paper submitted in 2022 and 2025, by primary category.
@@ -26,7 +26,7 @@ sources:
 Key numbers
 
 - An arXiv paper submitted in 2025 had **4 authors** at the median (mean 6.0), over 284,486 papers.
-- **11.2%** of 2025 papers had a single author, against 12.7% in 2022.
+- **11.1%** of 2025 papers had a single author, against 12.5% in 2022.
 - Most authors: **High-energy physics, experiment (hep-ex)**, median 7.
 - Fewest authors: **Mathematical physics (math-ph)**, median 2.
 - Most single-author papers: **Economics (econ)**, 34%.
@@ -104,14 +104,14 @@ By the primary category of papers submitted in 2025, ordered by median:
 
 | Field | Papers | Median authors | Mean | Single author | 10 authors or more |
 |---|---|---|---|---|---|
-| High-energy physics, experiment (hep-ex) | 1,090 | 7 | 181.8 | — | 45% |
+| High-energy physics, experiment (hep-ex) | 1,090 | 7 | 181.8 | 13% | 45% |
 | Astrophysics (astro-ph) | 18,660 | 5 | 13.0 | 7% | 27% |
 | Other physics (physics.*) | 17,437 | 4 | 6.6 | 9% | 12% |
 | Condensed matter (cond-mat) | 18,715 | 4 | 5.5 | 7% | 14% |
 | Computer science (cs) | 128,835 | 4 | 5.2 | 6% | 7% |
 | Quantitative biology (q-bio) | 3,229 | 4 | 5.2 | 10% | 9% |
 | Electrical engineering and systems science (eess) | 12,613 | 4 | 4.7 | 4% | 5% |
-| Nuclear physics (nucl-ex, nucl-th) | 1,824 | 3 | 13.4 | — | 13% |
+| Nuclear physics (nucl-ex, nucl-th) | 1,824 | 3 | 13.4 | 14% | 13% |
 | General relativity and quantum cosmology (gr-qc) | 4,471 | 3 | 9.2 | 20% | 2% |
 | Quantum physics (quant-ph) | 11,890 | 3 | 4.5 | 11% | 6% |
 | High-energy physics, phenomenology (hep-ph) | 5,604 | 3 | 3.6 | 15% | 1% |
@@ -123,11 +123,9 @@ By the primary category of papers submitted in 2025, ordered by median:
 | Mathematics (math) | 42,670 | 2 | 2.3 | 29% | 0% |
 | Mathematical physics (math-ph) | 1,348 | 2 | 2.3 | 30% | 0% |
 
-— High-energy experiment and nuclear physics collaborations often sign as one name on arXiv ("ATLAS Collaboration"), so their single-author share is not shown.
-
 ## Are papers written by more authors than before?
 
-Over all of arXiv, the median went from 3 authors in 2022 to 4 in 2025, the share of papers with 10 authors or more went from 5.6% to 7.6%, and the share of single-author papers from 12.7% to 11.2%. Medians and shares are used here rather than means, which a few papers with thousands of authors can move: one gravitational-wave paper with 1,800 authors weighs as much as 900 two-author papers.
+Over all of arXiv, the median went from 3 authors in 2022 to 4 in 2025, the share of papers with 10 authors or more went from 5.6% to 7.6%, and the share of single-author papers from 12.5% to 11.1%. Medians and shares are used here rather than means, which a few papers with thousands of authors can move: one gravitational-wave paper with 1,800 authors weighs as much as 900 two-author papers.
 
 | Field | Median 2022 | Median 2025 | 10+ authors 2022 | 10+ authors 2025 | Single author 2022 | Single author 2025 |
 |---|---|---|---|---|---|---|
@@ -144,21 +142,21 @@ Over all of arXiv, the median went from 3 authors in 2022 to 4 in 2025, the shar
 | General relativity and quantum cosmology (gr-qc) | 3 | 3 | 2% | 2% | 21% | 20% |
 | Quantitative biology (q-bio) | 4 | 4 | 7% | 9% | 10% | 10% |
 | Economics (econ) | 2 | 2 | 0% | 0% | 28% | 34% |
-| Nuclear physics (nucl-ex, nucl-th) | 3 | 3 | 17% | 13% | — | — |
+| Nuclear physics (nucl-ex, nucl-th) | 3 | 3 | 17% | 13% | 16% | 14% |
 | Mathematical physics (math-ph) | 2 | 2 | 0% | 0% | 33% | 30% |
 | Quantitative finance (q-fin) | 3 | 3 | 0% | 1% | 19% | 24% |
-| High-energy physics, experiment (hep-ex) | 4 | 7 | 41% | 45% | — | — |
+| High-energy physics, experiment (hep-ex) | 4 | 7 | 41% | 45% | 18% | 13% |
 | Nonlinear sciences (nlin) | 3 | 3 | 0% | 1% | 16% | 16% |
 
 ## Which papers had the most authors?
 
 The 2025 arXiv papers with the longest author lists:
 
-- [Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next Generation Agentic Capabilities](https://www.summarizepaper.com/en/paper/2507.06261/) (arXiv:2507.06261) — 3,435 authors, Computer science (cs)
-- [Search for continuous gravitational waves from known pulsars in the first part of the fourth LIGO-Virgo-KAGRA observing run](https://www.summarizepaper.com/en/paper/2501.01495/) (arXiv:2501.01495) — 1,819 authors, Astrophysics (astro-ph)
-- [GWTC-4.0: Methods for Identifying and Characterizing Gravitational-wave Transients](https://www.summarizepaper.com/en/paper/2508.18081/) (arXiv:2508.18081) — 1,812 authors, General relativity and quantum cosmology (gr-qc)
-- [GWTC-4.0: An Introduction to Version 4.0 of the Gravitational-Wave Transient Catalog](https://www.summarizepaper.com/en/paper/2508.18080/) (arXiv:2508.18080) — 1,811 authors, General relativity and quantum cosmology (gr-qc)
-- [GWTC-4.0: Population Properties of Merging Compact Binaries](https://www.summarizepaper.com/en/paper/2508.18083/) (arXiv:2508.18083) — 1,808 authors, Astrophysics (astro-ph)
+- [arXiv:2507.06261](https://www.summarizepaper.com/en/paper/2507.06261/) — 3,435 authors, Computer science (cs)
+- [arXiv:2501.01495](https://www.summarizepaper.com/en/paper/2501.01495/) — 1,819 authors, Astrophysics (astro-ph)
+- [arXiv:2508.18081](https://www.summarizepaper.com/en/paper/2508.18081/) — 1,812 authors, General relativity and quantum cosmology (gr-qc)
+- [arXiv:2508.18080](https://www.summarizepaper.com/en/paper/2508.18080/) — 1,811 authors, General relativity and quantum cosmology (gr-qc)
+- [arXiv:2508.18083](https://www.summarizepaper.com/en/paper/2508.18083/) — 1,808 authors, Astrophysics (astro-ph)
 
 Read any of them in minutes: each link opens a summary on SummarizePaper. To see who works on a topic rather than who signed one paper, [Who works on it?](https://www.summarizepaper.com/en/guides/find-research-teams-by-topic/) maps the teams behind a research topic.
 
