@@ -10,7 +10,7 @@ the examples themselves (teaser_* events) are counted in Umami.
 import datetime
 
 from django.contrib.auth.models import User
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 
 from . import activity, teasers
@@ -26,8 +26,10 @@ EXAMPLE_VIEWS = ('examples', 'example')
 KIND_LABELS = {teasers.KIND_OF.get(tool, tool): label for tool, _view, label in TOOL_VIEWS}
 
 
-def _visitors(views, **filters):
-    return views.filter(**filters).values('visitor').distinct().count()
+def _visitors(views, counts):
+    """{name: distinct visitors} for {name: Q}, in one query: each query of the visits runs the subqueries that tell
+    people from robots (activity._people), about half a second on 30 days, so one query per number timed the page out."""
+    return views.aggregate(**{name: Count('visitor', distinct=True, filter=q) for name, q in counts.items()})
 
 
 def _paid_plans(start, end):
@@ -74,7 +76,14 @@ def report(days, now=None):
     now = now or timezone.now()
     start = now - datetime.timedelta(days=days)
     views = activity._visits(start, now)
-    anonymous = views.filter(user__isnull=True)
+    anon = Q(user__isnull=True)
+    counts = {'all': Q(), 'tools': anon & Q(view__in=[v for _t, v, _l in TOOL_VIEWS]), 'examples': Q(view__in=EXAMPLE_VIEWS),
+              'premium': Q(view='premium'), 'register': anon & Q(view='register')}
+    for tool, view, _label in TOOL_VIEWS:
+        kind = teasers.KIND_OF.get(tool, tool)
+        counts.update({'anon_' + tool: anon & Q(view=view), 'member_' + tool: Q(user__isnull=False, view=view),
+                       'example_' + tool: Q(view='example', path__contains='/examples/%s' % _prefix(kind))})
+    seen = _visitors(views, counts)
     signups = User.objects.filter(date_joined__gte=start, date_joined__lt=now, is_staff=False)
     active = signups.filter(is_active=True)
     tries = Generated.objects.filter(trial=True, created__gte=start, created__lt=now, user__is_staff=False)
@@ -85,11 +94,11 @@ def report(days, now=None):
     followups = ConversionEmail.objects.filter(sent__gte=start, sent__lt=now)
     followed = set(followups.filter(kind='trial_result').values_list('user_id', flat=True))
     funnel = [
-        ('Visiteurs (personnes, hors équipe)', _visitors(views), ''),
-        ('… sans compte, sur une page d’outil Premium', _visitors(anonymous, view__in=[v for _t, v, _l in TOOL_VIEWS]), 'voient l’exemple de l’outil'),
-        ('… sur une page d’exemple publique', _visitors(views, view__in=EXAMPLE_VIEWS), '/examples/'),
-        ('… sur la page Premium', _visitors(views, view='premium'), ''),
-        ('… sur la page d’inscription', _visitors(anonymous, view='register'), ''),
+        ('Visiteurs (personnes, hors équipe)', seen['all'], ''),
+        ('… sans compte, sur une page d’outil Premium', seen['tools'], 'voient l’exemple de l’outil'),
+        ('… sur une page d’exemple publique', seen['examples'], '/examples/'),
+        ('… sur la page Premium', seen['premium'], ''),
+        ('… sur la page d’inscription', seen['register'], ''),
         ('Inscriptions', signups.count(), '%d activées' % active.count()),
         ('E-mails de bienvenue (essais gratuits)', followups.filter(kind='welcome').count(), 'le lendemain de l’inscription'),
         ('Annonce des essais aux anciens membres', followups.filter(kind='announce').count(), 'commande announce_trials'),
@@ -105,8 +114,7 @@ def report(days, now=None):
         kind = teasers.KIND_OF.get(tool, tool)
         tried = tries.filter(kind=kind)
         triers = set(tried.values_list('user_id', flat=True))
-        tools.append({'label': label, 'visitors': _visitors(anonymous, view=view), 'members': _visitors(views.filter(user__isnull=False), view=view),
-                      'examples': _visitors(views, view='example', path__contains='/examples/%s' % _prefix(kind)),
+        tools.append({'label': label, 'visitors': seen['anon_' + tool], 'members': seen['member_' + tool], 'examples': seen['example_' + tool],
                       'tries': tried.count(), 'paid': UserPlan.objects.filter(user_id__in=triers, paid=True).exclude(stripe_subscription_id='').count()})
     found = journeys(start, now, now)
     return {'days': days, 'start': start, 'funnel': funnel, 'tools': tools, 'journeys': found, 'sources': by_source(views, found),
